@@ -24,8 +24,7 @@ int macro8(){
     gausppar.SetParNames("Norm","Mean","Sigma","a","b","c");
     format_line(&gausppar,kBlue,1);
 
-    TH1F histo("histo","Signal plus background;X vals;Y Vals",
-               50,0,20);
+    TH1F histo("histo","Signal plus background;X vals;Y Vals",50,0,20);
     histo.SetMarkerStyle(8);
 
     // Fake the data
@@ -36,29 +35,26 @@ int macro8(){
     gausppar.SetParameter(0,50);
     gausppar.SetParameter(1,6);
     int npar=gausppar.GetNpar();
-    for (int ipar=2;ipar<npar;++ipar)
-        gausppar.SetParameter(ipar,1);
+    for (int ipar=2;ipar<npar;++ipar) gausppar.SetParameter(ipar,1);
 
     // perform fit ...
-    TFitResultPtr frp = histo.Fit(&gausppar, "S");
-
+    auto fitResPtr = histo.Fit(&gausppar, "S");
     // ... and retrieve fit results
-    frp->Print(); // print fit results
+    fitResPtr->Print(); // print fit results
     // get covariance Matrix an print it
-    TMatrixDSym covMatrix (frp->GetCovarianceMatrix());
+    TMatrixDSym covMatrix (fitResPtr->GetCovarianceMatrix());
     covMatrix.Print();
 
     // Set the values of the gaussian and parabola
     for (int ipar=0;ipar<3;ipar++){
-        gaussian.SetParameter(ipar,
-                              gausppar.GetParameter(ipar));
-        parabola.SetParameter(ipar,
-                              gausppar.GetParameter(ipar+3));}
+        gaussian.SetParameter(ipar,gausppar.GetParameter(ipar));
+        parabola.SetParameter(ipar,gausppar.GetParameter(ipar+3));
+    }
 
     histo.GetYaxis()->SetRangeUser(0,250);
     histo.DrawClone("PE");
     parabola.DrawClone("Same"); gaussian.DrawClone("Same");
-    TLatex latex(2,220,
-                 "#splitline{Signal Peak over}{background}");
+    TLatex latex(2,220,"#splitline{Signal Peak over}{background}");
     latex.DrawClone("Same");
+    return 0;
 }

@@ -10,27 +10,14 @@
 #ifndef ROOT_TBackCompFitter_H_
 #define ROOT_TBackCompFitter_H_
 
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
-
-#ifndef ROOT_Fit_Fitter
+#include "Fit/BasicFCN.h"
+#include "Fit/FitResult.h"
 #include "Fit/Fitter.h"
-#endif
-
-#ifndef ROOT_Fit_DataVector
-#include "Fit/DataVector.h"
-#endif
-
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
-
-
-
 #include <vector>
 
-/**
+/*
     TVirtualFitter backward compatibility implementation using new ROOT::Fit::Fitter
 */
 
@@ -78,7 +65,6 @@ public:
    virtual Double_t *GetCovarianceMatrix() const;
    virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const;
    virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
-   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    virtual Int_t     GetNumberTotalParameters() const;
    virtual Int_t     GetNumberFreeParameters() const;
 
@@ -89,7 +75,6 @@ public:
    virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
    virtual Double_t  GetSumLog(Int_t i);
 
-   //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
    virtual Bool_t    IsFixed(Int_t ipar) const ;
 
    virtual void      PrintResults(Int_t level, Double_t amin) const;
@@ -98,13 +83,8 @@ public:
    virtual Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);
 
    virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) );
-   // this for CINT (interactive functions)
-   virtual void      SetFCN(void * );
    // for using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
-
-   ///!!!! new method (of this interface)
-
 
    // get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
    ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
@@ -127,9 +107,9 @@ public:
    // scan likelihood value of  parameter and fill the given graph.
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
-//    // scan likelihood value for two  parameters and fill the given graph.
-//    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
-//                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
+   //    scan likelihood value for two  parameters and fill the given graph.
+   //    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
+   //                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
 
    // create contour of two parameters around the minimum
    // pass as option confidence level:  default is a value of 0.683
@@ -144,19 +124,14 @@ public:
 
 protected:
 
-   // internal methods
-
    bool ValidParameterIndex(int ipar) const;
-
    void DoSetDimension();
-
 
 private:
 
-
    //ROOT::Fit::FitData * fFitData;
-   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit 
-   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object 
+   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit
+   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc;
    ROOT::Math::IParamMultiFunction * fModelFunc;

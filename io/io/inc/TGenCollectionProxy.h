@@ -11,37 +11,17 @@
 #ifndef ROOT_TGenCollectionProxy
 #define ROOT_TGenCollectionProxy
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionProxy
-//
-// Proxy around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
+#include "TBuffer.h"
 
-#ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
-#endif
 
-#ifndef ROOT_TCollectionProxyInfo
 #include "TCollectionProxyInfo.h"
-#endif
 
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
-
+#include <atomic>
 #include <string>
 #include <map>
-#ifndef __CINT__
 #include <stdlib.h>
-#endif
+
 class TObjArray;
 class TCollectionProxyFactory;
 
@@ -55,7 +35,7 @@ class TGenCollectionProxy
 public:
 
 #ifdef R__HPUX
-   typedef const type_info&      Info_t;
+   typedef const std::type_info&      Info_t;
 #else
    typedef const std::type_info& Info_t;
 #endif
@@ -64,8 +44,7 @@ public:
       // Those 'bits' are used in conjunction with CINT's bit to store the 'type'
       // info into one int
       kBIT_ISSTRING   = 0x20000000,  // We can optimized a value operation when the content are strings
-      kBIT_ISTSTRING  = 0x40000000,
-      kBOOL_t = 21
+      kBIT_ISTSTRING  = 0x40000000
    };
 
    /** @class TGenCollectionProxy::Value TGenCollectionProxy.h TGenCollectionProxy.h
@@ -78,14 +57,14 @@ public:
     * @date    10/10/2004
     */
    struct Value  {
-      ROOT::NewFunc_t fCtor;       // Method cache for containee constructor
-      ROOT::DesFunc_t fDtor;       // Method cache for containee destructor
-      ROOT::DelFunc_t fDelete;     // Method cache for containee delete
-      UInt_t          fCase;       // type of data of Value_type
-      UInt_t          fProperties; // Additional properties of the value type (kNeedDelete)
-      TClassRef       fType;       // TClass reference of Value_type in collection
-      EDataType       fKind;       // kind of ROOT-fundamental type
-      size_t          fSize;       // fSize of the contained object
+      ROOT::NewFunc_t fCtor;       ///< Method cache for containee constructor
+      ROOT::DesFunc_t fDtor;       ///< Method cache for containee destructor
+      ROOT::DelFunc_t fDelete;     ///< Method cache for containee delete
+      UInt_t          fCase;       ///< type of data of Value_type
+      UInt_t          fProperties; ///< Additional properties of the value type (kNeedDelete)
+      TClassRef       fType;       ///< TClass reference of Value_type in collection
+      EDataType       fKind;       ///< kind of ROOT-fundamental type
+      size_t          fSize;       ///< fSize of the contained object
 
       // Default copy constructor has the correct implementation.
 
@@ -252,14 +231,14 @@ public:
     * @date    20/08/2010
     */
    class TStaging  {
-      void   *fTarget;   // Pointer to the collection we are staging for.
-      void   *fContent;  // Pointer to the content
-      size_t  fReserved; // Amount of space already reserved.
-      size_t  fSize;     // Number of elements
-      size_t  fSizeOf;   // size of each elements
+      void   *fTarget;   ///< Pointer to the collection we are staging for.
+      void   *fContent;  ///< Pointer to the content
+      size_t  fReserved; ///< Amount of space already reserved.
+      size_t  fSize;     ///< Number of elements
+      size_t  fSizeOf;   ///< size of each elements
 
-      TStaging(const TStaging&);            // Not implemented.
-      TStaging &operator=(const TStaging&); // Not implemented.
+      TStaging(const TStaging&);            ///< Not implemented.
+      TStaging &operator=(const TStaging&); ///< Not implemented.
 
    public:
       TStaging(size_t size, size_t size_of) : fTarget(0), fContent(0), fReserved(0), fSize(size), fSizeOf(size_of)
@@ -304,42 +283,42 @@ public:
    };
 
 protected:
-   typedef ROOT::TCollectionProxyInfo::Environ<char[64]> Env_t;
-   typedef ROOT::TCollectionProxyInfo::EnvironBase EnvironBase_t;
-   typedef std::vector<TStaging*>          Staged_t;  // Collection of pre-allocated staged array for associative containers.
+   typedef ROOT::Detail::TCollectionProxyInfo::Environ<char[64]> Env_t;
+   typedef ROOT::Detail::TCollectionProxyInfo::EnvironBase EnvironBase_t;
+   typedef std::vector<TStaging*>          Staged_t;  ///< Collection of pre-allocated staged array for associative containers.
    typedef std::vector<EnvironBase_t*>     Proxies_t;
-   mutable TObjArray *fReadMemberWise;                                   //Array of bundle of TStreamerInfoActions to stream out (read)
-   mutable std::map<std::string, TObjArray*> *fConversionReadMemberWise; //Array of bundle of TStreamerInfoActions to stream out (read) derived from another class.
+   mutable TObjArray *fReadMemberWise;                                   ///< Array of bundle of TStreamerInfoActions to stream out (read)
+   mutable std::map<std::string, TObjArray*> *fConversionReadMemberWise; ///< Array of bundle of TStreamerInfoActions to stream out (read) derived from another class.
    mutable TStreamerInfoActions::TActionSequence *fWriteMemberWise;
    typedef void (*Sizing_t)(void *obj, size_t size);
    typedef void* (*Feedfunc_t)(void *from, void *to, size_t size);
    typedef void* (*Collectfunc_t)(void *from, void *to);
    typedef void* (*ArrIterfunc_t)(void *from, size_t size);
 
-   std::string   fName;      // Name of the class being proxied.
-   Bool_t        fPointers;  // Flag to indicate if containee has pointers (key or value)
-   Method        fClear;     // Method cache for container accessors: clear container
-   Method        fSize;      // Container accessors: size of container
-   Sizing_t      fResize;    // Container accessors: resize container
-   Method        fFirst;     // Container accessors: generic iteration: first
-   Method        fNext;      // Container accessors: generic iteration: next
-   ArrIterfunc_t fConstruct; // Container accessors: block construct
-   Sizing_t      fDestruct;  // Container accessors: block destruct
-   Feedfunc_t    fFeed;      // Container accessors: block feed
-   Collectfunc_t fCollect;   // Method to collect objects from container
-   Method0       fCreateEnv; // Method to allocate an Environment holder.
-   Value*        fValue;     // Descriptor of the container value type
-   Value*        fVal;       // Descriptor of the Value_type
-   Value*        fKey;       // Descriptor of the key_type
-   EnvironBase_t*fEnv;       // Address of the currently proxied object
-   int           fValOffset; // Offset from key to value (in maps)
-   int           fValDiff;   // Offset between two consecutive value_types (memory layout).
-   Proxies_t     fProxyList; // Stack of recursive proxies
-   Proxies_t     fProxyKept; // Optimization: Keep proxies once they were created
-   Staged_t      fStaged;    // Optimization: Keep staged array once they were created
-   int           fSTL_type;  // STL container type
-   Info_t        fTypeinfo;  // Type information
-   TClass*       fOnFileClass; // On file class
+   std::string   fName;      ///< Name of the class being proxied.
+   Bool_t        fPointers;  ///< Flag to indicate if containee has pointers (key or value)
+   Method        fClear;     ///< Method cache for container accessors: clear container
+   Method        fSize;      ///< Container accessors: size of container
+   Sizing_t      fResize;    ///< Container accessors: resize container
+   Method        fFirst;     ///< Container accessors: generic iteration: first
+   Method        fNext;      ///< Container accessors: generic iteration: next
+   ArrIterfunc_t fConstruct; ///< Container accessors: block construct
+   Sizing_t      fDestruct;  ///< Container accessors: block destruct
+   Feedfunc_t    fFeed;      ///< Container accessors: block feed
+   Collectfunc_t fCollect;   ///< Method to collect objects from container
+   Method0       fCreateEnv; ///< Method to allocate an Environment holder.
+   std::atomic<Value*> fValue;     ///< Descriptor of the container value type
+   Value*        fVal;       ///< Descriptor of the Value_type
+   Value*        fKey;       ///< Descriptor of the key_type
+   EnvironBase_t*fEnv;       ///< Address of the currently proxied object
+   int           fValOffset; ///< Offset from key to value (in maps)
+   int           fValDiff;   ///< Offset between two consecutive value_types (memory layout).
+   Proxies_t     fProxyList; ///< Stack of recursive proxies
+   Proxies_t     fProxyKept; ///< Optimization: Keep proxies once they were created
+   Staged_t      fStaged;    ///< Optimization: Keep staged array once they were created
+   int           fSTL_type;  ///< STL container type
+   Info_t        fTypeinfo;  ///< Type information
+   TClass*       fOnFileClass; ///< On file class
 
    CreateIterators_t    fFunctionCreateIterators;
    CopyIterator_t       fFunctionCopyIterator;
@@ -377,7 +356,7 @@ private:
 public:
    // Initializing constructor
    TGenCollectionProxy(Info_t typ, size_t iter_size);
-   TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl);
+   TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info, TClass *cl);
 
    // Standard destructor.
    virtual ~TGenCollectionProxy();

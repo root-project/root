@@ -14,9 +14,7 @@
 
 
 // ROOT
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Python
 struct _object;
@@ -49,6 +47,9 @@ public:
 
 // used for both TObject and PyObject conversions
    operator void*() const;
+
+   template<class T>
+   operator T*() const { return (T*)(void*)*this; }
 
 // used strictly for PyObject conversions
    operator PyObject*() const;

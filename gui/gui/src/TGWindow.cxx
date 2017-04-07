@@ -37,18 +37,19 @@ ClassImp(TGUnknownWindowHandler)
 
 Int_t TGWindow::fgCounter = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new window. Parent p must exist otherwise the root window
+/// is taken as parent. No arguments specified results in values from
+/// parent to be taken (or defaults).
+
 TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                    UInt_t border, Int_t depth, UInt_t clss, void *visual,
                    SetWindowAttributes_t *attr, UInt_t wtype)
 {
-   // Create a new window. Parent p must exist otherwise the root window
-   // is taken as parent. No arguments specified results in values from
-   // parent to be taken (or defaults).
-
    UInt_t type = wtype;
    fId = 0;
    fParent = 0;
+   fNeedRedraw = kFALSE;
 
    if (!p && gClient) {
       p = gClient->GetRoot();
@@ -66,7 +67,6 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
                                      depth, clss, visual, attr, type);
          fClient->RegisterWindow(this);
       }
-      fNeedRedraw = kFALSE;
 
       // name will be used in SavePrimitive methods
       fgCounter++;
@@ -81,11 +81,11 @@ TGWindow::TGWindow(const TGWindow *p, Int_t x, Int_t y, UInt_t w, UInt_t h,
       SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a copy of a window.
+
 TGWindow::TGWindow(TGClient *c, Window_t id, const TGWindow *parent)
 {
-   // Create a copy of a window.
-
    fClient = c;
    fId     = id;
    fParent = parent;
@@ -100,11 +100,11 @@ TGWindow::TGWindow(TGClient *c, Window_t id, const TGWindow *parent)
    fName += fgCounter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Window destructor. Unregisters the window.
+
 TGWindow::~TGWindow()
 {
-   // Window destructor. Unregisters the window.
-
    if (fClient) {
       if (fParent == fClient->GetDefaultRoot())
          DestroyWindow();
@@ -112,11 +112,11 @@ TGWindow::~TGWindow()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window name.
+
 void TGWindow::SetWindowName(const char *name)
 {
-   // Set window name.
-
    if (!name && gDebug > 0) {
       // set default frame names only when in debug mode
       TString wname = ClassName();
@@ -127,20 +127,20 @@ void TGWindow::SetWindowName(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns top level main frame.
+
 const TGWindow *TGWindow::GetMainFrame() const
 {
-   // Returns top level main frame.
-
    return ((fParent == 0) || (fParent == fClient->GetDefaultRoot())) ? this : fParent->GetMainFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reparent window, make p the new parent and position the window at
+/// position (x,y) in new parent.
+
 void TGWindow::ReparentWindow(const TGWindow *p, Int_t x, Int_t y)
 {
-   // Reparent window, make p the new parent and position the window at
-   // position (x,y) in new parent.
-
    if (p == fParent) return;
 
    if (p) {
@@ -150,47 +150,47 @@ void TGWindow::ReparentWindow(const TGWindow *p, Int_t x, Int_t y)
    fParent = p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the window.
+
 void TGWindow::Move(Int_t x, Int_t y)
 {
-   // Move the window.
-
    gVirtualX->MoveWindow(fId, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the window.
+
 void TGWindow::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the window.
-
    gVirtualX->ResizeWindow(fId, TMath::Max(w, (UInt_t)1), TMath::Max(h, (UInt_t)1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize the window.
+
 void TGWindow::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move and resize the window.
-
    gVirtualX->MoveResizeWindow(fId, x, y, TMath::Max(w, (UInt_t)1), TMath::Max(h, (UInt_t)1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if window is mapped on screen, kFALSE otherwise.
+
 Bool_t TGWindow::IsMapped()
 {
-   // Returns kTRUE if window is mapped on screen, kFALSE otherwise.
-
    WindowAttributes_t attr;
 
    gVirtualX->GetWindowAttributes(fId, attr);
    return (attr.fMapState != kIsUnmapped);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print window id.
+/// If option is "tree" - print all parent windows tree
+
 void TGWindow::Print(Option_t *option) const
 {
-   // Print window id.
-   // If option is "tree" - print all parent windows tree
-
    TString opt = option;
 
    if (opt.Contains("tree")) {
@@ -207,19 +207,19 @@ void TGWindow::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return global window counter (total number of created windows).
+
 Int_t TGWindow::GetCounter()
 {
-   // Return global window counter (total number of created windows).
-
    return fgCounter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return unique name, used in SavePrimitive methods.
+
 const char *TGWindow::GetName()const
 {
-   // Return unique name, used in SavePrimitive methods.
-
    TGWindow *w = (TGWindow*)this;
 
    if (fName.BeginsWith("frame")) {

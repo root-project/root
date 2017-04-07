@@ -12,20 +12,7 @@
 #define ROOT_TCreatePrimitives
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCreatePrimitives                                                    //
-//                                                                      //
-// Creates new primitives.                                              //
-//                                                                      //
-// The functions in this static class are called by TPad::ExecuteEvent  //
-// to create new primitives in gPad from the TPad toolbar.              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "TLatex.h"
 #include "TCurlyArc.h"

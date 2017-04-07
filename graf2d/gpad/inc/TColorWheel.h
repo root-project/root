@@ -13,17 +13,7 @@
 #define ROOT_TColorWheel
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TColorWheel                                                          //
-//                                                                      //
-//  Utility class to draw the recommended color palette                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TCanvas;
 class TArc;
@@ -34,18 +24,18 @@ class TGraph;
 class TColorWheel : public TNamed {
 
 private:
-   Double_t  fRmin;     //Minimum radius for rectangles
-   Double_t  fRmax;     //Maximum radius for rectangles
-   Double_t  fR0;       //Minimum radius for circles
-   Double_t  fDr;       //Circles radius
-   Double_t  fRgray;    //Maximum radius of gray circle
-   Double_t  fX[15];    //X coordinates of the center of circles
-   Double_t  fY[15];    //Y coordinates of the center of circles
-   TCanvas  *fCanvas;   //! Canvas used to draw the Color Wheel
-   TArc     *fArc;      //! pointer to utility arc
-   TLine    *fLine;     //! pointer to utility line
-   TText    *fText;     //! pointer to utility text
-   TGraph   *fGraph;    //! pointer to utility graph
+   Double_t  fRmin;     ///<Minimum radius for rectangles
+   Double_t  fRmax;     ///<Maximum radius for rectangles
+   Double_t  fR0;       ///<Minimum radius for circles
+   Double_t  fDr;       ///<Circles radius
+   Double_t  fRgray;    ///<Maximum radius of gray circle
+   Double_t  fX[15];    ///<X coordinates of the center of circles
+   Double_t  fY[15];    ///<Y coordinates of the center of circles
+   TCanvas  *fCanvas;   ///<! Canvas used to draw the Color Wheel
+   TArc     *fArc;      ///<! pointer to utility arc
+   TLine    *fLine;     ///<! pointer to utility line
+   TText    *fText;     ///<! pointer to utility text
+   TGraph   *fGraph;    ///<! pointer to utility graph
 
    TColorWheel(const TColorWheel &org);             // no copy, use TObject::Clone()
    TColorWheel &operator=(const TColorWheel &rhs);  // idem

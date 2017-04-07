@@ -47,10 +47,6 @@
 #undef PPD_SRV_NEWER
 #endif
 #define PPD_SRV_NEWER(v) (fProof && fProof->GetRemoteProtocol() > v)
-#ifdef PPD_SRV_NEWER_REV
-#undef PPD_SRV_NEWER_REV
-#endif
-#define PPD_SRV_NEWER_REV(r) (fSVNRev > r)
 
 Bool_t TProofProgressDialog::fgKeepDefault = kTRUE;
 Bool_t TProofProgressDialog::fgLogQueryDefault = kFALSE;
@@ -60,7 +56,9 @@ TString TProofProgressDialog::fgTextQueryDefault = "last";
 
 ClassImp(TProofProgressDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create PROOF processing progress dialog.
+
 TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
                                            Int_t files, Long64_t first,
                                            Long64_t entries) : fDialog(0),
@@ -69,8 +67,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fTitleLab(0), fFilesEvents(0), fTimeLab(0), fProcessed(0), fEstim(0),
    fTotal(0), fRate(0), fInit(0), fSelector(0), fSpeedo(0), fSmoothSpeedo(0)
 {
-   // Create PROOF processing progress dialog.
-
    fProof         = proof;
    fFiles         = files;
    fFirst         = first;
@@ -92,7 +88,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fInitTime      = 0.;
    fAvgRate       = 0.;
    fAvgMBRate     = 0.;
-   fSVNRev        = -1;
    fRightInfo     = 0;
    fSpeedoEnabled = kFALSE;
    fSpeedo        = 0;
@@ -109,30 +104,6 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    // Have to save this information here, in case gProof is dead when
    // the logs are requested
    fSessionUrl = (proof && proof->GetManager()) ? proof->GetManager()->GetUrl() : "";
-
-   // SVN version run by the master
-   TSlave *mst = (TSlave *) proof->GetListOfActiveSlaves()->First();
-   if (mst) {
-      TString vrs = mst->GetROOTVersion();
-      Ssiz_t ib = vrs.Index("|"), from = ib + 2;
-      if (ib != kNPOS) {
-         TString svnr;
-         // Strip of also the 'r' in front of the number
-         // coverity[unchecked_value]
-         vrs.Tokenize(svnr, from, "|");
-         if (svnr.IsDigit()) {
-            if (gDebug)
-               Info("TProofProgressDialog", "svn revision run by the master: %s", svnr.Data());
-            fSVNRev = svnr.Atoi();
-         } else {
-            Info("TProofProgressDialog", "could not find svn revision run by the master");
-         }
-      } else if (gDebug) {
-         Info("TProofProgressDialog", "non-standard master version string:'%s'", vrs.Data());
-      }
-   } else {
-      Warning("TProofProgressDialog", "list of active workers is empty!");
-   }
 
    if (PPD_SRV_NEWER(25)) {
       fRatePoints = new TNtuple("RateNtuple","Rate progress info","tm:evr:mbr:act:tos:efs");
@@ -413,11 +384,11 @@ TProofProgressDialog::TProofProgressDialog(TProof *proof, const char *selector,
    fStartTime = gSystem->Now();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle information displayed in Analog Meter
+
 void TProofProgressDialog::ToggleOdometerInfos()
 {
-   // Toggle information displayed in Analog Meter
-
    if (fRightInfo < 1)
       fRightInfo++;
    else
@@ -432,7 +403,8 @@ void TProofProgressDialog::ToggleOdometerInfos()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TProofProgressDialog::ToggleThreshold()
 {
    if (fSpeedo->IsThresholdActive()) {
@@ -443,12 +415,13 @@ void TProofProgressDialog::ToggleThreshold()
       fSpeedo->EnableThreshold();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset dialog box preparing for new query
+
 void TProofProgressDialog::ResetProgressDialog(const char *selec,
                                                Int_t files, Long64_t first,
                                                Long64_t entries)
 {
-   // Reset dialog box preparing for new query
    TString buf;
 
    // Update title
@@ -527,12 +500,12 @@ void TProofProgressDialog::ResetProgressDialog(const char *selec,
    fAvgMBRate = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update progress bar and status labels.
+/// Use "processed == total" or "processed < 0" to indicate end of processing.
+
 void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
 {
-   // Update progress bar and status labels.
-   // Use "processed == total" or "processed < 0" to indicate end of processing.
-
    Long_t tt;
    UInt_t hh=0, mm=0, ss=0;
    TString buf;
@@ -661,16 +634,16 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed)
    fPrevProcessed = evproc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update progress bar and status labels.
+/// Use "processed == total" or "processed < 0" to indicate end of processing.
+
 void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
                                     Long64_t bytesread,
                                     Float_t initTime, Float_t procTime,
                                     Float_t evtrti, Float_t mbrti,
                                     Int_t actw, Int_t tses, Float_t eses)
 {
-   // Update progress bar and status labels.
-   // Use "processed == total" or "processed < 0" to indicate end of processing.
-
    Double_t BinLow, BinHigh;
    Int_t nbins;
    Long_t tt;
@@ -911,11 +884,11 @@ void TProofProgressDialog::Progress(Long64_t total, Long64_t processed,
    fPrevProcessed = evproc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform MBs to GBs ot TBs and get the correct suffix
+
 Float_t TProofProgressDialog::AdjustBytes(Float_t mbs, TString &sf)
 {
-   // Transform MBs to GBs ot TBs and get the correct suffix
-
    Float_t xb = mbs;
    sf = "MB";
    if (xb > 1024.) {
@@ -930,11 +903,11 @@ Float_t TProofProgressDialog::AdjustBytes(Float_t mbs, TString &sf)
    return xb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup dialog.
+
 TProofProgressDialog::~TProofProgressDialog()
 {
-   // Cleanup dialog.
-
    if (fProof) {
       fProof->Disconnect("Progress(Long64_t,Long64_t)", this,
                          "Progress(Long64_t,Long64_t)");
@@ -963,28 +936,28 @@ TProofProgressDialog::~TProofProgressDialog()
    delete fDialog;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when dialog is closed.
+
 void TProofProgressDialog::CloseWindow()
 {
-   // Called when dialog is closed.
-
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disable the asyn switch when an external request for going asynchronous is issued
+
 void TProofProgressDialog::DisableAsyn()
 {
-   // Disable the asyn switch when an external request for going asynchronous is issued
-
    fProof->Disconnect("DisableGoAsyn()", this, "DisableAsyn()");
    fAsyn->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Indicate that Cancel or Stop was clicked.
+
 void TProofProgressDialog::IndicateStop(Bool_t aborted)
 {
-   // Indicate that Cancel or Stop was clicked.
-
    if (aborted == kTRUE)
       fBar->SetBarColor("red");
    else
@@ -1012,11 +985,11 @@ void TProofProgressDialog::IndicateStop(Bool_t aborted)
       DoClose();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load/append a log msg in the log frame, if open
+
 void TProofProgressDialog::LogMessage(const char *msg, Bool_t all)
 {
-   // Load/append a log msg in the log frame, if open
-
    if (fLogWindow) {
       if (all) {
          // load buffer
@@ -1028,20 +1001,20 @@ void TProofProgressDialog::LogMessage(const char *msg, Bool_t all)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close dialog.
+
 void TProofProgressDialog::DoClose()
 {
-   // Close dialog.
-
    fClose->SetState(kButtonDisabled);
    TTimer::SingleShot(50, "TProofProgressDialog", this, "CloseWindow()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask proof session for logs
+
 void TProofProgressDialog::DoLog()
 {
-   // Ask proof session for logs
-
    if (fProof) {
       if (!fLogWindow) {
          fLogWindow = new TProofProgressLog(this);
@@ -1057,22 +1030,22 @@ void TProofProgressDialog::DoLog()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keep toggle button.
+
 void TProofProgressDialog::DoKeep(Bool_t)
 {
-   // Handle keep toggle button.
-
    fKeep = !fKeep;
 
    // Last choice will be the default for the future
    fgKeepDefault = fKeep;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle log-current-query-only toggle button.
+
 void TProofProgressDialog::DoSetLogQuery(Bool_t)
 {
-   // Handle log-current-query-only toggle button.
-
    fLogQuery = !fLogQuery;
    fEntry->SetEnabled(fLogQuery);
    if (fLogQuery)
@@ -1084,11 +1057,11 @@ void TProofProgressDialog::DoSetLogQuery(Bool_t)
    fgLogQueryDefault = fLogQuery;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Stop button.
+
 void TProofProgressDialog::DoStop()
 {
-   // Handle Stop button.
-
    // Do not wait for ever, but al least 10 seconds
    Long_t timeout = gEnv->GetValue("Proof.ShutdownTimeout", 60) / 2;
    timeout = (timeout > 10) ? timeout : 10;
@@ -1102,11 +1075,11 @@ void TProofProgressDialog::DoStop()
    fClose->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Cancel button.
+
 void TProofProgressDialog::DoAbort()
 {
-   // Handle Cancel button.
-
    fProof->StopProcess(kTRUE);
    fStatus = kAborted;
 
@@ -1117,22 +1090,22 @@ void TProofProgressDialog::DoAbort()
    fClose->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Asyn button.
+
 void TProofProgressDialog::DoAsyn()
 {
-   // Handle Asyn button.
-
    fProof->GoAsynchronous();
 
    // Set buttons states
    fAsyn->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Plot Rate Graph.
+
 void TProofProgressDialog::DoPlotRateGraph()
 {
-   // Handle Plot Rate Graph.
-
    // We must have some point to plot
    if (!fRatePoints || fRatePoints->GetEntries() <= 0) {
       Info("DoPlotRateGraph","list is empty!");
@@ -1336,11 +1309,11 @@ void TProofProgressDialog::DoPlotRateGraph()
    c1->Modified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do a memory plot
+
 void TProofProgressDialog::DoMemoryPlot()
 {
-   // Do a memory plot
-
    if (!fMemWindow) {
       fMemWindow = new TProofProgressMemoryPlot(this, 500, 300);
       fMemWindow->DoPlot();
@@ -1351,11 +1324,11 @@ void TProofProgressDialog::DoMemoryPlot()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/Disable speedometer
+
 void TProofProgressDialog::DoEnableSpeedo()
 {
-   // Enable/Disable speedometer
-
    if (!fSpeedoEnabled) {
       // Enable and connect
       fSpeedoEnabled = kTRUE;

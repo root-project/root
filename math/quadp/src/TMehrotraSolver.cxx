@@ -55,11 +55,11 @@
 
 ClassImp(TMehrotraSolver)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TMehrotraSolver::TMehrotraSolver()
 {
-// Default constructor
-
    fPrintlevel = 0;
    fTsig       = 0.0;
    fStep       = 0;
@@ -67,11 +67,11 @@ TMehrotraSolver::TMehrotraSolver()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose)
 {
-// Constructor
-
    fFactory = of;
    fStep = fFactory->MakeVariables(prob);
 
@@ -80,22 +80,22 @@ TMehrotraSolver::TMehrotraSolver(TQpProbBase *of,TQpDataBase *prob,Int_t verbose
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMehrotraSolver::TMehrotraSolver(const TMehrotraSolver &another) : TQpSolverBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve the quadratic programming problem as formulated through prob, store
+/// the final solution in iterate->fX . Monitor the residuals during the iterations
+/// through resid . The status is returned as defined in TQpSolverBase::ETerminationCode .
+
 Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resid)
 {
-// Solve the quadratic programming problem as formulated through prob, store
-// the final solution in iterate->fX . Monitor the residuals during the iterations
-// through resid . The status is returned as defined in TQpSolverBase::ETerminationCode .
-
    Int_t status_code;
    Double_t alpha = 1;
    Double_t sigma = 1;
@@ -164,15 +164,15 @@ Int_t TMehrotraSolver::Solve(TQpDataBase *prob,TQpVar *iterate,TQpResidual *resi
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about the optimization process and monitor the convergence
+/// status of thye algorithm
+
 void TMehrotraSolver::DefMonitor(TQpDataBase * /* data */,TQpVar * /* vars */,
                                  TQpResidual *resids,
                                  Double_t alpha,Double_t /* sigma */,Int_t i,Double_t mu,
                                  Int_t status_code,Int_t level)
 {
-// Print information about the optimization process and monitor the convergence
-// status of thye algorithm
-
    switch (level) {
       case 0 : case 1:
       {
@@ -207,20 +207,20 @@ void TMehrotraSolver::DefMonitor(TQpDataBase * /* data */,TQpVar * /* vars */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deconstructor
+
 TMehrotraSolver::~TMehrotraSolver()
 {
-// Deconstructor
-
    delete fStep;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TMehrotraSolver &TMehrotraSolver::operator=(const TMehrotraSolver &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TQpSolverBase::operator=(source);
 

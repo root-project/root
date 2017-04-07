@@ -9,33 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-//  TDataMember.
-//
-// All ROOT classes may have RTTI (run time type identification) support
-// added. The data is stored in so called DICTIONARY (look at TDictionary).
-// Information about a class is stored in TClass.
-// This information may be obtained via the cling api - see class TCling.
-// TClass has a list of TDataMember objects providing information about all
-// data members of described class.
-//Begin_Html
-/*
-<img align=center src="gif/classinfo.gif">
-*/
-//End_Html
-// TDataMember provides information about name of data member, its type,
-// and comment field string. It also tries to find the TMethodCall objects
-// responsible for getting/setting a value of it, and gives you pointers
-// to these methods. This gives you a unique possibility to access
-// protected and private (!) data members if only methods for doing that
-// are defined.
-// These methods could either be specified in a comment field, or found
-// out automatically by ROOT: here's an example:
-// suppose you have a class definition:
-//Begin_Html <pre>
-/*
+/** \class TDataMember
 
+All ROOT classes may have RTTI (run time type identification) support
+added. The data is stored in so called DICTIONARY (look at TDictionary).
+Information about a class is stored in TClass.
+This information may be obtained via the cling api - see class TCling.
+TClass has a list of TDataMember objects providing information about all
+data members of described class.
+
+\image html base_classinfo.png
+
+TDataMember provides information about name of data member, its type,
+and comment field string. It also tries to find the TMethodCall objects
+responsible for getting/setting a value of it, and gives you pointers
+to these methods. This gives you a unique possibility to access
+protected and private (!) data members if only methods for doing that
+are defined.
+
+These methods could either be specified in a comment field, or found
+out automatically by ROOT: here's an example:
+suppose you have a class definition:
+~~~ {.cpp}
         class MyClass{
             private:
                 Float_t fX1;
@@ -45,121 +40,100 @@
                 Float_t GetX1()          {return fX1;};
                     ...
         }
+~~~
+Look at the data member name and method names: a data member name has
+a prefix letter (f) and has a base name X1 . The methods for getting and
+setting this value have names which consist of string Get/Set and the
+same base name. This convention of naming data fields and methods which
+access them allows TDataMember find this methods by itself completely
+automatically. To make this description complete, one should know,
+that names that are automatically recognized may be also:
+for data fields: either fXXX or fIsXXX; and for getter function
+GetXXX() or IsXXX() [where XXX is base name].
 
-*/
-//</pre>
-//End_Html
-// Look at the data member name and method names: a data member name has
-// a prefix letter (f) and has a base name X1 . The methods for getting and
-// setting this value have names which consist of string Get/Set and the
-// same base name. This convention of naming data fields and methods which
-// access them allows TDataMember find this methods by itself completely
-// automatically. To make this description complete, one should know,
-// that names that are automatically recognized may be also:
-// for data fields: either fXXX or fIsXXX; and for getter function
-// GetXXX() or IsXXX() [where XXX is base name].
-//
-// As an example of using it let's analyse a few lines which get and set
-// a fEditable field in TCanvas:
-//Begin_Html <pre>
-/*
-
+As an example of using it let's analyse a few lines which get and set
+a fEditable field in TCanvas:
+~~~ {.cpp}
     TCanvas     *c  = new TCanvas("c");   // create a canvas
-    TClass      *cl = c-&gt;IsA();            // get its class description object.
+    TClass      *cl = c->IsA();            // get its class description object.
 
-    TDataMember *dm = cl-&gt;GetDataMember("fEditable"); //This is our data member
+    TDataMember *dm = cl->GetDataMember("fEditable"); //This is our data member
 
-    TMethodCall *getter = dm-&gt;GetterMethod(c); //find a method that gets value!
+    TMethodCall *getter = dm->GetterMethod(c); //find a method that gets value!
     Long_t l;   // declare a storage for this value;
 
-    getter-&gt;Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
+    getter->Execute(c,"",l);  // Get this Value !!!! It will appear in l !!!
 
 
-    TMethodCall *setter = dm-&gt;SetterMethod(c);
-    setter-&gt;Execute(c,"0",);   // Set Value 0 !!!
+    TMethodCall *setter = dm->SetterMethod(c);
+    setter->Execute(c,"0",);   // Set Value 0 !!!
+~~~
 
-*/
-//</pre>
-//End_Html
-//
-// This trick is widely used in ROOT TContextMenu and dialogs for obtaining
-// current values and put them as initial values in dialog fields.
-//
-// If you don't want to follow the convention of naming used by ROOT
-// you still could benefit from Getter/Setter method support: the solution
-// is to instruct ROOT what the names of these routines are.
-// The way to do it is putting this information in a comment string to a data
-// field in your class declaration:
-//
-//Begin_Html <pre>
-/*
+This trick is widely used in ROOT TContextMenu and dialogs for obtaining
+current values and put them as initial values in dialog fields.
 
+If you don't want to follow the convention of naming used by ROOT
+you still could benefit from Getter/Setter method support: the solution
+is to instruct ROOT what the names of these routines are.
+The way to do it is putting this information in a comment string to a data
+field in your class declaration:
+
+~~~ {.cpp}
     class MyClass{
-        Int_t mydata;  // <em> *OPTIONS={GetMethod="Get";SetMethod="Set"} </em>
+        Int_t mydata;  //  *OPTIONS={GetMethod="Get";SetMethod="Set"}
          ...
         Int_t Get() const { return mydata;};
         void  Set(Int_t i) {mydata=i;};
         }
+~~~
+
+However, this getting/setting functions are not the only feature of
+this class. The next point is providing lists of possible settings
+for the concerned data member. The idea is to have a list of possible
+options for this data member, with strings identifying them. This
+is used in dialogs with parameters to set - for details see
+TMethodArg, TRootContextMenu, TContextMenu. This list not only specifies
+the allowed value, but also provides strings naming the options.
+Options are managed via TList of TOptionListItem objects. This list
+is also  created automatically: if a data type is an enum type,
+the list will have items describing every enum value, and named
+according to enum name. If type is Bool_t, two options "On" and "Off"
+with values 0 and 1 are created. For other types you need to instruct
+ROOT about possible options. The way to do it is the same as in case of
+specifying getter/setter method: a comment string to a data field in
+Your header file with class definition.
+The most general format of this string is:
+~~~ {.cpp}
+*OPTIONS={GetMethod="getter";SetMethod="setter";Items=(it1="title1",it2="title2", ... ) }
+~~~
+
+While parsing this string ROOT firstly looks for command-tokens:
+GetMethod, SetMethod, Items; They must be preceded by string
+*OPTIONS= , enclosed by {} and separated by semicolons ";".
+All command token should have a form TOKEN=VALUE.
+All tokens are optional.
+The names of getter and setter method must be enclosed by double-quote
+marks (") .
+Specifications of Items is slightly more complicated: you need to
+put token ITEMS= and then enclose all options in curly brackets "()".
+You separate options by comas ",".
+Each option item may have one of the following forms:
+~~~ {.cpp}
+         IntegerValue  = "Text Label"
+
+         EnumValue     = "Text Label"
+
+        "TextValue" = Text Label"
+
+~~~
+
+One can specify values as Integers or Enums - when data field is an
+Integer, Float or Enum type; as texts - for char (more precisely:
+Option_t).
+
+As mentioned above - this information are mainly used by contextmenu,
+but also in Dump() and Inspect() methods and by the THtml class.
 */
-//</pre>
-//End_Html
-//
-// However, this getting/setting functions are not the only feature of
-// this class. The next point is providing lists of possible settings
-// for the concerned data member. The idea is to have a list of possible
-// options for this data member, with strings identifying them. This
-// is used in dialogs with parameters to set - for details see
-// TMethodArg, TRootContextMenu, TContextMenu. This list not only specifies
-// the allowed value, but also provides strings naming the options.
-// Options are managed via TList of TOptionListItem objects. This list
-// is also  created automatically: if a data type is an enum tynpe,
-// the list will have items describing every enum value, and named
-// according to enum name. If type is Bool_t, two options "On" and "Off"
-// with values 0 and 1 are created. For other types you need to instruct
-// ROOT about possible options. The way to do it is the same as in case of
-// specifying getter/setter method: a comment string to a data field in
-// Your header file with class definition.
-// The most general format of this string is:
-//Begin_Html <pre>
-/*
-
-<em>*OPTIONS={GetMethod="</em>getter<em>";SetMethod="</em>setter<em>";Items=(</em>it1<em>="</em>title1<em>",</em>it2<em>="</em>title2<em>", ... ) } </em>
-
-*/
-//</pre>
-//End_Html
-//
-// While parsing this string ROOT firstly looks for command-tokens:
-// GetMethod, SetMethod, Items; They must be preceded by string
-// *OPTIONS= , enclosed by {} and separated by semicolons ";".
-// All command token should have a form TOKEN=VALUE.
-// All tokens are optional.
-// The names of getter and setter method must be enclosed by double-quote
-// marks (") .
-// Specifications of Items is slightly more complicated: you need to
-// put token ITEMS= and then enclose all options in curly brackets "()".
-// You separate options by comas ",".
-// Each option item may have one of the following forms:
-//Begin_Html <pre>
-/*
-         IntegerValue<em>  = "</em>Text Label<em>"</em>
-
-         EnumValue   <em>  = "</em>Text Label<em>"</em>
-
-        <em>"</em>TextValue<em>" = </em>Text Label<em>"</em>
-
-*/
-//</pre>
-//End_Html
-//
-// One can sepcify values as Integers or Enums - when data field is an
-// Integer, Float or Enum type; as texts - for char (more precisely:
-// Option_t).
-//
-// As mentioned above - this information are mainly used by contextmenu,
-// but also in Dump() and Inspect() methods and by the THtml class.
-//
-//////////////////////////////////////////////////////////////////////////
 
 #include "TDataMember.h"
 
@@ -185,13 +159,13 @@
 
 ClassImp(TDataMember)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TDataMember ctor. TDataMembers are constructed in TClass
+/// via a call to TCling::CreateListOfDataMembers(). It parses the comment
+/// string, initializes optionlist and getter/setter methods.
+
 TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 {
-   // Default TDataMember ctor. TDataMembers are constructed in TClass
-   // via a call to TCling::CreateListOfDataMembers(). It parses the comment
-   // string, initializes optionlist and getter/setter methods.
-
    fInfo        = info;
    fClass       = cl;
    fDataType    = 0;
@@ -208,12 +182,13 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    Init(false);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Routines called by the constructor and Update to reset the member's
+/// information.
+/// afterReading is set when initializing after reading through Streamer().
+
 void TDataMember::Init(bool afterReading)
 {
-   // Routines called by the constructor and Update to reset the member's
-   // information.
-   // afterReading is set when initializing after reading through Streamer().
    const char *t = 0;
    if (!afterReading) {
       // Initialize from fInfo
@@ -387,7 +362,7 @@ void TDataMember::Init(bool afterReading)
             strlcpy(opts,ptr1,2048);
 
             //now parse it...
-            //fistly we just store strings like: xxx="Label Name"
+            //firstly we just store strings like: xxx="Label Name"
             //We'll store it in TOptionListItem objects, because they're derived
             //from TObject and thus can be stored in TList.
             //It's not elegant but works.
@@ -448,7 +423,7 @@ void TDataMember::Init(bool afterReading)
 
       }
 
-      // Garbage colletion
+      // Garbage collection
 
       // dispose of temporary option list...
       delete optionlist;
@@ -482,7 +457,9 @@ void TDataMember::Init(bool afterReading)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TDataMember::TDataMember(const TDataMember& dm) :
   TDictionary(dm),
   fInfo(gCling->DataMemberInfo_FactoryCopy(dm.fInfo)),
@@ -501,15 +478,15 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fValueSetter(0),
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 {
-   //copy constructor
    for(Int_t d = 0; d < fArrayDim; ++d)
       fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 TDataMember& TDataMember::operator=(const TDataMember& dm)
 {
-   //assignement operator
    if(this!=&dm) {
       gCling->DataMemberInfo_Delete(fInfo);
       delete fValueSetter;
@@ -540,11 +517,11 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TDataMember dtor deletes adopted CINT DataMemberInfo object.
+
 TDataMember::~TDataMember()
 {
-   // TDataMember dtor deletes adopted CINT DataMemberInfo object.
-
    delete [] fArrayMaxIndex;
    gCling->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
@@ -555,11 +532,11 @@ TDataMember::~TDataMember()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of array dimensions.
+
 Int_t TDataMember::GetArrayDim() const
 {
-   // Return number of array dimensions.
-
    if (fArrayDim<0 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
       TDataMember *dm = const_cast<TDataMember*>(this);
@@ -575,13 +552,13 @@ Int_t TDataMember::GetArrayDim() const
    return fArrayDim;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the data member is pointer and has a valid array size in its comments
+/// GetArrayIndex returns a string pointing to it;
+/// otherwise it returns an empty string.
+
 const char *TDataMember::GetArrayIndex() const
 {
-   // If the data member is pointer and has a valid array size in its comments
-   // GetArrayIndex returns a string pointing to it;
-   // otherwise it returns an empty string.
-
    if (!IsaPointer()) return "";
    if (fArrayIndex.Length()==0 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
@@ -593,18 +570,19 @@ const char *TDataMember::GetArrayIndex() const
    return fArrayIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDictionary::DeclId_t TDataMember::GetDeclId() const
 {
    if (fInfo) return gInterpreter->GetDeclId(fInfo);
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum index for array dimension "dim".
+
 Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
-   // Return maximum index for array dimension "dim".
-
    if (fArrayDim<0 && fInfo) {
       return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
    } else {
@@ -613,37 +591,38 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
+
 const char *TDataMember::GetTypeName() const
 {
-   // Get type of data member, e,g.: "class TDirectory*" -> "TDirectory".
-
    if (fProperty==(-1)) Property();
    return fTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of data member, e,g.: "class TDirectory*".
+
 const char *TDataMember::GetFullTypeName() const
 {
-   // Get full type description of data member, e,g.: "class TDirectory*".
    if (fProperty==(-1)) Property();
 
    return fFullTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of data member, e,g.: "class TDirectory*".
+
 const char *TDataMember::GetTrueTypeName() const
 {
-   // Get full type description of data member, e,g.: "class TDirectory*".
-
    return fTrueTypeName.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get offset from "this".
+
 Long_t TDataMember::GetOffset() const
 {
-   // Get offset from "this".
-
    if (fOffset>=0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -688,11 +667,11 @@ Long_t TDataMember::GetOffset() const
    return fOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get offset from "this" using the information in CINT only.
+
 Long_t TDataMember::GetOffsetCint() const
 {
-   // Get offset from "this" using the information in CINT only.
-
    if (fOffset>=0) return fOffset;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -702,12 +681,12 @@ Long_t TDataMember::GetOffsetCint() const
    else return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the sizeof the underlying type of the data member
+/// (i.e. if the member is an array sizeof(member)/length)
+
 Int_t TDataMember::GetUnitSize() const
 {
-   // Get the sizeof the underlying type of the data member
-   // (i.e. if the member is an array sizeof(member)/length)
-
    if (IsaPointer()) return sizeof(void*);
    if (IsEnum()    ) return sizeof(Int_t);
    if (IsBasic()   ) return GetDataType()->Size();
@@ -720,51 +699,51 @@ Int_t TDataMember::GetUnitSize() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is a basic type, e.g. char, int, long...
+
 Bool_t TDataMember::IsBasic() const
 {
-   // Return true if data member is a basic type, e.g. char, int, long...
-
    if (fProperty == -1) Property();
    return (fProperty & kIsFundamental) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is an enum.
+
 Bool_t TDataMember::IsEnum() const
 {
-   // Return true if data member is an enum.
-
    if (fProperty == -1) Property();
    return (fProperty & kIsEnum) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if data member is a pointer.
+
 Bool_t TDataMember::IsaPointer() const
 {
-   // Return true if data member is a pointer.
-
    if (fProperty == -1) Property();
    return (fProperty & kIsPointer) ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The return type is defined in TDictionary (kVector, kList, etc.)
+
 int TDataMember::IsSTLContainer()
 {
-   // The return type is defined in TDictionary (kVector, kList, etc.)
-
    if (fSTLCont != -1) return fSTLCont;
    R__LOCKGUARD(gInterpreterMutex);
-   fSTLCont = TClassEdit::IsSTLCont(GetTrueTypeName());
+   fSTLCont = TClassEdit::UnderlyingIsSTLCont(GetTrueTypeName());
    return fSTLCont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this data member object is pointing to a currently
+/// loaded data member.  If a function is unloaded after the TDataMember
+/// is created, the TDataMember will be set to be invalid.
+
 Bool_t TDataMember::IsValid()
 {
-   // Return true if this data member object is pointing to a currently
-   // loaded data member.  If a function is unloaded after the TDataMember
-   // is created, the TDataMember will be set to be invalid.
-
    if (fOffset >= 0) return kTRUE;
 
    // Register the transaction when checking the validity of the object.
@@ -784,11 +763,11 @@ Bool_t TDataMember::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TDataMember::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    if (fProperty!=(-1)) return fProperty;
 
    R__LOCKGUARD(gInterpreterMutex);
@@ -809,23 +788,23 @@ Long_t TDataMember::Property() const
    return fProperty;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list of options - list of TOptionListItems
+
 TList *TDataMember::GetOptions() const
 {
-   // Returns list of options - list of TOptionListItems
-
    return fOptions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a TMethodCall method responsible for getting the value
+/// of data member. The cl argument specifies the class of the object
+/// which will be used to call this method (in case of multiple
+/// inheritance TMethodCall needs to know this to calculate the proper
+/// offset).
+
 TMethodCall *TDataMember::GetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for getting the value
-   // of data member. The cl argument specifies the class of the object
-   // which will be used to call this method (in case of multiple
-   // inheritance TMethodCall needs to know this to calculate the proper
-   // offset).
-
    if (!fValueGetter || cl) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -861,15 +840,15 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
    return fValueGetter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a TMethodCall method responsible for setting the value
+/// of data member. The cl argument specifies the class of the object
+/// which will be used to call this method (in case of multiple
+/// inheritance TMethodCall needs to know this to calculate the proper
+/// offset).
+
 TMethodCall *TDataMember::SetterMethod(TClass *cl)
 {
-   // Return a TMethodCall method responsible for setting the value
-   // of data member. The cl argument specifies the class of the object
-   // which will be used to call this method (in case of multiple
-   // inheritance TMethodCall needs to know this to calculate the proper
-   // offset).
-
    if (!fValueSetter || cl) {
 
       R__LOCKGUARD(gInterpreterMutex);
@@ -905,14 +884,14 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
    return fValueSetter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TFunction to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TDataMember::Update(DataMemberInfo_t *info)
 {
-   // Update the TFunction to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    R__LOCKGUARD(gInterpreterMutex);
 
    if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
@@ -942,10 +921,11 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of TDataMember. Forces calculation of all cached
+/// (and persistent) values.
+
 void TDataMember::Streamer(TBuffer& b) {
-   // Stream an object of TDataMember. Forces calculation of all cached
-   // (and persistent) values.
    if (b.IsReading()) {
       b.ReadClassBuffer(Class(), this);
       Init(true /*reading*/);
@@ -967,12 +947,12 @@ void TDataMember::Streamer(TBuffer& b) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
                  Long_t tglmask,const char *name, const char *label)
 {
-   // Constuctor.
-
    fDataMember    = d;
    fValue         = val;
    fValueMaskBit  = valmask;
@@ -981,7 +961,7 @@ TOptionListItem::TOptionListItem(TDataMember *d, Long_t val, Long_t valmask,
       fOptName = name;
    }
 
-   if(label) {
-      fOptLabel = fOptLabel;
+   if (label) {
+      fOptLabel = label;
    }
 }

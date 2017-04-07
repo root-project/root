@@ -1,12 +1,17 @@
-// Example on how to use the new Minimizer class in ROOT
-//  Show usage with all the possible minimizers.
-// Minimize the Rosenbrock function (a 2D -function)
-// This example is described also in
-// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
-// input : minimizer name + algorithm name
-// randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
-//
-//Author: L. Moneta Dec 2010
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -nodraw
+/// Example on how to use the new Minimizer class in ROOT
+///  Show usage with all the possible minimizers.
+/// Minimize the Rosenbrock function (a 2D -function)
+/// This example is described also in
+/// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
+/// input : minimizer name + algorithm name
+/// randomSeed: = <0 : fixed value: 0 random with seed 0; >0 random with given seed
+///
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
@@ -40,16 +45,16 @@ int NumericalMinimization(const char * minName = "Minuit2",
    //  GSLMultiFit
    //   GSLSimAn
    //   Genetic
-   ROOT::Math::Minimizer* min =
+   ROOT::Math::Minimizer* minimum =
       ROOT::Math::Factory::CreateMinimizer(minName, algoName);
 
    // set tolerance , etc...
-   min->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
-   min->SetMaxIterations(10000);  // for GSL
-   min->SetTolerance(0.001);
-   min->SetPrintLevel(1);
+   minimum->SetMaxFunctionCalls(1000000); // for Minuit/Minuit2
+   minimum->SetMaxIterations(10000);  // for GSL
+   minimum->SetTolerance(0.001);
+   minimum->SetPrintLevel(1);
 
-   // create funciton wrapper for minmizer
+   // create function wrapper for minimizer
    // a IMultiGenFunction type
    ROOT::Math::Functor f(&RosenBrock,2);
    double step[2] = {0.01,0.01};
@@ -62,21 +67,21 @@ int NumericalMinimization(const char * minName = "Minuit2",
       variable[1] = r.Uniform(-20,20);
    }
 
-   min->SetFunction(f);
+   minimum->SetFunction(f);
 
-   // Set the free variables to be minimized!
-   min->SetVariable(0,"x",variable[0], step[0]);
-   min->SetVariable(1,"y",variable[1], step[1]);
+   // Set the free variables to be minimized !
+   minimum->SetVariable(0,"x",variable[0], step[0]);
+   minimum->SetVariable(1,"y",variable[1], step[1]);
 
    // do the minimization
-   min->Minimize();
+   minimum->Minimize();
 
-   const double *xs = min->X();
+   const double *xs = minimum->X();
    std::cout << "Minimum: f(" << xs[0] << "," << xs[1] << "): "
-             << min->MinValue()  << std::endl;
+             << minimum->MinValue()  << std::endl;
 
    // expected minimum is 0
-   if ( min->MinValue()  < 1.E-4  && f(xs) < 1.E-4)
+   if ( minimum->MinValue()  < 1.E-4  && f(xs) < 1.E-4)
       std::cout << "Minimizer " << minName << " - " << algoName
                 << "   converged to the right minimum" << std::endl;
    else {

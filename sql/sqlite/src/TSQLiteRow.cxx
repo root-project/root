@@ -14,36 +14,36 @@
 
 ClassImp(TSQLiteRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TSQLiteRow::TSQLiteRow(void *res, ULong_t /*rowHandle*/)
 {
-   // Single row of query result.
-
    fResult = (sqlite3_stmt *) res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TSQLiteRow::~TSQLiteRow()
 {
-   // Destroy row object.
-
    if (fResult)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TSQLiteRow::Close(Option_t *)
 {
-   // Close row.
-
    fResult = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TSQLiteRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (field < 0 || field >= (Int_t)sqlite3_column_count(fResult)) {
       Error("IsValid", "field index out of bounds");
       return kFALSE;
@@ -51,11 +51,11 @@ Bool_t TSQLiteRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TSQLiteRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -73,11 +73,11 @@ ULong_t TSQLiteRow::GetFieldLength(Int_t field)
    return fieldLength;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TSQLiteRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if (!IsValid(field))
       return 0;
 

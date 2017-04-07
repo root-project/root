@@ -11,17 +11,12 @@
 #ifndef ROOT_Math_GoFTest
 #define ROOT_Math_GoFTest
 
+#include "Math/WrappedFunction.h"
+#include "TMath.h"
+
 #include <memory>
 
-#ifndef ROOT_Math_WrappedFunction
-#include "Math/WrappedFunction.h"
-#endif
-#ifndef ROOT_TMath
-#include "TMath.h"
-#endif
-
 /*
-  Goodness of Fit Statistical Tests Toolkit -- Anderson-Darling and Kolmogorov-Smirnov 1- and 2-Samples Tests
 */
 
 namespace ROOT {
@@ -31,6 +26,15 @@ namespace ROOT {
    }
 namespace Math {
 
+/////  @defgroup GoFClasses Goodness of Fit Statistical Tests Tools 
+   
+/*
+  Class for Goodness of Fit tests implementing the Anderson-Darling and Kolmogorov-Smirnov 1- and 2-Samples Goodness of Fit Tests.
+  @ingroup MathCore
+
+ */
+
+   
 class GoFTest {
 public:
 
@@ -174,7 +178,7 @@ private:
    GoFTest(GoFTest& gof);           // Disallowed copy constructor
    GoFTest operator=(GoFTest& gof); // Disallowed assign operator
 
-   std::auto_ptr<IGenFunction> fCDF;
+   std::unique_ptr<IGenFunction> fCDF;
 
 
    EDistribution fDist;

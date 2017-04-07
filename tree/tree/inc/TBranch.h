@@ -23,22 +23,15 @@
 //     the list of TLeaves (branch description)                         //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TDataType
 #include "TDataType.h"
-#endif
 
 class TTree;
 class TBasket;
@@ -55,57 +48,66 @@ class TTreeCloner;
    const Int_t kBranchAny    = BIT(17); // branch is an object*
    const Int_t kMapObject    = kBranchObject | kBranchAny;
 
+namespace ROOT {
+  namespace Internal {
+    class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
+  }
+}
+
 class TBranch : public TNamed , public TAttFill {
 
 protected:
    friend class TTreeCloner;
+   friend class TTree;
+
    // TBranch status bits
    enum EStatusBits {
       kAutoDelete = BIT(15),
       kDoNotUseBufferMap = BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    };
 
-   static Int_t fgCount;          //! branch counter
-   Int_t       fCompress;        //  Compression level and algorithm
-   Int_t       fBasketSize;      //  Initial Size of  Basket Buffer
-   Int_t       fEntryOffsetLen;  //  Initial Length of fEntryOffset table in the basket buffers
-   Int_t       fWriteBasket;     //  Last basket number written
-   Long64_t    fEntryNumber;     //  Current entry number (last one filled in this branch)
-   Int_t       fOffset;          //  Offset of this branch
-   Int_t       fMaxBaskets;      //  Maximum number of Baskets so far
-   Int_t       fNBaskets;        //! Number of baskets in memory
-   Int_t       fSplitLevel;      //  Branch split level
-   Int_t       fNleaves;         //! Number of leaves
-   Int_t       fReadBasket;      //! Current basket number when reading
-   Long64_t    fReadEntry;       //! Current entry number when reading
-   Long64_t    fFirstBasketEntry;//! First entry in the current basket.
-   Long64_t    fNextBasketEntry; //! Next entry that will requires us to go to the next basket
-   TBasket    *fCurrentBasket;   //! Pointer to the current basket.
-   Long64_t    fEntries;         //  Number of entries
-   Long64_t    fFirstEntry;      //  Number of the first entry in this branch
-   Long64_t    fTotBytes;        //  Total number of bytes in all leaves before compression
-   Long64_t    fZipBytes;        //  Total number of bytes in all leaves after compression
-   TObjArray   fBranches;        //-> List of Branches of this branch
-   TObjArray   fLeaves;          //-> List of leaves of this branch
-   TObjArray   fBaskets;         //-> List of baskets of this branch
-   Int_t      *fBasketBytes;     //[fMaxBaskets] Length of baskets on file
-   Long64_t   *fBasketEntry;     //[fMaxBaskets] Table of first entry in each basket
-   Long64_t   *fBasketSeek;      //[fMaxBaskets] Addresses of baskets on file
-   TTree      *fTree;            //! Pointer to Tree header
-   TBranch    *fMother;          //! Pointer to top-level parent branch in the tree.
-   TBranch    *fParent;          //! Pointer to parent branch.
-   char       *fAddress;         //! Address of 1st leaf (variable or object)
-   TDirectory *fDirectory;       //! Pointer to directory where this branch buffers are stored
-   TString     fFileName;        //  Name of file where buffers are stored ("" if in same file as Tree header)
-   TBuffer    *fEntryBuffer;     //! Buffer used to directly pass the content without streaming
-   TList      *fBrowsables;      //! List of TVirtualBranchBrowsables used for Browse()
+   static Int_t fgCount;          ///<! branch counter
+   Int_t       fCompress;         ///<  Compression level and algorithm
+   Int_t       fBasketSize;       ///<  Initial Size of  Basket Buffer
+   Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
+   Int_t       fWriteBasket;      ///<  Last basket number written
+   Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
+   Int_t       fOffset;           ///<  Offset of this branch
+   Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
+   Int_t       fNBaskets;         ///<! Number of baskets in memory
+   Int_t       fSplitLevel;       ///<  Branch split level
+   Int_t       fNleaves;          ///<! Number of leaves
+   Int_t       fReadBasket;       ///<! Current basket number when reading
+   Long64_t    fReadEntry;        ///<! Current entry number when reading
+   Long64_t    fFirstBasketEntry; ///<! First entry in the current basket.
+   Long64_t    fNextBasketEntry;  ///<! Next entry that will requires us to go to the next basket
+   TBasket    *fCurrentBasket;    ///<! Pointer to the current basket.
+   Long64_t    fEntries;          ///<  Number of entries
+   Long64_t    fFirstEntry;       ///<  Number of the first entry in this branch
+   Long64_t    fTotBytes;         ///<  Total number of bytes in all leaves before compression
+   Long64_t    fZipBytes;         ///<  Total number of bytes in all leaves after compression
+   TObjArray   fBranches;         ///< -> List of Branches of this branch
+   TObjArray   fLeaves;           ///< -> List of leaves of this branch
+   TObjArray   fBaskets;          ///< -> List of baskets of this branch
+   Int_t      *fBasketBytes;      ///<[fMaxBaskets] Length of baskets on file
+   Long64_t   *fBasketEntry;      ///<[fMaxBaskets] Table of first entry in each basket
+   Long64_t   *fBasketSeek;       ///<[fMaxBaskets] Addresses of baskets on file
+   TTree      *fTree;             ///<! Pointer to Tree header
+   TBranch    *fMother;           ///<! Pointer to top-level parent branch in the tree.
+   TBranch    *fParent;           ///<! Pointer to parent branch.
+   char       *fAddress;          ///<! Address of 1st leaf (variable or object)
+   TDirectory *fDirectory;        ///<! Pointer to directory where this branch buffers are stored
+   TString     fFileName;         ///<  Name of file where buffers are stored ("" if in same file as Tree header)
+   TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
+   TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
+   TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
 
-   Bool_t      fSkipZip;         //! After being read, the buffer will not be unziped.
+   Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
    typedef void (TBranch::*ReadLeaves_t)(TBuffer &b);
-   ReadLeaves_t fReadLeaves;     //! Pointer to the ReadLeaves implementation to use.
+   ReadLeaves_t fReadLeaves;      ///<! Pointer to the ReadLeaves implementation to use.
    typedef void (TBranch::*FillLeaves_t)(TBuffer &b);
-   FillLeaves_t fFillLeaves;     //! Pointer to the FillLeaves implementation to use.
+   FillLeaves_t fFillLeaves;      ///<! Pointer to the FillLeaves implementation to use.
    void     ReadLeavesImpl(TBuffer &b);
    void     ReadLeaves0Impl(TBuffer &b);
    void     ReadLeaves1Impl(TBuffer &b);
@@ -116,14 +118,15 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
-   Int_t    WriteBasket(TBasket* basket, Int_t where);
+   Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
 private:
    Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
-   TBranch(const TBranch&);             // not implemented
-   TBranch& operator=(const TBranch&);  // not implemented
+   Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
+   TBranch(const TBranch&) = delete;             // not implemented
+   TBranch& operator=(const TBranch&) = delete;  // not implemented
 
 public:
    TBranch();
@@ -137,7 +140,8 @@ public:
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
-   virtual Int_t     Fill();
+           Int_t     Fill() { return FillImpl(nullptr); }
+   virtual Int_t     FillImpl(ROOT::Internal::TBranchIMTHelper *);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);
            Int_t     FlushBaskets();
@@ -185,6 +189,7 @@ public:
    virtual Bool_t    GetMakeClass() const;
    TBranch          *GetMother() const;
    TBranch          *GetSubBranch(const TBranch *br) const;
+   TBuffer          *GetTransientBuffer(Int_t size);
    Bool_t            IsAutoDelete() const;
    Bool_t            IsFolder() const;
    virtual void      KeepCircular(Long64_t maxEntries);

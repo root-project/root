@@ -34,7 +34,6 @@ struct SelectorDescriptor {
   const char *SelectorName;
   unsigned ArgumentCount;
 };
-}
 
 //===----------------------------------------------------------------------===//
 // FindSuperCallVisitor - Identify specific calls to the superclass.
@@ -50,7 +49,7 @@ public:
         DoesCallSuper = true;
 
     // Recurse if we didn't find the super call yet.
-    return !DoesCallSuper; 
+    return !DoesCallSuper;
   }
 
   bool DoesCallSuper;
@@ -60,10 +59,9 @@ private:
 };
 
 //===----------------------------------------------------------------------===//
-// ObjCSuperCallChecker 
+// ObjCSuperCallChecker
 //===----------------------------------------------------------------------===//
 
-namespace {
 class ObjCSuperCallChecker : public Checker<
                                       check::ASTDecl<ObjCImplementationDecl> > {
 public:
@@ -90,7 +88,7 @@ private:
 /// \param[out] SuperclassName On return, the found superclass name.
 bool ObjCSuperCallChecker::isCheckableClass(const ObjCImplementationDecl *D,
                                             StringRef &SuperclassName) const {
-  const ObjCInterfaceDecl *ID = D->getClassInterface();
+  const ObjCInterfaceDecl *ID = D->getClassInterface()->getSuperClass();
   for ( ; ID ; ID = ID->getSuperClass())
   {
     SuperclassName = ID->getIdentifier()->getName();
@@ -204,7 +202,7 @@ void ObjCSuperCallChecker::checkASTDecl(const ObjCImplementationDecl *D,
         SmallString<320> Buf;
         llvm::raw_svector_ostream os(Buf);
 
-        os << "The '" << S.getAsString() 
+        os << "The '" << S.getAsString()
            << "' instance method in " << SuperclassName.str() << " subclass '"
            << *D << "' is missing a [super " << S.getAsString() << "] call";
 

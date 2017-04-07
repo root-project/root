@@ -9,79 +9,74 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TCutG
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Graphical cut class</h2></center>
-A Graphical cut.
-<p>
+Graphical cut class.
+
 A TCutG object is a closed polygon defining a closed region in a x,y plot.
 It can be created via the graphics editor option "CutG" or directly by
 invoking its constructor. The first and last points should be the same.
-<p>
+
 To create a TCutG via the graphics editor, use the left button to select the
 points building the contour of the cut. Click on the right button to close the
 TCutG. When it is created via the graphics editor, the TCutG object is named
-"CUTG". It is recommended to immediatly change the name by using the context
+"CUTG". It is recommended to immediately change the name by using the context
 menu item "SetName". When the graphics editor is used, the names of the
 variables X,Y are automatically taken from the current pad title.
-<p>
-Example:
-<p>
-Assume a TTree object T and:
-<pre>
-     Root > T.Draw("abs(fMomemtum)%fEtot")
-</pre>
-the TCutG members fVarX, fVary will be set to:
-<pre>
-     fVarx = fEtot
-     fVary = abs(fMomemtum)
-</pre>
 
+Example:
+
+Assume a TTree object T and:
+~~~ {.cpp}
+    Root > T.Draw("abs(fMomemtum)%fEtot")
+~~~
+the TCutG members fVarX, fVary will be set to:
+~~~ {.cpp}
+    fVarx = fEtot
+    fVary = abs(fMomemtum)
+~~~
 A graphical cut can be used in a TTree selection expression:
-<pre>
+~~~ {.cpp}
     Root > T.Draw("fEtot","cutg1")
-</pre>
+~~~
 where "cutg1" is the name of an existing graphical cut.
-<p>
+
 Note that, as shown in the example above, a graphical cut may be used in a
 selection expression when drawing TTrees expressions of 1-d, 2-d or
 3-dimensions. The expressions used in TTree::Draw can reference the variables in
 the fVarX, fVarY of the graphical cut plus other variables.
-<p>
+
 When the TCutG object is created by TTree::Draw, it is added to the list of special objects in
 the main TROOT object pointed by gROOT. To retrieve a pointer to this object
 from the code or command line, do:
-<pre>
+~~~ {.cpp}
     TCutG *mycutg;
     mycutg = (TCutG*)gROOT->GetListOfSpecials()->FindObject("CUTG")
     mycutg->SetName("mycutg");
-</pre>
-<p>
+~~~
 When the TCutG is not created via TTree::Draw, one must set the variable names
 corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
-<pre>
-   TCutG *cutg = new TCutG("mycut",5);
-   cutg->SetVarX("y");
-   cutg->SetVarY("x");
-   cutg->SetPoint(0,-0.3586207,1.509534);
-   cutg->SetPoint(1,-1.894181,-0.529661);
-   cutg->SetPoint(2,0.07780173,-1.21822);
-   cutg->SetPoint(3,-1.0375,-0.07944915);
-   cutg->SetPoint(4,0.756681,0.1853814);
-   cutg->SetPoint(5,-0.3586207,1.509534);
-</pre>
-<p>
+~~~ {.cpp}
+    TCutG *cutg = new TCutG("mycut",6);
+    cutg->SetVarX("y");
+    cutg->SetVarY("x");
+    cutg->SetPoint(0,-0.3586207,1.509534);
+    cutg->SetPoint(1,-1.894181,-0.529661);
+    cutg->SetPoint(2,0.07780173,-1.21822);
+    cutg->SetPoint(3,-1.0375,-0.07944915);
+    cutg->SetPoint(4,0.756681,0.1853814);
+    cutg->SetPoint(5,-0.3586207,1.509534);
+~~~
 Example of use of a TCutG in TTree::Draw:
-<pre>
-   tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
-</pre>
-<p>
+~~~ {.cpp}
+    tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
+~~~
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph.
-<p>
+
 A Graphical cut may be saved to a file via TCutG::Write.
-End_Html */
+*/
 
 #include <string.h>
 
@@ -96,36 +91,33 @@ End_Html */
 
 ClassImp(TCutG)
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG default constructor.
 
-//______________________________________________________________________________
 TCutG::TCutG() : TGraph()
 {
-   // TCutG default constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG copy constructor
 
-//______________________________________________________________________________
 TCutG::TCutG(const TCutG &cutg)
       :TGraph(cutg)
 {
-   // TCutG copy constructor
-
    fVarX    = cutg.fVarX;
    fVarY    = cutg.fVarY;
    fObjectX = cutg.fObjectX;
    fObjectY = cutg.fObjectY;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
 
-//______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n)
       :TGraph(n)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -161,13 +153,12 @@ TCutG::TCutG(const char *name, Int_t n)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
 
-//______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -203,13 +194,12 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG normal constructor.
 
-//______________________________________________________________________________
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
-   // TCutG normal constructor.
-
    fObjectX  = 0;
    fObjectY  = 0;
    SetName(name);
@@ -245,21 +235,22 @@ TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCutG destructor.
+
 TCutG::~TCutG()
 {
-   // TCutG destructor.
-
    delete fObjectX;
    delete fObjectY;
-   gROOT->GetListOfSpecials()->Remove(this);
+   if ( gROOT && !gROOT->TestBit( TObject::kInvalidObject ) )
+      gROOT->GetListOfSpecials()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TCutG &TCutG::operator=(const TCutG &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       TGraph::operator=(rhs);
       delete fObjectX;
@@ -270,13 +261,14 @@ TCutG &TCutG::operator=(const TCutG &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the area inside this TCutG
+/// The algorithm uses Stoke's theorem over the border of the closed polygon.
+/// Just as a reminder: Stoke's theorem reduces a surface integral
+/// to a line integral over the border of the surface integral.
+
 Double_t TCutG::Area() const
 {
-   // Compute the area inside this TCutG
-   // The algorithm uses Stoke's theorem over the border of the closed polygon.
-   // Just as a reminder: Stoke's theorem reduces a surface integral
-   // to a line integral over the border of the surface integral.
    Double_t a = 0;
    Int_t n = GetN();
    for (Int_t i=0;i<n-1;i++) {
@@ -286,13 +278,14 @@ Double_t TCutG::Area() const
    return a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the center x,y of this TCutG
+/// The algorithm uses Stoke's theorem over the border of the closed polygon.
+/// Just as a reminder: Stoke's theorem reduces a surface integral
+/// to a line integral over the border of the surface integral.
+
 void TCutG::Center(Double_t &cx, Double_t &cy) const
 {
-   // Compute the center x,y of this TCutG
-   // The algorithm uses Stoke's theorem over the border of the closed polygon.
-   // Just as a reminder: Stoke's theorem reduces a surface integral
-   // to a line integral over the border of the surface integral.
    Int_t n = GetN();
    Double_t a  = 0;
    cx = cy = 0;
@@ -308,13 +301,13 @@ void TCutG::Center(Double_t &cx, Double_t &cy) const
    cy *= 1./(6*a);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the integral of 2-d histogram h for all bins inside the cut
+/// if option "width" is specified, the integral is the sum of
+/// the bin contents multiplied by the bin width in x and in y.
+
 Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
 {
-   // Compute the integral of 2-d histogram h for all bins inside the cut
-   // if option "width" is specified, the integral is the sum of
-   // the bin contents multiplied by the bin width in x and in y.
-
    if (!h) return 0;
    Int_t n = GetN();
    Double_t xmin= 1e200;
@@ -355,12 +348,11 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
    return integral;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
 
-//______________________________________________________________________________
 void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TCutG::Class())) {
@@ -384,51 +376,49 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       <<quote<<option<<quote<<");"<<std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the X object (and delete the previous one if any).
+
 void TCutG::SetObjectX(TObject *obj)
 {
-   // Set the X object (and delete the previous one if any).
-
    delete fObjectX;
    fObjectX = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the Y object (and delete the previous one if any).
+
 void TCutG::SetObjectY(TObject *obj)
 {
-   // Set the Y object (and delete the previous one if any).
-
    delete fObjectY;
    fObjectY = obj;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X variable.
+
 void TCutG::SetVarX(const char *varx)
 {
-   // Set X variable.
-
    fVarX = varx;
    delete fObjectX;
    fObjectX = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y variable.
 
-//______________________________________________________________________________
 void TCutG::SetVarY(const char *vary)
 {
-   // Set Y variable.
-
    fVarY = vary;
    delete fObjectY;
    fObjectY = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TCutG.
 
-//______________________________________________________________________________
 void TCutG::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TCutG.
-
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TCutG::Class(), this);
       gROOT->GetListOfSpecials()->Add(this);

@@ -1,12 +1,17 @@
-//
-// Author: Ilka Antcheva   1/12/2006
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to create a status bar related to an embedded canvas that shows the info of the selected object,
+/// exactly as the status bar of any canvas window.
+/// To run it do either:
+/// ~~~
+/// .x statusBar.C
+/// .x statusBar.C++
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   1/12/2006
 
-// This macro gives an example of how to create a status bar
-// related to an embedded canvas that shows the info of the selected object
-// exactly as the status bar of any canvas window
-// To run it do either:
-// .x statusBar.C
-// .x statusBar.C++
 
 #include <TApplication.h>
 #include <TGClient.h>

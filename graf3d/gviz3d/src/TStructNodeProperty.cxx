@@ -26,36 +26,36 @@ ClassImp(TStructNodeProperty);
 //
 //////////////////////////////////////////////////////////////////////////
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Contructs a TStructNodeProperty with p as parent window for class "name" with color "color".
+
 TStructNodeProperty::TStructNodeProperty(const char * name, Int_t color)
 {
-   // Contructs a TStructNodeProperty with p as parent window for class "name" with color "color".
-
    SetName(name);
    SetColor(color);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Contructs a TStructNodeProperty with p as parent window for class "name" with color "pixel".
+
 TStructNodeProperty::TStructNodeProperty(const char * name, Pixel_t pixel)
 {
-   // Contructs a TStructNodeProperty with p as parent window for class "name" with color "pixel".
-
    SetName(name);
    SetColor(pixel);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TStructNodeProperty::~TStructNodeProperty()
 {
-   // Destructor
-
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overrided method. Compare two objects of TStructNodeProperty class
+
 Int_t TStructNodeProperty::Compare(const TObject* obj) const
 {
-   // Overrided method. Compare two objects of TStructNodeProperty class
-
 
    // Default color "+" should be at the end.
    if (fName == "+") {
@@ -106,50 +106,50 @@ Int_t TStructNodeProperty::Compare(const TObject* obj) const
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns color of class
+
 TColor TStructNodeProperty::GetColor() const
 {
-   // Returns color of class
-
    return fColor;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return color in Pixel_t format
+
 Pixel_t TStructNodeProperty::GetPixel() const
 {
-   // Return color in Pixel_t format
-
    return fColor.GetPixel();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retruns true, because we have overrided method Compare
+
 Bool_t TStructNodeProperty::IsSortable() const
 {
-   // Retruns true, because we have overrided method Compare
-
    return true;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the color to "color"
+
 void TStructNodeProperty::SetColor(const TColor & color)
 {
-   // Sets the color to "color"
-
    fColor = color;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets  the color to "color"
+
 void TStructNodeProperty::SetColor(Int_t color)
 {
-   // Sets  the color to "color"
-
    fColor = *(gROOT->GetColor(color));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the color to "pixel"
+
 void TStructNodeProperty::SetColor(Pixel_t pixel)
 {
-   // Sets the color to "pixel"
-
    SetColor(TColor::GetColor(pixel));
 }

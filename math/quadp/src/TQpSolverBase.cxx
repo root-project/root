@@ -56,11 +56,11 @@
 
 ClassImp(TQpSolverBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TQpSolverBase::TQpSolverBase()
 {
-// Default constructor
-
    fSys = 0;
 
    fDnorm = 0.;
@@ -86,20 +86,20 @@ TQpSolverBase::TQpSolverBase()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpSolverBase::TQpSolverBase(const TQpSolverBase &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deconstructor
+
 TQpSolverBase::~TQpSolverBase()
 {
-// Deconstructor
-
    if (fSys) { delete fSys; fSys = 0; }
 
    if (fMu_history) { delete [] fMu_history;      fMu_history      = 0; }
@@ -109,25 +109,25 @@ TQpSolverBase::~TQpSolverBase()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implements a default starting-point heuristic. While interior-point theory
+///  places fairly loose restrictions on the choice of starting point, the choice
+/// of heuristic can significantly affect the robustness and efficiency of the
+///  algorithm.
+
 void TQpSolverBase::Start(TQpProbBase *formulation,TQpVar *iterate,TQpDataBase *prob,
                           TQpResidual *resid,TQpVar *step)
 {
-// Implements a default starting-point heuristic. While interior-point theory
-//  places fairly loose restrictions on the choice of starting point, the choice
-// of heuristic can significantly affect the robustness and efficiency of the
-//  algorithm.
-
    this->DefStart(formulation,iterate,prob,resid,step);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default starting point
+
 void TQpSolverBase::DefStart(TQpProbBase * /* formulation */,TQpVar *iterate,
                              TQpDataBase *prob,TQpResidual *resid,TQpVar *step)
 {
-// Default starting point
-
    Double_t sdatanorm = TMath::Sqrt(fDnorm);
    Double_t a         = sdatanorm;
    Double_t b         = sdatanorm;
@@ -148,13 +148,13 @@ void TQpSolverBase::DefStart(TQpProbBase * /* formulation */,TQpVar *iterate,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Starting point algoritm according to Stephen Wright
+
 void TQpSolverBase::SteveStart(TQpProbBase * /* formulation */,
                                TQpVar *iterate,TQpDataBase *prob,
                                TQpResidual *resid,TQpVar *step)
 {
-// Starting point algoritm according to Stephen Wright
-
    Double_t sdatanorm = TMath::Sqrt(fDnorm);
    Double_t a = 0.0;
    Double_t b = 0.0;
@@ -194,15 +194,15 @@ void TQpSolverBase::SteveStart(TQpProbBase * /* formulation */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Alternative starting point heuristic: sets the "complementary" variables to a large
+/// positive value (based on the norm of the problem data) and the remaining variables
+/// to zero .
+
 void TQpSolverBase::DumbStart(TQpProbBase * /* formulation */,
                               TQpVar *iterate,TQpDataBase * /* prob */,
                               TQpResidual * /* resid */,TQpVar * /* step */)
 {
-// Alternative starting point heuristic: sets the "complementary" variables to a large
-// positive value (based on the norm of the problem data) and the remaining variables
-// to zero .
-
    const Double_t sdatanorm = fDnorm;
    const Double_t a = 1.e3;
    const Double_t b = 1.e5;
@@ -211,12 +211,12 @@ void TQpSolverBase::DumbStart(TQpProbBase * /* formulation */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implements a version of Mehrotra starting point heuristic,
+///  modified to ensure identical steps in the primal and dual variables.
+
 Double_t TQpSolverBase::FinalStepLength(TQpVar *iterate,TQpVar *step)
 {
-// Implements a version of Mehrotra starting point heuristic,
-//  modified to ensure identical steps in the primal and dual variables.
-
    Int_t firstOrSecond;
    Double_t primalValue; Double_t primalStep; Double_t dualValue; Double_t dualStep;
    const Double_t maxAlpha = iterate->FindBlocking(step,primalValue,primalStep,
@@ -249,35 +249,35 @@ Double_t TQpSolverBase::FinalStepLength(TQpVar *iterate,TQpVar *step)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Monitor progress / convergence aat each interior-point iteration
+
 void TQpSolverBase::DoMonitor(TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
                               Double_t alpha,Double_t sigma,Int_t i,Double_t mu,
                               Int_t stop_code,Int_t level)
 {
-// Monitor progress / convergence aat each interior-point iteration
-
    this->DefMonitor(data,vars,resids,alpha,sigma,i,mu,stop_code,level);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tests for termination. Unless the user supplies a specific termination
+/// routine, this method calls another method defaultStatus, which returns
+/// a code indicating the current convergence status.
+
 Int_t TQpSolverBase::DoStatus(TQpDataBase *data,TQpVar *vars,TQpResidual *resids,
                               Int_t i,Double_t mu,Int_t level)
 {
-// Tests for termination. Unless the user supplies a specific termination
-// routine, this method calls another method defaultStatus, which returns
-// a code indicating the current convergence status.
-
    return this->DefStatus(data,vars,resids,i,mu,level);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default status method
+
 Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
                                TQpResidual *resids,Int_t iterate,Double_t mu,Int_t /* level */)
 {
-// Default status method
-
    Int_t stop_code = kNOT_FINISHED;
 
    const Double_t gap   = TMath::Abs(resids->GetDualityGap());
@@ -324,11 +324,11 @@ Int_t TQpSolverBase::DefStatus(TQpDataBase * /* data */,TQpVar * /* vars */,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpSolverBase &TQpSolverBase::operator=(const TQpSolverBase &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
 

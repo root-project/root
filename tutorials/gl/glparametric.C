@@ -1,27 +1,37 @@
-// Show rendering of parametric surfaces.
-// Author: Timur Pocheptsov
+/// \file
+/// \ingroup tutorial_gl
+/// Show rendering of parametric surfaces.
+///
+/// A parametric surface is defined by three functions:
+/// S(u, v) : {x(u, v), y(u, v), z(u, v)}.
+/// To create parametric surface and draw it one has to:
+///  1. Create canvas, which support OpenGL drawing (two ways):
+///     - Call gStyle->SetCanvasPreferGL(kTRUE)
+///     - Or create canvas with name, wich contains "gl".
+///  2. create TGLParametricEquation object.
+/// ~~~{.cpp}
+///     TGLParametricEquation *eq = new TGLParametricEquation("name",
+///     "some FORMULA here - x(u, v)",
+///     "some FORMULA here - y(u, v)",
+///     "some FORMULA here - z(u, v)",
+///     uMin, uMax, vMin, vMax);
+/// ~~~
+///     where FORMULA is the same string (mathematical expression),
+///     as in TF2, but you should use 'u' (or 'U') instead of 'x'
+///     and 'v' (or 'V') instead of 'y'.
+///  3. Call equation->Draw();
+///     Parametric surfaces support 21 color "schemes", you can change
+///     the color:
+///     - place mouse cursor above surface (surface is selected in pad)
+///     - press 's' or 'S'.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
+
 void glparametric()
 {
-   // A parametric surface is defined by three functions:
-   // S(u, v) : {x(u, v), y(u, v), z(u, v)}.
-   // To create parametric surface and draw it one has to:
-   //  1. Create canvas, which support OpenGL drawing (two ways):
-   //     a. Call gStyle->SetCanvasPreferGL(kTRUE)
-   //     b. Or create canvas with name, wich contains "gl".
-   //  2. create TGLParametricEquation object.
-   //     TGLParametricEquation *eq = new TGLParametricEquation("name",
-   //     "some FORMULA here - x(u, v)",
-   //     "some FORMULA here - y(u, v)",
-   //     "some FORMULA here - z(u, v)",
-   //     uMin, uMax, vMin, vMax);
-   //     where FORMULA is the same string (mathematical expression),
-   //     as in TF2, but you should use 'u' (or 'U') instead of 'x'
-   //     and 'v' (or 'V') instead of 'y'.
-   //  3. Call equation->Draw();
-   //     Parametric surfaces support 21 color "schemes", you can change
-   //     the color:
-   //     -place mouse cursor above surface (surface is selected in pad)
-   //     -press 's' or 'S'.
    gStyle->SetCanvasPreferGL(kTRUE);
    TCanvas *c = new TCanvas("canvas","Parametric surfaces with gl", 100, 10,
                             700, 700);

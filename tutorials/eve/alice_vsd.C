@@ -1,34 +1,23 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Complex example showing ALICE VSD visualization.
-
-/*
-  alice_vsd.C - a simple event-display for ALICE
-
-  ------------------------------------------------------------------------
-  ------------------------------------------------------------------------
-
-  Only standard ROOT is used to process the ALICE VSD files.
-
-  No ALICE code is needed -- the VSD file is exported from AliRoot into
-  VSD format -- see TEveVSDStructs.h and TEveVSD.h.
-
-  A simple geometry of 10KB, extracted from the full TGeo-geometry, is
-  used to outline the central detectors of ALICE.
-
-  All files are access from the web by using the "CACHEREAD" option.
-
-*/
-
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   Info("alice_vsd.C",
-        "Has to be run in compiled mode ... doing this for you.");
-   gSystem->CompileMacro("alice_vsd.C");
-   alice_vsd();
-}
-#else
+/// \file
+/// \ingroup tutorial_eve
+/// Complex example showing ALICE VSD visualization.
+///
+///  alice_vsd.C - a simple event-display for ALICE
+///
+///  Only standard ROOT is used to process the ALICE VSD files.
+///
+///  No ALICE code is needed -- the VSD file is exported from AliRoot into
+///  VSD format -- see TEveVSDStructs.h and TEveVSD.h.
+///
+///  A simple geometry of 10KB, extracted from the full TGeo-geometry, is
+///  used to outline the central detectors of ALICE.
+///
+///  All files are access from the web by using the "CACHEREAD" option.
+///
+/// \image html eve_alice_vsd.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 
 #include <TEveManager.h>

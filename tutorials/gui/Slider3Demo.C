@@ -1,6 +1,10 @@
-
-// Simple macro showing capabilities of triple slider
-//Authors: Bertrand Bellenot, Ilka Antcheva
+/// \file
+/// \ingroup tutorial_gui
+/// Simple macro showing capabilities of triple slider
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot, Ilka Antcheva
 
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"

@@ -1,6 +1,10 @@
-
-// Simple macro showing capabilities of TGSpeedo widget.
-//Author: Bertrand Bellenot
+/// \file
+/// \ingroup tutorial_gui
+/// Simple macro showing capabilities of the TGSpeedo widget.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 #include "TSystem.h"
 #include "TGFrame.h"
@@ -10,10 +14,10 @@
 class TGShapedMain : public TGMainFrame {
 
 protected:
-   const TGPicture   *fBgnd;           // picture used as mask
-   TGSpeedo          *fSpeedo;          // analog meter
-   TTimer            *fTimer;           // update timer
-   Int_t              fActInfo;         // actual information value
+   const TGPicture   *fBgnd;     // picture used as mask
+   TGSpeedo          *fSpeedo;   // analog meter
+   TTimer            *fTimer;    // update timer
+   Int_t              fActInfo;  // actual information value
 
 public:
    TGShapedMain(const TGWindow *p, int w, int h);

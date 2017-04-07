@@ -22,13 +22,16 @@
 #include "TGColorDialog.h"
 
 
-//______________________________________________________________________________
-// GUI editor for TEveShape.
-//
+/** \class TEveShapeEditor
+\ingroup TEve
+GUI editor for TEveShape.
+*/
 
 ClassImp(TEveShapeEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -38,8 +41,6 @@ TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
    fDrawFrame(0),
    fHighlightFrame(0)
 {
-   // Constructor.
-
    MakeTitle("TEveShape");
 
    {
@@ -69,19 +70,17 @@ TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
 
       fHighlightFrame = new TGCheckButton(f, "Highlight Frame");
       f->AddFrame(fHighlightFrame, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fHighlightFrame->Connect("Toggled(Bool_t)"," TEveShapeEditor", this, "DoHighlightFrame()");
+      fHighlightFrame->Connect("Toggled(Bool_t)", "TEveShapeEditor", this, "DoHighlightFrame()");
 
       AddFrame(f, new TGLayoutHints(kLHintsTop, 0,0,2,1));
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveShapeEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveShape*>(obj);
 
    fLineWidth->SetNumber(fM->fLineWidth);
@@ -90,40 +89,38 @@ void TEveShapeEditor::SetModel(TObject* obj)
    fHighlightFrame->SetState(fM->fHighlightFrame ? kButtonDown : kButtonUp);
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting line with of polygon outline.
 
-//______________________________________________________________________________
 void TEveShapeEditor::DoLineWidth()
 {
-   // Slot for setting line with of polygon outline.
-
    fM->SetLineWidth(fLineWidth->GetNumber());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting line color of polygon outline.
+
 void TEveShapeEditor::DoLineColor(Pixel_t pixel)
 {
-   // Slot for setting line color of polygon outline.
-
    fM->SetLineColor(TColor::GetColor(pixel));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for DrawFrame.
+
 void TEveShapeEditor::DoDrawFrame()
 {
-   // Slot for DrawFrame.
-
    fM->SetDrawFrame(fDrawFrame->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for HighlightFrame.
+
 void TEveShapeEditor::DoHighlightFrame()
 {
-   // Slot for HighlightFrame.
-
    fM->SetHighlightFrame(fHighlightFrame->IsOn());
    Update();
 }

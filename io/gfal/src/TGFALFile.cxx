@@ -9,66 +9,49 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFALFile                                                            //
-//                                                                      //
-// A TGFALFile is like a normal TFile except that it reads and writes   //
-// its data via the underlaying Grid access mechanism.                  //
-// TGFALFile file names are either a logical file name, a guid, an      //
-// SURL or a TURL, like:                                                //
-//                                                                      //
-//    gfal:/lfn/user/r/rdm/galice.root                                  //
-//                                                                      //
-// Grid storage interactions today require using several existing       //
-// software components:                                                 //
-//  - The replica catalog services to locate valid replicas of          //
-//    files.                                                            //
-//  - The SRM software to ensure:                                       //
-//     - files  exist on disk (they are recalled from mass              //
-//       storage if necessary) or                                       //
-//     - space is allocated on disk for new files (they are possibly    //
-//       migrated to mass storage later)                                //
-//  - A file access mechanism to access files from the storage          //
-//    system on the worker node.                                        //
-//                                                                      //
-// The GFAL library hides these interactions and presents a Posix       //
-// interface for the I/O operations. The currently supported protocols  //
-// are: file for local access, dcap, gsidcap and kdcap (dCache access   //
-// protocol) and rfio (CASTOR access protocol).                         //
-//                                                                      //
-// File naming convention:                                              //
-// A file name can be a Logical File Name (LFN), a Grid Unique          //
-// IDentifier (GUID), a file replica (SURL) or a Transport file         //
-// name (TURL):                                                         //
-//                                                                      //
-//     an LFN starts with lfn:                                          //
-//        for example lfn:baud/testgfal15                               //
-//                                                                      //
-//     a GUID starts with guid:                                         //
-//        for example guid:2cd59291-7ae7-4778-af6d-b1f423719441         //
-//                                                                      //
-//     an SURL starts with srm://                                       //
-//         for example srm://wacdr002d.cern.ch:8443/castor/             //
-//                    cern.ch/user/b/baud/testgfal15                    //
-//                                                                      //
-//      a TURL starts with a protocol name:                             //
-//          for example rfio:///castor/cern.ch/user/b/baud/testgfal15   //
-//                                                                      //
-// Note that for the TGFALFile plugin to work, all these pathnames      //
-// should be prepended by gfal:.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TGFALFile
+\ingroup IO
 
+Read and write data via the underlying Grid access mechanism.
+
+A TGFALFile is like a normal TFile except that it reads and writes
+its data via the underlying Grid access mechanism.
+TGFALFile file names are either a logical file name, a guid, an
+SURL or a TURL, like:
+    gfal:/lfn/user/r/rdm/galice.root
+Grid storage interactions today require using several existing
+software components:
+  - The replica catalog services to locate valid replicas of files.
+  - The SRM software to ensure:
+    - Files  exist on disk (they are recalled from mass storage if necessary) or
+    - Space is allocated on disk for new files (they are possibly migrated to mass storage later).
+  - A file access mechanism to access files from the storage system on the worker node.
+The GFAL library hides these interactions and presents a Posix
+interface for the I/O operations. The currently supported protocols
+are: file for local access, dcap, gsidcap and kdcap (dCache access
+protocol) and rfio (CASTOR access protocol).
+
+### File naming convention
+A file name can be a Logical File Name (LFN), a Grid Unique
+IDentifier (GUID), a file replica (SURL) or a Transport file
+name (TURL):
+  - an LFN starts with lfn. Example: \a lfn:baud/testgfal15
+  - a GUID starts with guid. Example: \a guid:2cd59291-7ae7-4778-af6d-b1f423719441
+  - an SURL starts with srm://. Example: \a srm://wacdr002d.cern.ch:8443/castor/cern.ch/user/b/baud/testgfal15
+  - a TURL starts with a protocol name. Example: \a rfio:///castor/cern.ch/user/b/baud/testgfal15
+Note that for the TGFALFile plugin to work, all these pathnames
+should be prepended by gfal:.
+*/
+
+#include "RConfig.h"
 #include "TROOT.h"
 #include "TUrl.h"
 
-extern "C" {
 #include <gfal_api.h>
-}
 
 // GFAL2 doesn't use special names for 64 bit versions
-#ifdef _GFAL2_API_
+#if defined(_GFAL2_API_) || defined(GFAL2_API_) || defined(_GFAL2_API) || defined(_GFAL2_API_H_) || defined(GFAL2_API_H_) || defined(_GFAL2_API_H)
 #define gfal_lseek64   gfal_lseek
 #define gfal_open64    gfal_open
 #define gfal_readdir64 gfal_readdir
@@ -82,20 +65,22 @@ extern "C" {
 ClassImp(TGFALFile)
 ClassImp(TGFALSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a GFAL file object.
+///
+/// A GFAL file is the same as a TFile
+/// except that it is being accessed via the underlaying Grid access
+/// mechanism. The url argument must be of the form: gfal:/lfn/file.root
+/// If the file specified in the URL does not exist, is not accessable
+/// or can not be created the kZombie bit will be set in the TGFALFile
+/// object. Use IsZombie() to see if the file is accessable.
+/// For a description of the option and other arguments see the TFile ctor.
+/// The preferred interface to this constructor is via TFile::Open().
+
 TGFALFile::TGFALFile(const char *url, Option_t *option, const char *ftitle,
                      Int_t compress)
          : TFile(url, "NET", ftitle, compress)
 {
-   // Create a GFAL file object. A GFAL file is the same as a TFile
-   // except that it is being accessed via the underlaying Grid access
-   // mechanism. The url argument must be of the form: gfal:/lfn/file.root
-   // If the file specified in the URL does not exist, is not accessable
-   // or can not be created the kZombie bit will be set in the TGFALFile
-   // object. Use IsZombie() to see if the file is accessable.
-   // For a description of the option and other arguments see the TFile ctor.
-   // The preferred interface to this constructor is via TFile::Open().
-
    fStatCached = kFALSE;
 
    fOption = option;
@@ -195,73 +180,73 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GFAL file dtor. Close and flush directory structure.
+
 TGFALFile::~TGFALFile()
 {
-   // GFAL file dtor. Close and flush directory structure.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system open. All arguments like in POSIX open.
+
 Int_t TGFALFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open.
-
    Int_t ret = ::gfal_open64(pathname, flags, (Int_t) mode);
 
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system close. All arguments like in POSIX close.
+
 Int_t TGFALFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close.
-
    Int_t ret = ::gfal_close(fd);
 
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system read. All arguments like in POSIX read.
+
 Int_t TGFALFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read.
-
    Int_t ret = ::gfal_read(fd, buf, len);
 
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system write. All arguments like in POSIX write.
+
 Int_t TGFALFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write.
-
    Int_t ret = ::gfal_write(fd, buf, len);
 
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system lseek. All arguments like in POSIX lseek
+/// except that the offset and return value are Long_t to be able to
+/// handle 64 bit file systems.
+
 Long64_t TGFALFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek
-   // except that the offset and return value are Long_t to be able to
-   // handle 64 bit file systems.
-
    Long64_t ret = ::gfal_lseek64(fd, offset, whence);
 
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TSystem:GetPathInfo(). Generally implemented via
+/// stat() or fstat().
+
 Int_t TGFALFile::SysStat(Int_t /*fd*/, Long_t *id, Long64_t *size, Long_t *flags,
                          Long_t *modtime)
 {
-   // Interface to TSystem:GetPathInfo(). Generally implemented via
-   // stat() or fstat().
-
    struct stat64 &statbuf = fStatBuffer;
 
    if (fOption != "READ" || !fStatCached) {
@@ -295,12 +280,12 @@ Int_t TGFALFile::SysStat(Int_t /*fd*/, Long_t *id, Long64_t *size, Long_t *flags
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via GFAL.
+/// Returns kTRUE in case of error.
+
 Bool_t TGFALFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read specified byte range from remote file via GFAL.
-   // Returns kTRUE in case of error.
-
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
       if (st == 2)
@@ -311,12 +296,12 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Int_t len)
    return TFile::ReadBuffer(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read specified byte range from remote file via GFAL.
+/// Returns kTRUE in case of error.
+
 Bool_t TGFALFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read specified byte range from remote file via GFAL.
-   // Returns kTRUE in case of error.
-
    SetOffset(pos);
    Int_t st;
    if ((st = ReadBufferViaCache(buf, len))) {
@@ -328,12 +313,12 @@ Bool_t TGFALFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    return TFile::ReadBuffer(buf, pos, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write specified byte range to remote file via GFAL.
+/// Returns kTRUE in case of error.
+
 Bool_t TGFALFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range to remote file via GFAL.
-   // Returns kTRUE in case of error.
-
    if (!IsOpen() || !fWritable) return kTRUE;
 
    Int_t st;
@@ -346,23 +331,29 @@ Bool_t TGFALFile::WriteBuffer(const char *buf, Int_t len)
    return TFile::WriteBuffer(buf, len);
 }
 
+/**
+\class TGFALSystem
+\ingroup IO
 
-//______________________________________________________________________________
+Directory handler for GFAL.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create helper class that allows directory access via GFAL.
+
 TGFALSystem::TGFALSystem() : TSystem("-gfal", "GFAL Helper System")
 {
-   // Create helper class that allows directory access via GFAL.
-
    // name must start with '-' to bypass the TSystem singleton check
    SetName("gfal");
 
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a directory via GFAL.
+
 Int_t TGFALSystem::MakeDirectory(const char *dir)
 {
-   // Make a directory via GFAL.
-
    TUrl url(dir);
 
    Int_t ret = ::gfal_mkdir(url.GetFileAndOptions(), 0755);
@@ -370,12 +361,12 @@ Int_t TGFALSystem::MakeDirectory(const char *dir)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via GFAL. Returns an opaque pointer to a dir
+/// structure. Returns 0 in case of error.
+
 void *TGFALSystem::OpenDirectory(const char *dir)
 {
-   // Open a directory via GFAL. Returns an opaque pointer to a dir
-   // structure. Returns 0 in case of error.
-
    if (fDirp) {
       Error("OpenDirectory", "invalid directory pointer (should never happen)");
       fDirp = 0;
@@ -396,11 +387,11 @@ void *TGFALSystem::OpenDirectory(const char *dir)
    return fDirp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free directory via GFAL.
+
 void TGFALSystem::FreeDirectory(void *dirp)
 {
-   // Free directory via GFAL.
-
    if (dirp != fDirp) {
       Error("FreeDirectory", "invalid directory pointer (should never happen)");
       return;
@@ -412,11 +403,11 @@ void TGFALSystem::FreeDirectory(void *dirp)
    fDirp = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via GFAL. Returns 0 in case no more entries.
+
 const char *TGFALSystem::GetDirEntry(void *dirp)
 {
-   // Get directory entry via GFAL. Returns 0 in case no more entries.
-
    if (dirp != fDirp) {
       Error("GetDirEntry", "invalid directory pointer (should never happen)");
       return 0;
@@ -433,14 +424,14 @@ const char *TGFALSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TGFALSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TUrl url(path);
 
    struct stat64 sbuf;
@@ -461,13 +452,13 @@ Int_t TGFALSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TGFALSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TUrl url(path);
 
    if (::gfal_access(url.GetFileAndOptions(), mode) == 0)

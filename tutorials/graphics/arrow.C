@@ -1,5 +1,13 @@
-//Draw arrows
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook -js
+/// Draw arrows.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 TCanvas *arrow(){
    TCanvas *c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);

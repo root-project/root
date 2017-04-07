@@ -20,10 +20,10 @@ namespace PyROOT {
 
    public:
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
 
    protected:
-      virtual Bool_t InitExecutor_( TExecutor*& );
+      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
    };
 
 } // namespace PyROOT

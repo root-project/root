@@ -53,11 +53,11 @@ public:
    TGRegionData &operator=(const TGRegionData &r);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignemnt of region data object.
+
 TGRegionData &TGRegionData::operator=(const TGRegionData &r)
 {
-   // Assignemnt of region data object.
-
    if (this != &r) {
       fRefs   = r.fRefs;
       fRgn    = r.fRgn;
@@ -68,11 +68,11 @@ TGRegionData &TGRegionData::operator=(const TGRegionData &r)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a region object.
+
 TGRegion::TGRegion()
 {
-   // Create a region object.
-
    if (!gEmptyRegion)                      // avoid too many allocs
       gEmptyRegion = new TGRegion(kTRUE);
 
@@ -80,21 +80,21 @@ TGRegion::TGRegion()
    fData->AddReference();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create empty region.
+
 TGRegion::TGRegion(Bool_t is_null)
 {
-   // Create empty region.
-
    fData          = new TGRegionData;
    fData->fRgn    = gVirtualX->CreateRegion();
    fData->fIsNull = is_null;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and initialize a region with a rectangle.
+
 TGRegion::TGRegion(Int_t x, Int_t y, UInt_t w, UInt_t h, ERegionType)
 {
-   // Create and initialize a region with a rectangle.
-
    fData          = new TGRegionData;
    fData->fRgn    = gVirtualX->CreateRegion();
    fData->fIsNull = kFALSE;
@@ -107,11 +107,11 @@ TGRegion::TGRegion(Int_t x, Int_t y, UInt_t w, UInt_t h, ERegionType)
    gVirtualX->UnionRectWithRegion(&xr, fData->fRgn, fData->fRgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and intialize a region with a polygon.
+
 TGRegion::TGRegion(Int_t n, TPoint *points, Bool_t winding)
 {
-   // Create and intialize a region with a polygon.
-
    fData            = new TGRegionData;
    fData->fIsNull   = kFALSE;
    Point_t *gpoints = new Point_t[n];
@@ -124,11 +124,11 @@ TGRegion::TGRegion(Int_t n, TPoint *points, Bool_t winding)
    fData->fRgn = gVirtualX->PolygonRegion(gpoints, n, winding);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and initialize a region with an X and a Y array of points.
+
 TGRegion::TGRegion(const TArrayS &x, const TArrayS &y, Bool_t winding)
 {
-   // Create and initialize a region with an X and a Y array of points.
-
    fData          = new TGRegionData;
    fData->fIsNull = kFALSE;
 
@@ -147,11 +147,11 @@ TGRegion::TGRegion(const TArrayS &x, const TArrayS &y, Bool_t winding)
    fData->fRgn = gVirtualX->PolygonRegion(gpoints, n, winding);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and initialize a region with an X and Y array of points.
+
 TGRegion::TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding)
 {
-   // Create and initialize a region with an X and Y array of points.
-
    fData          = new TGRegionData;
    fData->fIsNull = kFALSE;
    Point_t *gpoints = new Point_t[n];
@@ -164,31 +164,31 @@ TGRegion::TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding)
    fData->fRgn = gVirtualX->PolygonRegion(gpoints, n, winding);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Region copy constructor.
+
 TGRegion::TGRegion(const TGRegion &r) : TObject(r)
 {
-   // Region copy constructor.
-
    fData = r.fData;
    fData->AddReference();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a region.
+
 TGRegion::~TGRegion()
 {
-   // Delete a region.
-
    if (fData->RemoveReference() <= 0) {
       gVirtualX->DestroyRegion(fData->fRgn);
       delete fData;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Region assignment operator.
+
 TGRegion &TGRegion::operator=(const TGRegion &r)
 {
-   // Region assignment operator.
-
    if (this != &r) {
       TObject::operator=(r);
       r.fData->AddReference();
@@ -202,199 +202,199 @@ TGRegion &TGRegion::operator=(const TGRegion &r)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a region.
+
 TGRegion TGRegion::CopyRegion() const
 {
-   // Copy a region.
-
    TGRegion r(fData->fIsNull);
    gVirtualX->UnionRegion(fData->fRgn, r.fData->fRgn, r.fData->fRgn);
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if region is not set.
+
 Bool_t TGRegion::IsNull() const
 {
-   // Return true if region is not set.
-
    return fData->fIsNull;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if region is empty.
+
 Bool_t TGRegion::IsEmpty() const
 {
-   // Return true if region is empty.
-
    return fData->fIsNull || gVirtualX->EmptyRegion(fData->fRgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if point p is contained in the region.
+
 Bool_t TGRegion::Contains(const TPoint &p) const
 {
-   // Return true if point p is contained in the region.
-
    return gVirtualX->PointInRegion((Int_t)p.GetX(), (Int_t)p.GetY(), fData->fRgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if point (x,y) is contained in the region.
+
 Bool_t TGRegion::Contains(Int_t x, Int_t y) const
 {
-   // Return true if point (x,y) is contained in the region.
-
    return gVirtualX->PointInRegion(x, y, fData->fRgn);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the union of this region with r.
+
 TGRegion TGRegion::Unite(const TGRegion &r) const
 {
-   // Return the union of this region with r.
-
    TGRegion result(kFALSE);
    gVirtualX->UnionRegion(fData->fRgn, r.fData->fRgn, result.fData->fRgn);
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a region which is the intersection of this region and r.
+
 TGRegion TGRegion::Intersect(const TGRegion &r) const
 {
-   // Returns a region which is the intersection of this region and r.
-
    TGRegion result(kFALSE);
    gVirtualX->IntersectRegion(fData->fRgn, r.fData->fRgn, result.fData->fRgn);
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a region which is r subtracted from this region.
+
 TGRegion TGRegion::Subtract(const TGRegion &r) const
 {
-   // Returns a region which is r subtracted from this region.
-
    TGRegion result(kFALSE);
    gVirtualX->SubtractRegion(fData->fRgn, r.fData->fRgn, result.fData->fRgn);
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a region which is the difference between the union and
+/// intersection this region and r.
+
 TGRegion TGRegion::Eor(const TGRegion &r) const
 {
-   // Returns a region which is the difference between the union and
-   // intersection this region and r.
-
    TGRegion result(kFALSE);
    gVirtualX->XorRegion(fData->fRgn, r.fData->fRgn, result.fData->fRgn);
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return dimension of region (widht, height).
+
 TGDimension TGRegion::GetDimension() const
 {
-   // Return dimension of region (widht, height).
-
    Rectangle_t r = { 0, 0, 0, 0 };
    gVirtualX->GetRegionBox(fData->fRgn, &r);
    return TGDimension(r.fWidth, r.fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of region (x, y).
+
 TGPosition TGRegion::GetPosition() const
 {
-   // Return position of region (x, y).
-
    Rectangle_t r = { 0, 0, 0, 0 };
    gVirtualX->GetRegionBox(fData->fRgn, &r);
    return TGPosition(r.fX, r.fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Region == operator.
+
 Bool_t TGRegion::operator==(const TGRegion &r) const
 {
-   // Region == operator.
-
    return fData == r.fData ?
              kTRUE : gVirtualX->EqualRegion(fData->fRgn, r.fData->fRgn);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI region (with id and possible tooltip).
+
 TGRegionWithId::TGRegionWithId() : TGRegion()
 {
-   // Create GUI region (with id and possible tooltip).
-
    fId    = 0;
    fTip   = 0;
    fPopup = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI region (with id and possible tooltip).
+
 TGRegionWithId::TGRegionWithId(Int_t id, Int_t x, Int_t y,
                                UInt_t w, UInt_t h, ERegionType type) :
    TGRegion(x, y, w, h, type)
 {
-   // Create GUI region (with id and possible tooltip).
-
    fId    = id;
    fTip   = 0;
    fPopup = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI region (with id and possible tooltip).
+
 TGRegionWithId::TGRegionWithId(Int_t id, Int_t n, TPoint *points,
                                Bool_t winding) :
    TGRegion(n, points, winding)
 {
-   // Create GUI region (with id and possible tooltip).
-
    fId    = id;
    fTip   = 0;
    fPopup = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGRegionWithId::TGRegionWithId(const TGRegionWithId &reg) : TGRegion(reg)
 {
-   // Copy constructor.
-
    fId    = reg.GetId();
    fTip   = 0;
    fPopup = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor which allows setting of new id.
+
 TGRegionWithId::TGRegionWithId(const TGRegion &reg, Int_t id) :
    TGRegion(reg)
 {
-   // Copy ctor which allows setting of new id.
-
    fId    = id;
    fTip   = 0;
    fPopup = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TGRegionWithId::~TGRegionWithId()
 {
-   // Cleanup.
-
    delete fTip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display popup menu associated with this region.
+
 void TGRegionWithId::DisplayPopup()
 {
-   // Display popup menu associated with this region.
-
    if (fPopup) fPopup->PlaceMenu(gPointerX, gPointerY, kTRUE, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tool tip text associated with this region. The delay is in
+/// milliseconds (minimum 250). To remove tool tip call method with
+/// text = 0.
+
 void TGRegionWithId::SetToolTipText(const char *text, Long_t delayms,
                                     const TGFrame *frame)
 {
-   // Set tool tip text associated with this region. The delay is in
-   // milliseconds (minimum 250). To remove tool tip call method with
-   // text = 0.
-
    if (fTip) {
       delete fTip;
       fTip = 0;
@@ -405,17 +405,18 @@ void TGRegionWithId::SetToolTipText(const char *text, Long_t delayms,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an image map widget.
+
 TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    TGPictureButton(p, pic)
 {
-   // Create an image map widget.
-
    fCursorMouseOut  = kPointer;
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
    fTrash           = new TList;
    fMainTip         = 0;
+   fLastVisited     = 0;
    fNavMode = kNavRegions;
 
    SetDisabledPicture(fPic);
@@ -430,17 +431,18 @@ TGImageMap::TGImageMap(const TGWindow *p, const TGPicture *pic) :
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an image map widget.
+
 TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    TGPictureButton(p, pic.Data())
 {
-   // Create an image map widget.
-
    fCursorMouseOut  = kPointer;
    fCursorMouseOver = kHand;
    fListOfRegions   = new TList;
    fTrash           = new TList;
    fMainTip         = 0;
+   fLastVisited     = 0;
    fNavMode = kNavRegions;
 
    SetDisabledPicture(fPic);
@@ -455,11 +457,11 @@ TGImageMap::TGImageMap(const TGWindow *p, const TString &pic) :
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup image map widget.
+
 TGImageMap::~TGImageMap()
 {
-   // Cleanup image map widget.
-
    delete fMainTip;
    fTrash->Delete();
    delete fTrash;
@@ -467,19 +469,19 @@ TGImageMap::~TGImageMap()
    delete fListOfRegions;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a region to the image map.
+
 void TGImageMap::AddRegion(const TGRegion &region, Int_t id)
 {
-   // Add a region to the image map.
-
    fListOfRegions->Add(new TGRegionWithId(region, id));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create popoup menu or returns existing for regions with specified id.
+
 TGPopupMenu *TGImageMap::CreatePopup(Int_t id)
 {
-   // Create popoup menu or returns existing for regions with specified id.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
    TGPopupMenu    *popup = 0;
@@ -498,11 +500,11 @@ TGPopupMenu *TGImageMap::CreatePopup(Int_t id)
    return newpopup ? newpopup : popup;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return popup for regions with specified id.
+
 TGPopupMenu *TGImageMap::GetPopup(Int_t id)
 {
-   // Return popup for regions with specified id.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
 
@@ -512,11 +514,11 @@ TGPopupMenu *TGImageMap::GetPopup(Int_t id)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion events.
+
 Bool_t TGImageMap::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion events.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
 
@@ -544,11 +546,11 @@ Bool_t TGImageMap::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click events.
+
 Bool_t TGImageMap::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click events.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
 
@@ -570,11 +572,11 @@ Bool_t TGImageMap::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button events.
+
 Bool_t TGImageMap::HandleButton(Event_t *event)
 {
-   // Handle button events.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
    TGPopupMenu *pop;
@@ -604,11 +606,11 @@ Bool_t TGImageMap::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tooltip text for main region.
+
 void TGImageMap::SetToolTipText(const char *text, Long_t delayms)
 {
-   // Set tooltip text for main region.
-
    if (fMainTip) delete fMainTip;
    fMainTip = 0;
 
@@ -616,11 +618,11 @@ void TGImageMap::SetToolTipText(const char *text, Long_t delayms)
       fMainTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tooltip text for regions with specified id.
+
 void TGImageMap::SetToolTipText(Int_t id, const char *text, Long_t delayms)
 {
-   // Set tooltip text for regions with specified id.
-
    TIter next(fListOfRegions);
    TGRegionWithId *region;
 
@@ -630,53 +632,53 @@ void TGImageMap::SetToolTipText(Int_t id, const char *text, Long_t delayms)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle when mouse moves over region id. Emits signal
+/// OnMouseOver(Int_t).
+
 void TGImageMap::OnMouseOver(Int_t id)
 {
-   // Handle when mouse moves over region id. Emits signal
-   // OnMouseOver(Int_t).
-
    if (fTip) fTip->Reset();
    if (fMainTip) fMainTip->Hide();
    gVirtualX->SetCursor(fId, gVirtualX->CreateCursor(fCursorMouseOver));
    Emit("OnMouseOver(Int_t)", id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle when mouse moves from region id. Emits signal
+/// OnMouseOut(Int_t).
+
 void TGImageMap::OnMouseOut(Int_t id)
 {
-   // Handle when mouse moves from region id. Emits signal
-   // OnMouseOut(Int_t).
-
    if(fTip) fTip->Hide();
    if(fMainTip) fMainTip->Reset();
    gVirtualX->SetCursor(fId,gVirtualX->CreateCursor(fCursorMouseOut));
    Emit("OnMouseOut(Int_t)",id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle when mouse was clicked on region id. Emits signal
+/// RegionClicked(Int_t).
+
 void TGImageMap::RegionClicked(Int_t id)
 {
-   // Handle when mouse was clicked on region id. Emits signal
-   // RegionClicked(Int_t).
-
    Emit("RegionClicked(Int_t)",id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle when mouse is double clicked on main map. Emits signal
+/// DoubleClicked().
+
 void TGImageMap::DoubleClicked()
 {
-   // Handle when mouse is double clicked on main map. Emits signal
-   // DoubleClicked().
-
    Emit("DoubleClicked()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle when mouse is double clicked on region id. Emits signal
+/// DoubleClicked(Int_t).
+
 void TGImageMap::DoubleClicked(Int_t id)
 {
-   // Handle when mouse is double clicked on region id. Emits signal
-   // DoubleClicked(Int_t).
-
    Emit("DoubleClicked(Int_t)",id);
 }

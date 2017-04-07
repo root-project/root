@@ -21,13 +21,13 @@ TClonesArray *JetEvent::fgTracks = 0;
 TClonesArray *JetEvent::fgHitsA  = 0;
 TClonesArray *JetEvent::fgHitsB  = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a JetEvent object.
+/// When the constructor is invoked for the first time, the class static
+/// variables fgxxx are 0 and the TClonesArray fgxxx are created.
+
 JetEvent::JetEvent()
 {
-   // Create a JetEvent object.
-   // When the constructor is invoked for the first time, the class static
-   // variables fgxxx are 0 and the TClonesArray fgxxx are created.
-
    if (!fgTracks) fgTracks = new TClonesArray("Track", 100);
    if (!fgJets)   fgJets   = new TClonesArray("Jet", 10);
    if (!fgHitsA)  fgHitsA  = new TClonesArray("Hit", 10000);
@@ -38,16 +38,17 @@ JetEvent::JetEvent()
    fHitsB  = fgHitsB;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 JetEvent::~JetEvent()
 {
    Reset();
 }
 
-//______________________________________________________________________________
-void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
-   //Build one event
+////////////////////////////////////////////////////////////////////////////////
+///Build one event
 
+void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
    //Save current Object count
    Int_t ObjectNumber = TProcessID::GetObjectCount();
    Clear();
@@ -100,49 +101,50 @@ void JetEvent::Build(Int_t jetm, Int_t trackm, Int_t hitam, Int_t hitbm) {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new Jet to the list of tracks for this event.
+
 Jet *JetEvent::AddJet()
 {
-   // Add a new Jet to the list of tracks for this event.
-
    TClonesArray &jets = *fJets;
    Jet *jet = new(jets[fNjet++]) Jet();
    return jet;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new track to the list of tracks for this event.
+
 Track *JetEvent::AddTrack()
 {
-   // Add a new track to the list of tracks for this event.
-
    TClonesArray &tracks = *fTracks;
    Track *track = new(tracks[fNtrack++]) Track();
    return track;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new hit to the list of hits in detector A
+
 Hit *JetEvent::AddHitA()
 {
-   // Add a new hit to the list of hits in detector A
-
    TClonesArray &hitsA = *fHitsA;
    Hit *hit = new(hitsA[fNhitA++]) Hit();
    return hit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new hit to the list of hits in detector B
+
 Hit *JetEvent::AddHitB()
 {
-   // Add a new hit to the list of hits in detector B
-
    TClonesArray &hitsB = *fHitsB;
    Hit *hit = new(hitsB[fNhitB++]) Hit();
    return hit;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void JetEvent::Clear(Option_t *option)
 {
    fJets->Clear(option);
@@ -151,11 +153,11 @@ void JetEvent::Clear(Option_t *option)
    fHitsB->Clear(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to reset all static objects for this event
+
 void JetEvent::Reset(Option_t *)
 {
-// Static function to reset all static objects for this event
-
    delete fgJets;   fgJets = 0;
    delete fgTracks; fgTracks = 0;
    delete fgHitsA;  fgHitsA = 0;

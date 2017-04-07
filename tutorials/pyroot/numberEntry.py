@@ -1,3 +1,10 @@
+## \file
+## \ingroup tutorial_pyroot
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 from ROOT import *
 
 class pMyMainFrame( TGMainFrame ):
@@ -7,12 +14,12 @@ class pMyMainFrame( TGMainFrame ):
       self.fHor1 = TGHorizontalFrame( self, 60, 20, kFixedWidth )
       self.fExit = TGTextButton( self.fHor1, "&Exit", "gApplication->Terminate(0)" )
       self.fExit.SetCommand( 'TPython::Exec( "raise SystemExit" )' )
-      self.fHor1.AddFrame( self.fExit, TGLayoutHints( kLHintsTop | kLHintsLeft | 
+      self.fHor1.AddFrame( self.fExit, TGLayoutHints( kLHintsTop | kLHintsLeft |
                                                       kLHintsExpandX, 4, 4, 4, 4 ) )
       self.AddFrame( self.fHor1, TGLayoutHints( kLHintsBottom | kLHintsRight, 2, 2, 5, 1 ) )
-   
+
       self.fNumber = TGNumberEntry( self, 0, 9,999, TGNumberFormat.kNESInteger,
-                                               TGNumberFormat.kNEANonNegative, 
+                                               TGNumberFormat.kNEANonNegative,
                                                TGNumberFormat.kNELLimitMinMax,
                                                0, 99999 )
       self.fLabelDispatch = TPyDispatcher( self.DoSetlabel )
@@ -25,7 +32,7 @@ class pMyMainFrame( TGMainFrame ):
       self.fLabel = TGLabel( self.fGframe, "No input." )
       self.fGframe.AddFrame( self.fLabel, TGLayoutHints( kLHintsTop | kLHintsLeft, 5, 5, 5, 5) )
       self.AddFrame( self.fGframe, TGLayoutHints( kLHintsExpandX, 2, 2, 1, 1 ) )
-   
+
       self.SetCleanup( kDeepCleanup )
       self.SetWindowName( "Number Entry" )
       self.MapSubwindows()

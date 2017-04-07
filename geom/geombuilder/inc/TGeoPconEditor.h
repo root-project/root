@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoPcon;
 class TGeoPconSection;
@@ -46,7 +42,7 @@ protected:
    Double_t             fDPhii;             // Initial Dphi
    Double_t            *fZi;                // Initial Z positions
    Double_t            *fRmini;             // Initial Rmin values
-   Double_t            *fRmaxi;             // Initial Rmax values   
+   Double_t            *fRmaxi;             // Initial Rmax values
    Int_t                fNsections;         // Number of Z sections
    TObjArray           *fSections;          // List of section frames
    TGCanvas            *fCan;               // sections container
@@ -58,7 +54,7 @@ protected:
    TGTextEntry         *fShapeName;         // Shape name text entry
    TGNumberEntry       *fENz;               // Number entry for nsections
    TGNumberEntry       *fEPhi1;             // Number entry for phi1
-   TGNumberEntry       *fEDPhi;             // Number entry for dphi  
+   TGNumberEntry       *fEDPhi;             // Number entry for dphi
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
    TGCompositeFrame    *fBFrame;            // Frame containing Apply/Undo
@@ -67,7 +63,7 @@ protected:
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
    Bool_t       CheckSections(Bool_t change=kFALSE);
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
    void         CreateSections(Int_t inew);
    void         UpdateSections();
    virtual void CreateEdges() {;}
@@ -78,7 +74,7 @@ public:
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoPconEditor();
    virtual void   SetModel(TObject *obj);
-   
+
    void           DoModified();
    void           DoName();
    void           DoNz();
@@ -86,10 +82,10 @@ public:
    void           DoSectionChange(Int_t i);
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoPconEditor,0)   // TGeoPcon editor
-};   
-  
+};
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TGeoPconSection                                                     //
@@ -107,7 +103,7 @@ protected:
    TGNumberEntry       *fERmax;             // Number entry for Rmax position
 
    virtual void    ConnectSignals2Slots();
-   
+
 public:
    TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id);
    virtual ~TGeoPconSection();
@@ -126,5 +122,5 @@ public:
    virtual void Changed(Int_t i);   // *SIGNAL*
 
    ClassDef(TGeoPconSection,0)   // TGeoPcon section
-};      
-#endif                    
+};
+#endif

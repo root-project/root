@@ -32,13 +32,14 @@
 ClassImp(TSecContext)
 ClassImp(TSecContextCleanup)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor for SecContext object.
+
 TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
                          Int_t offset, const char *id,
                          const char *token, TDatime expdate, void *ctx)
             : TObject()
 {
-   // Ctor for SecContext object.
    R__ASSERT(gROOT);
 
    fContext = ctx;
@@ -66,14 +67,15 @@ TSecContext::TSecContext(const char *user, const char *host, Int_t meth,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor for SecContext object.
+/// User and host from url = user@host .
+
 TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
                          const char *token, const char *id,
                          TDatime expdate, void *ctx)
             : TObject()
 {
-   // Ctor for SecContext object.
-   // User and host from url = user@host .
    R__ASSERT(gROOT);
 
    fContext = ctx;
@@ -101,7 +103,9 @@ TSecContext::TSecContext(const char *url, Int_t meth, Int_t offset,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TSecContext::TSecContext(const TSecContext& sc) :
   TObject(sc),
   fContext(sc.fContext),
@@ -115,13 +119,13 @@ TSecContext::TSecContext(const TSecContext& sc) :
   fToken(sc.fToken),
   fUser(sc.fUser)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignement operator
+
 TSecContext& TSecContext::operator=(const TSecContext& sc)
 {
-   //assignement operator
    if(this!=&sc) {
       TObject::operator=(sc);
       fContext=sc.fContext;
@@ -138,19 +142,19 @@ TSecContext& TSecContext::operator=(const TSecContext& sc)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dtor: delete (deActivate, local/remote cleanup, list removal)
+/// all what is still active
+
 TSecContext::~TSecContext()
 {
-   // Dtor: delete (deActivate, local/remote cleanup, list removal)
-   // all what is still active
-
    Cleanup();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup what is still active
+
 void TSecContext::Cleanup()
 {
-   // Cleanup what is still active
-
    if (IsActive()) {
       CleanupSecContext(kTRUE);
       DeActivate("R");
@@ -174,15 +178,15 @@ void TSecContext::Cleanup()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set OffSet to -1 and expiring Date to default
+/// Remove from the list
+/// If Opt contains "C" or "c", ask for remote cleanup
+/// If Opt contains "R" or "r", remove from the list
+/// Default Opt="CR"
+
 void TSecContext::DeActivate(Option_t *Opt)
 {
-   // Set OffSet to -1 and expiring Date to default
-   // Remove from the list
-   // If Opt contains "C" or "c", ask for remote cleanup
-   // If Opt contains "R" or "r", remove from the list
-   // Default Opt="CR"
-
    // Ask remote cleanup of this context
    Bool_t clean = (strstr(Opt,"C") || strstr(Opt,"c"));
    if (clean && fOffSet > -1)
@@ -200,46 +204,46 @@ void TSecContext::DeActivate(Option_t *Opt)
    fExpDate = kROOTTZERO;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new TSecContextCleanup
+/// Internally is added to the list
+
 void TSecContext::AddForCleanup(Int_t port, Int_t proto, Int_t type)
 {
-   // Create a new TSecContextCleanup
-   // Internally is added to the list
-
    TSecContextCleanup *tscc = new TSecContextCleanup(port, proto, type);
    fCleanup->Add(tscc);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if this security context is for method named 'methname'
+/// Case sensitive.
+
 Bool_t TSecContext::IsA(const char *methname)
 {
-   // Checks if this security context is for method named 'methname'
-   // Case sensitive.
-
    return Bool_t(!strcmp(methname, GetMethodName()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check remote OffSet and expiring Date
+
 Bool_t TSecContext::IsActive() const
 {
-   // Check remote OffSet and expiring Date
-
    if (fOffSet > -1 && fExpDate > TDatime())
       return kTRUE;
    // Invalid
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If opt is "F" (default) print object content.
+/// If opt is "<number>" print in special form for calls within THostAuth
+/// with cardinality <number>
+/// If opt is "S" prints short in-line form for calls within TFTP,
+/// TSlave, TProof ...
+
 void TSecContext::Print(Option_t *opt) const
 {
-   // If opt is "F" (default) print object content.
-   // If opt is "<number>" print in special form for calls within THostAuth
-   // with cardinality <number>
-   // If opt is "S" prints short in-line form for calls within TFTP,
-   // TSlave, TProof ...
-
    char aOrd[10] = {0};
    char aSpc[10] = {0};
 
@@ -298,12 +302,12 @@ void TSecContext::Print(Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns short string with relevant information about this
+/// security context
+
 const char *TSecContext::AsString(TString &out)
 {
-   // Returns short string with relevant information about this
-   // security context
-
    if (fOffSet > -1) {
       char expdate[32];
       out = Form("Method: %d (%s) expiring on %s",
@@ -320,13 +324,13 @@ const char *TSecContext::AsString(TString &out)
    return out.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask remote client to cleanup security context 'ctx'
+/// If 'all', all sec context with the same host as ctx
+/// are cleaned.
+
 Bool_t TSecContext::CleanupSecContext(Bool_t)
 {
-   // Ask remote client to cleanup security context 'ctx'
-   // If 'all', all sec context with the same host as ctx
-   // are cleaned.
-
    AbstractMethod("CleanupSecContext");
    return kFALSE;
 }

@@ -61,7 +61,8 @@ enum ECubeBitMasks {
    k6_7            = k6 | k7
 };
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class E, class V>
 void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh, V eps)
 {
@@ -100,7 +101,8 @@ void ConnectTriangles(TCell<E> &cell, TIsoMesh<V> *mesh, V eps)
 /*
 TF3Adapter.
 */
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TF3Adapter::SetDataSource(const TF3 *f3)
 {
    fTF3 = f3;
@@ -109,7 +111,8 @@ void TF3Adapter::SetDataSource(const TF3 *f3)
    fD = f3->GetZaxis()->GetNbins();//f3->GetNpz();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t TF3Adapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 {
    return fTF3->Eval(fMinX * fXScaleInverted + i * fStepX * fXScaleInverted,
@@ -120,11 +123,12 @@ Double_t TF3Adapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 /*
 TF3 split edge implementation.
 */
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Split the edge and find normal in a new vertex.
+
 void TF3EdgeSplitter::SplitEdge(TCell<Double_t> & cell, TIsoMesh<Double_t> * mesh, UInt_t i,
                                 Double_t x, Double_t y, Double_t z, Double_t iso)const
 {
-   //Split the edge and find normal in a new vertex.
    Double_t v[3] = {};
    const Double_t ofst = GetOffset(cell.fVals[eConn[i][0]], cell.fVals[eConn[i][1]], iso);
    v[0] = x + (vOff[eConn[i][0]][0] + ofst * eDir[i][0]) * fStepX;
@@ -166,12 +170,13 @@ TMeshBuilder's implementation.
 "this->" is used with type-dependant names
 in templates.
 */
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Build iso-mesh using marching cubes.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildMesh(const D *s, const TGridGeometry<V> &g,
                                    MeshType_t *m, V iso)
 {
-   //Build iso-mesh using marching cubes.
    static_cast<TGridGeometry<V> &>(*this) = g;
 
    this->SetDataSource(s);
@@ -205,13 +210,13 @@ void TMeshBuilder<D, V>::BuildMesh(const D *s, const TGridGeometry<V> &g,
       BuildNormals();
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Fill slice with vertices and triangles.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::NextStep(UInt_t depth, const SliceType_t *prevSlice,
                                   SliceType_t *curr)const
 {
-   //Fill slice with vertices and triangles.
-
    if (!prevSlice) {
       //The first slice in mc grid.
       BuildFirstCube(curr);
@@ -226,11 +231,12 @@ void TMeshBuilder<D, V>::NextStep(UInt_t depth, const SliceType_t *prevSlice,
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The first cube in a grid. nx == 0, ny == 0, nz ==0.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildFirstCube(SliceType_t *s)const
 {
-   //The first cube in a grid. nx == 0, ny == 0, nz ==0.
    CellType_t & cell = s->fCells[0];
    cell.fVals[0] = GetData(0, 0, 0);
    cell.fVals[1] = GetData(1, 0, 0);
@@ -255,15 +261,16 @@ void TMeshBuilder<D, V>::BuildFirstCube(SliceType_t *s)const
    ConnectTriangles(cell, fMesh, fEpsilon);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The first row (along x) in the first slice:
+///ny == 0, nz == 0, nx : [1, W - 1].
+///Each cube has previous cube.
+///Values 0, 3, 4, 7 are taken from the previous cube.
+///Edges 3, 7, 8, 11 are taken from the previous cube.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildRow(SliceType_t *s)const
 {
-   //The first row (along x) in the first slice:
-   //ny == 0, nz == 0, nx : [1, W - 1].
-   //Each cube has previous cube.
-   //Values 0, 3, 4, 7 are taken from the previous cube.
-   //Edges 3, 7, 8, 11 are taken from the previous cube.
    for (UInt_t i = 1, e = GetW() - 1; i < e; ++i) {
       const CellType_t &prev = s->fCells[i - 1];
       CellType_t &cell = s->fCells[i];
@@ -318,15 +325,16 @@ void TMeshBuilder<D, V>::BuildRow(SliceType_t *s)const
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///"Col" (column) consists of cubes along y axis
+///on the first slice (nx == 0, nz == 0).
+///Each cube has a previous cube and shares values:
+///0, 1, 4, 5 (in prev.: 3, 2, 7, 6); and edges:
+///0, 4, 8, 9 (in prev.: 2, 6, 10, 11).
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildCol(SliceType_t *s)const
 {
-   //"Col" (column) consists of cubes along y axis
-   //on the first slice (nx == 0, nz == 0).
-   //Each cube has a previous cube and shares values:
-   //0, 1, 4, 5 (in prev.: 3, 2, 7, 6); and edges:
-   //0, 4, 8, 9 (in prev.: 2, 6, 10, 11).
    const UInt_t w = GetW();
    const UInt_t h = GetH();
 
@@ -385,15 +393,16 @@ void TMeshBuilder<D, V>::BuildCol(SliceType_t *s)const
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Slice with nz == 0.
+///nx : [1, W - 1], ny : [1, H - 1].
+///nx increased inside inner loop, ny - enclosing loop.
+///Each cube has two neighbours: ny - 1 => "left",
+///nx - 1 => "right".
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildSlice(SliceType_t *s)const
 {
-   //Slice with nz == 0.
-   //nx : [1, W - 1], ny : [1, H - 1].
-   //nx increased inside inner loop, ny - enclosing loop.
-   //Each cube has two neighbours: ny - 1 => "left",
-   //nx - 1 => "right".
    const UInt_t w = GetW();
    const UInt_t h = GetH();
 
@@ -462,14 +471,15 @@ void TMeshBuilder<D, V>::BuildSlice(SliceType_t *s)const
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///The first cube in a slice with nz == depth.
+///Neighbour is the first cube in the previous slice.
+///Four values and four edges come from the previous cube.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildFirstCube(UInt_t depth, const SliceType_t *prevSlice,
                                         SliceType_t *slice)const
 {
-   //The first cube in a slice with nz == depth.
-   //Neighbour is the first cube in the previous slice.
-   //Four values and four edges come from the previous cube.
    const CellType_t &prevCell = prevSlice->fCells[0];
    CellType_t &cell = slice->fCells[0];
    cell.fType = 0;
@@ -527,14 +537,15 @@ void TMeshBuilder<D, V>::BuildFirstCube(UInt_t depth, const SliceType_t *prevSli
    ConnectTriangles(cell, fMesh, fEpsilon);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Row with ny == 0 and nz == depth, nx : [1, W - 1].
+///Two neighbours: one from previous slice (called bottom cube here),
+///the second is the previous cube in a row.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildRow(UInt_t depth, const SliceType_t *prevSlice,
                                   SliceType_t *slice)const
 {
-   //Row with ny == 0 and nz == depth, nx : [1, W - 1].
-   //Two neighbours: one from previous slice (called bottom cube here),
-   //the second is the previous cube in a row.
    const V z = this->fMinZ + depth * this->fStepZ;
    const UInt_t w = GetW();
 
@@ -603,14 +614,15 @@ void TMeshBuilder<D, V>::BuildRow(UInt_t depth, const SliceType_t *prevSlice,
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///nz == depth, nx == 0, ny : [1, H - 1].
+///Two neighbours - from previous slice ("bottom" cube)
+///and previous cube in a column.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildCol(UInt_t depth, const SliceType_t *prevSlice,
                                   SliceType_t *slice)const
 {
-   //nz == depth, nx == 0, ny : [1, H - 1].
-   //Two neighbours - from previous slice ("bottom" cube)
-   //and previous cube in a column.
    const V z = this->fMinZ + depth * this->fStepZ;
    const UInt_t w = GetW();
    const UInt_t h = GetH();
@@ -675,15 +687,16 @@ void TMeshBuilder<D, V>::BuildCol(UInt_t depth, const SliceType_t *prevSlice,
 }
 
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///nz == depth, nx : [1, W - 1], ny : [1, H - 1].
+///Each cube has 3 neighbours, "bottom" cube from
+///the previous slice, "left" and "right" from the
+///current slice.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildSlice(UInt_t depth, const SliceType_t *prevSlice,
                                     SliceType_t *slice)const
 {
-   //nz == depth, nx : [1, W - 1], ny : [1, H - 1].
-   //Each cube has 3 neighbours, "bottom" cube from
-   //the previous slice, "left" and "right" from the
-   //current slice.
    const V z = this->fMinZ + depth * this->fStepZ;
    const UInt_t h = GetH();
    const UInt_t w = GetW();
@@ -751,12 +764,13 @@ void TMeshBuilder<D, V>::BuildSlice(UInt_t depth, const SliceType_t *prevSlice,
    }
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Build averaged normals using vertices and
+///trinagles.
+
 template<class D, class V>
 void TMeshBuilder<D, V>::BuildNormals()const
 {
-   //Build averaged normals using vertices and
-   //trinagles.
    typedef std::vector<UInt_t>::size_type size_type;
    const UInt_t *t;
    V *p1, *p2, *p3;

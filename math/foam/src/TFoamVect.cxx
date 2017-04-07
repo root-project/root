@@ -15,21 +15,21 @@
 
 ClassImp(TFoamVect);
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for streamer
+
 TFoamVect::TFoamVect()
 {
-// Default constructor for streamer
-
    fDim    =0;
    fCoords =0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// User constructor creating n-dimensional vector
+/// and allocating dynamically array of components
+
 TFoamVect::TFoamVect(Int_t n)
 {
-// User constructor creating n-dimensional vector
-// and allocating dynamically array of components
-
    Int_t i;
    fDim=n;
    fCoords = 0;
@@ -44,11 +44,11 @@ TFoamVect::TFoamVect(Int_t n)
    if(gDebug) Info("TFoamVect", "USER CONSTRUCTOR TFoamVect(const Int_t)\n ");
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 {
-// Copy constructor
-
    fDim = Vect.fDim; fCoords = 0;
    if(fDim > 0)  fCoords = new Double_t[fDim];
 
@@ -63,10 +63,11 @@ TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TFoamVect::~TFoamVect()
 {
-// Destructor
    if(gDebug) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
    delete [] fCoords; //  free(fCoords)
    fCoords=0;
@@ -77,11 +78,11 @@ TFoamVect::~TFoamVect()
 //                     Overloading operators                                //
 //////////////////////////////////////////////////////////////////////////////
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// substitution operator
+
 TFoamVect& TFoamVect::operator =(const TFoamVect& Vect)
 {
-// substitution operator
-
    Int_t i;
    if (&Vect == this) return *this;
    if( Vect.fDim < 0 )
@@ -97,34 +98,35 @@ TFoamVect& TFoamVect::operator =(const TFoamVect& Vect)
    return *this;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [] is for access to elements as in ordinary matrix like a[j]=b[j]
+/// (Perhaps against some strict rules but rather practical.)
+/// Range protection is built in, consequently for substitution
+/// one should use rather use a=b than explicit loop!
+
 Double_t &TFoamVect::operator[](Int_t n)
 {
-// [] is for access to elements as in ordinary matrix like a[j]=b[j]
-// (Perhaps against some strict rules but rather practical.)
-// Range protection is built in, consequently for substitution
-// one should use rather use a=b than explicit loop!
-
    if ((n<0) || (n>=fDim)) {
       Error( "TFoamVect","operator[], out of range \n");
    }
    return fCoords[n];
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary multiplication operator *=
+
 TFoamVect& TFoamVect::operator*=(const Double_t &x)
 {
-// unary multiplication operator *=
-
    for(Int_t i=0;i<fDim;i++)
       fCoords[i] = fCoords[i]*x;
    return *this;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary addition operator +=; adding vector c*=x,
+
 TFoamVect& TFoamVect::operator+=(const TFoamVect& Shift)
 {
-// unary addition operator +=; adding vector c*=x,
    if( fDim != Shift.fDim){
       Error( "TFoamVect","operator+, different dimensions= %d %d \n",fDim,Shift.fDim);
    }
@@ -133,10 +135,11 @@ TFoamVect& TFoamVect::operator+=(const TFoamVect& Shift)
    return *this;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// unary subtraction operator -=
+
 TFoamVect& TFoamVect::operator-=(const TFoamVect& Shift)
 {
-// unary subtraction operator -=
    if( fDim != Shift.fDim) {
       Error( "TFoamVect","operator+, different dimensions= %d %d \n",fDim,Shift.fDim);
    }
@@ -145,42 +148,46 @@ TFoamVect& TFoamVect::operator-=(const TFoamVect& Shift)
    return *this;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// addition operator +; sum of 2 vectors: c=a+b, a=a+b,
+/// NEVER USE IT, VERY SLOW!!!
+
 TFoamVect TFoamVect::operator+(const TFoamVect &p2)
 {
-// addition operator +; sum of 2 vectors: c=a+b, a=a+b,
-// NEVER USE IT, VERY SLOW!!!
    TFoamVect temp(fDim);
    temp  = (*this);
    temp += p2;
    return temp;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// subtraction operator -; difference of 2 vectors; c=a-b, a=a-b,
+/// NEVER USE IT, VERY SLOW!!!
+
 TFoamVect TFoamVect::operator-(const TFoamVect &p2)
 {
-// subtraction operator -; difference of 2 vectors; c=a-b, a=a-b,
-// NEVER USE IT, VERY SLOW!!!
    TFoamVect temp(fDim);
    temp  = (*this);
    temp -= p2;
    return temp;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loading in ordinary double prec. vector, sometimes can be useful
+
 TFoamVect& TFoamVect::operator =(Double_t Vect[])
 {
-// Loading in ordinary double prec. vector, sometimes can be useful
    Int_t i;
    for(i=0; i<fDim; i++)
       fCoords[i] = Vect[i];
    return *this;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loading in double prec. number, sometimes can be useful
+
 TFoamVect& TFoamVect::operator =(Double_t x)
 {
-// Loading in double prec. number, sometimes can be useful
    if(fCoords != 0) {
       for(Int_t i=0; i<fDim; i++)
          fCoords[i] = x;
@@ -191,10 +198,11 @@ TFoamVect& TFoamVect::operator =(Double_t x)
 //                          OTHER METHODS                                   //
 //////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printout of all vector components on "std::cout"
+
 void TFoamVect::Print(Option_t *option) const
 {
-// Printout of all vector components on "std::cout"
    if(!option) Error("Print ", "No option set \n");
    Int_t i;
    Int_t pr = std::cout.precision(7);

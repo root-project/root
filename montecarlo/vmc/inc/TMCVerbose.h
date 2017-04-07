@@ -16,7 +16,7 @@
 //
 // Class TMCVerbose
 // ----------------
-// Class for printing detailed info from MC application.
+// Class for printing a detailed infomation from MC application.
 // Defined levels:
 //  0  no output
 //  1  info up to event level
@@ -63,8 +63,8 @@ private:
    void PrintStepHeader() const;
 
    // data members
-   Int_t  fLevel;      // verbose level
-   Int_t  fStepNumber; // current step number
+   Int_t  fLevel;      ///< Verbose level
+   Int_t  fStepNumber; ///< Current step number
 
    ClassDef(TMCVerbose,1)  //Verbose class for MC application
 };

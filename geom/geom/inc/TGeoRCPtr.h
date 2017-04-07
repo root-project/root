@@ -1,3 +1,6 @@
+// @(#)root/geom:$Id$
+// Author: Andrei Gheata   29/05/2013
+
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -6,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// Author: Andrei.Gheata@cern.ch  29/05/2013
+/** \class TGeoRCPtr
+\ingroup Geometry_classes
 
-//______________________________________________________________________________
-//   TGeoRCPtr - A reference counting-managed pointer for classes derived from
-//               TGeoExtension which can be used as C pointer. Based on
-//               CodeProject implementation example
-//______________________________________________________________________________
+A reference counting-managed pointer for classes derived from TGeoExtension
+which can be used as C pointer. Based on CodeProject implementation example
 
+### Example:
 
-
-/*______________________________________________________________________________
-Example:
-=======
+~~~ {.cpp}
 class MyExtension : public TGeoExtension {
 public:
    MyExtension() : TGeoExtension(), fRC(0) {printf("Created MyExtension\n");}
@@ -31,10 +30,11 @@ private:
    mutable Int_t        fRC;           // Reference counter
    ClassDef(MyExtension,1)
 };
+~~~
 
+### Usage:
 
-Usage:
-======
+~~~ {.cpp}
  // Module 1 creates an object
  TGeoRCPtr<MyExtension> a2 = new MyExtension(); //fRC=1
 
@@ -50,12 +50,13 @@ Usage:
 
  // Module 2 no longer needs object
   ptr2 = 0;    //object will be destroyed here
+~~~
 
-Note:
-=====
- Event if one forgets to call ptr2 = 0, the object gets delete when the method
- using ptr2 gets out of scope.
-______________________________________________________________________________*/
+### Note:
+
+Event if one forgets to call ptr2 = 0, the object gets delete when the method
+using ptr2 gets out of scope.
+*/
 
 template<class T>
 class TGeoRCPtr

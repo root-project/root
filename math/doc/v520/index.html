@@ -74,7 +74,7 @@ In detail, the new classes containing implementations present previously in <tt>
 
     <ul>
   <li><tt>GaussIntegrator</tt> and <tt>GaussLegendreIntegrator</tt> for numerical integration of one-dimensional functions. The first class uses Gaussian  8 and 16 point  quadrature approximation, it provides the translation of the CERNLIB algorithm
-  <a href="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/d103/top.html">DGAUSS</a> by Sigfried Kolbig,  and it is used by the <tt>TF1::Integral</tt> method. The second one uses the Gauss Legendre quadrature formula. It is used by the <tt>TF1::IntegralFast</tt> method.
+  <a href="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/d103/top.html">DGAUSS</a> by Sigfried Kolbig,  and it is used by the <tt>TF1::Integral</tt> method. The second one uses the Gauss Legendre quadrature formula. It is used by the <tt>TF1::IntegralFast</tt> method.
   These classes implement both the same  virtual interface as the adaptive integration methods provided by the MathMore library.  They can all be created and used easily via the common class <tt>ROOT::Math::IntegratorOneDim</tt> providing the interfaces for numerical integration.
 New template methods have been also included in the common Integration class in order to be able to integrate automatically any C++ callable object.
 </li>

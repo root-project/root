@@ -12,13 +12,9 @@
 #ifndef ROOT_TFormLeafInfo
 #define ROOT_TFormLeafInfo
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TLeafElement
 #include "TLeafElement.h"
-#endif
 
 #include "TArrayI.h"
 #include "TDataType.h"
@@ -162,10 +158,6 @@ template <> struct TFormLeafInfo::GetValueHelper<LongDouble_t> {
    static LongDouble_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLongDouble(leaf, instance); }
 };
 
-
-
-//______________________________________________________________________________
-//
 // TFormLeafInfoDirect is a small helper class to implement reading a data
 // member on an object stored in a TTree.
 
@@ -186,9 +178,6 @@ public:
 
 };
 
-
-//______________________________________________________________________________
-//
 // TFormLeafInfoNumerical is a small helper class to implement reading a
 // numerical value inside a collection
 
@@ -210,8 +199,6 @@ public:
    virtual Bool_t    Update();
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoCollectionObject
 // This class is used when we are interested by the collection it self and
 // it is split.
@@ -240,8 +227,6 @@ public:
    virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoClones is a small helper class to implement reading a data
 // member on a TClonesArray object stored in a TTree.
 
@@ -272,9 +257,6 @@ public:
    virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
 };
 
-
-//______________________________________________________________________________
-//
 // TFormLeafInfoCollection is a small helper class to implement reading a data member
 // on a generic collection object stored in a TTree.
 
@@ -321,10 +303,8 @@ public:
    virtual void     *GetLocalValuePointer(char  *thisobj, Int_t instance = 0);
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoCollectionSize is used to return the size of a collection
-//
+
 class TFormLeafInfoCollectionSize : public TFormLeafInfo {
    TClass                  *fCollClass;
    TString                  fCollClassName;
@@ -353,8 +333,6 @@ public:
    virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoPointer is a small helper class to implement reading a data
 // member by following a pointer inside a branch of TTree.
 
@@ -370,8 +348,6 @@ public:
    DECLARE_READVAL;
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoMethod is a small helper class to implement executing a method
 // of an object stored in a TTree
 
@@ -406,8 +382,6 @@ public:
    virtual Bool_t   Update();
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoMultiVarDim is a small helper class to implement reading a
 // data member on a variable size array inside a TClonesArray object stored in
 // a TTree.  This is the version used when the data member is inside a
@@ -461,8 +435,6 @@ public:
    virtual void     UpdateSizes(TArrayI *garr);
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoMultiVarDimDirect is a small helper class to implement reading
 // a data member on a variable size array inside a TClonesArray object stored
 // in a TTree.  This is the version used for split access
@@ -479,8 +451,6 @@ public:
    virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoMultiVarDimCollection is a small helper class to implement reading
 // a data member which is a collection inside a TClonesArray or collection object
 // stored in a TTree.  This is the version used for split access
@@ -503,8 +473,6 @@ public:
    DECLARE_READVAL;
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoMultiVarDimClones is a small helper class to implement reading
 // a data member which is a TClonesArray inside a TClonesArray or collection object
 // stored in a TTree.  This is the version used for split access
@@ -527,8 +495,6 @@ public:
    DECLARE_READVAL;
 };
 
-//______________________________________________________________________________
-//
 // TFormLeafInfoCast is a small helper class to implement casting an object to
 // a different type (equivalent to dynamic_cast)
 
@@ -554,9 +520,7 @@ public:
    virtual Bool_t    Update();
 };
 
-//______________________________________________________________________________
-//
-// TFormLeafTTree is a small helper class to implement reading
+// TFormLeafInfoTTree is a small helper class to implement reading
 // from the containing TTree object itself.
 
 class TFormLeafInfoTTree : public TFormLeafInfo {

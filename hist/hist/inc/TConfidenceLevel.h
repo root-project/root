@@ -4,9 +4,7 @@
 #ifndef ROOT_TConfidenceLevel
 #define ROOT_TConfidenceLevel
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 //____________________________________________________________________
 //

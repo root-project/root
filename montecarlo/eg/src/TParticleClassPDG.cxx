@@ -9,9 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// Utility class used internally by TDatabasePDG
+/** \class  TParticleClassPDG
+    \ingroup eg
+
+Utility class used internally by TDatabasePDG
+*/
 
 #include "TDecayChannel.h"
 #include "TParticlePDG.h"
@@ -19,29 +21,30 @@
 
 ClassImp(TParticleClassPDG)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TParticleClassPDG::TParticleClassPDG(const char* name): TNamed(name,name)
 {
-   //default constructor
    fListOfParticles  = new TObjArray(5);
 }
 
-//______________________________________________________________________________
-TParticleClassPDG::~TParticleClassPDG() {
-   // destructor, class doesn't own its particles...
+////////////////////////////////////////////////////////////////////////////////
+/// destructor, class doesn't own its particles...
 
+TParticleClassPDG::~TParticleClassPDG() {
    delete fListOfParticles;
 }
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Print the entire information of this kind of particle
+///
+
 void TParticleClassPDG::Print(Option_t *) const
 {
-//
-//  Print the entire information of this kind of particle
-//
-
    printf("Particle class: %-20s",GetName());
    if (fListOfParticles) {
       int banner_printed = 0;
@@ -57,10 +60,11 @@ void TParticleClassPDG::Print(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///browse this particle class
+
 void TParticleClassPDG::Browse(TBrowser* b)
 {
-   //browse this particle class
    if (fListOfParticles) fListOfParticles->Browse(b);
 }
 

@@ -12,53 +12,56 @@
 #include "TEveWindowManager.h"
 #include "TEveWindow.h"
 
-//______________________________________________________________________________
-//
-// Manager for EVE windows.
-//
-// Provides the concept of the current window and takes care for proper
-// destruction of the windows.
-//
-// It is also the EVE-parent of windows that are not attaced into the
-// hierarchy of EVE-windows.
-//
-// Window-manager is created by the EVE-manager and can be retrieved via:
-//   gEve->GetWindowManager.
+/** \class TEveWindowManager
+\ingroup TEve
+Manager for EVE windows.
+
+Provides the concept of the current window and takes care for proper
+destruction of the windows.
+
+It is also the EVE-parent of windows that are not attached into the
+hierarchy of EVE-windows.
+
+Window-manager is created by the EVE-manager and can be retrieved via:
+~~~ {.cpp}
+   gEve->GetWindowManager.
+~~~
+*/
 
 ClassImp(TEveWindowManager);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveWindowManager::TEveWindowManager(const char* n, const char* t) :
    TEveElementList(n, t),
    TQObject       (),
    fCurrentWindow    (0),
    fDefaultContainer (0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveWindowManager::~TEveWindowManager()
 {
-   // Destructor.
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Entry-point for communicating the fact that a window was acted
+/// upon in such a way that it should become the current window.
+/// If the passed window is already the current one, it is deselected.
+///
+/// For example, this is called from title-bar, when creating a new
+/// window slot, etc.
+///
+/// If the change is accepted (the manager can refuse to make a
+/// window current), the state of window is changed accordingly and
+/// WindowSelected() signal is emitted.
 
-//______________________________________________________________________________
 void TEveWindowManager::SelectWindow(TEveWindow* window)
 {
-   // Entry-point for communicating the fact that a window was acted
-   // upon in such a way that it should become the current window.
-   // If the passed window is already the current one, it is deselcted.
-   //
-   // For example, this is called from title-bar, when creating a new
-   // window slot, etc.
-   //
-   // If the change is accepted (the manager can refuse to make a
-   // window current), the state of window is changed accordingly and
-   // WindowSelected() signal is emitted.
-
    if (window == fCurrentWindow)
       window = 0;
 
@@ -73,11 +76,11 @@ void TEveWindowManager::SelectWindow(TEveWindow* window)
    WindowSelected(fCurrentWindow);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by a window before it gets deleted.
+
 void TEveWindowManager::DeleteWindow(TEveWindow* window)
 {
-   // Called by a window before it gets deleted.
-
    if (window == fCurrentWindow)
    {
       fCurrentWindow = 0;
@@ -86,45 +89,43 @@ void TEveWindowManager::DeleteWindow(TEveWindow* window)
    WindowDeleted(window);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the "WindowDocked(TEveWindow*)" signal.
+
 void TEveWindowManager::WindowDocked(TEveWindow* window)
 {
-   // Emit the "WindowDocked(TEveWindow*)" signal.
-
    Emit("WindowDocked(TEveWindow*)", (Long_t)window);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the "WindowUndocked(TEveWindow*)" signal.
+
 void TEveWindowManager::WindowUndocked(TEveWindow* window)
 {
-   // Emit the "WindowUndocked(TEveWindow*)" signal.
-
    Emit("WindowUndocked(TEveWindow*)", (Long_t)window);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the "WindowSelected(TEveWindow*)" signal.
+
 void TEveWindowManager::WindowSelected(TEveWindow* window)
 {
-   // Emit the "WindowSelected(TEveWindow*)" signal.
-
    Emit("WindowSelected(TEveWindow*)", (Long_t)window);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the "WindowDeleted(TEveWindow*)" signal.
+
 void TEveWindowManager::WindowDeleted(TEveWindow* window)
 {
-   // Emit the "WindowDeleted(TEveWindow*)" signal.
-
    Emit("WindowDeleted(TEveWindow*)", (Long_t)window);
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Return current window dynamic-casted to TEveWindowSlot.
 
-//______________________________________________________________________________
 TEveWindowSlot* TEveWindowManager::GetCurrentWindowAsSlot() const
 {
-   // Return current window dynamic-casted to TEveWindowSlot.
-
    return dynamic_cast<TEveWindowSlot*>(fCurrentWindow);
 }
 
@@ -142,12 +143,12 @@ void TEveWindowManager::SetDefaultContainer(TEveWindow* w)
    fDefaultContainer = w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy window's children and then the window itself.
+/// Protected method used during shutdown.
+
 void TEveWindowManager::DestroyWindowRecursively(TEveWindow* window)
 {
-   // Destroy window's children and then the window itself.
-   // Protected method used during shutdown.
-
    while (window->HasChildren())
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(window->FirstChild());
@@ -159,11 +160,11 @@ void TEveWindowManager::DestroyWindowRecursively(TEveWindow* window)
    window->DestroyWindowAndSlot();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for all windows to shut-down.
+
 void TEveWindowManager::DestroyWindows()
 {
-   // Wait for all windows to shut-down.
-
    while (HasChildren())
    {
       TEveWindow* w = dynamic_cast<TEveWindow*>(FirstChild());
@@ -175,13 +176,11 @@ void TEveWindowManager::DestroyWindows()
 
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Hide all eve decorations (title-bar and mini-bar) on all frames.
 
-//______________________________________________________________________________
 void TEveWindowManager::HideAllEveDecorations()
 {
-   // Hide all eve decorations (title-bar and mini-bar) on all frames.
-
    TEveCompositeFrame *ecf = 0;
    TIter wins(TEveCompositeFrame::fgFrameList);
    while ((ecf = (TEveCompositeFrame*) wins()))
@@ -191,12 +190,12 @@ void TEveWindowManager::HideAllEveDecorations()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show eve decorations (title-bar or mini-bar) as specified for
+/// the contained window on all frames.
+
 void TEveWindowManager::ShowNormalEveDecorations()
 {
-   // Show eve decorations (title-bar or mini-bar) as specified for
-   // the contained window on all frames.
-
    TEveCompositeFrame *ecf = 0;
    TIter wins(TEveCompositeFrame::fgFrameList);
    while ((ecf = (TEveCompositeFrame*) wins()))
@@ -206,13 +205,13 @@ void TEveWindowManager::ShowNormalEveDecorations()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set show title-bar state on all frames.
+/// This does not modify the per-window settings - call
+/// ShowNormalEveDecorations() to restore them.
+
 void TEveWindowManager::SetShowTitleBars(Bool_t state)
 {
-   // Set show title-bar state on all frames.
-   // This does not modify the per-window settings - call
-   // ShowNormalEveDecorations() to restore them.
-
    TEveCompositeFrame *ecf = 0;
    TIter wins(TEveCompositeFrame::fgFrameList);
    while ((ecf = (TEveCompositeFrame*) wins()))

@@ -155,16 +155,28 @@ ClassImp(RooCustomizer)
 ;
 
 
+static Int_t init();
+
+static Int_t dummy = init() ;
+
 static Int_t init()
 {
   RooFactoryWSTool::IFace* iface = new RooCustomizer::CustIFace ;
   RooFactoryWSTool::registerSpecial("EDIT",iface) ;
+  (void) dummy;
   return 0 ;
 }
-static Int_t dummy = init() ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with a prototype and masterCat index category.
+/// Customizers created by this constructor offer offer both the
+/// replaceArg() and splitArg() functionality. All nodes created in
+/// the customization process are added to the splitLeafs set.
+/// If the customizer is owning, the splitLeafs set will become
+/// owner of all created objects by the customizer
+/// 
+
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafs, RooArgSet* splitLeafsAll) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(kFALSE),
@@ -177,14 +189,6 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
   _cloneNodeListAll(splitLeafsAll),
   _cloneNodeListOwned(&splitLeafs)
 {
-  // Constructor with a prototype and masterCat index category.
-  // Customizers created by this constructor offer offer both the
-  // replaceArg() and splitArg() functionality. All nodes created in
-  // the customization process are added to the splitLeafs set.
-  // If the customizer is owning, the splitLeafs set will become
-  // owner of all created objects by the customizer
-  // 
-
   _masterBranchList.setHashTableSize(1000) ;
   _masterLeafList.setHashTableSize(1000) ;
 
@@ -196,7 +200,11 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& m
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sterile Constructor. Customizers created by this constructor
+/// offer only the replace() method. The supplied 'name' is used as
+/// suffix for any cloned branch nodes
+
 RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   TNamed(pdf.GetName(),pdf.GetTitle()),
   _sterile(kTRUE), 
@@ -210,10 +218,6 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
   _cloneNodeListAll(0),
   _cloneNodeListOwned(0)
 {
-  // Sterile Constructor. Customizers created by this constructor
-  // offer only the replace() method. The supplied 'name' is used as
-  // suffix for any cloned branch nodes
-
   _masterBranchList.setHashTableSize(1000) ;
   _masterLeafList.setHashTableSize(1000) ;
 
@@ -226,11 +230,11 @@ RooCustomizer::RooCustomizer(const RooAbsArg& pdf, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the customizer
+
 void RooCustomizer::initialize() 
 {
-  // Initialize the customizer
-
   _masterPdf->leafNodeServerList(&_masterLeafList) ;
   _masterPdf->branchNodeServerList(&_masterBranchList) ;
 
@@ -240,11 +244,11 @@ void RooCustomizer::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCustomizer::~RooCustomizer() 
 {
-  // Destructor
-
   delete _masterLeafListIter ;
   delete _masterBranchListIter ;
 
@@ -253,16 +257,16 @@ RooCustomizer::~RooCustomizer()
 
   
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Split all arguments in 'set' into individualized clones for each
+/// defined state of 'splitCat'. The 'splitCats' category must be
+/// subset of or equal to the master category supplied in the
+/// customizer constructor.
+///
+/// Splitting is only available on customizers created with a master index category
+
 void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitCat) 
 {
-  // Split all arguments in 'set' into individualized clones for each
-  // defined state of 'splitCat'. The 'splitCats' category must be
-  // subset of or equal to the master category supplied in the
-  // customizer constructor.
-  //
-  // Splitting is only available on customizers created with a master index category
-
   if (_sterile) {
     coutE(InputArguments) << "RooCustomizer::splitArgs(" << _name 
 			  << ") ERROR cannot set spitting rules on this sterile customizer" << endl ;
@@ -278,16 +282,16 @@ void RooCustomizer::splitArgs(const RooArgSet& set, const RooAbsCategory& splitC
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Split all argument 'arg' into individualized clones for each
+/// defined state of 'splitCat'. The 'splitCats' category must be
+/// subset of or equal to the master category supplied in the
+/// customizer constructor.
+///
+/// Splitting is only available on customizers created with a master index category
+
 void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCat) 
 {
-  // Split all argument 'arg' into individualized clones for each
-  // defined state of 'splitCat'. The 'splitCats' category must be
-  // subset of or equal to the master category supplied in the
-  // customizer constructor.
-  //
-  // Splitting is only available on customizers created with a master index category
-
   if (_splitArgList.FindObject(arg.GetName())) {
     coutE(InputArguments) << "RooCustomizer(" << GetName() << ") ERROR: multiple splitting rules defined for " 
 			  << arg.GetName() << " only using first rule" << endl ;
@@ -306,11 +310,11 @@ void RooCustomizer::splitArg(const RooAbsArg& arg, const RooAbsCategory& splitCa
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace any occurence of arg 'orig' with arg 'subst'
+
 void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst) 
 {
-  // Replace any occurence of arg 'orig' with arg 'subst'
-
   if (_replaceArgList.FindObject(orig.GetName())) {
     coutE(InputArguments) << "RooCustomizer(" << GetName() << ") ERROR: multiple replacement rules defined for " 
 	 << orig.GetName() << " only using first rule" << endl ;
@@ -323,14 +327,14 @@ void RooCustomizer::replaceArg(const RooAbsArg& orig, const RooAbsArg& subst)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a clone of the prototype executing all registered 'replace' rules
+/// If verbose is set a message is printed for each leaf or branch node
+/// modification. The returned head node owns all cloned branch nodes
+/// that were created in the cloning proces
+
 RooAbsArg* RooCustomizer::build(Bool_t verbose) 
 {
-  // Build a clone of the prototype executing all registered 'replace' rules
-  // If verbose is set a message is printed for each leaf or branch node
-  // modification. The returned head node owns all cloned branch nodes
-  // that were created in the cloning proces
-
   // Execute build
   RooAbsArg* ret =  doBuild(_name.Length()>0?_name.Data():0,verbose) ;
 
@@ -357,16 +361,16 @@ RooAbsArg* RooCustomizer::build(Bool_t verbose)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build a clone of the prototype executing all registered 'replace'
+/// rules and 'split' rules for the masterCat state named
+/// 'masterCatState'.  If verbose is set a message is printed for
+/// each leaf or branch node modification. The returned composite arg
+/// is owned by the customizer.  This function cannot be called on
+/// customizer build with the sterile constructor.
+
 RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose) 
 {
-  // Build a clone of the prototype executing all registered 'replace'
-  // rules and 'split' rules for the masterCat state named
-  // 'masterCatState'.  If verbose is set a message is printed for
-  // each leaf or branch node modification. The returned composite arg
-  // is owned by the customizer.  This function cannot be called on
-  // customizer build with the sterile constructor.
-
   if (_sterile) {
     coutE(InputArguments) << "RooCustomizer::build(" << _name 
 			  << ") ERROR cannot use leaf spitting build() on this sterile customizer" << endl ;
@@ -385,11 +389,11 @@ RooAbsArg* RooCustomizer::build(const char* masterCatState, Bool_t verbose)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Back-end implementation of the p.d.f building functionality
+
 RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose) 
 {
-  // Back-end implementation of the p.d.f building functionality
-
   // Find nodes that must be split according to provided description, Clone nodes, change their names
   RooArgSet masterNodesToBeSplit("masterNodesToBeSplit") ;
   RooArgSet masterNodesToBeReplaced("masterNodesToBeReplaced") ;
@@ -592,34 +596,38 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of customizer
+
 void RooCustomizer::printName(ostream& os) const 
 {
-  // Print name of customizer
   os << GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of customizer
+
 void RooCustomizer::printTitle(ostream& os) const 
 {
-  // Print title of customizer
   os << GetTitle() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of customizer
+
 void RooCustomizer::printClassName(ostream& os) const 
 {
-  // Print class name of customizer
   os << IsA()->GetName() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print arguments of customizer, i.e. input p.d.f and input master category (if any)
+
 void RooCustomizer::printArgs(ostream& os) const 
 {
-  // Print arguments of customizer, i.e. input p.d.f and input master category (if any)
   os << "[ masterPdf=" << _masterPdf->GetName() ;
   if (_masterCat) {
     os << " masterCat=" << _masterCat->GetName() ;
@@ -629,11 +637,11 @@ void RooCustomizer::printArgs(ostream& os) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print customizer configuration details
+
 void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verbose*/, TString indent) const
 {
-  // Print customizer configuration details
-
   os << indent << "RooCustomizer for " << _masterPdf->GetName() << (_sterile?" (sterile)":"") << endl ;
 
   Int_t i, nsplit = _splitArgList.GetSize() ;
@@ -657,12 +665,12 @@ void RooCustomizer::printMultiline(ostream& os, Int_t /*content*/, Bool_t /*verb
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install the input RooArgSet as container in which all cloned branches
+/// will be stored
+
 void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet) 
 {
-  // Install the input RooArgSet as container in which all cloned branches
-  // will be stored
-
   _cloneBranchList = &cloneBranchSet ;
   _cloneBranchList->setHashTableSize(1000) ;
 }
@@ -670,10 +678,10 @@ void RooCustomizer::setCloneBranchSet(RooArgSet& cloneBranchSet)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) 
 {
-
   // Check number of arguments
   if (args.size()<2) {
     throw string(Form("RooCustomizer::CustIFace::create() ERROR: expect at least 2 arguments for EDIT: the input object and at least one $Replace() rule")) ;
@@ -732,13 +740,17 @@ std::string RooCustomizer::CustIFace::create(RooFactoryWSTool& ft, const char* t
     } else {
       subst = ft.ws().arg(sep+1) ;
     }
-    if (!orig) {
-      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",buf)) ;
+//     if (!orig) {
+//       throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",buf)) ;
+//     }
+//     if (!subst) {
+//       throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() replacement RooAbsArg %s does not exist",sep+1)) ;
+//     }
+    if (orig && subst) {
+      cust.replaceArg(*orig,*subst) ;
+    } else {
+      oocoutW((TObject*)0,ObjectHandling) << "RooCustomizer::CustIFace::create() WARNING: input or replacement of a replacement operation not found, operation ignored"<< endl ;
     }
-    if (!subst) {
-      throw string(Form("RooCustomizer::CustIFace::create() ERROR: $Replace() input RooAbsArg %s does not exist",sep+1)) ;
-    }
-    cust.replaceArg(*orig,*subst) ;
   }
 
   // Build the desired edited object

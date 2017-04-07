@@ -24,7 +24,7 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -fsigned-char -Wshadow -Wall -W -Woverloaded-virtual \
-                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
+                -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -fsigned-char -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
@@ -53,7 +53,9 @@ F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.$(SOEXT))
 else
 F77LIBS      := $(shell $(F77) -print-file-name=libgfortran.a)
 endif
+ifneq ($(shell $(F77) -print-file-name=libgfortranbegin.a),libgfortranbegin.a)
 F77LIBS      += $(shell $(F77) -print-file-name=libgfortranbegin.a)
+endif
 endif
 
 ifneq ($(findstring g77, $(F77)),)

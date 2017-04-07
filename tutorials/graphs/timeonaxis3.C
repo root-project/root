@@ -1,8 +1,15 @@
-// This example compares what the system time function gmtime and localtime give
-// with what gives TGaxis. It can be used as referenced test to check if TGaxis
-// is working properly.
-// The original code was developped by Philippe Gras (CEA Saclay. IRFU/SEDI)
-//Author: Philippe Gras, Bertrand Bellenot, Olivier Couet
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// This example compares what the system time function gmtime and localtime give
+/// with what gives TGaxis. It can be used as referenced test to check if TGaxis
+/// is working properly.
+/// The original code was developed by Philippe Gras (CEA Saclay. IRFU/SEDI)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Philippe Gras, Bertrand Bellenot, Olivier Couet
 
 #if defined(G__WIN32) && defined(__CINT__) && !defined(__MAKECINT__)
 {
@@ -28,13 +35,13 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
    if (utc) tt = gmtime(t);
    else     tt = localtime(t);
    char buf[256];
-   if (display_time_zone) strftime(buf, sizeof(buf), "%H:%M:%S %Z", tt);
+   if (display_time_zone) strftime(buf, sizeof(buf), "%Y-%m-%d  %H:%M:%S %Z", tt);
    else                   strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tt);
    return TString(buf);
 }
 
 
-TCanvas * timeonaxis3() {
+TCanvas *timeonaxis3() {
    double f = 1.8;
 
    TCanvas* c = new TCanvas;
@@ -42,7 +49,7 @@ TCanvas * timeonaxis3() {
    TLatex* tex1 = new TLatex;
    tex1->SetNDC();
    tex1->SetTextFont(102);
-   tex1->SetTextSize(0.07*f);
+   tex1->SetTextSize(0.055*f);
 
    TLatex* tex3 = new TLatex;
    tex3->SetNDC();
@@ -84,7 +91,7 @@ TCanvas * timeonaxis3() {
          ga->SetLineColor(0);
          ga->Draw();
 
-         // Get offset string of axis time format: there is not acccessor
+         // Get offset string of axis time format: there is not accessor
          // to time format in TGaxis.
          // Assumes TAxis use the same format.
          TAxis a(10, 0, 1600000000);

@@ -25,6 +25,8 @@
 
 #include "XrdProofdManager.h"
 
+#include "XrdVersion.hh"
+#include "Xrd/XrdProtocol.hh"
 #include "XrdOuc/XrdOucEnv.hh"
 #include "XrdOuc/XrdOucStream.hh"
 #include "XrdSys/XrdSysPriv.hh"
@@ -51,6 +53,9 @@
 // Tracing utilities
 #include "XrdProofdTrace.h"
 
+#include <grp.h>
+#include <unistd.h>
+
 // Auxilliary sructure used internally to extract list of allowed/denied user names
 // when running in access control mode
 typedef struct {
@@ -58,10 +63,13 @@ typedef struct {
    XrdOucString denied;
 } xpd_acm_lists_t;
 
+// Protocol loader; arguments: const char *pname, char *parms,  XrdProtocol_Config *pi
+typedef XrdProtocol *(*XrdProtocolLoader_t)(const char *, char *, XrdProtocol_Config *);
+
 #ifdef __sun
 /*-
  * Copyright (c) 1991, 1993
- *	The Regents of the University of California.  All rights reserved.
+ * The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -73,8 +81,8 @@ typedef struct {
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ * This product includes software developed by the University of
+ * California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -94,7 +102,7 @@ typedef struct {
 
 #if 0
 #if defined(LIBC_SCCS) && !defined(lint)
-static char sccsid[] = "@(#)getgrouplist.c	8.2 (Berkeley) 12/8/94";
+static char sccsid[] = "@(#)getgrouplist.c   8.2 (Berkeley) 12/8/94";
 #endif /* LIBC_SCCS and not lint */
 #include <sys/cdefs.h>
 __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 delphij Exp $");
@@ -105,54 +113,52 @@ __FBSDID("$FreeBSD: src/lib/libc/gen/getgrouplist.c,v 1.14 2005/05/03 16:20:03 d
  */
 #include <sys/types.h>
 
-#include <grp.h>
 #include <string.h>
-#include <unistd.h>
 
 int
 getgrouplist(const char *uname, gid_t agroup, gid_t *groups, int *grpcnt)
 {
-	const struct group *grp;
-	int i, maxgroups, ngroups, ret;
+   const struct group *grp;
+   int i, maxgroups, ngroups, ret;
 
-	ret = 0;
-	ngroups = 0;
-	maxgroups = *grpcnt;
-	/*
-	 * When installing primary group, duplicate it;
-	 * the first element of groups is the effective gid
-	 * and will be overwritten when a setgid file is executed.
-	 */
-	groups ? groups[ngroups++] = agroup : ngroups++;
-	if (maxgroups > 1)
-		groups ? groups[ngroups++] = agroup : ngroups++;
-	/*
-	 * Scan the group file to find additional groups.
-	 */
-	setgrent();
-	while ((grp = getgrent()) != NULL) {
-		if (groups) {
-			for (i = 0; i < ngroups; i++) {
-				if (grp->gr_gid == groups[i])
-					goto skip;
-			}
-		}
-		for (i = 0; grp->gr_mem[i]; i++) {
-			if (!strcmp(grp->gr_mem[i], uname)) {
-				if (ngroups >= maxgroups) {
-					ret = -1;
-					break;
-				}
-				groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
-				break;
-			}
-		}
+   ret = 0;
+   ngroups = 0;
+   maxgroups = *grpcnt;
+   /*
+    * When installing primary group, duplicate it;
+    * the first element of groups is the effective gid
+    * and will be overwritten when a setgid file is executed.
+    */
+   groups ? groups[ngroups++] = agroup : ngroups++;
+   if (maxgroups > 1)
+      groups ? groups[ngroups++] = agroup : ngroups++;
+   /*
+    * Scan the group file to find additional groups.
+    */
+   setgrent();
+   while ((grp = getgrent()) != NULL) {
+      if (groups) {
+         for (i = 0; i < ngroups; i++) {
+            if (grp->gr_gid == groups[i])
+               goto skip;
+         }
+      }
+      for (i = 0; grp->gr_mem[i]; i++) {
+         if (!strcmp(grp->gr_mem[i], uname)) {
+            if (ngroups >= maxgroups) {
+               ret = -1;
+               break;
+            }
+            groups ? groups[ngroups++] = grp->gr_gid : ngroups++;
+            break;
+         }
+      }
 skip:
-		;
-	}
-	endgrent();
-	*grpcnt = ngroups;
-	return (ret);
+      ;
+   }
+   endgrent();
+   *grpcnt = ngroups;
+   return (ret);
 }
 #endif
 
@@ -162,10 +168,11 @@ skip:
 //
 // Function run in separate thread doing regular checks
 //
-//--------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// This is an endless loop to periodically check the system
+
 void *XrdProofdManagerCron(void *p)
 {
-   // This is an endless loop to periodically check the system
    XPDLOC(PMGR, "ManagerCron")
 
    XrdProofdManager *mgr = (XrdProofdManager *)p;
@@ -209,11 +216,15 @@ void *XrdProofdManagerCron(void *p)
    return (void *)0;
 }
 
-//__________________________________________________________________________
-XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
                  : XrdProofdConfig(pi->ConfigFN, edest)
 {
-   // Constructor
+
+   fParms = parms; // only used for construction: not to be trusted later on
+   fPi = pi;       // only used for construction: not to be trusted later on
 
    fSrvType = kXPD_AnyServer;
    fEffectiveUser = "";
@@ -239,8 +250,9 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fDataDirOpts = "";    // Default: no action
    fDataDirUrlOpts = ""; // Default: none
 
-   // Rootd file serving enabled by default in readonly mode
-   fRootdExe = "<>";
+   ////// This is deprecated: see fXrootd below
+   // Rootd file serving enabled by default in readonly mode 
+   fRootdExe = "";
    // Add mandatory arguments
    fRootdArgs.push_back(XrdOucString("-i"));
    fRootdArgs.push_back(XrdOucString("-nologin"));
@@ -258,6 +270,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
    // Started with 'system' (not 'fork')
    fRootdFork = 0;
+   /////////////////////////////////////////////////////////////////
+
+   // Tools to enable xrootd file serving
+   fXrootdLibPath = "<>";
+   fXrootdPlugin = 0;
 
    // Proof admin path
    fAdminPath = pi->AdmPath;
@@ -300,11 +317,11 @@ XrdProofdManager::XrdProofdManager(XrdProtocol_Config *pi, XrdSysError *edest)
    fSessionMgr = new XrdProofdProofServMgr(this, pi, edest);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdManager::~XrdProofdManager()
 {
-   // Destructor
-
    // Destroy the configuration handler
    SafeDelete(fAdmin);
    SafeDelete(fClientMgr);
@@ -314,12 +331,49 @@ XrdProofdManager::~XrdProofdManager()
    SafeDelete(fROOTMgr);
    SafeDelete(fSessionMgr);
    SafeDelArray(fRootdArgsPtrs);
+   SafeDelete(fXrootdPlugin);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load the Xrootd protocol, if required
+
+XrdProtocol *XrdProofdManager::LoadXrootd(char *parms, XrdProtocol_Config *pi, XrdSysError *edest)
+{
+   XPDLOC(ALL, "Manager::LoadXrootd")
+
+   XrdProtocol *xrp = 0;
+
+   // Create the plug-in instance
+   fXrootdPlugin = new XrdSysPlugin((edest ? edest : (XrdSysError *)0), fXrootdLibPath.c_str());
+   if (!fXrootdPlugin) {
+      TRACE(XERR, "could not create plugin instance for "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the function
+   XrdProtocolLoader_t ep = (XrdProtocolLoader_t) fXrootdPlugin->getPlugin("XrdgetProtocol");
+   if (!ep) {
+      TRACE(XERR, "could not find 'XrdgetProtocol()' in "<<fXrootdLibPath.c_str());
+      return xrp;
+   }
+
+   // Get the server object
+   if (!(xrp = (*ep)("xrootd", parms, pi))) {
+      TRACE(XERR, "Unable to create xrootd protocol service object via " << fXrootdLibPath.c_str());
+      SafeDelete(fXrootdPlugin);
+   } else {
+      // Notify
+      TRACE(ALL, "xrootd protocol service created");
+   }
+
+   return xrp;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the log file belongs to the original effective user
+
 void XrdProofdManager::CheckLogFileOwnership()
 {
-   // Make sure that the log file belongs to the original effective user
    XPDLOC(ALL, "Manager::CheckLogFileOwnership")
 
    // Nothing to do if not priviledged
@@ -351,10 +405,11 @@ void XrdProofdManager::CheckLogFileOwnership()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if master 'm' is allowed to connect to this host
+
 bool XrdProofdManager::CheckMaster(const char *m)
 {
-   // Check if master 'm' is allowed to connect to this host
    bool rc = 1;
 
    if (fMastersAllowed.size() > 0) {
@@ -373,13 +428,13 @@ bool XrdProofdManager::CheckMaster(const char *m)
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the user is allowed to use the system
+/// Return 0 if OK, -1 if not.
+
 int XrdProofdManager::CheckUser(const char *usr, const char *grp,
                                 XrdProofUI &ui, XrdOucString &e, bool &su)
 {
-   // Check if the user is allowed to use the system
-   // Return 0 if OK, -1 if not.
-
    su = 0;
    // User must be defined
    if (!usr || strlen(usr) <= 0) {
@@ -551,10 +606,11 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load PROOF scheduler
+
 XrdProofSched *XrdProofdManager::LoadScheduler()
 {
-   // Load PROOF scheduler
    XPDLOC(ALL, "Manager::LoadScheduler")
 
    XrdProofSched *sched = 0;
@@ -637,11 +693,12 @@ XrdProofSched *XrdProofdManager::LoadScheduler()
    return sched;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a list of workers from the available resource broker
+
 int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
                                  const char *query)
 {
-   // Get a list of workers from the available resource broker
    XPDLOC(ALL, "Manager::GetWorkers")
 
    int rc = 0;
@@ -756,11 +813,11 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the key value in the string passed via the void argument
+
 static int FillKeyValues(const char *k, int *d, void *s)
 {
-   // Add the key value in the string passed via the void argument
-
    xpd_acm_lists_t *ls = (xpd_acm_lists_t *)s;
 
    if (ls) {
@@ -784,11 +841,11 @@ static int FillKeyValues(const char *k, int *d, void *s)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the key value in the string passed via the void argument
+
 static int RemoveInvalidUsers(const char *k, int *, void *s)
 {
-   // Add the key value in the string passed via the void argument
-
    XrdOucString *ls = (XrdOucString *)s;
 
    XrdProofUI ui;
@@ -808,11 +865,12 @@ static int RemoveInvalidUsers(const char *k, int *, void *s)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run configuration and parse the entered config directives.
+/// Return 0 on success, -1 on error
+
 int XrdProofdManager::Config(bool rcf)
 {
-   // Run configuration and parse the entered config directives.
-   // Return 0 on success, -1 on error
    XPDLOC(ALL, "Manager::Config")
 
    XrdSysMutexHelper mtxh(fMutex);
@@ -1182,6 +1240,12 @@ int XrdProofdManager::Config(bool rcf)
       return -1;
    }
 
+   // Xrootd protocol service
+   if ((fXrootd = LoadXrootd(fParms, fPi, fEDest))) {
+      // If enabled, Xrootd takes precedence
+      fRootdExe = "";
+   }
+
    // File server
    if (fRootdExe.length() > 0) {
       // Absolute or relative?
@@ -1249,12 +1313,13 @@ int XrdProofdManager::Config(bool rcf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate local dataset src at URL (check the URL and make the relevant
+/// directories).
+/// Return 1 if OK, 0 if any problem arises
+
 bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
 {
-   // Validate local dataset src at URL (check the URL and make the relevant
-   // directories).
-   // Return 1 if OK, 0 if any problem arises
    XPDLOC(ALL, "Manager::ValidateLocalDataSetSrc")
 
    TRACE(ALL, "validating '" << url << "' ...");
@@ -1342,11 +1407,11 @@ bool XrdProofdManager::ValidateLocalDataSetSrc(XrdOucString &url, bool &local)
    return goodsrc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdManager::RegisterDirectives()
 {
-   // Register directives for configuration
-
    // Register special config directives
    Register("trace", new XrdProofdDirective("trace", this, &DoDirectiveClass));
    Register("groupfile", new XrdProofdDirective("groupfile", this, &DoDirectiveClass));
@@ -1364,6 +1429,7 @@ void XrdProofdManager::RegisterDirectives()
    Register("rootdallow", new XrdProofdDirective("rootdallow", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
    Register("filterlibpaths", new XrdProofdDirective("filterlibpaths", this, &DoDirectiveClass));
+   Register("xrootd", new XrdProofdDirective("xrootd", this, &DoDirectiveClass));
    // Register config directives for strings
    Register("tmp", new XrdProofdDirective("tmp", (void *)&fTMPdir, &DoDirectiveString));
    Register("poolurl", new XrdProofdDirective("poolurl", (void *)&fPoolURL, &DoDirectiveString));
@@ -1376,20 +1442,21 @@ void XrdProofdManager::RegisterDirectives()
    Register("stagereqrepo", new XrdProofdDirective("stagereqrepo", (void *)&fStageReqRepo, &DoDirectiveString));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve special keywords in 's' for client 'pcl'. Recognized keywords
+///     <workdir>          root for working dirs
+///     <host>             local host name
+///     <port>             daemon port
+///     <homedir>          user home dir
+///     <user>             user name
+///     <group>            user group
+///     <uid>              user ID
+///     <gid>              user group ID
+///     <effuser>          effective user name (for multiuser or user mapping modes)
+/// Return the number of keywords resolved.
+
 int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
 {
-   // Resolve special keywords in 's' for client 'pcl'. Recognized keywords
-   //     <workdir>          root for working dirs
-   //     <host>             local host name
-   //     <port>             daemon port
-   //     <homedir>          user home dir
-   //     <user>             user name
-   //     <group>            user group
-   //     <uid>              user ID
-   //     <gid>              user group ID
-   //     <effuser>          effective user name (for multiuser or user mapping modes)
-   // Return the number of keywords resolved.
    XPDLOC(ALL, "Manager::ResolveKeywords")
 
    int nk = 0;
@@ -1465,11 +1532,12 @@ int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
 //
 // Special directive processors
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofdManager::DoDirective(XrdProofdDirective *d,
                                   char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(ALL, "Manager::DoDirective")
 
    if (!d)
@@ -1506,15 +1574,18 @@ int XrdProofdManager::DoDirective(XrdProofdDirective *d,
       return DoDirectivePort(val, cfg, rcf);
    } else if (d->fName == "filterlibpaths") {
       return DoDirectiveFilterLibPaths(val, cfg, rcf);
+   } else if (d->fName == "xrootd") {
+      return DoDirectiveXrootd(val, cfg, rcf);
    }
    TRACE(XERR, "unknown directive: " << d->fName);
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the config file for tracing settings
+
 int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
 {
-   // Scan the config file for tracing settings
    XPDLOC(ALL, "Manager::DoDirectiveTrace")
 
    if (!val || !cfg)
@@ -1608,10 +1679,11 @@ int XrdProofdManager::DoDirectiveTrace(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'groupfile' directive
+
 int XrdProofdManager::DoDirectiveGroupfile(char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Process 'groupfile' directive
    XPDLOC(ALL, "Manager::DoDirectiveGroupfile")
 
    if (!val)
@@ -1635,11 +1707,11 @@ int XrdProofdManager::DoDirectiveGroupfile(char *val, XrdOucStream *cfg, bool rc
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'maxoldlogs' directive
+
 int XrdProofdManager::DoDirectiveMaxOldLogs(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'maxoldlogs' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1655,11 +1727,11 @@ int XrdProofdManager::DoDirectiveMaxOldLogs(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'allow' directive
+
 int XrdProofdManager::DoDirectiveAllow(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'allow' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1674,11 +1746,11 @@ int XrdProofdManager::DoDirectiveAllow(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'allowedgroups' directive
+
 int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'allowedgroups' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1716,11 +1788,11 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'allowedusers' directive
+
 int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'allowedusers' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1753,14 +1825,11 @@ int XrdProofdManager::DoDirectiveAllowedUsers(char *val, XrdOucStream *cfg, bool
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'role' directive
+
 int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'role' directive
-#if defined(BUILD_BONJOUR)
-   XPDLOC(ALL, "Manager::DoDirectiveRole")
-#endif
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1785,21 +1854,14 @@ int XrdProofdManager::DoDirectiveRole(char *val, XrdOucStream *cfg, bool)
       fSrvType = kXPD_AnyServer;
    }
 
-#if defined(BUILD_BONJOUR)
-   // Check the compatibility of the roles and give a warning to the user.
-   if (!XrdProofdNetMgr::CheckBonjourRoleCoherence(SrvType(), fNetMgr->GetBonjourRequestedServiceType())) {
-      TRACE(XERR, "Warning: xpd.role directive and xpd.bonjour service selection are not compatible");
-   }
-#endif
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'xrd.protocol' directive to find the port
+
 int XrdProofdManager::DoDirectivePort(char *val, XrdOucStream *, bool)
 {
-   // Process 'xrd.protocol' directive to find the port
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1816,10 +1878,11 @@ int XrdProofdManager::DoDirectivePort(char *val, XrdOucStream *, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'multiuser' directive
+
 int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'multiuser' directive
    XPDLOC(ALL, "Manager::DoDirectiveMultiUser")
 
    if (!val)
@@ -1839,11 +1902,11 @@ int XrdProofdManager::DoDirectiveMultiUser(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'datasetsrc' directive
+
 int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'datasetsrc' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1893,11 +1956,11 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'datadir' directive
+
 int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'datadir' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -1923,12 +1986,37 @@ int XrdProofdManager::DoDirectiveDataDir(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'xrootd' directive
+///  xpd.xrootd [path/]libXrdXrootd.so
+
+int XrdProofdManager::DoDirectiveXrootd(char *val, XrdOucStream *, bool)
+{
+   XPDLOC(ALL, "Manager::DoDirectiveXrootd")
+
+   if (!val)
+      // undefined inputs
+      return -1;
+   TRACE(ALL, "val: "<< val);
+   // Check version (v3 does not have the plugin, loading v4 may lead to problems)
+   if (XrdMajorVNUM(XrdVNUMBER) < 4) {
+      TRACE(ALL, "WARNING: built against an XRootD version without libXrdXrootd.so :");
+      TRACE(ALL, "WARNING:    loading external " << val << " may lead to incompatibilities");
+   }
+
+   fXrootdLibPath = val;
+
+   // Done
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'rootd' directive
+///  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
+///            [auth:none|full] [other_rootd_args]
+
 int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'rootd' directive
-   //  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
-   //            [auth:none|full] [other_rootd_args]
    XPDLOC(ALL, "Manager::DoDirectiveRootd")
 
    if (!val)
@@ -1943,7 +2031,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
 
    // Parse directive
    XrdOucString mode("ro"), auth("none"), fork("0");
-   bool denied = 0;
+   bool denied = 1;
    char *nxt = val;
    do {
       if (!strcmp(nxt, "deny") || !strcmp(nxt, "disable") || !strcmp(nxt, "off")) {
@@ -1952,6 +2040,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
       } else if (!strcmp(nxt, "allow") || !strcmp(nxt, "enable") || !strcmp(nxt, "on")) {
          denied = 0;
          fRootdExe = "<>";
+         TRACE(ALL, "Use of this directive is deprecated: use xpd.xrootd instead");
       } else if (!strncmp(nxt, "mode:", 5)) {
          mode = nxt + 5;
       } else if (!strncmp(nxt, "auth:", 5)) {
@@ -1993,17 +2082,20 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'rootdallow' directive
+///  xpd.rootdallow host1,host2 host3
+/// Host names may contain the wild card '*'
+
 int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'rootdallow' directive
-   //  xpd.rootdallow host1,host2 host3
-   // Host names may contain the wild card '*'
    XPDLOC(ALL, "Manager::DoDirectiveRootdAllow")
 
    if (!val)
       // undefined inputs
       return -1;
+
+   TRACE(ALL, "Use of this and 'xpd.rootd' directives is deprecated: use xpd.xrootd instead");
 
    TRACE(ALL, "val: "<< val);
 
@@ -2022,11 +2114,12 @@ int XrdProofdManager::DoDirectiveRootdAllow(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'filterlibpaths' directive
+///  xpd.filterlibpaths 1|0 [path1,path2 path3 path4 ...]
+
 int XrdProofdManager::DoDirectiveFilterLibPaths(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'filterlibpaths' directive
-   //  xpd.filterlibpaths 1|0 [path1,path2 path3 path4 ...]
    XPDLOC(ALL, "Manager::DoDirectiveRemoveLibPaths")
 
    if (!val)
@@ -2060,10 +2153,11 @@ int XrdProofdManager::DoDirectiveFilterLibPaths(char *val, XrdOucStream *cfg, bo
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 'host' is allowed to access files via rootd
+
 bool XrdProofdManager::IsRootdAllowed(const char *host)
 {
-   // Check if 'host' is allowed to access files via rootd
    XPDLOC(ALL, "Manager::IsRootdAllowed")
 
    // Check if access is controlled
@@ -2085,10 +2179,11 @@ bool XrdProofdManager::IsRootdAllowed(const char *host)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process manager request
+
 int XrdProofdManager::Process(XrdProofdProtocol *p)
 {
-   // Process manager request
    XPDLOC(ALL, "Manager::Process")
 
    int rc = 0;

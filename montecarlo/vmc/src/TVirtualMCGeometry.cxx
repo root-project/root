@@ -12,35 +12,42 @@
 
 #include "TVirtualMCGeometry.h"
 
-//______________________________________________________________________________
-//   Virtual MCGeometry provides a virtual interface to Monte Carlo
-//   geometry construction.
-//______________________________________________________________________________
+/** \class TVirtualMCGeometry
+    \ingroup vmc
+
+Interface to Monte Carlo geometry construction.
+
+This class has been separated from VirtualMC and it is used
+internally in TVirtualMC implementations.
+*/
 
 ClassImp(TVirtualMCGeometry)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Standard constructor
+///
+
 TVirtualMCGeometry::TVirtualMCGeometry(const char *name, const char *title)
   : TNamed(name,title)
 {
-   //
-   // Standard constructor
-   //
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Default constructor
+///
+
 TVirtualMCGeometry::TVirtualMCGeometry()
   : TNamed()
 {
-   //
-   // Default constructor
-   //
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Destructor
+///
+
 TVirtualMCGeometry::~TVirtualMCGeometry()
 {
-   //
-   // Destructor
-   //
 }

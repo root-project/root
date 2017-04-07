@@ -1,199 +1,177 @@
+// @(#)root/physics:$Id$
+// Author: Jan Conrad
 
-//////////////////////////////////////////////////////////////////////////////
-//
-//  TRolke
-//
-//  This class computes confidence intervals for the rate of a Poisson
-//  process in the presence of uncertain background and/or efficiency.
-//
-//  The treatment and the resulting limits are fully frequentist. The
-//  limit calculations make use of the profile likelihood method.
-//
-//      Author: Jan Conrad (CERN) 2004
-//      Updated: Johan Lundberg (CERN) 2009
-//
-//      Copyright CERN 2004,2009           Jan.Conrad@cern.ch,
-//                                     Johan.Lundberg@cern.ch
-//
-//  For a full list of methods and their syntax, and build instructions,
-//  consult the header file TRolke.h.
-//  --------------------------------
-//
-//  Examples/tutorials are found in the separate file Rolke.C
-//  ---------------------------------------------------------
-//
-//////////////////////////////////////////////////////////////////////////////
-//
-//
-//  TRolke implements the following Models
-//  =======================================
-//
-//  The signal is always assumed to be Poisson, with the following
-//  combinations of models of background and detection efficiency:
-//
-//  If unsure, first consider model 3, 4 or 5.
-//
-//       1: SetPoissonBkgBinomEff(x,y,z,tau,m)
-//
-//          Background: Poisson
-//          Efficiency: Binomial
-//
-//          when the background is simultaneously measured
-//          from sidebands (or MC), and
-//          the signal efficiency was determined from Monte Carlo
-//
-//       2: SetPoissonBkgGaussEff(x,y,em,sde,tau)
-//
-//          Background: Poisson
-//          Efficiency: Gaussian
-//
-//          when the background is simultaneously measured
-//          from sidebands (or MC), and
-//          the efficiency is modeled as Gaussian
-//
-//       3: SetGaussBkgGaussEff(x,bm,em,sde,sdb)
-//
-//          Background: Gaussian
-//          Efficiency: Gaussian
-//
-//          when background and efficiency can both be
-//          modeled as Gaussian.
-//
-//       4: SetPoissonBkgKnownEff(x,y,tau,e)
-//
-//          Background: Poisson
-//          Efficiency: Known
-//
-//          when the background is simultaneously measured
-//          from sidebands (or MC).
-//
-//       5: SetGaussBkgKnownEff(x,bm,sdb,e)
-//
-//          Background: Gaussian
-//          Efficiency: Known
-//
-//          when background is Gaussian
-//
-//       6: SetKnownBkgBinomEff(x,z,b,m)
-//
-//          Background: Known
-//          Efficiency: Binomial
-//
-//          when signal efficiency was determined from Monte Carlo
-//
-//       7: SetKnownBkgGaussEff(x,em,sde,b)
-//
-//          Background: Known
-//          Efficiency: Gaussian
-//
-//          when background is known and efficiency Gaussian
-//
-//  Parameters and further explanation
-//  ==================================
-//
-//  For all models:
-//  ---------------
-//
-//    x = number of observed events in the experiment
-//
-//    Efficiency (e or em) is the detection probability for signal.
-//    A low efficiency hence generally means weaker limits.
-//    If the efficiency of an experiment (with analysis cuts) is
-//    dealt with elsewhere, em or e can be set to one.
-//
-//  For Poisson background measurements (sideband or MC):
-//  -----------------------------------------------------
-//
-//    y = number of observed events in background region
-//    tau =
-//        Either: the ratio between signal and background region
-//        in case background is observed.
-//        Or: the ratio between observed and simulated live-time
-//        in case background is determined from MC.
-//
-//  For Gaussian efficiency or background:
-//  --------------------------------------
-//
-//    bm  = estimate of the background
-//    sdb = corresponding standard deviation
-//
-//    em  = estimate of the efficiency
-//    sde = corresponding standard deviation
-//
-//        If the efficiency scale of dealt with elsewhere,
-//        set em to 1 and sde to the relative uncertainty.
-//
-//  For Binomial signal efficiency:
-//  -------------------------------
-//
-//     m = number of MC events generated
-//     z = number of MC events observed
-//
-//  For the case of known background expectation or known efficiency:
-//  -----------------------------------------------------------------
-//
-//     e = true efficiency (considered known)
-//     b = background expectation value (considered known)
-//
-//
-////////////////////////////////////////////////////////////////////
-//
-//
-//  The confidence level (CL) is set either at construction
-//  time or with either of SetCL or SetCLSigmas
-//
-//  The TRolke method is very similar to the one used in MINUIT (MINOS).
-//
-//  Two options are offered to deal with cases where the maximum likelihood
-//  estimate (MLE) is not in the physical region. Version "bounded likelihood"
-//  is the one used by MINOS if bounds for the physical region are chosen.
-//  Unbounded likelihood (the default) allows the MLE to be in the
-//  unphysical region. It has however better coverage.
-//  For more details consult the reference (see below).
-//
-//  For a description of the method and its properties:
-//
-//  W.Rolke, A. Lopez, J. Conrad and Fred James
-//  "Limits and Confidence Intervals in presence of nuisance parameters"
-//   http://lanl.arxiv.org/abs/physics/0403059
-//   Nucl.Instrum.Meth.A551:493-503,2005
-//
-//  Should I use TRolke, TFeldmanCousins, TLimit?
-//  ----------------------------------------------
-//
-//  1. Does TRolke make TFeldmanCousins obsolete?
-//
-//  Certainly not. TFeldmanCousins is the fully frequentist construction and
-//  should be used in case of no (or negligible) uncertainties. It is however
-//  not capable of treating uncertainties in nuisance parameters. In other
-//  words, it does not handle background expectations or signal efficiencies
-//  which are known only with some limited accuracy.
-//
-//  TRolke is designed for this case and it is shown in the reference above
-//  that it has good coverage properties for most cases, and can be used
-//  where FeldmannCousins can't.
-//
-//  2. What are the advantages of TRolke over TLimit?
-//
-//  TRolke is fully frequentist. TLimit treats nuisance parameters Bayesian.
-//
-//  For a coverage study of a Bayesian method refer to
-//  physics/0408039 (Tegenfeldt & J.C). However, this note studies
-//  the coverage of Feldman&Cousins with Bayesian treatment of nuisance
-//  parameters. To make a long story short: using the Bayesian method you
-//  might introduce a small amount of over-coverage (though I haven't shown it
-//  for TLimit). On the other hand, coverage of course is a not so interesting
-//  when you consider yourself a Bayesian.
-//
-///////////////////////////////////////////////////////////////////////////
+/** \class TRolke
+    \ingroup Physics
+ This class computes confidence intervals for the rate of a Poisson
+ process in the presence of uncertain background and/or efficiency.
+
+ The treatment and the resulting limits are fully frequentist. The
+ limit calculations make use of the profile likelihood method.
+
+\author Jan Conrad (CERN) 2004, Updated: Johan Lundberg (CERN) 2009
+
+ For a full list of methods and their syntax, and build instructions,
+ consult the header file TRolke.h.
+
+ Examples/tutorials are found in the separate file Rolke.C
+
+### TRolke implements the following Models
+
+ The signal is always assumed to be Poisson, with the following
+ combinations of models of background and detection efficiency:
+
+ If unsure, first consider model 3, 4 or 5.
+
+1: SetPoissonBkgBinomEff(x,y,z,tau,m)
+~~~
+   Background: Poisson
+   Efficiency: Binomial
+~~~
+   when the background is simultaneously measured
+   from sidebands (or MC), and
+   the signal efficiency was determined from Monte Carlo
+
+2: SetPoissonBkgGaussEff(x,y,em,sde,tau)
+~~~
+   Background: Poisson
+   Efficiency: Gaussian
+~~~
+   when the background is simultaneously measured
+   from sidebands (or MC), and
+   the efficiency is modeled as Gaussian
+
+3: SetGaussBkgGaussEff(x,bm,em,sde,sdb)
+~~~
+   Background: Gaussian
+   Efficiency: Gaussian
+~~~
+   when background and efficiency can both be
+   modeled as Gaussian.
+
+4: SetPoissonBkgKnownEff(x,y,tau,e)
+~~~
+   Background: Poisson
+   Efficiency: Known
+~~~
+   when the background is simultaneously measured
+   from sidebands (or MC).
+
+5: SetGaussBkgKnownEff(x,bm,sdb,e)
+~~~
+   Background: Gaussian
+   Efficiency: Known
+~~~
+   when background is Gaussian
+
+6: SetKnownBkgBinomEff(x,z,b,m)
+~~~
+   Background: Known
+   Efficiency: Binomial
+~~~
+   when signal efficiency was determined from Monte Carlo
+
+7: SetKnownBkgGaussEff(x,em,sde,b)
+~~~
+   Background: Known
+   Efficiency: Gaussian
+~~~
+   when background is known and efficiency Gaussian
+
+### Parameters and further explanation
+
+#### For all models:
+~~~
+   x = number of observed events in the experiment
+~~~
+   Efficiency (e or em) is the detection probability for signal.
+   A low efficiency hence generally means weaker limits.
+   If the efficiency of an experiment (with analysis cuts) is
+   dealt with elsewhere, em or e can be set to one.
+
+#### For Poisson background measurements (sideband or MC):
+~~~
+   y = number of observed events in background region
+   tau =
+       Either: the ratio between signal and background region
+       in case background is observed.
+       Or: the ratio between observed and simulated live-time
+       in case background is determined from MC.
+~~~
+#### For Gaussian efficiency or background:
+~~~
+   bm  = estimate of the background
+   sdb = corresponding standard deviation
+
+   em  = estimate of the efficiency
+   sde = corresponding standard deviation
+~~~
+   If the efficiency scale of dealt with elsewhere,
+   set em to 1 and sde to the relative uncertainty.
+
+#### For Binomial signal efficiency:
+~~~
+    m = number of MC events generated
+    z = number of MC events observed
+~~~
+#### For the case of known background expectation or known efficiency:
+~~~
+    e = true efficiency (considered known)
+    b = background expectation value (considered known)
+~~~
+
+ The confidence level (CL) is set either at construction
+ time or with either of SetCL or SetCLSigmas
+
+ The TRolke method is very similar to the one used in MINUIT (MINOS).
+
+ Two options are offered to deal with cases where the maximum likelihood
+ estimate (MLE) is not in the physical region. Version "bounded likelihood"
+ is the one used by MINOS if bounds for the physical region are chosen.
+ Unbounded likelihood (the default) allows the MLE to be in the
+ unphysical region. It has however better coverage.
+ For more details consult the reference (see below).
+
+ For a description of the method and its properties:
+
+ W.Rolke, A. Lopez, J. Conrad and Fred James
+ "Limits and Confidence Intervals in presence of nuisance parameters"
+  http://lanl.arxiv.org/abs/physics/0403059
+  Nucl.Instrum.Meth.A551:493-503,2005
+
+#### Should I use TRolke, TFeldmanCousins, TLimit?
+
+   1. Does TRolke make TFeldmanCousins obsolete?
+      Certainly not. TFeldmanCousins is the fully frequentist construction and
+      should be used in case of no (or negligible) uncertainties. It is however
+      not capable of treating uncertainties in nuisance parameters. In other
+      words, it does not handle background expectations or signal efficiencies
+      which are known only with some limited accuracy.
+      TRolke is designed for this case and it is shown in the reference above
+      that it has good coverage properties for most cases, and can be used
+      where FeldmannCousins can't.
+
+   2. What are the advantages of TRolke over TLimit?
+      TRolke is fully frequentist. TLimit treats nuisance parameters Bayesian.
+      For a coverage study of a Bayesian method refer to
+      physics/0408039 (Tegenfeldt & J.C). However, this note studies
+      the coverage of Feldman&Cousins with Bayesian treatment of nuisance
+      parameters. To make a long story short: using the Bayesian method you
+      might introduce a small amount of over-coverage (though I haven't shown it
+      for TLimit). On the other hand, coverage of course is a not so interesting
+      when you consider yourself a Bayesian.
+*/
 
 #include "TRolke.h"
 #include "TMath.h"
-#include "Riostream.h"
+#include <iostream>
 
 ClassImp(TRolke)
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with optional Confidence Level argument.
+/// 'option' is not used.
+
 TRolke::TRolke(Double_t CL, Option_t * /*option*/)
 :  fCL(CL),
    fUpperLimit(0.0),
@@ -202,26 +180,26 @@ TRolke::TRolke(Double_t CL, Option_t * /*option*/)
    fNumWarningsDeprecated1(0),
    fNumWarningsDeprecated2(0)
 {
-//constructor with optional Confidence Level argument.
-//'option' is not used.
-
    SetModelParameters();
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRolke::~TRolke()
 {
 }
 
-/* ______________________ new interface _____________________ */
+////////////////////////////////////////////////////////////////////////////////
+/// Model 1: Background - Poisson, Efficiency - Binomial
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - z   : number of MC events observed
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - m   : number of MC events generated
+
 void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
 {
-// Model 1: Background - Poisson, Efficiency - Binomial
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    z   : number of MC events observed
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    m   : number of MC events generated
    SetModelParameters(
          x  ,       //   Int_t x,
          y  ,       //   Int_t y,
@@ -237,14 +215,16 @@ void TRolke::SetPoissonBkgBinomEff(Int_t x, Int_t y, Int_t z, Double_t tau, Int_
          m);        //   Int_t m
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 2: Background - Poisson, Efficiency - Gaussian
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - em  : estimate of the efficiency
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - sde : efficiency estimate's standard deviation
+
 void TRolke::SetPoissonBkgGaussEff(Int_t x, Int_t y, Double_t em, Double_t tau, Double_t sde)
 {
-// Model 2: Background - Poisson, Efficiency - Gaussian
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    em  : estimate of the efficiency
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    sde : efficiency estimate's standard deviation
    SetModelParameters(
          x  ,       //   Int_t x,
          y  ,       //   Int_t y,
@@ -261,14 +241,16 @@ void TRolke::SetPoissonBkgGaussEff(Int_t x, Int_t y, Double_t em, Double_t tau, 
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 3: Background - Gaussian, Efficiency - Gaussian (x,bm,em,sde,sdb)
+///   - x   : number of observed events in the experiment
+///   - bm  : estimate of the background
+///   - em  : estimate of the efficiency
+///   - sde : efficiency estimate's standard deviation
+///   - sdb : background estimate's standard deviation
+
 void TRolke::SetGaussBkgGaussEff(Int_t x, Double_t bm, Double_t em, Double_t sde, Double_t sdb)
 {
-// Model 3: Background - Gaussian, Efficiency - Gaussian (x,bm,em,sde,sdb)
-//    x   : number of observed events in the experiment
-//    bm  : estimate of the background
-//    em  : estimate of the efficiency
-//    sde : efficiency estimate's standard deviation
-//    sdb : background estimate's standard deviation
    SetModelParameters(
          x  ,       //   Int_t x,
          0  ,       //   Int_t y,
@@ -285,13 +267,15 @@ void TRolke::SetGaussBkgGaussEff(Int_t x, Double_t bm, Double_t em, Double_t sde
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 4: Background - Poisson, Efficiency - known     (x,y,tau,e)
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - e   : true efficiency (considered known)
+
 void TRolke::SetPoissonBkgKnownEff(Int_t x, Int_t y, Double_t tau, Double_t e)
 {
-// Model 4: Background - Poisson, Efficiency - known     (x,y,tau,e)
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    e   : true efficiency (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
          y  ,       //   Int_t y,
@@ -308,13 +292,15 @@ void TRolke::SetPoissonBkgKnownEff(Int_t x, Int_t y, Double_t tau, Double_t e)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 5: Background - Gaussian, Efficiency - known    (x,bm,sdb,e
+///   - x   : number of observed events in the experiment
+///   - bm  : estimate of the background
+///   - sdb : background estimate's standard deviation
+///   - e   : true efficiency (considered known)
+
 void TRolke::SetGaussBkgKnownEff(Int_t x, Double_t bm, Double_t sdb, Double_t e)
 {
-// Model 5: Background - Gaussian, Efficiency - known    (x,bm,sdb,e
-//    x   : number of observed events in the experiment
-//    bm  : estimate of the background
-//    sdb : background estimate's standard deviation
-//    e   : true efficiency (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
          0  ,       //   Int_t y,
@@ -331,13 +317,15 @@ void TRolke::SetGaussBkgKnownEff(Int_t x, Double_t bm, Double_t sdb, Double_t e)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 6: Background - known, Efficiency - Binomial    (x,z,m,b)
+///   - x   : number of observed events in the experiment
+///   - z   : number of MC events observed
+///   - m   : number of MC events generated
+///   - b   : background expectation value (considered known)
+
 void TRolke::SetKnownBkgBinomEff(Int_t x, Int_t z, Int_t m, Double_t b)
 {
-// Model 6: Background - known, Efficiency - Binomial    (x,z,m,b)
-//    x   : number of observed events in the experiment
-//    z   : number of MC events observed
-//    m   : number of MC events generated
-//    b   : background expectation value (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
          0  ,       //   Int_t y
@@ -354,13 +342,15 @@ void TRolke::SetKnownBkgBinomEff(Int_t x, Int_t z, Int_t m, Double_t b)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Model 7: Background - known, Efficiency - Gaussian    (x,em,sde,b)
+///   - x   : number of observed events in the experiment
+///   - em  : estimate of the efficiency
+///   - sde : efficiency estimate's standard deviation
+///   - b   : background expectation value (considered known)
+
 void TRolke::SetKnownBkgGaussEff(Int_t x, Double_t em, Double_t sde, Double_t b)
 {
-// Model 7: Background - known, Efficiency - Gaussian    (x,em,sde,b)
-//    x   : number of observed events in the experiment
-//    em  : estimate of the efficiency
-//    sde : efficiency estimate's standard deviation
-//    b   : background expectation value (considered known)
    SetModelParameters(
          x  ,       //   Int_t x,
          0  ,       //   Int_t y
@@ -377,9 +367,11 @@ void TRolke::SetKnownBkgGaussEff(Int_t x, Double_t em, Double_t sde, Double_t b)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and get the upper and lower limits for the pre-specified model.
+
 bool TRolke::GetLimits(Double_t& low, Double_t& high)
 {
-/* Calculate and get the upper and lower limits for the pre-specified model */
    if ((f_mid<1)||(f_mid>7)) {
       std::cerr << "TRolke - Error: Model id "<< f_mid<<std::endl;
       if (f_mid<1) {
@@ -399,25 +391,31 @@ bool TRolke::GetLimits(Double_t& low, Double_t& high)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and get upper limit for the pre-specified model.
+
 Double_t TRolke::GetUpperLimit()
 {
-/* Calculate and get upper limit for the pre-specified model */
    Double_t low(0), high(0);
    GetLimits(low,high);
    return fUpperLimit;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and get lower limit for the pre-specified model.
+
 Double_t TRolke::GetLowerLimit()
 {
-/* Calculate and get lower limit for the pre-specified model */
    Double_t low(0), high(0);
    GetLimits(low,high);
    return fLowerLimit;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return a simple background value (estimate/truth) given the pre-specified model.
+
 Double_t TRolke::GetBackground()
 {
-/* Return a simple background value (estimate/truth) given the pre-specified model */
    Double_t background = 0;
    switch (f_mid) {
       case 1:
@@ -441,10 +439,12 @@ Double_t TRolke::GetBackground()
    return background;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the upper and lower average limits based on the specified model.
+/// No uncertainties are considered for the Poisson weights in the averaging sum
+
 bool TRolke::GetSensitivity(Double_t& low, Double_t& high, Double_t pPrecision)
 {
-// get the upper and lower average limits based on the specified model.
-// No uncertainties are considered for the Poisson weights in the averaging sum
    Double_t background = GetBackground();
 
    Double_t weight = 0;
@@ -469,16 +469,17 @@ bool TRolke::GetSensitivity(Double_t& low, Double_t& high, Double_t pPrecision)
    return (low < high); // could also add more detailed test
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the upper and lower limits for the outcome corresponding to
+/// a given quantile.
+/// For integral=0.5 this gives the median limits
+/// in repeated experiments. The returned out_x is the corresponding
+/// (e.g. median) value of x.
+/// No uncertainties are considered for the Poisson weights when calculating
+/// the Poisson integral.
 
 bool TRolke::GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Double_t integral)
 {
-/* get the upper and lower limits for the outcome corresponding to
-   a given quantile.
-   For integral=0.5 this gives the median limits
-   in repeated experiments. The returned out_x is the corresponding
-   (e.g. median) value of x.
-   No uncertainties are considered for the Poisson weights when calculating
-   the Poisson integral */
    Double_t background = GetBackground();
    Double_t weight = 0;
    Double_t weightSum = 0;
@@ -502,11 +503,13 @@ bool TRolke::GetLimitsQuantile(Double_t& low, Double_t& high, Int_t& out_x, Doub
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the upper and lower limits for the most likely outcome.
+/// The returned out_x is the corresponding value of x
+/// No uncertainties are considered for the Poisson weights when finding ML.
+
 bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
 {
-/* get the upper and lower limits for the most likely outcome.
-   The returned out_x is the corresponding value of x
-   No uncertainties are considered for the Poisson weights when finding ML */
    Double_t background = GetBackground();
 
    Int_t loop_x = 0; // this can be optimized if needed.
@@ -534,12 +537,14 @@ bool TRolke::GetLimitsML(Double_t& low, Double_t& high, Int_t& out_x)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// get the value of x corresponding to rejection of the null hypothesis.
+/// This means a lower limit >0 with the pre-specified Confidence Level.
+/// Optionally give maxtry; the maximum value of x to try. Of not, or if
+/// maxtry<0 an automatic mode is used.
+
 bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
 {
-// get the value of x corresponding to rejection of the null hypothesis.
-// This means a lower limit >0 with the pre-specified Confidence Level.
-// Optionally give maxtry; the maximum value of x to try. Of not, or if
-// maxtry<0 an automatic mode is used.
    Double_t background = GetBackground();
 
    int j = 0;
@@ -568,8 +573,10 @@ bool TRolke::GetCriticalNumber(Int_t& ncrit, Int_t maxtry)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Deprecated name for SetBounding.
+
 void TRolke::SetSwitch(bool bnd) {
-/* Deprecated name for SetBounding. */
    if(fNumWarningsDeprecated1<2){
       std::cerr << "*******************************************" <<std::endl;
       std::cerr << "TRolke - Warning: 'SetSwitch' is depricated and may be removed from future releases:" <<std::endl;
@@ -580,8 +587,10 @@ void TRolke::SetSwitch(bool bnd) {
    SetBounding(bnd);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dump internals. Print members.
+
 void TRolke::Print(Option_t*) const {
-/* Dump internals. Print members. */
    std::cout << "*******************************************" <<std::endl;
    std::cout << "* TRolke::Print() - dump of internals:                " <<std::endl;
    std::cout << "*"<<std::endl;
@@ -608,23 +617,24 @@ void TRolke::Print(Option_t*) const {
    std::cout << "*******************************************" <<std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Deprecated and error prone model selection interface.
+/// It's use is trongly discouraged. 'mid' is the model ID (1 to 7).
+/// This method is provided for backwards compatibility/developer use only. */
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - z   : number of MC events observed
+///   - bm  : estimate of the background
+///   - em  : estimate of the efficiency
+///   - e   : true efficiency (considered known)
+///   - mid : internal model id (really, you should not use this method at all)
+///   - sde : efficiency estimate's standard deviation
+///   - sdb : background estimate's standard deviation
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - b   : background expectation value (considered known)
+///   - m   : number of MC events generated
 
 Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m){
-/* Deprecated and error prone model selection interface.
-   It's use is trongly discouraged. 'mid' is the model ID (1 to 7).
-   This method is provided for backwards compatibility/developer use only. */
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    z   : number of MC events observed
-//    bm  : estimate of the background
-//    em  : estimate of the efficiency
-//    e   : true efficiency (considered known)
-//    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation
-//    sdb : background estimate's standard deviation
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    b   : background expectation value (considered known)
-//    m   : number of MC events generated
    if (fNumWarningsDeprecated2<2 ) {
       std::cerr << "*******************************************" <<std::endl;
       std::cerr << "TRolke - Warning: 'CalculateInterval' is depricated and may be removed from future releases:" <<std::endl;
@@ -648,23 +658,22 @@ Double_t TRolke::CalculateInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Doubl
    return ComputeInterval(f_x, f_y, f_z, f_bm, f_em, f_e, f_mid, f_sde, f_sdb, f_tau, f_b, f_m);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - z   : number of MC events observed
+///   - bm  : estimate of the background
+///   - em  : estimate of the efficiency
+///   - e   : true efficiency (considered known)
+///   - mid : internal model id
+///   - sde : efficiency estimate's standard deviation
+///   - sdb : background estimate's standard deviation
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - b   : background expectation value (considered known)
+///   - m   : number of MC events generated
 
-// --------------- Private methods ----------------
 void TRolke::SetModelParameters(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
 {
-//___________________________________________________________________________
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    z   : number of MC events observed
-//    bm  : estimate of the background
-//    em  : estimate of the efficiency
-//    e   : true efficiency (considered known)
-//    mid : internal model id
-//    sde : efficiency estimate's standard deviation
-//    sdb : background estimate's standard deviation
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    b   : background expectation value (considered known)
-//    m   : number of MC events generated
    f_x   = x   ;
    f_y   = y   ;
    f_z   = z   ;
@@ -686,24 +695,23 @@ void TRolke::SetModelParameters()
    f_mid=0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// ComputeInterval, the internals.
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - z   : number of MC events observed
+///   - bm  : estimate of the background
+///   - em  : estimate of the efficiency
+///   - e   : true efficiency (considered known)
+///   - mid : internal model id (really, you should not use this method at all)
+///   - sde : efficiency estimate's standard deviation
+///   - sdb : background estimate's standard deviation
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - b   : background expectation value (considered known)
+///   - m   : number of MC events generated
 
 Double_t TRolke::ComputeInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
 {
-//___________________________________________________________________________
-// ComputeInterval, the internals.
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    z   : number of MC events observed
-//    bm  : estimate of the background
-//    em  : estimate of the efficiency
-//    e   : true efficiency (considered known)
-//    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation
-//    sdb : background estimate's standard deviation
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    b   : background expectation value (considered known)
-//    m   : number of MC events generated
-
    //calculate interval
    Int_t done = 0;
    Double_t limit[2];
@@ -728,24 +736,23 @@ Double_t TRolke::ComputeInterval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_
    return limit[1];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Internal helper function 'Interval'
+///   - x   : number of observed events in the experiment
+///   - y   : number of observed events in background region
+///   - z   : number of MC events observed
+///   - bm  : estimate of the background
+///   - em  : estimate of the efficiency
+///   - e   : true efficiency (considered known)
+///   - mid : internal model id (really, you should not use this method at all)
+///   - sde : efficiency estimate's standard deviation
+///   - sdb : background estimate's standard deviation
+///   - tau : ratio parameter (read TRolke.cxx for details)
+///   - b   : background expectation value (considered known)
+///   - m   : number of MC events generated
+
 Double_t TRolke::Interval(Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Double_t e, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m)
 {
-//_____________________________________________________________________
-// Internal helper function 'Interval'
-//
-//    x   : number of observed events in the experiment
-//    y   : number of observed events in background region
-//    z   : number of MC events observed
-//    bm  : estimate of the background
-//    em  : estimate of the efficiency
-//    e   : true efficiency (considered known)
-//    mid : internal model id (really, you should not use this method at all)
-//    sde : efficiency estimate's standard deviation
-//    sdb : background estimate's standard deviation
-//    tau : ratio parameter (read TRolke.cxx for details)
-//    b   : background expectation value (considered known)
-//    m   : number of MC events generated
-
    Double_t dchi2 = TMath::ChisquareQuantile(fCL, 1);
    Double_t tempxy[2], limits[2] = {0, 0};
    Double_t slope, fmid, low, flow, high, fhigh, test, ftest, mu0, maximum, target, l, f0;
@@ -917,15 +924,14 @@ done:
    return limits[1];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Internal helper function
+/// Chooses between the different profile likelihood functions to use for the
+/// different models.
+/// Returns evaluation of the profile likelihood functions.
 
 Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm, Double_t em, Int_t mid, Double_t sde, Double_t sdb, Double_t tau, Double_t b, Int_t m, Int_t what)
 {
-//___________________________________________________________________________
-//Internal helper function
-// Chooses between the different profile likelihood functions to use for the
-// different models.
-// Returns evaluation of the profile likelihood functions.
-
    switch (mid) {
       case 1:
          return EvalLikeMod1(mu, x, y, z, tau, m, what);
@@ -950,16 +956,16 @@ Double_t TRolke::Likelihood(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t bm,
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 1:
+/// Poisson background/ Binomial Efficiency
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m, Int_t what)
 {
-//_________________________________________________________________________
-//
-// Calculates the Profile Likelihood for MODEL 1:
-//  Poisson background/ Binomial Efficiency
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
    Double_t f  = 0;
    Double_t zm = Double_t(z) / m;
 
@@ -990,13 +996,12 @@ Double_t TRolke::EvalLikeMod1(Double_t mu, Int_t x, Int_t y, Int_t z, Double_t t
    return f;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 1:
+/// Poisson background/ Binomial Efficiency
 
 Double_t TRolke::LikeMod1(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
 {
-//________________________________________________________________________
-// Profile Likelihood function for MODEL 1:
-// Poisson background/ Binomial Efficiency
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1018,12 +1023,11 @@ Double_t TRolke::LikeMod1(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y,
 struct LikeFunction1 {
 };
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helper for calculation of estimates of efficiency and background for model 1
+
 void TRolke::ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
 {
-//________________________________________________________________________
-// Helper for calculation of estimates of efficiency and background for model 1
-//
-
    Double_t med = 0.0, fmid;
    Int_t maxiter = 1000;
    Double_t acc = 0.00001;
@@ -1052,10 +1056,11 @@ void TRolke::ProfLikeMod1(Double_t mu, Double_t &b, Double_t &e, Int_t x, Int_t 
    b = Double_t(y) / (tau - eta / mu);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gradient model likelihood
+
 Double_t TRolke::LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z, Double_t tau, Int_t m)
 {
-//gradient model likelihood
    Double_t eta, etaprime, bprime, f;
    eta = static_cast<double>(z) / e - static_cast<double>(m - z) / (1.0 - e);
    etaprime = (-1) * (static_cast<double>(m - z) / ((1.0 - e) * (1.0 - e)) + static_cast<double>(z) / (e * e));
@@ -1065,15 +1070,16 @@ Double_t TRolke::LikeGradMod1(Double_t e, Double_t mu, Int_t x, Int_t y, Int_t z
    return f;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 2:
+/// Poisson background/ Gauss Efficiency
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double_t sde, Double_t tau, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 2:
-//  Poisson background/ Gauss Efficiency
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
    Double_t v =  sde * sde;
    Double_t coef[4], roots[3];
    Double_t f = 0;
@@ -1113,12 +1119,12 @@ Double_t TRolke::EvalLikeMod2(Double_t mu, Int_t x, Int_t y, Double_t em, Double
    return f;
 }
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 2:
+/// Poisson background/Gauss Efficiency
+
 Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y, Double_t em, Double_t tau, Double_t v)
 {
-// Profile Likelihood function for MODEL 2:
-// Poisson background/Gauss Efficiency
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1131,16 +1137,16 @@ Double_t TRolke::LikeMod2(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t y,
    return 2*( lls + llb + lle);
 }
 
-//_____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 3:
+/// Gauss  background/ Gauss Efficiency
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Double_t sde, Double_t sdb, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 3:
-// Gauss  background/ Gauss Efficiency
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t f = 0.;
    Double_t  v = sde * sde;
    Double_t  u = sdb * sdb;
@@ -1181,12 +1187,12 @@ Double_t TRolke::EvalLikeMod3(Double_t mu, Int_t x, Double_t bm, Double_t em, Do
    return f;
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 3:
+/// Gauss background/Gauss Efficiency
+
 Double_t TRolke::LikeMod3(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t bm, Double_t em, Double_t u, Double_t v)
 {
-// Profile Likelihood function for MODEL 3:
-// Gauss background/Gauss Efficiency
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1199,15 +1205,16 @@ Double_t TRolke::LikeMod3(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
 
 }
 
-//____________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 4:
+/// Poiss  background/Efficiency known
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 4:
-// Poiss  background/Efficiency known
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
    Double_t f = 0.0;
 
    if (what == 1) f = x - y / tau;
@@ -1228,12 +1235,12 @@ Double_t TRolke::EvalLikeMod4(Double_t mu, Int_t x, Int_t y, Double_t tau, Int_t
    return f;
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 4:
+/// Poiss background/Efficiency known
+
 Double_t TRolke::LikeMod4(Double_t mu, Double_t b, Int_t x, Int_t y, Double_t tau)
 {
-// Profile Likelihood function for MODEL 4:
-// Poiss background/Efficiency known
-
    double s = mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1244,16 +1251,16 @@ Double_t TRolke::LikeMod4(Double_t mu, Double_t b, Int_t x, Int_t y, Double_t ta
    return 2*( lls + llb);
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 5:
+/// Gauss  background/Efficiency known
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 5:
-// Gauss  background/Efficiency known
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t u = sdb * sdb;
    Double_t f = 0;
 
@@ -1273,12 +1280,12 @@ Double_t TRolke::EvalLikeMod5(Double_t mu, Int_t x, Double_t bm, Double_t sdb, I
    return f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 5:
+/// Gauss background/Efficiency known
+
 Double_t TRolke::LikeMod5(Double_t mu, Double_t b, Int_t x, Double_t bm, Double_t u)
 {
-// Profile Likelihood function for MODEL 5:
-// Gauss background/Efficiency known
-
    double s = mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1288,16 +1295,16 @@ Double_t TRolke::LikeMod5(Double_t mu, Double_t b, Int_t x, Double_t bm, Double_
    return 2*( lls + llb);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 6:
+/// Background known/Efficiency binomial
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t b, Int_t m, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 6:
-// Background known/Efficiency binomial
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t coef[4], roots[3];
    Double_t f = 0.;
    Double_t zm = Double_t(z) / m;
@@ -1328,12 +1335,12 @@ Double_t TRolke::EvalLikeMod6(Double_t mu, Int_t x, Int_t z, Double_t b, Int_t m
    return f;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 6:
+/// background known/ Efficiency binomial
+
 Double_t TRolke::LikeMod6(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t z, Int_t m)
 {
-// Profile Likelihood function for MODEL 6:
-// background known/ Efficiency binomial
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1347,16 +1354,16 @@ Double_t TRolke::LikeMod6(Double_t mu, Double_t b, Double_t e, Int_t x, Int_t z,
 }
 
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates the Profile Likelihood for MODEL 7:
+/// background known/Efficiency Gauss
+///  - what = 1: Maximum likelihood estimate is returned
+///  - what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
+///  - what = 3: Profile Likelihood of Test hypothesis is returned
+/// otherwise parameters as described in the beginning of the class)
+
 Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t sde, Double_t b, Int_t what)
 {
-// Calculates the Profile Likelihood for MODEL 7:
-// background known/Efficiency Gauss
-// what = 1: Maximum likelihood estimate is returned
-// what = 2: Profile Likelihood of Maximum Likelihood estimate is returned.
-// what = 3: Profile Likelihood of Test hypothesis is returned
-// otherwise parameters as described in the beginning of the class)
-
    Double_t v = sde * sde;
    Double_t f = 0.;
 
@@ -1383,12 +1390,12 @@ Double_t TRolke::EvalLikeMod7(Double_t mu, Int_t x, Double_t em, Double_t sde, D
    return f;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Profile Likelihood function for MODEL 6:
+/// background known/ Efficiency gaussian
+
 Double_t TRolke::LikeMod7(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t em, Double_t v)
 {
-// Profile Likelihood function for MODEL 6:
-// background known/ Efficiency gaussian
-
    double s = e*mu+b;
    double lls = - s;
    if (x > 0) lls = x*TMath::Log(s) - s - LogFactorial(x);
@@ -1399,10 +1406,11 @@ Double_t TRolke::LikeMod7(Double_t mu, Double_t b, Double_t e, Int_t x, Double_t
    return 2*( lls + lle);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate polynomial
+
 Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
 {
-// evaluate polynomial
    const Int_t   *p;
    p = coef;
    Double_t ans = *p++;
@@ -1415,10 +1423,11 @@ Double_t TRolke::EvalPolynomial(Double_t x, const Int_t  coef[], Int_t N)
    return ans;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate mononomial
+
 Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
 {
-// evaluate mononomial
    Double_t ans;
    const Int_t   *p;
 
@@ -1433,12 +1442,10 @@ Double_t TRolke::EvalMonomial(Double_t x, const Int_t coef[], Int_t N)
    return ans;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// LogFactorial function (use the logGamma function via the relation Gamma(n+1) = n!
+
 Double_t TRolke::LogFactorial(Int_t n)
 {
-// LogFactorial function (use the logGamma function via the relation Gamma(n+1) = n!
-
    return TMath::LnGamma(n+1);
 }
-
-

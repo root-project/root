@@ -1,10 +1,17 @@
-void basic2() {
-//   example of macro to create can ntuple reading data from an ascii file.
-//   This macro is a variant of basic.C
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -js
+/// Create can ntuple reading data from an ascii file.
+/// This macro is a variant of basic.C
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("basic2.C","");
+void basic2() {
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/tree/");
    dir.ReplaceAll("/./","/");
 
    TFile *f = new TFile("basic2.root","RECREATE");

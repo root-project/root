@@ -26,7 +26,7 @@ namespace {
    {
    // normal getter access
       void* address = pyprop->GetAddress( pyobj );
-      if ( PyErr_Occurred() )
+      if ( ! address || (ptrdiff_t)address == -1 /* Cling error */ )
          return 0;
 
    // for fixed size arrays
@@ -61,10 +61,11 @@ namespace {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value of the C++ datum held.
+
    int pp_set( PropertyProxy* pyprop, ObjectProxy* pyobj, PyObject* value )
    {
-   // Set the value of the C++ datum held.
       const int errret = -1;
 
    // filter const objects to prevent changing their values
@@ -74,7 +75,7 @@ namespace {
       }
 
       ptrdiff_t address = (ptrdiff_t)pyprop->GetAddress( pyobj );
-      if ( ! address || address == -1 /* Cling error */ || PyErr_Occurred() )
+      if ( ! address || address == -1 /* Cling error */ )
          return errret;
 
    // for fixed size arrays
@@ -109,10 +110,11 @@ namespace {
       return pyprop;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deallocate memory held by this descriptor.
+
    void pp_dealloc( PropertyProxy* pyprop )
    {
-   // Deallocate memory held by this descriptor.
       using namespace std;
       delete pyprop->fConverter;
       pyprop->fName.~string();
@@ -177,6 +179,9 @@ PyTypeObject PropertyProxy_Type = {
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
+#endif
 };
 
 } // namespace PyROOT
@@ -191,7 +196,7 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
    fProperty       = Cppyy::IsStaticData( scope, idata ) ? kIsStaticData : 0;
 
    Int_t size = Cppyy::GetDimensionSize( scope, idata, 0 );
-   if ( size != -1 )
+   if ( 0 < size )
       fProperty |= kIsArrayType;
 
    std::string fullType = Cppyy::GetDatamemberType( scope, idata );
@@ -200,10 +205,14 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, Cppyy::TCppIndex_t id
       fProperty |= kIsEnumData;
    }
 
+   if ( Cppyy::IsConstData( scope, idata ) )
+      fProperty |= kIsConstData;
+
    fConverter = CreateConverter( fullType, size );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& name, void* address )
 {
    fEnclosingScope = scope;
@@ -213,9 +222,10 @@ void PyROOT::PropertyProxy::Set( Cppyy::TCppScope_t scope, const std::string& na
    fConverter      = CreateConverter( "UInt_t", -1 );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// class attributes, global properties
+
 void* PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
-// class attributes, global properties
    if ( fProperty & kIsStaticData )
       return (void*)fOffset;
 
@@ -237,8 +247,9 @@ void* PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
    }
 
 // the proxy's internal offset is calculated from the enclosing class
-   ptrdiff_t offset = Cppyy::GetBaseOffset(
-      pyobj->ObjectIsA(), fEnclosingScope, obj, 1 /* up-cast */ );
+   ptrdiff_t offset = 0;
+   if ( pyobj->ObjectIsA() != fEnclosingScope)
+      offset = Cppyy::GetBaseOffset( pyobj->ObjectIsA(), fEnclosingScope, obj, 1 /* up-cast */ );
 
    return (void*)((ptrdiff_t)obj + offset + fOffset);
 }

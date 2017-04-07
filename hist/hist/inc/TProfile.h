@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
 
 class TProfileHelper;
 

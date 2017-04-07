@@ -26,9 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class THashTable;
 
@@ -53,8 +51,8 @@ public:
    TObject   *FindObject(const char *name) const;
    TObject   *FindObject(const TObject *obj) const;
 
-   TList     *GetListForObject(const char *name) const;
-   TList     *GetListForObject(const TObject *obj) const;
+   const TList *GetListForObject(const char *name) const;
+   const TList *GetListForObject(const TObject *obj) const;
 
    void       AddFirst(TObject *obj);
    void       AddFirst(TObject *obj, Option_t *opt);

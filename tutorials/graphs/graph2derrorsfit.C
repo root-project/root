@@ -1,5 +1,12 @@
-//Create, Draw and fit a TGraph2DErrors
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// Draw and fit a TGraph2DErrors
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 #include <TMath.h>
 #include <TGraph2DErrors.h>

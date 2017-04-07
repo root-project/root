@@ -12,21 +12,13 @@
 #ifndef ROOT_TBufferXML
 #define ROOT_TBufferXML
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
-#ifndef ROOT_TXMLSetup
 #include "TXMLSetup.h"
-#endif
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
+
+#include <string>
 
 
 class TExMap;
@@ -57,7 +49,7 @@ public:
 
    Int_t             GetIOVersion() const { return fIOVersion; }
    void              SetIOVersion(Int_t v) { fIOVersion = v; }
-   
+
    // suppress class writing/reading
 
    virtual TClass*  ReadClass(const TClass* cl = 0, UInt_t* objTag = 0);
@@ -183,7 +175,7 @@ public:
    virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0);
+   virtual void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0);
    virtual void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
    virtual void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual void     StreamObject(TObject *obj);
@@ -203,7 +195,9 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string &s);
+   virtual   void     ReadStdString(std::string *s);
+   using              TBuffer::ReadStdString;
+   virtual   void     ReadCharStar(char* &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -220,7 +214,9 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
-   virtual   void     WriteStdString(const std::string &s);
+   virtual   void     WriteStdString(const std::string *s);
+   using              TBuffer::WriteStdString;
+   virtual   void     WriteCharStar(char *s);
 
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
    virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
@@ -335,15 +331,15 @@ protected:
 
    Int_t            fErrorFlag;            //!
 
-   Bool_t           fCanUseCompact;        //!   flag indicate that basic type (like Int_t) can be placed in the same tag
-   Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
-   TClass*          fExpectedBaseClass;    //!   pointer to class, which should be stored as parent of current
-   Int_t            fCompressLevel;        //!   compression level and algorithm
-   Int_t            fIOVersion;            //!   indicates format of ROOT xml file
+   Bool_t           fCanUseCompact;        ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
+   Bool_t           fExpectedChain;        ///<!   Flag to resolve situation when several elements of same basic type stored as FastArray
+   TClass*          fExpectedBaseClass;    ///<!   Pointer to class, which should be stored as parent of current
+   Int_t            fCompressLevel;        ///<!   Compression level and algorithm
+   Int_t            fIOVersion;            ///<!   Indicates format of ROOT xml file
 
-   static const char* fgFloatFmt;          //!  printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
+   static std::string fgFloatFmt;          ///<!   Printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
-ClassDef(TBufferXML,2) //a specialized TBuffer to read/write to XML files
+   ClassDef(TBufferXML, 0); //a specialized TBuffer to read/write to XML files
 };
 
 //______________________________________________________________________________

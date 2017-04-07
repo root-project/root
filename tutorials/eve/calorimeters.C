@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
-
-// Demonstrates usage of EVE calorimetry classes.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of EVE calorimetry classes.
+///
+/// \image html eve_calorimeters.png
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
 #include "TEveProjections.h"
 
@@ -94,7 +98,6 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    v->SetElementName("Viewer - Lego");
    s->SetElementName("Scene - Lego");
 
-   gStyle->SetPalette(1, 0);
    TEveCaloLego* lego = new TEveCaloLego(data);
    s->AddElement(lego);
 

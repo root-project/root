@@ -9,99 +9,97 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The Command design pattern is based on the idea, that all editing    //
-// in an application is done by creating instances of command objects.  //
-// Command objects apply changes to the edited object and then are      //
-// stored  on a command stack. Furthermore, each command knows how to   //
-// undo its changes to bring the edited object back to its previous     //
-// state. As long as the application only uses command objects to       //
-// change the state of the edited object, it is possible to undo        //
-// a sequence of commands by traversing the command stack downwards and //
-// calling the "undo" method of each command in turn. It is also        //
-// possible to redo a sequence of commands by traversing the command    //
-// stack upwards and calling the "redo" method of each command.         //
-//                                                                      //
-//                                                                      //
-// Examples:                                                            //
-//                                                                      //
-// 1. Create a new command                                              //
-//                                                                      //
-// TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"   //
-//                                "SetFillColor(Color_t)");             //
-//                                                                      //
-// 1st parameter - the name of class                                    //
-// 2nd parameter - object                                               //
-// 3rd parameter - the name of do/redo method                           //
-// 4th parameter - the name of undo method                              //
-//                                                                      //
-// Since redo,undo methods are the same, undo name can be omitted, e.g. //
-//                                                                      //
-// TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"); //
-//                                                                      //
-// For objects derived from TObject class name can be omitted, e.g.     //
-//                                                                      //
-//    TQCommand *com = new TQCommand(hpx, "SetFillColor(Color_t)");     //
-//                                                                      //
-// 2. Setting undo, redo parameters.                                    //
-//                                                                      //
-//    Color_t old_color = hpx->GetFillColor();                          //
-//    Color_t new_color = 4;  // blue color                             //
-//                                                                      //
-//    com->SetRedoArgs(1, new_color);                                   //
-//    com->SetUndoArgs(1, old_color);                                   //
-//                                                                      //
-// 1st argument - the number of undo, redo parameters                   //
-// the other arguments - undo, redo values                              //
-//                                                                      //
-// Since the number of undo,redo parameters is the same one can use     //
-//                                                                      //
-//    com->SetArgs(1, new_color, old_color);                            //
-//                                                                      //
-// 3. Undo, redo method execution                                       //
-//                                                                      //
-//    com->Redo(); // execute redo method                               //
-//    com->Undo(); // execute undo method                               //
-//                                                                      //
-// 4. Merged commands                                                   //
-//                                                                      //
-// It possible to group several commands together so an end user        //
-// can undo and redo them with one command.                             //
-//                                                                      //
-//    TQCommand *update = new TQCommand(gPad, "Modified()");            //
-//    com->Add(update);                                                 //
-//                                                                      //
-// 5. Macro commands                                                    //
-//                                                                      //
-// "Merging" allows to create macro commands, e.g.                      //
-//                                                                      //
-//    TQCommand *macro = new TQCommand("my macro");                     //
-//    macro->Add(com1);                                                 //
-//    macro->Add(com2);                                                 //
-//    ...                                                               //
-//                                                                      //
-// During Redo operation commands composing macro command are executed  //
-// sequentially in direct  order (first in first out). During Undo,     //
-// they are executed in reverse order (last in first out).              //
-//                                                                      //
-// 6. Undo manager.                                                     //
-//                                                                      //
-// TQUndoManager is recorder of undo and redo operations. This is       //
-// command history list which can be traversed backwards and upwards    //
-// performing undo and redo operations.                                 //
-// To register command TQUndoManager::Add(TObject*) method is used.     //
-//                                                                      //
-//    TQUndoManager *history = new TQUndoManager();                     //
-//    history->Add(com);                                                //
-//                                                                      //
-// TQUndoManager::Add automatically invokes execution of command's      //
-// Redo method.                                                         //
-//                                                                      //
-// Use TQUndoManager::Undo to undo commands in  history list.           //
-// Redo is Undo for undo action. Use TQUndoManager::Redo method for that//
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQCommand
+\ingroup Base
+
+The Command design pattern is based on the idea, that all editing
+in an application is done by creating instances of command objects.
+Command objects apply changes to the edited object and then are
+stored  on a command stack. Furthermore, each command knows how to
+undo its changes to bring the edited object back to its previous
+state. As long as the application only uses command objects to
+change the state of the edited object, it is possible to undo
+a sequence of commands by traversing the command stack downwards and
+calling the "undo" method of each command in turn. It is also
+possible to redo a sequence of commands by traversing the command
+stack upwards and calling the "redo" method of each command.
+
+
+Examples:
+
+1. Create a new command
+~~~ {.cpp}
+   TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)"
+                                "SetFillColor(Color_t)");
+~~~
+   - 1st parameter - the name of class
+   - 2nd parameter - object
+   - 3rd parameter - the name of do/redo method
+   - 4th parameter - the name of undo method
+   Since redo,undo methods are the same, undo name can be omitted, e.g.
+~~~ {.cpp}
+   TQCommand *com = new TQCommand("TH1", hpx, "SetFillColor(Color_t)");
+~~~
+   For objects derived from TObject class name can be omitted, e.g.
+~~~ {.cpp}
+   TQCommand *com = new TQCommand(hpx, "SetFillColor(Color_t)");
+~~~
+
+2. Setting undo, redo parameters.
+~~~ {.cpp}
+   Color_t old_color = hpx->GetFillColor();
+   Color_t new_color = 4;  // blue color
+
+   com->SetRedoArgs(1, new_color);
+   com->SetUndoArgs(1, old_color);
+~~~
+   1st argument - the number of undo, redo parameters
+   the other arguments - undo, redo values
+   Since the number of undo,redo parameters is the same one can use
+~~~ {.cpp}
+   com->SetArgs(1, new_color, old_color);
+~~~
+
+3. Undo, redo method execution
+~~~ {.cpp}
+   com->Redo(); // execute redo method
+   com->Undo(); // execute undo method
+~~~
+
+4. Merged commands
+   It possible to group several commands together so an end user
+   can undo and redo them with one command.
+~~~ {.cpp}
+   TQCommand *update = new TQCommand(gPad, "Modified()");
+   com->Add(update);
+~~~
+
+5. Macro commands
+   "Merging" allows to create macro commands, e.g.
+~~~ {.cpp}
+   TQCommand *macro = new TQCommand("my macro");
+   macro->Add(com1);
+   macro->Add(com2);
+   ...
+~~~
+   During Redo operation commands composing macro command are executed
+   sequentially in direct  order (first in first out). During Undo,
+   they are executed in reverse order (last in first out).
+
+6. Undo manager.
+   TQUndoManager is recorder of undo and redo operations. This is
+   command history list which can be traversed backwards and upwards
+   performing undo and redo operations.
+   To register command TQUndoManager::Add(TObject*) method is used.
+~~~ {.cpp}
+   TQUndoManager *history = new TQUndoManager();
+   history->Add(com);
+~~~
+   TQUndoManager::Add automatically invokes execution of command's Redo method.
+
+Use TQUndoManager::Undo to undo commands in  history list.
+Redo is Undo for undo action. Use TQUndoManager::Redo method for that
+*/
 
 #include "Varargs.h"
 #include "TQCommand.h"
@@ -116,11 +114,10 @@ ClassImp(TQUndoManager)
 static TQCommand *gActiveCommand = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+/// Common protected method used in several constructors
+
 void TQCommand::Init(const char *clname, void *obj, const char *redo, const char *undo)
 {
-   // common protected method used in several constructors
-
    TString credo( CompressName(redo) );
    TString cundo( CompressName(undo) );
 
@@ -141,68 +138,75 @@ void TQCommand::Init(const char *clname, void *obj, const char *redo, const char
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///
+///   Input parameters:
+///     1. clname - class name.
+///     2. obj - an object
+///     3. redo - method or function to do/redo operation
+///     4. undo - method or function to undo operation
+///
+/// Comments:
+///    - if either clname or obj is NULL that means that redo/undo is function
+///    - to specify default arguments for redo/undo method/function
+///       '=' must precede to argument value.
+///
+///  Example:
+/// ~~~ {.cpp}
+///   TQCommand("TPad", gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
+/// ~~~
+///   undo method can be same as redo one. In that case undo parameter
+///   can be omitted.
+///
+///  Example:
+/// ~~~ {.cpp}
+///   TQCommand("TPad", gPad, "SetFillStyle(Style_t)");
+/// ~~~
+
 TQCommand::TQCommand(const char *clname, void *obj, const char *redo,
                      const char *undo) : TList(), TQObject()
 {
-   // Constructor.
-   //
-   //   Input parameters:
-   //     1. clname - class name.
-   //     2. obj - an object
-   //     3. redo - method or function to do/redo operation
-   //     4. undo - method or function to undo operation
-   //
-   // Comments:
-   //    - if either clname or obj is NULL that means that redo/undo is function
-   //    - to specify default arguments for redo/undo method/function
-   //       '=' must precede to argument value.
-   //
-   //  Example:
-   //    TQCommand("TPad", gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
-   //
-   //    - undo method can be same as redo one. In that case undo parameter
-   //       can be omitted.
-   //
-   //  Example:
-   //    TQCommand("TPad", gPad, "SetFillStyle(Style_t)");
-
    Init(clname, obj, redo, undo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///
+///   Input parameters:
+///     1. obj - an object
+///     2. redo - method or function to do/redo operation
+///     3. undo - method or function to undo operation
+///
+/// Comments:
+///   to specify default arguments for redo/undo method/function
+///   '=' must precede to argument value.
+///
+///  Example:
+/// ~~~ {.cpp}
+///    TQCommand(gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
+/// ~~~
+///
+///   undo method can be same as redo one. In that case "undo"
+///   can parameter be omitted.
+///
+///  Example:
+/// ~~~ {.cpp}
+///    TQCommand(gPad, "SetFillStyle(Style_t)");
+/// ~~~
+
 TQCommand::TQCommand(TObject *obj, const char *redo, const char *undo) :
            TList(), TQObject()
 {
-   // Constructor.
-   //
-   //   Input parameters:
-   //     1. obj - an object
-   //     2. redo - method or function to do/redo operation
-   //     3. undo - method or function to undo operation
-   //
-   // Comments:
-   //    - to specify default arguments for redo/undo method/function
-   //       '=' must precede to argument value.
-   //
-   //  Example:
-   //    TQCommand(gPad, "SetEditable(=kTRUE)", "SetEditable(=kFALSE)");
-   //
-   //    - undo method can be same as redo one. In that case "undo"
-   //       can parameter be omitted.
-   //
-   //  Example:
-   //    TQCommand(gPad, "SetFillStyle(Style_t)");
-
    if (obj) Init(obj->ClassName(), obj, redo, undo);
    else Init(0, 0, redo, undo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
 {
-   // Copy constructor.
-
    fRedo = new TQConnection(*(com.fRedo));
    fUndo = new TQConnection(*(com.fUndo));
 
@@ -238,11 +242,11 @@ TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor.
+
 TQCommand::~TQCommand()
 {
-   // dtor.
-
    if (fRedo != fUndo) delete fUndo;
 
    delete fRedo;
@@ -252,32 +256,33 @@ TQCommand::~TQCommand()
    Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a command which is doing redo/undo action.
+///
+/// This static method allows to set undo parameters dynamically, i.e.
+/// during execution of Redo function.
+///
+/// Example:
+///   For redo actions like TGTextEdit::DelChar() it is not possible to
+///   know ahead what character will be deleted.
+///   To set arguments for undo action ( e.g. TGTextEdit::InsChar(char)),
+///   one needs to call TQCommand::SetUndoArgs(1, character) from
+///   inside of TGTextEdit::DelChar() method, i.e.
+/// ~~~ {.cpp}
+///    TQCommand::GetCommand()->SetUndoArgs(1, somechar);
+/// ~~~
+
 TQCommand *TQCommand::GetCommand()
 {
-   // Return a command which is doing redo/undo action.
-   //
-   // This static method allows to set undo parameters dynamically, i.e.
-   // during execution of Redo function.
-   //
-   // Example:
-   //    For redo actions like TGTextEdit::DelChar() it is not possible to
-   //    know ahead what character will be deleted.
-   //    To set arguments for undo action ( e.g. TGTextEdit::InsChar(char)),
-   //    one needs to call TQCommand::SetUndoArgs(1, character) from
-   //    inside of TGTextEdit::DelChar() method, i.e.
-   //
-   //    TQCommand::GetCommand()->SetUndoArgs(1, somechar);
-
    return gActiveCommand;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If "opt" is not zero delete every merged command which option string is
+/// equal to "opt". If "opt" is zero - delete all merged commands.
+
 void TQCommand::Delete(Option_t *opt)
 {
-   // If "opt" is not zero delete every merged command which option string is
-   // equal to "opt". If "opt" is zero - delete all merged commands.
-
    if (!opt) {
       TList::Delete();
       return;
@@ -297,37 +302,37 @@ void TQCommand::Delete(Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Two commands can be merged if they can be composed into
+/// a single command (Macro command).
+///
+/// To allow merging commands user might override this function.
+
 Bool_t TQCommand::CanMerge(TQCommand *) const
 {
-   // Two commands can be merged if they can be composed into
-   // a single command (Macro command).
-   //
-   // To allow merging commands user might override this function.
-
    return (!fRedo && !fUndo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add command to the list of merged commands.
+/// This make it possible to group complex actions together so an end user
+/// can undo and redo them with one command. Execution of TQUndoManager::Undo(),
+/// TQUndoManager::Redo() methods only invokes the top level command as a whole.
+///
+/// Merge method is analogous to logical join operation.
+///
+/// Note:  Merge method invokes redo action.
+
 void TQCommand::Merge(TQCommand *c)
 {
-   // Add command to the list of merged commands.
-   // This make it possible to group complex actions together so an end user
-   // can undo and redo them with one command. Execution of TQUndoManager::Undo(),
-   // TQUndoManager::Redo() methods only invokes the top level command as a whole.
-   //
-   // Merge method is analogous to logical join operation.
-   //
-   // Note:  Merge method invokes redo action.
-
    Add(c, "merge");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge a collection of TQCommand.
+
 Long64_t TQCommand::Merge(TCollection *collection,TFileMergeInfo*)
 {
-   // Merge a collection of TQCommand.
-
    TIter next(collection);
    while (TObject* o = next()) {
       TQCommand *command = dynamic_cast<TQCommand*> (o);
@@ -341,16 +346,16 @@ Long64_t TQCommand::Merge(TCollection *collection,TFileMergeInfo*)
    return GetEntries();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add command to the list of merged commands.
+///
+/// Option string can contain substrings:
+///  - "compress" - try to compress input command
+///  - "radd" - execute redo action of input command
+///  - "uadd" - execute undo action of input command
+
 void TQCommand::Add(TObject *obj, Option_t *opt)
 {
-   // Add command to the list of merged commands.
-   //
-   // Option string can contain substrings:
-   //  "compress" - try to compress input command
-   //  "radd" - execute redo action of input command
-   //  "uadd" - execute undo action of input command
-
    if (!obj->InheritsFrom(TQCommand::Class())) return;
 
    TQCommand *o = (TQCommand *)obj;
@@ -368,31 +373,31 @@ void TQCommand::Add(TObject *obj, Option_t *opt)
    if (o->CanUndo() && ostr.Contains("uadd")) o->Undo();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default, commands can be compressed if they are:
+///
+///  - equal
+///  - setter commands
+///
+/// More complicated commands might want to override this function.
+
 Bool_t TQCommand::CanCompress(TQCommand *c) const
 {
-   // By default, commands can be compressed if they are:
-   //
-   //  - equal
-   //  - setter commands
-   //
-   // More complicated commands might want to override this function.
-
    return (IsEqual(c) && IsSetter());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compress command. Compression is analogous to arithmetic "addition operation".
+///
+/// Note:
+///   - The compressed command will be deleted.
+///   - Execution Compress method invokes Redo action with new redo arguments
+///     inherited from compressed command.
+///
+/// More complicated commands might want to override this function.
+
 void TQCommand::Compress(TQCommand *c)
 {
-   // Compress command. Compression is analogous to arithmetic "addition operation".
-   //
-   // Note:
-   //    - The compressed command will be deleted.
-   //    - Execution Compress method invokes Redo action with new redo arguments
-   //      inheritied from compressed command.
-   //
-   // More complicated commands might want to override this function.
-
    for (int i = 0; i < fNRargs; i++) {
       fRedoArgs[i] = c->fRedoArgs[i];
    }
@@ -401,14 +406,14 @@ void TQCommand::Compress(TQCommand *c)
    delete c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equal comparison. The commands are equal if they are
+/// applied to the same object and have the same Redo/Undo actions
+///
+/// More complicated commands might want to override this function.
+
 Bool_t TQCommand::IsEqual(const TObject* obj) const
 {
-   // Equal comparison. The commands are equal if they are
-   // applied to the same object and have the same Redo/Undo actions
-   //
-   // More complicated commands might want to override this function.
-
    if (!obj->InheritsFrom(TQCommand::Class())) return kFALSE;
    TQCommand *c = (TQCommand *)obj;
    if (!fRedo || !fUndo || (c->GetObject() != fObject)) return kFALSE;
@@ -420,17 +425,17 @@ Bool_t TQCommand::IsEqual(const TObject* obj) const
            (rname == c->GetRedo()->GetName()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE is command if Redo is the same as Undo function
+/// and is the setter action.
+///
+/// By default, all functions with names like "SetXXX" or "setXXX"
+/// considered as setters. Another type of setters are Move, Resize operations
+///
+/// More complicated commands might want to override this function.
+
 Bool_t TQCommand::IsSetter() const
 {
-   // Returns kTRUE is command if Redo is the same as Undo function
-   // and is the setter action.
-   //
-   // By default, all functions with names like "SetXXX" or "setXXX"
-   // considered as setters. Another type of setters are Move, Resize operations
-   //
-   // More complicated commands might want to override this function.
-
    TString redo = GetRedoName();
    TString undo = GetUndoName();
 
@@ -444,16 +449,18 @@ Bool_t TQCommand::IsSetter() const
            redo.BeginsWith("resize"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set do/redo and undo parameters. The format is
+///    SetArgs(number_of_params, redo_params, undo_params)
+///
+/// Example:
+/// ~~~ {.cpp}
+///     move_command->SetArgs(2, 100, 100, 200, 200);
+/// ~~~
+///      2 params, (100,100) - do/redo position, (200,200) - undo position
+
 void TQCommand::SetArgs(Int_t narg, ...)
 {
-   // Set do/redo and undo parameters. The format is
-   //    SetArgs(number_of_params, redo_params, undo_params)
-   //
-   // Example:
-   //     move_command->SetArgs(2, 100, 100, 200, 200);
-   //      2 params, (100,100) - do/redo position, (200,200) - undo position
-
    if (narg < 0) {
       return;
    } else if (!narg) {  // no arguments
@@ -486,15 +493,17 @@ void TQCommand::SetArgs(Int_t narg, ...)
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set redo parameters. The format is
+///    SetRedoArgs(number_of_params, params)
+///
+/// Example:
+/// ~~~ {.cpp}
+///     move_command->SetRedoArgs(2, 100, 100);
+/// ~~~
+
 void TQCommand::SetRedoArgs(Int_t narg, ...)
 {
-   // Set redo parameters. The format is
-   //    SetRedoArgs(number_of_params, params)
-   //
-   // Example:
-   //     move_command->SetRedoArgs(2, 100, 100);
-
    if (narg < 0) {
       return;
    } else if (!narg) {  // no arguments
@@ -518,15 +527,17 @@ void TQCommand::SetRedoArgs(Int_t narg, ...)
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set undo parameters. The format is
+///    SetUndoArgs(number_of_params, params)
+///
+/// Example:
+/// ~~~ {.cpp}
+///     move_command->SetUndoArgs(2, 200, 200);
+/// ~~~
+
 void TQCommand::SetUndoArgs(Int_t narg, ...)
 {
-   // Set undo parameters. The format is
-   //    SetUndoArgs(number_of_params, params)
-   //
-   // Example:
-   //     move_command->SetUndoArgs(2, 200, 200);
-
    if (narg < 0) {
       return;
    } else if (!narg) {  // no arguments
@@ -550,29 +561,29 @@ void TQCommand::SetUndoArgs(Int_t narg, ...)
    va_end(ap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if Redo action is possible, kFALSE if it's not.
+/// By default, only single sequential redo action is possible.
+
 Bool_t TQCommand::CanRedo() const
 {
-   // Returns kTRUE if Redo action is possible, kFALSE if it's not.
-   // By default, only single sequential redo action is possible.
-
    return (fStatus <= 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if Undo action is possible, kFALSE if it's not.
+/// By default, only single trial undo action is possible.
+
 Bool_t TQCommand::CanUndo() const
 {
-   // Returns kTRUE if Undo action is possible, kFALSE if it's not.
-   // By default, only single tial undo action is possible.
-
    return (fStatus > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute command and then merge commands
+
 void TQCommand::Redo(Option_t *)
 {
-   // Execute command and then smerged commands
-
    Bool_t done = kFALSE;
    fState = 1;
 
@@ -605,12 +616,12 @@ void TQCommand::Redo(Option_t *)
    gActiveCommand = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Un-execute all merged commands and the command.
+/// Merged commands are executed in reverse order.
+
 void TQCommand::Undo(Option_t *)
 {
-   // Unexecute all merged commands and the command.
-   // Merged commands are executed in reverse order.
-
    Bool_t done = kFALSE;
    fState = -1;
 
@@ -648,13 +659,13 @@ void TQCommand::Undo(Option_t *)
    gActiveCommand = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the command name. Default name is "ClassName::RedoName(args)"
+/// If list of merged commands is not empty the name is
+/// "ClassName::RedoName(args):cname1:cname2 ..."
+
 const char *TQCommand::GetName() const
 {
-   // Returns the command name. Default name is "ClassName::RedoName(args)"
-   // If list of merged commands is not empty the name is
-   // "ClassName::RedoName(args):cname1:cname2 ..."
-
    const Int_t maxname = 100;
 
    if (!fName.IsNull()) return fName.Data();
@@ -685,12 +696,12 @@ const char *TQCommand::GetName() const
    return name.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns command description.
+/// By default, "ClassName::RedoName(args)_ClassName::UndoName(args)"
+
 const char *TQCommand::GetTitle() const
 {
-   // Returns command description.
-   // By default, "ClassName::RedoName(args)_ClassName::UndoName(args)"
-
    if (!fTitle.IsNull()) return fTitle.Data();
 
    TString title = GetName();
@@ -704,123 +715,123 @@ const char *TQCommand::GetTitle() const
    return title.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the name of redo command
+
 const char *TQCommand::GetRedoName() const
 {
-   // Returns the name of redo command
-
    return (fRedo ? fRedo->GetName() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the name of undo command
+
 const char *TQCommand::GetUndoName() const
 {
-   // Returns the name of undo command
-
    return (fUndo ? fUndo->GetName() : 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to array of redo arguments
+
 Long_t *TQCommand::GetRedoArgs() const
 {
-   // Returns a pointer to array of redo arguments
-
    return fRedoArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a pointer to array of undo arguments
+
 Long_t *TQCommand::GetUndoArgs() const
 {
-   // Returns a pointer to array of undo arguments
-
    return fUndoArgs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a number of redo arguments
+
 Int_t TQCommand::GetNRargs() const
 {
-   // Returns a number of redo arguments
-
    return fNRargs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a number of undo arguments
+
 Int_t TQCommand::GetNUargs() const
 {
-   // Returns a number of undo arguments
-
    return fNUargs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns an object for which undo redo actions are applied
+
 void *TQCommand::GetObject() const
 {
-   // Returns an object for which undo redo acions are applied
-
    return fObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a number of sequential undo or redo operations
+
 Int_t TQCommand::GetStatus() const
 {
-   // Returns a number of sequential undo or redo operations
-
    return fStatus;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if neither redo nor undo action specified
+
 Bool_t TQCommand::IsMacro() const
 {
-   // Returns kTRUE if neither redo nor undo action specified
-
    return (!fRedo && !fUndo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Undo action is in progress
+
 Bool_t TQCommand::IsUndoing() const
 {
-   // Undo action is in progress
-
    return (fState < 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redo action is in progress
+
 Bool_t TQCommand::IsRedoing() const
 {
-   // Redo action is in progress
-
    return (fState > 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if command execution is in progress
+
 Bool_t TQCommand::IsExecuting() const
 {
-   // Returns kTRUE if command execution is in progress
-
    return fState;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets name of the command
+
 void TQCommand::SetName(const char *name)
 {
-   // Sets name of the command
-
    fName = name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets description of the command
+
 void TQCommand::SetTitle(const char *title)
 {
-   // Sets description of the command
-
    fTitle = title;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ls this command and merged commands
+
 void TQCommand::ls(Option_t *) const
 {
-   // ls this command and merged commands
-
    TString name = GetName();
    printf("%d %s\n", fStatus, name.Data());
 
@@ -832,21 +843,24 @@ void TQCommand::ls(Option_t *) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print collection header.
+
 void TQCommand::PrintCollectionHeader(Option_t* /*option*/) const
 {
-   // Print collection header.
-
    TROOT::IndentLevel();
    printf("%d %s\n", fStatus, GetName());
 }
 
-///////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+/** \class TQUndoManager
+Recorder of operations for undo and redo
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQUndoManager::TQUndoManager() : TQCommand(0, 0, 0, 0)
 {
-   // Constructor
-
    fCursor = 0;
    fLimit = kMaxUInt;   // maximum value for UInt_t
    fLogging = kFALSE;
@@ -854,11 +868,11 @@ TQUndoManager::TQUndoManager() : TQCommand(0, 0, 0, 0)
    fCurrent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TQUndoManager::~TQUndoManager()
 {
-   // Destructor
-
    Delete();
 
    if (fLogBook) {
@@ -866,11 +880,11 @@ TQUndoManager::~TQUndoManager()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lists all commands in stack
+
 void TQUndoManager::ls(Option_t *option) const
 {
-   // Lists all commands in stack
-
    if (!IsEmpty()) {
       TObjLink *lnk = fFirst;
       while (lnk) {
@@ -886,12 +900,12 @@ void TQUndoManager::ls(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print collection entry.
+
 void TQUndoManager::PrintCollectionEntry(TObject* entry, Option_t* option,
                                          Int_t /*recurse*/) const
 {
-   // Print collection entry.
-
    TQCommand *com = (TQCommand*) entry;
    TROOT::IndentLevel();
    if (fCursor && fCursor->GetObject() == entry) {
@@ -902,12 +916,12 @@ void TQUndoManager::PrintCollectionEntry(TObject* entry, Option_t* option,
    com->ls(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start logging. Delete all previous log records
+/// Note: logging is not implemented yet
+
 void  TQUndoManager::SetLogging(Bool_t on)
 {
-   // Start logging. Delete all previous log records
-   // Note: logging is not implemented yet
-
    fLogging = on;
 
    if (fLogging) {
@@ -919,16 +933,16 @@ void  TQUndoManager::SetLogging(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add command to the stack of commands.
+/// Command's redo action will be executed.
+///
+/// option string can contain the following substrings:
+///  - "merge" - input command will be merged
+///  - "compress" - input command will be compressed
+
 void TQUndoManager::Add(TObject *obj, Option_t *opt)
 {
-   // Add command to the stack of commands.
-   // Command's redo action will be executed.
-   //
-   // option string can contain the following substrings:
-   //    "merge" - input command will be merged
-   //    "compress" - input command will be compressed
-
    if (!obj->InheritsFrom(TQCommand::Class())) return;
 
    TQCommand *o = (TQCommand *)obj;
@@ -978,19 +992,19 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// emit signal
+
 void TQUndoManager::CurrentChanged(TQCommand *c)
 {
-   // emit signal
-
    Emit("CurrentChanged(TQCommand*)", (long)c);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs undo action. Move cursor position backward in history stack
+
 void TQUndoManager::Undo(Option_t *option)
 {
-   // Performs undo action. Move cursor position backward in history stack
-
    Bool_t done = kFALSE;
    if (!CanUndo()) return;
 
@@ -1018,11 +1032,11 @@ void TQUndoManager::Undo(Option_t *option)
    if (sav != fCurrent) CurrentChanged(fCurrent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs redo action. Move cursor position forward in history stack
+
 void TQUndoManager::Redo(Option_t *option)
 {
-   // Performs redo action. Move cursor position forward in history stack
-
    Bool_t done = kFALSE;
    if (!CanRedo()) return;
 
@@ -1050,11 +1064,11 @@ void TQUndoManager::Redo(Option_t *option)
    if (sav != fCurrent) CurrentChanged(fCurrent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if redo action is possible
+
 Bool_t TQUndoManager::CanRedo() const
 {
-   // Returns kTRUE if redo action is possible
-
    if (!fCursor) return kFALSE;
 
    TQCommand *c = (TQCommand*)fCursor->GetObject();
@@ -1064,11 +1078,11 @@ Bool_t TQUndoManager::CanRedo() const
    return (c && c->CanRedo());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if undo action is possible
+
 Bool_t TQUndoManager::CanUndo() const
 {
-   // Returns kTRUE if undo action is possible
-
    if (!fCursor) return kFALSE;
 
    TQCommand *c = (TQCommand*)fCursor->GetObject();
@@ -1078,42 +1092,42 @@ Bool_t TQUndoManager::CanUndo() const
    return (c && c->CanUndo());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if logging is ON
+
 Bool_t TQUndoManager::IsLogging() const
 {
-   // Returns kTRUE if logging is ON
-
    return fLogging;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the last executed command
+
 TQCommand *TQUndoManager::GetCurrent() const
 {
-   // Returns the last executed command
-
    return fCurrent;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a command correspondent to the current cursor position in stack
+
 TQCommand *TQUndoManager::GetCursor() const
 {
-   // Returns a command correspondent to the current cursor position in stack
-
    return (TQCommand*)(fCursor ? fCursor->GetObject() : 0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a maximum number of commands which could be located in stack
+
 void TQUndoManager::SetLimit(UInt_t limit)
 {
-   // Returns a maximum number of commands which could be located in stack
-
    fLimit = limit;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a maximum number of commands which  could be located in stack
+
 UInt_t TQUndoManager::GetLimit() const
 {
-   // Returns a maximum number of commands which  could be located in stack
-
    return fLimit;
 }

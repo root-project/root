@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooTable is the abstract interface for table objects.
-// Table objects are the category equivalent of RooPlot objects
-// (which are used for real-valued objects)
-// END_HTML
-//
+/**
+\file RooTable.cxx
+\class RooTable
+\ingroup Roofitcore
+
+RooTable is the abstract interface for table objects.
+Table objects are the category equivalent of RooPlot objects
+(which are used for real-valued objects)
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -36,25 +37,28 @@ ClassImp(RooTable)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooTable::RooTable(const char *name, const char *title) : TNamed(name,title)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooTable::RooTable(const RooTable& other) : TNamed(other), RooPrintable(other)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooTable::~RooTable()
 {
-  // Destructor
 }
 

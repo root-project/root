@@ -1,18 +1,28 @@
-//-----------------------------------------------------------------------
-//
-// Convoluted Landau and Gaussian Fitting Function
-//         (using ROOT's Landau and Gauss functions)
-//
-//  Based on a Fortran code by R.Fruehwirth (fruhwirth@hephy.oeaw.ac.at)
-//  Adapted for C++/ROOT by H.Pernegger (Heinz.Pernegger@cern.ch) and
-//   Markus Friedl (Markus.Friedl@cern.ch)
-//
-//  to execute this example, do:
-//  root > .x langaus.C
-// or
-//  root > .x langaus.C++
-//
-//-----------------------------------------------------------------------
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook
+/// Convoluted Landau and Gaussian Fitting Function
+///         (using ROOT's Landau and Gauss functions)
+///
+///  Based on a Fortran code by R.Fruehwirth (fruhwirth@hephy.oeaw.ac.at)
+///
+///  to execute this example, do:
+///
+/// ~~~{.cpp}
+///  root > .x langaus.C
+/// ~~~
+///
+/// or
+///
+/// ~~~{.cpp}
+///  root > .x langaus.C++
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors H.Pernegger, Markus Friedl
 
 #include "TH1.h"
 #include "TF1.h"

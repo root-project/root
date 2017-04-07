@@ -28,9 +28,18 @@ LDAPLIB      := $(LPATH)/libRLDAP.$(SOEXT)
 LDAPMAP      := $(LDAPLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(LDAPH))
+LDAPH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(LDAPH))
+ALLHDRS     += $(LDAPH_REL)
 ALLLIBS     += $(LDAPLIB)
 ALLMAPS     += $(LDAPMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(LDAPH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(LDAPLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(LDAPDEP)

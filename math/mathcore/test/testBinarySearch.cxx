@@ -6,25 +6,25 @@
 
 using namespace std;
 
-const int n = 20;
+const int nn = 20;
 const int maxint = 10;
 const int except = 8;
 
 template <typename T> void testBinarySearch()
 {
-   T k[n];
+   T k[nn];
 
    TRandom2 r( time( 0 ) );
-   for ( Int_t i = 0; i < n; i++) {
+   for ( Int_t i = 0; i < nn; i++) {
       T number = (T) r.Integer( maxint );
       while ( number == except )
          number = (T) r.Integer( maxint );
       k[i] = number;
    }
 
-   std::sort(k, k+n);
+   std::sort(k, k+nn);
 
-   for ( Int_t i = 0; i < n; i++) {
+   for ( Int_t i = 0; i < nn; i++) {
       cout << k[i] << ' ';
    }
    cout << endl;

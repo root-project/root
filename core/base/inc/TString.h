@@ -23,20 +23,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include <string.h>
-#include <stdio.h>
-#endif
-
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
-#ifndef ROOT_TMathBase
 #include "TMathBase.h"
-#endif
 
+#include "RStringView.h"
+
+#include <iosfwd>
 #include <stdarg.h>
+#include <stdio.h>
 #include <string>
 
 #ifdef R__GLOBALSTL
@@ -111,6 +104,9 @@ public:
    char         &operator[](Ssiz_t i);           // Index with bounds checking
    char          operator()(Ssiz_t i) const;     // Index with optional bounds checking
    char          operator[](Ssiz_t i) const;     // Index with bounds checking
+
+   operator std::string_view() const { return std::string_view(Data(),fExtent); }
+   operator std::string() const { return std::string_view(Data(),fExtent).to_string(); }
 
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
@@ -256,11 +252,13 @@ public:
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
    TString(const TString &s);           // Copy constructor
+   TString(TString &&s);                // Move constructor
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
    TString(char c);
    TString(char c, Ssiz_t s);
+   TString(const std::string_view &sub);
    TString(const TSubString &sub);
 
    virtual ~TString();
@@ -281,12 +279,14 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
+   operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
 
    // Assignment
    TString    &operator=(char s);                // Replace string
    TString    &operator=(const char *s);
    TString    &operator=(const TString &s);
    TString    &operator=(const std::string &s);
+   TString    &operator=(const std::string_view &s);
    TString    &operator=(const TSubString &s);
    TString    &operator+=(const char *s);        // Append string
    TString    &operator+=(const TString &s);
@@ -774,10 +774,9 @@ namespace llvm {
 }
 
 namespace cling {
-   // cling ValuePrinting
-   class Value;
-   std::string printValue(const TString* const p, const TString* const u,
-                          const Value& V);
+  std::string printValue(const TString* val);
+  std::string printValue(const TSubString* val);
+  std::string printValue(const std::string_view* val);
 }
 
 #endif

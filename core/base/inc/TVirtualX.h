@@ -27,24 +27,12 @@
 #include <utility>
 #include <vector>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 // WM Atoms are initialized in TGClient
@@ -281,6 +269,7 @@ public:
    virtual Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
    virtual void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
    virtual void         GetGCValues(GContext_t gc, GCValues_t &gval);
+   virtual FontStruct_t GetGCFont(GContext_t gc);
    virtual FontStruct_t GetFontStruct(FontH_t fh);
    virtual void         FreeFontStruct(FontStruct_t fs);
    virtual void         ClearWindow(Window_t id);
@@ -349,6 +338,8 @@ public:
    virtual void         BeginModalSessionFor(Window_t window);
 
    virtual Bool_t       IsCmdThread() const { return kTRUE; }
+
+   virtual void         MapGCFont(GContext_t, FontStruct_t);
 
    static TVirtualX    *&Instance();
 

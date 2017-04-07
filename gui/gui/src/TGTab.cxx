@@ -51,20 +51,21 @@ ClassImp(TGTabLayout)
 ClassImp(TGTab)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tab element. Text is adopted by tab element.
+
 TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
                            GContext_t norm, FontStruct_t font,
                            UInt_t options, ULong_t back) :
    TGFrame(p, w, h, options, back)
 {
-   // Create a tab element. Text is adopted by tab element.
-
    fClosePic     = 0;
    fClosePicD    = 0;
    fShowClose    = kFALSE;
    fActive       = kFALSE;
    fText         = text;
    fBorderWidth  = 0;
+   fTWidth       = 0;
    fNormGC       = norm;
    fFontStruct   = font;
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
@@ -81,21 +82,21 @@ TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h
    gVirtualX->GrabButton(fId, kButton1, kAnyModifier, kButtonPressMask, kNone, kNone);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete tab element.
+
 TGTabElement::~TGTabElement()
 {
-   // Delete tab element.
-
    if (fClosePic) gClient->FreePicture(fClosePic);
    if (fClosePicD) gClient->FreePicture(fClosePicD);
    if (fText) delete fText;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw little tab element.
+
 void TGTabElement::DrawBorder()
 {
-   // Draw little tab element.
-
    gVirtualX->DrawLine(fId, GetHilightGC()(), 0, fHeight-1, 0, 2);
    gVirtualX->DrawLine(fId, GetHilightGC()(), 0, 2, 2, 0);
    gVirtualX->DrawLine(fId, GetHilightGC()(), 2, 0, fWidth-3, 0);
@@ -124,12 +125,12 @@ void TGTabElement::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button event in the tab widget. Basically we only handle
+/// button events in the small tabs.
+
 Bool_t TGTabElement::HandleButton(Event_t *event)
 {
-   // Handle button event in the tab widget. Basically we only handle
-   // button events in the small tabs.
-
    if (event->fType == kButtonPress) {
       TGTab* main = (TGTab*)fParent;
       if (main) {
@@ -162,22 +163,22 @@ Bool_t TGTabElement::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default size of tab element.
+
 TGDimension TGTabElement::GetDefaultSize() const
 {
-   // Return default size of tab element.
-
    if (fShowClose && fClosePic && fClosePicD)
       return TGDimension(TMath::Max(fTWidth+30, (UInt_t)45), fTHeight+6);
    else
       return TGDimension(TMath::Max(fTWidth+12, (UInt_t)45), fTHeight+6);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new tab text.
+
 void TGTabElement::SetText(TGString *text)
 {
-   // Set new tab text.
-
    if (fText) delete fText;
    fText = text;
 
@@ -189,12 +190,12 @@ void TGTabElement::SetText(TGString *text)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show/hide close icon on the tab element, then apply layout
+/// to compute correct elements size.
+
 void TGTabElement::ShowClose(Bool_t show)
 {
-   // Show/hide close icon on the tab element, then apply layout
-   // to compute correct elements size.
-
    TGTab* main = (TGTab*)fParent;
    fShowClose = show;
    if (fShowClose && fClosePic && fClosePicD)
@@ -205,20 +206,20 @@ void TGTabElement::ShowClose(Bool_t show)
       main->GetLayoutManager()->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a tab layout manager.
+
 TGTabLayout::TGTabLayout(TGTab *main)
 {
-   // Create a tab layout manager.
-
    fMain = main;
    fList = fMain->GetList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the tab widget.
+
 void TGTabLayout::Layout()
 {
-   // Layout the tab widget.
-
    Int_t  i, xtab;
    UInt_t tw;
    UInt_t tabh = fMain->GetTabHeight(), bw = fMain->GetBorderWidth();
@@ -258,11 +259,11 @@ void TGTabLayout::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default size of tab widget.
+
 TGDimension TGTabLayout::GetDefaultSize() const
 {
-   // Get default size of tab widget.
-
    TGDimension dsize, dsize_te;
    TGDimension size(0,0), size_te(0,0);
 
@@ -290,14 +291,14 @@ TGDimension TGTabLayout::GetDefaultSize() const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create tab widget.
+
 TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
              GContext_t norm, FontStruct_t font,
              UInt_t options, ULong_t back) :
    TGCompositeFrame(p, w, h, options, back)
 {
-   // Create tab widget.
-
    fMsgWindow  = p;
 
    fBorderWidth = 2;
@@ -322,23 +323,23 @@ TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
    fContainer->SetEditDisabled(kEditDisable | kEditDisableGrab);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete tab widget. This deletes the tab windows and the containers.
+/// The tab string is deleted by the TGTabElement dtor.
+
 TGTab::~TGTab()
 {
-   // Delete tab widget. This deletes the tab windows and the containers.
-   // The tab string is deleted by the TGTabElement dtor.
-
    Cleanup();
    fRemoved->Delete();
    delete fRemoved;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a tab to the tab widget. Returns the new container, which
+/// is owned by the tab widget. The text is adopted by the tab widget.
+
 TGCompositeFrame *TGTab::AddTab(TGString *text)
 {
-   // Add a tab to the tab widget. Returns the new container, which
-   // is owned by the tab widget. The text is adopted by the tab widget.
-
    TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
    AddFrame(te, 0);
 
@@ -352,28 +353,28 @@ TGCompositeFrame *TGTab::AddTab(TGString *text)
    return cf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a tab to the tab widget. Returns the new container. The container
+/// is owned by the tab widget.
+
 TGCompositeFrame *TGTab::AddTab(const char *text)
 {
-   // Add a tab to the tab widget. Returns the new container. The container
-   // is owned by the tab widget.
-
    return AddTab(new TGString(text));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a tab to the tab widget and fill it with given TGCompositeFrame.
+
 void TGTab::AddTab(const char *text, TGCompositeFrame *cf)
 {
-   // Add a tab to the tab widget and fill it with given TGCompositeFrame.
-
    AddTab(new TGString(text), cf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a tab to the tab widget and fill it with given TGCompositeFrame.
+
 void TGTab::AddTab(TGString *text, TGCompositeFrame *cf)
 {
-   // Add a tab to the tab widget and fill it with given TGCompositeFrame.
-
    TGTabElement *te = new TGTabElement(this, text, 50, 20, fNormGC, fFontStruct);
    AddFrame(te, 0);
 
@@ -384,12 +385,12 @@ void TGTab::AddTab(TGString *text, TGCompositeFrame *cf)
    cf->MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove container and tab of tab with index tabIndex.
+/// Does NOT remove the container contents!
+
 void TGTab::RemoveTab(Int_t tabIndex, Bool_t storeRemoved)
 {
-   // Remove container and tab of tab with index tabIndex.
-   // Does NOT remove the container contents!
-
    if (tabIndex < 0) {
       tabIndex = fCurrent;
    }
@@ -428,11 +429,11 @@ void TGTab::RemoveTab(Int_t tabIndex, Bool_t storeRemoved)
    GetLayoutManager()->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable tab.
+
 void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
 {
-   // Enable or disable tab.
-
    TGTabElement *te = GetTabTab(tabIndex);
    if (te) {
       te->SetEnabled(on);
@@ -440,22 +441,22 @@ void TGTab::SetEnabled(Int_t tabIndex, Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if tab is enabled.
+
 Bool_t TGTab::IsEnabled(Int_t tabIndex) const
 {
-   // Returns true if tab is enabled.
-
    TGTabElement *te = GetTabTab(tabIndex);
 
    return te ? te->IsEnabled() : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make tabIdx the current tab. Utility method called by SetTab and
+/// HandleButton().
+
 void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
 {
-   // Make tabIdx the current tab. Utility method called by SetTab and
-   // HandleButton().
-
    TGTabElement *te = GetTabTab(tabIndex);
    if (!te || !te->IsEnabled()) return;
 
@@ -497,14 +498,14 @@ void TGTab::ChangeTab(Int_t tabIndex, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Brings the composite frame with the index tabIndex to the
+/// front and generate the following event if the front tab has changed:
+/// kC_COMMAND, kCM_TAB, tab id, 0.
+/// Returns kFALSE if tabIndex is a not valid index
+
 Bool_t TGTab::SetTab(Int_t tabIndex, Bool_t emit)
 {
-   // Brings the composite frame with the index tabIndex to the
-   // front and generate the following event if the front tab has changed:
-   // kC_COMMAND, kCM_TAB, tab id, 0.
-   // Returns kFALSE if tabIndex is a not valid index
-
    // check if tabIndex is a valid index
    if (tabIndex < 0)
       return kFALSE;
@@ -525,14 +526,14 @@ Bool_t TGTab::SetTab(Int_t tabIndex, Bool_t emit)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Brings the composite frame with the name to the
+/// front and generate the following event if the front tab has changed:
+/// kC_COMMAND, kCM_TAB, tab id, 0.
+/// Returns kFALSE if tab with name does not exist.
+
 Bool_t TGTab::SetTab(const char *name, Bool_t emit)
 {
-   // Brings the composite frame with the name to the
-   // front and generate the following event if the front tab has changed:
-   // kC_COMMAND, kCM_TAB, tab id, 0.
-   // Returns kFALSE if tab with name does not exist.
-
    TGFrameElement *el;
    Int_t  count = 0;
    TGTabElement *tab = 0;
@@ -555,12 +556,12 @@ Bool_t TGTab::SetTab(const char *name, Bool_t emit)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return container of tab with index tabIndex.
+/// Return 0 in case tabIndex is out of range.
+
 TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
 {
-   // Return container of tab with index tabIndex.
-   // Return 0 in case tabIndex is out of range.
-
    if (tabIndex < 0) return 0;
 
    TGFrameElement *el;
@@ -579,12 +580,12 @@ TGCompositeFrame *TGTab::GetTabContainer(Int_t tabIndex) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the tab container of tab with string name.
+/// Returns 0 in case name is not found.
+
 TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
 {
-   // Return the tab container of tab with string name.
-   // Returns 0 in case name is not found.
-
    TGFrameElement *el;
    TGTabElement *tab = 0;
    TGCompositeFrame *comp = 0;
@@ -604,12 +605,12 @@ TGCompositeFrame *TGTab::GetTabContainer(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the tab element of tab with index tabIndex.
+/// Returns 0 in case tabIndex is out of range.
+
 TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
 {
-   // Return the tab element of tab with index tabIndex.
-   // Returns 0 in case tabIndex is out of range.
-
    if (tabIndex < 0) return 0;
 
    TGFrameElement *el;
@@ -628,12 +629,12 @@ TGTabElement *TGTab::GetTabTab(Int_t tabIndex) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the tab element of tab with string name.
+/// Returns 0 in case name is not found.
+
 TGTabElement *TGTab::GetTabTab(const char *name) const
 {
-   // Return the tab element of tab with string name.
-   // Returns 0 in case name is not found.
-
    TGFrameElement *el;
    TGTabElement *tab = 0;
 
@@ -651,11 +652,11 @@ TGTabElement *TGTab::GetTabTab(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of tabs.
+
 Int_t TGTab::GetNumberOfTabs() const
 {
-   // Return number of tabs.
-
    Int_t count = 0;
 
    TIter next(fList);
@@ -669,31 +670,31 @@ Int_t TGTab::GetNumberOfTabs() const
    return count;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGTab::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGTab::GetDefaultGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new tab. Used in context menu.
+
 void TGTab::NewTab(const char *text)
 {
-   // Create new tab. Used in context menu.
-
    TString name;
    if (text)
       name = text;
@@ -704,20 +705,20 @@ void TGTab::NewTab(const char *text)
    GetLayoutManager()->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text to current tab.
+
 void TGTab::SetText(const char *text)
 {
-   // Set text to current tab.
-
    if (GetCurrentTab()) GetCurrentTab()->SetText(new TGString(text));
    GetLayoutManager()->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return layout manager.
+
 TGLayoutManager *TGTab::GetLayoutManager() const
 {
-   // Return layout manager.
-
    TGTab *tab = (TGTab*)this;
 
    if (tab->fLayoutManager->IsA() != TGTabLayout::Class()) {
@@ -727,11 +728,11 @@ TGLayoutManager *TGTab::GetLayoutManager() const
    return tab->fLayoutManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a tab widget as a C++ statement(s) on output stream out.
+
 void TGTab::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a tab widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // font + GC

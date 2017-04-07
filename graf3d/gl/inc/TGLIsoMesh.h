@@ -14,12 +14,8 @@
 
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
 
 class TGLBoxCut;
 

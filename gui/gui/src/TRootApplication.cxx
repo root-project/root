@@ -28,12 +28,12 @@
 
 ClassImp(TRootApplication)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create ROOT application environment.
+
 TRootApplication::TRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
-   // Create ROOT application environment.
-
    fApplicationName = appClassName;
    fDisplay         = 0;
 
@@ -51,30 +51,30 @@ TRootApplication::TRootApplication(const char *appClassName,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete ROOT application environment.
+
 TRootApplication::~TRootApplication()
 {
-   // Delete ROOT application environment.
-
    delete [] fDisplay;
    delete fClient;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// By default (for UNIX) ROOT is a single thread application
+/// For win32gdk returns kTRUE if it's called from inside of server/cmd thread
+
 Bool_t TRootApplication::IsCmdThread()
 {
-   // By default (for UNIX) ROOT is a single thread application
-   // For win32gdk returns kTRUE if it's called from inside of server/cmd thread
-
    return gVirtualX ? gVirtualX->IsCmdThread() : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle command line arguments. Arguments handled are removed from the
+/// argument array. Currently only option "-display xserver" is considered.
+
 void TRootApplication::GetOptions(Int_t *argc, char **argv)
 {
-   // Handle command line arguments. Arguments handled are removed from the
-   // argument array. Currently only option "-display xserver" is considered.
-
    if (!argc) return;
 
    int i, j;

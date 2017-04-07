@@ -29,25 +29,13 @@ Additional distributions are also provided by the
 
 @defgroup StatFunc Statistical functions
 
+@ingroup  MathCore
+@ingroup  MathMore
+
 */
-
-
-
-#if defined(__CINT__) && !defined(__MAKECINT__)
-// avoid to include header file when using CINT
-#ifndef _WIN32
-#include "../lib/libMathCore.so"
-#else
-#include "../bin/libMathCore.dll"
-#endif
-
-#else
-
 
 #ifndef ROOT_Math_PdfFuncMathCore
 #define ROOT_Math_PdfFuncMathCore
-
-
 
 
 namespace ROOT {
@@ -55,7 +43,7 @@ namespace Math {
 
 
 
-  /** @defgroup PdfFunc Probability Density Functions (PDF) from MathCore
+  /** @defgroup PdfFunc Probability Density Functions (PDF)
    *   @ingroup StatFunc
    *  Probability density functions of various statistical distributions
    *  (continuous and discrete).
@@ -186,7 +174,26 @@ namespace Math {
   double chisquared_pdf(double x, double r, double x0 = 0);
 
 
+  /**
 
+  Crystal ball function
+
+  See the definition at
+  <A HREF="http://en.wikipedia.org/wiki/Crystal_Ball_function">
+  Wikipedia</A>.
+
+  It is not really a pdf since it is not normalized
+
+  @ingroup PdfFunc
+
+  */
+
+  double crystalball_function(double x, double alpha, double n, double sigma, double x0 = 0);
+
+   /**
+       pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging
+    */
+  double crystalball_pdf(double x, double alpha, double n, double sigma, double x0 = 0);
 
   /**
 
@@ -268,13 +275,13 @@ namespace Math {
 
   Probability density function of the bi-dimensional (Gaussian) distribution.
 
-  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]  
+  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_pdf which will
   call the same implementation.
-  
+
  @param rho correlation , must be between -1,1
 
   @ingroup PdfFunc
@@ -294,7 +301,7 @@ namespace Math {
    <A HREF="http://dx.doi.org/10.1016/0010-4655(84)90085-7">Computer Phys. Comm. 31 (1984) 97-111</A>
    <A HREF="http://dx.doi.org/10.1016/j.cpc.2008.03.002">[Erratum-ibid. 178 (2008) 972]</A>.
    The same algorithms as in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g110/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g110/top.html">
    CERNLIB</A> (DENLAN)  is used
 
    @param x The argument \f$x\f$
@@ -319,7 +326,7 @@ namespace Math {
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>.
   @param s scale parameter (not the sigma of the distribution which is not even defined)
-  @param x0  location parameter, corresponds approximatly to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
+  @param x0  location parameter, corresponds approximately to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
 
   @ingroup PdfFunc
 
@@ -410,5 +417,3 @@ namespace Math {
 
 
 #endif // ROOT_Math_PdfFunc
-
-#endif // if defined (__CINT__) && !defined(__MAKECINT__)

@@ -2,9 +2,6 @@
 # CMakeLists.txt file for building ROOT sql/odbc package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${ODBC_INCLUDE_DIR})
 if(MACOSX_ODBC_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)

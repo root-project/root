@@ -28,6 +28,7 @@ bool showGraphics = false;
 bool verbose = false;
 //std::string plotFile;
 
+namespace {
 template<typename T>
 struct Compare {
 
@@ -39,6 +40,7 @@ struct Compare {
 
    const T * fData;
 };
+}
 
 template <typename T> bool testSort(const int n, double* tTMath, double* tStd)
 {
@@ -109,7 +111,7 @@ bool stdsort()
 
    if (verbose) {
       cout << " TMATH - time  ---  std time " << std::endl;
-      for ( int i = 0; i < ntest; ++i) {
+      for ( i = 0; i < ntest; ++i) {
          cout << " size = " << index[i] << " :  " << tM[i] << ' ' << tS[i] << endl;
       }
    }

@@ -1,3 +1,11 @@
+/// \file
+/// \ingroup tutorial_geom
+/// GUI to draw the geometry shapes.
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
+
 #include "TMath.h"
 #include "TControlBar.h"
 #include "TRandom3.h"
@@ -28,9 +36,6 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoPhysicalNode.h"
 
-
-// GUI to draw the geometry shapes
-// Author: M.Gheata  06/16/03
 Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;
 Bool_t grotate = kFALSE;
@@ -166,7 +171,7 @@ void help() {
    hdemo->AddText("- While pointing the mouse to the pad containing the geometry, do:");
    hdemo->AddText("- .... click-and-move to rotate");
    hdemo->AddText("- .... press j/k to zoom/unzoom");
-   hdemo->AddText("- .... press l/h/u/i to move the view center arround");
+   hdemo->AddText("- .... press l/h/u/i to move the view center around");
    hdemo->AddText("- Click Ray-trace ON/OFF to toggle ray-tracing");
    hdemo->AddText("- Use <View with x3d> from the <View> menu to get an x3d view");
    hdemo->AddText("- .... same methods to rotate/zoom/move the view");
@@ -207,19 +212,19 @@ void geodemo ()
 // When drawing one shape after another, the old geometry/canvas will be deleted.
    TControlBar *bar = new TControlBar("vertical", "TGeo shapes",10,10);
    bar->AddButton("How to run  ","help()","Instructions for running this macro");
-   bar->AddButton("Arb8        ","arb8()","An arbitrary polyedron defined by vertices (max 8) sitting on 2 parallel planes");
+   bar->AddButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
    bar->AddButton("Box         ","box()","A box shape.");
    bar->AddButton("Composite   ","composite()","A composite shape");
    bar->AddButton("Cone        ","cone()","A conical tube");
    bar->AddButton("Cone segment","coneseg()","A conical segment");
    bar->AddButton("Cut tube    ","ctub()","A cut tube segment");
-   bar->AddButton("Eliptical tube","eltu()","An eliptical tube");
+   bar->AddButton("Elliptical tube","eltu()","An elliptical tube");
    bar->AddButton("Extruded poly","xtru()","A general polygone extrusion");
    bar->AddButton("Hyperboloid  ","hype()","A hyperboloid");
    bar->AddButton("Paraboloid  ","parab()","A paraboloid");
    bar->AddButton("Polycone    ","pcon()","A polycone shape");
    bar->AddButton("Polygone    ","pgon()","A polygone");
-   bar->AddButton("Parallelipiped","para()","A parallelipiped shape");
+   bar->AddButton("Parallelepiped","para()","A parallelepiped shape");
    bar->AddButton("Sphere      ","sphere()","A spherical sector");
    bar->AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
    bar->AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
@@ -362,7 +367,7 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
    gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("para shape", "A parallelipiped", 700,1000);
+   TCanvas *c = new TCanvas("para shape", "A parallelepiped", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -394,7 +399,7 @@ void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
    pt->SetLineColor(1);
    TGeoPara *para = (TGeoPara*)(vol->GetShape());
-   TText *text = pt->AddText("TGeoPara - parallelipiped class");
+   TText *text = pt->AddText("TGeoPara - parallelepiped class");
    text->SetTextColor(2);
    AddText(pt,"fX",para->GetX(),"half length in X");
    AddText(pt,"fY",para->GetY(),"half length in Y");
@@ -1095,7 +1100,7 @@ void hype()
    pt->AddText("----- Create with:    TGeoHype *hype = new TGeoHype(rin, stin, rout, stout, dz);");
    pt->AddText("-----      rin < rout; rout > 0");
    pt->AddText("-----      rin = 0; stin > 0 => inner surface conical");
-   pt->AddText("-----      stin/stout = 0 => corresponding surface cyllindrical");
+   pt->AddText("-----      stin/stout = 0 => corresponding surface cylindrical");
    pt->AddText(" ");
    pt->SetAllWith("-----","color",2);
    pt->SetAllWith("-----","font",72);
@@ -1275,7 +1280,7 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
       printf("Cannot divide arb8\n");
       return;
    }
-   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyedron", 700,1000);
+   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyhedron", 700,1000);
    if (comments) {
       c->Divide(1,2,0,0);
       c->cd(2);
@@ -1673,7 +1678,7 @@ void composite()
    pt->AddText("                TGeoCompositeShape(\"someName\", \"expression\")");
    pt->AddText("----- Expression is made of <shapeName:transfName> components related by Boolean operators");
    pt->AddText("----- Boolean operators can be: (+) union, (-) subtraction and (*) intersection");
-   pt->AddText("----- Use paranthesys in the expression to force precedence");
+   pt->AddText("----- Use parenthesis in the expression to force precedence");
    pt->AddText(" ");
    pt->SetAllWith("-----","color",4);
    pt->SetAllWith("-----","font",72);
@@ -1710,7 +1715,7 @@ void ideal()
 //       node->SetLineStyle(style);
 // 3.   node->SetVisibleFull(Bool_t flag); // not only last node in the branch is visible (default)
 //
-// Activating/desactivating physical nodes drawing - not needed in case of alignment
+// Activating/deactivating physical nodes drawing - not needed in case of alignment
 
 // Aligning physical nodes
 //==========================

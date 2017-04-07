@@ -28,7 +28,8 @@ ClassImp(TQtMarker)
 //
 ////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtMarker::TQtMarker(int n, TPoint *xy, int type) : fNumNode(n),
 fChain(0), fCindex(0), fMarkerType(0),fLineWidth(0),fLineOption(false)
 {
@@ -43,34 +44,38 @@ fChain(0), fCindex(0), fMarkerType(0),fLineWidth(0),fLineOption(false)
 //______________________________________________________________________________
 TQtMarker::~TQtMarker(){}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign the TQtMarker from ROOT TAttMarker
+
 TQtMarker &TQtMarker::operator=(const TAttMarker&markerAttributes)
 {
-   // Assign the TQtMarker from ROOT TAttMarker
    SetMarkerAttributes(markerAttributes);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the TQtMarker from ROOT TAttMarker
+
 TQtMarker::TQtMarker(const TAttMarker &markerAttributes)
 {
-   // Create the TQtMarker from ROOT TAttMarker
    SetMarkerAttributes(markerAttributes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map Qt marker  attributes to ROOT TAttMaker parameters
+
 void TQtMarker::SetMarkerAttributes(const TAttMarker& markerAttributes)
 {
-   // Map Qt marker  attributes to ROOT TAttMaker parameters
    fCindex     = markerAttributes.GetMarkerColor();
    SetPenAttributes(markerAttributes.GetMarkerStyle());
    fNumNode    = Int_t(markerAttributes.GetMarkerSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pen attrbutes is 100000*LineFlag + 1000*width + "marker style"
+
 void  TQtMarker::SetPenAttributes(int type)
 {
-   // Pen attrbutes is 100000*LineFlag + 1000*width + "marker style"
    static const int packFactor = 1000;
    static const int lineFactor = 10000;
    fMarkerType = type%packFactor;
@@ -91,10 +96,11 @@ int  TQtMarker::GetType()  const {return fMarkerType;}
 //______________________________________________________________________________
 int  TQtMarker::GetWidth() const { return fLineWidth;}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-* Did we have a chain ?
+
 void TQtMarker::SetMarker(int n, TPoint *xy, int type)
 {
-   //*-* Did we have a chain ?
    fNumNode = n;
    SetPenAttributes(type);
    if (GetType() != kDot) {
@@ -105,14 +111,14 @@ void TQtMarker::SetMarker(int n, TPoint *xy, int type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw n markers with the current attributes at positions xy.
+/// p    : the external QPainter
+/// n    : number of markers to draw
+/// xy   : x,y coordinates of markers
+
 void  TQtMarker::DrawPolyMarker(QPainter &p, int n, TPoint *xy)
 {
-   // Draw n markers with the current attributes at positions xy.
-   // p    : the external QPainter
-   // n    : number of markers to draw
-   // xy   : x,y coordinates of markers
-
    /* Set marker Color */
    const QColor &mColor  = gQt->ColorIndex(fCindex);
 

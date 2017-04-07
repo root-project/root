@@ -22,69 +22,79 @@ TGeometry *gGeometry = 0;
 
 ClassImp(TGeometry)
 
+/** \class TGeometry
+\ingroup g3d
+TGeometry description.
 
-//______________________________________________________________________________
-//                    T G E O M E T R Y  description
-//                    ==============================
-//
-//    The Geometry class describes the geometry of a detector.
-//    The current implementation supports the GEANT3 style description.
-//    A special program provided in the ROOT utilities (toroot) can be used
-//    to automatically translate a GEANT detector geometry into a ROOT geometry.
-//
-//   a Geometry object is entered into the list of geometries into the
-//     ROOT main object (see TROOT description) when the TGeometry
-//     constructor is invoked.
-//   Several geometries may coexist in memory.
-//
-//   A Geometry object consist of the following linked lists:
-//        - the TMaterial list (material definition only).
-//        - the TRotmatrix list (Rotation matrices definition only).
-//        - the TShape list (volume definition only).
-//        - the TNode list assembling all detector elements.
-//
-//   Only the Build and Draw functions for a geometry are currently supported.
-//
-//---------------------------------------------------------------------------
-//  The conversion program from Geant to Root has been added in the list
-//  of utilities in utils directory.(see g2root)
-//  The executable module of g2root can be found in $ROOTSYS/bin/g2root.
-//
-//  To use this conversion program, type the shell command:
-//        g2root  geant_rzfile macro_name
-//
-//  for example
-//        g2root na49.geom na49.C
-//  will convert the GEANT RZ file na49.geom into a ROOT macro na49.C
-//
-//  To generate the Geometry structure within Root, do:
-//    Root > .x na49.C
-//    Root > na49.Draw()
-//    Root > wh.x3d()    (this invokes the 3-d Root viewver)
-//    Root > TFile gna49("na49.root","NEW")  //open a new root file
-//    Root > na49.Write()                    //Write the na49 geometry structure
-//    Root > gna49.Write()                   //Write all keys (in this case only one)
-//  Note: all keys are also written on closing of the file, gna49.Close or
-//  when the program exits, Root closes all open files correctly.
-//  Once this file has been written, in a subsequent session, simply do:
-//    Root > TFile gna49("na49.root")
-//    Root > na49.Draw()
-//
-//  The figure below shows the geometry above using the x3d viewer.
-//  This x3d viewver is invoked by selecting "View x3d" in the View menu
-//  of a canvas (See example of this tool bar in TCanvas).
-//Begin_Html
-/*
-<img src="gif/na49.gif">
+The Geometry class describes the geometry of a detector.
+The current implementation supports the GEANT3 style description.
+A special program provided in the ROOT utilities (toroot) can be used
+to automatically translate a GEANT detector geometry into a ROOT geometry.
+
+a Geometry object is entered into the list of geometries into the
+ROOT main object (see TROOT description) when the TGeometry
+constructor is invoked.
+Several geometries may coexist in memory.
+/
+A Geometry object consist of the following linked lists:
+
+  - the TMaterial list (material definition only).
+  - the TRotmatrix list (Rotation matrices definition only).
+  - the TShape list (volume definition only).
+  - the TNode list assembling all detector elements.
+
+Only the Build and Draw functions for a geometry are currently supported.
+
+The conversion program from Geant to Root has been added in the list
+of utilities in utils directory.(see g2root)
+The executable module of g2root can be found in $ROOTSYS/bin/g2root.
+
+To use this conversion program, type the shell command:
+
+~~~ {.cpp}
+      g2root  geant_rzfile macro_name
+~~~
+
+for example
+
+~~~ {.cpp}
+      g2root na49.geom na49.C
+~~~
+
+will convert the GEANT RZ file na49.geom into a ROOT macro na49.C
+
+To generate the Geometry structure within Root, do:
+
+~~~ {.cpp}
+  Root > .x na49.C
+  Root > na49.Draw()
+  Root > wh.x3d()    (this invokes the 3-d Root viewer)
+  Root > TFile gna49("na49.root","NEW")  //open a new root file
+  Root > na49.Write()                    //Write the na49 geometry structure
+  Root > gna49.Write()                   //Write all keys (in this case only one)
+~~~
+
+Note: all keys are also written on closing of the file, gna49.Close or
+when the program exits, Root closes all open files correctly.
+Once this file has been written, in a subsequent session, simply do:
+
+~~~ {.cpp}
+  Root > TFile gna49("na49.root")
+  Root > na49.Draw()
+~~~
+
+The figure below shows the geometry above using the x3d viewer.
+This x3d viewer is invoked by selecting "View x3d" in the View menu
+of a canvas (See example of this tool bar in TCanvas).
+
+\image html g3d_na49.png
 */
-//End_Html
 
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry default constructor.
 
-//______________________________________________________________________________
 TGeometry::TGeometry()
 {
-   // Geometry default constructor.
-
    fMaterials       = new THashList(100,3);
    fMatrices        = new THashList(100,3);
    fShapes          = new THashList(500,3);
@@ -101,12 +111,11 @@ TGeometry::TGeometry()
    fIsReflection[fGeomLevel] = kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry normal constructor.
 
-//______________________________________________________________________________
 TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
 {
-   // Geometry normal constructor.
-
    fMaterials       = new THashList(1000,3);
    fMatrices        = new THashList(1000,3);
    fShapes          = new THashList(5000,3);
@@ -124,7 +133,9 @@ TGeometry::TGeometry(const char *name,const char *title ) : TNamed (name, title)
    fIsReflection[fGeomLevel] = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TGeometry::TGeometry(const TGeometry& geo) :
   TNamed(geo),
   fMaterials(geo.fMaterials),
@@ -142,7 +153,6 @@ TGeometry::TGeometry(const TGeometry& geo) :
   fY(geo.fY),
   fZ(geo.fZ)
 {
-   //copy constructor
    for(Int_t i=0; i<kMAXLEVELS; i++) {
       for(Int_t j=0; j<kVectorSize; j++)
          fTranslation[i][j]=geo.fTranslation[i][j];
@@ -152,10 +162,11 @@ TGeometry::TGeometry(const TGeometry& geo) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 TGeometry& TGeometry::operator=(const TGeometry& geo)
 {
-   //assignement operator
    if(this!=&geo) {
       TNamed::operator=(geo);
       fMaterials=geo.fMaterials;
@@ -183,11 +194,11 @@ TGeometry& TGeometry::operator=(const TGeometry& geo)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Geometry default destructor.
+
 TGeometry::~TGeometry()
 {
-   // Geometry default destructor.
-
    if (!fMaterials) return;
    fMaterials->Delete();
    fMatrices->Delete();
@@ -216,12 +227,11 @@ TGeometry::~TGeometry()
    gROOT->GetListOfGeometries()->Remove(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Browse.
 
-//______________________________________________________________________________
 void TGeometry::Browse(TBrowser *b)
 {
-   // Browse.
-
    if( b ) {
       b->Add( fMaterials, "Materials" );
       b->Add( fMatrices, "Rotation Matrices" );
@@ -230,55 +240,50 @@ void TGeometry::Browse(TBrowser *b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change Current Geometry to this.
 
-//______________________________________________________________________________
 void TGeometry::cd(const char *)
 {
-   // Change Current Geometry to this.
-
    gGeometry = this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this Geometry.
 
-//______________________________________________________________________________
 void TGeometry::Draw(Option_t *option)
 {
-   // Draw this Geometry.
-
    TNode *node1 = (TNode*)fNodes->First();
    if (node1) node1->Draw(option);
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Find object in a geometry node, material, etc
 
-//______________________________________________________________________________
 TObject *TGeometry::FindObject(const TObject *) const
 {
-   // Find object in a geometry node, material, etc
-
    Error("FindObject","Not yet implemented");
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Search object identified by name in the geometry tree
 
-//______________________________________________________________________________
 TObject *TGeometry::FindObject(const char *name) const
 {
-   // Search object identified by name in the geometry tree
-
    TObjArray *loc = TGeometry::Get(name);
    if (loc) return loc->At(0);
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Static function called by TROOT to search name in the geometry.
+/// Returns a TObjArray containing a pointer to the found object
+/// and a pointer to the container where the object was found.
 
-//______________________________________________________________________________
 TObjArray *TGeometry::Get(const char *name)
 {
-   // Static function called by TROOT to search name in the geometry.
-   // Returns a TObjArray containing a pointer to the found object
-   // and a pointer to the container where the object was found.
-
    static TObjArray *locs = 0;
    if (!locs) locs = new TObjArray(2);
    TObjArray &loc = *locs;
@@ -311,21 +316,19 @@ TObjArray *TGeometry::Get(const char *name)
    return &loc;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Material with name.
 
-//______________________________________________________________________________
 TMaterial *TGeometry::GetMaterial(const char *name) const
 {
-   // Return pointer to Material with name.
-
    return (TMaterial*)fMaterials->FindObject(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Material with number.
 
-//______________________________________________________________________________
 TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
 {
-   // Return pointer to Material with number.
-
    TMaterial *mat;
    if (number < 0 || number >= fMaterials->GetSize()) return 0;
    if (fMaterialPointer)  return fMaterialPointer[number];
@@ -336,33 +339,30 @@ TMaterial *TGeometry::GetMaterialByNumber(Int_t number) const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to node with name in the geometry tree.
 
-//______________________________________________________________________________
 TNode *TGeometry::GetNode(const char *name) const
 {
-   // Return pointer to node with name in the geometry tree.
-
    TNode *node= (TNode*)GetListOfNodes()->First();
    if (!node) return 0;
    if (node->TestBit(kNotDeleted))  return node->GetNode(name);
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to RotMatrix with name.
 
-//______________________________________________________________________________
 TRotMatrix *TGeometry::GetRotMatrix(const char *name) const
 {
-   // Return pointer to RotMatrix with name.
-
    return (TRotMatrix*)fMatrices->FindObject(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to RotMatrix with number.
 
-//______________________________________________________________________________
 TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
 {
-   // Return pointer to RotMatrix with number.
-
    TRotMatrix *matrix;
    if (number < 0 || number >= fMatrices->GetSize()) return 0;
    if (fMatrixPointer)  return fMatrixPointer[number];
@@ -373,21 +373,19 @@ TRotMatrix *TGeometry::GetRotMatrixByNumber(Int_t number) const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Shape with name.
 
-//______________________________________________________________________________
 TShape *TGeometry::GetShape(const char *name) const
 {
-   // Return pointer to Shape with name.
-
    return (TShape*)fShapes->FindObject(name);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to Shape with number.
 
-//______________________________________________________________________________
 TShape *TGeometry::GetShapeByNumber(Int_t number) const
 {
-   // Return pointer to Shape with number.
-
    TShape *shape;
    if (number < 0 || number >= fShapes->GetSize()) return 0;
    if (fShapePointer)  return fShapePointer[number];
@@ -398,17 +396,16 @@ TShape *TGeometry::GetShapeByNumber(Int_t number) const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TGeometry::Local2Master(Double_t *local, Double_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
@@ -433,17 +430,16 @@ void TGeometry::Local2Master(Double_t *local, Double_t *master)
       for (Int_t i=0;i<3;i++) master[i] = local[i];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TGeometry::Local2Master(Float_t *local, Float_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
@@ -471,12 +467,11 @@ void TGeometry::Local2Master(Float_t *local, Float_t *master)
       for (Int_t i=0;i<3;i++) master[i] = local[i];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List this geometry.
 
-//______________________________________________________________________________
 void TGeometry::ls(Option_t *option) const
 {
-   // List this geometry.
-
    TString opt = option;
    opt.ToLower();
    if (opt.Contains("m")) {
@@ -497,17 +492,16 @@ void TGeometry::ls(Option_t *option) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TGeometry::Master2Local(Double_t *master, Double_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Double_t x,y,z;
       Double_t bomb = GetBomb();
@@ -527,17 +521,16 @@ void TGeometry::Master2Local(Double_t *master, Double_t *local)
       memcpy(local,master,sizeof(Double_t)* kVectorSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TGeometry::Master2Local(Float_t *master, Float_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    if (GeomLevel()) {
       Float_t x,y,z;
       Float_t bomb = GetBomb();
@@ -558,30 +551,27 @@ void TGeometry::Master2Local(Float_t *master, Float_t *local)
       memcpy(local,master,sizeof(Float_t)* kVectorSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a node to the current node in this geometry.
 
-//______________________________________________________________________________
 void TGeometry::Node(const char *name, const char *title, const char *shapename, Double_t x, Double_t y, Double_t z, const char *matrixname, Option_t *option)
 {
-   // Add a node to the current node in this geometry.
-
    new TNode(name,title,shapename,x,y,z,matrixname,option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from a Geometry list.
 
-//______________________________________________________________________________
 void TGeometry::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from a Geometry list.
-
    if (fNodes) fNodes->RecursiveRemove(obj);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
 
-//______________________________________________________________________________
 void TGeometry::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -638,13 +628,12 @@ void TGeometry::Streamer(TBuffer &b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Update global rotation matrix/translation vector for this node
+/// this function must be called before invoking Local2Master
 
-//______________________________________________________________________________
 void TGeometry::UpdateMatrix(TNode *node)
 {
-   // Update global rotation matrix/translation vector for this node
-   // this function must be called before invoking Local2Master
-
    TNode *nodes[kMAXLEVELS];
    for (Int_t i=0;i<kVectorSize;i++) fTranslation[0][i] = 0;
    for (Int_t i=0;i<kMatrixSize;i++) fRotMatrix[0][i] = 0;
@@ -666,12 +655,11 @@ void TGeometry::UpdateMatrix(TNode *node)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Update temp matrix.
 
-//______________________________________________________________________________
 void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, TRotMatrix *rotMatrix)
 {
-   // Update temp matrix.
-
    Double_t *matrix = 0;
    Bool_t isReflection = kFALSE;
    if (rotMatrix && rotMatrix->GetType()) {
@@ -681,12 +669,11 @@ void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, TRotMatrix 
    UpdateTempMatrix( x,y,z, matrix,isReflection);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Update temp matrix.
 
-//______________________________________________________________________________
 void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *matrix,Bool_t isReflection)
 {
-   // Update temp matrix.
-
    Int_t i=GeomLevel();
    if (i) {
       if(matrix) {
@@ -711,20 +698,19 @@ void TGeometry::UpdateTempMatrix(Double_t x, Double_t y, Double_t z, Double_t *m
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute new translation vector and global matrix.
+///
+///  - dx      old translation vector
+///  - rmat    old global matrix
+///  - x,y,z   offset of new local system with respect to mother
+///  - dxnew   new translation vector
+///  - rmatnew new global rotation matrix
 
-//______________________________________________________________________________
 void TGeometry::UpdateTempMatrix(Double_t *dx,Double_t *rmat
                          , Double_t x, Double_t y, Double_t z, Double_t *matrix
                          , Double_t *dxnew, Double_t *rmatnew)
 {
-   // Compute new translation vector and global matrix.
-   //
-   //  dx      old translation vector
-   //  rmat    old global matrix
-   //  x,y,z   offset of new local system with respect to mother
-   //  dxnew   new translation vector
-   //  rmatnew new global rotation matrix
-
    dxnew[0] = dx[0] + x*rmat[0] + y*rmat[3] + z*rmat[6];
    dxnew[1] = dx[1] + x*rmat[1] + y*rmat[4] + z*rmat[7];
    dxnew[2] = dx[2] + x*rmat[2] + y*rmat[5] + z*rmat[8];

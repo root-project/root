@@ -9,15 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofNodeInfo                                                       //
-//                                                                      //
-// Implementation of PROOF node info.                                   //
-// The purpose of this class is to provide a complete node description  //
-// for masters, submasters and workers.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofNodeInfo
+\ingroup proofkernel
+
+The purpose of this class is to provide a complete node description
+for masters, submasters and workers.
+
+*/
 
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -25,21 +23,22 @@
 
 ClassImp(TProofNodeInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TProofNodeInfo::TProofNodeInfo()
                : fNodeType(kWorker), fPort(-1), fPerfIndex(100), fNWrks(1)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a string containing all the information in a serialized
+/// way. Used to decode thr information coming from the coordinator
+/// <type>|<host@user>|<port>|<ord>|<id>|<perfidx>|<img>|<workdir>|<msd>|<cfg>
+
 TProofNodeInfo::TProofNodeInfo(const char *str)
                : fNodeType(kWorker), fPort(-1), fPerfIndex(100), fNWrks(1)
 {
-   // Constructor from a string containing all the information in a serialized
-   // way. Used to decode thr information coming from the coordinator
-   // <type>|<host@user>|<port>|<ord>|<id>|<perfidx>|<img>|<workdir>|<msd>|<cfg>
-
    // Needs a non empty string to do something
    if (!str || strlen(str) <= 0)
       return;
@@ -84,11 +83,11 @@ TProofNodeInfo::TProofNodeInfo(const char *str)
    fName.Form("%s:%d", fNodeName.Data(), fPort);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TProofNodeInfo::TProofNodeInfo(const TProofNodeInfo &nodeInfo) : TObject(nodeInfo)
 {
-   // Copy constructor.
-
    fName      = nodeInfo.fName;
    fNodeType  = nodeInfo.fNodeType;
    fNodeName  = nodeInfo.fNodeName;
@@ -103,11 +102,11 @@ TProofNodeInfo::TProofNodeInfo(const TProofNodeInfo &nodeInfo) : TObject(nodeInf
    fNWrks     = nodeInfo.fNWrks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Asssign content of node n to this node
+
 void TProofNodeInfo::Assign(const TProofNodeInfo &n)
 {
-   // Asssign content of node n to this node
-
    fName      = n.fName;
    fNodeType  = n.fNodeType;
    fNodeName  = n.fNodeName;
@@ -122,11 +121,11 @@ void TProofNodeInfo::Assign(const TProofNodeInfo &n)
    fNWrks     = n.fNWrks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the TProofNodeInfo structure.
+
 void TProofNodeInfo::Print(const Option_t *opt) const
 {
-   // Print the TProofNodeInfo structure.
-
    if (opt[0] == 'c' || opt[0] == 'C') {
       Printf("%d %s:%d %s %s", fNodeType, fNodeName.Data(), fPort,
                                fOrdinal.Data(), fWorkDir.Data());
@@ -143,12 +142,12 @@ void TProofNodeInfo::Print(const Option_t *opt) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning node type. Allowed input: "master", "submaster",
+/// or anything else which will be interpreted as worker.
+
 TProofNodeInfo::ENodeType TProofNodeInfo::GetNodeType(const TString &type)
 {
-   // Static method returning node type. Allowed input: "master", "submaster",
-   // or anything else which will be interpreted as worker.
-
    ENodeType enType;
 
    if (type == "M" || type == "master") {

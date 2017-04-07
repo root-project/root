@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_gui
+/// This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT.
+/// Thanks to the clever usage of TTimer objects it looks like they are all executing in parallel (emulation of multi-threading).
+/// It uses the small classes generated in $ROOTSYS/test/Hello, Aclock, Tetris
+///
+/// \macro_code
+///
+/// \author Valeriy Onuchin
+
 #ifndef __RUN_GAMES__
 
 void games()
@@ -52,13 +62,6 @@ class Tetris;
 
 void rungames()
 {
-   // This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT.
-   // Thanks to the clever usage of TTimer objects it looks like they are all
-   // executing in parallel (emulation of multi-threading).
-   // It uses the small classes generated in $ROOTSYS/test/Hello,
-   // Aclock, Tetris
-   //Author: Valeriy Onuchin
-
    // run the dancing Hello World
    Hello *hello = new Hello();
 

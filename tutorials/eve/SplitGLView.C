@@ -1,7 +1,10 @@
-// @(#)root/eve:$Id$
-// Author: Bertrand Bellenot
-
-// Helper classes for the alice_esd_split.C demo.
+/// \file
+/// \ingroup tutorial_eve
+/// Helper classes for the alice_esd_split.C demo.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 #include "TApplication.h"
 #include "TSystem.h"
@@ -288,8 +291,7 @@ void TGShapedToolTip::Refresh()
    const char *str = fText.Data();
    char *string = strdup(str);
    Int_t nlines = 0, size = fTextH;
-   TString fp = gEnv->GetValue("Root.TTFontPath", "");
-   TString ar = fp + "/arial.ttf";
+   TString ar = "arial.ttf";
    char *s = strtok((char *)string, "\n");
    TImage *img = (TImage*)fImage->Clone("img");
    img->DrawText(fTextX, fTextY+(nlines*size), s, size, fTextCol, ar);
@@ -1017,14 +1019,7 @@ void SplitGLView::HandleMenu(Int_t id)
       case kHelpAbout:
          {
 #ifdef R__UNIX
-            TString rootx;
-# ifdef ROOTBINDIR
-            rootx = ROOTBINDIR;
-# else
-            rootx = gSystem->Getenv("ROOTSYS");
-            if (!rootx.IsNull()) rootx += "/bin";
-# endif
-            rootx += "/root -a &";
+            TString rootx = TROOT::GetBinDir() + "/root -a &";
             gSystem->Exec(rootx);
 #else
 #ifdef WIN32
@@ -1432,12 +1427,6 @@ void SplitGLView::UpdateSummary()
    }
 }
 
-// Linkdef
-#ifdef __CINT__
-
-#pragma link C++ class SplitGLView;
-
-#endif
 
 #ifdef __CINT__
 void SplitGLView()

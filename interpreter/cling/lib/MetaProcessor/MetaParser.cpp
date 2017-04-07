@@ -15,15 +15,16 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Value.h"
+#include "cling/Utils/Output.h"
+#include "cling/Utils/Paths.h"
 
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 
 namespace cling {
 
-  MetaParser::MetaParser(MetaSema* Actions) {
-    m_Lexer.reset(0);
+  MetaParser::MetaParser(MetaSema* Actions) : m_Lexer("") {
     m_Actions.reset(Actions);
     const InvocationOptions& Opts = Actions->getInterpreter().getOptions();
     MetaLexer metaSymbolLexer(Opts.MetaString);
@@ -37,7 +38,7 @@ namespace cling {
   }
 
   void MetaParser::enterNewInputLine(llvm::StringRef Line) {
-    m_Lexer.reset(new MetaLexer(Line));
+    m_Lexer.reset(Line);
     m_TokenCache.clear();
   }
 
@@ -60,12 +61,14 @@ namespace cling {
         || MergedTok.is(tok::comment))
       return;
 
+    //look ahead for the next token without consuming it
     Token Tok = lookAhead(1);
     Token PrevTok = Tok;
     while (Tok.isNot(stopAt) && Tok.isNot(tok::eof)){
       //MergedTok.setLength(MergedTok.getLength() + Tok.getLength());
       m_TokenCache.erase(m_TokenCache.begin() + 1);
       PrevTok = Tok;
+      //look ahead for the next token without consuming it
       Tok = lookAhead(1);
     }
     MergedTok.setKind(tok::raw_ident);
@@ -83,7 +86,7 @@ namespace cling {
 
     for (unsigned C = N+1 - m_TokenCache.size(); C > 0; --C) {
       m_TokenCache.push_back(Token());
-      m_Lexer->Lex(m_TokenCache.back());
+      m_Lexer.Lex(m_TokenCache.back());
     }
     return m_TokenCache.back();
   }
@@ -121,13 +124,14 @@ namespace cling {
       || isXCommand(actionResult, resultValue) ||isTCommand(actionResult)
       || isAtCommand()
       || isqCommand() || isUCommand(actionResult) || isICommand()
-      || isOCommand() || israwInputCommand() || isprintDebugCommand()
+      || isOCommand() || israwInputCommand()
+      || isdebugCommand() || isprintDebugCommand()
       || isdynamicExtensionsCommand() || ishelpCommand() || isfileExCommand()
       || isfilesCommand() || isClassCommand() || isNamespaceCommand() || isgCommand()
       || isTypedefCommand()
       || isShellCommand(actionResult, resultValue) || isstoreStateCommand()
       || iscompareStateCommand() || isstatsCommand() || isundoCommand()
-      || isRedirectCommand(actionResult);
+      || isRedirectCommand(actionResult) || istraceCommand();
   }
 
   // L := 'L' FilePath Comment
@@ -181,7 +185,7 @@ namespace cling {
     // Default redirect is stdout.
     MetaProcessor::RedirectionScope stream = MetaProcessor::kSTDOUT;
 
-    if (getCurTok().is(tok::constant)) {
+    if (getCurTok().is(tok::constant) && lookAhead(1).is(tok::greater)) {
       // > or 1> the redirection is for stdout stream
       // 2> redirection for stderr stream
       constant_FD = getCurTok().getConstant();
@@ -189,50 +193,66 @@ namespace cling {
         stream = MetaProcessor::kSTDERR;
       // Wrong constant_FD, do not redirect.
       } else if (constant_FD != 1) {
-        llvm::errs() << "cling::MetaParser::isRedirectCommand():"
-                     << "invalid file descriptor number " << constant_FD <<"\n";
+        cling::errs() << "cling::MetaParser::isRedirectCommand():"
+                      << "invalid file descriptor number " << constant_FD <<"\n";
         return true;
       }
       consumeToken();
     }
     // &> redirection for both stdout & stderr
     if (getCurTok().is(tok::ampersand)) {
-      if (constant_FD != 2) {
+      if (constant_FD == 0) {
         stream = MetaProcessor::kSTDBOTH;
       }
       consumeToken();
     }
+    llvm::StringRef file;
     if (getCurTok().is(tok::greater)) {
       bool append = false;
-      consumeToken();
-      // check for syntax like: 2>&1
-      if (getCurTok().is(tok::ampersand)) {
-        if (constant_FD != 2) {
-          stream = MetaProcessor::kSTDBOTH;
-        }
+      // check whether we have >>
+      if (lookAhead(1).is(tok::greater)) {
         consumeToken();
-      } else {
-        // check whether we have >>
-        if (getCurTok().is(tok::greater)) {
-          append = true;
-          consumeToken();
+        append = true;
+      }
+      // check for syntax like: 2>&1
+      if (lookAhead(1).is(tok::ampersand)) {
+        if (constant_FD == 0)
+          stream = MetaProcessor::kSTDBOTH;
+
+        const Token& Tok = lookAhead(2);
+        if (Tok.is(tok::constant)) {
+          switch (Tok.getConstant()) {
+            case 1: file = llvm::StringRef("&1"); break;
+            case 2: file = llvm::StringRef("&2"); break;
+            default: break;
+          }
+          if (!file.empty()) {
+            // Mark the stream name as refering to stderr or stdout, not a name
+            stream = MetaProcessor::RedirectionScope(stream |
+                                                     MetaProcessor::kSTDSTRM);
+            consumeToken(); // &
+            consumeToken(); // 1,2
+          }
         }
       }
-      llvm::StringRef file;
-      if (getCurTok().is(tok::constant) && getCurTok().getConstant() == 1) {
-        file = llvm::StringRef("_IO_2_1_stdout_");
-      } else {
-        if (getCurTok().is(tok::eof)) {
-          file  = llvm::StringRef();
-        } else {
-          consumeAnyStringToken(tok::eof);
-          if (getCurTok().is(tok::raw_ident)) {
-            file = getCurTok().getIdent();
-            consumeToken();
+      std::string EnvExpand;
+      if (!lookAhead(1).is(tok::eof) && !(stream & MetaProcessor::kSTDSTRM)) {
+        consumeAnyStringToken(tok::eof);
+        if (getCurTok().is(tok::raw_ident)) {
+          EnvExpand = getCurTok().getIdent();
+          // Quoted path, no expansion and strip quotes
+          if (EnvExpand.size() > 3 && EnvExpand.front() == '"' &&
+              EnvExpand.back() == '"') {
+            file = EnvExpand;
+            file = file.substr(1, file.size()-2);
+          } else if (!EnvExpand.empty()) {
+            cling::utils::ExpandEnvVars(EnvExpand);
+            file = EnvExpand;
           }
-          else {
-            file  = llvm::StringRef();
-          }
+          consumeToken();
+          // If we had a token, we need a path; empty means to undo a redirect
+          if (file.empty())
+            return false;
         }
       }
       // Empty file means std.
@@ -259,18 +279,13 @@ namespace cling {
       // There might be ArgList
       consumeAnyStringToken(tok::l_paren);
       llvm::StringRef file(getCurTok().getIdent());
-      llvm::StringRef args;
       consumeToken();
-      if (getCurTok().is(tok::l_paren) && isExtraArgList()) {
-        args = getCurTok().getIdent();
-        consumeToken(); // consume the closing paren
-      }
-      actionResult = m_Actions->actOnxCommand(file, args, resultValue);
+      // '(' to end of string:
 
-      if (getCurTok().is(tok::comment)) {
-        consumeAnyStringToken();
-        m_Actions->actOnComment(getCurTok().getIdent());
-      }
+      std::string args = getCurTok().getBufStart();
+      if (args.empty())
+        args = "()";
+      actionResult = m_Actions->actOnxCommand(file, args, resultValue);
       return true;
     }
 
@@ -381,6 +396,20 @@ namespace cling {
     return false;
   }
 
+  bool MetaParser::isdebugCommand() {
+    if (getCurTok().is(tok::ident) &&
+        getCurTok().getIdent().equals("debug")) {
+      llvm::Optional<int> mode;
+      consumeToken();
+      skipWhitespace();
+      if (getCurTok().is(tok::constant))
+        mode = getCurTok().getConstant();
+      m_Actions->actOndebugCommand(mode);
+      return true;
+    }
+    return false;
+  }
+
   bool MetaParser::isprintDebugCommand() {
     if (getCurTok().is(tok::ident) &&
         getCurTok().getIdent().equals("printDebug")) {
@@ -401,15 +430,10 @@ namespace cling {
        //MetaSema::SwitchMode mode = MetaSema::kToggle;
       consumeToken();
       skipWhitespace();
-      if (!getCurTok().is(tok::quote))
+      if (!getCurTok().is(tok::stringlit))
         return false; // FIXME: Issue proper diagnostics
+      std::string ident = getCurTok().getIdentNoQuotes();
       consumeToken();
-      if (!getCurTok().is(tok::ident))
-        return false; // FIXME: Issue proper diagnostics
-      std::string ident = getCurTok().getIdent();
-      consumeToken();
-      if (!getCurTok().is(tok::quote))
-        return false; // FIXME: Issue proper diagnostics
       m_Actions->actOnstoreStateCommand(ident);
       return true;
     }
@@ -422,15 +446,10 @@ namespace cling {
       //MetaSema::SwitchMode mode = MetaSema::kToggle;
       consumeToken();
       skipWhitespace();
-      if (!getCurTok().is(tok::quote))
+      if (!getCurTok().is(tok::stringlit))
         return false; // FIXME: Issue proper diagnostics
+      std::string ident = getCurTok().getIdentNoQuotes();
       consumeToken();
-      if (!getCurTok().is(tok::ident))
-        return false; // FIXME: Issue proper diagnostics
-      std::string ident = getCurTok().getIdent();
-      consumeToken();
-      if (!getCurTok().is(tok::quote))
-        return false; // FIXME: Issue proper diagnostics
       m_Actions->actOncompareStateCommand(ident);
       return true;
     }
@@ -444,9 +463,32 @@ namespace cling {
       skipWhitespace();
       if (!getCurTok().is(tok::ident))
         return false; // FIXME: Issue proper diagnostics
-      std::string ident = getCurTok().getIdent();
+      llvm::StringRef what = getCurTok().getIdent();
       consumeToken();
-      m_Actions->actOnstatsCommand(ident);
+      skipWhitespace();
+      const Token& next = getCurTok();
+      m_Actions->actOnstatsCommand(what, next.is(tok::ident)
+                                         ? next.getIdent() : llvm::StringRef());
+      return true;
+    }
+    return false;
+  }
+
+  // dumps/creates a trace of the requested representation.
+  bool MetaParser::istraceCommand() {
+    if (getCurTok().is(tok::ident) &&
+        getCurTok().getIdent().equals("trace")) {
+      consumeToken();
+      skipWhitespace();
+      if (!getCurTok().is(tok::ident))
+          return false;
+      llvm::StringRef ident = getCurTok().getIdent();
+      consumeToken();
+      skipWhitespace();
+      m_Actions->actOnstatsCommand(ident.equals("ast")
+        ? llvm::StringRef("asttree") : ident,
+        getCurTok().is(tok::ident) ? getCurTok().getIdent() : llvm::StringRef());
+      consumeToken();
       return true;
     }
     return false;

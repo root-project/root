@@ -12,24 +12,12 @@
 #ifndef ROOSTATS_MetropolisHastings
 #define ROOSTATS_MetropolisHastings
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
 
 namespace RooStats {
 
@@ -56,7 +44,7 @@ namespace RooStats {
       // specify the parameters to store in the chain
       // if not specified all of them will be stored
       virtual void SetChainParameters(const RooArgSet& set)
-      { fChainParams.removeAll();  fChainParams.add(set);  RemoveConstantParameters(&fChainParams); }      
+      { fChainParams.removeAll();  fChainParams.add(set);  RemoveConstantParameters(&fChainParams); }
       // specify all the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& set)
       { fParameters.removeAll();  fParameters.add(set);  RemoveConstantParameters(&fParameters); }

@@ -9,19 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEmulatedCollectionProxy
-//
-// Streamer around an arbitrary container, which implements basic
-// functionality and iteration.
-//
-// In particular this is used to implement splitting and abstract
-// element access of any container. Access to compiled code is necessary
-// to implement the abstract iteration sequence and functionality like
-// size(), clear(), resize(). resize() may be a void operation.
-//
-//////////////////////////////////////////////////////////////////////////
+/**
+ \class TEmulatedCollectionProxy
+ \ingroup IO
+
+Streamer around an arbitrary STL like container, which implements basic
+container functionality.
+
+### Note:
+Although this class contains all the setup necessary to deal
+with maps, the map-like functionality is NOT supported.
+For optimization reasons this functionality is put into
+the class TEmulatedMapProxy.
+*/
 
 #include "TEmulatedCollectionProxy.h"
 #include "TStreamerElement.h"
@@ -136,7 +136,10 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // since under-neath is actually an array.
 
          // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
-         int slong = sizeof(void*);
+         auto alignedSize = [](size_t in) {
+            constexpr size_t kSizeOfPtr = sizeof(void*);
+            return in + (kSizeOfPtr - in%kSizeOfPtr)%kSizeOfPtr;
+         };
          switch ( fSTL_type )  {
             case ROOT::kSTLmap:
             case ROOT::kSTLmultimap:
@@ -149,21 +152,18 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                fValue = new Value(nam,silent);
                fKey   = new Value(inside[1],silent);
                fVal   = new Value(inside[2],silent);
-               if ( !fValue->IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
+               if ( !(*fValue).IsValid() || !fKey->IsValid() || !fVal->IsValid() ) {
                   return 0;
                }
                fPointers |= 0 != (fKey->fCase&kIsPointer);
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {
                   fProperties |= kNeedDelete;
                }
-               if ( 0 == fValDiff )  {
-                  fValDiff = fKey->fSize + fVal->fSize;
-                  fValDiff += (slong - fKey->fSize%slong)%slong;
-                  fValDiff += (slong - fValDiff%slong)%slong;
-               }
                if ( 0 == fValOffset )  {
-                  fValOffset  = fKey->fSize;
-                  fValOffset += (slong - fKey->fSize%slong)%slong;
+                  fValOffset = alignedSize(fKey->fSize);
+               }
+               if ( 0 == fValDiff )  {
+                  fValDiff = alignedSize(fValOffset + fVal->fSize);
                }
                break;
             case ROOT::kSTLbitset:
@@ -172,14 +172,13 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
             default:
                fValue = new Value(inside[1],silent);
                fVal   = new Value(*fValue);
-               if ( !fValue->IsValid() || !fVal->IsValid() ) {
+               if ( !(*fValue).IsValid() || !fVal->IsValid() ) {
                   return 0;
                }
                if ( 0 == fValDiff )  {
                   fValDiff  = fVal->fSize;
-                  if (fVal->fCase != kIsFundamental) {
-                     fValDiff += (slong - fValDiff%slong)%slong;
-                  }
+                  // No need to align, the size even for a class should already
+                  // be correctly padded for use in a vector.
                }
                break;
          }
@@ -447,12 +446,12 @@ void* TEmulatedCollectionProxy::Allocate(UInt_t n, Bool_t forceDelete)
    return fEnv->fObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert data into the container where data is a C-style array of the actual type contained in the collection
+/// of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+
 void TEmulatedCollectionProxy::Insert(const void * /* data */, void * /*container*/, size_t /*size*/)
 {
-   // Insert data into the container where data is a C-style array of the actual type contained in the collection
-   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
-
    Fatal("Insert","Not yet implemented, require copy of objects.");
 }
 
@@ -478,7 +477,6 @@ void TEmulatedCollectionProxy::ReadItems(int nElements, TBuffer &b)
             case kFloat_t:   b.ReadFastArray(&itm->flt       , nElements); break;
             case kFloat16_t: b.ReadFastArrayFloat16(&itm->flt, nElements); break;
             case kDouble_t:  b.ReadFastArray(&itm->dbl       , nElements); break;
-            case kBOOL_t:    b.ReadFastArray(&itm->boolean   , nElements); break;
             case kUChar_t:   b.ReadFastArray(&itm->u_char    , nElements); break;
             case kUShort_t:  b.ReadFastArray(&itm->u_short   , nElements); break;
             case kUInt_t:    b.ReadFastArray(&itm->u_int     , nElements); break;
@@ -528,7 +526,6 @@ void TEmulatedCollectionProxy::WriteItems(int nElements, TBuffer &b)
             case kFloat_t:   b.WriteFastArray(&itm->flt       , nElements); break;
             case kFloat16_t: b.WriteFastArrayFloat16(&itm->flt, nElements); break;
             case kDouble_t:  b.WriteFastArray(&itm->dbl       , nElements); break;
-            case kBOOL_t:    b.WriteFastArray(&itm->boolean   , nElements); break;
             case kUChar_t:   b.WriteFastArray(&itm->u_char    , nElements); break;
             case kUShort_t:  b.WriteFastArray(&itm->u_short   , nElements); break;
             case kUInt_t:    b.WriteFastArray(&itm->u_int     , nElements); break;

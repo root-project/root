@@ -34,6 +34,8 @@
 #include "TImage.h"
 #include "TBrowser.h"
 #include "TRemoteObject.h"
+#include "TKey.h"
+#include "TKeyMapFile.h"
 #include "TVirtualPad.h"
 #include "Getline.h"
 #include <time.h>
@@ -98,12 +100,12 @@ public:
 
 ClassImp(TGFileBrowser)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGFileBrowser constructor.
+
 TGFileBrowser::TGFileBrowser(const TGWindow *p, TBrowser* b, UInt_t w, UInt_t h)
    : TGMainFrame(p, w, h), TBrowserImp(b), fNewBrowser(0)
 {
-   // TGFileBrowser constructor.
-
    if (p && p != gClient->GetDefaultRoot())
       fNewBrowser = (TRootBrowser *)p->GetMainFrame();
    if (fNewBrowser)
@@ -113,11 +115,11 @@ TGFileBrowser::TGFileBrowser(const TGWindow *p, TBrowser* b, UInt_t w, UInt_t h)
    if (fBrowser) Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the actual file browser.
+
 void TGFileBrowser::CreateBrowser()
 {
-   // Create the actual file browser.
-
    fCachedPic  = 0;
    SetCleanup(kDeepCleanup);
 
@@ -242,11 +244,11 @@ void TGFileBrowser::CreateBrowser()
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGFileBrowser::~TGFileBrowser()
 {
-   // Destructor.
-
    TQObject::Disconnect("TGHtmlBrowser", "Clicked(char*)");
    TQObject::Disconnect("TPad", "Modified()");
 
@@ -259,11 +261,11 @@ TGFileBrowser::~TGFileBrowser()
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function checking if a class has a graphic properties editor.
+
 static Bool_t IsObjectEditable(TClass *cl)
 {
-   // Helper function checking if a class has a graphic properties editor.
-
    TBaseClass *base;
    TList* bcl = cl->GetListOfBases();
    TIter next(bcl);
@@ -277,11 +279,11 @@ static Bool_t IsObjectEditable(TClass *cl)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Format the tooltip information, based on the object passed in argument.
+
 static const char *FormatToolTip(TObject *obj, Int_t maxlen=0)
 {
-   // Format the tooltip information, based on the object passed in argument.
-
    static TString infos;
    if (!obj) {
       infos.Clear();
@@ -325,14 +327,14 @@ static const char *FormatToolTip(TObject *obj, Int_t maxlen=0)
 // TBrowserImp virtuals
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add items to the browser. This function has to be called
+/// by the Browse() member function of objects when they are
+/// called by a browser. If check < 0 (default) no check box is drawn,
+/// if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
+
 void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
 {
-   // Add items to the browser. This function has to be called
-   // by the Browse() member function of objects when they are
-   // called by a browser. If check < 0 (default) no check box is drawn,
-   // if 0 then unchecked checkbox is added, if 1 checked checkbox is added.
-
    if (fListLevel && !strcmp(fListLevel->GetText(), "Classes") &&
       fListLevel->GetParent() &&
       !strcmp(fListLevel->GetParent()->GetText(), "root")) {
@@ -419,11 +421,11 @@ void TGFileBrowser::Add(TObject *obj, const char *name, Int_t check)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add remote file in list tree.
+
 void TGFileBrowser::AddRemoteFile(TObject *obj)
 {
-   // Add remote file in list tree.
-
    Bool_t      is_link;
    Int_t       type;
    TString     filename;
@@ -454,13 +456,13 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse object. This, in turn, will trigger the calling of
+/// TBrowser::Add() which will fill the IconBox and the tree.
+/// Emits signal "BrowseObj(TObject*)".
+
 void TGFileBrowser::BrowseObj(TObject *obj)
 {
-   // Browse object. This, in turn, will trigger the calling of
-   // TBrowser::Add() which will fill the IconBox and the tree.
-   // Emits signal "BrowseObj(TObject*)".
-
    if (fNewBrowser)
       fNewBrowser->SetActBrowser(this);
    if (obj != gROOT) {
@@ -475,7 +477,7 @@ void TGFileBrowser::BrowseObj(TObject *obj)
          fListTree->AdjustPosition(fListLevel);
       }
    }
-   obj->Browse(fBrowser);
+   if (fBrowser) obj->Browse(fBrowser);
    if (obj == gROOT) {
       TList *volumes = gSystem->GetVolumes("all");
       TList *curvol  = gSystem->GetVolumes("cur");
@@ -505,29 +507,29 @@ void TGFileBrowser::BrowseObj(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits signal when double clicking on icon.
+
 void TGFileBrowser::Checked(TObject *obj, Bool_t checked)
 {
-   // Emits signal when double clicking on icon.
-
    if (fNewBrowser)
       fNewBrowser->Checked(obj, checked);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns drawing option
+
 Option_t *TGFileBrowser::GetDrawOption() const
 {
-   // returns drawing option
-
    return fDrawOption->GetTextEntry()->GetText();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the file picture for the given file type.
+
 void TGFileBrowser::GetFilePictures(const TGPicture **pic, Int_t file_type,
                                     Bool_t is_link, const char *name)
 {
-   // Determine the file picture for the given file type.
-
    static TString cached_ext;
    static const TGPicture *cached_spic = 0;
    const char *ext = name ? strrchr(name, '.') : 0;
@@ -575,11 +577,11 @@ void TGFileBrowser::GetFilePictures(const TGPicture **pic, Int_t file_type,
    cached_ext = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object.
+
 void TGFileBrowser::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object.
-
    TGListTreeItem *itm = 0, *item = 0;
    if (obj->InheritsFrom("TFile")) {
       itm = fListTree->FindChildByData(0, gROOT->GetListOfFiles());
@@ -612,11 +614,11 @@ void TGFileBrowser::RecursiveRemove(TObject *obj)
    //fListTree->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh content of the list tree.
+
 void TGFileBrowser::Refresh(Bool_t /*force*/)
 {
-   // Refresh content of the list tree.
-
    TTimer::SingleShot(200, "TGFileBrowser", this, "Update()");
    return; // disable refresh for the time being...
    // coverity[unreachable]
@@ -634,16 +636,15 @@ void TGFileBrowser::Refresh(Bool_t /*force*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update content of the list tree.
+
 void TGFileBrowser::Update()
 {
-   // Update content of the list tree.
-
    Long64_t size = 0;
    Long_t id = 0, flags = 0, modtime = 0;
    char path[1024];
    TGListTreeItem *item = fCurrentDir;
-   TObject *selected = 0;
    if (!item) item = fRootDir;
    if (!item) return;
    //fListTree->DeleteChildren(item);
@@ -680,11 +681,6 @@ void TGFileBrowser::Update()
             }
          }
       }
-      selected = obj;
-      if (selected && selected->InheritsFrom("TLeaf"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
-      if (selected && selected->InheritsFrom("TBranch"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
    }
    TString actpath = FullPathName(item);
    flags = id = size = modtime = 0;
@@ -719,26 +715,18 @@ void TGFileBrowser::Update()
    DoubleClicked(item, 1);
    fListLevel = sav;
    CheckFiltered(fListLevel, kTRUE);
-
-   if (selected && gPad && IsObjectEditable(selected->IsA())) {
-      TVirtualPadEditor *ved = TVirtualPadEditor::GetPadEditor(kFALSE);
-      if (ved) {
-         TGedEditor *ged = (TGedEditor *)ved;
-         ged->SetModel(gPad, selected, kButton1Down);
-      }
-   }
 }
 
 /**************************************************************************/
 // Other
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file system directory in the list tree.
+
 void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
                                    Option_t *opt)
 {
-   // Add file system directory in the list tree.
-
    TGListTreeItem *item = 0;
    if ((opt == 0) || (!opt[0])) {
       if (fRootDir == 0 && !fListTree->FindChildByName(0, rootdir))
@@ -774,11 +762,11 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// display content of ROOT file
+
 void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
 {
-   // display content of ROOT file
-
    // Int_t from, to;
    TGListTreeItem *where;
    static TGListTreeItem *olditem = itm;
@@ -822,11 +810,11 @@ void TGFileBrowser::AddKey(TGListTreeItem *itm, TObject *obj, const char *name)
    fCnt++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply filter selected in combo box to the file tree view.
+
 void TGFileBrowser::ApplyFilter(Int_t id)
 {
-   // Apply filter selected in combo box to the file tree view.
-
    // Long64_t size;
    // Long_t fid, flags, modtime;
 
@@ -851,11 +839,11 @@ void TGFileBrowser::ApplyFilter(Int_t id)
    fListTree->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make object associated with item the current directory.
+
 void TGFileBrowser::Chdir(TGListTreeItem *item)
 {
-   // Make object associated with item the current directory.
-
    if (item) {
       TGListTreeItem *i = item;
       while (i) {
@@ -869,11 +857,11 @@ void TGFileBrowser::Chdir(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the current list tree item points to a remote object.
+
 void TGFileBrowser::CheckRemote(TGListTreeItem *item)
 {
-   // Check if the current list tree item points to a remote object.
-
    if (!item) return;
    TObject *obj = (TObject *) item->GetUserData();
    if (obj) {
@@ -935,13 +923,13 @@ void TGFileBrowser::CheckRemote(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is a filter active on the children of the list tree item.
+/// If the but argument is true, the "filter" button state is set accordingly,
+/// and its tooltip will show the filter used.
+
 Bool_t TGFileBrowser::CheckFiltered(TGListTreeItem *item, Bool_t but)
 {
-   // Check if there is a filter active on the children of the list tree item.
-   // If the but argument is true, the "filter" button state is set accordingly,
-   // and its tooltip will show the filter used.
-
    Bool_t found = kFALSE;
    TString filter;
    // if there is no filter (the map is empty) then just return
@@ -972,12 +960,12 @@ Bool_t TGFileBrowser::CheckFiltered(TGListTreeItem *item, Bool_t but)
    return found;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the list tree item children are alphabetically sorted.
+/// If the but argument is true, the "sort" button state is set accordingly.
+
 Bool_t TGFileBrowser::CheckSorted(TGListTreeItem *item, Bool_t but)
 {
-   // Check if the list tree item children are alphabetically sorted.
-   // If the but argument is true, the "sort" button state is set accordingly.
-
    Bool_t found = kFALSE;
    TGListTreeItem *i, *itm;
    if (item->GetFirstChild())
@@ -995,11 +983,11 @@ Bool_t TGFileBrowser::CheckSorted(TGListTreeItem *item, Bool_t but)
    return found;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process mouse clicks in TGListTree.
+
 void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
 {
-   // Process mouse clicks in TGListTree.
-
    char path[1024];
    Long64_t size = 0;
    Long_t id = 0, flags = 0, modtime = 0;
@@ -1015,12 +1003,12 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
        gSystem->AccessPathName(fullpath.Data()))) {
       if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
-         const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+         const char *clname = ((TKey *)obj)->GetClassName();
          if (clname && strcmp(clname, "TGeoManager")) {
             TClass *cl = TClass::GetClass(clname);
-            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", (ULong_t)obj));
+            TString name = ((TKey *)obj)->GetName();
             name += ";";
-            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", (ULong_t)obj));
+            name += ((TKey *)obj)->GetCycle();
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
@@ -1065,16 +1053,18 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
       }
    }
    fListTree->ClearViewPort();
-   if (selected && selected->InheritsFrom("TLeaf"))
-      selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
-   if (selected && selected->InheritsFrom("TBranch"))
-      selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
-   if (selected && selected->InheritsFrom("TTree")) {
-      // if a tree not attached to any directory (e.g. in a TFolder)
-      // then attach it to the current directory (gDirectory)
-      TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->GetDirectory();", (ULong_t)selected));
-      if (!tdir) {
-         gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);", (ULong_t)selected));
+   if (selected && (selected->IsA() != TClass::Class())) {
+      if (selected->InheritsFrom("TLeaf"))
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
+      if (selected->InheritsFrom("TBranch"))
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
+      if (selected->InheritsFrom("TTree")) {
+         // if a tree not attached to any directory (e.g. in a TFolder)
+         // then attach it to the current directory (gDirectory)
+         TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->GetDirectory();", (ULong_t)selected));
+         if (!tdir) {
+            gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);", (ULong_t)selected));
+         }
       }
    }
    if (selected && gPad && IsObjectEditable(selected->IsA())) {
@@ -1086,11 +1076,11 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns an absolute path
+
 TString TGFileBrowser::FullPathName(TGListTreeItem* item)
 {
-   // returns an absolute path
-
    TGListTreeItem *parent, *itm = item;
    TString dirname = itm->GetText();
 
@@ -1114,11 +1104,11 @@ TString TGFileBrowser::FullPathName(TGListTreeItem* item)
    return dirname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the directory path
+
 TString TGFileBrowser::DirName(TGListTreeItem* item)
 {
-   // returns the directory path
-
    TString dirname;
    TString fullpath = FullPathName(item);
 
@@ -1135,14 +1125,14 @@ TString TGFileBrowser::DirName(TGListTreeItem* item)
    return dirname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if given a text file
+/// Uses the specification given on p86 of the Camel book
+/// - Text files have no NULLs in the first block
+/// - and less than 30% of characters with high bit set
+
 static Bool_t IsTextFile(const char *candidate)
 {
-   // Returns true if given a text file
-   // Uses the specification given on p86 of the Camel book
-   // - Text files have no NULLs in the first block
-   // - and less than 30% of characters with high bit set
-
    Int_t i;
    Int_t nchars;
    Int_t weirdcount = 0;
@@ -1175,12 +1165,12 @@ static Bool_t IsTextFile(const char *candidate)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a symlink (shortcut on Windows) icon by merging the picture
+/// passed as argument and the slink_t.xpm icon (small arrow)
+
 static const TGPicture *MakeLinkPic(const TGPicture *pic)
 {
-   // Create a symlink (shortcut on Windows) icon by merging the picture
-   // passed as argument and the slink_t.xpm icon (small arrow)
-
    const TGPicture *merged;
    TImage *img1, *img2;
    if (pic) {
@@ -1194,17 +1184,18 @@ static const TGPicture *MakeLinkPic(const TGPicture *pic)
       lnk_name.Prepend("lnk_");
       merged = gClient->GetPicturePool()->GetPicture(lnk_name.Data(),
                                           img1->GetPixmap(), img1->GetMask());
-      if (img2) delete img2; delete img1;
+      if (img2) delete img2;
+      delete img1;
       return merged;
    }
    return pic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process double clicks in TGListTree.
+
 void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
 {
-   // Process double clicks in TGListTree.
-
    const TGPicture *pic=0;
    TString dirname = DirName(item);
    TString fullpath = FullPathName(item);
@@ -1231,7 +1222,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    TObject *obj = (TObject *) item->GetUserData();
    if (obj && !obj->InheritsFrom("TSystemFile")) {
       TString ext = obj->GetName();
-      if (obj->InheritsFrom("TDirectory")) {
+      if (obj->InheritsFrom("TDirectory") && (obj->IsA() != TClass::Class())) {
          if (((TDirectory *)obj)->GetListOfKeys())
             fNKeys = ((TDirectory *)obj)->GetListOfKeys()->GetEntries();
          else
@@ -1239,12 +1230,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       else if (obj->InheritsFrom("TKey") && (obj->IsA() != TClass::Class())) {
          Chdir(item);
-         const char *clname = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+         const char *clname = ((TKey *)obj)->GetClassName();
          if (clname) {
             TClass *cl = TClass::GetClass(clname);
-            TString name = (const char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetName();", (ULong_t)obj));
+            TString name = ((TKey *)obj)->GetName();
             name += ";";
-            name += (Short_t)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetCycle();", (ULong_t)obj));
+            name += ((TKey *)obj)->GetCycle();
             void *add = gDirectory->FindObjectAny((char *) name.Data());
             if (add && cl->IsTObject()) {
                obj = (TObject*)add;
@@ -1257,8 +1248,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             }
          }
       }
-      else if (obj->InheritsFrom("TLeaf") ||
-          obj->InheritsFrom("TBranch")) {
+      else if (obj->InheritsFrom("TLeaf") || obj->InheritsFrom("TBranch")) {
          Chdir(item);
       }
       else if (obj->InheritsFrom("TRemoteObject")) {
@@ -1297,15 +1287,15 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
       }
       if (!obj->InheritsFrom("TObjString") ||
           gSystem->AccessPathName(fullpath.Data())) {
-         fBrowser->SetDrawOption(GetDrawOption());
+         if (fBrowser) fBrowser->SetDrawOption(GetDrawOption());
          fDblClick = kTRUE;
          if (gClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
             act = action;
-            if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
-            else if (act.Contains("->Browse()")) obj->Browse(fBrowser);
+            if (fBrowser && act.Contains("->Browse()")) obj->Browse(fBrowser);
             else if (act.Contains("->Draw()")) obj->Draw(GetDrawOption());
             else {
-               act.Prepend(obj->GetName());
+               if (act.Contains("%s")) act.ReplaceAll("%s", obj->GetName());
+               else act.Prepend(obj->GetName());
                gInterpreter->SaveGlobalsContext();
                if (act[0] == '!') {
                   act.Remove(0, 1);
@@ -1318,13 +1308,14 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                }
             }
          }
-         else if (obj->InheritsFrom("TCanvas") &&
+         else if (obj->InheritsFrom("TCanvas") && fNewBrowser &&
+                  fNewBrowser->GetTabRight() &&
                   fNewBrowser->GetTabRight()->GetTabTab(obj->GetName())) {
             // avoid potential crash when drawing a canvas with the same name
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
          }
-         else if (!obj->InheritsFrom("TFormula"))
+         else if (fBrowser && !obj->InheritsFrom("TFormula"))
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
@@ -1456,7 +1447,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             item->SetUserData(rfile);
             fNKeys = rfile->GetListOfKeys()->GetEntries();
             fCnt = 0;
-            rfile->Browse(fBrowser);
+            if (fBrowser) rfile->Browse(fBrowser);
             fNKeys = 0;
             fCnt = 0;
          }
@@ -1506,16 +1497,16 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
    fListTree->ClearViewPort();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute default action for selected object (action is specified
+/// in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
+
 Long_t TGFileBrowser::XXExecuteDefaultAction(TObject *obj)
 {
-   // Execute default action for selected object (action is specified
-   // in the $HOME/.root.mimes or $ROOTSYS/etc/root.mimes file.
-
    char action[512];
    TString act;
    TString ext = obj->GetName();
-   fBrowser->SetDrawOption(GetDrawOption());
+   if (fBrowser) fBrowser->SetDrawOption(GetDrawOption());
 
    if (gClient->GetMimeTypeList()->GetAction(obj->GetName(), action)) {
       act = action;
@@ -1543,11 +1534,11 @@ Long_t TGFileBrowser::XXExecuteDefaultAction(TObject *obj)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Format file information to be displayed in the tooltip.
+
 char *TGFileBrowser::FormatFileInfo(const char *fname, Long64_t size, Long_t modtime)
 {
-   // Format file information to be displayed in the tooltip.
-
    Long64_t fsize, bsize;
    TString infos = fname;
    infos += "\n";
@@ -1577,12 +1568,12 @@ char *TGFileBrowser::FormatFileInfo(const char *fname, Long64_t size, Long_t mod
    return StrDup(infos.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve icons associated with class "name". Association is made
+/// via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
+
 void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
 {
-   // Retrieve icons associated with class "name". Association is made
-   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
-
    const char *clname = 0;
    TClass *objClass = 0;
    static TImage *im = 0;
@@ -1596,10 +1587,10 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
          clname = objClass->GetName();
    }
    else if (obj->InheritsFrom("TKey")) {
-      clname = (char *)gROOT->ProcessLine(TString::Format("((TKey *)0x%lx)->GetClassName();", (ULong_t)obj));
+      clname = ((TKey *)obj)->GetClassName();
    }
    else if (obj->InheritsFrom("TKeyMapFile")) {
-      clname = (char *)gROOT->ProcessLine(TString::Format("((TKeyMapFile *)0x%lx)->GetTitle();", (ULong_t)obj));
+      clname = ((TKeyMapFile *)obj)->GetTitle();
    }
    else if (obj->InheritsFrom("TRemoteObject")) {
       // special case for remote object: get real object class
@@ -1650,11 +1641,11 @@ void TGFileBrowser::GetObjPicture(const TGPicture **pic, TObject *obj)
    fCachedPicName = iconname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go to the directory "path" and open all the parent list tree items.
+
 void TGFileBrowser::GotoDir(const char *path)
 {
-   // Go to the directory "path" and open all the parent list tree items.
-
    TGListTreeItem *item, *itm;
    Bool_t expand = kTRUE;
    TString sPath(gSystem->UnixPathName(path));
@@ -1670,7 +1661,13 @@ void TGFileBrowser::GotoDir(const char *path)
       fListTree->AdjustPosition(item);
       return;
    }
+   // if the Browser.ExpandDirectories option is set to "no", then don't
+   // expand the parent directory tree (for example on nfs)
+   TString str = gEnv->GetValue("Browser.ExpandDirectories", "yes");
+   str.ToLower();
+   expand = (str == "yes") ? kTRUE : kFALSE;
    TString first = ((TObjString*)tokens->At(0))->GetName();
+   // always prevent expanding the parent directory tree on afs
    if (first == "afs")
       expand = kFALSE;
    if (first.Length() == 2 && first.EndsWith(":")) {
@@ -1720,13 +1717,13 @@ void TGFileBrowser::GotoDir(const char *path)
    fListTree->AdjustPosition(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot used to switch to the tab containing the current pad/canvas (gPad)
+/// used e.g. when drawing a histogram by double-clicking on its list tree
+/// item in a root file.
+
 void TGFileBrowser::PadModified()
 {
-   // Slot used to switch to the tab containing the current pad/canvas (gPad)
-   // used e.g. when drawing a histogram by double-clicking on its list tree
-   // item in a root file.
-
    if (fDblClick && fNewBrowser) {
       Int_t i;
       TGTab *tabRight = fNewBrowser->GetTabRight();
@@ -1751,13 +1748,13 @@ void TGFileBrowser::PadModified()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a dialog box asking for a string to be used as filter (regexp), and
+/// add an entry in the map of filtered entries. Entering "*" or empty string
+/// ("") will disable filtering on the current list tree item.
+
 void TGFileBrowser::RequestFilter()
 {
-   // Open a dialog box asking for a string to be used as filter (regexp), and
-   // add an entry in the map of filtered entries. Entering "*" or empty string
-   // ("") will disable filtering on the current list tree item.
-
    char filter[1024];
    if (!fListLevel)
       return;
@@ -1796,11 +1793,11 @@ void TGFileBrowser::RequestFilter()
    fListTree->AdjustPosition(fListLevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A ROOT File has been selected in TGHtmlBrowser.
+
 void TGFileBrowser::Selected(char *)
 {
-   // A ROOT File has been selected in TGHtmlBrowser.
-
    TGListTreeItem *itm = fListTree->FindChildByData(0, gROOT->GetListOfFiles());
    if (itm) {
       fListTree->ClearHighlighted();
@@ -1813,11 +1810,11 @@ void TGFileBrowser::Selected(char *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle the sort mode and set the "sort button" state accordingly.
+
 void TGFileBrowser::ToggleSort()
 {
-   // Toggle the sort mode and set the "sort button" state accordingly.
-
    if (!fListLevel) return;
    char *itemname = 0;
    TGListTreeItem *item = fListLevel;

@@ -9,61 +9,52 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileDrawMap                                                         //
-//                                                                      //
-// This class is automatically called by TFile::DrawMap
-// It draws a canvas showing the internal structure of a ROOT file.
-// Each key or basket in a file is shown with a fill area drawn
-// at the byte position of the key/basket in the file.
-// The Y axis of the canvas shows the number of Kbytes/Mbytes.
-// The X axis shows the bytes between y(i) and y(i+1).
-// A color corresponding to the class in the key/basket is automatically
-// selected using the class unique identifier.
-//
-// When moving the mouse in the canvas, the "Event Status" panels
-// shows the object corresponding to the mouse position.
-// if the object is a key, it shows the class and object name as well as
-//    the file directory name if the file has sub-directories.
-// if the object is a basket, it shows:
-//   -the name of the Tree
-//   -the name of the branch
-//   -the basket number
-//   -the entry number in the basket
-//
-// Special keys like the StreamerInfo record, the Keys List Record
-// and the Free Blocks Record are also shown.
-//
-// When clicking the right mouse button, a pop-up menu is shown
-// with its title identifying the picked object and with the items:
-//   -DrawObject: in case of a key, the Draw function of the object is called
-//                in case of a basket, the branch is drawn for all entries
-//   -DumpObject: in case of a key, the Dump function of the object is called
-//                in case of a basket, tree->Show(entry) is called
-//   -InspectObject: the Inspect function is called for the object.
-//
-// The normal axis zoom functionality can be used to zoom or unzoom
-// One can also use the TCanvas context menu SetCanvasSize to make
-// a larger canvas and use the canvas scroll bars.
-//
-// When the class is built, it is possible to identify a subset of the
-// objects to be shown. For example, to view only the keys with
-// names starting with "abc", set the argument keys to "abc*".
-// The default is to view all the objects.
-// The argument options can also be used (only one option currently)
-// When the option "same" is given, the new picture is suprimposed.
-// The option "same" is useful, eg:
-//  to draw all keys with names = "abc" in a first pass
-// then all keys with names = "uv*" in a second pass, etc.
-//
-//Begin_Html
-/*
-<img src="gif/filedrawmap.gif">
+/** \class TFileDrawMap
+This class is automatically called by TFile::DrawMap.
+It draws a canvas showing the internal structure of a ROOT file.
+Each key or basket in a file is shown with a fill area drawn
+at the byte position of the key/basket in the file.
+The Y axis of the canvas shows the number of Kbytes/Mbytes.
+The X axis shows the bytes between y(i) and y(i+1).
+A color corresponding to the class in the key/basket is automatically
+selected using the class unique identifier.
+
+When moving the mouse in the canvas, the "Event Status" panels
+shows the object corresponding to the mouse position.
+if the object is a key, it shows the class and object name as well as
+the file directory name if the file has sub-directories.
+
+if the object is a basket, it shows:
+ - the name of the Tree
+ - the name of the branch
+ - the basket number
+ - the entry number in the basket
+
+Special keys like the StreamerInfo record, the Keys List Record
+and the Free Blocks Record are also shown.
+
+When clicking the right mouse button, a pop-up menu is shown
+with its title identifying the picked object and with the items:
+ - DrawObject: in case of a key, the Draw function of the object is called
+               in case of a basket, the branch is drawn for all entries
+ - DumpObject: in case of a key, the Dump function of the object is called
+               in case of a basket, tree->Show(entry) is called
+ - InspectObject: the Inspect function is called for the object.
+
+The normal axis zoom functionality can be used to zoom or unzoom
+One can also use the TCanvas context menu SetCanvasSize to make
+a larger canvas and use the canvas scroll bars.
+
+When the class is built, it is possible to identify a subset of the
+objects to be shown. For example, to view only the keys with
+names starting with "abc", set the argument keys to "abc*".
+The default is to view all the objects.
+The argument options can also be used (only one option currently)
+When the option "same" is given, the new picture is suprimposed.
+The option "same" is useful, eg:
+to draw all keys with names = "abc" in a first pass
+then all keys with names = "uv*" in a second pass, etc.
 */
-//End_Html
-//
-//  =============================================================================
 
 #include "TFileDrawMap.h"
 #include "TROOT.h"
@@ -83,24 +74,24 @@
 
 ClassImp(TFileDrawMap)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TreeFileMap constructor.
+
 TFileDrawMap::TFileDrawMap() :TNamed()
 {
-// Default TreeFileMap constructor
-
    fFile   = 0;
    fFrame  = 0;
    fXsize  = 1000;
    fYsize  = 1000;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFileDrawMap normal constructor.
+/// see descriptions of arguments above
+
 TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option)
          : TNamed("TFileDrawMap","")
 {
-// TFileDrawMap normal constructor
-// see descriptions of arguments above
-
    fFile     = (TFile*)file;
    fKeys     = keys;
    fOption   = option;
@@ -141,25 +132,25 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tree destructor.
+
 TFileDrawMap::~TFileDrawMap()
 {
-//*-*-*-*-*-*-*-*-*-*-*Tree destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =================
-
    //delete fFrame; //should not be deleted (kCanDelete set)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show sequence of baskets reads for the list of baskets involved
+/// in the list of branches (separated by ",")
+/// - if branches="", the branch pointed by the mouse is taken.
+/// - if branches="*", all branches are taken
+/// Example:
+///
+///     AnimateTree("x,y,u");
+
 void  TFileDrawMap::AnimateTree(const char *branches)
 {
-// Show sequence of baskets reads for the list of baskets involved
-// in the list of branches (separated by ",")
-// if branches="", the branch pointed by the mouse is taken.
-// if branches="*", all branches are taken
-// Example:
-//  AnimateTree("x,y,u");
-
    TString ourbranches( GetName() );
    Ssiz_t pos = ourbranches.Index(", basket=");
    if (pos == kNPOS) return;
@@ -228,12 +219,12 @@ void  TFileDrawMap::AnimateTree(const char *branches)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to this TreeFileMap.
+/// Find the closest object to the mouse, save its path in the TFileDrawMap name.
+
 Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Compute distance from point px,py to this TreeFileMap
-// Find the closest object to the mouse, save its path in the TFileDrawMap name.
-
    Int_t pxmin = gPad->XtoAbsPixel(gPad->GetUxmin());
    Int_t pxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t pymin = gPad->YtoAbsPixel(gPad->GetUymin());
@@ -245,11 +236,11 @@ Int_t TFileDrawMap::DistancetoPrimitive(Int_t px, Int_t py)
    return fFrame->DistancetoPrimitive(px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw marker.
+
 void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
 {
-// Draw marker
-
    Int_t iy = gPad->YtoAbsPixel(eseek/fXsize);
    Int_t ix = gPad->XtoAbsPixel(eseek%fXsize);
    Int_t d;
@@ -283,11 +274,11 @@ void TFileDrawMap::DrawMarker(Int_t marker, Long64_t eseek)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw object at the mouse position.
+
 void TFileDrawMap::DrawObject()
 {
-// Draw object at the mouse position
-
    TVirtualPad *padsave = gROOT->GetSelectedPad();
    if (padsave == gPad) {
       //must create a new canvas
@@ -317,11 +308,11 @@ void TFileDrawMap::DrawObject()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump object at the mouse position.
+
 void TFileDrawMap::DumpObject()
 {
-// Dump object at the mouse position
-
    TObject *obj = GetObject();
    if (obj) {
       obj->Dump();
@@ -340,19 +331,19 @@ void TFileDrawMap::DumpObject()
    if (tree) tree->Show(entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+
 void TFileDrawMap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Execute action corresponding to one event
-
    fFrame->ExecuteEvent(event,px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve object at the mouse position in memory.
+
 TObject *TFileDrawMap::GetObject()
 {
-// Retrieve object at the mouse position in memory
-
    if (strstr(GetName(),"entry=")) return 0;
    char *info = new char[fName.Length()+1];
    strlcpy(info,fName.Data(),fName.Length()+1);
@@ -363,25 +354,27 @@ TObject *TFileDrawMap::GetObject()
    return fFile->Get(info);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redefines TObject::GetObjectInfo.
+/// Displays the keys info in the file corresponding to cursor position px,py
+/// in the canvas status bar info panel
+
 char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 {
-//   Redefines TObject::GetObjectInfo.
-//   Displays the keys info in the file corresponding to cursor position px,py
-//   in the canvas status bar info panel
-
+   // Thread safety: this solution is not elegant, but given the action performed
+   // by the method, this construct can be considered nonproblematic.
    static TString info;
    GetObjectInfoDir(fFile, px, py, info);
    return (char*)info.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redefines TObject::GetObjectInfo.
+/// Displays the keys info in the directory
+/// corresponding to cursor position px,py
+
 Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
 {
-//   Redefines TObject::GetObjectInfo.
-//   Displays the keys info in the directory
-//   corresponding to cursor position px,py
-//
    Double_t x = gPad->AbsPixeltoX(px);
    Double_t y = gPad->AbsPixeltoY(py);
    Int_t iy   = (Int_t)y;
@@ -472,20 +465,20 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inspect object at the mouse position.
+
 void TFileDrawMap::InspectObject()
 {
-// Inspect object at the mouse position
-
    TObject *obj = GetObject();
    if (obj) obj->Inspect();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this TFileDrawMap.
+
 void TFileDrawMap::Paint(Option_t *)
 {
-//  Paint this TFileDrawMap
-
    // draw map frame
    if (!fOption.Contains("same")) {
       gPad->Clear();
@@ -504,11 +497,11 @@ void TFileDrawMap::Paint(Option_t *)
    fFrame->Draw("sameaxis");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the object at bseek with nbytes using the box object.
+
 void TFileDrawMap::PaintBox(TBox &box, Long64_t bseek, Int_t nbytes)
 {
-// Paint the object at bseek with nbytes using the box object
-
    Int_t iy = bseek/fXsize;
    Int_t ix = bseek%fXsize;
    Int_t ny = 1+(nbytes+ix)/fXsize;
@@ -534,11 +527,11 @@ void TFileDrawMap::PaintBox(TBox &box, Long64_t bseek, Int_t nbytes)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint keys in a directory.
+
 void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
 {
-// Paint keys in a directory
-
    TDirectory *dirsav = gDirectory;
    TIter next(dir->GetListOfKeys());
    TKey *key;

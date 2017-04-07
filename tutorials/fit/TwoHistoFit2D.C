@@ -1,5 +1,13 @@
-//+ Example to fit two histograms at the same time
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook
+/// Example to fit two histograms at the same time.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TH2D.h"
 #include "TF2.h"
@@ -108,8 +116,8 @@ int TwoHistoFit2D(bool global = true) {
   func->SetParameters(iniParams);
 
   // fill Histos
-  int n1 = 1000000;
-  int n2 = 1000000;
+  int n1 = 50000;
+  int n2 = 50000;
   //  h1->FillRandom("func", n1);
   //h2->FillRandom("func",n2);
   FillHisto(h1,n1,iniParams);

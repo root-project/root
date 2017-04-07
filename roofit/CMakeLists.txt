@@ -5,15 +5,8 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   include(${ROOT_USE_FILE})
 endif()
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/foam)
-ROOT_USE_PACKAGE(math/minuit)
-ROOT_USE_PACKAGE(math/smatrix)
-ROOT_USE_PACKAGE(proof/proof)
-
 if(mathmore OR ROOT_mathmore_FOUND)
   set(ROOT_MATHMORE_LIBRARY MathMore)
-  ROOT_USE_PACKAGE(math/mathmore)	
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/roofit/inc) 

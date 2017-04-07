@@ -23,17 +23,16 @@
 
 ClassImp(TInspectCanvas)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TInspectorObject                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TInspectorObject
+\ingroup gpad
+
+This class is designed to wrap a Foreign object in order to
+inject it into the Browse sub-system.
+*/
 
 class TInspectorObject : public TObject
 {
-   // This class is designed to wrap a Foreign object in order to
-   // inject it into the Browse sub-system.
-
 public:
 
    TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
@@ -52,22 +51,17 @@ private:
 };
 
 
-//______________________________________________________________________________//*-*
-//*-*   A InspectCanvas is a canvas specialized to inspect Root objects.
-//
-//Begin_Html
-/*
-<img src="gif/InspectCanvas.gif">
+/** \class TInspectCanvas
+\ingroup gpad
+
+A TInspectCanvas is a canvas specialized to inspect Root objects.
 */
-//End_Html
-//
 
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas default constructor.
 
-//______________________________________________________________________________
 TInspectCanvas::TInspectCanvas() : TCanvas()
 {
-   // InspectCanvas default constructor.
-
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
@@ -77,13 +71,12 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
    SetFillColor(0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas constructor.
 
-//_____________________________________________________________________________
 TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
             : TCanvas("inspect","ROOT Object Inspector",ww,wh)
 {
-   // InspectCanvas constructor.
-
    fBackward   = 0;
    fForward    = 0;
    fCurObject  = 0;
@@ -93,33 +86,27 @@ TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
    SetFillColor(0);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// InspectCanvas default destructor.
 
-//______________________________________________________________________________
 TInspectCanvas::~TInspectCanvas()
 {
-   // InspectCanvas default destructor.
-
    if (fObjects) {
       fObjects->Clear("nodelete");
       delete fObjects;
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dump contents of obj in a graphics canvas.
+/// Same action as TObject::Dump but in a graphical form.
+/// In addition pointers to other objects can be followed.
+///
+/// The following picture is the Inspect of a histogram object:
+/// \image html gpad_inspect.png
 
-//______________________________________________________________________________
 void TInspectCanvas::InspectObject(TObject *obj)
 {
-   // Dump contents of obj in a graphics canvas.
-   // Same action as TObject::Dump but in a graphical form.
-   // In addition pointers to other objects can be followed.
-   //
-   // The following picture is the Inspect of a histogram object:
-   //Begin_Html
-   /*
-   <img src="gif/hpxinspect.gif">
-   */
-   //End_Html
-
    Int_t cdate = 0;
    Int_t ctime = 0;
    UInt_t *cdatime = 0;
@@ -356,12 +343,11 @@ void TInspectCanvas::InspectObject(TObject *obj)
    fCurObject = obj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// static function , inspect previous object
 
-//______________________________________________________________________________
 void TInspectCanvas::GoBackward()
 {
-   // static function , inspect previous object
-
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
@@ -369,12 +355,11 @@ void TInspectCanvas::GoBackward()
    if (obj)       inspect->InspectObject(obj);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// static function , inspect next object
 
-//______________________________________________________________________________
 void TInspectCanvas::GoForward()
 {
-   // static function , inspect next object
-
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) return;
    TObject *cur = inspect->GetCurObject();
@@ -382,13 +367,12 @@ void TInspectCanvas::GoForward()
    if (obj)       inspect->InspectObject(obj);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// static function , interface to InspectObject.
+/// Create the InspectCanvas if it does not exist yet.
 
-//______________________________________________________________________________
 void TInspectCanvas::Inspector(TObject *obj)
 {
-   // static function , interface to InspectObject.
-   // Create the InspectCanvas if it does not exist yet.
-
    TVirtualPad *padsav = gPad;
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) inspect = new TInspectCanvas(700,600);
@@ -401,12 +385,11 @@ void TInspectCanvas::Inspector(TObject *obj)
    if (padsav) padsav->cd();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from the list of objects.
 
-//______________________________________________________________________________
 void TInspectCanvas::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from the list of objects.
-
    fObjects->Remove(obj);
    TPad::RecursiveRemove(obj);
 }

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoTrap;
 class TGeoTabManager;
@@ -54,15 +50,15 @@ protected:
    Bool_t               fIsShapeEditable;   // Flag that the shape can be changed
 
    TGTextEntry         *fShapeName;         // Shape name text entry
-   TGNumberEntry       *fEH1;               // Number entry for  H1 
+   TGNumberEntry       *fEH1;               // Number entry for  H1
    TGNumberEntry       *fEBl1;              // Number entry for  Bl1
    TGNumberEntry       *fETl1;              // Number entry for  Tl1
    TGNumberEntry       *fESc1;              // Number entry for lower scale
    TGNumberEntry       *fESc2;              // Number entry for  upper scale
    TGNumberEntry       *fEDz;               // Number entry for  DZ
    TGNumberEntry       *fEAlpha1;           // Number entry for  Alpha1
-   TGNumberEntry       *fETheta;            // Number entry for  Theta 
-   TGNumberEntry       *fEPhi  ;            // Number entry for  Theta 
+   TGNumberEntry       *fETheta;            // Number entry for  Theta
+   TGNumberEntry       *fEPhi  ;            // Number entry for  Theta
    TGTextButton        *fApply;             // Apply-Button to accept changes
    TGTextButton        *fUndo;              // Undo-Button
    TGCompositeFrame    *fBFrame;            // Frame containing Apply/Undo
@@ -70,7 +66,7 @@ protected:
    TGCompositeFrame    *fDFrame;            // Frame containing Delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoTrapEditor(const TGWindow *p = 0,
@@ -93,17 +89,17 @@ public:
    void           DoName();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
+
    ClassDef(TGeoTrapEditor,0)   // TGeoTrap editor
-};   
+};
 
 class TGeoGtraEditor : public TGeoTrapEditor {
 
 protected:
 
    Double_t             fTwisti;            // Initial twist angle
-   TGNumberEntry       *fETwist;            // Number entry for  H1 
-   
+   TGNumberEntry       *fETwist;            // Number entry for  H1
+
 public:
    TGeoGtraEditor(const TGWindow *p = 0,
                    Int_t width = 140, Int_t height = 30,
@@ -111,12 +107,12 @@ public:
                    Pixel_t back = GetDefaultFrameBackground());
    virtual ~TGeoGtraEditor();
    virtual void   SetModel(TObject *obj);
-  
+
    void           DoTwist();
    virtual void   DoApply();
    virtual void   DoUndo();
 
    ClassDef(TGeoGtraEditor,0)   // TGeoGtra editor
-};   
-   
-#endif                    
+};
+
+#endif

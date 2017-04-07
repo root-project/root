@@ -138,59 +138,66 @@ static uchar *patter_bits[]= { p1_bits, p2_bits,   p3_bits,  p4_bits,  p5_bits,
                               p21_bits, p22_bits, p23_bits, p24_bits, p25_bits};
 
 ClassImp(TQtBrush)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtBrush::TQtBrush(): QBrush(),fStyle(0),fFasi(0),fAlpha(255)
 {}
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQtBrush ctor from ROOT TAttFill object
+
 TQtBrush::TQtBrush(const TAttFill &rootFillAttributes)
 {
-   // TQtBrush ctor from ROOT TAttFill object
    SetFillAttributes(rootFillAttributes);
 
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQtBrush dtor
+
 TQtBrush::~TQtBrush()
 {
-   // TQtBrush dtor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TQtBrush &TQtBrush::operator=(const TAttFill &rootFillAttributes)
 {
    SetFillAttributes(rootFillAttributes);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void  TQtBrush::SetFillAttributes(const TAttFill &rootFillAttributes)
 {
    SetColor(rootFillAttributes.GetFillColor());
    SetStyle(rootFillAttributes.GetFillStyle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color index for to fill shapes
+///  cindex    : color index
+
  void TQtBrush::SetColor(Color_t cindex)
  {
-   // Set color index for to fill shapes
-   //  cindex    : color index
     if (cindex >= 0)  SetColor(gQt->ColorIndex(gQt->UpdateColor(cindex)));
     else fAlpha = cindex;
  }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remember the user's alpha value and set the  brush color
+
 void TQtBrush::SetColor(const QColor &qtcolor)
 {
-   // remember the user's alpha value and set the  brush color
    fAlpha = qtcolor.alpha();
    fBackground = qtcolor;
    SetColorOwn();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the brush color and adjust its alpha value from fStyle
+/// Take in account the new transperency if needed
+
 void TQtBrush::SetColorOwn()
 {
-  // Set the brush color and adjust its alpha value from fStyle
-  // Take in account the new transperency if needed
-
    static const int opaqAlpha = QColor(0,0,0).alpha(); // Qt   alpha range is  [0:255]
    static const float opaqFactor = opaqAlpha/100.;     // ROOT alpha range is  [0:100]
    if (fAlpha >=0 ) {
@@ -200,13 +207,14 @@ void TQtBrush::SetColorOwn()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set fill area style index*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  =========================
+///*-*  style   : fill area interior style hollow or solid
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void TQtBrush::SetStyle(int sty, int fasi)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set fill area style index*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//*-*  style   : fill area interior style hollow or solid
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
   fStyle =  sty;
   fFasi  =  fasi;
 

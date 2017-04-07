@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -24,6 +25,20 @@
 #include "TClassTable.h"
 
 namespace ROOT {
+namespace Internal {
+   std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
+      constexpr static const char tag[] = "TypeNameExtraction<";
+      const char* start = strstr(derived_funcname, tag);
+      if (!start)
+         return "";
+      start += sizeof(tag) - 1;
+      const char* end = strstr(start, ">::Get(");
+      if (!end)
+         return "";
+      std::string ret;
+      TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
+      return ret;
+   }
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/)
@@ -36,10 +51,38 @@ namespace ROOT {
       return &theDefault;
    }
 
+   void TCDGIILIBase::SetInstance(::ROOT::TGenericClassInfo& R__instance,
+                                  NewFunc_t New, NewArrFunc_t NewArray,
+                                  DelFunc_t Delete, DelArrFunc_t DeleteArray,
+                                  DesFunc_t Destruct) {
+         R__LOCKGUARD2(gROOTMutex);
+         R__instance.SetNew(New);
+         R__instance.SetNewArray(NewArray);
+         R__instance.SetDelete(Delete);
+         R__instance.SetDeleteArray(DeleteArray);
+         R__instance.SetDestructor(Destruct);
+   }
+
+   void TCDGIILIBase::SetName(const std::string& name,
+                              std::string& nameMember) {
+      R__LOCKGUARD2(gInterpreterMutex);
+      if (nameMember.empty()) {
+         TClassEdit::GetNormalizedName(nameMember, name);
+      }
+   }
+
+   void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)()) {
+      if (!isA.load()) {
+         R__LOCKGUARD2(gInterpreterMutex);
+         dictfun();
+      }
+   }
+} // Internal
+
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -49,7 +92,7 @@ namespace ROOT {
         fIsA(isa),
         fVersion(1),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
+        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor.
@@ -59,7 +102,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
+                                        const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
@@ -69,7 +112,7 @@ namespace ROOT {
         fIsA(isa),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
+        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -82,7 +125,7 @@ namespace ROOT {
 
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
-                                        const TInitBehavior  *action,
+                                        const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
@@ -91,7 +134,7 @@ namespace ROOT {
         fIsA(0),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
+        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
 
    {
@@ -171,11 +214,12 @@ namespace ROOT {
       delete fStreamer;
       if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
       fIsA = 0;
-      if (!ROOT::gROOTLocal || !ROOT::gROOTLocal->Initialized() || !gROOT->GetListOfClasses()) return;
+      using ROOT::Internal::gROOTLocal;
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
       if (fAction) GetAction().Unregister(GetClassName());
    }
 
-   const TInitBehavior &TGenericClassInfo::GetAction() const
+   const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
    {
       // Return the creator action.
 
@@ -219,10 +263,11 @@ namespace ROOT {
          fClass->SetDestructor(fDestructor);
          fClass->SetDirectoryAutoAdd(fDirAutoAdd);
          fClass->SetStreamerFunc(fStreamerFunc);
+         fClass->SetConvStreamerFunc(fConvStreamerFunc);
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
          fClass->AdoptStreamer(fStreamer); fStreamer = 0;
-         // If IsZombie is true, something went wront and we will not be
+         // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
             if (fCollectionProxy) fClass->CopyCollectionProxy(*fCollectionProxy);
@@ -234,34 +279,37 @@ namespace ROOT {
 
          //---------------------------------------------------------------------
          // Attach the schema evolution information
-         //---------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
       }
       return fClass;
    }
 
-   //---------------------------------------------------------------------------
-   void TGenericClassInfo::CreateRuleSet( std::vector<TSchemaHelper>& vect,
+   /////////////////////////////////////////////////////////////////////////////
+   /// Attach the schema evolution information to TClassObject
+
+   void TGenericClassInfo::CreateRuleSet( std::vector<Internal::TSchemaHelper>& vect,
                                           Bool_t ProcessReadRules )
    {
-      // Attach the schema evolution information to TClassObject
-
       if ( vect.empty() ) {
          return;
       }
 
       //------------------------------------------------------------------------
       // Get the rules set
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TSchemaRuleSet* rset = fClass->GetSchemaRules( kTRUE );
 
       //------------------------------------------------------------------------
       // Process the rules
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TSchemaRule* rule;
       TString errmsg;
-      std::vector<TSchemaHelper>::iterator it;
+      std::vector<Internal::TSchemaHelper>::iterator it;
       for( it = vect.begin(); it != vect.end(); ++it ) {
          rule = new TSchemaRule();
          rule->SetTarget( it->fTarget );
@@ -299,28 +347,28 @@ namespace ROOT {
    }
 
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionProxyInfo() const
    {
       // Return the set of info we have for the CollectionProxy, if any
 
       return fCollectionProxyInfo;
    }
 
-   TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
+   Detail::TCollectionProxyInfo *TGenericClassInfo::GetCollectionStreamerInfo() const
    {
       // Return the set of info we have for the Collection Streamer, if any
 
       return fCollectionProxyInfo;
    }
 
-   const type_info &TGenericClassInfo::GetInfo() const
+   const std::type_info &TGenericClassInfo::GetInfo() const
    {
-      // Return the typeifno value
+      // Return the typeinfo value
 
       return fInfo;
    }
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRawRules() const
    {
       // Return the list of rule give raw access to the TBuffer.
 
@@ -328,7 +376,7 @@ namespace ROOT {
    }
 
 
-   const std::vector<TSchemaHelper>& TGenericClassInfo::GetReadRules() const
+   const std::vector<Internal::TSchemaHelper>& TGenericClassInfo::GetReadRules() const
    {
       // Return the list of Data Model Evolution regular read rules.
       return fReadRules;
@@ -416,14 +464,14 @@ namespace ROOT {
       return 0;
    }
 
-   void TGenericClassInfo::SetReadRawRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRawRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution read rules giving direct access to the TBuffer.
       fReadRawRules = rules;
    }
 
 
-   void TGenericClassInfo::SetReadRules( const std::vector<TSchemaHelper>& rules )
+   void TGenericClassInfo::SetReadRules( const std::vector<Internal::TSchemaHelper>& rules )
    {
       // Set the list of Data Model Evolution regular read rules.
       fReadRules = rules;
@@ -444,10 +492,18 @@ namespace ROOT {
 
    void TGenericClassInfo::SetStreamerFunc(ClassStreamerFunc_t streamer)
    {
-      // Set a wrapper around the Streamer memger function.
+      // Set a wrapper around the Streamer member function.
 
       fStreamerFunc = streamer;
       if (fClass) fClass->SetStreamerFunc(streamer);
+   }
+
+   void TGenericClassInfo::SetConvStreamerFunc(ClassConvStreamerFunc_t streamer)
+   {
+      // Set a wrapper around the Streamer member function.
+
+      fConvStreamerFunc = streamer;
+      if (fClass) fClass->SetConvStreamerFunc(streamer);
    }
 
    const char *TGenericClassInfo::GetDeclFileName() const

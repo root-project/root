@@ -24,6 +24,7 @@ PyObject* PyROOT::PyStrings::gLifeLine = 0;
 PyObject* PyROOT::PyStrings::gModule = 0;
 PyObject* PyROOT::PyStrings::gMRO = 0;
 PyObject* PyROOT::PyStrings::gName = 0;
+PyObject* PyROOT::PyStrings::gCppName = 0;
 PyObject* PyROOT::PyStrings::gNe = 0;
 PyObject* PyROOT::PyStrings::gTypeCode = 0;
 
@@ -51,7 +52,8 @@ PyObject* PyROOT::PyStrings::gSetFCN = 0;
 PyObject* PyROOT::PyStrings::gTClassDynCast = 0;
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_INITIALIZE_STRING( var, str )                                 \
    if ( ! ( PyStrings::var = PyROOT_PyUnicode_InternFromString( (char*)#str ) ) )    \
       return kFALSE
@@ -78,6 +80,7 @@ Bool_t PyROOT::CreatePyStrings() {
    PYROOT_INITIALIZE_STRING( gModule, __module__ );
    PYROOT_INITIALIZE_STRING( gMRO, __mro__ );
    PYROOT_INITIALIZE_STRING( gName, __name__ );
+   PYROOT_INITIALIZE_STRING( gCppName, __cppname__ );
    PYROOT_INITIALIZE_STRING( gNe, __ne__ );
    PYROOT_INITIALIZE_STRING( gTypeCode, typecode );
 
@@ -107,9 +110,10 @@ Bool_t PyROOT::CreatePyStrings() {
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all cached python strings.
+
 PyObject* PyROOT::DestroyPyStrings() {
-// Remove all cached python strings.
    Py_DECREF( PyStrings::gBases ); PyStrings::gBases = 0;
    Py_DECREF( PyStrings::gBase ); PyStrings::gBase = 0;
    Py_DECREF( PyStrings::gClass ); PyStrings::gClass = 0;
@@ -128,6 +132,7 @@ PyObject* PyROOT::DestroyPyStrings() {
    Py_DECREF( PyStrings::gModule ); PyStrings::gModule = 0;
    Py_DECREF( PyStrings::gMRO ); PyStrings::gMRO = 0;
    Py_DECREF( PyStrings::gName ); PyStrings::gName = 0;
+   Py_DECREF( PyStrings::gCppName ); PyStrings::gCppName = 0;
    Py_DECREF( PyStrings::gNe ); PyStrings::gNe = 0;
    Py_DECREF( PyStrings::gTypeCode ); PyStrings::gTypeCode = 0;
 

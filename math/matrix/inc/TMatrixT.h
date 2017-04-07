@@ -20,17 +20,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
-#ifndef ROOT_TMatrixTUtils
 #include "TMatrixTUtils.h"
-#endif
 
 #ifdef CBLAS
 #include <vecLib/vBLAS.h>
 //#include <cblas.h>
 #endif
+
+#include "Rtypes.h"
+#include "TError.h"
 
 
 template<class Element> class TMatrixTSym;
@@ -51,9 +50,9 @@ protected:
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                      Int_t /*nr_nonzeros*/ = -1);
 
-   static Element & NaNValue();
 
 public:
+
 
    enum {kWorkMax = 100};
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
@@ -119,7 +118,8 @@ public:
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                   else fElements = 0;  this->fNelems = 0; }
+                                                   else fElements = 0;
+                                                   this->fNelems = 0; }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
    const   TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,const Element *data) const
@@ -207,6 +207,18 @@ public:
    ClassDef(TMatrixT,4) // Template of General Matrix class
 };
 
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TMatrixT<double>::Class();
+#endif // __CINT__
+
+
 template <class Element> inline const Element           *TMatrixT<Element>::GetMatrixArray() const { return fElements; }
 template <class Element> inline       Element           *TMatrixT<Element>::GetMatrixArray()       { return fElements; }
 
@@ -242,11 +254,11 @@ template <class Element> inline Element TMatrixT<Element>::operator()(Int_t rown
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
 
    }
    return (fElements[arown*this->fNcols+acoln]);
@@ -259,12 +271,11 @@ template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t row
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return NaNValue();
-
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return NaNValue();
+      return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }

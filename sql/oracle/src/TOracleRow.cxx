@@ -20,11 +20,11 @@ using namespace std;
 using namespace oracle::occi;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of query result.
+
 TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
 {
-   // Single row of query result.
-
    fResult      = rs;
    fFieldInfo   = fieldMetaData;
    fFieldCount  = fFieldInfo->size();
@@ -34,19 +34,19 @@ TOracleRow::TOracleRow(ResultSet *rs, vector<MetaData> *fieldMetaData)
    GetRowData();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TOracleRow::~TOracleRow()
 {
-   // Destroy row object.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TOracleRow::Close(Option_t *)
 {
-   // Close row.
-
    if (fFieldsBuffer!=0) {
       for (int n=0;n<fFieldCount;n++)
         if (fFieldsBuffer[n]) delete[] fFieldsBuffer[n];
@@ -58,11 +58,11 @@ void TOracleRow::Close(Option_t *)
    fResult      = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TOracleRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "row closed");
       return kFALSE;
@@ -74,11 +74,11 @@ Bool_t TOracleRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TOracleRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field) || fFieldInfo->size() <= 0)
       return 0;
 
@@ -87,7 +87,8 @@ ULong_t TOracleRow::GetFieldLength(Int_t field)
    return fieldMD.getInt(MetaData::ATTR_DATA_SIZE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char* TOracleRow::GetField(Int_t field)
 {
    if ((field<0) || (field>=fFieldCount)) {
@@ -98,7 +99,8 @@ const char* TOracleRow::GetField(Int_t field)
    return fFieldsBuffer ? fFieldsBuffer[field] : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TOracleRow::GetRowData()
 {
    if (!fResult || !fFieldInfo || (fFieldCount<=0)) return;

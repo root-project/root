@@ -9,7 +9,9 @@
 #  PYTHIA6_LIBRARIES (not cached)
 
 set(_pythia6dirs
-  ${PYTHIA6_DIR} 
+  ${PYTHIA6}
+  $ENV{PYTHIA6}
+  ${PYTHIA6_DIR}
   $ENV{PYTHIA6_DIR}
   /cern/pro/lib
   /opt/pythia
@@ -24,8 +26,9 @@ find_path(PYTHIA6_INCLUDE_DIR general_pythia.inc
            PATH_SUFFIXES include
            DOC "Specify the Pythia6 include dir here.")
 
-set(PYTHIA6_INCLUDE_DIRS ${PYTHIA6_INCLUDE_DIR})
-
+if(PYTHIA6_INCLUDE_DIR)
+  set(PYTHIA6_INCLUDE_DIRS ${PYTHIA6_INCLUDE_DIR})
+endif()
 
 find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6
              HINTS ${_pythia6dirs}
@@ -49,7 +52,7 @@ get_filename_component(PYTHIA6_LIBRARY_DIR ${PYTHIA6_LIBRARY} PATH)
 # all listed variables are TRUE
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Pythia6 DEFAULT_MSG PYTHIA6_INCLUDE_DIR PYTHIA6_LIBRARY)
+find_package_handle_standard_args(Pythia6 DEFAULT_MSG PYTHIA6_LIBRARY)
 
 mark_as_advanced(PYTHIA6_INCLUDE_DIR
                  PYTHIA6_LIBRARY

@@ -33,119 +33,85 @@
 #include "TVirtualPadEditor.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
+Int_t TGraphPainter::fgMaxPointsPerLine = 50;
 
 ClassImp(TGraphPainter);
 
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>The graph painter class</h2></center>
+////////////////////////////////////////////////////////////////////////////////
 
-<ul>
-<li><a href="#GP00">Introduction</li></a>
-<li><a href="#GP01">Graphs' plotting options</li></a>
-<li><a href="#GP02">Exclusion graphs</li></a>
-<li><a href="#GP03">Graphs with error bars</li></a>
-<ul>
-<li><a href="#GP03a">TGraphErrors</li></a>
-<li><a href="#GP03b">TGraphAsymmErrors</li></a>
-<li><a href="#GP03c">TGraphBentErrors</li></a>
-</ul>
-<li><a href="#GP04">TGraphPolar options</li></a>
-</ul>
+/*! \class TGraphPainter
+    \ingroup Histpainter
+    \brief The graph painter class. Implements all graphs' drawing's options.
 
-<a name="GP00"></a><h3>Introduction</h3>
+- [Introduction](#GP00)
+- [Graphs' plotting options](#GP01)
+- [Exclusion graphs](#GP02)
+- [Graphs with error bars](#GP03)
+   - [TGraphErrors](#GP03a)
+   - [TGraphAsymmErrors](#GP03b)
+   - [TGraphBentErrors](#GP03c)
+- [TGraphPolar options](#GP04)
+- [Colors automatically picked in palette](#GP05)
 
-Graphs are drawn via the painter <tt>TGraphPainter</tt> class. This class
+
+### <a name="GP00"></a> Introduction
+
+Graphs are drawn via the painter `TGraphPainter` class. This class
 implements techniques needed to display the various kind of
-graphs i.e.: <tt>TGraph</tt>, <tt>TGraphErrors</tt>,
-<tt>TGraphBentErrors</tt> and <tt>TGraphAsymmErrors</tt>.
+graphs i.e.: `TGraph`, `TGraphErrors`, `TGraphBentErrors` and `TGraphAsymmErrors`.
 
-<p>
-To draw a graph "<tt>graph</tt>" it's enough to do:
-<pre>
-   graph->Draw("AL");
-</pre>
+To draw a graph `graph` it's enough to do:
 
+    graph->Draw("AL");
 
-<p>The option <tt>"AL"</tt> in the <tt>Draw()</tt> method means:
-<ol>
-<li>The axis should be drawn (option <tt>"A"</tt>),</li>
-<li>The graph should be drawn as a simple line (option <tt>"L"</tt>).</li>
-</ol>
-By default a graph is drawn in the current pad in the current coordinate system.
+The option `AL` in the `Draw()` method means:
+
+1. The axis should be drawn (option `A`),
+2. The graph should be drawn as a simple line (option `L`).
+
+ By default a graph is drawn in the current pad in the current coordinate system.
 To define a suitable coordinate system and draw the axis the option
-<tt>"A"</tt> must be specified.
-<p>
-<tt>TGraphPainter</tt> offers many options to paint the various kind of graphs.
-<p>
+`A` must be specified.
+
+`TGraphPainter` offers many options to paint the various kind of graphs.
+
 It is separated from the graph classes so that one can have graphs without the
 graphics overhead, for example in a batch program.
-<p>
-When a displayed graph is modified, there is no need to call
-<tt>Draw()</tt> again; the image will be refreshed the next time the
-pad will be updated.
-<p>A pad is updated after one of these three actions:
-<ol>
-<li>  a carriage return on the ROOT command line,
-<li>  a click inside the pad,
-<li>  a call to <tt>TPad::Update</tt>.
-</ol>
 
-<a name="GP01"></a><h3>Graphs' plotting options</h3>
+When a displayed graph is modified, there is no need to call `Draw()` again; the
+image will be refreshed the next time the pad will be updated. A pad is updated
+after one of these three actions:
+
+1.  a carriage return on the ROOT command line,
+2.  a click inside the pad,
+3.  a call to `TPad::Update`.
+
+### <a name="GP01"></a> Graphs' plotting options
 Graphs can be drawn with the following options:
-<p>
-<table border=0>
 
-<tr><th valign=top>"A"</th><td>
-Axis are drawn around the graph
-</td></tr>
+| Option   | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "A"      | Axis are drawn around the graph |
+| "I"      | Combine with option 'A' it draws invisible axis |
+| "L"      | A simple polyline is drawn |
+| "F"      | A fill area is drawn ('CF' draw a smoothed fill area) |
+| "C"      | A smooth Curve is drawn |
+| "*"      | A Star is plotted at each point |
+| "P"      | The current marker is plotted at each point |
+| "B"      | A Bar chart is drawn |
+| "1"      | When a graph is drawn as a bar chart, this option makes the bars start from the bottom of the pad. By default they start at 0. |
+| "X+"     | The X-axis is drawn on the top side of the plot. |
+| "Y+"     | The Y-axis is drawn on the right side of the plot. |
+| "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
+| "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
+| "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
 
-<tr><th valign=top>"L"</th><td>
-A simple polyline is drawn
-</td></tr>
-
-<tr><th valign=top>"F"</th><td>
-A fill area is drawn ('CF' draw a smoothed fill area)
-</td></tr>
-
-<tr><th valign=top>"C"</th><td>
-A smooth Curve is drawn
-</td></tr>
-
-<tr><th valign=top>"*"</th><td>
-A Star is plotted at each point
-</td></tr>
-
-<tr><th valign=top>"P"</th><td>
-The current marker is plotted at each point
-</td></tr>
-
-<tr><th valign=top>"B"</th><td>
-A Bar chart is drawn
-</td></tr>
-
-<tr><th valign=top>"1"</th><td>
-When a graph is drawn as a bar chart, this option makes the bars start from
-the bottom of the pad. By default they start at 0.
-</td></tr>
-
-<tr><th valign=top>"X+"</th><td>
-The X-axis is drawn on the top side of the plot.
-</td></tr>
-
-<tr><th valign=top>"Y+"</th><td>
-The Y-axis is drawn on the right side of the plot.
-</td></tr>
-
-</table>
-<p>
 
 Drawing options can be combined. In the following example the graph
 is drawn as a smooth curve (option "C") with markers (option "P") and
 with axes (option "A").
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",200,10,600,400);
@@ -178,12 +144,10 @@ Begin_Macro(source)
    return c1;
 }
 End_Macro
-Begin_Html
 
-<p>The following macro shows the option "B" usage. It can be combined with the
+The following macro shows the option "B" usage. It can be combined with the
 option "1".
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c47 = new TCanvas("c47","c47",200,10,600,400);
@@ -201,114 +165,62 @@ Begin_Macro(source)
  return c47;
 }
 End_Macro
-Begin_Html
 
-<a name="GP02"></a><h3>Exclusion graphs</h3>
+### <a name="GP02"></a> Exclusion graphs
 
-When a graph is painted with the option <tt>"C"</tt> or <tt>"L"</tt> it is
+When a graph is painted with the option `C` or `L` it is
 possible to draw a filled area on one side of the line. This is useful to show
 exclusion zones.
 
-<p>This drawing mode is activated when the absolute value of the graph line
-width (set by <tt>SetLineWidth()</tt>) is greater than 99. In that
+This drawing mode is activated when the absolute value of the graph line
+width (set by `SetLineWidth()`) is greater than 99. In that
 case the line width number is interpreted as:
-<pre>
-      100*ff+ll = ffll
-</pre>
-<ul>
-<li> The two digits number <tt>"ll"</tt> represent the normal line width
-<li> The two digits number  <tt>"ff"</tt> represent the filled area width.
-<li> The sign of "ffll" allows to flip the filled area from one side of the line
-     to the other.
-</ul>
+
+    100*ff+ll = ffll
+
+- The two digits number `ll` represent the normal line width
+- The two digits number  `ff` represent the filled area width.
+- The sign of "ffll" allows to flip the filled area from one side of the line to the other.
+
 The current fill area attributes are used to draw the hatched zone.
 
-End_Html
 Begin_Macro(source)
 ../../../tutorials/graphs/exclusiongraph.C
 End_Macro
-Begin_Html
 
-<a name="GP03"></a><h3>Graphs with error bars</h3>
+### <a name="GP03"></a> Graphs with error bars
 Three classes are available to handle graphs with error bars:
-<tt>TGraphErrors</tt>, <tt>TGraphAsymmErrors</tt> and <tt>TGraphBentErrors</tt>.
+`TGraphErrors`, `TGraphAsymmErrors` and `TGraphBentErrors`.
 The following drawing options are specific to graphs with error bars:
-<p>
-<table border=0>
 
-<tr><th valign=top>"Z"</th><td>
-Do not draw small horizontal and vertical lines the end of the error bars.
-Without "Z", the default is to draw these.
-</td></tr>
+| Option   | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "Z"      | Do not draw small horizontal and vertical lines the end of the error bars. Without "Z", the default is to draw these. |
+| ">"      | An arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of the marker size. |
+| \"\|\>\" | A filled arrow is drawn at the end of the error bars. The size of the arrow is set to 2/3 of the marker size. |
+| "X"      | Do not draw error bars.  By default, graph classes that have errors are drawn with the errors (TGraph itself has no errors, and so this option has no effect.) |
+| \"\|\|\" | Draw only the small vertical/horizontal lines at the ends of the error bars, without drawing the bars themselves. This option is interesting to superimpose statistical-only errors on top of a graph with statistical+systematic errors. |
+| "[]"     | Does the same as option \"\|\|\" except that it draws additional marks at the ends of the small vertical/horizontal lines. It makes plots less ambiguous in case several graphs are drawn on the same picture. |
+| "0"      | By default, when a data point is outside the visible range along the Y axis, the error bars are not drawn. This option forces error bars' drawing for the data points outside the visible range along the Y axis (see example below). |
+| "2"      | Error rectangles are drawn. |
+| "3"      | A filled area is drawn through the end points of the vertical error bars. |
+| "4"      | A smoothed filled area is drawn through the end points of the vertical error bars. |
+| "5"      | Error rectangles are drawn like option "2". In addition the contour line around the boxes is drawn. This can be useful when boxes' fill colors are very light or in gray scale mode. |
 
-<tr><th valign=top>">"</th><td>
-An arrow is drawn at the end of the error bars.
-The size of the arrow is set to 2/3 of the marker size.
-</td></tr>
 
-<tr><th valign=top>"|>"</th><td>
-A filled arrow is drawn at the end of the error bars.
-The size of the arrow is set to 2/3 of the marker size.
-</td></tr>
+`gStyle->SetErrorX(dx)` controls the size of the error along x.
+`dx = 0` removes the error along x.
 
-<tr><th valign=top>"X"</th><td>
-Do not draw error bars.  By default, graph classes that have errors
-are drawn with the errors (TGraph itself has no errors, and so this option
-has no effect.)
-</td></tr>
-
-<tr><th valign=top>"||"</th><td>
-Draw only the small vertical/horizontal lines at the ends of the
-error bars, without drawing the bars themselves. This option is
-interesting to superimpose statistical-only errors on top of a graph
-with statistical+systematic errors.
-</td></tr>
-
-<tr><th valign=top>"[]"</th><td>
-Does the same as option "||" except that it draws additional marks at the
-ends of the small vertical/horizontal lines. It makes plots less ambiguous
-in case several graphs are drawn on the same picture.
-</td></tr>
-
-<tr><th valign=top>"0"</th><td>
-By default, when a data point is outside the visible range along the Y
-axis, the error bars are not drawn. This option forces error bars' drawing for
-the data points outside the visible range along the Y axis (see example below).
-</td></tr>
-
-<tr><th valign=top>"2"</th><td>
-Error rectangles are drawn.
-</td></tr>
-
-<tr><th valign=top>"3"</th><td>
-A filled area is drawn through the end points of the vertical error bars.
-</td></tr>
-
-<tr><th valign=top>"4"</th><td>
-A smoothed filled area is drawn through the end points of the vertical error
-bars.
-</td></tr>
-
-<tr><th valign=top>"5"</th><td>
-Error rectangles are drawn like option "2". In addition the contour line
-around the boxes is drawn. This can be useful when boxes' fill colors are very
-light or in gray scale mode.
-</td></tr>
-</table>
-<p>
-<tt>gStyle->SetErrorX(dx)</tt> controls the size of the error along x.
-<tt>dx = 0</tt> removes the error along x.
-<p>
-<tt>gStyle->SetEndErrorSize(np)</tt> controls the size of the lines
+`gStyle->SetEndErrorSize(np)` controls the size of the lines
 at the end of the error bars (when option 1 is used).
-By default <tt>np=1</tt>. (np represents the number of pixels).
+By default `np=1`. (np represents the number of pixels).
 
-<a name="GP03a"></a><h4><u>TGraphErrors</u></h4>
-A <tt>TGraphErrors</tt> is a <tt>TGraph</tt> with error bars. The errors are
+#### <a name="GP03a"></a> TGraphErrors
+
+A `TGraphErrors` is a `TGraph` with error bars. The errors are
 defined along X and Y and are symmetric: The left and right errors are the same
 along X and the bottom and up errors are the same along Y.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c4 = new TCanvas("c4","c4",200,10,600,400);
@@ -321,11 +233,9 @@ Begin_Macro(source)
    return c4;
 }
 End_Macro
-Begin_Html
 
-<p>The option "0" shows the error bars for data points outside range.
+The option "0" shows the error bars for data points outside range.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c48 = new TCanvas("c48","c48",200,10,600,400);
@@ -340,11 +250,9 @@ Begin_Macro(source)
    return c48;
 }
 End_Macro
-Begin_Html
 
-<p>The option "3" shows the errors as a band.
+The option "3" shows the errors as a band.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c41 = new TCanvas("c41","c41",200,10,600,400);
@@ -359,15 +267,13 @@ Begin_Macro(source)
    return c41;
 }
 End_Macro
-Begin_Html
 
-<p>The option "4" is similar to the option "3" except that the band
+The option "4" is similar to the option "3" except that the band
 is smoothed. As the following picture shows, this option should be
 used carefully because the smoothing algorithm may show some (huge)
 "bouncing" effects. In some cases it looks nicer than option "3"
 (because it is smooth) but it can be misleading.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c42 = new TCanvas("c42","c42",200,10,600,400);
@@ -382,12 +288,10 @@ Begin_Macro(source)
    return c42;
 }
 End_Macro
-Begin_Html
 
-<p>The following example shows how the option "[]" can be used to superimpose
+The following example shows how the option "[]" can be used to superimpose
 systematic errors on top of a graph with statistical errors.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c43 = new TCanvas("c43","c43",200,10,600,400);
@@ -432,14 +336,12 @@ Begin_Macro(source)
    return c43;
 }
 End_Macro
-Begin_Html
 
-<a name="GP03b"></a><h4><u>TGraphAsymmErrors</u></h4>
-A <tt>TGraphAsymmErrors</tt> is like a <tt>TGraphErrors</tt> but the errors
+#### <a name="GP03b"></a> TGraphAsymmErrors
+A `TGraphAsymmErrors` is like a `TGraphErrors` but the errors
 defined along X and Y are not symmetric: The left and right errors are
 different along X and the bottom and up errors are different along Y.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c44 = new TCanvas("c44","c44",200,10,600,400);
@@ -457,15 +359,13 @@ Begin_Macro(source)
    return c44;
 }
 End_Macro
-Begin_Html
 
 
-<a name="GP03c"></a><h4><u>TGraphBentErrors</u></h4>
-A <tt>TGraphBentErrors</tt> is like a <tt>TGraphAsymmErrors</tt>.
+#### <a name="GP03c"></a> TGraphBentErrors
+A `TGraphBentErrors` is like a `TGraphAsymmErrors`.
 An extra parameter allows to bend the error bars to better see them
 when several graphs are drawn on the same plot.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c45 = new TCanvas("c45","c45",200,10,600,400);
@@ -488,42 +388,22 @@ Begin_Macro(source)
    return c45;
 }
 End_Macro
-Begin_Html
 
 
-<a name="GP04"></a><h3>TGraphPolar options</h3>
+### <a name="GP04"></a> TGraphPolar options
 
 The drawing options for the polar graphs are the following:
 
-<table border=0>
+| Option   | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "O"      | Polar labels are drawn orthogonally to the polargram radius. |
+| "P"      | Polymarker are drawn at each point position. |
+| "E"      | Draw error bars. |
+| "F"      | Draw fill area (closed polygon). |
+| "A"      | Force axis redrawing even if a polargram already exists. |
+| "N"      | Disable the display of the polar labels. |
 
-<tr><th valign=top>"O"</th><td>
-Polar labels are drawn orthogonally to the polargram radius.
-</td></tr>
 
-<tr><th valign=top>"P"</th><td>
-Polymarker are drawn at each point position.
-</td></tr>
-
-<tr><th valign=top>"E"</th><td>
-Draw error bars.
-</td></tr>
-
-<tr><th valign=top>"F"</th><td>
-Draw fill area (closed polygon).
-</td></tr>
-
-<tr><th valign=top>"A"</th><td>
-Force axis redrawing even if a polargram already exists.
-</td></tr>
-
-<tr><th valign=top>"N"</th><td>
-Disable the display of the polar labels.
-</td></tr>
-
-</table>
-
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c46 = new TCanvas("c46","c46",500,500);
@@ -552,43 +432,60 @@ Begin_Macro(source)
    return c46;
 }
 End_Macro
-Begin_Html
 
-End_Html */
+### <a name="GP05"></a> Colors automatically picked in palette
+
+\since **ROOT version 6.09/01**
+
+When several graphs are painted in the same canvas or when a multi-graph is drawn,
+it might be useful to have an easy and automatic way to choose
+their color. The simplest way is to pick colors in the current active color
+palette. Palette coloring for histogram is activated thanks to the options `PFC`
+(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+When one of these options is given to `TGraph::Draw` the graph get its color
+from the current color palette defined by `gStyle->SetPalette(…)`. The color
+is determined according to the number of objects having palette coloring in
+the current pad.
+
+Begin_Macro(source)
+../../../tutorials/graphs/graphpalettecolor.C
+End_Macro
+
+Begin_Macro(source)
+../../../tutorials/graphs/multigraphpalettecolor.C
+End_Macro
+ */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGraphPainter::TGraphPainter()
 {
-   /* Begin_Html
-   Default constructor
-   End_Html */
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGraphPainter::~TGraphPainter()
 {
-   /* Begin_Html
-   Destructor.
-   End_Html */
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the logarithm of global variables `gxwork` and `gywork`
+///  according to the value of Options and put the results in the global
+///  variables `gxworkl` and `gyworkl`.
+///
+/// npoints : Number of points in gxwork and in gywork.
+///
+/// - opt = 1 ComputeLogs is called from PaintGrapHist
+/// - opt = 0 ComputeLogs is called from PaintGraph
+
 void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 {
-   /* Begin_Html
-   Compute the logarithm of global variables <tt>gxwork</tt> and <tt>gywork</tt>
-   according to the value of Options and put the results in the global
-   variables <tt>gxworkl</tt> and <tt>gyworkl</tt>.
-   <p>
-   npoints : Number of points in gxwork and in gywork.
-   <ul>
-   <li> opt = 1 ComputeLogs is called from PaintGrapHist
-   <li> opt = 0 ComputeLogs is called from PaintGraph
-   </ul>
-   End_Html */
+
 
    Int_t i;
    memcpy(gxworkl,gxwork,npoints*8);
@@ -608,15 +505,14 @@ void TGraphPainter::ComputeLogs(Int_t npoints, Int_t opt)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a graph.
+///
+/// Compute the closest distance of approach from point px,py to this line.
+/// The distance is computed in pixels units.
+
 Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py)
 {
-   /* Begin_Html
-   Compute distance from point px,py to a graph.
-   <p>
-   Compute the closest distance of approach from point px,py to this line.
-   The distance is computed in pixels units.
-   End_Html */
 
    // Are we on the axis?
    Int_t distance;
@@ -695,12 +591,11 @@ Int_t TGraphPainter::DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display a panel with all histogram drawing options.
+
 void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
 {
-   /* Begin_html
-   Display a panel with all histogram drawing options.
-   End_html */
 
    if (!gPad) {
       Error("DrawPanel", "need to draw graph first");
@@ -713,20 +608,21 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+/// This member function is called when a graph is clicked with the locator.
+///
+/// If the left mouse button is clicked on one of the line end points, this point
+/// follows the cursor until button is released.
+///
+/// If the middle mouse button clicked, the line is moved parallel to itself
+/// until the button is released.
+
 void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py)
 {
-   /* Begin_Html
-   Execute action corresponding to one event.
-   <p>
-   This member function is called when a graph is clicked with the locator.
-   <p>
-   If the left mouse button is clicked on one of the line end points, this point
-   follows the cursor until button is released.
-   <p>
-   If the middle mouse button clicked, the line is moved parallel to itself
-   until the button is released.
-   End_Html */
+
+   if (!gPad) return;
 
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
@@ -1001,53 +897,66 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *TGraphPainter::GetObjectInfoHelper(TGraph * /*theGraph*/, Int_t /*px*/, Int_t /*py*/) const
 {
    return (char*)"";
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a any kind of TGraph
+
 void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   Paint a any kind of TGraph
-   End_Html */
+
+   char chopt[80];
+   strlcpy(chopt,option,80);
 
    if (theGraph) {
+      char *l1 = strstr(chopt,"pfc"); // Automatic Fill Color
+      char *l2 = strstr(chopt,"plc"); // Automatic Line Color
+      char *l3 = strstr(chopt,"pmc"); // Automatic Marker Color
+      if (l1 || l2 || l3) {
+         Int_t i = gPad->NextPaletteColor();
+         if (l1) {strncpy(l1,"   ",3); theGraph->SetFillColor(i);}
+         if (l2) {strncpy(l2,"   ",3); theGraph->SetLineColor(i);}
+         if (l3) {strncpy(l3,"   ",3); theGraph->SetMarkerColor(i);}
+      }
+
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
       if (theGraph->InheritsFrom(TGraphBentErrors::Class())) {
-         PaintGraphBentErrors(theGraph,option);
+         PaintGraphBentErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
-         PaintGraphQQ(theGraph,option);
+         PaintGraphQQ(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphAsymmErrors::Class())) {
-         PaintGraphAsymmErrors(theGraph,option);
+         PaintGraphAsymmErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphErrors::Class())) {
          if (theGraph->InheritsFrom(TGraphPolar::Class())) {
-            PaintGraphPolar(theGraph,option);
+            PaintGraphPolar(theGraph,chopt);
          } else {
-            PaintGraphErrors(theGraph,option);
+            PaintGraphErrors(theGraph,chopt);
          }
       } else {
-         PaintGraphSimple(theGraph,option);
+         PaintGraphSimple(theGraph,chopt);
       }
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [Control function to draw a graph.]($GP01)
+
 void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
-   /* Begin_Html
-   <a href="#GP01">Control function to draw a graph.</a>
-   End_Html */
+
    if (theGraph->InheritsFrom("TGraphPolar"))
       gPad->PushSelectableObject(theGraph);
 
-   Int_t optionLine , optionAxis , optionCurve, optionStar , optionMark;
-   Int_t optionBar  , optionR    , optionOne  , optionE;
-   Int_t optionFill , optionZ    , optionCurveFill;
+   Int_t optionLine , optionAxis , optionCurve    , optionStar , optionMark;
+   Int_t optionBar  , optionR    , optionOne      , optionE;
+   Int_t optionFill , optionZ    , optionCurveFill, optionIAxis;
    Int_t i, npt, nloop;
    Int_t drawtype=0;
    Double_t xlow, xhigh, ylow, yhigh;
@@ -1065,15 +974,16 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    opt.ToUpper();
    opt.ReplaceAll("SAME","");
 
-   if (opt.Contains("L")) optionLine = 1;  else optionLine = 0;
-   if (opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
-   if (opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
-   if (opt.Contains("*")) optionStar = 1;  else optionStar = 0;
-   if (opt.Contains("P")) optionMark = 1;  else optionMark = 0;
-   if (opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
-   if (opt.Contains("R")) optionR    = 1;  else optionR    = 0;
-   if (opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
-   if (opt.Contains("F")) optionFill = 1;  else optionFill = 0;
+   if (opt.Contains("L")) optionLine  = 1;  else optionLine  = 0;
+   if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
+   if (opt.Contains("C")) optionCurve = 1;  else optionCurve = 0;
+   if (opt.Contains("*")) optionStar  = 1;  else optionStar  = 0;
+   if (opt.Contains("P")) optionMark  = 1;  else optionMark  = 0;
+   if (opt.Contains("B")) optionBar   = 1;  else optionBar   = 0;
+   if (opt.Contains("R")) optionR     = 1;  else optionR     = 0;
+   if (opt.Contains("1")) optionOne   = 1;  else optionOne   = 0;
+   if (opt.Contains("F")) optionFill  = 1;  else optionFill  = 0;
+   if (opt.Contains("I")) optionIAxis = 1;  else optionIAxis = 0;
    if (opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4") || opt.Contains("5")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
@@ -1150,6 +1060,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
       char chopth[8] = " ";
       if (strstr(chopt,"x+")) strncat(chopth, "x+",2);
       if (strstr(chopt,"y+")) strncat(chopth, "y+",2);
+      if (optionIAxis) strncat(chopth, "A",1);
       if (!theGraph->GetHistogram()) {
          // the graph is created with at least as many bins as there are
          // points to permit zooming on the full range.
@@ -1425,110 +1336,40 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is a service method used by `THistPainter`
+/// to paint 1D histograms. It is not used to paint TGraph.
+///
+/// Input parameters:
+///
+/// - npoints : Number of points in X or in Y.
+/// - x[npoints] or x[0] : x coordinates or (xmin,xmax).
+/// - y[npoints] or y[0] : y coordinates or (ymin,ymax).
+/// - chopt : Option.
+///
+/// The aspect of the histogram is done according to the value of the chopt.
+///
+/// | Option | Description                                                     |
+/// |--------|-----------------------------------------------------------------|
+/// |"R"     | Graph is drawn horizontally, parallel to X axis. (default is vertically, parallel to Y axis).If option R is selected the user must give 2 values for Y (y[0]=YMIN and y[1]=YMAX) or N values for X, one for each channel. Otherwise the user must give, N values for Y, one for each channel or 2 values for X (x[0]=XMIN and x[1]=XMAX) |
+/// |"L"     | A simple polyline between every points is drawn.|
+/// |"H"     | An Histogram with equidistant bins is drawn as a polyline.|
+/// |"F"     | An histogram with equidistant bins is drawn as a fill area. Contour is not drawn unless chopt='H' is also selected..|
+/// |"N"     | Non equidistant bins (default is equidistant). If N is the number of channels array X and Y must be dimensioned as follow: If option R is not selected (default) then the user must give (N+1) values for X (limits of channels) or N values for Y, one for each channel. Otherwise the user must give (N+1) values for Y (limits of channels). or N values for X, one for each channel |
+/// |"F1"    | Idem as 'F' except that fill area base line is the minimum of the pad instead of Y=0.|
+/// |"F2"    | Draw a Fill area polyline connecting the center of bins|
+/// |"C"     | A smooth Curve is drawn.|
+/// |"*"     | A Star is plotted at the center of each bin.|
+/// |"P"     | Idem with the current marker.|
+/// |"P0"    | Idem with the current marker. Empty bins also drawn.|
+/// |"B"     | A Bar chart with equidistant bins is drawn as fill areas (Contours are drawn).|
+/// |"]["    | "Cutoff" style. When this option is selected together with H option, the first and last vertical lines of the histogram are not drawn.|
+
 void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x,
                                   const Double_t *y, Option_t *chopt)
 {
-   /* Begin_Html
-    This is a service method used by
-    <a href="http://root.cern.ch/root/html/THistPainter.html"><tt>THistPainter</tt></a>
-    to paint 1D histograms. <b>It is not used to paint TGraph</b>.
-    <p>
-    Input parameters:
-    <ul>
-    <li> npoints : Number of points in X or in Y.
-    <li> x[npoints] or x[0] : x coordinates or (xmin,xmax).
-    <li> y[npoints] or y[0] : y coordinates or (ymin,ymax).
-    <li> chopt : Option.
-    </ul>
-    <p>
-    The aspect of the histogram is done according to the value of the chopt.
-    <p>
-    <table border=0>
-    <tr><th valign=top>"R"</th><td>
-    Graph is drawn horizontaly, parallel to X axis. (default is vertically,
-    parallel to Y axis)
-    <br>
-    If option R is selected the user must give:
-    <ul>
-    <li> 2 values for Y (y[0]=YMIN and y[1]=YMAX)
-    <li> N values for X, one for each channel.
-    </ul>
-    Otherwise the user must give:
-    <ul>
-    <li> N values for Y, one for each channel.
-    <li> 2 values for X (x[0]=XMIN and x[1]=XMAX)
-    </ul>
-    </td></tr>
 
-    <tr><th valign=top>"L"</th><td>
-    A simple polyline beetwen every points is drawn.
-    </td></tr>
-
-    <tr><th valign=top>"H"</th><td>
-    An Histogram with equidistant bins is drawn as a polyline.
-    </td></tr>
-
-    <tr><th valign=top>"F"</th><td>
-    An histogram with equidistant bins is drawn as a fill area. Contour is not
-    drawn unless chopt='H' is also selected..
-    </td></tr>
-
-    <tr><th valign=top>"N"</th><td>
-    Non equidistant bins (default is equidistant). If N is the number of channels
-    array X and Y must be dimensionned as follow:
-    <ul>
-    <li>>If option R is not selected (default) then the user must give:</li>
-      <ul>
-      <li>(N+1) values for X (limits of channels).</li>
-      <li>N values for Y, one for each channel.</li>
-      <ul>
-    <li>Otherwise the user must give:</li>
-      <ul>
-      <li>(N+1) values for Y (limits of channels).</li>
-      <li>N values for X, one for each channel.</li>
-      </ul>
-    </ul>
-    </td></tr>
-
-    <tr><th valign=top>"F1"</th><td>
-    Idem as 'F' except that fill area base line is the minimum of the pad instead
-    of Y=0.
-    </td></tr>
-
-    <tr><th valign=top>"F2"</th><td>
-    Draw a Fill area polyline connecting the center of bins
-    </td></tr>
-
-    <tr><th valign=top>"C"</th><td>
-    A smooth Curve is drawn.
-    </td></tr>
-
-    <tr><th valign=top>"*"</th><td>
-    A Star is plotted at the center of each bin.
-    </td></tr>
-
-    <tr><th valign=top>"P"</th><td>
-    Idem with the current marker.
-    </td></tr>
-
-    <tr><th valign=top>"P0"</th><td>
-    Idem with the current marker. Empty bins also drawn.
-    </td></tr>
-
-    <tr><th valign=top>"B"</th><td>
-    A Bar chart with equidistant bins is drawn as fill areas (Contours are drawn).
-    </td></tr>
-
-    <tr><th valign=top>"]["</th><td>
-    "Cutoff" style. When this option is selected together with H option, the
-    first and last vertical lines of the histogram are not drawn.
-    </td></tr>
-
-    </table>
-    End_Html */
-
-   const char *where = "PaintGraphHist";
+   const char *where = "PaintGrapHist";
 
    Int_t optionLine , optionAxis , optionCurve, optionStar, optionMark;
    Int_t optionBar  , optionRot  , optionOne  , optionOff ;
@@ -1729,7 +1570,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
                //make sure that the fill area does not overwrite the frame
-               //take into account the frame linewidth
+               //take into account the frame line width
                if (gxwork[0    ] < vxmin) {gxwork[0    ] = vxmin; gxwork[1    ] = vxmin;}
                if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
@@ -1811,7 +1652,7 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = gxwork[npt-2];
                gywork[npt-1] = gywork[0];
                //make sure that the fill area does not overwrite the frame
-               //take into account the frame linewidth
+               //take into account the frame line width
                if (gxwork[0] < vxmin) {gxwork[0] = vxmin; gxwork[1    ] = vxmin;}
                if (gywork[0] < vymin) {gywork[0] = vymin; gywork[npt-1] = vymin;}
 
@@ -1923,9 +1764,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
-               ComputeLogs(50, optionZ);
-               Smooth(theGraph, 50,gxworkl,gyworkl,drawtype);
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(fgMaxPointsPerLine, optionZ);
+               Smooth(theGraph, fgMaxPointsPerLine,gxworkl,gyworkl,drawtype);
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
@@ -1963,9 +1804,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
-               ComputeLogs(50, optionZ);
-               Smooth(theGraph, 50,gxworkl,gyworkl,drawtype);
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(fgMaxPointsPerLine, optionZ);
+               Smooth(theGraph, fgMaxPointsPerLine,gxworkl,gyworkl,drawtype);
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
@@ -1978,11 +1819,9 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       }
    }
 
-   //    Draw the histogram with a simple line or/and a marker
+   //    Draw the histogram with a simple line
 
-   optionMarker = 0;
-   if ((optionStar) || (optionMark))optionMarker=1;
-   if ((optionMarker) || (optionLine)) {
+   if (optionLine) {
       wminstep = wmin + 0.5*delta;
       Axis_t ax1,ax2,ay1,ay2;
       gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
@@ -2003,23 +1842,14 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
             }
             if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
-            if ((optionMark != 10) && (optionLine == 0)) {
-               if (y[i-1] <= rwymin)  {npt--; continue;}
-            }
             gywork[npt-1] = y[i-1];
             gywork[npt]   = y[i-1]; //new
             if ((gywork[npt-1] < rwymin) || ((gywork[npt-1] > rwymax) && !optionFill2)) {
                if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
                if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
                if (npt > 2) {
-                  if (optionMarker) {
-                     ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                  }
-                  if (optionLine) {
-                     if (!optionMarker) ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
-                  }
+                  ComputeLogs(npt, optionZ);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
@@ -2027,31 +1857,23 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                continue;
             }
 
-            if (npt >= 50) {
-               if (optionMarker) {
-                  ComputeLogs(50, optionZ);
-                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
-               }
+            if (npt >= fgMaxPointsPerLine) {
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(50, optionZ);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
                   if (optionFill2) {
                      gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                      gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
-                     gPad->PaintFillArea(52,gxworkl,gyworkl);
+                     gPad->PaintFillArea(fgMaxPointsPerLine+2,gxworkl,gyworkl);
                   }
-                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+                  gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
             }
          }  //endfor (i=first; i<=last;i++)
-         if (optionMarker && npt > 0) {
+         if (npt > 1) {
             ComputeLogs(npt, optionZ);
-            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-         }
-         if (optionLine && npt > 1) {
-            if (!optionMarker) ComputeLogs(npt, optionZ);
             if (optionFill2) {
                gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
                gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
@@ -2077,12 +1899,8 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
             gxwork[npt-1] = x[i-1];
             if ((gxwork[npt-1] < uxmin) || (gxwork[npt-1] > uxmax)) {
                if (npt > 2) {
-                  if (optionMarker) {
-                     ComputeLogs(npt, optionZ);
-                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                  }
                   if (optionLine) {
-                     if (!optionMarker) ComputeLogs(npt, optionZ);
+                     ComputeLogs(npt, optionZ);
                      gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                   }
                }
@@ -2091,26 +1909,18 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
                npt      = 1;
                continue;
             }
-            if (npt >= 50) {
-               if (optionMarker) {
-                  ComputeLogs(50, optionZ);
-                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
-               }
+            if (npt >= fgMaxPointsPerLine) {
                if (optionLine) {
-                  if (!optionMarker) ComputeLogs(50, optionZ);
-                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+                  ComputeLogs(fgMaxPointsPerLine, optionZ);
+                  gPad->PaintPolyLine(fgMaxPointsPerLine,gxworkl,gyworkl);
                }
                gxwork[0] = gxwork[npt-1];
                gywork[0] = gywork[npt-1];
                npt      = 1;
             }
          }  //endfor (i=first; i<=last;i++)
-         if (optionMarker && npt > 0) {
-            ComputeLogs(npt, optionZ);
-            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-         }
          if (optionLine != 0 && npt > 1) {
-            if (!optionMarker) ComputeLogs(npt, optionZ);
+            ComputeLogs(npt, optionZ);
             gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
          }
       }
@@ -2199,6 +2009,75 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       }
       gStyle->SetDrawBorder(drawbordersav);
    }
+
+   //    Draw the histogram with a simple marker
+
+   optionMarker = 0;
+   if ((optionStar) || (optionMark)) optionMarker=1;
+
+   if (optionMarker) {
+      Double_t xm,ym;
+      npt = 0;
+      if (!optionRot) {
+         for (i=first; i<=last;i++) {
+            if (!optionBins) xm = wmin+(i-first)*delta+0.5*delta;
+            else             xm = x[i-1] + 0.5*(x[i]-x[i-1]);
+            ym                  = y[i-1];
+            if (optionMark != 10) {
+               if (ym<rwymax && ym > rwymin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            } else {
+               if (ym<rwymax && ym >= rwymin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            }
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(npt, optionZ);
+               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+               npt = 0;
+            }
+         }
+         if (npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+         }
+      } else {
+         wminstep = wmin + 0.5*delta;
+         for (i=first; i<=last;i++) {
+            if (!optionBins) ym = wminstep+(i-first)*delta+0.5*delta;
+            else             ym = y[i-1] + 0.5*(y[i]-y[i-1]);
+            xm                  = x[i-1];
+            if (optionMark != 10) {
+               if (xm<rwxmax && xm > rwxmin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            } else {
+               if (xm<rwxmax && xm >= rwxmin) {
+                  npt++;
+                  gxwork[npt-1] = xm;
+                  gywork[npt-1] = ym;
+               }
+            }
+            if (npt >= fgMaxPointsPerLine) {
+               ComputeLogs(npt, optionZ);
+               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+               npt = 0;
+            }
+         }
+         if (npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+         }
+      }
+   }
+
    gPad->ResetBit(TGraph::kClipFrame);
 
    delete [] gxwork;
@@ -2208,12 +2087,11 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [Paint this TGraphAsymmErrors with its current attributes.](#GP03)
+
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   <a href="#GP03">Paint this TGraphAsymmErrors with its current attributes.</a>
-   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2456,12 +2334,11 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [Paint this TGraphBentErrors with its current attributes.]($GP03)
+
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   <a href="#GP03">Paint this TGraphBentErrors with its current attributes.</a>
-   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2713,12 +2590,11 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [Paint this TGraphErrors with its current attributes.]($GP03)
+
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   <a href="#GP03">Paint this TGraphErrors with its current attributes.</a>
-   End_Html */
 
    Double_t *xline = 0;
    Double_t *yline = 0;
@@ -2961,12 +2837,11 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// [Paint this TGraphPolar with its current attributes.]($GP04)
+
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
-   /* Begin_Html
-   <a href="#GP04">Paint this TGraphPolar with its current attributes.</a>
-   End_Html */
 
    Int_t ipt, i;
    Double_t rwrmin, rwrmax, rwtmin, rwtmax;
@@ -3038,7 +2913,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       rwrmax += 0.1*dr;
       rwrmin -= 0.1*dr;
 
-      // Assume equaly spaced points for full 2*Pi.
+      // Assume equally spaced points for full 2*Pi.
       rwtmax += dt/theNpoints;
    } else {
       rwrmin = thePolargram->GetRMin();
@@ -3069,26 +2944,29 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Draw the error bars.
    // Y errors are lines, but X errors are pieces of circles.
    if (opt.Contains("E")) {
+      Double_t c=1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       if (theEY) {
          for (i=0; i<theNpoints; i++) {
             Double_t eymin, eymax, exmin,exmax;
             exmin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymin = (theY[i]-theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             exmax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Cos((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
             eymax = (theY[i]+theEY[i]-rwrmin)/radiusNDC*
-                     TMath::Sin((theX[i]-rwtmin)/thetaNDC);
+                     TMath::Sin(c*(theX[i]-rwtmin)/thetaNDC);
             theGraphPolar->TAttLine::Modify();
             if (exmin != exmax || eymin != eymax) gPad->PaintLine(exmin,eymin,exmax,eymax);
          }
       }
       if (theEX) {
          for (i=0; i<theNpoints; i++) {
-            Double_t rad = (theY[i]-rwrmin)/radiusNDC;
-            Double_t phimin = (theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
-            Double_t phimax = (theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            Double_t rad    = c*(theY[i]-rwrmin)/radiusNDC;
+            Double_t phimin = c*(theX[i]-theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
+            Double_t phimax = c*(theX[i]+theEX[i]-rwtmin)/thetaNDC*180/TMath::Pi();
             theGraphPolar->TAttLine::Modify();
             if (phimin != phimax) thePolargram->PaintCircle(0,0,rad,phimin,phimax,0);
          }
@@ -3103,10 +2981,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
       Double_t xt   = 0;
       Double_t yt   = 0 ;
       Int_t j       = -1;
+      if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
+      if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
       for (i=0; i<theNpoints; i++) {
-         if (thePolargram->IsRadian()) {c=1;}
-         if (thePolargram->IsDegree()) {c=180/TMath::Pi();}
-         if (thePolargram->IsGrad())   {c=100/TMath::Pi();}
          xts  = xt;
          yts  = yt;
          xt   = (theY[i]-rwrmin)/radiusNDC*TMath::Cos(c*(theX[i]-rwtmin)/thetaNDC);
@@ -3225,9 +3102,9 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    }
 
    Int_t talh = gStyle->GetTitleAlign()/10;
-   if (talh < 1) talh = 1; if (talh > 3) talh = 3;
+   if (talh < 1) talh = 1; else if (talh > 3) talh = 3;
    Int_t talv = gStyle->GetTitleAlign()%10;
-   if (talv < 1) talv = 1; if (talv > 3) talv = 3;
+   if (talv < 1) talv = 1; else if (talv > 3) talv = 3;
 
    Double_t xpos, ypos;
    xpos = gStyle->GetTitleX();
@@ -3256,12 +3133,11 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this graphQQ. No options for the time being.
+
 void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   Paint this graphQQ. No options for the time being.
-   End_Html */
 
    TGraphQQ *theGraphQQ = (TGraphQQ*) theGraph;
 
@@ -3317,12 +3193,11 @@ void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a simple graph, without errors bars.
+
 void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 {
-   /* Begin_Html
-   Paint a simple graph, without errors bars.
-   End_Html */
 
    if (strstr(option,"H") || strstr(option,"h")) {
       PaintGrapHist(theGraph, theGraph->GetN(), theGraph->GetX(), theGraph->GetY(), option);
@@ -3352,16 +3227,15 @@ void TGraphPainter::PaintGraphSimple(TGraph *theGraph, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a polyline with hatches on one side showing an exclusion zone. x and y
+/// are the the vectors holding the polyline and n the number of points in the
+/// polyline and `w` the width of the hatches. `w` can be negative.
+/// This method is not meant to be used directly. It is called automatically
+/// according to the line style convention.
+
 void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y)
 {
-   /* Begin_Html
-   Paint a polyline with hatches on one side showing an exclusion zone. x and y
-   are the the vectors holding the polyline and n the number of points in the
-   polyline and <tt>w</tt> the width of the hatches. <tt>w</tt> can be negative.
-   This method is not meant to be used directly. It is called automatically
-   according to the line style convention.
-   End_Html */
 
    Int_t i,j,nf;
    Double_t w = (theGraph->GetLineWidth()/100)*0.005;
@@ -3562,12 +3436,11 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the statistics box with the fit info.
+
 void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 {
-   /* Begin_Html
-   Paint the statistics box with the fit info.
-   End_Html */
 
    Int_t dofit;
    TPaveStats *stats  = 0;
@@ -3657,33 +3530,30 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Smooth a curve given by N points.
+///
+/// The original code is from an underlaying routine for Draw based on the
+/// CERN GD3 routine TVIPTE:
+///
+/// Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
+///
+/// This method draws a smooth tangentially continuous curve through
+/// the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I)).
+/// The curve is approximated by a polygonal arc of short vectors.
+/// The data points can represent open curves, P(1) != P(N) or closed
+/// curves P(2) == P(N). If a tangential discontinuity at P(I) is
+/// required, then set P(I)=P(I+1). Loops are also allowed.
+///
+/// Reference Marlow and Powell, Harwell report No.R.7092.1972
+/// MCCONALOGUE, Computer Journal VOL.13, NO4, NOV1970P p392 6
+///
+/// -  npoints   : Number of data points.
+/// -  x         : Abscissa
+/// -  y         : Ordinate
+
 void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype)
 {
-   /* Begin_Html
-   Smooth a curve given by N points.
-   <p>
-   The original code is from an underlaying routine for Draw based on the
-   CERN GD3 routine TVIPTE:
-   <pre>
-        Author - Marlow etc.   Modified by - P. Ward     Date -  3.10.1973
-   </pre>
-   This method draws a smooth tangentially continuous curve through
-   the sequence of data points P(I) I=1,N where P(I)=(X(I),Y(I)).
-   The curve is approximated by a polygonal arc of short vectors.
-   The data points can represent open curves, P(1) != P(N) or closed
-   curves P(2) == P(N). If a tangential discontinuity at P(I) is
-   required, then set P(I)=P(I+1). Loops are also allowed.
-   <p>
-   Reference Marlow and Powell, Harwell report No.R.7092.1972
-   MCCONALOGUE, Computer Journal VOL.13, NO4, NOV1970P p392 6
-   <p>
-   <ul>
-   <li>  npoints   : Number of data points.
-   <li>  x         : Abscissa
-   <li>  y         : Ordinate
-   </ul>
-   End_Html */
 
    Int_t i, k, kp, km, npointsMax, banksize, n2, npt;
    Int_t maxiterations, finished;
@@ -3719,7 +3589,7 @@ void TGraphPainter::Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_
       return;
    }
 
-   //  Decode the type of curve (drawtype).
+   //  Decode the type of curve (draw type).
 
    loptx = kFALSE;
    jtype  = (drawtype%1000)-10;
@@ -4145,4 +4015,19 @@ L390:
 
    delete [] qlx;
    delete [] qly;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set `fgMaxPointsPerLine` for graph painting. When graphs
+/// are painted with lines, they are split into chunks of length `fgMaxPointsPerLine`.
+/// This allows to paint line with an "infinite" number of points. In some case
+/// this "chunks painting" technic may create artefacts at the chunk's boundaries.
+/// For instance when zooming deeply in a PDF file. To avoid this effect it might
+/// be necessary to increase the chunks' size using this function:
+/// `TGraphPainter::SetMaxPointsPerLine(20000)`.
+
+void TGraphPainter::SetMaxPointsPerLine(Int_t maxp)
+{
+   fgMaxPointsPerLine = maxp;
+   if (maxp < 50) fgMaxPointsPerLine = 50;
 }

@@ -42,11 +42,11 @@ extern void HtmlTranslateEscapes(char *z);
 extern void ToLower(char *z);
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML element constructor.
+
 TGHtmlElement::TGHtmlElement(int etype)
 {
-   // HTML element constructor.
-
    fPNext = fPPrev = 0;
    fStyle.fFont = 0;
    fStyle.fColor = 0;
@@ -62,11 +62,11 @@ TGHtmlElement::TGHtmlElement(int etype)
    fOffs = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML element constructor.
+
 TGHtmlTextElement::TGHtmlTextElement(int size) : TGHtmlElement(Html_Text)
 {
-   // HTML element constructor.
-
    fZText = new char[size + 1];
    fX = 0; fY = 0; fW = 0;
    fAscent = 0;
@@ -74,20 +74,20 @@ TGHtmlTextElement::TGHtmlTextElement(int size) : TGHtmlElement(Html_Text)
    fSpaceWidth = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML element destructor.
+
 TGHtmlTextElement::~TGHtmlTextElement()
 {
-   // HTML element destructor.
-
    delete[] fZText;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML mrkup element constructor.
+
 TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc, int arglen[],
                                          char *av[]) : TGHtmlElement(type2)
 {
-   // HTML mrkup element constructor.
-
    fCount = argc - 1;
 
    if (argc > 1) {
@@ -116,24 +116,24 @@ TGHtmlMarkupElement::TGHtmlMarkupElement(int type2, int argc, int arglen[],
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML markup element destructor.
+
 TGHtmlMarkupElement::~TGHtmlMarkupElement()
 {
-   // HTML markup element destructor.
-
    if (fArgv) {
       for (int i = 0; i < fCount; ++i) delete [] fArgv[i];
       delete [] fArgv;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lookup an argument in the given markup with the name given.
+/// Return a pointer to its value, or the given default
+/// value if it doesn't appear.
+
 const char *TGHtmlMarkupElement::MarkupArg(const char *tag, const char *zDefault)
 {
-   // Lookup an argument in the given markup with the name given.
-   // Return a pointer to its value, or the given default
-   // value if it doesn't appear.
-
    int i;
 
    for (i = 0; i < fCount; i += 2) {
@@ -142,13 +142,13 @@ const char *TGHtmlMarkupElement::MarkupArg(const char *tag, const char *zDefault
    return zDefault;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an alignment or justification flag associated with the
+/// given markup. The given default value is returned if no alignment is
+/// specified.
+
 int TGHtmlMarkupElement::GetAlignment(int dflt)
 {
-   // Return an alignment or justification flag associated with the
-   // given markup. The given default value is returned if no alignment is
-   // specified.
-
    const char *z = MarkupArg("align", 0);
    int rc = dflt;
 
@@ -165,14 +165,14 @@ int TGHtmlMarkupElement::GetAlignment(int dflt)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The "type" argument to the given element might describe the type
+/// for an ordered list. Return the corresponding LI_TYPE_* entry
+/// if this is the case, or the default value if it isn't.
+/// (this and the following should be defined only for TGHtmlLi)
+
 int TGHtmlMarkupElement::GetOrderedListType(int dflt)
 {
-   // The "type" argument to the given element might describe the type
-   // for an ordered list. Return the corresponding LI_TYPE_* entry
-   // if this is the case, or the default value if it isn't.
-   // (this and the following should be defined only for TGHtmlLi)
-
    const char *z = MarkupArg("type", 0);
    if (z) {
       switch (*z) {
@@ -188,13 +188,13 @@ int TGHtmlMarkupElement::GetOrderedListType(int dflt)
    return dflt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The "type" argument to the given element might describe a type
+/// for an unordered list.  Return the corresponding LI_TYPE entry
+/// if this is the case, or the default value if it isn't.
+
 int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
 {
-   // The "type" argument to the given element might describe a type
-   // for an unordered list.  Return the corresponding LI_TYPE entry
-   // if this is the case, or the default value if it isn't.
-
    const char *z = MarkupArg("type", 0);
    if (z) {
       if (strcasecmp(z, "disc") == 0) {
@@ -211,12 +211,12 @@ int TGHtmlMarkupElement::GetUnorderedListType(int dflt)
 
 //int TGHtmlMarkupElement::GetVerticalAlignment(int dflt);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML table element constructor.
+
 TGHtmlTable::TGHtmlTable(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML table element constructor.
-
    fBorderWidth = 0;
    fNCol = 0;
    fNRow = 0;
@@ -229,20 +229,20 @@ TGHtmlTable::TGHtmlTable(int type2, int argc, int arglen[], char *argv2[]) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML table element destructor.
+
 TGHtmlTable::~TGHtmlTable()
 {
-   // HTML table element destructor.
-
    if (fBgImage) delete fBgImage;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML cell element constructor.
+
 TGHtmlCell::TGHtmlCell(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML cell element constructor.
-
    fRowspan = 0;
    fColspan = 0;
    fX = 0; fY = 0; fW = 0; fH = 0;
@@ -252,38 +252,38 @@ TGHtmlCell::TGHtmlCell(int type2, int argc, int arglen[], char *argv2[]) :
    fBgImage = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML cell element destructor.
+
 TGHtmlCell::~TGHtmlCell()
 {
-   // HTML cell element destructor.
-
    if (fBgImage) delete fBgImage;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML ref element constructor.
+
 TGHtmlRef::TGHtmlRef(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML ref element constructor.
-
    fPOther = 0;
    fBgImage = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML ref element destructor.
+
 TGHtmlRef::~TGHtmlRef()
 {
-   // HTML ref element destructor.
-
    if (fBgImage) delete fBgImage;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML li element constructor.
+
 TGHtmlLi::TGHtmlLi(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML li element constructor.
-
    fLtype = 0;
    fAscent = 0;
    fDescent = 0;
@@ -291,12 +291,12 @@ TGHtmlLi::TGHtmlLi(int type2, int argc, int arglen[], char *argv2[]) :
    fX = 0; fY = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML list start element constructor.
+
 TGHtmlListStart::TGHtmlListStart(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML list start element constructor.
-
    fLtype = 0;
    fCompact = 0;
    fCnt = 0;
@@ -304,13 +304,13 @@ TGHtmlListStart::TGHtmlListStart(int type2, int argc, int arglen[], char *argv2[
    fLPrev = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML image element constructor.
+
 TGHtmlImageMarkup::TGHtmlImageMarkup(int type2, int argc,
                                      int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML image element constructor.
-
    fAlign = 0;
    fTextAscent = 0;
    fTextDescent = 0;
@@ -324,12 +324,12 @@ TGHtmlImageMarkup::TGHtmlImageMarkup(int type2, int argc,
    fINext = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML form element constructor.
+
 TGHtmlForm::TGHtmlForm(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML form element constructor.
-
    fFormId = 0;
    fElements = 0;
    fHasctl = 0;
@@ -337,41 +337,41 @@ TGHtmlForm::TGHtmlForm(int type2, int argc, int arglen[], char *argv2[]) :
    fPEnd = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML hr element constructor.
+
 TGHtmlHr::TGHtmlHr(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML hr element constructor.
-
    fX = 0; fY = 0; fW = 0; fH = 0;
    fIs3D = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML anchor element constructor.
+
 TGHtmlAnchor::TGHtmlAnchor(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML anchor element constructor.
-
    fY = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML script element constructor.
+
 TGHtmlScript::TGHtmlScript(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML script element constructor.
-
    fNStart = -1;
    fNScript = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML map area constructor.
+
 TGHtmlMapArea::TGHtmlMapArea(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML map area constructor.
-
    fMType = 0;
    fCoords = 0;
    fNum = 0;
@@ -392,12 +392,12 @@ TGHtmlBlock::~TGHtmlBlock()
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// HTML input element constructor.
+
 TGHtmlInput::TGHtmlInput(int type2, int argc, int arglen[], char *argv2[]) :
    TGHtmlMarkupElement(type2, argc, arglen, argv2)
 {
-   // HTML input element constructor.
-
    fPForm = 0;
    fINext = 0;
    fFrame = 0;
@@ -414,15 +414,15 @@ TGHtmlInput::TGHtmlInput(int type2, int argc, int arglen[], char *argv2[]) :
    fCnt = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark this element as being empty. It has no widget and doesn't appear on
+/// the screen.
+///
+/// This is called for HIDDEN inputs or when the corresponding widget is
+/// not created.
+
 void TGHtmlInput::Empty()
 {
-   // Mark this element as being empty. It has no widget and doesn't appear on
-   // the screen.
-   //
-   // This is called for HIDDEN inputs or when the corresponding widget is
-   // not created.
-
    fFrame = NULL;
    fW = 0;
    fH = 0;

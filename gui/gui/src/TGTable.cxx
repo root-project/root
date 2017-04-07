@@ -37,7 +37,9 @@
 ClassImp(TGTable)
 ClassImp(TTableRange)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an array to hold a bunch of numbers
+
 /* Begin_Html
 <center><h2>TGTable</h2></center>
 <br><br>
@@ -72,7 +74,6 @@ A simple macro to use a TGTable with a TGSimpleTableInterface:
 End_Html
 Begin_Macro(source, gui)
 {
-   // Create an array to hold a bunch of numbers
    Int_t i = 0, j = 0;
    UInt_t nrows = 6, ncolumns = 5;
    Double_t** data = new Double_t*[nrows];
@@ -161,7 +162,9 @@ End_Macro
 
 // TList *TGTable::fgEditList = 0 ;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTable constuctor.
+
 TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
                  UInt_t nrows, UInt_t ncolumns)
    : TGCompositeFrame(p, 500, 500, kVerticalFrame), TGWidget(id), fRows(0),
@@ -169,8 +172,6 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
      fTMode(0), fAllData(kFALSE), fTableFrame(0), fCanvas(0), fCellWidth(80),
      fCellHeight(25), fInterface(interface)
 {
-   // TGTable constuctor.
-
    fCurrentRange = new TTableRange();
    fDataRange = new TTableRange();
    fGotoRange = new TTableRange();
@@ -196,11 +197,11 @@ TGTable::TGTable(const TGWindow *p, Int_t id, TVirtualTableInterface *interface,
 //    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTable destructor.
+
 TGTable::~TGTable()
 {
-   // TGTable destructor.
-
    // delete all cells in a good way
    UInt_t i = 0, j = 0;
    for (i = 0; i < GetNTableRows(); i++) {
@@ -226,11 +227,11 @@ TGTable::~TGTable()
    delete fMainHintsList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the TGTable.
+
 void TGTable::Init()
 {
-   // Initialise the TGTable.
-
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
 
@@ -424,29 +425,29 @@ void TGTable::Init()
 //    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the TGTable.
+
 void TGTable::DoRedraw()
 {
-   // Redraw the TGTable.
-
    MapSubwindows();
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a TGTable by nrows and ncolumns.
+
 void TGTable::Expand(UInt_t nrows, UInt_t ncolumns)
 {
-   // Expand a TGTable by nrows and ncolumns.
-
    ExpandRows(nrows);
    ExpandColumns(ncolumns);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand the columns of a TGTable by ncolumns.
+
 void TGTable::ExpandColumns(UInt_t ncolumns)
 {
-   // Expand the columns of a TGTable by ncolumns.
-
    UInt_t i = 0, j = 0;
    TGString *label = 0;
 
@@ -481,11 +482,11 @@ void TGTable::ExpandColumns(UInt_t ncolumns)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand the rows of a TGTable by nrows.
+
 void TGTable::ExpandRows(UInt_t nrows)
 {
-   // Expand the rows of a TGTable by nrows.
-
    UInt_t i = 0, j = 0;
 
    UInt_t ntrows = GetNTableRows();
@@ -517,11 +518,11 @@ void TGTable::ExpandRows(UInt_t nrows)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the current width of the column header frame.
+
 UInt_t TGTable::GetCHdrWidth() const
 {
-   // Get the current width of the column header frame.
-
    Int_t ncolumns = GetNTableColumns();
    UInt_t width = 0;
    for (Int_t i = 0; i < ncolumns; i++) {
@@ -530,11 +531,11 @@ UInt_t TGTable::GetCHdrWidth() const
    return width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the current height of the row header frame.
+
 UInt_t TGTable::GetRHdrHeight() const
 {
-   // Get the current height of the row header frame.
-
    Int_t nrows = GetNTableRows();
    UInt_t height = 0;
    for (Int_t i = 0; i < nrows; i++) {
@@ -543,20 +544,20 @@ UInt_t TGTable::GetRHdrHeight() const
    return height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shrink the TGTable by nrows and ncolumns.
+
 void TGTable::Shrink(UInt_t nrows, UInt_t ncolumns)
 {
-   // Shrink the TGTable by nrows and ncolumns.
-
    ShrinkRows(nrows);
    ShrinkColumns(ncolumns);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shrink the columns of the TGTable by ncolumns.
+
 void TGTable::ShrinkColumns(UInt_t ncolumns)
 {
-   // Shrink the columns of the TGTable by ncolumns.
-
    UInt_t i = 0, j = 0, k = 0;
 
    if(GetNTableColumns() - ncolumns < 1) {
@@ -605,11 +606,11 @@ void TGTable::ShrinkColumns(UInt_t ncolumns)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shrink the rows of the TGTable by nrows.
+
 void TGTable::ShrinkRows(UInt_t nrows)
 {
-   // Shrink the rows of the TGTable by nrows.
-
    UInt_t i = 0 , j = 0;
 
    if(GetNTableRows() - nrows < 1) {
@@ -653,11 +654,11 @@ void TGTable::ShrinkRows(UInt_t nrows)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the labels of the headers of the given type
+
 void TGTable::UpdateHeaders(EHeaderType type)
 {
-   // Update the labels of the headers of the given type
-
    UInt_t max = 0, i = 0, d = 0;
    if(type == kColumnHeader) {
       max = GetNTableColumns();
@@ -676,12 +677,12 @@ void TGTable::UpdateHeaders(EHeaderType type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the interface that the TGTable uses to interface.
+
 void TGTable::SetInterface(TVirtualTableInterface *interface,
                            UInt_t nrows, UInt_t ncolumns)
 {
-   // Set the interface that the TGTable uses to interface.
-
    fInterface = interface;
 
    // Set up ranges
@@ -714,12 +715,12 @@ void TGTable::SetInterface(TVirtualTableInterface *interface,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the table to newnrows and newncolumns and add all the frames to
+/// their parent frames.
+
 void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
 {
-   // Resize the table to newnrows and newncolumns and add all the frames to
-   // their parent frames.
-
    UInt_t oldnrows = GetNTableRows();
    UInt_t oldncolumns = GetNTableColumns();
 
@@ -778,11 +779,11 @@ void TGTable::ResizeTable(UInt_t newnrows, UInt_t newncolumns)
    fCanvas->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the range shown in the range frame.
+
 void TGTable::UpdateRangeFrame()
 {
-   // Update the range shown in the range frame.
-
    TString tl, range;
 
    tl += fCurrentRange->fYtl;
@@ -798,24 +799,24 @@ void TGTable::UpdateRangeFrame()
    fGotoButton->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get row. NOTE: Do not delete the TObjArray returned or the cells
+/// it contains, they are owned by the TGTable.
+
 TObjArray *TGTable::GetRow(UInt_t row)
 {
-   // Get row. NOTE: Do not delete the TObjArray returned or the cells
-   // it contains, they are owned by the TGTable.
-
    return (TObjArray *)fRows->At(row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to a TObjArray that contains pointers to all
+/// the cells in column. NOTE: The user will have to delete the
+/// TObjArray, but do NOT delete the cells it contains, they are
+/// owned by the TGTable and will be deleted from the TGTable with
+/// undefined consequenses.
+
 TObjArray *TGTable::GetColumn(UInt_t column)
 {
-   // Return a pointer to a TObjArray that contains pointers to all
-   // the cells in column. NOTE: The user will have to delete the
-   // TObjArray, but do NOT delete the cells it contains, they are
-   // owned by the TGTable and will be deleted from the TGTable with
-   // undefined consequenses.
-
    UInt_t nrows = GetNTableRows();
 
    TObjArray *col = new TObjArray(nrows);
@@ -885,19 +886,19 @@ TObjArray *TGTable::GetColumn(UInt_t column)
 // {
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Const version of GetCell().
+
 const TGTableCell* TGTable::GetCell(UInt_t i, UInt_t j) const
 {
-   // Const version of GetCell().
-
    return const_cast<TGTable *>(this)->GetCell(i, j);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the TGTableCell at position i,j.
+
 TGTableCell* TGTable::GetCell(UInt_t i, UInt_t j)
 {
-   // Return a pointer to the TGTableCell at position i,j.
-
    TObjArray *row = (TObjArray *)fRows->At(i);
    if(row) {
       TGTableCell *cell = (TGTableCell *)row->At(j);
@@ -907,19 +908,19 @@ TGTableCell* TGTable::GetCell(UInt_t i, UInt_t j)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Const version of FindCell().
+
 const TGTableCell* TGTable::FindCell(TGString label) const
 {
-   // Const version of FindCell().
-
    return const_cast<TGTable *>(this)->FindCell(label);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the TGTableCell with label.
+
 TGTableCell* TGTable::FindCell(TGString label)
 {
-   // Find the TGTableCell with label.
-
    TObjArray *row = 0;
    TGTableCell *cell = 0;
    UInt_t i = 0, j = 0;
@@ -938,11 +939,11 @@ TGTableCell* TGTable::FindCell(TGString label)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the contents of the TGTable in stdout.
+
 void TGTable::Show()
 {
-   // Show the contents of the TGTable in stdout.
-
    TGTableCell *cell = 0;
    TGTableHeader *hdr = 0;
    UInt_t i = 0, j = 0;
@@ -1053,11 +1054,11 @@ void TGTable::Show()
 // {
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update and layout the visible part of the TGTable.
+
 void TGTable::UpdateView()
 {
-   // Update and layout the visible part of the TGTable.
-
    UInt_t nrows = GetNTableRows();
    UInt_t ncolumns = GetNTableColumns();
 
@@ -1098,99 +1099,99 @@ void TGTable::UpdateView()
    UpdateRangeFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of rows in the table.
+
 UInt_t TGTable::GetNTableRows() const
 {
-   // Return the amount of rows in the table.
-
    return fCurrentRange->fYbr - fCurrentRange->fYtl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of rows in the data source.
+
 UInt_t TGTable::GetNDataRows() const
 {
-   // Return the amount of rows in the data source.
-
    return fDataRange->fYbr - fDataRange->fYtl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of columns in the table.
+
 UInt_t TGTable::GetNTableColumns() const
 {
-   // Return the amount of columns in the table.
-
    return fCurrentRange->fXbr - fCurrentRange->fXtl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of columns in the data source.
+
 UInt_t TGTable::GetNDataColumns() const
 {
-   // Return the amount of columns in the data source.
-
    return fDataRange->fYbr - fDataRange->fYtl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of cells in the table.
+
 UInt_t TGTable::GetNTableCells() const
 {
-   // Return the amount of cells in the table.
-
    return GetNTableRows() * GetNTableColumns();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the amount of cell in the data source.
+
 UInt_t TGTable::GetNDataCells() const
 {
-   // Return the amount of cell in the data source.
-
    return GetNDataRows() * GetNDataColumns();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current range of the TGTable.
+
 const TTableRange *TGTable::GetCurrentRange() const
 {
-   // Return the current range of the TGTable.
-
    return fCurrentRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Const version of GetRowHeader();
+
 const TGTableHeader *TGTable::GetRowHeader(const UInt_t row) const
 {
-   // Const version of GetRowHeader();
-
    return const_cast<TGTable *>(this)->GetRowHeader(row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the header of row.
+
 TGTableHeader *TGTable::GetRowHeader(const UInt_t row)
 {
-   // Return a pointer to the header of row.
-
    return (TGTableHeader *)fRowHeaders->At(row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Const version of GetColumnHeader();
+
 const TGTableHeader *TGTable::GetColumnHeader(const UInt_t column) const
 {
-   // Const version of GetColumnHeader();
-
    return const_cast<TGTable *>(this)->GetColumnHeader(column);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the header of column.
+
 TGTableHeader *TGTable::GetColumnHeader(const UInt_t column)
 {
-   // Return a pointer to the header of column.
-
    return (TGTableHeader *)fColumnHeaders->At(column);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the table header.
+
 TGTableHeader *TGTable::GetTableHeader()
 {
-   // Return a pointer to the table header.
-
    return fTableHeader;
 }
 
@@ -1209,11 +1210,11 @@ TGTableHeader *TGTable::GetTableHeader()
 // {
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the background collor for row.
+
 Pixel_t TGTable::GetRowBackground(UInt_t row) const
 {
-   // Get the background collor for row.
-
    if (row % 2 == 0) { // Even rows
       return fEvenRowBackground;
    } else {            // Odd rows
@@ -1221,19 +1222,19 @@ Pixel_t TGTable::GetRowBackground(UInt_t row) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the background color of headers.
+
 Pixel_t TGTable::GetHeaderBackground() const
 {
-   // Get the background color of headers.
-
    return fHeaderBackground;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the background color for all odd numbered rows.
+
 void TGTable::SetOddRowBackground(Pixel_t pixel)
 {
-   // Set the background color for all odd numbered rows.
-
    if(pixel == fOddRowBackground) return;
 
    fOddRowBackground = pixel;
@@ -1257,11 +1258,11 @@ void TGTable::SetOddRowBackground(Pixel_t pixel)
    fTableFrame->DrawRegion(0, 0, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the background color for all even numbered rows.
+
 void TGTable::SetEvenRowBackground(Pixel_t pixel)
 {
-   // Set the background color for all even numbered rows.
-
    if(pixel == fEvenRowBackground) return;
 
    fEvenRowBackground = pixel;
@@ -1284,11 +1285,11 @@ void TGTable::SetEvenRowBackground(Pixel_t pixel)
    fTableFrame->DrawRegion(0, 0, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the background color for the headers.
+
 void TGTable::SetHeaderBackground(Pixel_t pixel)
 {
-   // Set the background color for the headers.
-
    if(pixel == fHeaderBackground) return;
 
    fHeaderBackground = pixel;
@@ -1316,21 +1317,21 @@ void TGTable::SetHeaderBackground(Pixel_t pixel)
    fCHdrFrame->DrawRegion(0, 0, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the background color for all rows and headers to their defaults.
+
 void TGTable::SetDefaultColors()
 {
-   // Set the background color for all rows and headers to their defaults.
-
    SetEvenRowBackground(TColor::RGB2Pixel(204, 255, 204));
    SetOddRowBackground(TColor::RGB2Pixel(255, 255, 255));
    SetHeaderBackground(TColor::RGB2Pixel(204, 204, 255));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and layout the table to the specified range.
+
 void TGTable::MoveTable(Int_t rows, Int_t columns)
 {
-   // Move and layout the table to the specified range.
-
    if (fAllData) return;
 
    Int_t xtl = fCurrentRange->fXtl + columns;
@@ -1341,11 +1342,11 @@ void TGTable::MoveTable(Int_t rows, Int_t columns)
    GotoTableRange(xtl, ytl, xbr, ybr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize the table to the specified range.
+
 void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
 {
-   // Move and resize the table to the specified range.
-
    if (fAllData) return;
 
    if(xtl == xbr || ytl == ybr) {
@@ -1429,19 +1430,19 @@ void TGTable::GotoTableRange(Int_t xtl,  Int_t ytl, Int_t xbr,  Int_t ybr)
    UpdateView();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator for easy cell acces.
+
 TGTableCell *TGTable::operator() (UInt_t row, UInt_t column)
 {
-   // Operator for easy cell acces.
-
    return GetCell(row, column);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the column headers horizontally.
+
 void TGTable::ScrollCHeaders(Int_t xpos)
 {
-   // Scroll the column headers horizontally.
-
    if (!fCHdrFrame) return;
 
    fCHdrFrame->Move(- xpos, 0);
@@ -1450,11 +1451,11 @@ void TGTable::ScrollCHeaders(Int_t xpos)
                           fCHdrFrame->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the row headers vertically
+
 void TGTable::ScrollRHeaders(Int_t ypos)
 {
-   // Scroll the row headers vertically
-
    if (!fRHdrFrame) return;
 
    fRHdrFrame->Move(fRHdrFrame->GetX(), -ypos);
@@ -1463,30 +1464,30 @@ void TGTable::ScrollRHeaders(Int_t ypos)
                           fRHdrFrame->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the table to the next chunk of the data set with the same size.
+
 void TGTable::NextChunk()
 {
-   // Move the table to the next chunk of the data set with the same size.
-
    MoveTable(GetNTableRows(), 0);
    UpdateRangeFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the table to the previous chunk of the data set with the same size.
+
 void TGTable::PreviousChunk()
 {
-   // Move the table to the previous chunk of the data set with the same size.
-
    MoveTable(-1 * (Int_t)GetNTableRows(), 0);
    UpdateRangeFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot used by the Goto button and whenever return is pressed in
+/// on of the text entries in the range frame.
+
 void TGTable::Goto()
 {
-   // Slot used by the Goto button and whenever return is pressed in
-   // on of the text entries in the range frame.
-
    if (fGotoButton->GetState() == kButtonUp) {
       GotoTableRange(fGotoRange->fXtl, fGotoRange->fYtl,
                      fGotoRange->fXbr, fGotoRange->fYbr);
@@ -1494,11 +1495,11 @@ void TGTable::Goto()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot used when the text in one of the range frame text entries changes.
+
 void TGTable::UserRangeChange()
 {
-   // Slot used when the text in one of the range frame text entries changes.
-
    TString topleft(fFirstCellEntry->GetText());
    if(!topleft.Contains(",")) return;
 
@@ -1537,11 +1538,11 @@ void TGTable::UserRangeChange()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the range of the available data and refresh the current view.
+
 void TGTable::Update()
 {
-   // Update the range of the available data and refresh the current view.
-
    fDataRange->fXbr = fInterface->GetNColumns();
    fDataRange->fYbr = fInterface->GetNRows();
 
@@ -1551,26 +1552,27 @@ void TGTable::Update()
    UpdateView();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTableRange constuctor.
+
 TTableRange::TTableRange() : fXtl(0), fYtl(0), fXbr(0), fYbr(0)
 {
-   // TTableRange constuctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the values of a range.
+
 void TTableRange::Print()
 {
-   // Print the values of a range.
-
    std::cout << "Range = (" << fXtl << "," << fYtl << ")->("
              << fXbr << "," << fYbr << ")" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator to determine if 2 ranges are equal
+
 Bool_t TTableRange::operator==(TTableRange &other)
 {
-   // Operator to determine if 2 ranges are equal
-
    if ((fXtl == other.fXtl) && (fYtl == other.fYtl) &&
        (fXbr == other.fXbr) && (fYbr == other.fYbr)) {
       return kTRUE;

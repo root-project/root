@@ -209,8 +209,8 @@ int main() {
     std::vector<double> Error(6, 1.);
     MnScan scan(fFCN, params, Error);
     std::cout<<"scan parameters: "<<scan.Parameters()<<std::endl;
-    FunctionMinimum min = scan();
-//     std::cout<<min<<std::endl;
+    FunctionMinimum min2 = scan();
+//     std::cout<<min2<<std::endl;
     std::cout<<scan.Parameters()<<std::endl;
   }
 

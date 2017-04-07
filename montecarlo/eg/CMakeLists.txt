@@ -5,11 +5,6 @@
 
 set(libname EG)
 
-ROOT_USE_PACKAGE(graf2d/gpad)
-ROOT_USE_PACKAGE(graf3d/g3d)
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(math/physics)
-
 ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h)
 
 

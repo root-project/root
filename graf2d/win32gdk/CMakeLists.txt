@@ -2,7 +2,6 @@
 # CMakeLists.txt file for building ROOT graf2d/win32gdk package
 # @author Pere Mato, CERN
 ############################################################################
-ROOT_USE_PACKAGE(gui/gui)
 include_directories(${FREETYPE_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/gdk/src 
 					${CMAKE_CURRENT_SOURCE_DIR}/gdk/src/gdk
 					${CMAKE_CURRENT_BINARY_DIR}/gdk/src/glib)
@@ -31,15 +30,15 @@ endif()
 # Build iconv
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
-					COMMAND cmake -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
+					COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/gdk gdk
 					COMMAND echo "*** Building ${iconvliba}"
-					COMMAND cmake -E chdir gdk/src/iconv 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/iconv
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 				  )
 
 add_custom_command( OUTPUT ${iconvlib} ${iconvdll}
-					COMMAND cmake -E copy_if_different ${iconvliba} ${iconvlib}
-					COMMAND cmake -E copy_if_different ${iconvdlla} ${iconvdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${iconvliba} ${iconvlib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${iconvdlla} ${iconvdll}
 					DEPENDS ${iconvliba} ${iconvdlla}
 				  )
 
@@ -50,14 +49,14 @@ set_target_properties(iconv PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${glibliba} ${glibdlla}
 					COMMAND echo "*** Building ${glibliba}"
-					COMMAND cmake -E chdir gdk/src/glib 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/glib
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS iconv
 				  )
 
 add_custom_command( OUTPUT ${gliblib} ${glibdll}
-					COMMAND cmake -E copy_if_different ${glibliba} ${gliblib}
-					COMMAND cmake -E copy_if_different ${glibdlla} ${glibdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${glibliba} ${gliblib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${glibdlla} ${glibdll}
 					DEPENDS ${glibliba} ${glibdlla})
 
 add_custom_target(glib DEPENDS ${gliblib})
@@ -67,16 +66,16 @@ set_target_properties(glib PROPERTIES FOLDER Builtins)
 
 add_custom_command( OUTPUT ${gdkliba}
 					COMMAND echo "*** Building ${gdkliba}"
-					COMMAND cmake -E chdir gdk/src/gdk/win32 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk/win32
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
-					COMMAND cmake -E chdir gdk/src/gdk 
+					COMMAND ${CMAKE_COMMAND} -E chdir gdk/src/gdk
 							nmake -nologo -f makefile.msc NMCXXFLAGS=${nmcxxflags} VC_MAJOR=${VC_MAJOR}
 					DEPENDS glib
 				  )
 
 add_custom_command( OUTPUT ${gdklib} ${gdkdll}
-					COMMAND cmake -E copy_if_different ${gdkliba} ${gdklib}
-					COMMAND cmake -E copy_if_different ${gdkdlla} ${gdkdll}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${gdkliba} ${gdklib}
+					COMMAND ${CMAKE_COMMAND} -E copy_if_different ${gdkdlla} ${gdkdll}
 					DEPENDS ${gdkliba} )
 
 add_custom_target(GDKLIB DEPENDS ${gdklib})
@@ -93,15 +92,11 @@ ROOT_GENERATE_DICTIONARY(G__Win32gdk TGWin32.h TGWin32GL.h MODULE Win32gdk LINKD
 # The library itself
 #
 
-ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cint Core Graf ${FREETYPE_LIBRARIES} 
-					${gdklib} ${gliblib} Glu32.lib Opengl32.lib)
+ROOT_LINKER_LIBRARY(Win32gdk *.cxx *.c G__Win32gdk.cxx LIBRARIES Cling Core Graf ${FREETYPE_LIBRARIES} 
+					${gdklib} ${gliblib} Glu32.lib Opengl32.lib BUILTINS FREETYPE)
 
 add_dependencies(Win32gdk GDKLIB glib)
 
-if(builtin_freetype)
-  add_dependencies(Win32gdk FREETYPE)
-endif()
-					
 install(FILES  ${gdkdlla}
 			   ${glibdlla}
 			   ${iconvdlla}

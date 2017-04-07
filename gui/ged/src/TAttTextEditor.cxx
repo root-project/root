@@ -48,12 +48,13 @@ enum ETextWid {
    kALPHAFIELD
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of text attributes GUI.
+
 TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of text attributes GUI.
    fPriority = 3;
 
    fAttText = 0;
@@ -96,17 +97,18 @@ TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t width,
    AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of text editor.
+
 TAttTextEditor::~TAttTextEditor()
 {
-   // Destructor of text editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TAttTextEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fAlpha->Connect("Released()","TAttTextEditor", this, "DoAlpha()");
    fAlpha->Connect("PositionChanged(Int_t)","TAttTextEditor", this, "DoLiveAlpha(Int_t)");
    fAlphaField->Connect("ReturnPressed()","TAttTextEditor", this, "DoAlphaField()");
@@ -116,11 +118,11 @@ void TAttTextEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the values of used text attributes.
+
 void TAttTextEditor::SetModel(TObject* obj)
 {
-   // Pick up the values of used text attributes.
-
    TAttText *atttext = dynamic_cast<TAttText *>(obj);
    if (!atttext) return;
 
@@ -159,11 +161,11 @@ void TAttTextEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the marker color.
+
 void TAttTextEditor::DoTextColor(Pixel_t color)
 {
-   // Slot connected to the marker color.
-
    if (fAvoidSignal) return;
    fAttText->SetTextColor(TColor::GetColor(color));
 
@@ -175,11 +177,11 @@ void TAttTextEditor::DoTextColor(Pixel_t color)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the color with alpha.
+
 void TAttTextEditor::DoTextAlphaColor(ULong_t p)
 {
-   // Slot connected to the color with alpha.
-
    TColor *color = (TColor *)p;
 
    if (fAvoidSignal) return;
@@ -190,11 +192,11 @@ void TAttTextEditor::DoTextAlphaColor(ULong_t p)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process message.
+
 Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process message.
-
    if(!fGedEditor || !fGedEditor->GetModel()) return kTRUE;
 
    Bool_t b = kFALSE;
@@ -236,11 +238,11 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create text size combo box.
+
 TGComboBox* TAttTextEditor::BuildFontSizeComboBox(TGFrame* parent, Int_t id)
 {
-   // Create text size combo box.
-
    char a[100];
    TGComboBox *c = new TGComboBox(parent, id);
 
@@ -253,11 +255,11 @@ TGComboBox* TAttTextEditor::BuildFontSizeComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create text align combo box.
+
 TGComboBox* TAttTextEditor::BuildTextAlignComboBox(TGFrame* parent, Int_t id)
 {
-   // Create text align combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry("11 Bottom, Left",   11);
@@ -273,11 +275,11 @@ TGComboBox* TAttTextEditor::BuildTextAlignComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value from the entry field.
+
 void TAttTextEditor::DoAlphaField()
 {
-   // Slot to set the alpha value from the entry field.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
@@ -287,11 +289,11 @@ void TAttTextEditor::DoAlphaField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value
+
 void TAttTextEditor::DoAlpha()
 {
-   // Slot to set the alpha value
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
@@ -301,11 +303,11 @@ void TAttTextEditor::DoAlpha()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set alpha value online.
+
 void TAttTextEditor::DoLiveAlpha(Int_t a)
 {
-   // Slot to set alpha value online.
-
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
@@ -320,11 +322,11 @@ void TAttTextEditor::DoLiveAlpha(Int_t a)
    Update();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update alpha value on click on Slider
+
 void TAttTextEditor::GetCurAlpha()
 {
-   // Slot to update alpha value on click on Slider
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {

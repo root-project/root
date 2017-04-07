@@ -12,22 +12,12 @@
 #ifndef RooStats_MCMCInterval
 #define RooStats_MCMCInterval
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
 
 class RooNDKeysPdf;
 class RooProduct;
@@ -37,16 +27,15 @@ namespace RooStats {
 
    class Heaviside;
 
-
    class MCMCInterval : public ConfInterval {
 
 
    public:
 
-      // default constructor
+      /// default constructor
       explicit MCMCInterval(const char* name = 0);
 
-      // constructor from parameter of interest and Markov chain object
+      /// constructor from parameter of interest and Markov chain object
       MCMCInterval(const char* name, const RooArgSet& parameters,
                    MarkovChain& chain);
 
@@ -54,59 +43,59 @@ namespace RooStats {
       enum IntervalType {kShortest, kTailFraction};
 
       virtual ~MCMCInterval();
-        
-      // determine whether this point is in the confidence interval
+
+      /// determine whether this point is in the confidence interval
       virtual Bool_t IsInInterval(const RooArgSet& point) const;
 
-      // set the desired confidence level (see GetActualConfidenceLevel())
-      // Note: calling this function triggers the algorithm that determines
-      // the interval, so call this after initializing all other aspects
-      // of this IntervalCalculator
-      // Also, calling this function again with a different confidence level
-      // retriggers the calculation of the interval
+      /// set the desired confidence level (see GetActualConfidenceLevel())
+      /// Note: calling this function triggers the algorithm that determines
+      /// the interval, so call this after initializing all other aspects
+      /// of this IntervalCalculator
+      /// Also, calling this function again with a different confidence level
+      /// re-triggers the calculation of the interval
       virtual void SetConfidenceLevel(Double_t cl);
 
-      // get the desired confidence level (see GetActualConfidenceLevel())
+      /// get the desired confidence level (see GetActualConfidenceLevel())
       virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
- 
-      // return a set containing the parameters of this interval
-      // the caller owns the returned RooArgSet*
+
+      /// return a set containing the parameters of this interval
+      /// the caller owns the returned RooArgSet*
       virtual RooArgSet* GetParameters() const;
 
-      // get the cutoff bin height for being considered in the
-      // confidence interval
+      /// get the cutoff bin height for being considered in the
+      /// confidence interval
       virtual Double_t GetHistCutoff();
 
-      // get the cutoff RooNDKeysPdf value for being considered in the
-      // confidence interval
+      /// get the cutoff RooNDKeysPdf value for being considered in the
+      /// confidence interval
       virtual Double_t GetKeysPdfCutoff();
-      //virtual Double_t GetKeysPdfCutoff() { return fKeysCutoff; }
+      ///virtual Double_t GetKeysPdfCutoff() { return fKeysCutoff; }
 
-      // get the actual value of the confidence level for this interval.
+      /// get the actual value of the confidence level for this interval.
       virtual Double_t GetActualConfidenceLevel();
 
-      // whether the specified confidence level is a floor for the actual
-      // confidence level (strict), or a ceiling (not strict)
+      /// whether the specified confidence level is a floor for the actual
+      /// confidence level (strict), or a ceiling (not strict)
       virtual void SetHistStrict(Bool_t isHistStrict)
       { fIsHistStrict = isHistStrict; }
 
-      // check if parameters are correct. (dummy implementation to start)
+      /// check if parameters are correct. (dummy implementation to start)
       Bool_t CheckParameters(const RooArgSet& point) const;
 
-      // Set the parameters of interest for this interval
-      // and change other internal data members accordingly
+      /// Set the parameters of interest for this interval
+      /// and change other internal data members accordingly
       virtual void SetParameters(const RooArgSet& parameters);
 
-      // Set the MarkovChain that this interval is based on
+      /// Set the MarkovChain that this interval is based on
       virtual void SetChain(MarkovChain& chain) { fChain = &chain; }
 
-      // Set which parameters go on which axis.  The first list element
-      // goes on the x axis, second (if it exists) on y, third (if it
-      // exists) on z, etc
+      /// Set which parameters go on which axis.  The first list element
+      /// goes on the x axis, second (if it exists) on y, third (if it
+      /// exists) on z, etc
       virtual void SetAxes(RooArgList& axes);
 
-      // return a list of RooRealVars representing the axes
-      // you own the returned RooArgList
+      /// return a list of RooRealVars representing the axes
+      /// you own the returned RooArgList
       virtual RooArgList* GetAxes()
       {
          RooArgList* axes = new RooArgList();
@@ -115,125 +104,125 @@ namespace RooStats {
          return axes;
       }
 
-      // get the lowest value of param that is within the confidence interval
+      /// get the lowest value of param that is within the confidence interval
       virtual Double_t LowerLimit(RooRealVar& param);
 
-      // determine lower limit of the lower confidence interval
+      /// determine lower limit of the lower confidence interval
       virtual Double_t LowerLimitTailFraction(RooRealVar& param);
 
-      // get the lower limit of param in the shortest confidence interval
-      // Note that this works better for some distributions (ones with exactly
-      // one maximum) than others, and sometimes has little value.
+      /// get the lower limit of param in the shortest confidence interval
+      /// Note that this works better for some distributions (ones with exactly
+      /// one maximum) than others, and sometimes has little value.
       virtual Double_t LowerLimitShortest(RooRealVar& param);
 
-      // determine lower limit in the shortest interval by using keys pdf
+      /// determine lower limit in the shortest interval by using keys pdf
       virtual Double_t LowerLimitByKeys(RooRealVar& param);
 
-      // determine lower limit using histogram
+      /// determine lower limit using histogram
       virtual Double_t LowerLimitByHist(RooRealVar& param);
 
-      // determine lower limit using histogram
+      /// determine lower limit using histogram
       virtual Double_t LowerLimitBySparseHist(RooRealVar& param);
 
-      // determine lower limit using histogram
+      /// determine lower limit using histogram
       virtual Double_t LowerLimitByDataHist(RooRealVar& param);
 
-      // get the highest value of param that is within the confidence interval
+      /// get the highest value of param that is within the confidence interval
       virtual Double_t UpperLimit(RooRealVar& param);
 
-      // determine upper limit of the lower confidence interval
+      /// determine upper limit of the lower confidence interval
       virtual Double_t UpperLimitTailFraction(RooRealVar& param);
 
-      // get the upper limit of param in the confidence interval
-      // Note that this works better for some distributions (ones with exactly
-      // one maximum) than others, and sometimes has little value.
+      /// get the upper limit of param in the confidence interval
+      /// Note that this works better for some distributions (ones with exactly
+      /// one maximum) than others, and sometimes has little value.
       virtual Double_t UpperLimitShortest(RooRealVar& param);
 
-      // determine upper limit in the shortest interval by using keys pdf
+      /// determine upper limit in the shortest interval by using keys pdf
       virtual Double_t UpperLimitByKeys(RooRealVar& param);
 
-      // determine upper limit using histogram
+      /// determine upper limit using histogram
       virtual Double_t UpperLimitByHist(RooRealVar& param);
 
-      // determine upper limit using histogram
+      /// determine upper limit using histogram
       virtual Double_t UpperLimitBySparseHist(RooRealVar& param);
 
-      // determine upper limit using histogram
+      /// determine upper limit using histogram
       virtual Double_t UpperLimitByDataHist(RooRealVar& param);
 
-      // Determine the approximate maximum value of the Keys PDF
+      /// Determine the approximate maximum value of the Keys PDF
       Double_t GetKeysMax();
 
-      // set the number of steps in the chain to discard as burn-in,
-      // starting from the first
+      /// set the number of steps in the chain to discard as burn-in,
+      /// starting from the first
       virtual void SetNumBurnInSteps(Int_t numBurnInSteps)
       { fNumBurnInSteps = numBurnInSteps; }
 
-      // set whether to use kernel estimation to determine the interval
+      /// set whether to use kernel estimation to determine the interval
       virtual void SetUseKeys(Bool_t useKeys) { fUseKeys = useKeys; }
 
-      // set whether to use a sparse histogram.  you MUST also call
-      // SetUseKeys(kFALSE) to use a histogram.
+      /// set whether to use a sparse histogram.  you MUST also call
+      /// SetUseKeys(kFALSE) to use a histogram.
       virtual void SetUseSparseHist(Bool_t useSparseHist)
       { fUseSparseHist = useSparseHist; }
 
-      // get whether we used kernel estimation to determine the interval
+      /// get whether we used kernel estimation to determine the interval
       virtual Bool_t GetUseKeys() { return fUseKeys; }
 
-      // get the number of steps in the chain to disard as burn-in,
+      /// get the number of steps in the chain to discard as burn-in,
 
-      // get the number of steps in the chain to disard as burn-in,
-      // starting from the first
+      /// get the number of steps in the chain to discard as burn-in,
+      /// starting from the first
       virtual Int_t GetNumBurnInSteps() { return fNumBurnInSteps; }
 
-      // set the number of bins to use (same for all axes, for now)
-      //virtual void SetNumBins(Int_t numBins);
+      /// set the number of bins to use (same for all axes, for now)
+      ///virtual void SetNumBins(Int_t numBins);
 
-      // Get a clone of the histogram of the posterior
+      /// Get a clone of the histogram of the posterior
       virtual TH1* GetPosteriorHist();
 
-      // Get a clone of the keys pdf of the posterior
+      /// Get a clone of the keys pdf of the posterior
       virtual RooNDKeysPdf* GetPosteriorKeysPdf();
 
-      // Get a clone of the (keyspdf * heaviside) product of the posterior
+      /// Get a clone of the (keyspdf * heaviside) product of the posterior
       virtual RooProduct* GetPosteriorKeysProduct();
 
-      // Get the number of parameters of interest in this interval
+      /// Get the number of parameters of interest in this interval
       virtual Int_t GetDimension() const { return fDimension; }
 
-      // Get the markov chain on which this interval is based
-      // You do not own the returned MarkovChain*
+      /// Get the markov chain on which this interval is based
+      /// You do not own the returned MarkovChain*
       virtual const MarkovChain* GetChain() { return fChain; }
 
-      // Get a clone of the markov chain on which this interval is based
-      // as a RooDataSet.  You own the returned RooDataSet*
+      /// Get a clone of the markov chain on which this interval is based
+      /// as a RooDataSet.  You own the returned RooDataSet*
       virtual RooDataSet* GetChainAsDataSet(RooArgSet* whichVars = NULL)
       { return fChain->GetAsDataSet(whichVars); }
 
-      // Get the markov chain on which this interval is based
-      // as a RooDataSet.  You do not own the returned RooDataSet*
+      /// Get the markov chain on which this interval is based
+      /// as a RooDataSet.  You do not own the returned RooDataSet*
       virtual const RooDataSet* GetChainAsConstDataSet()
       { return fChain->GetAsConstDataSet(); }
 
-      // Get a clone of the markov chain on which this interval is based
-      // as a RooDataHist.  You own the returned RooDataHist*
+      /// Get a clone of the markov chain on which this interval is based
+      /// as a RooDataHist.  You own the returned RooDataHist*
       virtual RooDataHist* GetChainAsDataHist(RooArgSet* whichVars = NULL)
       { return fChain->GetAsDataHist(whichVars); }
 
-      // Get a clone of the markov chain on which this interval is based
-      // as a THnSparse.  You own the returned THnSparse*
+      /// Get a clone of the markov chain on which this interval is based
+      /// as a THnSparse.  You own the returned THnSparse*
       virtual THnSparse* GetChainAsSparseHist(RooArgSet* whichVars = NULL)
       { return fChain->GetAsSparseHist(whichVars); }
 
-      // Get a clone of the NLL variable from the markov chain
+      /// Get a clone of the NLL variable from the markov chain
       virtual RooRealVar* GetNLLVar() const
       { return fChain->GetNLLVar(); }
 
-      // Get a clone of the weight variable from the markov chain
+      /// Get a clone of the weight variable from the markov chain
       virtual RooRealVar* GetWeightVar() const
       { return fChain->GetWeightVar(); }
 
-      // set the acceptable level or error for Keys interval determination
+      /// set the acceptable level or error for Keys interval determination
       virtual void SetEpsilon(Double_t epsilon)
       {
          if (epsilon < 0)
@@ -243,27 +232,31 @@ namespace RooStats {
             fEpsilon = epsilon;
       }
 
-      // Set the type of interval to find.  This will only have an effect for
-      // 1-D intervals.  If is more than 1 parameter of interest, then a
-      // "shortest" interval will always be used, since it generalizes directly
-      // to N dimensions
+      /// Set the type of interval to find.  This will only have an effect for
+      /// 1-D intervals.  If is more than 1 parameter of interest, then a
+      /// "shortest" interval will always be used, since it generalizes directly
+      /// to N dimensions
       virtual void SetIntervalType(enum IntervalType intervalType)
       { fIntervalType = intervalType; }
+      virtual void SetShortestInterval() { SetIntervalType(kShortest); }
 
-      // Return the type of this interval
+      /// Return the type of this interval
       virtual enum IntervalType GetIntervalType() { return fIntervalType; }
 
-      // set the left-side tail fraction for a tail-fraction interval
-      virtual void SetLeftSideTailFraction(Double_t a) { fLeftSideTF = a; }
+      /// set the left-side tail fraction for a tail-fraction interval
+      virtual void SetLeftSideTailFraction(Double_t a) {
+         fIntervalType = kTailFraction;
+         fLeftSideTF = a;
+      }
 
-      // kbelasco: The inner-workings of the class really should not be exposed
-      // like this in a comment, but it seems to be the only way to give
-      // the user any control over this process, if they desire it
-      //
-      // Set the fraction delta such that
-      // topCutoff (a) is considered == bottomCutoff (b) iff
-      // (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2))
-      // when determining the confidence interval by Keys
+      /// kbelasco: The inner-workings of the class really should not be exposed
+      /// like this in a comment, but it seems to be the only way to give
+      /// the user any control over this process, if they desire it
+      ///
+      /// Set the fraction delta such that
+      /// topCutoff (a) is considered == bottomCutoff (b) iff
+      /// (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2))
+      /// when determining the confidence interval by Keys
       virtual void SetDelta(Double_t delta)
       {
          if (delta < 0.)
@@ -347,7 +340,7 @@ namespace RooStats {
       inline virtual Double_t CalcConfLevel(Double_t cutoff, Double_t full);
 
       ClassDef(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
-      
+
    };
 }
 

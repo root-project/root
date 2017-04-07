@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class TSocket;
 class TWebSocket;
@@ -57,8 +51,11 @@ protected:
    TString           fBasicUrl;         // basic url without authentication and options
    TUrl              fUrlOrg;           // save original url in case of temp redirection
    TString           fBasicUrlOrg;      // save original url in case of temp redirection
+   void             *fFullCache;        //! complete content of the file, some http server may return complete content
+   Long64_t          fFullCacheSize;    //! size of the cached content
 
    static TUrl       fgProxy;           // globally set proxy URL
+   static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
    virtual void        Init(Bool_t readHeadOnly);
    virtual void        CheckProxy();
@@ -68,7 +65,8 @@ protected:
    virtual Int_t       GetHunk(TSocket *s, char *hunk, Int_t maxsize);
    virtual const char *HttpTerminator(const char *start, const char *peeked, Int_t peeklen);
    virtual Int_t       GetFromWeb(char *buf, Int_t len, const TString &msg);
-   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg);
+   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg = 0, Long64_t *seg_pos = 0, Int_t *seg_len = 0);
+   virtual Int_t       GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len);
    virtual Bool_t      ReadBuffer10(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
    virtual void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
@@ -89,6 +87,9 @@ public:
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
+
+   static Long64_t    GetMaxFullCacheSize();
+   static void        SetMaxFullCacheSize(Long64_t sz);
 
    ClassDef(TWebFile,2)  //A ROOT file that reads via a http server
 };

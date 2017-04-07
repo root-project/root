@@ -20,28 +20,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixT
 #include "TMatrixT.h"
-#endif
-#ifndef ROOT_TMatrixTSym
 #include "TMatrixTSym.h"
-#endif
-#ifndef ROOT_TMatrixTSparse
 #include "TMatrixTSparse.h"
-#endif
 
 template<class Element> class TVectorT : public TObject {
 
 protected:
-   Int_t    fNrows;                // number of rows
-   Int_t    fRowLwb;               // lower bound of the row index
-   Element *fElements;             //[fNrows] elements themselves
+   Int_t    fNrows{0};                // number of rows
+   Int_t    fRowLwb{0};               // lower bound of the row index
+   Element *fElements{nullptr};             //[fNrows] elements themselves
 
    enum {kSizeMax = 5};             // size data container on stack, see New_m(),Delete_m()
    enum {kWorkMax = 100};           // size of work array's in several routines
 
    Element  fDataStack[kSizeMax];  //! data container
-   Bool_t   fIsOwner;              //!default kTRUE, when Use array kFALSE
+   Bool_t   fIsOwner{kTRUE};              //!default kTRUE, when Use array kFALSE
 
    Element* New_m   (Int_t size);
    void     Delete_m(Int_t size,Element*&);
@@ -72,7 +66,7 @@ public:
       *this = another;
    }
 #ifndef __CINT__
-   TVectorT(Int_t lwb,Int_t upb,Element iv1, ...);
+   TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...);
 #endif
    virtual ~TVectorT() { Clear(); }
 
@@ -178,12 +172,24 @@ public:
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
    void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
-                                           else fElements = 0; fNrows = 0; }
+                                           else fElements = 0;
+                                           fNrows = 0; }
    void Draw (Option_t *option=""); // *MENU*
    void Print(Option_t *option="") const;  // *MENU*
 
    ClassDef(TVectorT,4)  // Template of Vector class
 };
+
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TVectorT<double>::Class();
+#endif // __CINT__
 
 template<class Element> inline       TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,Element *data) { return Use(0,n-1,data); }
 template<class Element> inline const TVectorT<Element> &TVectorT<Element>::Use     (Int_t n,const Element *data) const { return Use(0,n-1,data); }
@@ -212,7 +218,7 @@ template<class Element> inline const Element &TVectorT<Element>::operator()(Int_
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -225,7 +231,7 @@ template<class Element> inline Element &TVectorT<Element>::operator()(Int_t ind)
    const Int_t aind = ind-fRowLwb;
    if (aind >= fNrows || aind < 0) {
       Error("operator()","Request index(%d) outside vector range of %d - %d",ind,fRowLwb,fRowLwb+fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
 
    return fElements[aind];
@@ -239,6 +245,9 @@ template<class Element> TVectorT<Element>   operator*   (const TMatrixT      <El
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSym   <Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (const TMatrixTSparse<Element>  &a,      const TVectorT <Element>  &source);
 template<class Element> TVectorT<Element>   operator*   (      Element                   val,    const TVectorT <Element>  &source);
+template<class Element>
+inline
+TVectorT<Element> operator*   (const TVectorT <Element>  &source, Element val) { return val * source; }
 
 template<class Element> Element             Dot         (const TVectorT      <Element>  &source1,const TVectorT <Element>  &source2);
 template <class Element1,class Element2>

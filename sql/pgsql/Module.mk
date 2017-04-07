@@ -28,9 +28,18 @@ PGSQLLIB     := $(LPATH)/libPgSQL.$(SOEXT)
 PGSQLMAP     := $(PGSQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PGSQLH))
+PGSQLH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PGSQLH))
+ALLHDRS     += $(PGSQLH_REL)
 ALLLIBS     += $(PGSQLLIB)
 ALLMAPS     += $(PGSQLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PGSQLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PGSQLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PGSQLDEP)

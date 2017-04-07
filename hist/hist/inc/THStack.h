@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 
 class TBrowser;
@@ -62,6 +58,8 @@ public:
    virtual void     Draw(Option_t *chopt="");
    TH1             *GetHistogram() const;
    TList           *GetHists()  const { return fHists; }
+   TIter            begin() const;
+   TIter            end() const { return TIter::End(); }
    Int_t            GetNhists() const;
    TObjArray       *GetStack();
    virtual Double_t GetMaximum(Option_t *option="");

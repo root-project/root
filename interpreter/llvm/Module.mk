@@ -32,28 +32,31 @@ LLVMDIRS     := $(MODDIRS)
 
 ##### libllvm #####
 LLVMLIB      := $(LLVMDIRI)/lib/libclangSema.a
-LLVMDEPO     := $(LLVMDIRO)/Makefile.config
-LLVMDEPS     := $(LLVMDIRS)/Makefile
+LLVMDEPO     := $(LLVMDIRO)/CMakeCache.txt
+LLVMDEPS     := $(LLVMDIRS)/CMakeLists.txt
 ifeq ($(strip $(LLVMCONFIG)),)
 LLVMCONFIG   := interpreter/llvm/inst/bin/llvm-config
 endif
 LLVMGOODS    := $(MODDIRS)/../../cling/LastKnownGoodLLVMSVNRevision.txt
 LLVMGOODO    := $(LLVMDIRO)/$(notdir $(LLVMGOODS))
-LLVMVERSION  := $(shell echo $(subst rc,,$(subst svn,,$(subst PACKAGE_VERSION=,,\
-	$(shell grep 'PACKAGE_VERSION=' $(LLVMDIRS)/configure)))))
+define llvm_version_part
+$(shell grep 'set.LLVM_VERSION_$1' $(LLVMDIRS)/CMakeLists.txt | sed 's,.*LLVM_VERSION_$1 ,,' | sed 's,.$$,,')
+endef
+LLVMVERSION  := $(call llvm_version_part,MAJOR).$(call llvm_version_part,MINOR).$(call llvm_version_part,PATCH)
 LLVMRES      := etc/cling/lib/clang/$(LLVMVERSION)/include/stddef.h
-LLVMRESEXTRA := etc/cling/lib/clang/$(LLVMVERSION)/include/assert.h
-LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA)
+LLVMRESEXTRA := $(addprefix etc/cling/lib/clang/$(LLVMVERSION)/include/, assert.h stdlib.h unistd.h)
+LLVMSYSEXTRA := $(wildcard $(addprefix /usr/include/, wchar.h bits/stat.h bits/time.h))
+LLVMSYSEXTRA := $(patsubst /usr/include/%,etc/cling/lib/clang/$(LLVMVERSION)/include/%,$(LLVMSYSEXTRA))
+LLVMDEP      := $(LLVMLIB) $(LLVMRES) $(LLVMRESEXTRA) $(LLVMSYSEXTRA)
 
 ROOT_NOCLANG := "ROOT_NOCLANG=yes"
 ifeq ($(LLVMDEV),)
-LLVMOPTFLAGS := --enable-optimized --disable-assertions
+LLVMOPTFLAGS := -DCMAKE_BUILD_TYPE=Release
 else
-ROOT_NOCLANG := "ROOT_NOCLANG=no"
 ifeq (,$(findstring debug,$(ROOTBUILD)))
-LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols --disable-assertions
+LLVMOPTFLAGS := -DCMAKE_BUILD_TYPE=RelWithDebInfo
 else
-LLVMOPTFLAGS := --disable-optimized
+LLVMOPTFLAGS := -DCMAKE_BUILD_TYPE=Debug
 endif
 endif
 
@@ -88,22 +91,23 @@ $(LLVMRES): $(LLVMLIB)
 $(LLVMRESEXTRA): $(dir $(firstword $(LLVMRESEXTRA)))%: $(MODDIR)/ROOT/%
 		@mkdir -p $(dir $@)
 		@cp $< $@
+$(LLVMSYSEXTRA): $(dir $(firstword $(LLVMSYSEXTRA)))%: /usr/include/%
+		@mkdir -p $(dir $@)
+		@cp $< $@
 
 $(LLVMLIB): $(LLVMDEPO) $(FORCELLVMTARGET)
 		@(echo "*** Building $@..."; \
 		cd $(LLVMDIRO) && \
-		$(MAKE) ONLY_TOOLS=clang NOCLING=1 VERBOSE=1 $(ROOT_NOCLANG) && \
+		$(MAKE) && \
 		rm -rf ../inst/lib/clang && \
-		$(MAKE) ONLY_TOOLS=clang NOCLING=1 install $(ROOT_NOCLANG) \
+		$(MAKE) install \
                 $(ENDLLVMBUILD) )
 
 $(LLVMGOODO): $(LLVMGOODS) $(LLVMLIB)
 		@cp $(LLVMGOODS) $(LLVMGOODO)
 
 ifeq ($(CXX14),yes)
-LLVM_CXX_VERSION=--enable-cxx1y
-else
-LLVM_CXX_VERSION=--enable-cxx11
+LLVM_CXX_VERSION=-DLLVM_ENABLE_CXX1Y=ON
 endif
 
 $(LLVMDEPO): $(LLVMDEPS)
@@ -114,88 +118,109 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVM_CFLAGS="-DBOOL=int"; \
 		fi; \
 		if [ $(ARCH) = "linux" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=ON"; \
+			LLVM_CFLAGS="-m32 -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664gcc" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
+			LLVM_CFLAGS="-fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxicc" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=ON"; \
+			LLVM_CFLAGS="-fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "linuxx8664icc" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
+			LLVM_CFLAGS="-fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "macosx" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=ON"; \
+			LLVM_CFLAGS="-Wno-unused-private-field -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "macosx64" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
+			LLVM_CFLAGS="-Wno-unused-private-field -fvisibility=hidden"; \
+		fi; \
+		if [ $(ARCH) = "macosx64" -a x$(GCC_MAJOR) != "x" ]; then \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
+			LLVM_CFLAGS="$$LLVM_CFLAGS -fno-omit-frame-pointer -fvisibility=hidden"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
 			LLVM_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
-			LLVM_HOST="--host=i386-apple-darwin"; \
+			LLVM_HOST="-DLLVM_HOST_TRIPLE=i386-apple-darwin"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
 			LLVM_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
-			LLVM_EXTRA_OPTIONS="--with-extra-options=$$LLVM_CFLAGS"; \
-			LLVM_HOST="--host=armv7-apple-darwin"; \
-			LLVM_TARGET="--target=armv7-apple-darwin"; \
-			LLVM_BUILD="--build=i386-apple-darwin"; \
-			LLVM_BUILD_CC="BUILD_CC=$(CC)"; \
-			LLVM_BUILD_CXX="BUILD_CXX=$(CXX)"; \
+			LLVM_HOST="-DLLVM_HOST_TRIPLE=armv7-apple-darwin"; \
+			LLVM_TARGET="-DLLVM_TARGET_ARCH=armv7-apple-darwin"; \
 		fi; \
 		if [ $(ARCH) = "solaris64CC5" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
 		fi; \
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
-			LLVM_CFLAGS="-m64"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
 		fi; \
 		if [ $(ARCH) = "linuxppcgcc" ]; then \
-			LLVM_CFLAGS="-m32"; \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=ON"; \
 		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
+			LLVM_32BITS="-DLLVM_BUILD_32_BITS=OFF"; \
 			LLVMCC="cc"; \
 			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
 		if [ $(LIBCXX) = "yes" ]; then \
-			LLVMLIBCXX="--enable-libcpp"; \
+			LLVMLIBCXX="-DLLVM_ENABLE_LIBCXX=ON"; \
 		fi; \
-		if [ "x$$LLVM_EXTRA_OPTIONS" = "x" ]; then \
-			LLVM_EXTRA_OPTIONS="--with-extra-options="; \
+		if [ $(GCCTOOLCHAIN) ]; then \
+			LLVM_CFLAGS="$(LLVM_CFLAGS) --gcc-toolchain=$(GCCTOOLCHAIN) "; \
 		fi; \
-		if [ x$(GCCTOOLCHAIN) != "x" ]; then \
-			LLVM_GCC_TOOLCHAIN="--with-gcc-toolchain=$(GCCTOOLCHAIN)"; \
+		if [ $(CXXMODULES) = "yes" ]; then \
+			LLVM_CXXMODULES=" -DLLVM_ENABLE_MODULES=ON "; \
 		fi; \
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
-		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure $(LLVM_CXX_VERSION) \
+		unset LDFLAGS && \
+		cmake $(LLVM_CXX_VERSION) \
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
-		$$LLVM_BUILD \
-		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
-		--disable-docs --disable-bindings \
-		--disable-visibility-inlines-hidden \
-		--disable-clang-rewriter --disable-clang-static-analyzer \
-		--disable-clang-arcmt \
-		--disable-compiler-version-checks \
-                --disable-threads \
+		-DCMAKE_INSTALL_PREFIX=$(ROOT_OBJDIR)/$(LLVMDIRI) \
+		-DROOT_CLASSIC=ON \
+		-DLLVM_BUILD_DOCS=OFF \
+		-DLLVM_BUILD_TESTS=OFF \
+		-DLLVM_ENABLE_WARNINGS=ON \
+		-DLLVM_INCLUDE_TESTS=OFF \
+		-DLLVM_INCLUDE_EXAMPLES=OFF \
+		-DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON \
+                -DLLVM_ENABLE_THREADS=OFF \
+		-DLLVM_NOCLING=YES \
+		-DCLANG_ENABLE_STATIC_ANALYZER=OFF \
+		-DCLANG_ENABLE_ARCMT=OFF \
+		-DCLANG_ENABLE_COMPILER=OFF \
+		-DCLANG_ENABLE_FORMAT=OFF \
+		-DCLANG_TOOL_C_INDEX_TEST_BUILD=OFF \
+		-DCLANG_TOOL_LIBCLANG_BUILD=OFF \
+		-DCLANG_TOOL_DRIVER_BUILD=OFF \
+		-DCLANG_INCLUDE_TESTS=OFF \
 		$$LLVMLIBCXX \
 		$(LLVMOPTFLAGS) \
-		--enable-targets=host \
-		"$$LLVM_EXTRA_OPTIONS" \
+		$$LLVM_32BITS \
+		-DLLVM_TARGETS_TO_BUILD=host \
 		$$LLVM_GCC_TOOLCHAIN \
-		CC=$$LLVMCC CXX=$$LLVMCXX \
-		$$LLVM_BUILD_CC $$LLVM_BUILD_CXX \
-		CFLAGS="$$LLVM_CFLAGS" CXXFLAGS="$$LLVM_CFLAGS" )
+		$$LLVM_CXXMODULES \
+		-DCMAKE_C_COMPILER=$$LLVMCC \
+                -DCMAKE_CXX_COMPILER=$$LLVMCXX \
+		-DCMAKE_CXX_FLAGS="$$LLVM_CFLAGS" \
+		-DCMAKE_C_FLAGS="$$LLVM_CFLAGS" \
+		$(LLVMDIRS) )
 
 all-$(MODNAME): $(LLVMLIB)
 
-clean-llvm:
+clean-$(MODNAME):
 		-@(if [ -d $(LLVMDIRO) ]; then \
 			cd $(LLVMDIRO); \
-			$(MAKE) clean ONLY_TOOLS=clang NOCLING=1 $(ROOT_NOCLANG); \
+			$(MAKE) clean; \
 		fi)
 
 clean::         clean-$(MODNAME)

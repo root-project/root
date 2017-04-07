@@ -1,9 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TEvePointSet.
-
-#ifndef __CINT__
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of class TEvePointSet.
+///
+/// \image html eve_pointset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include <TEveManager.h>
 #include <TEvePointSet.h>
@@ -12,7 +14,6 @@
 #include <TRandom.h>
 #include <TMath.h>
 
-#endif
 
 TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
 {

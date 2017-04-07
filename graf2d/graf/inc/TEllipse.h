@@ -13,44 +13,24 @@
 #define ROOT_TEllipse
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEllipse                                                             //
-//                                                                      //
-// An ellipse.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 class TEllipse : public TObject, public TAttLine, public TAttFill, public TAttBBox2D {
 
 protected:
-   Double_t    fX1;        //X coordinate of centre
-   Double_t    fY1;        //Y coordinate of centre
-   Double_t    fR1;        //first radius
-   Double_t    fR2;        //second radius
-   Double_t    fPhimin;    //Minimum angle (degrees)
-   Double_t    fPhimax;    //Maximum angle (degrees)
-   Double_t    fTheta;     //Rotation angle (degrees)
+   Double_t    fX1;        ///< X coordinate of centre
+   Double_t    fY1;        ///< Y coordinate of centre
+   Double_t    fR1;        ///< first radius
+   Double_t    fR2;        ///< second radius
+   Double_t    fPhimin;    ///< Minimum angle (degrees)
+   Double_t    fPhimax;    ///< Maximum angle (degrees)
+   Double_t    fTheta;     ///< Rotation angle (degrees)
 
 public:
    // TEllipse status bits

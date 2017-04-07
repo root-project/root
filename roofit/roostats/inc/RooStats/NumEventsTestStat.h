@@ -11,43 +11,32 @@
 #ifndef ROOSTATS_NumEventsTestStat
 #define ROOSTATS_NumEventsTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-NumEventsTestStat is a simple implementation of the TestStatistic interface used for simple number counting.
-It should probably support simple cuts as well.
-</p>
-END_HTML
-*/
-//
 
-#ifndef ROOT_Rtypes
+
 #include "Rtypes.h"
-#endif
 
 
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
 
-#ifndef ROO_ABS_DATA
 #include "RooAbsData.h"
-#endif
 
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
 
 //#include "RooStats/DistributionCreator.h"
 
 
 namespace RooStats {
+
+   /**
+
+      NumEventsTestStat is a simple implementation of the TestStatistic interface used for simple number counting.
+      It should probably support simple cuts as well.
+      
+      \ingroup RooStats
+   */
 
   class NumEventsTestStat : public TestStatistic{
 

@@ -5,9 +5,6 @@
 #include "PyROOT.h"
 #include "TPyArg.h"
 
-// ROOT
-#include "TObject.h"
-
 
 //______________________________________________________________________________
 //                        Generic wrapper for arguments
@@ -33,12 +30,12 @@ void TPyArg::CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::v
    Py_DECREF( pyargs );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
 void CallConstructor( PyObject*& pyself, PyObject* pyclass )
 {
    PyObject* pyargs = PyTuple_New( 0 );
    pyself = PyObject_Call( pyclass, pyargs, NULL );
-   Py_DECREF( pyargs );
+    Py_DECREF( pyargs );
 }
 
 //- generic dispatcher -------------------------------------------------------
@@ -53,6 +50,18 @@ PyObject* TPyArg::CallMethod( PyObject* pymeth, const std::vector<TPyArg>& args 
    return result;
 }
 
+//- denstructor dispatcher ----------------------------------------------------
+void TPyArg::CallDestructor( PyObject*& pyself, PyObject*, const std::vector<TPyArg>& )
+{
+   Py_XDECREF( pyself );      // calls actual dtor if ref-count down to 0
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPyArg::CallDestructor( PyObject*& pyself )
+{
+   Py_XDECREF( pyself );
+}
+
 //- constructors/destructor --------------------------------------------------
 TPyArg::TPyArg( PyObject* pyobject )
 {
@@ -61,46 +70,52 @@ TPyArg::TPyArg( PyObject* pyobject )
    fPyObject = pyobject;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TPyArg from an integer value.
+
 TPyArg::TPyArg( Int_t value )
 {
-// Construct a TPyArg from an integer value.
    fPyObject = PyInt_FromLong( value );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TPyArg from an integer value.
+
 TPyArg::TPyArg( Long_t value )
 {
-// Construct a TPyArg from an integer value.
    fPyObject = PyLong_FromLong( value );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TPyArg from a double value.
+
 TPyArg::TPyArg( Double_t value )
 {
-// Construct a TPyArg from a double value.
    fPyObject = PyFloat_FromDouble( value );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TPyArg from a C-string.
+
 TPyArg::TPyArg( const char* value )
 {
-// Construct a TPyArg from a C-string.
    fPyObject = PyROOT_PyUnicode_FromString( value );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TPyArg::TPyArg( const TPyArg& s )
 {
-// Copy constructor.
    Py_XINCREF( s.fPyObject );
    fPyObject = s.fPyObject;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TPyArg& TPyArg::operator=( const TPyArg& s )
 {
-// Assignment operator.
    if ( &s != this ) {
       Py_XINCREF( s.fPyObject );
       fPyObject = s.fPyObject;
@@ -108,10 +123,11 @@ TPyArg& TPyArg::operator=( const TPyArg& s )
    return *this;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Done with held PyObject.
+
 TPyArg::~TPyArg()
 {
-// Done with held PyObject.
    Py_XDECREF( fPyObject );
    fPyObject = NULL;
 }

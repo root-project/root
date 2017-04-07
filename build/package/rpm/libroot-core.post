@@ -1,7 +1,0 @@
-# Add %{_prefix}/lib/root to the directories searched by ldd, if not
-# so already 
-if ! grep -qs ^%{_prefix}/lib/root\$ /etc/ld.so.conf ; then
-    echo %{_prefix}/lib/root >> /etc/ld.so.conf
-fi
-# update /etc/ld.so.cache 
-ldconfig 

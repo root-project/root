@@ -2,7 +2,6 @@
 # CMakeLists.txt file for building ROOT net/ldap package
 ############################################################################
 
-ROOT_USE_PACKAGE(net/net)
 include_directories(${LDAP_INCLUDE_DIRS})
 add_definitions(-DLDAP_DEPRECATED)
 

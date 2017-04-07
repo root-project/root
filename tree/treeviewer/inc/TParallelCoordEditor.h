@@ -12,9 +12,7 @@
 #ifndef ROOT_TParallelCoordEditor
 #define ROOT_TParallelCoordEditor
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TParallelCoord;
 class TGCheckButton;

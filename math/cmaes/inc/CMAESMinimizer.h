@@ -30,7 +30,7 @@
 #include "Math/IFunctionfwd.h"
 #endif
 
-#include "cmaes.h"
+#include "libcmaes/cmaes.h"
 
 using namespace libcmaes;
 

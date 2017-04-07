@@ -14,12 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Landau Distribution p.d.f
-// END_HTML
-//
+/** \class RooLandau
+    \ingroup Roofit
+
+Landau Distribution p.d.f
+**/
 
 #include "TMath.h"
 #include "RooFit.h"
@@ -34,8 +33,8 @@ using namespace std;
 
 ClassImp(RooLandau)
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
@@ -43,39 +42,39 @@ RooLandau::RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbs
   sigma("sigma","Width",this,_sigma)
 {
 }
- 
 
-//_____________________________________________________________________________
-RooLandau::RooLandau(const RooLandau& other, const char* name) : 
+////////////////////////////////////////////////////////////////////////////////
+
+RooLandau::RooLandau(const RooLandau& other, const char* name) :
   RooAbsPdf(other,name),
   x("x",this,other.x),
   mean("mean",this,other.mean),
   sigma("sigma",this,other.sigma)
 {
-} 
+}
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 Double_t RooLandau::evaluate() const
 {
   return TMath::Landau(x, mean, sigma);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  if (matchArgs(directVars,generateVars,x)) return 1 ;  
+  if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 void RooLandau::generateEvent(Int_t code)
 {
   R__ASSERT(code==1) ;
   Double_t xgen ;
-  while(1) {    
+  while(1) {
     xgen = RooRandom::randomGenerator()->Landau(mean,sigma);
     if (xgen<x.max() && xgen>x.min()) {
       x = xgen ;
@@ -84,5 +83,3 @@ void RooLandau::generateEvent(Int_t code)
   }
   return;
 }
-
-

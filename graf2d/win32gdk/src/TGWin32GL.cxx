@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32GL                                                            //
-//                                                                      //
-// The TGWin32GL is win32gdk implementation of TVirtualGLImp class.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGWin32GL
+\ingroup win32
+
+The TGWin32GL is win32gdk implementation of TVirtualGLImp class.
+*/
+
 #include <deque>
 
 #include "TGWin32GL.h"
@@ -224,7 +223,8 @@ TGWin32GLManager::TGWin32GLImpl::~TGWin32GLImpl()
 
 ClassImp(TGWin32GLManager)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGWin32GLManager::TGWin32GLManager() : fPimpl(new TGWin32GLImpl)
 {
    gPtr2GLManager = &TGWin32GLManagerProxy::ProxyObject;
@@ -232,23 +232,26 @@ TGWin32GLManager::TGWin32GLManager() : fPimpl(new TGWin32GLImpl)
    gGLManager = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGWin32GLManager::~TGWin32GLManager()
 {
    delete fPimpl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGWin32GLManager::InitGLWindow(Window_t winID)
 {
    return gVirtualX->InitWindow(winID);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///winInd is TGWin32 index, returned by previous call gGLManager->InitGLWindow
+///returns descripto (index) of gl context or -1 if failed
+
 Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
 {
-   //winInd is TGWin32 index, returned by previous call gGLManager->InitGLWindow
-   //returns descripto (index) of gl context or -1 if failed
    Window_t winID = gVirtualX->GetWindowID(winInd);
    HDC hDC = GetWindowDC((HWND)GDK_DRAWABLE_XID((GdkWindow *)winID));
 
@@ -294,10 +297,11 @@ Int_t TGWin32GLManager::CreateGLContext(Int_t winInd)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create DIB section to read GL buffer into
+
 Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
 {
-   //Create DIB section to read GL buffer into
    HDC dibDC = CreateCompatibleDC(0);
 
    if (!dibDC) {
@@ -327,7 +331,8 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGWin32GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
@@ -341,10 +346,11 @@ Bool_t TGWin32GLManager::AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, U
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Create new DIB if needed
+
 Bool_t TGWin32GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   //Create new DIB if needed
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
 
    if (ctx.fPixmapIndex != -1)
@@ -367,20 +373,23 @@ Bool_t TGWin32GLManager::ResizeOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, U
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::SelectOffScreenDevice(Int_t ctxInd)
 {
    gVirtualX->SelectWindow(fPimpl->fGLContexts[ctxInd].fPixmapIndex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::MarkForDirectCopy(Int_t pixInd, Bool_t isDirect)
 {
    if (fPimpl->fGLContexts[pixInd].fPixmapIndex != -1)
       fPimpl->fGLContexts[pixInd].fDirect = isDirect;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::ReadGLBuffer(Int_t ctxInd)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
@@ -392,20 +401,23 @@ void TGWin32GLManager::ReadGLBuffer(Int_t ctxInd)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGWin32GLManager::GetVirtualXInd(Int_t ctxInd)
 {
    return fPimpl->fGLContexts[ctxInd].fPixmapIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGWin32GLManager::MakeCurrent(Int_t ctxInd)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
    return (Bool_t)wglMakeCurrent(ctx.fDC, ctx.fGLContext);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::Flush(Int_t ctxInd)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
@@ -433,7 +445,8 @@ void TGWin32GLManager::Flush(Int_t ctxInd)
    //do nothing for non-direct off-screen device
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::DeleteGLContext(Int_t ctxInd)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
@@ -454,7 +467,8 @@ void TGWin32GLManager::DeleteGLContext(Int_t ctxInd)
    fPimpl->fNextFreeContext = &ctx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
 {
    TGLContext &ctx = fPimpl->fGLContexts[ctxInd];
@@ -467,43 +481,50 @@ void TGWin32GLManager::ExtractViewport(Int_t ctxInd, Int_t *viewport)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::PaintSingleObject(TVirtualGLPainter *p)
 {
    p->Paint();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::PrintViewer(TVirtualViewer3D *vv)
 {
    vv->PrintObjects();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGWin32GLManager::SelectManip(TVirtualGLManip *manip, const TGLCamera * camera, const TGLRect * rect, const TGLBoundingBox * sceneBox)
 {
    return manip->Select(*camera, *rect, *sceneBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGWin32GLManager::PanObject(TVirtualGLPainter *o, Int_t x, Int_t y)
 {
    return o->Pan(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGWin32GLManager::PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
     return plot->PlotSelected(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 char *TGWin32GLManager::GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py)
 {
     return plot->GetPlotInfo(px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGWin32GLManager::HighColorFormat(Int_t ctxInd)
 {
    if (ctxInd == -1)

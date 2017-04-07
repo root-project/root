@@ -14,6 +14,10 @@
 #ifndef KD_TREE_ICC
 #define KD_TREE_ICC
 
+#ifndef ROOT_Math_KDTree
+#error "Do not use KDTree.icc directly. #include \"KDTree.h\" instead."
+#endif // ROOT_Math_KDTree
+
 // STL include(s)
 #include <iostream>
 #include <functional>

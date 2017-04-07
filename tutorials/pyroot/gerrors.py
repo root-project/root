@@ -1,17 +1,19 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/gerrors.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## \notebook -js
+## A Simple Graph with error bars
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TGraphErrors
 from ROOT import gROOT
 from array import array
 
-
-gROOT.Reset()
-
 c1 = TCanvas( 'c1', 'A Simple Graph with error bars', 200, 10, 700, 500 )
 
-c1.SetFillColor( 42 )
 c1.SetGrid()
 c1.GetFrame().SetFillColor( 21 )
 c1.GetFrame().SetBorderSize( 12 )

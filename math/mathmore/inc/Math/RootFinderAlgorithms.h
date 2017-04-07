@@ -32,13 +32,9 @@
 #define ROOT_Math_GSLRootFinderAlgorithms
 
 
-#ifndef ROOT_Math_GSLRootFinder
 #include "Math/GSLRootFinder.h"
-#endif
 
-#ifndef ROOT_Math_GSLRootFinderDeriv
 #include "Math/GSLRootFinderDeriv.h"
-#endif
 
 namespace ROOT {
 namespace Math {

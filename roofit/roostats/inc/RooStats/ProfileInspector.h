@@ -28,7 +28,7 @@ namespace RooStats {
    public:
     ProfileInspector();
 
-    // Destructor of SamplingDistribution
+    // Destructor
     virtual ~ProfileInspector();
 
     TList * GetListOfProfilePlots( RooAbsData& data, RooStats::ModelConfig * config);

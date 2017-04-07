@@ -23,6 +23,7 @@
 
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Pass.h"
+#include "llvm/PassSupport.h"
 
 namespace llvm {
 
@@ -30,7 +31,7 @@ class CallGraphNode;
 class CallGraph;
 class PMStack;
 class CallGraphSCC;
-  
+
 class CallGraphSCCPass : public Pass {
 public:
   explicit CallGraphSCCPass(char &pid) : Pass(PT_CallGraphSCC, pid) {}
@@ -77,29 +78,55 @@ public:
   /// the call graph.  If the derived class implements this method, it should
   /// always explicitly call the implementation here.
   void getAnalysisUsage(AnalysisUsage &Info) const override;
+
+protected:
+  /// Optional passes call this function to check whether the pass should be
+  /// skipped. This is the case when optimization bisect is over the limit.
+  bool skipSCC(CallGraphSCC &SCC) const;
 };
 
-/// CallGraphSCC - This is a single SCC that a CallGraphSCCPass is run on. 
+/// CallGraphSCC - This is a single SCC that a CallGraphSCCPass is run on.
 class CallGraphSCC {
+  const CallGraph &CG; // The call graph for this SCC.
   void *Context; // The CGPassManager object that is vending this.
   std::vector<CallGraphNode*> Nodes;
+
 public:
-  CallGraphSCC(void *context) : Context(context) {}
-  
-  void initialize(CallGraphNode*const*I, CallGraphNode*const*E) {
+  CallGraphSCC(CallGraph &cg, void *context) : CG(cg), Context(context) {}
+
+  void initialize(CallGraphNode *const *I, CallGraphNode *const *E) {
     Nodes.assign(I, E);
   }
-  
+
   bool isSingular() const { return Nodes.size() == 1; }
   unsigned size() const { return Nodes.size(); }
-  
+
   /// ReplaceNode - This informs the SCC and the pass manager that the specified
   /// Old node has been deleted, and New is to be used in its place.
   void ReplaceNode(CallGraphNode *Old, CallGraphNode *New);
-  
-  typedef std::vector<CallGraphNode*>::const_iterator iterator;
+
+  typedef std::vector<CallGraphNode *>::const_iterator iterator;
   iterator begin() const { return Nodes.begin(); }
   iterator end() const { return Nodes.end(); }
+
+  const CallGraph &getCallGraph() { return CG; }
+};
+
+void initializeDummyCGSCCPassPass(PassRegistry &);
+
+/// This pass is required by interprocedural register allocation. It forces
+/// codegen to follow bottom up order on call graph.
+class DummyCGSCCPass : public CallGraphSCCPass {
+public:
+  static char ID;
+  DummyCGSCCPass() : CallGraphSCCPass(ID) {
+    PassRegistry &Registry = *PassRegistry::getPassRegistry();
+    initializeDummyCGSCCPassPass(Registry);
+  };
+  bool runOnSCC(CallGraphSCC &SCC) override { return false; }
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.setPreservesAll();
+  }
 };
 
 } // End llvm namespace

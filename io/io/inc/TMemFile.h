@@ -12,18 +12,7 @@
 #ifndef ROOT_TMemFile
 #define ROOT_TMemFile
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMemFile                                                             //
-//                                                                      //
-// A TMemFile is like a normal TFile except that it reads and writes    //
-// its data via in memory.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 class TMemFile : public TFile {
 
@@ -44,11 +33,11 @@ private:
       UChar_t   *fBuffer;
       Long64_t   fSize;
    };
-   TMemBlock    fBlockList;   // Colletion of memory blocks of size fBlockSize
-   Long64_t     fSize;        // Total file size (sum of the size of the chunks)
-   Long64_t     fSysOffset;   // Seek offset in file
-   TMemBlock   *fBlockSeek;   // Pointer to the block we seeked to.
-   Long64_t     fBlockOffset; // Seek offset within the block
+   TMemBlock    fBlockList;   ///< Colletion of memory blocks of size fBlockSize
+   Long64_t     fSize;        ///< Total file size (sum of the size of the chunks)
+   Long64_t     fSysOffset;   ///< Seek offset in file
+   TMemBlock   *fBlockSeek;   ///< Pointer to the block we seeked to.
+   Long64_t     fBlockOffset; ///< Seek offset within the block
 
    static Long64_t fgDefaultBlockSize;
 
@@ -57,6 +46,8 @@ private:
    // Overload TFile interfaces.
    Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
    Int_t    SysClose(Int_t fd);
+   Int_t    SysReadImpl(Int_t fd, void *buf, Long64_t len);
+   Int_t    SysWriteImpl(Int_t fd, const void *buf, Long64_t len);
    Int_t    SysRead(Int_t fd, void *buf, Int_t len);
    Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
    Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
@@ -82,7 +73,7 @@ public:
 
    virtual void        Print(Option_t *option="") const;
 
-   ClassDef(TMemFile, 0) //A ROOT file that reads/writes via HDFS
+   ClassDef(TMemFile, 0) // A ROOT file that reads/writes via HDFS
 };
 
 #endif

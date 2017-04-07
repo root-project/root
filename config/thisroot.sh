@@ -19,26 +19,34 @@ drop_from_path()
    drop=$2
 
    newpath=`echo $p | sed -e "s;:${drop}:;:;g" \
-                          -e "s;:${drop};;g"   \
-                          -e "s;${drop}:;;g"   \
-                          -e "s;${drop};;g"`
+                          -e "s;:${drop}\$;;g"   \
+                          -e "s;^${drop}:;;g"   \
+                          -e "s;^${drop}\$;;g"`
 }
 
 if [ -n "${ROOTSYS}" ] ; then
    old_rootsys=${ROOTSYS}
 fi
 
-if [ "x${BASH_ARGV[0]}" = "x" ]; then
-    if [ ! -f bin/thisroot.sh ]; then
+SOURCE=${BASH_ARGV[0]}
+if [ "x$SOURCE" = "x" ]; then
+    SOURCE=${(%):-%N} # for zsh
+fi
+
+if [ "x${SOURCE}" = "x" ]; then
+    if [ -f bin/thisroot.sh ]; then
+        ROOTSYS="$PWD"; export ROOTSYS
+    elif [ -f ./thisroot.sh ]; then
+        ROOTSYS=$(cd ..  > /dev/null; pwd); export ROOTSYS
+    else
         echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
         ROOTSYS=; export ROOTSYS
         return 1
     fi
-    ROOTSYS="$PWD"; export ROOTSYS
 else
     # get param to "."
-    thisroot=$(dirname ${BASH_ARGV[0]})
-    ROOTSYS=$(cd ${thisroot}/..;pwd); export ROOTSYS
+    thisroot=$(dirname ${SOURCE})
+    ROOTSYS=$(cd ${thisroot}/.. > /dev/null;pwd); export ROOTSYS
 fi
 
 if [ -n "${old_rootsys}" ] ; then
@@ -70,6 +78,15 @@ if [ -n "${old_rootsys}" ] ; then
       drop_from_path $MANPATH ${old_rootsys}/man
       MANPATH=$newpath
    fi
+   if [ -n "${CMAKE_PREFIX_PATH}" ]; then
+      drop_from_path $CMAKE_PREFIX_PATH ${old_rootsys}
+      CMAKE_PREFIX_PATH=$newpath
+   fi
+   if [ -n "${JUPYTER_PATH}" ]; then
+      drop_from_path $JUPYTER_PATH ${old_rootsys}/etc/notebook
+      JUPYTER_PATH=$newpath
+   fi
+
 fi
 
 if [ -z "${MANPATH}" ]; then
@@ -118,9 +135,21 @@ else
 fi
 
 if [ -z "${MANPATH}" ]; then
-   MANPATH=`dirname @mandir@`:${default_manpath}; export MANPATH
+   MANPATH=@mandir@:${default_manpath}; export MANPATH
 else
-   MANPATH=`dirname @mandir@`:$MANPATH; export MANPATH
+   MANPATH=@mandir@:$MANPATH; export MANPATH
+fi
+
+if [ -z "${CMAKE_PREFIX_PATH}" ]; then
+   CMAKE_PREFIX_PATH=$ROOTSYS; export CMAKE_PREFIX_PATH       # Linux, ELF HP-UX
+else
+   CMAKE_PREFIX_PATH=$ROOTSYS:$CMAKE_PREFIX_PATH; export CMAKE_PREFIX_PATH
+fi
+
+if [ -z "${JUPYTER_PATH}" ]; then
+   JUPYTER_PATH=$ROOTSYS/etc/notebook; export JUPYTER_PATH       # Linux, ELF HP-UX
+else
+   JUPYTER_PATH=$ROOTSYS/etc/notebook:$JUPYTER_PATH; export JUPYTER_PATH
 fi
 
 if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then

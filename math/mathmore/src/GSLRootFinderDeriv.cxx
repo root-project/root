@@ -39,7 +39,6 @@
 #include "gsl/gsl_roots.h"
 #include "gsl/gsl_errno.h"
 
-#include <iostream>
 #include <cmath>
 
 namespace ROOT {

@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Lightweight function binding that returns the inverse of an input function binding
-// Apply the change of variables transformation x -> 1/x to the input
-// function and its range. The function must be one dimensional and its
-// range cannot include zero.
-// END_HTML
-//
+/**
+\file RooInvTransform.cxx
+\class RooInvTransform
+\ingroup Roofitcore
+
+Lightweight function binding that returns the inverse of an input function binding
+Apply the change of variables transformation x -> 1/x to the input
+function and its range. The function must be one dimensional and its
+range cannot include zero.
+**/
 
 
 #include "RooFit.h"
@@ -39,10 +40,10 @@ ClassImp(RooInvTransform)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. 
+
 RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   RooAbsFunc(func.getDimension()), _func(&func)
 {
-  // Constructor. 
-
 }

@@ -46,14 +46,14 @@
 
 ClassImp(TProofProgressMemoryPlot)
 
-//_________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TProofProgressMemoryPlot::TProofProgressMemoryPlot(TProofProgressDialog *d,
                                                    Int_t w, Int_t h)
                          : TGTransientFrame(gClient->GetRoot(),
                                             gClient->GetRoot(), w, h)
 {
-   // Main constructor
-
    fDialog = d;
    fProofLog = 0;
    fWPlot = 0;
@@ -113,11 +113,11 @@ TProofProgressMemoryPlot::TProofProgressMemoryPlot(TProofProgressDialog *d,
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofProgressMemoryPlot::~TProofProgressMemoryPlot()
 {
-   // Destructor
-
    if (fProofLog){
       delete fProofLog;
       fProofLog = 0;
@@ -136,12 +136,12 @@ TProofProgressMemoryPlot::~TProofProgressMemoryPlot()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the list of workers. For this, extract the logs and take the names
+/// of TProofLogElements
+
 TGListBox* TProofProgressMemoryPlot::BuildLogList(TGFrame *parent)
 {
-   // Build the list of workers. For this, extract the logs and take the names
-   // of TProofLogElements
-
    TGListBox *c = new TGListBox(parent);
    c->AddEntry("average", 0);
 
@@ -173,22 +173,22 @@ TGListBox* TProofProgressMemoryPlot::BuildLogList(TGFrame *parent)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the canvases
+
 void TProofProgressMemoryPlot::Clear(Option_t *)
 {
-   // Clear the canvases
-
    if (fWorkersPlot)
       fWorkersPlot->GetCanvas()->Clear();
    if (fMasterPlot)
       fMasterPlot->GetCanvas()->Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the plot from the logs
+
 void TProofProgressMemoryPlot::DoPlot()
 {
-   // Draw the plot from the logs
-
    Clear();
 
    if (!fProofLog || !fFullLogs ||
@@ -373,11 +373,11 @@ void TProofProgressMemoryPlot::DoPlot()
    delete selected;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the average plots
+
 TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
 {
-   // Create the average plots
-
    TList *elem = fProofLog->GetListOfLogs();
    if (!elem) {
       Error("DoAveragePlot", "Empty log");
@@ -493,18 +493,18 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract from line 'l' the virtual memory 'v', the resident memory 'r' and the
+/// number of events 'e'.
+/// The line is assumed to be in the form
+/// "... Memory 130868 virtual 31540 ... event 5550"
+/// The fields are only filled if >= 0 .
+/// Return 0 on success, -1 if any of the values coudl not be filled (the output
+/// fields are not touched in such a case).
+
 Int_t TProofProgressMemoryPlot::ParseLine(TString l,
                                           Long64_t &v, Long64_t &r, Long64_t &e)
 {
-   // Extract from line 'l' the virtual memory 'v', the resident memory 'r' and the
-   // number of events 'e'.
-   // The line is assumed to be in the form
-   // "... Memory 130868 virtual 31540 ... event 5550"
-   // The fields are only filled if >= 0 .
-   // Return 0 on success, -1 if any of the values coudl not be filled (the output
-   // fields are not touched in such a case).
-
    // Something to parse is mandatory
    if (l.IsNull()) return -1;
 
@@ -545,11 +545,11 @@ Int_t TProofProgressMemoryPlot::ParseLine(TString l,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a memory consumption graph for a worker
+
 TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
 {
-   // Make a memory consumption graph for a worker
-
    TObjString *curline;
    TList *lines = ple->GetMacro()->GetListOfLines();
    if (!lines) {
@@ -600,12 +600,12 @@ TGraph *TProofProgressMemoryPlot::DoWorkerPlot(TProofLogElem *ple)
    return gr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// a master or submaster log
+/// display without meaningful labels for now
+
 TGraph *TProofProgressMemoryPlot::DoMasterPlot(TProofLogElem *ple)
 {
-   // a master or submaster log
-   // display without meaningful labels for now
-
    TList *lines = ple->GetMacro()->GetListOfLines();
    TIter prevline(lines, kIterBackward);
    Int_t iline=0;
@@ -636,11 +636,11 @@ TGraph *TProofProgressMemoryPlot::DoMasterPlot(TProofLogElem *ple)
    return gr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///actions of select all/clear all button
+
 void TProofProgressMemoryPlot::Select(Int_t id)
 {
-   //actions of select all/clear all button
-
    Int_t nen = fWorkers->GetNumberOfEntries();
    Bool_t sel = id ? 0 : 1;
 

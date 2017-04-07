@@ -4,16 +4,14 @@
 #ifndef ROOT_TRootSnifferStore
 #define ROOT_TRootSnifferStore
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TDataMember;
 class TFolder;
+
+/** Abstract interface for storage of hierarchy scan in TRootSniffer */
 
 class TRootSnifferStore : public TObject {
 protected:
@@ -21,6 +19,7 @@ protected:
    TClass       *fResClass;     //! class of found item
    TDataMember  *fResMember;    //! datamember pointer of found item
    Int_t         fResNumChilds; //! count of found childs, -1 by default
+   Int_t         fResRestrict;  //! restriction for result, 0-default, 1-readonly, 2-full
 public:
    TRootSnifferStore();
    virtual ~TRootSnifferStore();
@@ -30,7 +29,8 @@ public:
    virtual void BeforeNextChild(Int_t, Int_t, Int_t) {}
    virtual void CloseNode(Int_t, Int_t) {}
 
-   void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb, Int_t _res_chld);
+   void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb,
+                  Int_t _res_chld, Int_t restr = 0);
 
    void *GetResPtr() const
    {
@@ -48,7 +48,10 @@ public:
    {
       return fResNumChilds;
    }
-
+   Int_t GetResRestrict() const
+   {
+      return fResRestrict;
+   }
    virtual Bool_t IsXml() const
    {
       return kFALSE;
@@ -58,6 +61,8 @@ public:
 };
 
 // ========================================================================
+
+/** Storage of hierarchy scan in TRootSniffer in XML format */
 
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
@@ -87,6 +92,7 @@ public:
 
 // ========================================================================
 
+/** Storage of hierarchy scan in TRootSniffer in JSON format */
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
@@ -106,5 +112,6 @@ public:
 
    ClassDef(TRootSnifferStoreJson, 0) // json results store of objects sniffer
 };
+
 
 #endif

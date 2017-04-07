@@ -38,27 +38,28 @@
 ClassImp(TGString)
 ClassImp(TGHotString)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cconstructor
+
 TGString::TGString(const TGString *s) : TString(s->Data())
 {
-   // cconstructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw string.
+
 void TGString::Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw string.
-
    gVirtualX->DrawString(id, gc, x, y, Data(), Length());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a string in a column with width w. If string is longer than
+/// w wrap it to next line.
+
 void TGString::DrawWrapped(Drawable_t id, GContext_t gc,
                            Int_t x, Int_t y, UInt_t w, FontStruct_t font)
 {
-   // Draw a string in a column with width w. If string is longer than
-   // w wrap it to next line.
-
    const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
@@ -95,11 +96,11 @@ void TGString::DrawWrapped(Drawable_t id, GContext_t gc,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of lines of width w the string would take using a certain font.
+
 Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 {
-   // Get number of lines of width w the string would take using a certain font.
-
    const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
@@ -128,11 +129,11 @@ Int_t TGString::GetLines(FontStruct_t font, UInt_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a hot string.
+
 TGHotString::TGHotString(const char *s) : TGString()
 {
-   // Create a hot string.
-
    fLastGC = 0;
    fOff1 = fOff2 = 0;
 
@@ -163,23 +164,23 @@ TGHotString::TGHotString(const char *s) : TGString()
    delete [] dup;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a hot string and underline the hot character.
+
 void TGHotString::Draw(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw a hot string and underline the hot character.
-
    gVirtualX->DrawString(id, gc, x, y, Data(), Length());
 
    DrawHotChar(id, gc, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a hot string in a column with width w. If string is longer than
+/// w wrap it to next line.
+
 void TGHotString::DrawWrapped(Drawable_t id, GContext_t gc,
                               Int_t x, Int_t y, UInt_t w, FontStruct_t font)
 {
-   // Draw a hot string in a column with width w. If string is longer than
-   // w wrap it to next line.
-
    const char *p     = Data();
    const char *prev  = p;
    const char *chunk = p;
@@ -225,24 +226,30 @@ void TGHotString::DrawWrapped(Drawable_t id, GContext_t gc,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the underline under the hot character.
+
 void TGHotString::DrawHotChar(Drawable_t id, GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw the underline under the hot character.
-
    if (fHotPos > 0) {
       if (fLastGC != gc) {
          GCValues_t   gcval;
          FontStruct_t font;
+         font = gVirtualX->GetGCFont(gc);
+         if (font) {
+            fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
+            fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
+         }
+         else {
+            gcval.fMask = kGCFont;
+            gVirtualX->GetGCValues(gc, gcval);
+            font = gVirtualX->GetFontStruct(gcval.fFont);
 
-         gcval.fMask = kGCFont;
-         gVirtualX->GetGCValues(gc, gcval);
-         font = gVirtualX->GetFontStruct(gcval.fFont);
+            fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
+            fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
 
-         fOff1   = gVirtualX->TextWidth(font, Data(), fHotPos-1); //+1;
-         fOff2   = gVirtualX->TextWidth(font, Data(), fHotPos) - 1;
-
-         gVirtualX->FreeFontStruct(font);
+            gVirtualX->FreeFontStruct(font);
+         }
          fLastGC = gc;
       }
       gVirtualX->DrawLine(id, gc, x+fOff1, y+1, x+fOff2, y+1);

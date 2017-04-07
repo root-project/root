@@ -28,9 +28,18 @@ GPADLIB      := $(LPATH)/libGpad.$(SOEXT)
 GPADMAP      := $(GPADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GPADH))
+GPADH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GPADH))
+ALLHDRS     += $(GPADH_REL)
 ALLLIBS     += $(GPADLIB)
 ALLMAPS     += $(GPADMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GPADH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf2d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GPADLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GPADDEP)

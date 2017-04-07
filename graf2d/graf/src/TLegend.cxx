@@ -14,6 +14,7 @@
 #include "TStyle.h"
 #include "TLatex.h"
 #include "TLine.h"
+#include "TPolyLine.h"
 #include "TBox.h"
 #include "TMarker.h"
 #include "TLegend.h"
@@ -24,33 +25,32 @@
 #include "TLegendEntry.h"
 #include "Riostream.h"
 #include "TMultiGraph.h"
+#include "TGraph.h"
 #include "THStack.h"
-
 
 ClassImp(TLegend)
 
+/** \class TLegend
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Legend class</h2></center>
 This class displays a legend box (TPaveText) containing several legend entries.
+
 Each legend entry is made of a reference to a ROOT object, a text label and an
 option specifying which graphical attributes (marker/line/fill) should be
 displayed.
-<p>
+
 The following example shows how to create a legend. In this example the legend
 contains a histogram, a function and a graph. The histogram is put in the legend
 using its reference pointer whereas the graph and the function are added
-using their names. Note that, because <tt>TGraph</tt> constructors do not have the
-<tt>TGraph</tt> name as parameter, the graph name should be specified using the
-<tt>SetName</tt> method.
-<p>
+using their names. Note that, because `TGraph` constructors do not have the
+`TGraph` name as parameter, the graph name should be specified using the
+`SetName` method.
+
 When an object is added by name, a scan is performed on the list of objects
-contained in the current pad (<tt>gPad</tt>) and also in the possible
-<tt>TMultiGraph</tt> and <tt>THStack</tt> present in the pad. If a matching
+contained in the current pad (`gPad`) and also in the possible
+`TMultiGraph` and `THStack` present in the pad. If a matching
 name is found, the corresponding object is added in the legend using its pointer.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",600,500);
@@ -86,7 +86,7 @@ Begin_Macro(source)
    gr->Draw("P");
 
    leg = new TLegend(0.1,0.7,0.48,0.9);
-   leg->SetHeader("The Legend Title");
+   leg->SetHeader("The Legend Title","C"); // option "C" allows to center the header
    leg->AddEntry(h1,"Histogram filled with random numbers","f");
    leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
    leg->AddEntry("gr","Graph with error bars","lep");
@@ -95,55 +95,53 @@ Begin_Macro(source)
    return c1;
 }
 End_Macro
-Begin_Html
-<br>
-<tt>TLegend</tt> inherits from <tt>TAttText</tt> therefore changing any
+
+
+`TLegend` inherits from `TAttText` therefore changing any
 text attributes (text alignment, font, color...) on a legend will changed the
 text attributes on each line.
-<br>
+
 In particular it can be interesting to change the text alignement that way. In
 order to have a base-line vertical alignment instead of a centered one simply do:
-<pre>
+~~~ {.cpp}
    leg->SetTextAlign(13);
-</pre
+~~~
 or
-<pre>
+~~~ {.cpp}
    leg->SetTextAlign(11);
-</pre
-The default value of some <tt>TLegend</tt> attributes can be changed using
-<tt>gStyle</tt>. The default settings are:
-<pre>
+~~~
+The default value of some `TLegend` attributes can be changed using
+`gStyle`. The default settings are:
+~~~ {.cpp}
    SetLegendBorderSize(1);
    SetLegendFillColor(0);
    SetLegendFont(42);
    SetLegendTextSize(0.);
-<pre>
+~~~
 The global attributes change the default values for the next created legends.
-<p>
+
 Text attributes can be also changed individually on each legend entry:
-<pre>
+~~~ {.cpp}
    TLegendEntry *le = leg->AddEntry(h1,"Histogram filled with random numbers","f");
    le->SetTextColor(kBlue);;
-</pre>
-<br>
-Note that the <tt>TPad</tt> class has a method to build automatically a legend
-for all objects in the pad. It is called <tt>TPad::BuildLegend()</tt>.
-<p>
-Each item in the legend is added using the <tt>AddEntry</tt> method. This
+~~~
+
+Note that the `TPad` class has a method to build automatically a legend
+for all objects in the pad. It is called `TPad::BuildLegend()`.
+
+Each item in the legend is added using the `AddEntry` method. This
 method defines the object to be added (by reference or name), the label
 associated to this object and an option which a combination of:
-<ul>
-<li> L: draw line associated with TAttLine if obj inherits from TAttLine
-<li> P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
-<li> F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
-<li> E: draw vertical error bar
-</ul>
-<p>
+
+  - L: draw line associated with TAttLine if obj inherits from TAttLine
+  - P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
+  - F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
+  - E: draw vertical error bar
+
 As shown in the following example, passing a NULL pointer as first parameter in
-<tt>AddEntry</tt> is also valid. This allows to add text or blank lines in a
+`AddEntry` is also valid. This allows to add text or blank lines in a
 legend.
 
-End_Html
 Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",500,300);
@@ -161,12 +159,10 @@ Begin_Macro(source)
    return c2;
 }
 End_Macro
-Begin_Html
-<br>
-It is possible to draw the legend entries over several columns using
-the method <tt>SetNColumns()</tt> like in the following example.
 
-End_Html
+It is possible to draw the legend entries over several columns using
+the method `SetNColumns()` like in the following example.
+
 Begin_Macro(source)
 {
    TCanvas *c3 = new TCanvas("c2","c2",500,300);
@@ -187,38 +183,32 @@ Begin_Macro(source)
 End_Macro
 */
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
 
-//______________________________________________________________________________
 TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
-   /* Begin_Html
-   Default constructor.
-   End_Html */
-
    fPrimitives = 0;
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
    SetFillColor(gStyle->GetLegendFillColor());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Normal constructor.
+///
+/// A TLegend is a Pave with several TLegendEntry(s).
+/// x1,y1,x2,y2 are the coordinates of the Legend in the current pad
+/// (in normalised coordinates by default)
+/// "header" is the title that will be displayed at the top of the legend
+/// it is treated like a regular entry and supports TLatex. The default
+/// is no header (header = 0).
+/// The options are the same as for TPave Default = "brNDC"
 
-//______________________________________________________________________________
 TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
                   const char *header, Option_t *option)
         :TPave(x1,y1,x2,y2,4,option), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 {
-   /* Begin_Html
-   Normal constructor.
-   <p>
-   A TLegend is a Pave with several TLegendEntry(s).
-   x1,y1,x2,y2 are the coordinates of the Legend in the current pad
-   (in normalised coordinates by default)
-   "header" is the title that will be displayed at the top of the legend
-   it is treated like a regular entry and supports TLatex. The default
-   is no header (header = 0).
-   The options are the same as for TPave Default = "brNDC"
-   End_Html */
-
    fPrimitives = new TList;
    if ( header && strlen(header) > 0) {
       TLegendEntry *headerEntry = new TLegendEntry( 0, header, "h" );
@@ -234,15 +224,12 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
    SetFillColor(gStyle->GetLegendFillColor());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
 
-//______________________________________________________________________________
 TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
                                             fPrimitives(0)
 {
-   /* Begin_Html
-   Copy constructor.
-   End_Html */
-
   if (legend.fPrimitives) {
       fPrimitives = new TList();
       TListIter it(legend.fPrimitives);
@@ -254,14 +241,11 @@ TLegend::TLegend( const TLegend &legend ) : TPave(legend), TAttText(legend),
    ((TLegend&)legend).Copy(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
 
-//______________________________________________________________________________
 TLegend& TLegend::operator=(const TLegend &lg)
 {
-   /* Begin_Html
-   Assignment operator.
-   End_Html */
-
    if(this!=&lg) {
       TPave::operator=(lg);
       TAttText::operator=(lg);
@@ -273,37 +257,30 @@ TLegend& TLegend::operator=(const TLegend &lg)
    return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor.
 
-//______________________________________________________________________________
 TLegend::~TLegend()
 {
-   /* Begin_Html
-   Default destructor.
-   End_Html */
-
    if (fPrimitives) fPrimitives->Delete();
    delete fPrimitives;
    fPrimitives = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new entry to this legend. "obj" is the object to be represented.
+/// "label" is the text you wish to associate with obj in the legend.
+/// If "label" is null or empty, the title of the object will be used.
+///
+/// Options are:
+///
+///  - L: draw line associated with TAttLine if obj inherits from TAttLine
+///  - P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
+///  - F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
+///  - E: draw vertical error bar if option "L" is also specified
 
-//______________________________________________________________________________
 TLegendEntry *TLegend::AddEntry(const TObject *obj, const char *label, Option_t *option)
 {
-   /* Begin_Html
-   Add a new entry to this legend. "obj" is the object to be represented.
-   "label" is the text you wish to associate with obj in the legend.
-   If "label" is null or empty, the title of the object will be used.
-   <p>
-   Options are:
-   <ul>
-   <li> L: draw line associated with TAttLine if obj inherits from TAttLine
-   <li> P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
-   <li> F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
-   <li> E: draw vertical error bar if option "L" is also specified
-   </ul>
-   End_Html */
-
    const char *lab = label;
 
    if (obj && (!label || strlen(label)==0)) lab = obj->GetTitle();
@@ -313,24 +290,20 @@ TLegendEntry *TLegend::AddEntry(const TObject *obj, const char *label, Option_t 
    return newentry;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new entry to this legend. "name" is the name of an object in the pad to
+/// be represented label is the text you wish to associate with obj in the legend
+/// if label is null or empty, the title of the object will be used.
+///
+/// Options are:
+///
+///  - L: draw line associated with TAttLine if obj inherits from TAttLine
+///  - P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
+///  - F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
+///  - E: draw vertical error bar if option "L" is also specified
 
-//______________________________________________________________________________
 TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *option)
 {
-   /* Begin_Html
-   Add a new entry to this legend. "name" is the name of an object in the pad to
-   be represented label is the text you wish to associate with obj in the legend
-   if label is null or empty, the title of the object will be used.
-   <p>
-   Options are:
-   <ul>
-   <li> L: draw line associated with TAttLine if obj inherits from TAttLine
-   <li> P: draw polymarker associated with TAttMarker if obj inherits from TAttMarker
-   <li> F: draw a box with fill associated wit TAttFill if obj inherits TAttFill
-   <li> E: draw vertical error bar if option "L" is also specified
-   </ul>
-   End_Html */
-
    if (!gPad) {
       Error("AddEntry", "need to create a canvas first");
       return 0;
@@ -363,26 +336,20 @@ TLegendEntry *TLegend::AddEntry(const char *name, const char *label, Option_t *o
    return AddEntry( obj, label, option );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all entries in this legend, including the header.
 
-//______________________________________________________________________________
 void TLegend::Clear( Option_t *)
 {
-   /* Begin_Html
-   Clear all entries in this legend, including the header.
-   End_Html */
-
    if (!fPrimitives) return;
    fPrimitives->Delete();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this legend into "obj".
 
-//______________________________________________________________________________
 void TLegend::Copy( TObject &obj ) const
 {
-   /* Begin_Html
-   Copy this legend into "obj".
-   End_Html */
-
    TPave::Copy(obj);
    TAttText::Copy((TLegend&)obj);
    ((TLegend&)obj).fEntrySeparation = fEntrySeparation;
@@ -390,14 +357,11 @@ void TLegend::Copy( TObject &obj ) const
    ((TLegend&)obj).fNColumns = fNColumns;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Delete entry at the mouse position.
 
-//______________________________________________________________________________
 void TLegend::DeleteEntry()
 {
-   /* Begin_Html
-   Delete entry at the mouse position.
-   End_Html */
-
    if ( !fPrimitives ) return;
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( !entry ) return;
@@ -405,82 +369,64 @@ void TLegend::DeleteEntry()
    delete entry;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this legend with its current attributes.
 
-//______________________________________________________________________________
 void TLegend::Draw( Option_t *option )
 {
-   /* Begin_Html
-   Draw this legend with its current attributes.
-   End_Html */
-
    AppendPad(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the fill attributes for the entry pointed by the mouse.
 
-//______________________________________________________________________________
 void TLegend::EditEntryAttFill()
 {
-   /* Begin_Html
-   Edit the fill attributes for the entry pointed by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( !entry ) return;
    gROOT->SetSelectedPrimitive( entry );
    entry->SetFillAttributes();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the line attributes for the entry pointed by the mouse.
 
-//______________________________________________________________________________
 void TLegend::EditEntryAttLine()
 {
-   /* Begin_Html
-   Edit the line attributes for the entry pointed by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( !entry ) return;
    gROOT->SetSelectedPrimitive( entry );
    entry->SetLineAttributes();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the marker attributes for the entry pointed by the mouse.
 
-//______________________________________________________________________________
 void TLegend::EditEntryAttMarker()
 {
-   /* Begin_Html
-   Edit the marker attributes for the entry pointed by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( !entry ) return;
    gROOT->SetSelectedPrimitive( entry );
    entry->SetMarkerAttributes();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the text attributes for the entry pointed by the mouse.
 
-//______________________________________________________________________________
 void TLegend::EditEntryAttText()
 {
-   /* Begin_Html
-   Edit the text attributes for the entry pointed by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( !entry ) return;
    gROOT->SetSelectedPrimitive( entry );
    entry->SetTextAttributes();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get entry pointed to by the mouse.
+/// This method is mostly a tool for other methods inside this class.
 
-//______________________________________________________________________________
 TLegendEntry *TLegend::GetEntry() const
 {
-   /* Begin_Html
-   Get entry pointed to by the mouse.
-   This method is mostly a tool for other methods inside this class.
-   End_Html */
-
    if (!gPad) {
       Error("GetEntry", "need to create a canvas first");
       return 0;
@@ -516,15 +462,12 @@ TLegendEntry *TLegend::GetEntry() const
    return entry;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the header, which is the title that appears at the top
+/// of the legend.
 
-//______________________________________________________________________________
 const char *TLegend::GetHeader() const
 {
-   /* Begin_Html
-   Returns the header, which is the title that appears at the top
-   of the legend.
-   End_Html */
-
    if ( !fPrimitives ) return 0;
       TIter next(fPrimitives);
    TLegendEntry *first;   // header is always the first entry
@@ -536,14 +479,11 @@ const char *TLegend::GetHeader() const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new entry before the entry at the mouse position.
 
-//______________________________________________________________________________
 void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* option)
 {
-   /* Begin_Html
-   Add a new entry before the entry at the mouse position.
-   End_Html */
-
    if (!gPad) {
       Error("InsertEntry", "need to create a canvas first");
       return;
@@ -564,27 +504,21 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this legend with its current attributes.
 
-//______________________________________________________________________________
 void TLegend::Paint( Option_t* option )
 {
-   /* Begin_Html
-   Paint this legend with its current attributes.
-   End_Html */
-
    TPave::ConvertNDCtoPad();
    TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
    PaintPrimitives();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get the number of rows.
 
-//______________________________________________________________________________
 Int_t TLegend::GetNRows() const
 {
-   /* Begin_Html
-   Get the number of rows.
-   End_Html */
-
    Int_t nEntries = 0;
    if ( fPrimitives ) nEntries = fPrimitives->GetSize();
    if ( nEntries == 0 ) return 0;
@@ -596,18 +530,15 @@ Int_t TLegend::GetNRows() const
    return nRows;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of columns for the legend. The header, if set, is given
+/// its own row. After that, every nColumns entries are inserted into the
+/// same row. For example, if one calls legend.SetNColumns(2), and there
+/// is no header, then the first two TObjects added to the legend will be
+/// in the first row, the next two will appear in the second row, and so on.
 
-//______________________________________________________________________________
 void TLegend::SetNColumns(Int_t nColumns)
 {
-   /* Begin_Html
-   Set the number of columns for the legend. The header, if set, is given
-   its own row. After that, every nColumns entries are inserted into the
-   same row. For example, if one calls legend.SetNColumns(2), and there
-   is no header, then the first two TObjects added to the legend will be
-   in the first row, the next two will appear in the second row, and so on.
-   End_Html */
-
    if(nColumns < 1) {
       Warning("TLegend::SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
       return;
@@ -615,14 +546,11 @@ void TLegend::SetNColumns(Int_t nColumns)
    fNColumns = nColumns;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the entries (list of primitives) for this legend.
 
-//______________________________________________________________________________
 void TLegend::PaintPrimitives()
 {
-   /* Begin_Html
-   Paint the entries (list of primitives) for this legend.
-   End_Html */
-
    Int_t nRows = GetNRows();
    if ( nRows == 0 ) return;
 
@@ -812,6 +740,21 @@ void TLegend::PaintPrimitives()
 
       TObject *eobj = entry->GetObject();
 
+      // depending on the object drawing option, the endcaps for error
+      // bar are drawn differently.
+      Int_t endcaps  = 0; // no endcaps.
+      if (eobj) { // eobj == nullptr for the legend header
+         TString eobjopt = eobj->GetDrawOption();
+         eobjopt.ToLower();
+         if (eobjopt.Contains("e1") && eobj->InheritsFrom(TH1::Class())) endcaps = 1; // a bar
+         if (eobj->InheritsFrom(TGraph::Class())) {
+            endcaps = 1; // a bar, default for TGraph
+            if (eobjopt.Contains("z"))  endcaps = 0; // no endcaps.
+            if (eobjopt.Contains(">"))  endcaps = 2; // empty arrow.
+            if (eobjopt.Contains("|>")) endcaps = 3; // filled arrow.
+         }
+      }
+
       // Draw fill pattern (in a box)
 
       if ( opt.Contains("f")) {
@@ -837,6 +780,20 @@ void TLegend::PaintPrimitives()
          gPad->PaintFillArea(4,xf,yf);
       }
 
+      // Get Polymarker size
+
+      Double_t symbolsize = 0.;
+      TMarker entrymarker( xsym, ysym, 0 );
+
+      if ( opt.Contains("p")) {
+         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
+            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
+         }
+         entrymarker.SetNDC();
+         entry->TAttMarker::Copy(entrymarker);
+         if (entrymarker.GetMarkerStyle() != 1 ) symbolsize = entrymarker.GetMarkerSize();
+      }
+
       // Draw line
 
       if ( opt.Contains("l") || opt.Contains("f")) {
@@ -856,18 +813,71 @@ void TLegend::PaintPrimitives()
             if ( boxwidth > margin ) boxwidth = margin;
 
             entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym - yspace*0.35);
+                                    xsym + boxw, ysym - yspace*0.35);
             entryline.PaintLineNDC( xsym + boxw, ysym - yspace*0.35,
-                                 xsym + boxw, ysym + yspace*0.35);
+                                    xsym + boxw, ysym + yspace*0.35);
             entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                 xsym - boxw, ysym + yspace*0.35);
+                                    xsym - boxw, ysym + yspace*0.35);
          } else {
             entryline.Paint();
             if (opt.Contains("e")) {
-               entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
-                                       xsym, ysym + yspace*0.30);
+               if ( !opt.Contains("p")) {
+                  entryline.PaintLineNDC( xsym, ysym - yspace*0.30,
+                                          xsym, ysym + yspace*0.30);
+               } else {
+                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+                  TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+                  entryline1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline1);
+                  entryline1.Paint();
+                  TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+                  entryline2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entryline2);
+                  entryline2.Paint();
+               }
+               if (endcaps == 1) {
+                  TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+                  entrytop1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entrytop1);
+                  entrytop1.Paint();
+                  TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+                  entrytop2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(entrytop2);
+                  entrytop2.Paint();
+               } else if (endcaps == 2) {
+                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+                  TPolyLine ple1(3,xe1,ye1);
+                  ple1.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(ple1);
+                  ple1.Paint();
+                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+                  TPolyLine ple2(3,xe2,ye2);
+                  ple2.SetBit(TLine::kLineNDC);
+                  entry->TAttLine::Copy(ple2);
+               } else if (endcaps == 3) {
+                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+                  for (Int_t i=0;i<3;i++) {
+                     xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
+                     ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
+                     xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
+                     ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+                  }
+                  TPolyLine ple1(3,xe1,ye1);
+                  ple1.SetFillColor(entry->GetLineColor());
+                  ple1.SetFillStyle(1001);
+                  ple1.Paint("f");
+                  TPolyLine ple2(3,xe2,ye2);
+                  ple2.SetFillColor(entry->GetLineColor());
+                  ple2.SetFillStyle(1001);
+                  ple2.Paint("f");
+               }
             }
          }
       }
@@ -878,51 +888,88 @@ void TLegend::PaintPrimitives()
          if (eobj && eobj->InheritsFrom(TAttLine::Class())) {
             dynamic_cast<TAttLine*>(eobj)->Copy(*entry);
          }
-         TLine entryline(xsym, ysym - yspace*0.30,
-                         xsym, ysym + yspace*0.30);
-         entryline.SetBit(TLine::kLineNDC);
-         entry->TAttLine::Copy(entryline);
-         entryline.Paint();
+         if ( !opt.Contains("p")) {
+            TLine entryline(xsym, ysym - yspace*0.30,
+                            xsym, ysym + yspace*0.30);
+            entryline.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline);
+            entryline.Paint();
+         } else {
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+            TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*0.30);
+            entryline1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline1);
+            entryline1.Paint();
+            TLine entryline2(xsym, ysym - sy, xsym, ysym - yspace*0.30);
+            entryline2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entryline2);
+            entryline2.Paint();
+         }
+         if (endcaps == 1) {
+            TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+            entrytop1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop1);
+            entrytop1.Paint();
+            TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+            entrytop2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(entrytop2);
+            entrytop2.Paint();
+         } else if (endcaps == 2) {
+            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+            TPolyLine ple1(3,xe1,ye1);
+            ple1.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(ple1);
+            ple1.Paint();
+            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+            TPolyLine ple2(3,xe2,ye2);
+            ple2.SetBit(TLine::kLineNDC);
+            entry->TAttLine::Copy(ple2);
+            ple2.Paint();
+         } else if (endcaps == 3) {
+            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
+            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
+            for (Int_t i=0;i<3;i++) {
+               xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
+               ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
+               xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
+               ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+            }
+            TPolyLine ple1(3,xe1,ye1);
+            ple1.SetFillColor(entry->GetLineColor());
+            ple1.SetFillStyle(1001);
+            ple1.Paint("f");
+            TPolyLine ple2(3,xe2,ye2);
+            ple2.SetFillColor(entry->GetLineColor());
+            ple2.SetFillStyle(1001);
+            ple2.Paint("f");
+         }
       }
 
       // Draw Polymarker
-
-      if ( opt.Contains("p")) {
-
-         if (eobj && eobj->InheritsFrom(TAttMarker::Class())) {
-            dynamic_cast<TAttMarker*>(eobj)->Copy(*entry);
-         }
-         TMarker entrymarker( xsym, ysym, 0 );
-         entrymarker.SetNDC();
-         entry->TAttMarker::Copy(entrymarker);
-         entrymarker.Paint();
-      }
+      if ( opt.Contains("p"))  entrymarker.Paint();
    }
-
    SetTextSize(save_textsize);
    delete [] columnWidths;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this TLegend and its contents.
 
-//______________________________________________________________________________
 void TLegend::Print( Option_t* option ) const
 {
-   /* Begin_Html
-   Dump this TLegend and its contents.
-   End_Html */
-
    TPave::Print( option );
    if (fPrimitives) fPrimitives->Print();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the legend entries pointing to "obj".
 
-//______________________________________________________________________________
 void TLegend::RecursiveRemove(TObject *obj)
 {
-   /* Begin_Html
-   Reset the legend entries pointing to "obj".
-   End_Html */
-
    TIter next(fPrimitives);
    TLegendEntry *entry;
    while (( entry = (TLegendEntry *)next() )) {
@@ -930,14 +977,12 @@ void TLegend::RecursiveRemove(TObject *obj)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save this legend as C++ statements on output stream out
+/// to be used with the SaveAs .C option.
 
-//______________________________________________________________________________
 void TLegend::SavePrimitive(std::ostream &out, Option_t* )
 {
-   /* Begin_Html
-   Save this legend as C++ statements on output stream out
-   to be used with the SaveAs .C option.
-   End_Html */
 
    out << "   " << std::endl;
    char quote = '"';
@@ -964,51 +1009,52 @@ void TLegend::SavePrimitive(std::ostream &out, Option_t* )
    out << "   leg->Draw();"<<std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the label of the entry pointed to by the mouse.
 
-//______________________________________________________________________________
 void TLegend::SetEntryLabel( const char* label )
 {
-   /* Begin_Html
-   Edit the label of the entry pointed to by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( entry ) entry->SetLabel( label );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the option of the entry pointed to by the mouse.
 
-//______________________________________________________________________________
 void TLegend::SetEntryOption( Option_t* option )
 {
-   /* Begin_Html
-   Edit the option of the entry pointed to by the mouse.
-   End_Html */
-
    TLegendEntry* entry = GetEntry();   // get entry pointed by the mouse
    if ( entry ) entry->SetOption( option );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the header, which is the "title" that appears at the top of the legend.
+/// If `option` contains `C`, the title will be centered.
 
-//______________________________________________________________________________
-void TLegend::SetHeader( const char *header )
+void TLegend::SetHeader( const char *header, Option_t* option )
 {
-   /* Begin_Html
-   Sets the header, which is the "title" that appears at the top of the legend.
-   End_Html */
+   TString opt;
 
    if ( !fPrimitives ) fPrimitives = new TList;
    TIter next(fPrimitives);
    TLegendEntry *first;   // header is always the first entry
    if ((  first = (TLegendEntry*)next() )) {
-      TString opt = first->GetOption();
+      opt = first->GetOption();
       opt.ToLower();
       if ( opt.Contains("h") ) {
          first->SetLabel(header);
+         opt = option;
+         opt.ToLower();
+         if ( opt.Contains("c") ) first->SetTextAlign(22);
+         else                     first->SetTextAlign(0);
          return;
       }
    }
    first = new TLegendEntry( 0, header, "h" );
-   first->SetTextAlign(0);
+   opt = option;
+   opt.ToLower();
+   if ( opt.Contains("c") ) first->SetTextAlign(22);
+   else                     first->SetTextAlign(0);
    first->SetTextAngle(0);
    first->SetTextColor(0);
    first->SetTextFont(GetTextFont()); // default font is TLegend font for the header

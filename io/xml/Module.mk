@@ -28,9 +28,18 @@ XMLLIB       := $(LPATH)/libXMLIO.$(SOEXT)
 XMLMAP       := $(XMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLH))
+XMLH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLH))
+ALLHDRS     += $(XMLH_REL)
 ALLLIBS     += $(XMLLIB)
 ALLMAPS     += $(XMLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(XMLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(XMLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(XMLDEP)

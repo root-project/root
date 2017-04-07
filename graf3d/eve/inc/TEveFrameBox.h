@@ -85,7 +85,7 @@ public:
    Bool_t GetDrawBack() const   { return fDrawBack; }
    void   SetDrawBack(Bool_t f) { fDrawBack = f;    }
 
-   ClassDef(TEveFrameBox, 1); // Description of a 2D or 3D frame that can be used to visually group a set of objects.
+   ClassDef(TEveFrameBox, 0); // Description of a 2D or 3D frame that can be used to visually group a set of objects.
 };
 
 #endif

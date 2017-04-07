@@ -1,6 +1,6 @@
 // Builds a graph with errors, displays it and saves it as
-// image. First, include some header files (within CINT,
-// these will be ignored).
+// image. First, include some header files
+// (not necessary for Cling)
 
 #include "TCanvas.h"
 #include "TROOT.h"
@@ -21,7 +21,7 @@ void macro1(){
             {5,5,4.7,4.5,4.2,5.1,2.9,4.1,4.8,5.43};
 
     // Instance of the graph
-    TGraphErrors graph(n_points,x_vals,y_vals,NULL,y_errs);
+    TGraphErrors graph(n_points,x_vals,y_vals,nullptr,y_errs);
     graph.SetTitle("Measurement XYZ;lenght [cm];Arb.Units");
 
     // Make the plot estetically better
@@ -30,7 +30,7 @@ void macro1(){
     graph.SetLineColor(kBlue);
 
     // The canvas on which we'll draw the graph
-    TCanvas* mycanvas = new TCanvas();
+    auto  mycanvas = new TCanvas();
 
     // Draw the graph !
     graph.DrawClone("APE");
@@ -63,8 +63,6 @@ void macro1(){
     mycanvas->Print("graph_with_law.pdf");
 }
 
-#ifndef __CINT__
 int main(){
     macro1();
     }
-#endif

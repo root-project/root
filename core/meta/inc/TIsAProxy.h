@@ -12,13 +12,10 @@
 #ifndef ROOT_TIsAProxy
 #define ROOT_TIsAProxy
 
-#ifndef ROOT_TVirtualIsAProxy
 #include "TVirtualIsAProxy.h"
-#endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
+#include "RtypesCore.h"
 #include <atomic>
+#include <typeinfo>
 
 class TClass;
 
@@ -31,7 +28,7 @@ class TIsAProxy  : public TVirtualIsAProxy {
 private:
    template <typename T> using Atomic_t = std::atomic<T>;
 
-   const type_info          *fType;        //Actual typeid of the proxy
+   const std::type_info     *fType;        //Actual typeid of the proxy
    Atomic_t<TClass*>         fClass;       //Actual TClass
    Atomic_t<void*>           fLast;        //points into fSubTypes map for last used values
    Char_t                    fSubTypes[72];//map of known sub-types
@@ -40,15 +37,15 @@ private:
    Bool_t                    fVirtual;     //Flag if class is virtual
    Atomic_t<Bool_t>          fInit;        //Initialization flag
 
-   void* FindSubType(const type_info*) const;
-   void* CacheSubType(const type_info*, TClass*);
+   void* FindSubType(const std::type_info*) const;
+   void* CacheSubType(const std::type_info*, TClass*);
 protected:
    TIsAProxy(const TIsAProxy&) = delete;
    TIsAProxy& operator=(const TIsAProxy&) = delete;
 
 public:
    // Standard initializing constructor
-   TIsAProxy(const type_info &typ);
+   TIsAProxy(const std::type_info &typ);
    // Standard destructor
    virtual ~TIsAProxy();
    // Callbacl to set the class

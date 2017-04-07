@@ -57,6 +57,10 @@ N: Paul Balm
 E: p.balm@nikhef.nl
 D: implemented TDatabasePDG::ConvertGeant3ToPDG
 
+N: Benjamin Bannier
+E: bbannier@gmail.com
+D: implemented THnChain
+
 N: Daniel Barna
 E: daniel.barna@cern.ch
 D: CINT install target
@@ -190,7 +194,7 @@ D: contribution in RooStats
 
 N: Bianca-Cristina Cristescu
 E: bianca-cristina.cristescu@cern.ch
-D: contributions to ROOT6 / meta
+D: contributions to ROOT6 / meta and cling.
 
 N: David Dagenhart
 E: wdd@fnal.gov
@@ -219,6 +223,10 @@ N: Adrien Devresse
 E: adrien.devresse@cern.ch
 D: libRDAVIX, the davix client code
 
+N: Baozeng Ding
+E: sploving1@gmail.com
+D: Contribution to cling's pointer validity checker
+
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
@@ -242,6 +250,10 @@ D: TTreeReader
 N: Rutger v.d. Eijk
 E: r36@nikhef.nl
 D: various contributions to GUI classes
+
+N: Andrey Erokhin
+E: Andrey.Erokhin@cern.ch
+D: ROOT::TDirectory
 
 N: Giulio Eulisse
 E: Giulio.Eulisse@cern.ch
@@ -314,6 +326,10 @@ E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
 D: PROOF developments
 
+N: Paul Gessinger
+E: hello@paulgessinger.com
+D: TRatioPlot class
+
 N: Davide Gerbaudo
 E: davide.gerbaudo@gmail.com
 D: VIOLIN drawing option for 2D histograms.
@@ -335,9 +351,21 @@ N: Mary-Louise Gill
 E: m.l.gill+cern@gmail.com
 D: editline terminal interface
 
+N: Luca Giommi
+E: luca.giommi2@studio.unibo.it
+D: rootdrawtree and TSimpleAnalysis
+
+N: Enrico Guiraud
+E: enrico.guiraud@gmail.com
+D: author of the multiproc module
+
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
 D: Original author of the Smatrix package
+
+N: Sergei Gleyzer
+E: Sergei.Gleyzer@cern.ch
+D: TMVA
 
 N: Piotr Golonka
 E: Piotr.Golonka@cern.ch
@@ -383,6 +411,10 @@ E: rhatcher@fnal.gov
 D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 D: class TTimeStamp
 
+N: John Harvey
+E: john.harvey@cern.ch
+D: Several Coverity bug fixes
+
 N: Bill Heintzelman
 E: billh@hep.upenn.edu
 D: TTree::AutoFlush,Autosave improvements
@@ -422,6 +454,10 @@ E: cholm@nbi.dk
 D: contributions to the build system (configure, Makefile.in, config.in)
 D: implementation of the principal component analysis class TPrincipal
 D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
+
+N: Burt Holzman
+E: burt@fnal.gov
+D: Contribution to TWebFile,rpdutils and sockets.
 
 N: Marian Ivanov
 E: m.ivanov@gsi.de
@@ -567,7 +603,7 @@ E: mmarino@gmail.com
 D: script to run a CSV file with python in tutorials/pyroot
 
 N: Claudi Martinez
-E: claudi@astres.cat
+E: claudix.kernel@gmail.com
 D: provided the fitsio module
 
 N: Andy Mastbaum
@@ -610,9 +646,13 @@ E: tigran.mkrtchyan@desy.de
 D: class TDCacheFile, interface to DESY's dCache system
 D: libRDAVIX, the davix client code
 
+N: Pau Miquel Mir
+E: paumm2006@yahoo.es
+D: Conversion of ROOT tutorials to Jupyter notebooks
+
 N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
-D: Math libraries
+D: Math libraries, ROOT-R, TMVA
 
 N: Miroslav Morhac
 E: fyzimiro@savba.sk (died on August 11 2011)
@@ -685,6 +725,7 @@ D: author of Carrot (http://carrot.cern.ch)
 N: Katerina Opocenska
 E: opocenska@gmail.com
 D: author of the Event Recorder
+D: author of the sub-merging technology in PROOF
 
 N: Juan Palacios
 E: Juan.Palacios@cern.ch
@@ -761,6 +802,14 @@ D: port to x32 psABI and its validation
 N: Sven Ravndal
 E: Sven.Ravndal@dresdner-bank.com
 D: initial event generator interface
+
+N: Benjamin Ragan-Kelley
+E: benjaminrk@gmail.com
+D: cling / Jupyter integration
+
+N: Dan Riley
+E: Daniel.Riley@cornell.edu
+D: Reduce memory/cpu waster in LZMA usage
 
 N: Reiner Rohlfs
 E: Reiner.Rohlfs@obs.unige.ch
@@ -839,6 +888,10 @@ N: Abdelhalim Ssadik
 E: abdelhalim.ssadik@cern.ch
 D: contribution to GUI classes (TGDockableFrame)
 
+N: Toby St. Clere Smithe
+E: mail@tsmithe.net
+D: cppyy pythonizations API
+
 N: Joerg Stelzer
 E: Joerz.Stelzer@cern.ch
 D: author of the TMVA package
@@ -859,6 +912,10 @@ N: Jan Therhaag
 E: therhaag@users.sourceforge.net
 D: author of the TMVA package
 
+N: Jeromy Tompkins
+E: Tompkins@nscl.msu.edu
+D: COL2 drawing option
+
 N: Tim Tran
 E: timtran@jlab.org
 D: Full implementation of all projections in THistPainter::ShowProjection3
@@ -866,6 +923,10 @@ D: Full implementation of all projections in THistPainter::ShowProjection3
 N: Long Tran-Thanh
 E: ttl1208@gmail.com
 D: PROOF contributions
+
+N: Georg Troska
+E: georg.troska@tu-dortmund.de
+D: Enhancement of the CANDLE drawing option
 
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
@@ -918,3 +979,7 @@ D: contributed to Reflex
 N: Andreas Zoglauer
 E: zog@mpe.mpg.de
 D: contributed to TStyle::CreateGradientColorTable()
+
+N: Omar Andres Zapata Mesa
+E: Omar.Zapata@cern.ch
+D: ROOT-R, JupyROOT, TMVA

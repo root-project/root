@@ -58,14 +58,14 @@ struct LsTreeEntry_t {
 
 ClassImp(TDataSetManagerFile)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Main constructor
+
 TDataSetManagerFile::TDataSetManagerFile(const char *group,
                                          const char *user, const char *ins)
                     : TDataSetManager(group, user, ins)
 {
-   //
-   // Main constructor
-
    // Parse options
    ParseInitOpts(ins);
 
@@ -73,13 +73,13 @@ TDataSetManagerFile::TDataSetManagerFile(const char *group,
    Init();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Main constructor
+
 TDataSetManagerFile::TDataSetManagerFile(const char *ins)
                     : TDataSetManager("", "", ins)
 {
-   //
-   // Main constructor
-
    // Parse options
    ParseInitOpts(ins);
 
@@ -87,11 +87,11 @@ TDataSetManagerFile::TDataSetManagerFile(const char *ins)
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do the real inititialization
+
 void TDataSetManagerFile::Init()
 {
-   // Do the real inititialization
-
    fIsRemote = kFALSE;
    if (!fUser.IsNull() && !fGroup.IsNull() && !fDataSetDir.IsNull()) {
 
@@ -228,11 +228,11 @@ void TDataSetManagerFile::Init()
    fLocalCacheDir = "";
    InitLocalCache();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the local cache if required
+
 void TDataSetManagerFile::InitLocalCache()
 {
-   // Init the local cache if required
-
    fUseCache = (fIsRemote) ? kTRUE : kFALSE;
 
    // Check if the caller has given specific instructions
@@ -305,17 +305,17 @@ void TDataSetManagerFile::InitLocalCache()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the input string and set the init bits accordingly
+/// Format is
+///    dir:<datasetdir> [mss:<mss-url>] [opt:<base-options>]
+/// The <datasetdir> is mandatory.
+/// See TDataSetManager::ParseInitOpts for the available
+/// base options.
+/// The base options are already initialized by the base constructor
+
 void TDataSetManagerFile::ParseInitOpts(const char *ins)
 {
-   // Parse the input string and set the init bits accordingly
-   // Format is
-   //    dir:<datasetdir> [mss:<mss-url>] [opt:<base-options>]
-   // The <datasetdir> is mandatory.
-   // See TDataSetManager::ParseInitOpts for the available
-   // base options.
-   // The base options are already initialized by the base constructor
-
    SetBit(TObject::kInvalidObject);
    fOpenPerms = kFALSE;
 
@@ -341,18 +341,18 @@ void TDataSetManagerFile::ParseInitOpts(const char *ins)
    ResetBit(TObject::kInvalidObject);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns path of the indicated dataset. The extension is '.root' for all files
+/// except for 'dsName==ls' which have extension '.txt'.
+/// If 'local' is kTRUE the local cache path is returned instead in the form
+/// <cachedir>/<group>.<user>.<dsName>.<ext>.
+/// NB: contains a static TString for result, so copy result before using twice.
+
 const char *TDataSetManagerFile::GetDataSetPath(const char *group,
                                                 const char *user,
                                                 const char *dsName,
                                                 TString &md5path, Bool_t local)
 {
-   // Returns path of the indicated dataset. The extension is '.root' for all files
-   // except for 'dsName==ls' which have extension '.txt'.
-   // If 'local' is kTRUE the local cache path is returned instead in the form
-   // <cachedir>/<group>.<user>.<dsName>.<ext>.
-   // NB: contains a static TString for result, so copy result before using twice.
-
    if (fgCommonDataSetTag == group)
      group = fCommonGroup;
 
@@ -373,15 +373,15 @@ const char *TDataSetManagerFile::GetDataSetPath(const char *group,
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save into the <datasetdir>/kDataSet_DataSetList file the name of the updated
+/// or created or modified dataset. For still existing datasets, fill the
+/// modification date in seconds anf the checksum.
+/// Returns 0 on success, -1 on error
+
 Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
                                         const char *dsName, Long_t mtime, const char *checksum)
 {
-   // Save into the <datasetdir>/kDataSet_DataSetList file the name of the updated
-   // or created or modified dataset. For still existing datasets, fill the
-   // modification date in seconds anf the checksum.
-   // Returns 0 on success, -1 on error
-
    // Update / create list for the owner
    Long_t lsmtime = 0;
    TString lschecksum;
@@ -465,15 +465,15 @@ Int_t TDataSetManagerFile::NotifyUpdate(const char *group, const char *user,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create or recreate the dataset lists for 'uri'.
+/// The list are saved in text form in 'uri'/ls.txt for fast browsing and in
+/// 'uri'/ls.root in form of TMacro for optimized and portable transfer.
+/// Return 0 on success, 1 if the file was empty, -1 on error
+
 Int_t TDataSetManagerFile::CreateLsFile(const char *group, const char *user,
                                         Long_t &mtime, TString &checksum)
 {
-   // Create or recreate the dataset lists for 'uri'.
-   // The list are saved in text form in 'uri'/ls.txt for fast browsing and in
-   // 'uri'/ls.root in form of TMacro for optimized and portable transfer.
-   // Return 0 on success, 1 if the file was empty, -1 on error
-
    mtime = 0;
    checksum = "";
    // Create temporary file; we cannot lock now because we would (dead-)lock
@@ -559,25 +559,25 @@ Int_t TDataSetManagerFile::CreateLsFile(const char *group, const char *user,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds the dataset in the folder of group, user to the list in target.
+/// If dsName is defined, only the information about the specified dataset
+/// is processed.
+///
+/// The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
+/// Available options (to be .or.ed):
+///    kPrint          print the dataset content
+///    kQuotaUpdate    update quotas
+///    kExport         use export naming
+///    kList           get a list of dataset names
+///
+/// NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
+/// NB2: for options "kPrint" and "kQuotaUpdate" return is null.
+
 Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
                                            const char *dsName,
                                            UInt_t option, TObject *target)
 {
-   // Adds the dataset in the folder of group, user to the list in target.
-   // If dsName is defined, only the information about the specified dataset
-   // is processed.
-   //
-   // The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
-   // Available options (to be .or.ed):
-   //    kPrint          print the dataset content
-   //    kQuotaUpdate    update quotas
-   //    kExport         use export naming
-   //    kList           get a list of dataset names
-   //
-   // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
-   // NB2: for options "kPrint" and "kQuotaUpdate" return is null.
-
    TString userDirPath;
    userDirPath.Form("%s/%s/%s", fDataSetDir.Data(), group, user);
    void *userDir = gSystem->OpenDirectory(userDirPath);
@@ -711,37 +711,37 @@ Bool_t TDataSetManagerFile::BrowseDataSets(const char *group, const char *user,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General purpose call to go through the existing datasets.
+/// If <user> is 0 or "*", act on all datasets for the given <group>.
+/// If <group> is 0 or "*", act on all datasets.
+/// If <dsName> is defined, only the information about the specified dataset
+/// is processed.
+/// Action depends on option; available options:
+///
+///    kExport         Return a TMap object containing all the information about
+///                    datasets in the form:
+///                    { <group>, <map of users> }
+///                                     |
+///                             { <map of datasets>, <dataset>}
+///                    (<dataset> are TFileCollection objects)
+///    kShowDefault    as kExport with in addition a default selection including
+///                    the datasets from the current user, the ones from the group
+///                    and the common ones
+///
+///    kPrint          print the dataset content; no output is returned
+///    kList           get a list of available dataset names
+///    kForceScan      Re-open files while processing kPrint (do not use the
+///                    pre-processed information)
+///    kNoHeaderPrint  Labelling header is not printed
+///    kQuotaUpdate    update {group, user} quotas; no output is returned
+///
+/// NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
+/// NB2: for options "kPrint" and "kQuoatUpdate" return is null.
+
 TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
                                        const char *dsName, UInt_t option)
 {
-   // General purpose call to go through the existing datasets.
-   // If <user> is 0 or "*", act on all datasets for the given <group>.
-   // If <group> is 0 or "*", act on all datasets.
-   // If <dsName> is defined, only the information about the specified dataset
-   // is processed.
-   // Action depends on option; available options:
-   //
-   //    kExport         Return a TMap object containing all the information about
-   //                    datasets in the form:
-   //                    { <group>, <map of users> }
-   //                                     |
-   //                             { <map of datasets>, <dataset>}
-   //                    (<dataset> are TFileCollection objects)
-   //    kShowDefault    as kExport with in addition a default selection including
-   //                    the datasets from the current user, the ones from the group
-   //                    and the common ones
-   //
-   //    kPrint          print the dataset content; no output is returned
-   //    kList           get a list of available dataset names
-   //    kForceScan      Re-open files while processing kPrint (do not use the
-   //                    pre-processed information)
-   //    kNoHeaderPrint  Labelling header is not printed
-   //    kQuotaUpdate    update {group, user} quotas; no output is returned
-   //
-   // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
-   // NB2: for options "kPrint" and "kQuoatUpdate" return is null.
-
    if (group && fgCommonDataSetTag == group)
      group = fCommonGroup;
 
@@ -934,15 +934,15 @@ TMap *TDataSetManagerFile::GetDataSets(const char *group, const char *user,
    return (TMap *)result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check for the 'ls.txt' for 'group' and 'user' and fill the path for the
+/// ls file in 'out'.
+/// If 'dsname' is defined, open the file and extract the relevant line.
+/// Return 0 on success, -1 on failure
+
 Int_t TDataSetManagerFile::FillLsDataSet(const char *group, const char *user,
                                          const char *dsname, TList *out, UInt_t option)
 {
-   // Check for the 'ls.txt' for 'group' and 'user' and fill the path for the
-   // ls file in 'out'.
-   // If 'dsname' is defined, open the file and extract the relevant line.
-   // Return 0 on success, -1 on failure
-
    // Check inputs
    if (!group || strlen(group) <= 0 || !user || strlen(user) <= 0 || !out) {
       Error("FillLsDataSet", "at least one of the inputs is invalid (%s,%s,%p)", group, user, out);
@@ -1004,20 +1004,20 @@ Int_t TDataSetManagerFile::FillLsDataSet(const char *group, const char *user,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns the dataset <dsName> of user <user> in group <group> .
+/// If checksum is non-zero, it will contain the pointer to a TMD5 sum object
+/// with the checksum of the file, has to be deleted by the user.
+/// If option has the bi kReadShort set, the shortobject is read, that does not
+/// contain the list of files. This is much faster.
+
 TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
                                                  const char *user,
                                                  const char *dsName,
                                                  UInt_t option,
                                                  TMD5 **checksum)
 {
-   //
-   // Returns the dataset <dsName> of user <user> in group <group> .
-   // If checksum is non-zero, it will contain the pointer to a TMD5 sum object
-   // with the checksum of the file, has to be deleted by the user.
-   // If option has the bi kReadShort set, the shortobject is read, that does not
-   // contain the list of files. This is much faster.
-
    TFileCollection *fileList = 0;
    Bool_t readshort = (option & kReadShort) ? kTRUE : kFALSE;
    // Check is the file is in the cache
@@ -1077,14 +1077,14 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *group,
    return fileList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the local cache information for group, user, dsName is up-to-date
+/// If not, make the relevant updates
+/// Return 0 if OK, 1 if the dataset does not exists anymore, -1 on failure
+
 Int_t TDataSetManagerFile::CheckLocalCache(const char *group, const char *user,
                                            const char *dsName, UInt_t option)
 {
-   // Check if the local cache information for group, user, dsName is up-to-date
-   // If not, make the relevant updates
-   // Return 0 if OK, 1 if the dataset does not exists anymore, -1 on failure
-
    // Check first if the global update info is uptodate
    static TMacro *uptmac = 0;
    Bool_t need_last_update = (option & kNoCacheUpdate) ? kFALSE : kTRUE;
@@ -1247,11 +1247,11 @@ Int_t TDataSetManagerFile::CheckLocalCache(const char *group, const char *user,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear cached information matching uri
+
 Int_t TDataSetManagerFile::ClearCache(const char *uri)
 {
-   // Clear cached information matching uri
-
    // Open the top directory
    void *dirp = gSystem->OpenDirectory(fLocalCacheDir.Data());
    if (!dirp) {
@@ -1313,11 +1313,11 @@ Int_t TDataSetManagerFile::ClearCache(const char *uri)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show cached information matching uri
+
 Int_t TDataSetManagerFile::ShowCache(const char *uri)
 {
-   // Show cached information matching uri
-
    // Open the top directory
    void *dirp = gSystem->OpenDirectory(fLocalCacheDir.Data());
    if (!dirp) {
@@ -1380,21 +1380,21 @@ Int_t TDataSetManagerFile::ShowCache(const char *uri)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Writes indicated dataset.
+/// If option has the bit kFileMustExist set, the file must still exist,
+/// otherwise the new dataset is not written (returns 3 in this case).
+/// If checksum is non-zero the files current checksum is checked against it,
+/// if it does not match the file is not written (the function returns 2 in this
+/// case, if the file has disappeared it is also not written (i.e. checksum
+/// implies the bit kFileMustExist set in option).
+/// Returns != 0 for success, 0 for error
+
 Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
                                         const char *dsName, TFileCollection *dataset,
                                         UInt_t option, TMD5 *checksum)
 {
-   //
-   // Writes indicated dataset.
-   // If option has the bit kFileMustExist set, the file must still exist,
-   // otherwise the new dataset is not written (returns 3 in this case).
-   // If checksum is non-zero the files current checksum is checked against it,
-   // if it does not match the file is not written (the function returns 2 in this
-   // case, if the file has disappeared it is also not written (i.e. checksum
-   // implies the bit kFileMustExist set in option).
-   // Returns != 0 for success, 0 for error
-
    TString md5path, path, md5sum;
    Long_t mtime = 0;
    {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
@@ -1504,14 +1504,14 @@ Int_t TDataSetManagerFile::WriteDataSet(const char *group, const char *user,
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the checksum of the indicated dataset at 'path' and save it to the
+/// appropriate file 'md5path'. The MD5 string is returned in 'md5sum'.
+/// Return 0 on success, -1 on error.
+
 Int_t TDataSetManagerFile::ChecksumDataSet(const char *path,
                                            const char *md5path, TString &checksum)
 {
-   // Calculate the checksum of the indicated dataset at 'path' and save it to the
-   // appropriate file 'md5path'. The MD5 string is returned in 'md5sum'.
-   // Return 0 on success, -1 on error.
-
    checksum = "";
    // Check inputs
    if (!path || strlen(path) <= 0 || !md5path || strlen(md5path) <= 0) {
@@ -1538,12 +1538,12 @@ Int_t TDataSetManagerFile::ChecksumDataSet(const char *path,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes the indicated dataset
+
 Bool_t TDataSetManagerFile::RemoveDataSet(const char *group, const char *user,
                                                const char *dsName)
 {
-   // Removes the indicated dataset
-
    TString md5path, path;
    {  TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
 
@@ -1570,12 +1570,12 @@ Bool_t TDataSetManagerFile::RemoveDataSet(const char *group, const char *user,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the indicated dataset exits
+
 Bool_t TDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
                                                const char *dsName)
 {
-   // Checks if the indicated dataset exits
-
    TLockFile lock(fDataSetLockFile, fLockFileTimeLimit);
 
    TString md5path, path(GetDataSetPath(group, user, dsName, md5path));
@@ -1583,22 +1583,22 @@ Bool_t TDataSetManagerFile::ExistsDataSet(const char *group, const char *user,
    return (gSystem->AccessPathName(path) == kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a dataset, perfoming quota checkings and verification, if required.
+/// If a dataset with the same name already exists the action fails unless 'opts'
+/// contains 'O', in which case the old dataset is overwritten, or contains 'U',
+/// in which case 'newDataSet' is added to the existing dataset (duplications are
+/// ignored, if any).
+/// If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
+/// is configured to allow so). By default the dataset is not verified.
+/// If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
+/// is trusted, i.e. not reset (if the dataset manager is configured to allow so).
+/// Returns 0 on success, -1 on failure
+
 Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
                                            TFileCollection *newDataSet,
                                            const char *opts)
 {
-   // Register a dataset, perfoming quota checkings and verification, if required.
-   // If a dataset with the same name already exists the action fails unless 'opts'
-   // contains 'O', in which case the old dataset is overwritten, or contains 'U',
-   // in which case 'newDataSet' is added to the existing dataset (duplications are
-   // ignored, if any).
-   // If 'opts' contains 'V' the dataset files are also verified (if the dataset manager
-   // is configured to allow so). By default the dataset is not verified.
-   // If 'opts' contains 'T' the in the dataset object (status bits, meta,...)
-   // is trusted, i.e. not reset (if the dataset manager is configured to allow so).
-   // Returns 0 on success, -1 on failure
-
    if (!TestBit(TDataSetManager::kAllowRegister))
       return -1;
 
@@ -1721,14 +1721,14 @@ Int_t TDataSetManagerFile::RegisterDataSet(const char *uri,
    // Done
    return ((success) ? 0 : -1);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scans the dataset indicated by <uri> and returns the number of missing files.
+/// Returns -1 if any failure occurs, >= 0 on success.
+/// For more details, see documentation of
+/// ScanDataSet(TFileCollection *dataset, const char *option)
+
 Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
 {
-   // Scans the dataset indicated by <uri> and returns the number of missing files.
-   // Returns -1 if any failure occurs, >= 0 on success.
-   // For more details, see documentation of
-   // ScanDataSet(TFileCollection *dataset, const char *option)
-
    TString dsName, dsTree;
    if ((opt & kSetDefaultTree)) {
       if (TestBit(TDataSetManager::kAllowRegister)) {
@@ -1777,12 +1777,12 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *uri, UInt_t opt)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See documentation of ScanDataSet(TFileCollection *dataset, UInt_t option)
+
 Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
                                        const char *dsName, UInt_t option)
 {
-   // See documentation of ScanDataSet(TFileCollection *dataset, UInt_t option)
-
    if (!TestBit(TDataSetManager::kAllowVerify))
       return -1;
 
@@ -1837,27 +1837,27 @@ Int_t TDataSetManagerFile::ScanDataSet(const char *group, const char *user,
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returns all datasets for the <group> and <user> specified by <uri>.
+/// If <user> is 0, it returns all datasets for the given <group>.
+/// If <group> is 0, it returns all datasets.
+/// The returned TMap contains:
+///    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
+///
+/// The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
+/// Available options (to be .or.ed):
+///    kShowDefault    a default selection is shown that include the ones from
+///                    the current user, the ones from the group and the common ones
+///    kPrint          print the dataset content
+///    kQuotaUpdate    update quotas
+///    kExport         use export naming
+///
+/// NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
+/// NB2: for options "kPrint" and "kQuoatUpdate" return is null.
+
 TMap *TDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
 {
-   //
-   // Returns all datasets for the <group> and <user> specified by <uri>.
-   // If <user> is 0, it returns all datasets for the given <group>.
-   // If <group> is 0, it returns all datasets.
-   // The returned TMap contains:
-   //    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
-   //
-   // The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
-   // Available options (to be .or.ed):
-   //    kShowDefault    a default selection is shown that include the ones from
-   //                    the current user, the ones from the group and the common ones
-   //    kPrint          print the dataset content
-   //    kQuotaUpdate    update quotas
-   //    kExport         use export naming
-   //
-   // NB1: options "kPrint", "kQuoatUpdate" and "kExport" are mutually exclusive
-   // NB2: for options "kPrint" and "kQuoatUpdate" return is null.
-
    TString dsUser, dsGroup, dsName;
 
    if (((option & kPrint) || (option & kExport)) && strlen(uri) <= 0)
@@ -1868,11 +1868,11 @@ TMap *TDataSetManagerFile::GetDataSets(const char *uri, UInt_t option)
    return (TMap *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Utility function used in various methods for user dataset upload.
+
 TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *opts)
 {
-   // Utility function used in various methods for user dataset upload.
-
    TString dsUser, dsGroup, dsName, ss(opts);
 
    TFileCollection *fc = 0;
@@ -1924,11 +1924,11 @@ TFileCollection *TDataSetManagerFile::GetDataSet(const char *uri, const char *op
    return fc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Removes the indicated dataset
+
 Bool_t TDataSetManagerFile::RemoveDataSet(const char *uri)
 {
-   // Removes the indicated dataset
-
    TString dsName;
 
    if (TestBit(TDataSetManager::kAllowRegister)) {
@@ -1941,11 +1941,11 @@ Bool_t TDataSetManagerFile::RemoveDataSet(const char *uri)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the indicated dataset exits
+
 Bool_t TDataSetManagerFile::ExistsDataSet(const char *uri)
 {
-   // Checks if the indicated dataset exits
-
    TString dsUser, dsGroup, dsName;
 
    if (ParseUri(uri, &dsGroup, &dsUser, &dsName))
@@ -1953,11 +1953,11 @@ Bool_t TDataSetManagerFile::ExistsDataSet(const char *uri)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// updates the used space maps
+
 void TDataSetManagerFile::UpdateUsedSpace()
 {
-   // updates the used space maps
-
    // Clear used space entries
    fGroupUsed.DeleteAll();
    fUserUsed.DeleteAll();
@@ -1966,12 +1966,12 @@ void TDataSetManagerFile::UpdateUsedSpace()
    GetDataSets(0, 0, 0, (UInt_t)kQuotaUpdate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets last dataset modification time. Returns -1 on error, or number of
+/// seconds since epoch on success
+
 Long_t TDataSetManagerFile::GetModTime(const char *uri)
 {
-   // Gets last dataset modification time. Returns -1 on error, or number of
-   // seconds since epoch on success
-
    TString group, user, name, md5path;
    if (!ParseUri(uri, &group, &user, &name)) {
       return -1;

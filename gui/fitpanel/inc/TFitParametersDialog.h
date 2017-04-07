@@ -20,16 +20,19 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 enum EFPDialogBound {
    kFPDBounded,
    kFPDNoneBounded
+};
+
+/// Enumeration specifying if parameters
+/// have been modified by the user
+enum EFPDialogChange {
+   kFPDNoChange,
+   kFPDChange
 };
 
 class TF1;
@@ -105,6 +108,7 @@ public:
    virtual void  HandleButtons(Bool_t update);
    virtual void  HandleShiftTab();
    virtual void  HandleTab();
+   virtual Bool_t HasChanges() { return fHasChanges; }
 
 protected:
    void SetParameters();

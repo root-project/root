@@ -22,15 +22,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TSelectorList
 #include "TSelectorList.h"
-#endif
 
 
 class TTree;
@@ -42,12 +36,12 @@ public:
    enum EAbort { kContinue, kAbortProcess, kAbortFile };
 
 protected:
-   Long64_t       fStatus;  // Selector status
-   EAbort         fAbort;   // Abort status
-   TString        fOption;  // Option given to TTree::Process
-   TObject       *fObject;  //!Current object if processing object (vs. TTree)
-   TList         *fInput;   // List of objects available during processing
-   TSelectorList *fOutput;  //!List of objects created during processing
+   Long64_t       fStatus;  ///<  Selector status
+   EAbort         fAbort;   ///<  Abort status
+   TString        fOption;  ///<  Option given to TTree::Process
+   TObject       *fObject;  ///<! Current object if processing object (vs. TTree)
+   TList         *fInput;   ///<  List of objects available during processing
+   TSelectorList *fOutput;  ///<! List of objects created during processing
 
 private:
    TSelector(const TSelector&);            // not implemented
@@ -68,6 +62,7 @@ public:
    virtual Bool_t      ProcessCut(Long64_t /*entry*/);
    virtual void        ProcessFill(Long64_t /*entry*/);
    virtual Bool_t      Process(Long64_t /*entry*/);
+   virtual void        ImportOutput(TList *output);
    virtual void        SetOption(const char *option) { fOption = option; }
    virtual void        SetObject(TObject *obj) { fObject = obj; }
    virtual void        SetInputList(TList *input) { fInput = input; }

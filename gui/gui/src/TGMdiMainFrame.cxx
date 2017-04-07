@@ -54,14 +54,14 @@ ClassImp(TGMdiContainer)
 ClassImp(TGMdiGeometry)
 ClassImp(TGMdiFrameList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a MDI main frame.
+
 TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
                                Int_t w, Int_t h, UInt_t options,
                                Pixel_t back) :
    TGCanvas(p, w, h, options | kDoubleBorder | kSunkenFrame | kMdiMainFrame, back)
 {
-   // Create a MDI main frame.
-
    fContainer = new TGMdiContainer(this, 10, 10, kOwnBackground,
                          fClient->GetShadow(GetDefaultFrameBackground()));
    TGCanvas::SetContainer(fContainer);
@@ -111,11 +111,11 @@ TGMdiMainFrame::TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menuBar,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MDI main frame destructor.
+
 TGMdiMainFrame::~TGMdiMainFrame()
 {
-   // MDI main frame destructor.
-
    TGMdiFrameList *tmp, *travel = fChildren;
 
    while (travel) {
@@ -143,11 +143,11 @@ TGMdiMainFrame::~TGMdiMainFrame()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MDI windows resize mode (opaque or transparent).
+
 void TGMdiMainFrame::SetResizeMode(Int_t mode)
 {
-   // Set MDI windows resize mode (opaque or transparent).
-
    TGMdiFrameList *travel;
 
    fResizeMode = mode;
@@ -156,11 +156,11 @@ void TGMdiMainFrame::SetResizeMode(Int_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboards events into MDI main frame.
+
 Bool_t TGMdiMainFrame::HandleKey(Event_t *event)
 {
-   // Handle keyboards events into MDI main frame.
-
    char   input[10];
    UInt_t keysym;
 
@@ -185,11 +185,11 @@ Bool_t TGMdiMainFrame::HandleKey(Event_t *event)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new MDI child window.
+
 void TGMdiMainFrame::AddMdiFrame(TGMdiFrame *frame)
 {
-   // Add new MDI child window.
-
    TGMdiFrameList *travel;
 
    frame->UnmapWindow();
@@ -226,11 +226,11 @@ void TGMdiMainFrame::AddMdiFrame(TGMdiFrame *frame)
    FrameCreated(travel->GetDecorFrame()->GetId());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove MDI child window.
+
 Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
 {
-   // Remove MDI child window.
-
    TGMdiFrameList *travel = fChildren;
 
    if (!frame) return kFALSE;
@@ -278,11 +278,11 @@ Bool_t TGMdiMainFrame::RemoveMdiFrame(TGMdiFrame *frame)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current (active) MDI child window (by id).
+
 Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
 {
-   // Set current (active) MDI child window (by id).
-
    if (fCurrent && (fCurrent->GetDecorFrame()->GetId() == id)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
@@ -300,11 +300,11 @@ Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
    return SetCurrent(travel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current (active) MDI child window (by frame pointer).
+
 Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrame *f)
 {
-   // Set current (active) MDI child window (by frame pointer).
-
    if (fCurrent && (fCurrent->GetDecorFrame()->GetMdiFrame() == f)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
@@ -321,11 +321,11 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrame *f)
    return SetCurrent(travel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current (active) MDI child window (by frame list).
+
 Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
 {
-   // Set current (active) MDI child window (by frame list).
-
    if (fCurrent && (fCurrent == newcurrent)) {
       fCurrent->GetDecorFrame()->RaiseWindow();
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
@@ -388,11 +388,11 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bring the lowest window to the top.
+
 void TGMdiMainFrame::CirculateUp()
 {
-   // Bring the lowest window to the top.
-
    if (fCurrent) {
       fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeNotCurrent,
                                                      fBackNotCurrent,
@@ -413,11 +413,11 @@ void TGMdiMainFrame::CirculateUp()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send the highest window to the bottom.
+
 void TGMdiMainFrame::CirculateDown()
 {
-   // Send the highest window to the bottom.
-
    if (fCurrent) {
       fCurrent->GetDecorFrame()->LowerWindow();
       fCurrent->GetDecorFrame()->GetTitleBar()->SetTitleBarColors(fForeNotCurrent,
@@ -438,11 +438,11 @@ void TGMdiMainFrame::CirculateDown()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return decor frame of MDI child window (by frame pointer).
+
 TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(TGMdiFrame *frame) const
 {
-   // Return decor frame of MDI child window (by frame pointer).
-
    TGMdiFrameList *travel = fChildren;
    while (travel && (travel->GetDecorFrame()->GetMdiFrame() != frame))
       travel = travel->GetNext();
@@ -450,32 +450,32 @@ TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(TGMdiFrame *frame) const
    return travel->GetDecorFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return decor frame of MDI child window (by id).
+
 TGMdiDecorFrame *TGMdiMainFrame::GetDecorFrame(UInt_t id) const
 {
-   // Return decor frame of MDI child window (by id).
-
    TGMdiFrameList *travel = fChildren;
    while (travel && (travel->GetDecorFrame()->GetId() != id)) travel = travel->GetNext();
    if (!travel) return 0;
    return travel->GetDecorFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return frame of MDI child window (by id).
+
 TGMdiFrame *TGMdiMainFrame::GetMdiFrame(UInt_t id) const
 {
-   // Return frame of MDI child window (by id).
-
    TGMdiDecorFrame *frame = GetDecorFrame(id);
    if (!frame) return 0;
    return frame->GetMdiFrame();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return resizing box (rectangle) for current MDI child.
+
 TGRectangle TGMdiMainFrame::GetBBox() const
 {
-   // Return resizing box (rectangle) for current MDI child.
-
    if (fCurrent && fCurrent->GetDecorFrame()->IsMaximized()) {
       return TGRectangle(0, 0, fWidth - 2 * fBorderWidth, fHeight - 2 * fBorderWidth);
    } else {
@@ -494,11 +494,11 @@ TGRectangle TGMdiMainFrame::GetBBox() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return minimized box (rectangle) for current MDI child.
+
 TGRectangle TGMdiMainFrame::GetMinimizedBBox() const
 {
-   // Return minimized box (rectangle) for current MDI child.
-
    TGRectangle rect;
    TGMdiFrameList *travel;
    Int_t first = kTRUE;
@@ -515,11 +515,11 @@ TGRectangle TGMdiMainFrame::GetMinimizedBBox() const
    return rect;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update MDI menu entries with current list of MDI child windows.
+
 void TGMdiMainFrame::UpdateWinListMenu()
 {
-   // Update MDI menu entries with current list of MDI child windows.
-
    TString buf;
    char scut;
    TGMdiFrameList *travel;
@@ -553,22 +553,22 @@ void TGMdiMainFrame::UpdateWinListMenu()
       fWinListMenu->RCheckEntry(fCurrent->GetDecorFrame()->GetId(), 0, kMaxInt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recalculates the postion and the size of all MDI child windows.
+
 void TGMdiMainFrame::Layout()
 {
-   // Recalculates the postion and the size of all MDI child windows.
-
    TGCanvas::Layout();
    if (fCurrent && fCurrent->GetDecorFrame()->IsMaximized())
       fCurrent->GetDecorFrame()->MoveResize(0, 0, fWidth - 2 *fBorderWidth, fHeight -
                                    2 * fBorderWidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the status of MDI buttons in the decor frame of all children.
+
 void TGMdiMainFrame::UpdateMdiButtons()
 {
-   // Update the status of MDI buttons in the decor frame of all children.
-
    static Bool_t done = kFALSE;
    TGMdiFrameList *travel;
    if (done) return;
@@ -581,12 +581,12 @@ void TGMdiMainFrame::UpdateMdiButtons()
    done = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Automatic repositionning and resizing of every MDI child window.
+/// depending on mode : tile horizontal, tile vertical, or cascade.
+
 void TGMdiMainFrame::ArrangeFrames(Int_t mode)
 {
-   // Automatic repositionning and resizing of every MDI child window.
-   // depending on mode : tile horizontal, tile vertical, or cascade.
-
    Int_t factor_x = 0;
    Int_t factor_y = 0;
    Int_t num_mapped = 0;
@@ -667,11 +667,11 @@ void TGMdiMainFrame::ArrangeFrames(Int_t mode)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is an attempt to an "smart" minimized window re-arrangement.
+
 void TGMdiMainFrame::ArrangeMinimized()
 {
-   // This is an attempt to an "smart" minimized window re-arrangement.
-
    TGMdiFrameList *travel, *closest;
    Int_t x, y, w, h;
 
@@ -734,11 +734,11 @@ void TGMdiMainFrame::ArrangeMinimized()
       travel->GetDecorFrame()->SetMinUserPlacement(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages MDI main frame.
+
 Bool_t TGMdiMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process messages MDI main frame.
-
    switch (GET_MSG(msg)) {
       case kC_MDI:
          SetCurrent(parm1);
@@ -781,11 +781,11 @@ Bool_t TGMdiMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Maximize MDI child window mdiframe.
+
 void TGMdiMainFrame::Maximize(TGMdiFrame *mdiframe)
 {
-   // Maximize MDI child window mdiframe.
-
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
 
    if (!frame) return;
@@ -831,11 +831,11 @@ void TGMdiMainFrame::Maximize(TGMdiFrame *mdiframe)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore size of MDI child window mdiframe.
+
 void TGMdiMainFrame::Restore(TGMdiFrame *mdiframe)
 {
-   // Restore size of MDI child window mdiframe.
-
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
 
    if (!frame) return;
@@ -877,11 +877,11 @@ void TGMdiMainFrame::Restore(TGMdiFrame *mdiframe)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Minimize MDI child window mdiframe.
+
 void TGMdiMainFrame::Minimize(TGMdiFrame *mdiframe)
 {
-   // Minimize MDI child window mdiframe.
-
    Int_t x, y, w, h;
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
 
@@ -950,11 +950,11 @@ void TGMdiMainFrame::Minimize(TGMdiFrame *mdiframe)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close MDI child window mdiframe.
+
 Int_t TGMdiMainFrame::Close(TGMdiFrame *mdiframe)
 {
-   // Close MDI child window mdiframe.
-
    if (!mdiframe) return kFALSE;
 
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
@@ -965,11 +965,11 @@ Int_t TGMdiMainFrame::Close(TGMdiFrame *mdiframe)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allow to move MDI child window mdiframe.
+
 void TGMdiMainFrame::FreeMove(TGMdiFrame *mdiframe)
 {
-   // Allow to move MDI child window mdiframe.
-
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
    if (!frame) return;
 
@@ -989,11 +989,11 @@ void TGMdiMainFrame::FreeMove(TGMdiFrame *mdiframe)
                           kNone, cursor, kTRUE, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allow to resize MDI child window mdiframe.
+
 void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
 {
-   // Allow to resize MDI child window mdiframe.
-
    TGMdiDecorFrame *frame = GetDecorFrame(mdiframe);
    if (!frame) return;
 
@@ -1028,33 +1028,33 @@ void TGMdiMainFrame::FreeSize(TGMdiFrame *mdiframe)
    frame->GetLowerRightCR()->HandleButton(&event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls Help() method of MDI child window mdiframe.
+
 Int_t TGMdiMainFrame::ContextHelp(TGMdiFrame *mdiframe)
 {
-   // Calls Help() method of MDI child window mdiframe.
-
    if (mdiframe)
       return mdiframe->Help();
    else
       return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer on current (active) MDI child window.
+
 TGMdiFrame *TGMdiMainFrame::GetCurrent() const
 {
-   // Return pointer on current (active) MDI child window.
-
    if (fCurrent)
       return fCurrent->GetDecorFrame()->GetMdiFrame();
    else
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get MDI geometry of MDI child window f.
+
 TGMdiGeometry TGMdiMainFrame::GetWindowGeometry(TGMdiFrame *f) const
 {
-   // Get MDI geometry of MDI child window f.
-
    TGMdiGeometry geom;
 
    geom.fValueMask = 0;
@@ -1099,11 +1099,11 @@ TGMdiGeometry TGMdiMainFrame::GetWindowGeometry(TGMdiFrame *f) const
    return geom;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MDI geometry for MDI child window f.
+
 void TGMdiMainFrame::ConfigureWindow(TGMdiFrame *f, TGMdiGeometry &geom)
 {
-   // Set MDI geometry for MDI child window f.
-
    TGMdiDecorFrame *frame = GetDecorFrame(f);
    if (frame) {
       if (geom.fValueMask & kMdiDecorGeometry) {
@@ -1130,11 +1130,11 @@ void TGMdiMainFrame::ConfigureWindow(TGMdiFrame *f, TGMdiGeometry &geom)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close all MDI child windows.
+
 void TGMdiMainFrame::CloseAll()
 {
-   // Close all MDI child windows.
-
    TGMdiFrameList *tmp, *travel = fChildren;
 
    while (travel) {
@@ -1145,42 +1145,42 @@ void TGMdiMainFrame::CloseAll()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if MDI child window f is maximized;
+
 Bool_t TGMdiMainFrame::IsMaximized(TGMdiFrame *f)
 {
-   // Check if MDI child window f is maximized;
-
    TGMdiDecorFrame *frame = GetDecorFrame(f);
    if (frame) return frame->IsMaximized();
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if MDI child window f is minimized;
+
 Bool_t TGMdiMainFrame::IsMinimized(TGMdiFrame *f)
 {
-   // Check if MDI child window f is minimized;
-
    TGMdiDecorFrame *frame = GetDecorFrame(f);
    if (frame) return frame->IsMinimized();
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMdiContainer constructor.
+
 TGMdiContainer::TGMdiContainer(const TGMdiMainFrame *p, Int_t w, Int_t h,
                                UInt_t options, ULong_t back) :
   TGFrame(p->GetViewPort(), w, h, options, back)
 {
-   // TGMdiContainer constructor.
-
    fMain = p;
    AddInput(kStructureNotifyMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return dimension of MDI container.
+
 TGDimension TGMdiContainer::GetDefaultSize() const
 {
-   // Return dimension of MDI container.
-
    TGRectangle rect = fMain->GetBBox();
 
    Int_t xpos = -fMain->GetViewPort()->GetHPos() - rect.LeftTop().fX;
@@ -1190,11 +1190,11 @@ TGDimension TGMdiContainer::GetDefaultSize() const
                       TMath::Max(Int_t(ypos + fHeight), rect.RightBottom().fY + 1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle configure notify events for MDI container.
+
 Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
 {
-   // Handle configure notify events for MDI container.
-
    if (event->fWindow != fId) {
       TGRectangle rect = fMain->GetBBox();
 
@@ -1212,11 +1212,11 @@ Bool_t TGMdiContainer::HandleConfigureNotify(Event_t *event)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a MDI main frame as a C++ statement(s) on output stream out
+
 void TGMdiMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a MDI main frame as a C++ statement(s) on output stream out
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // MDI main frame" << std::endl;

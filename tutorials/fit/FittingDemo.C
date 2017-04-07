@@ -1,8 +1,19 @@
-//Example for fitting signal/background.
-// This example can be executed with:
-// root > .x FittingDemo.C  (using the CINT interpreter)
-// root > .x FittingDemo.C+ (using the native complier via ACLIC)
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+/// Example for fitting signal/background.
+/// This example can be executed with:
+///
+/// ~~~{.cpp}
+/// root > .x FittingDemo.C  (using the CINT interpreter)
+/// root > .x FittingDemo.C+ (using the native complier via ACLIC)
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TH1.h"
 #include "TMath.h"

@@ -13,221 +13,189 @@
 
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TEntryList.h"
 #include "TTreeReaderValue.h"
 
-////////////////////////////////////////////////////////////////////////////////
-/*BEGIN_HTML
+/** \class TTreeReader
  TTreeReader is a simple, robust and fast interface to read values from a TTree,
- TChain or TNtuple. It uses TTreeReaderValue&lt;T&gt; and
- TTreeReaderArray&lt;T&gt; to access the data. Example code can be found in
+ TChain or TNtuple.
+
+ It uses TTreeReaderValue<T> and TTreeReaderArray<T> to access the data.
+
+ Example code can be found in
  tutorials/tree/hsimpleReader.C and tutorials/trees/h1analysisTreeReader.h and
  tutorials/trees/h1analysisTreeReader.C for a TSelector.
+
  Roottest contains an
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
  showing the full power.
 
 A simpler analysis example - the one from the tutorials - can be found below:
-it histograms a function of the px and py branches.</p>
-&nbsp;
-<div class="code"><pre class="_listing"><span class="codecomment">// A simple <a href="./TTreeReader.html">TTreeReader</a> use: read data from hsimple.root (written by hsimple.C)</span>
-&nbsp;
-<span class="cpp">#include "<a href="./TFile.h">TFile.h</a>"</span>
-<span class="cpp">#include "<a href="./TH1F.h">TH1F.h</a>"</span>
-<span class="cpp">#include "<a href="./TTreeReader.h">TTreeReader.h</a>"</span>
-<span class="cpp">#include "<a href="./TTreeReaderValue.h">TTreeReaderValue.h</a>"</span>
-&nbsp;
+it histograms a function of the px and py branches.
+
+~~~{.cpp}
+// A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
+
+#include "TFile.h
+#include "TH1F.h
+#include "TTreeReader.h
+#include "TTreeReaderValue.h
+
 void hsimpleReader() {
-   <span class="codecomment">// Create a histogram for the values we read.</span>
-   <a href="./TH1F.html">TH1F</a> *myHist = <span class="keyword">new</span> <a href="./TH1F.html">TH1F</a>(<span class="string">"h1"</span>, <span class="string">"ntuple"</span>, 100, -4, 4);
-&nbsp;
-   <span class="codecomment">// Open the file containing the tree.</span>
-   <a href="./TFile.html">TFile</a> *myFile = <a href="./TFile.html">TFile</a>::<a href="./TFile.html#TFile:Open" title="TFile* TFile::Open(const char* name, Option_t* option = &quot;&quot;, const char* ftitle = &quot;&quot;, Int_t compress = 1, Int_t netopt = 0) or overloads">Open</a>(<span class="string">"$ROOTSYS/tutorials/hsimple.root"</span>);
-&nbsp;
-   <span class="codecomment">// Create a <a href="./TTreeReader.html">TTreeReader</a> for the tree, for instance by passing the</span>
-   <span class="codecomment">// <a href="./TTree.html">TTree</a>'s name and the <a href="./TDirectory.html">TDirectory</a> / <a href="./TFile.html">TFile</a> it is in.</span>
-   <a href="./TTreeReader.html">TTreeReader</a> myReader(<span class="string">"ntuple"</span>, myFile);
-&nbsp;
-   <span class="codecomment">// The branch <span class="string">"px"</span> contains floats; access them as myPx.</span>
-   TTreeReaderValue&lt;<a href="./ListOfTypes.html#Float_t">Float_t</a>&gt; myPx(myReader, <span class="string">"px"</span>);
-   <span class="codecomment">// The branch <span class="string">"py"</span> contains floats, too; access those as myPy.</span>
-   TTreeReaderValue&lt;<a href="./ListOfTypes.html#Float_t">Float_t</a>&gt; myPy(myReader, <span class="string">"py"</span>);
-&nbsp;
-   <span class="codecomment">// Loop over all entries of the <a href="./TTree.html">TTree</a> or <a href="./TChain.html">TChain</a>.</span>
-   <span class="keyword">while</span> (myReader.<a href="./TTreeReader.html#TTreeReader:Next" title="Bool_t TTreeReader::Next()">Next</a>()) {
-      <span class="codecomment">// Just access the data as if myPx and myPy were iterators (note the <span class="string">'*'</span></span>
-      <span class="codecomment">// in front of them):</span>
-      myHist-&gt;Fill(*myPx + *myPy);
+   // Create a histogram for the values we read.
+   TH1F("h1", "ntuple", 100, -4, 4);
+
+   // Open the file containing the tree.
+   TFile *myFile = TFile::Open("$ROOTSYS/tutorials/hsimple.root");
+
+   // Create a TTreeReader for the tree, for instance by passing the
+   // TTree's name and the TDirectory / TFile it is in.
+   TTreeReader myReader("ntuple", myFile);
+
+   // The branch "px" contains floats; access them as myPx.
+   TTreeReaderValue<Float_t> myPx(myReader, "px");
+   // The branch "py" contains floats, too; access those as myPy.
+   TTreeReaderValue<Float_t> myPy(myReader, "py");
+
+   // Loop over all entries of the TTree or TChain.
+   while (myReader.Next()) {
+      // Just access the data as if myPx and myPy were iterators (note the '*'
+      // in front of them):
+      myHist->Fill(*myPx + *myPy);
    }
-&nbsp;
-   myHist-&gt;<a href="./TObject.html#TObject:Draw" title="void TObject::Draw(Option_t* option = &quot;&quot;)">Draw</a>();
+
+   myHist->Draw();
 }
-</pre></div>
-<div class="clear"></div>
-<p>
-<br/>
-</p>
+~~~
 
-<p>A more complete example including error handling and a few combinations of
-TTreeReaderValue and TTreeReaderArray would look like this:</p>
+A more complete example including error handling and a few combinations of
+TTreeReaderValue and TTreeReaderArray would look like this:
 
-<div class="clear"></div>
+~~~{.cpp}
+#include <TFile.h>
+#include <TH1.h>
+#include <TTreeReader.h>
+#include <TTreeReaderValue.h>
+#include <TTreeReaderArray.h>
 
-<div class="code">
-<table><tr><td>
-<pre class="_listing">
-<span class="cpp">#include &lt;<a href="TFile.h">TFile.h</a>&gt;</span>
-<span class="cpp">#include &lt;<a href="TH1.h">TH1.h</a>&gt;</span>
-<span class="cpp">#include &lt;<a href="TTreeReader.h">TTreeReader.h</a>&gt;</span>
-<span class="cpp">#include &lt;<a href="TTreeReaderValue.h">TTreeReaderValue.h</a>&gt;</span>
-<span class="cpp">#include &lt;<a href="TTreeReaderArray.h">TTreeReaderArray.h</a>&gt;</span>
-&nbsp;
-<span class="cpp">#include "TriggerInfo.h"</span>
-<span class="cpp">#include "Muon.h"</span>
-<span class="cpp">#include "Tau.h"</span>
-&nbsp;
-<span class="cpp">#include &lt;vector&gt;</span>
-<span class="cpp">#include &lt;iostream&gt;</span>
-&nbsp;
-<span class="keyword">bool</span> CheckValue(<a href="ROOT__TTreeReaderValueBase.html">ROOT::TTreeReaderValueBase</a>* value) {
-   <span class="keyword">if</span> (value-&gt;GetSetupStatus() &lt; 0) {
-      std::cerr &lt;&lt; <span class="string">"Error "</span> &lt;&lt; value-&gt;GetSetupStatus()
-                &lt;&lt; <span class="string">"setting up reader for "</span> &lt;&lt; value-&gt;GetBranchName() &lt;&lt; '\n';
-      <span class="keyword">return</span> <span class="keyword">false</span>;
+#include "TriggerInfo.h"
+#include "Muon.h"
+#include "Tau.h"
+
+#include <vector>
+#include <iostream>
+
+bool CheckValue(ROOT::Internal::TTreeReaderValueBase& value) {
+   if (value->GetSetupStatus() < 0) {
+      std::cerr << "Error " << value->GetSetupStatus()
+                << "setting up reader for " << value->GetBranchName() << '\n';
+      return false;
    }
-   <span class="keyword">return</span> <span class="keyword">true</span>;
+   return true;
 }
-&nbsp;
-&nbsp;
-<span class="comment">// Analyze the tree <span class="string">"MyTree"</span> in the file passed into the function.</span>
-<span class="comment">// Returns false in case of errors.</span>
-<span class="keyword">bool</span> analyze(<a href="TFile.html">TFile</a>* file) {
-   <span class="comment">// Create a <a href="TTreeReader.html">TTreeReader</a> named <span class="string">"MyTree"</span> from the given <a href="TDirectory.html">TDirectory</a>.</span>
-   <span class="comment">// The <a href="TTreeReader.html">TTreeReader</a> gives access to the <a href="TTree.html">TTree</a> to the TTreeReaderValue and</span>
-   <span class="comment">// TTreeReaderArray objects. It knows the current entry number and knows</span>
-   <span class="comment">// how to iterate through the <a href="TTree.html">TTree</a>.</span>
-   <a href="TTreeReader.html">TTreeReader</a> reader(<span class="string">"MyTree"</span>, file);
-&nbsp;
-   <span class="comment">// <a href="TObject.html#TObject:Read" title="Int_t TObject::Read(const char* name)">Read</a> a single <a href="ListOfTypes.html#float">float</a> value in each tree entries:</span>
-   TTreeReaderValue&lt;<span class="keyword">float</span>&gt; weight(reader, <span class="string">"event.weight"</span>);
-   <span class="keyword">if</span> (!CheckValue(weight)) <span class="keyword">return</span> <span class="keyword">false</span>;
-&nbsp;
-   <span class="comment">// <a href="TObject.html#TObject:Read" title="Int_t TObject::Read(const char* name)">Read</a> a TriggerInfo object from the tree entries:</span>
-   TTreeReaderValue&lt;TriggerInfo&gt; triggerInfo(reader, <span class="string">"triggerInfo"</span>);
-   <span class="keyword">if</span> (!CheckValue(triggerInfo)) <span class="keyword">return</span> <span class="keyword">false</span>;
-&nbsp;
-   <span class="comment">// <a href="TObject.html#TObject:Read" title="Int_t TObject::Read(const char* name)">Read</a> a vector of Muon objects from the tree entries:</span>
-   TTreeReaderValue&lt;std::vector&lt;Muon&gt;&gt; muons(reader, <span class="string">"muons"</span>);
-   <span class="keyword">if</span> (!CheckValue(muons)) <span class="keyword">return</span> <span class="keyword">false</span>;
-&nbsp;
-   <span class="comment">// <a href="TObject.html#TObject:Read" title="Int_t TObject::Read(const char* name)">Read</a> the pT for all jets in the tree entry:</span>
-   TTreeReaderArray&lt;<span class="keyword">double</span>&gt; jetPt(reader, <span class="string">"jets.pT"</span>);
-   <span class="keyword">if</span> (!CheckValue(jetPt)) <span class="keyword">return</span> <span class="keyword">false</span>;
-&nbsp;
-   <span class="comment">// <a href="TObject.html#TObject:Read" title="Int_t TObject::Read(const char* name)">Read</a> the taus in the tree entry:</span>
-   TTreeReaderArray&lt;Tau&gt; taus(reader, <span class="string">"taus"</span>);
-   <span class="keyword">if</span> (!CheckValue(taus)) <span class="keyword">return</span> <span class="keyword">false</span>;
-&nbsp;
-&nbsp;
-   <span class="comment">// Now iterate through the <a href="TTree.html">TTree</a> entries and fill a histogram.</span>
-&nbsp;
-   <a href="TH1.html">TH1</a>* hist = <span class="keyword">new</span> <a href="TH1F.html">TH1F</a>(<span class="string">"hist"</span>, <span class="string">"TTreeReader example histogram"</span>, 10, 0., 100.);
-&nbsp;
-   <span class="keyword">while</span> (reader.Next()) {
-&nbsp;
-      <span class="keyword">if</span> (reader.GetEntryStatus() == <a href="TTreeReader.html#TTreeReader:kEntryValid" title="TTreeReader::EEntryStatus TTreeReader::kEntryValid">kEntryValid</a>) {
-         std::cout &lt;&lt; <span class="string">"Loaded entry "</span> &lt;&lt; reader.GetCurrentEntry() &lt;&lt; '\n';
-      } <span class="keyword">else</span> {
-         <span class="keyword">switch</span> (reader.GetEntryStatus()) {
-         <a href="TTreeReader.html#TTreeReader:kEntryValid" title="TTreeReader::EEntryStatus TTreeReader::kEntryValid">kEntryValid</a>:
-            <span class="comment">// Handled above.</span>
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryNotLoaded" title="TTreeReader::EEntryStatus TTreeReader::kEntryNotLoaded">kEntryNotLoaded</a>:
-            std::cerr &lt;&lt; <span class="string">"Error: TTreeReader has not loaded any data yet!\n"</span>;
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryNoTree" title="TTreeReader::EEntryStatus TTreeReader::kEntryNoTree">kEntryNoTree</a>:
-            std::cerr &lt;&lt; <span class="string">"Error: TTreeReader cannot find a tree names \"MyTree\"!\n"</span>;
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryNotFound" title="TTreeReader::EEntryStatus TTreeReader::kEntryNotFound">kEntryNotFound</a>:
-            <span class="comment">// Can't really happen as <a href="TTreeReader.html">TTreeReader</a>::<a href="TTreeReader.html#TTreeReader:Next" title="Bool_t TTreeReader::Next()">Next</a>() knows when to stop.</span>
-            std::cerr &lt;&lt; <span class="string">"Error: The entry number doe not exist\n"</span>;
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryChainSetupError" title="TTreeReader::EEntryStatus TTreeReader::kEntryChainSetupError">kEntryChainSetupError</a>:
-            std::cerr &lt;&lt; <span class="string">"Error: TTreeReader cannot access a chain element, e.g. file without the tree\n"</span>;
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryChainFileError" title="TTreeReader::EEntryStatus TTreeReader::kEntryChainFileError">kEntryChainFileError</a>:
-            std::cerr &lt;&lt; <span class="string">"Error: TTreeReader cannot open a chain element, e.g. missing file\n"</span>;
-            <span class="keyword">break</span>;
-         <a href="TTreeReader.html#TTreeReader:kEntryDictionaryError" title="TTreeReader::EEntryStatus TTreeReader::kEntryDictionaryError">kEntryDictionaryError</a>:
-            std::cerr &lt;&lt; <span class="string">"Error: TTreeReader cannot find the dictionary for some data\n"</span>;
-            <span class="keyword">break</span>;
-         }
-         <span class="keyword">return</span> <span class="keyword">false</span>;
-      }
-&nbsp;
-      <span class="comment">// Access the TriggerInfo object as if it's a pointer.</span>
-      <span class="keyword">if</span> (!triggerInfo-&gt;hasMuonL1())
-         <span class="keyword">continue</span>;
-&nbsp;
-      <span class="comment">// Ditto for the vector&lt;Muon&gt;.</span>
-      <span class="keyword">if</span> (!muons-&gt;size())
-         <span class="keyword">continue</span>;
-&nbsp;
-      <span class="comment">// Access the jetPt as an array, whether the <a href="TTree.html">TTree</a> stores this as</span>
-      <span class="comment">// a std::vector, std::list, <a href="TClonesArray.html">TClonesArray</a> or Jet* C-style array, with</span>
-      <span class="comment">// fixed or variable array size.</span>
-      <span class="keyword">if</span> (jetPt.<a href="TCollection.html#TCollection:GetSize" title="Int_t TCollection::GetSize() const">GetSize</a>() &lt; 2 || jetPt[0] &lt; 100)
-         <span class="keyword">continue</span>;
-&nbsp;
-      <span class="comment">// Access the array of taus.</span>
-      <span class="keyword">if</span> (!taus.<a href="TObjArray.html#TObjArray:IsEmpty" title="Bool_t TObjArray::IsEmpty() const">IsEmpty</a>()) {
-         <span class="keyword">float</span> currentWeight = *weight;
-         <span class="keyword">for</span> (<span class="keyword">int</span> iTau = 0, nTau = taus.<a href="TCollection.html#TCollection:GetSize" title="Int_t TCollection::GetSize() const">GetSize</a>(); iTau &lt; nTau; ++iTau) {
-            <span class="comment">// Access a <a href="ListOfTypes.html#float">float</a> value - need to dereference as TTreeReaderValue</span>
-            <span class="comment">// behaves like an iterator</span>
-            hist-&gt;Fill(taus[iTau].eta(), currentWeight);
+
+
+// Analyze the tree "MyTree" in the file passed into the function.
+// Returns false in case of errors.
+bool analyze(TFile* file) {
+   // Create a TTreeReader named "MyTree" from the given TDirectory.
+   // The TTreeReader gives access to the TTree to the TTreeReaderValue and
+   // TTreeReaderArray objects. It knows the current entry number and knows
+   // how to iterate through the TTree.
+   TTreeReader reader("MyTree", file);
+
+   // Read a single float value in each tree entries:
+   TTreeReaderValue<float> weight(reader, "event.weight");
+
+   // Read a TriggerInfo object from the tree entries:
+   TTreeReaderValue<TriggerInfo> triggerInfo(reader, "triggerInfo");
+
+   //Read a vector of Muon objects from the tree entries:
+   TTreeReaderValue<std::vector<Muon>> muons(reader, "muons");
+
+   //Read the pT for all jets in the tree entry:
+   TTreeReaderArray<double> jetPt(reader, "jets.pT");
+
+   // Read the taus in the tree entry:
+   TTreeReaderArray<Tau> taus(reader, "taus");
+
+
+   // Now iterate through the TTree entries and fill a histogram.
+
+   TH1F("hist", "TTreeReader example histogram", 10, 0., 100.);
+
+   while (reader.Next()) {
+      if (!CheckValue(weight)) return false;
+      if (!CheckValue(triggerInfo)) return false;
+      if (!CheckValue(muons)) return false;
+      if (!CheckValue(jetPt)) return false;
+      if (!CheckValue(taus)) return false;
+
+      // Access the TriggerInfo object as if it's a pointer.
+      if (!triggerInfo->hasMuonL1())
+         continue;
+
+      // Ditto for the vector<Muon>.
+      if (!muons->size())
+         continue;
+
+      // Access the jetPt as an array, whether the TTree stores this as
+      // a std::vector, std::list, TClonesArray or Jet* C-style array, with
+      // fixed or variable array size.
+      if (jetPt.GetSize() < 2 || jetPt[0] < 100)
+         continue;
+
+      // Access the array of taus.
+      if (!taus.IsEmpty()) {
+         // Access a float value - need to dereference as TTreeReaderValue
+         // behaves like an iterator
+         float currentWeight = *weight;
+         for (const Tau& tau: taus) {
+            hist->Fill(tau.eta(), currentWeight);
          }
       }
-   } <span class="comment">// TTree entry / event loop
+   } // TTree entry / event loop
 }
-</pre></td></tr></table></div>
-<div class="clear"></div>
-END_HTML
+~~~
 */
-////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TTreeReader)
 
-//______________________________________________________________________________
-TTreeReader::TTreeReader(TTree* tree):
+using namespace ROOT::Internal;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Access data from tree.
+
+TTreeReader::TTreeReader(TTree* tree, TEntryList* entryList /*= nullptr*/):
    fTree(tree),
-   fDirectory(0),
-   fEntryStatus(kEntryNotLoaded),
-   fDirector(0)
+   fEntryList(entryList)
 {
-   // Access data from tree.
+   if (!fTree) {
+      Error("TTreeReader", "TTree is NULL!");
+   } else {
+      Initialize();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Access data from the tree called keyname in the directory (e.g. TFile)
+/// dir, or the current directory if dir is NULL. If keyname cannot be
+/// found, or if it is not a TTree, IsZombie() will return true.
+
+TTreeReader::TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/):
+   fEntryList(entryList)
+{
+   if (!dir) dir = gDirectory;
+   dir->GetObject(keyname, fTree);
    Initialize();
 }
 
-//______________________________________________________________________________
-TTreeReader::TTreeReader(const char* keyname, TDirectory* dir /*= NULL*/):
-   fTree(0),
-   fDirectory(dir),
-   fEntryStatus(kEntryNotLoaded),
-   fDirector(0)
-{
-   // Access data from the tree called keyname in the directory (e.g. TFile)
-   // dir, or the current directory if dir is NULL. If keyname cannot be
-   // found, or if it is not a TTree, IsZombie() will return true.
-   if (!fDirectory) fDirectory = gDirectory;
-   fDirectory->GetObject(keyname, fTree);
-   Initialize();
-}
+////////////////////////////////////////////////////////////////////////////////
+/// Tell all value readers that the tree reader does not exist anymore.
 
-//______________________________________________________________________________
 TTreeReader::~TTreeReader()
 {
-   // Tell all value readers that the tree reader does not exist anymore.
-   for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+   for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
            i = fValues.begin(), e = fValues.end(); i != e; ++i) {
       (*i)->MarkTreeReaderUnavailable();
    }
@@ -235,65 +203,180 @@ TTreeReader::~TTreeReader()
    fProxies.SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization of the director.
+
 void TTreeReader::Initialize()
 {
-   // Initialization of the director.
+   fEntry = -1;
    if (!fTree) {
       MakeZombie();
       fEntryStatus = kEntryNoTree;
-   } else {
-      fDirector = new ROOT::TBranchProxyDirector(fTree, -1);
+      fMostRecentTreeNumber = -1;
+      return;
    }
+
+   ResetBit(kZombie);
+   if (fTree->InheritsFrom(TChain::Class())) {
+      SetBit(kBitIsChain);
+   }
+   fDirector = new ROOT::Internal::TBranchProxyDirector(fTree, -1);
 }
 
-//______________________________________________________________________________
-Long64_t TTreeReader::GetCurrentEntry() const {
-   //Returns the index of the current entry being read
+////////////////////////////////////////////////////////////////////////////////
+/// Set the range of entries to be loaded by `Next()`; end will not be loaded.
+///
+/// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
+/// Example:
+///
+///  ~~~ {.cpp}
+/// reader.SetEntriesRange(3, 5);
+/// while (reader.Next()) {
+///   // Will load entries 3 and 4.
+/// }
+/// ~~~
+///
+/// \param beginEntry The first entry to be loaded by `Next()`.
+/// \param endEntry   The entry where `Next()` will return kFALSE, not loading it.
 
-   if (!fDirector) return 0;
-   Long64_t currentTreeEntry = fDirector->GetReadEntry();
-   if (fTree->IsA() == TChain::Class() && currentTreeEntry >= 0) {
-      return ((TChain*)fTree)->GetChainEntryNumber(currentTreeEntry);
-   }
-   return currentTreeEntry;
+TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
+{
+   if (beginEntry < 0)
+      return kEntryNotFound;
+   // Complain if the entries number is larger than the tree's / chain's / entry
+   // list's number of entries, unless it's a TChain and "max entries" is
+   // uninitialized (i.e. TTree::kMaxEntries).
+   if (beginEntry >= GetEntries(false) && !(IsChain() && GetEntries(false) == TTree::kMaxEntries))
+      return kEntryNotFound;
+
+   if (endEntry > beginEntry)
+      fEndEntry = endEntry;
+   else
+      fEndEntry = -1;
+   SetEntry(beginEntry - 1);
+   return kEntryValid;
 }
 
-//______________________________________________________________________________
+void TTreeReader::Restart() {
+   fDirector->SetTree(nullptr);
+   fDirector->SetReadEntry(-1);
+   fProxiesSet = false; // we might get more value readers, meaning new proxies.
+   fEntry = -1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of entries of the TEntryList if one is provided, else
+/// of the TTree / TChain.
+///
+/// \param force If `IsChain()` and `force`, determines whether all TFiles of
+///   this TChain should be opened to determine the exact number of entries
+/// of the TChain. If `!IsChain()`, `force` is ignored.
+
+Long64_t TTreeReader::GetEntries(Bool_t force) const {
+   if (fEntryList)
+      return fEntryList->GetN();
+   if (!fTree)
+      return -1;
+   if (force)
+      return fTree->GetEntries();
+   return fTree->GetEntriesFast();
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Load an entry into the tree, return the status of the read.
+/// For chains, entry is the global (i.e. not tree-local) entry number, unless
+/// `local` is `true`, in which case `entry` specifies the entry number within
+/// the current tree. This is needed for instance for TSelector::Process().
+
 TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
 {
-   // Load an entry into the tree, return the status of the read.
-   // For chains, entry is the global (i.e. not tree-local) entry number.
-
-   if (!fTree) {
+   if (!fTree || !fDirector) {
       fEntryStatus = kEntryNoTree;
+      fEntry = -1;
       return fEntryStatus;
    }
 
-   TTree* prevTree = fDirector->GetTree();
+   if (fTree->GetEntryList() && !TestBit(kBitHaveWarnedAboutEntryListAttachedToTTree)) {
+      Warning("SetEntryBase()",
+              "The TTree / TChain has an associated TEntryList. "
+              "TTreeReader ignores TEntryLists unless you construct the TTreeReader passing a TEntryList.");
+      SetBit(kBitHaveWarnedAboutEntryListAttachedToTTree);
+   }
 
-   int loadResult;
-   if (!local){
-      Int_t treeNumInChain = fTree->GetTreeNumber();
+   fEntry = entry;
 
-      loadResult = fTree->LoadTree(entry);
-
-      if (loadResult == -2) {
+   Long64_t entryAfterList = entry;
+   if (fEntryList) {
+      if (entry >= fEntryList->GetN()) {
+         // Passed the end of the chain, Restart() was not called:
+         // don't try to load entries anymore. Can happen in these cases:
+         // while (tr.Next()) {something()};
+         // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
          fEntryStatus = kEntryNotFound;
          return fEntryStatus;
       }
-
-      Int_t currentTreeNumInChain = fTree->GetTreeNumber();
-      if (treeNumInChain != currentTreeNumInChain) {
-            fDirector->SetTree(fTree->GetTree());
+      entryAfterList = fEntryList->GetEntry(entry);
+      if (local && IsChain()) {
+         // Must translate the entry list's entry to the current TTree's entry number.
+         local = kFALSE;
       }
    }
-   else {
-      loadResult = entry;
+
+   if (fProxiesSet && fDirector && fDirector->GetReadEntry() == -1
+       && fMostRecentTreeNumber != -1) {
+      // Passed the end of the chain, Restart() was not called:
+      // don't try to load entries anymore. Can happen in these cases:
+      // while (tr.Next()) {something()};
+      // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
+      fEntryStatus = kEntryNotFound;
+      return fEntryStatus;
    }
-   if (!prevTree || fDirector->GetReadEntry() == -1) {
+
+   Int_t treeNumberBeforeLoadTree = fTree->GetTreeNumber();
+
+   TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
+   Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
+
+   if (loadResult == -2) {
+      fDirector->SetTree(nullptr);
+      fEntryStatus = kEntryNotFound;
+      return fEntryStatus;
+   }
+
+   if (fMostRecentTreeNumber != treeNumberBeforeLoadTree) {
+      // This can happen if someone switched trees behind us.
+      // Likely cause: a TChain::LoadTree() e.g. from TTree::Process().
+      // This means that "local" should be set!
+
+      if (fTree->GetTreeNumber() != treeNumberBeforeLoadTree) {
+         // we have switched trees again, which means that "local" was not set!
+         // There are two entities switching trees which is bad.
+         R__ASSERT(!local && "Logic error - !local but tree number changed?");
+         Warning("SetEntryBase()",
+                 "The current tree in the TChain %s has changed (e.g. by TTree::Process) "
+                 "even though TTreeReader::SetEntry() was called, which switched the tree "
+                 "again. Did you mean to call TTreeReader::SetLocalEntry()?",
+                 fTree->GetName());
+      }
+   }
+
+   if (fDirector->GetTree() != fTree->GetTree()
+       || fMostRecentTreeNumber != fTree->GetTreeNumber()) {
+      fDirector->SetTree(fTree->GetTree());
+      if (fProxiesSet) {
+         for (auto value: fValues) {
+            value->NotifyNewTree(fTree->GetTree());
+         }
+      }
+   }
+
+   fMostRecentTreeNumber = fTree->GetTreeNumber();
+
+   if (!fProxiesSet) {
       // Tell readers we now have a tree
-      for (std::deque<ROOT::TTreeReaderValueBase*>::const_iterator
+      for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
               i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
          (*i)->CreateProxy();
 
@@ -302,18 +385,29 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
             return fEntryStatus;
          }
       }
+      // If at least one proxy was there and no error occurred, we assume the proxies to be set.
+      fProxiesSet = !fValues.empty();
+   }
+
+   if (fEndEntry >= 0 && entry >= fEndEntry) {
+      fEntryStatus = kEntryBeyondEnd;
+      return fEntryStatus;
    }
    fDirector->SetReadEntry(loadResult);
    fEntryStatus = kEntryValid;
    return fEntryStatus;
 }
 
-//______________________________________________________________________________
-void TTreeReader::SetTree(TTree* tree)
+////////////////////////////////////////////////////////////////////////////////
+/// Set (or update) the which tree to read from. `tree` can be
+/// a TTree or a TChain.
+
+void TTreeReader::SetTree(TTree* tree, TEntryList* entryList /*= nullptr*/)
 {
-   // Set (or update) the which tree to reader from. tree can be
-   // a TTree or a TChain.
    fTree = tree;
+   fEntryList = entryList;
+   fEntry = -1;
+
    if (fTree) {
       ResetBit(kZombie);
       if (fTree->InheritsFrom(TChain::Class())) {
@@ -327,21 +421,49 @@ void TTreeReader::SetTree(TTree* tree)
    else {
       fDirector->SetTree(fTree);
       fDirector->SetReadEntry(-1);
+      // Distinguish from end-of-chain case:
+      fMostRecentTreeNumber = -1;
    }
 }
 
-//______________________________________________________________________________
-void TTreeReader::RegisterValueReader(ROOT::TTreeReaderValueBase* reader)
+////////////////////////////////////////////////////////////////////////////////
+/// Set (or update) the which tree to read from, passing the name of a tree in a
+/// directory.
+///
+/// \param keyname - name of the tree in `dir`
+/// \param dir - the `TDirectory` to load `keyname` from (or gDirectory if `nullptr`)
+/// \param entryList - the `TEntryList` to attach to the `TTreeReader`.
+
+void TTreeReader::SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList /*= nullptr*/)
 {
-   // Add a value reader for this tree.
-   fValues.push_back(reader);
+   TTree* tree = nullptr;
+   if (!dir)
+      dir = gDirectory;
+   dir->GetObject(keyname, tree);
+   SetTree(tree, entryList);
 }
 
-//______________________________________________________________________________
-void TTreeReader::DeregisterValueReader(ROOT::TTreeReaderValueBase* reader)
+////////////////////////////////////////////////////////////////////////////////
+/// Add a value reader for this tree.
+
+Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
-   // Remove a value reader for this tree.
-   std::deque<ROOT::TTreeReaderValueBase*>::iterator iReader
+   if (fProxiesSet) {
+      Error("RegisterValueReader",
+            "Error registering reader for %s: TTreeReaderValue/Array objects must be created before the call to Next() / SetEntry() / SetLocalEntry(), or after TTreeReader::Restart()!",
+            reader->GetBranchName());
+      return false;
+   }
+   fValues.push_back(reader);
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a value reader for this tree.
+
+void TTreeReader::DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
+{
+   std::deque<ROOT::Internal::TTreeReaderValueBase*>::iterator iReader
       = std::find(fValues.begin(), fValues.end(), reader);
    if (iReader == fValues.end()) {
       Error("DeregisterValueReader", "Cannot find reader of type %s for branch %s", reader->GetDerivedTypeName(), reader->fBranchName.Data());

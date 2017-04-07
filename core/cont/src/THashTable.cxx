@@ -9,46 +9,38 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THashTable                                                           //
-//                                                                      //
-// THashTable implements a hash table to store TObject's. The hash      //
-// value is calculated using the value returned by the TObject's        //
-// Hash() function. Each class inheriting from TObject can override     //
-// Hash() as it sees fit.                                               //
-// THashTable does not preserve the insertion order of the objects.     //
-// If the insertion order is important AND fast retrieval is needed     //
-// use THashList instead.                                               //
-//Begin_Html
-/*
-<img src=gif/thashtable.gif>
+/** \class THashTable
+\ingroup Containers
+THashTable implements a hash table to store TObject's. The hash
+value is calculated using the value returned by the TObject's
+Hash() function. Each class inheriting from TObject can override
+Hash() as it sees fit.
+
+THashTable does not preserve the insertion order of the objects.
+If the insertion order is important AND fast retrieval is needed
+use THashList instead.
 */
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "THashTable.h"
 #include "TObjectTable.h"
 #include "TList.h"
 #include "TError.h"
 
-
 ClassImp(THashTable)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a THashTable object. Capacity is the initial hashtable capacity
+/// (i.e. number of slots), by default kInitHashTableCapacity = 17, and
+/// rehashlevel is the value at which a rehash will be triggered. I.e. when
+/// the average size of the linked lists at a slot becomes longer than
+/// rehashlevel then the hashtable will be resized and refilled to reduce
+/// the collision rate to about 1. The higher the collision rate, i.e. the
+/// longer the linked lists, the longer lookup will take. If rehashlevel=0
+/// the table will NOT automatically be rehashed. Use Rehash() for manual
+/// rehashing.
+
 THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
 {
-   // Create a THashTable object. Capacity is the initial hashtable capacity
-   // (i.e. number of slots), by default kInitHashTableCapacity = 17, and
-   // rehashlevel is the value at which a rehash will be triggered. I.e. when
-   // the average size of the linked lists at a slot becomes longer than
-   // rehashlevel then the hashtable will be resized and refilled to reduce
-   // the collision rate to about 1. The higher the collision rate, i.e. the
-   // longer the linked lists, the longer lookup will take. If rehashlevel=0
-   // the table will NOT automatically be rehashed. Use Rehash() for manual
-   // rehashing.
-
    if (capacity < 0) {
       Warning("THashTable", "capacity (%d) < 0", capacity);
       capacity = TCollection::kInitHashTableCapacity;
@@ -65,24 +57,24 @@ THashTable::THashTable(Int_t capacity, Int_t rehashlevel)
    fRehashLevel = rehashlevel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a hashtable. Objects are not deleted unless the THashTable is the
+/// owner (set via SetOwner()).
+
 THashTable::~THashTable()
 {
-   // Delete a hashtable. Objects are not deleted unless the THashTable is the
-   // owner (set via SetOwner()).
-
    if (fCont) Clear();
    delete [] fCont;
    fCont = 0;
    fSize = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the hash table. Its position in the table will be
+/// determined by the value returned by its Hash() function.
+
 void THashTable::Add(TObject *obj)
 {
-   // Add object to the hash table. Its position in the table will be
-   // determined by the value returned by its Hash() function.
-
    if (IsArgNull("Add", obj)) return;
 
    Int_t slot = GetHashValue(obj);
@@ -97,12 +89,38 @@ void THashTable::Add(TObject *obj)
       Rehash(fEntries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the hash table. Its position in the table will be
+/// determined by the value returned by its Hash() function.
+/// If and only if 'before' is in the same bucket as obj, obj is added
+/// in front of 'before' within the bucket's list.
+
+void THashTable::AddBefore(const TObject *before, TObject *obj)
+{
+   if (IsArgNull("Add", obj)) return;
+
+   Int_t slot = GetHashValue(obj);
+   if (!fCont[slot]) {
+      fCont[slot] = new TList;
+      fUsedSlots++;
+   }
+   if (before && GetHashValue(before) == slot) {
+      fCont[slot]->AddBefore(before,obj);
+   } else {
+      fCont[slot]->Add(obj);
+   }
+   fEntries++;
+
+   if (fRehashLevel && AverageCollisions() > fRehashLevel)
+      Rehash(fEntries);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add all objects from collection col to this collection.
+/// Implemented for more efficient rehashing.
+
 void THashTable::AddAll(const TCollection *col)
 {
-   // Add all objects from collection col to this collection.
-   // Implemented for more efficient rehashing.
-
    // Hashing after AddAll can be much more expensive than
    // hashing before, as we need to add more elements.
    // We assume an ideal hash, i.e. fUsedSlots==fSize.
@@ -124,12 +142,12 @@ void THashTable::AddAll(const TCollection *col)
       Rehash(fEntries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the table. Does not delete the objects
+/// unless the THashTable is the owner (set via SetOwner()).
+
 void THashTable::Clear(Option_t *option)
 {
-   // Remove all objects from the table. Does not delete the objects
-   // unless the THashTable is the owner (set via SetOwner()).
-
    for (int i = 0; i < fSize; i++) {
       // option "nodelete" is passed when Clear is called from
       // THashList::Clear() or THashList::Delete() or Rehash().
@@ -145,24 +163,24 @@ void THashTable::Clear(Option_t *option)
    fUsedSlots = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of collisions for an object with a certain name
+/// (i.e. number of objects in same slot in the hash table, i.e. length
+/// of linked list).
+
 Int_t THashTable::Collisions(const char *name) const
 {
-   // Returns the number of collisions for an object with a certain name
-   // (i.e. number of objects in same slot in the hash table, i.e. length
-   // of linked list).
-
    Int_t slot = GetHashValue(name);
    if (fCont[slot]) return fCont[slot]->GetSize();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of collisions for an object (i.e. number of objects
+/// in same slot in the hash table, i.e. length of linked list).
+
 Int_t THashTable::Collisions(TObject *obj) const
 {
-   // Returns the number of collisions for an object (i.e. number of objects
-   // in same slot in the hash table, i.e. length of linked list).
-
    if (IsArgNull("Collisions", obj)) return 0;
 
    Int_t slot = GetHashValue(obj);
@@ -170,11 +188,11 @@ Int_t THashTable::Collisions(TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all objects from the table AND delete all heap based objects.
+
 void THashTable::Delete(Option_t *)
 {
-   // Remove all objects from the table AND delete all heap based objects.
-
    for (int i = 0; i < fSize; i++)
       if (fCont[i]) {
          fCont[i]->Delete();
@@ -185,22 +203,22 @@ void THashTable::Delete(Option_t *)
    fUsedSlots = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object using its name. Uses the hash value returned by the
+/// TString::Hash() after converting name to a TString.
+
 TObject *THashTable::FindObject(const char *name) const
 {
-   // Find object using its name. Uses the hash value returned by the
-   // TString::Hash() after converting name to a TString.
-
    Int_t slot = GetHashValue(name);
    if (fCont[slot]) return fCont[slot]->FindObject(name);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object using its hash value (returned by its Hash() member).
+
 TObject *THashTable::FindObject(const TObject *obj) const
 {
-   // Find object using its hash value (returned by its Hash() member).
-
    if (IsArgNull("FindObject", obj)) return 0;
 
    Int_t slot = GetHashValue(obj);
@@ -208,32 +226,32 @@ TObject *THashTable::FindObject(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
-TList *THashTable::GetListForObject(const char *name) const
-{
-   // Return the TList corresponding to object's name based hash value.
-   // One can iterate this list "manually" to find, e.g. objects with
-   // the same name.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TList corresponding to object's name based hash value.
+/// One can iterate this list "manually" to find, e.g. objects with
+/// the same name.
 
+const TList *THashTable::GetListForObject(const char *name) const
+{
    return fCont[GetHashValue(name)];
 }
 
-//______________________________________________________________________________
-TList *THashTable::GetListForObject(const TObject *obj) const
-{
-   // Return the TList corresponding to object's hash value.
-   // One can iterate this list "manually" to find, e.g. identical
-   // objects.
+////////////////////////////////////////////////////////////////////////////////
+/// Return the TList corresponding to object's hash value.
+/// One can iterate this list "manually" to find, e.g. identical
+/// objects.
 
+const TList *THashTable::GetListForObject(const TObject *obj) const
+{
    if (IsArgNull("GetListForObject", obj)) return 0;
    return fCont[GetHashValue(obj)];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of pointer to obj
+
 TObject **THashTable::GetObjectRef(const TObject *obj) const
 {
-   // Return address of pointer to obj
-
    if (IsArgNull("GetObjectRef", obj)) return 0;
 
    Int_t slot = GetHashValue(obj);
@@ -241,26 +259,26 @@ TObject **THashTable::GetObjectRef(const TObject *obj) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a hash table iterator.
+
 TIterator *THashTable::MakeIterator(Bool_t dir) const
 {
-   // Returns a hash table iterator.
-
    return new THashTableIter(this, dir);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rehash the hashtable. If the collision rate becomes too high (i.e.
+/// the average size of the linked lists become too long) then lookup
+/// efficiency decreases since relatively long lists have to be searched
+/// every time. To improve performance rehash the hashtable. This resizes
+/// the table to newCapacity slots and refills the table. Use
+/// AverageCollisions() to check if you need to rehash. Set checkObjValidity
+/// to kFALSE if you know that all objects in the table are still valid
+/// (i.e. have not been deleted from the system in the meanwhile).
+
 void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 {
-   // Rehash the hashtable. If the collision rate becomes too high (i.e.
-   // the average size of the linked lists become too long) then lookup
-   // efficiency decreases since relatively long lists have to be searched
-   // every time. To improve performance rehash the hashtable. This resizes
-   // the table to newCapacity slots and refills the table. Use
-   // AverageCollisions() to check if you need to rehash. Set checkObjValidity
-   // to kFALSE if you know that all objects in the table are still valid
-   // (i.e. have not been deleted from the system in the meanwhile).
-
    THashTable *ht = new THashTable(newCapacity);
 
    TIter next(this);
@@ -291,11 +309,11 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
    delete ht;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the hashtable.
+
 TObject *THashTable::Remove(TObject *obj)
 {
-   // Remove object from the hashtable.
-
    Int_t slot = GetHashValue(obj);
    if (fCont[slot]) {
       TObject *ob = fCont[slot]->Remove(obj);
@@ -311,11 +329,11 @@ TObject *THashTable::Remove(TObject *obj)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from the hashtable without using the hash value.
+
 TObject *THashTable::RemoveSlow(TObject *obj)
 {
-   // Remove object from the hashtable without using the hash value.
-
    for (int i = 0; i < fSize; i++) {
       if (fCont[i]) {
          TObject *ob = fCont[i]->Remove(obj);
@@ -332,34 +350,29 @@ TObject *THashTable::RemoveSlow(TObject *obj)
    return 0;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THashTableIter                                                       //
-//                                                                      //
-// Iterator of hash table.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class THashTableIter
+Iterator of hash table.
+*/
 
 ClassImp(THashTableIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a hashtable iterator. By default the iteration direction
+/// is kIterForward. To go backward use kIterBackward.
+
 THashTableIter::THashTableIter(const THashTable *ht, Bool_t dir)
 {
-   // Create a hashtable iterator. By default the iteration direction
-   // is kIterForward. To go backward use kIterBackward.
-
    fTable      = ht;
    fDirection  = dir;
    fListCursor = 0;
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 THashTableIter::THashTableIter(const THashTableIter &iter) : TIterator(iter)
 {
-   // Copy ctor.
-
    fTable      = iter.fTable;
    fDirection  = iter.fDirection;
    fCursor     = iter.fCursor;
@@ -371,11 +384,11 @@ THashTableIter::THashTableIter(const THashTableIter &iter) : TIterator(iter)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overridden assignment operator.
+
 TIterator &THashTableIter::operator=(const TIterator &rhs)
 {
-   // Overridden assignment operator.
-
    if (this != &rhs && rhs.IsA() == THashTableIter::Class()) {
       const THashTableIter &rhs1 = (const THashTableIter &)rhs;
       fTable     = rhs1.fTable;
@@ -390,11 +403,11 @@ TIterator &THashTableIter::operator=(const TIterator &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overloaded assignment operator.
+
 THashTableIter &THashTableIter::operator=(const THashTableIter &rhs)
 {
-   // Overloaded assignment operator.
-
    if (this != &rhs) {
       fTable     = rhs.fTable;
       fDirection = rhs.fDirection;
@@ -408,19 +421,19 @@ THashTableIter &THashTableIter::operator=(const THashTableIter &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete hashtable iterator.
+
 THashTableIter::~THashTableIter()
 {
-   // Delete hashtable iterator.
-
    delete fListCursor;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next object in hashtable. Returns 0 when no more objects in table.
+
 TObject *THashTableIter::Next()
 {
-   // Return next object in hashtable. Returns 0 when no more objects in table.
-
    while (kTRUE) {
       if (!fListCursor) {
          int slot = NextSlot();
@@ -435,11 +448,11 @@ TObject *THashTableIter::Next()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns index of next slot in table containing list to be iterated.
+
 Int_t THashTableIter::NextSlot()
 {
-   // Returns index of next slot in table containing list to be iterated.
-
    if (fDirection == kIterForward) {
       for ( ; fCursor < fTable->Capacity() && fTable->fCont[fCursor] == 0;
               fCursor++) { }
@@ -457,12 +470,12 @@ Int_t THashTableIter::NextSlot()
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the hashtable iterator. Either to beginning or end, depending on
+/// the initial iteration direction.
+
 void THashTableIter::Reset()
 {
-   // Reset the hashtable iterator. Either to beginning or end, depending on
-   // the initial iteration direction.
-
    if (fDirection == kIterForward)
       fCursor = 0;
    else
@@ -470,11 +483,11 @@ void THashTableIter::Reset()
    SafeDelete(fListCursor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two TIterator objects.
+
 Bool_t THashTableIter::operator!=(const TIterator &aIter) const
 {
-   // This operator compares two TIterator objects.
-
    if (aIter.IsA() == THashTableIter::Class()) {
       const THashTableIter &iter(dynamic_cast<const THashTableIter &>(aIter));
       return (fListCursor != iter.fListCursor);
@@ -482,18 +495,18 @@ Bool_t THashTableIter::operator!=(const TIterator &aIter) const
    return false; // for base class we don't implement a comparison
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This operator compares two THashTableIter objects.
+
 Bool_t THashTableIter::operator!=(const THashTableIter &aIter) const
 {
-   // This operator compares two THashTableIter objects.
-
    return (fListCursor != aIter.fListCursor);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to current object or nullptr.
+
 TObject *THashTableIter::operator*() const
 {
-   // Return pointer to current object or nullptr.
-
    return (fListCursor ? fListCursor->operator*() : nullptr);
 }

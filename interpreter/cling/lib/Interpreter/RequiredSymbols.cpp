@@ -12,10 +12,12 @@
 #include "cling/Interpreter/DynamicExprInfo.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
+#include "cling/Utils/Output.h"
 #include "clang/AST/Type.h"
-#include "llvm/Support/raw_ostream.h"
 
-extern "C" void cling__runtime__internal__throwNullDerefException(void*, void*);
+extern "C"
+void* cling_runtime_internal_throwIfInvalidPointer(void* Sema, void* Expr,
+                                                   const void* Arg);
 
 namespace cling {
 namespace internal {
@@ -36,8 +38,8 @@ void symbol_requester() {
    h.findFunctionProto(0, "", "", LookupHelper::NoDiagnostics);
    h.findFunctionArgs(0, "", "", LookupHelper::NoDiagnostics);
    runtime::internal::DynamicExprInfo DEI(0,0,false);
-   cling__runtime__internal__throwNullDerefException(0, 0);
    DEI.getExpr();
+   cling_runtime_internal_throwIfInvalidPointer(nullptr, nullptr, nullptr);
 }
 }
 }

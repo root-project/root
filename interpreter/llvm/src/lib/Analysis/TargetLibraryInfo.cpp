@@ -13,341 +13,22 @@
 
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/Support/CommandLine.h"
 using namespace llvm;
 
-const char* TargetLibraryInfoImpl::StandardNames[LibFunc::NumLibFuncs] =
-  {
-    "_IO_getc",
-    "_IO_putc",
-    "_ZdaPv",
-    "_ZdaPvRKSt9nothrow_t",
-    "_ZdaPvj",
-    "_ZdaPvm",
-    "_ZdlPv",
-    "_ZdlPvRKSt9nothrow_t",
-    "_ZdlPvj",
-    "_ZdlPvm",
-    "_Znaj",
-    "_ZnajRKSt9nothrow_t",
-    "_Znam",
-    "_ZnamRKSt9nothrow_t",
-    "_Znwj",
-    "_ZnwjRKSt9nothrow_t",
-    "_Znwm",
-    "_ZnwmRKSt9nothrow_t",
-    "__cospi",
-    "__cospif",
-    "__cxa_atexit",
-    "__cxa_guard_abort",
-    "__cxa_guard_acquire",
-    "__cxa_guard_release",
-    "__isoc99_scanf",
-    "__isoc99_sscanf",
-    "__memcpy_chk",
-    "__memmove_chk",
-    "__memset_chk",
-    "__sincospi_stret",
-    "__sincospif_stret",
-    "__sinpi",
-    "__sinpif",
-    "__sqrt_finite",
-    "__sqrtf_finite",
-    "__sqrtl_finite",
-    "__stpcpy_chk",
-    "__stpncpy_chk",
-    "__strcpy_chk",
-    "__strdup",
-    "__strncpy_chk",
-    "__strndup",
-    "__strtok_r",
-    "abs",
-    "access",
-    "acos",
-    "acosf",
-    "acosh",
-    "acoshf",
-    "acoshl",
-    "acosl",
-    "asin",
-    "asinf",
-    "asinh",
-    "asinhf",
-    "asinhl",
-    "asinl",
-    "atan",
-    "atan2",
-    "atan2f",
-    "atan2l",
-    "atanf",
-    "atanh",
-    "atanhf",
-    "atanhl",
-    "atanl",
-    "atof",
-    "atoi",
-    "atol",
-    "atoll",
-    "bcmp",
-    "bcopy",
-    "bzero",
-    "calloc",
-    "cbrt",
-    "cbrtf",
-    "cbrtl",
-    "ceil",
-    "ceilf",
-    "ceill",
-    "chmod",
-    "chown",
-    "clearerr",
-    "closedir",
-    "copysign",
-    "copysignf",
-    "copysignl",
-    "cos",
-    "cosf",
-    "cosh",
-    "coshf",
-    "coshl",
-    "cosl",
-    "ctermid",
-    "exp",
-    "exp10",
-    "exp10f",
-    "exp10l",
-    "exp2",
-    "exp2f",
-    "exp2l",
-    "expf",
-    "expl",
-    "expm1",
-    "expm1f",
-    "expm1l",
-    "fabs",
-    "fabsf",
-    "fabsl",
-    "fclose",
-    "fdopen",
-    "feof",
-    "ferror",
-    "fflush",
-    "ffs",
-    "ffsl",
-    "ffsll",
-    "fgetc",
-    "fgetpos",
-    "fgets",
-    "fileno",
-    "fiprintf",
-    "flockfile",
-    "floor",
-    "floorf",
-    "floorl",
-    "fmax",
-    "fmaxf",
-    "fmaxl",
-    "fmin",
-    "fminf",
-    "fminl",
-    "fmod",
-    "fmodf",
-    "fmodl",
-    "fopen",
-    "fopen64",
-    "fprintf",
-    "fputc",
-    "fputs",
-    "fread",
-    "free",
-    "frexp",
-    "frexpf",
-    "frexpl",
-    "fscanf",
-    "fseek",
-    "fseeko",
-    "fseeko64",
-    "fsetpos",
-    "fstat",
-    "fstat64",
-    "fstatvfs",
-    "fstatvfs64",
-    "ftell",
-    "ftello",
-    "ftello64",
-    "ftrylockfile",
-    "funlockfile",
-    "fwrite",
-    "getc",
-    "getc_unlocked",
-    "getchar",
-    "getenv",
-    "getitimer",
-    "getlogin_r",
-    "getpwnam",
-    "gets",
-    "gettimeofday",
-    "htonl",
-    "htons",
-    "iprintf",
-    "isascii",
-    "isdigit",
-    "labs",
-    "lchown",
-    "ldexp",
-    "ldexpf",
-    "ldexpl",
-    "llabs",
-    "log",
-    "log10",
-    "log10f",
-    "log10l",
-    "log1p",
-    "log1pf",
-    "log1pl",
-    "log2",
-    "log2f",
-    "log2l",
-    "logb",
-    "logbf",
-    "logbl",
-    "logf",
-    "logl",
-    "lstat",
-    "lstat64",
-    "malloc",
-    "memalign",
-    "memccpy",
-    "memchr",
-    "memcmp",
-    "memcpy",
-    "memmove",
-    "memrchr",
-    "memset",
-    "memset_pattern16",
-    "mkdir",
-    "mktime",
-    "modf",
-    "modff",
-    "modfl",
-    "nearbyint",
-    "nearbyintf",
-    "nearbyintl",
-    "ntohl",
-    "ntohs",
-    "open",
-    "open64",
-    "opendir",
-    "pclose",
-    "perror",
-    "popen",
-    "posix_memalign",
-    "pow",
-    "powf",
-    "powl",
-    "pread",
-    "printf",
-    "putc",
-    "putchar",
-    "puts",
-    "pwrite",
-    "qsort",
-    "read",
-    "readlink",
-    "realloc",
-    "reallocf",
-    "realpath",
-    "remove",
-    "rename",
-    "rewind",
-    "rint",
-    "rintf",
-    "rintl",
-    "rmdir",
-    "round",
-    "roundf",
-    "roundl",
-    "scanf",
-    "setbuf",
-    "setitimer",
-    "setvbuf",
-    "sin",
-    "sinf",
-    "sinh",
-    "sinhf",
-    "sinhl",
-    "sinl",
-    "siprintf",
-    "snprintf",
-    "sprintf",
-    "sqrt",
-    "sqrtf",
-    "sqrtl",
-    "sscanf",
-    "stat",
-    "stat64",
-    "statvfs",
-    "statvfs64",
-    "stpcpy",
-    "stpncpy",
-    "strcasecmp",
-    "strcat",
-    "strchr",
-    "strcmp",
-    "strcoll",
-    "strcpy",
-    "strcspn",
-    "strdup",
-    "strlen",
-    "strncasecmp",
-    "strncat",
-    "strncmp",
-    "strncpy",
-    "strndup",
-    "strnlen",
-    "strpbrk",
-    "strrchr",
-    "strspn",
-    "strstr",
-    "strtod",
-    "strtof",
-    "strtok",
-    "strtok_r",
-    "strtol",
-    "strtold",
-    "strtoll",
-    "strtoul",
-    "strtoull",
-    "strxfrm",
-    "system",
-    "tan",
-    "tanf",
-    "tanh",
-    "tanhf",
-    "tanhl",
-    "tanl",
-    "times",
-    "tmpfile",
-    "tmpfile64",
-    "toascii",
-    "trunc",
-    "truncf",
-    "truncl",
-    "uname",
-    "ungetc",
-    "unlink",
-    "unsetenv",
-    "utime",
-    "utimes",
-    "valloc",
-    "vfprintf",
-    "vfscanf",
-    "vprintf",
-    "vscanf",
-    "vsnprintf",
-    "vsprintf",
-    "vsscanf",
-    "write"
-  };
+static cl::opt<TargetLibraryInfoImpl::VectorLibrary> ClVectorLibrary(
+    "vector-library", cl::Hidden, cl::desc("Vector functions library"),
+    cl::init(TargetLibraryInfoImpl::NoLibrary),
+    cl::values(clEnumValN(TargetLibraryInfoImpl::NoLibrary, "none",
+                          "No vector functions library"),
+               clEnumValN(TargetLibraryInfoImpl::Accelerate, "Accelerate",
+                          "Accelerate framework"),
+               clEnumValEnd));
+
+const char *const TargetLibraryInfoImpl::StandardNames[LibFunc::NumLibFuncs] = {
+#define TLI_DEFINE_STRING
+#include "llvm/Analysis/TargetLibraryInfo.def"
+};
 
 static bool hasSinCosPiStret(const Triple &T) {
   // Only Darwin variants have _stret versions of combined trig functions.
@@ -371,14 +52,26 @@ static bool hasSinCosPiStret(const Triple &T) {
 /// specified target triple.  This should be carefully written so that a missing
 /// target triple gets a sane set of defaults.
 static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
-                       const char **StandardNames) {
-#ifndef NDEBUG
+                       ArrayRef<const char *> StandardNames) {
   // Verify that the StandardNames array is in alphabetical order.
-  for (unsigned F = 1; F < LibFunc::NumLibFuncs; ++F) {
-    if (strcmp(StandardNames[F-1], StandardNames[F]) >= 0)
-      llvm_unreachable("TargetLibraryInfoImpl function names must be sorted");
+  assert(std::is_sorted(StandardNames.begin(), StandardNames.end(),
+                        [](const char *LHS, const char *RHS) {
+                          return strcmp(LHS, RHS) < 0;
+                        }) &&
+         "TargetLibraryInfoImpl function names must be sorted");
+
+  if (T.getArch() == Triple::r600 ||
+      T.getArch() == Triple::amdgcn) {
+    TLI.setUnavailable(LibFunc::ldexp);
+    TLI.setUnavailable(LibFunc::ldexpf);
+    TLI.setUnavailable(LibFunc::ldexpl);
+    TLI.setUnavailable(LibFunc::exp10);
+    TLI.setUnavailable(LibFunc::exp10f);
+    TLI.setUnavailable(LibFunc::exp10l);
+    TLI.setUnavailable(LibFunc::log10);
+    TLI.setUnavailable(LibFunc::log10f);
+    TLI.setUnavailable(LibFunc::log10l);
   }
-#endif // !NDEBUG
 
   // There are no library implementations of mempcy and memset for AMD gpus and
   // these can be difficult to lower in the backend.
@@ -391,13 +84,14 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   }
 
   // memset_pattern16 is only available on iOS 3.0 and Mac OS X 10.5 and later.
+  // All versions of watchOS support it.
   if (T.isMacOSX()) {
     if (T.isMacOSXVersionLT(10, 5))
       TLI.setUnavailable(LibFunc::memset_pattern16);
   } else if (T.isiOS()) {
     if (T.isOSVersionLT(3, 0))
       TLI.setUnavailable(LibFunc::memset_pattern16);
-  } else {
+  } else if (!T.isWatchOS()) {
     TLI.setUnavailable(LibFunc::memset_pattern16);
   }
 
@@ -517,6 +211,8 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
       TLI.setUnavailable(LibFunc::fmaxf);
       TLI.setUnavailable(LibFunc::fmodf);
       TLI.setUnavailable(LibFunc::logf);
+      TLI.setUnavailable(LibFunc::log10f);
+      TLI.setUnavailable(LibFunc::modff);
       TLI.setUnavailable(LibFunc::powf);
       TLI.setUnavailable(LibFunc::sinf);
       TLI.setUnavailable(LibFunc::sinhf);
@@ -605,8 +301,13 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     }
     break;
   case Triple::IOS:
+  case Triple::TvOS:
+  case Triple::WatchOS:
     TLI.setUnavailable(LibFunc::exp10l);
-    if (T.isOSVersionLT(7, 0)) {
+    if (!T.isWatchOS() && (T.isOSVersionLT(7, 0) ||
+                           (T.isOSVersionLT(9, 0) &&
+                            (T.getArch() == Triple::x86 ||
+                             T.getArch() == Triple::x86_64)))) {
       TLI.setUnavailable(LibFunc::exp10);
       TLI.setUnavailable(LibFunc::exp10f);
     } else {
@@ -630,12 +331,14 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   // ffsl is available on at least Darwin, Mac OS X, iOS, FreeBSD, and
   // Linux (GLIBC):
   // http://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man3/ffsl.3.html
-  // http://svn.freebsd.org/base/user/eri/pf45/head/lib/libc/string/ffsl.c
+  // http://svn.freebsd.org/base/head/lib/libc/string/ffsl.c
   // http://www.gnu.org/software/gnulib/manual/html_node/ffsl.html
   switch (T.getOS()) {
   case Triple::Darwin:
   case Triple::MacOSX:
   case Triple::IOS:
+  case Triple::TvOS:
+  case Triple::WatchOS:
   case Triple::FreeBSD:
   case Triple::Linux:
     break;
@@ -644,14 +347,29 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
   }
 
   // ffsll is available on at least FreeBSD and Linux (GLIBC):
-  // http://svn.freebsd.org/base/user/eri/pf45/head/lib/libc/string/ffsll.c
+  // http://svn.freebsd.org/base/head/lib/libc/string/ffsll.c
   // http://www.gnu.org/software/gnulib/manual/html_node/ffsll.html
   switch (T.getOS()) {
+  case Triple::Darwin:
+  case Triple::MacOSX:
+  case Triple::IOS:
+  case Triple::TvOS:
+  case Triple::WatchOS:
   case Triple::FreeBSD:
   case Triple::Linux:
     break;
   default:
     TLI.setUnavailable(LibFunc::ffsll);
+  }
+
+  // The following functions are available on at least FreeBSD:
+  // http://svn.freebsd.org/base/head/lib/libc/string/fls.c
+  // http://svn.freebsd.org/base/head/lib/libc/string/flsl.c
+  // http://svn.freebsd.org/base/head/lib/libc/string/flsll.c
+  if (!T.isOSFreeBSD()) {
+    TLI.setUnavailable(LibFunc::fls);
+    TLI.setUnavailable(LibFunc::flsl);
+    TLI.setUnavailable(LibFunc::flsll);
   }
 
   // The following functions are available on at least Linux:
@@ -674,6 +392,26 @@ static void initialize(TargetLibraryInfoImpl &TLI, const Triple &T,
     TLI.setUnavailable(LibFunc::statvfs64);
     TLI.setUnavailable(LibFunc::tmpfile64);
   }
+
+  // As currently implemented in clang, NVPTX code has no standard library to
+  // speak of.  Headers provide a standard-ish library implementation, but many
+  // of the signatures are wrong -- for example, many libm functions are not
+  // extern "C".
+  //
+  // libdevice, an IR library provided by nvidia, is linked in by the front-end,
+  // but only used functions are provided to llvm.  Moreover, most of the
+  // functions in libdevice don't map precisely to standard library functions.
+  //
+  // FIXME: Having no standard library prevents e.g. many fastmath
+  // optimizations, so this situation should be fixed.
+  if (T.isNVPTX()) {
+    TLI.disableAllFunctions();
+    TLI.setAvailable(LibFunc::nvvm_reflect);
+  } else {
+    TLI.setUnavailable(LibFunc::nvvm_reflect);
+  }
+
+  TLI.addVectorizableFunctionsFromVecLib(ClVectorLibrary);
 }
 
 TargetLibraryInfoImpl::TargetLibraryInfoImpl() {
@@ -693,12 +431,16 @@ TargetLibraryInfoImpl::TargetLibraryInfoImpl(const Triple &T) {
 TargetLibraryInfoImpl::TargetLibraryInfoImpl(const TargetLibraryInfoImpl &TLI)
     : CustomNames(TLI.CustomNames) {
   memcpy(AvailableArray, TLI.AvailableArray, sizeof(AvailableArray));
+  VectorDescs = TLI.VectorDescs;
+  ScalarDescs = TLI.ScalarDescs;
 }
 
 TargetLibraryInfoImpl::TargetLibraryInfoImpl(TargetLibraryInfoImpl &&TLI)
     : CustomNames(std::move(TLI.CustomNames)) {
   std::move(std::begin(TLI.AvailableArray), std::end(TLI.AvailableArray),
             AvailableArray);
+  VectorDescs = TLI.VectorDescs;
+  ScalarDescs = TLI.ScalarDescs;
 }
 
 TargetLibraryInfoImpl &TargetLibraryInfoImpl::operator=(const TargetLibraryInfoImpl &TLI) {
@@ -714,40 +456,30 @@ TargetLibraryInfoImpl &TargetLibraryInfoImpl::operator=(TargetLibraryInfoImpl &&
   return *this;
 }
 
-namespace {
-struct StringComparator {
-  /// Compare two strings and return true if LHS is lexicographically less than
-  /// RHS. Requires that RHS doesn't contain any zero bytes.
-  bool operator()(const char *LHS, StringRef RHS) const {
-    // Compare prefixes with strncmp. If prefixes match we know that LHS is
-    // greater or equal to RHS as RHS can't contain any '\0'.
-    return std::strncmp(LHS, RHS.data(), RHS.size()) < 0;
-  }
-
-  // Provided for compatibility with MSVC's debug mode.
-  bool operator()(StringRef LHS, const char *RHS) const { return LHS < RHS; }
-  bool operator()(StringRef LHS, StringRef RHS) const { return LHS < RHS; }
-  bool operator()(const char *LHS, const char *RHS) const {
-    return std::strcmp(LHS, RHS) < 0;
-  }
-};
-}
-
-bool TargetLibraryInfoImpl::getLibFunc(StringRef funcName,
-                                   LibFunc::Func &F) const {
-  const char **Start = &StandardNames[0];
-  const char **End = &StandardNames[LibFunc::NumLibFuncs];
-
+static StringRef sanitizeFunctionName(StringRef funcName) {
   // Filter out empty names and names containing null bytes, those can't be in
   // our table.
   if (funcName.empty() || funcName.find('\0') != StringRef::npos)
-    return false;
+    return StringRef();
 
   // Check for \01 prefix that is used to mangle __asm declarations and
   // strip it if present.
-  if (funcName.front() == '\01')
-    funcName = funcName.substr(1);
-  const char **I = std::lower_bound(Start, End, funcName, StringComparator());
+  return GlobalValue::getRealLinkageName(funcName);
+}
+
+bool TargetLibraryInfoImpl::getLibFunc(StringRef funcName,
+                                       LibFunc::Func &F) const {
+  const char *const *Start = &StandardNames[0];
+  const char *const *End = &StandardNames[LibFunc::NumLibFuncs];
+
+  funcName = sanitizeFunctionName(funcName);
+  if (funcName.empty())
+    return false;
+
+  const char *const *I = std::lower_bound(
+      Start, End, funcName, [](const char *LHS, StringRef RHS) {
+        return std::strncmp(LHS, RHS.data(), RHS.size()) < 0;
+      });
   if (I != End && *I == funcName) {
     F = (LibFunc::Func)(I - Start);
     return true;
@@ -755,18 +487,648 @@ bool TargetLibraryInfoImpl::getLibFunc(StringRef funcName,
   return false;
 }
 
+bool TargetLibraryInfoImpl::isValidProtoForLibFunc(const FunctionType &FTy,
+                                                   LibFunc::Func F,
+                                                   const DataLayout *DL) const {
+  LLVMContext &Ctx = FTy.getContext();
+  Type *PCharTy = Type::getInt8PtrTy(Ctx);
+  Type *SizeTTy = DL ? DL->getIntPtrType(Ctx, /*AS=*/0) : nullptr;
+  auto IsSizeTTy = [SizeTTy](Type *Ty) {
+    return SizeTTy ? Ty == SizeTTy : Ty->isIntegerTy();
+  };
+  unsigned NumParams = FTy.getNumParams();
+
+  switch (F) {
+  case LibFunc::strlen:
+    return (NumParams == 1 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getReturnType()->isIntegerTy());
+
+  case LibFunc::strchr:
+  case LibFunc::strrchr:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getReturnType() &&
+            FTy.getParamType(1)->isIntegerTy());
+
+  case LibFunc::strtol:
+  case LibFunc::strtod:
+  case LibFunc::strtof:
+  case LibFunc::strtoul:
+  case LibFunc::strtoll:
+  case LibFunc::strtold:
+  case LibFunc::strtoull:
+    return ((NumParams == 2 || NumParams == 3) &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::strcat:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getReturnType() &&
+            FTy.getParamType(1) == FTy.getReturnType());
+
+  case LibFunc::strncat:
+    return (NumParams == 3 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getReturnType() &&
+            FTy.getParamType(1) == FTy.getReturnType() &&
+            FTy.getParamType(2)->isIntegerTy());
+
+  case LibFunc::strcpy_chk:
+  case LibFunc::stpcpy_chk:
+    --NumParams;
+    if (!IsSizeTTy(FTy.getParamType(NumParams)))
+      return false;
+  // fallthrough
+  case LibFunc::strcpy:
+  case LibFunc::stpcpy:
+    return (NumParams == 2 && FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getParamType(0) == FTy.getParamType(1) &&
+            FTy.getParamType(0) == PCharTy);
+
+  case LibFunc::strncpy_chk:
+  case LibFunc::stpncpy_chk:
+    --NumParams;
+    if (!IsSizeTTy(FTy.getParamType(NumParams)))
+      return false;
+  // fallthrough
+  case LibFunc::strncpy:
+  case LibFunc::stpncpy:
+    return (NumParams == 3 && FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getParamType(0) == FTy.getParamType(1) &&
+            FTy.getParamType(0) == PCharTy &&
+            FTy.getParamType(2)->isIntegerTy());
+
+  case LibFunc::strxfrm:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+
+  case LibFunc::strcmp:
+    return (NumParams == 2 && FTy.getReturnType()->isIntegerTy(32) &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getParamType(1));
+
+  case LibFunc::strncmp:
+    return (NumParams == 3 && FTy.getReturnType()->isIntegerTy(32) &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getParamType(1) &&
+            FTy.getParamType(2)->isIntegerTy());
+
+  case LibFunc::strspn:
+  case LibFunc::strcspn:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(0) == FTy.getParamType(1) &&
+            FTy.getReturnType()->isIntegerTy());
+
+  case LibFunc::strcoll:
+  case LibFunc::strcasecmp:
+  case LibFunc::strncasecmp:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+
+  case LibFunc::strstr:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+
+  case LibFunc::strpbrk:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getParamType(0) == FTy.getParamType(1));
+
+  case LibFunc::strtok:
+  case LibFunc::strtok_r:
+    return (NumParams >= 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::scanf:
+  case LibFunc::setbuf:
+  case LibFunc::setvbuf:
+    return (NumParams >= 1 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::strdup:
+  case LibFunc::strndup:
+    return (NumParams >= 1 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy());
+  case LibFunc::sscanf:
+  case LibFunc::stat:
+  case LibFunc::statvfs:
+  case LibFunc::sprintf:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::snprintf:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::setitimer:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::system:
+    return (NumParams == 1 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::malloc:
+    return (NumParams == 1 && FTy.getReturnType()->isPointerTy());
+  case LibFunc::memcmp:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy() &&
+            FTy.getReturnType()->isIntegerTy(32));
+
+  case LibFunc::memchr:
+  case LibFunc::memrchr:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isIntegerTy(32) &&
+            FTy.getParamType(2)->isIntegerTy() &&
+            FTy.getReturnType()->isPointerTy());
+  case LibFunc::modf:
+  case LibFunc::modff:
+  case LibFunc::modfl:
+    return (NumParams >= 2 && FTy.getParamType(1)->isPointerTy());
+
+  case LibFunc::memcpy_chk:
+  case LibFunc::memmove_chk:
+    --NumParams;
+    if (!IsSizeTTy(FTy.getParamType(NumParams)))
+      return false;
+  // fallthrough
+  case LibFunc::memcpy:
+  case LibFunc::memmove:
+    return (NumParams == 3 && FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy() &&
+            IsSizeTTy(FTy.getParamType(2)));
+
+  case LibFunc::memset_chk:
+    --NumParams;
+    if (!IsSizeTTy(FTy.getParamType(NumParams)))
+      return false;
+  // fallthrough
+  case LibFunc::memset:
+    return (NumParams == 3 && FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isIntegerTy() &&
+            IsSizeTTy(FTy.getParamType(2)));
+
+  case LibFunc::memccpy:
+    return (NumParams >= 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::memalign:
+    return (FTy.getReturnType()->isPointerTy());
+  case LibFunc::realloc:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getReturnType()->isPointerTy());
+  case LibFunc::read:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::rewind:
+  case LibFunc::rmdir:
+  case LibFunc::remove:
+  case LibFunc::realpath:
+    return (NumParams >= 1 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::rename:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::readlink:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::write:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::bcopy:
+  case LibFunc::bcmp:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::bzero:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::calloc:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy());
+
+  case LibFunc::atof:
+  case LibFunc::atoi:
+  case LibFunc::atol:
+  case LibFunc::atoll:
+  case LibFunc::ferror:
+  case LibFunc::getenv:
+  case LibFunc::getpwnam:
+  case LibFunc::pclose:
+  case LibFunc::perror:
+  case LibFunc::printf:
+  case LibFunc::puts:
+  case LibFunc::uname:
+  case LibFunc::under_IO_getc:
+  case LibFunc::unlink:
+  case LibFunc::unsetenv:
+    return (NumParams == 1 && FTy.getParamType(0)->isPointerTy());
+
+  case LibFunc::chmod:
+  case LibFunc::chown:
+  case LibFunc::clearerr:
+  case LibFunc::closedir:
+  case LibFunc::ctermid:
+  case LibFunc::fclose:
+  case LibFunc::feof:
+  case LibFunc::fflush:
+  case LibFunc::fgetc:
+  case LibFunc::fileno:
+  case LibFunc::flockfile:
+  case LibFunc::free:
+  case LibFunc::fseek:
+  case LibFunc::fseeko64:
+  case LibFunc::fseeko:
+  case LibFunc::fsetpos:
+  case LibFunc::ftell:
+  case LibFunc::ftello64:
+  case LibFunc::ftello:
+  case LibFunc::ftrylockfile:
+  case LibFunc::funlockfile:
+  case LibFunc::getc:
+  case LibFunc::getc_unlocked:
+  case LibFunc::getlogin_r:
+  case LibFunc::mkdir:
+  case LibFunc::mktime:
+  case LibFunc::times:
+    return (NumParams != 0 && FTy.getParamType(0)->isPointerTy());
+
+  case LibFunc::access:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::fopen:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fdopen:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fputc:
+  case LibFunc::fstat:
+  case LibFunc::frexp:
+  case LibFunc::frexpf:
+  case LibFunc::frexpl:
+  case LibFunc::fstatvfs:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fgets:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::fread:
+    return (NumParams == 4 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(3)->isPointerTy());
+  case LibFunc::fwrite:
+    return (NumParams == 4 && FTy.getReturnType()->isIntegerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isIntegerTy() &&
+            FTy.getParamType(2)->isIntegerTy() &&
+            FTy.getParamType(3)->isPointerTy());
+  case LibFunc::fputs:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fscanf:
+  case LibFunc::fprintf:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fgetpos:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::gets:
+  case LibFunc::getchar:
+  case LibFunc::getitimer:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::ungetc:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::utime:
+  case LibFunc::utimes:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::putc:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::pread:
+  case LibFunc::pwrite:
+    return (NumParams == 4 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::popen:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::vscanf:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::vsscanf:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::vfscanf:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::valloc:
+    return (FTy.getReturnType()->isPointerTy());
+  case LibFunc::vprintf:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::vfprintf:
+  case LibFunc::vsprintf:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::vsnprintf:
+    return (NumParams == 4 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+  case LibFunc::open:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::opendir:
+    return (NumParams == 1 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy());
+  case LibFunc::tmpfile:
+    return (FTy.getReturnType()->isPointerTy());
+  case LibFunc::htonl:
+  case LibFunc::htons:
+  case LibFunc::ntohl:
+  case LibFunc::ntohs:
+  case LibFunc::lstat:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::lchown:
+    return (NumParams == 3 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::qsort:
+    return (NumParams == 4 && FTy.getParamType(3)->isPointerTy());
+  case LibFunc::dunder_strdup:
+  case LibFunc::dunder_strndup:
+    return (NumParams >= 1 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy());
+  case LibFunc::dunder_strtok_r:
+    return (NumParams == 3 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::under_IO_putc:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::dunder_isoc99_scanf:
+    return (NumParams >= 1 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::stat64:
+  case LibFunc::lstat64:
+  case LibFunc::statvfs64:
+    return (NumParams >= 1 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::dunder_isoc99_sscanf:
+    return (NumParams >= 1 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::fopen64:
+    return (NumParams == 2 && FTy.getReturnType()->isPointerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+  case LibFunc::tmpfile64:
+    return (FTy.getReturnType()->isPointerTy());
+  case LibFunc::fstat64:
+  case LibFunc::fstatvfs64:
+    return (NumParams == 2 && FTy.getParamType(1)->isPointerTy());
+  case LibFunc::open64:
+    return (NumParams >= 2 && FTy.getParamType(0)->isPointerTy());
+  case LibFunc::gettimeofday:
+    return (NumParams == 2 && FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy());
+
+  case LibFunc::Znwj:                    // new(unsigned int);
+  case LibFunc::Znwm:                    // new(unsigned long);
+  case LibFunc::Znaj:                    // new[](unsigned int);
+  case LibFunc::Znam:                    // new[](unsigned long);
+  case LibFunc::msvc_new_int:            // new(unsigned int);
+  case LibFunc::msvc_new_longlong:       // new(unsigned long long);
+  case LibFunc::msvc_new_array_int:      // new[](unsigned int);
+  case LibFunc::msvc_new_array_longlong: // new[](unsigned long long);
+    return (NumParams == 1);
+
+  case LibFunc::memset_pattern16:
+    return (!FTy.isVarArg() && NumParams == 3 &&
+            isa<PointerType>(FTy.getParamType(0)) &&
+            isa<PointerType>(FTy.getParamType(1)) &&
+            isa<IntegerType>(FTy.getParamType(2)));
+
+  // int __nvvm_reflect(const char *);
+  case LibFunc::nvvm_reflect:
+    return (NumParams == 1 && isa<PointerType>(FTy.getParamType(0)));
+
+  case LibFunc::sin:
+  case LibFunc::sinf:
+  case LibFunc::sinl:
+  case LibFunc::cos:
+  case LibFunc::cosf:
+  case LibFunc::cosl:
+  case LibFunc::tan:
+  case LibFunc::tanf:
+  case LibFunc::tanl:
+  case LibFunc::exp:
+  case LibFunc::expf:
+  case LibFunc::expl:
+  case LibFunc::exp2:
+  case LibFunc::exp2f:
+  case LibFunc::exp2l:
+  case LibFunc::log:
+  case LibFunc::logf:
+  case LibFunc::logl:
+  case LibFunc::log10:
+  case LibFunc::log10f:
+  case LibFunc::log10l:
+  case LibFunc::log2:
+  case LibFunc::log2f:
+  case LibFunc::log2l:
+  case LibFunc::fabs:
+  case LibFunc::fabsf:
+  case LibFunc::fabsl:
+  case LibFunc::floor:
+  case LibFunc::floorf:
+  case LibFunc::floorl:
+  case LibFunc::ceil:
+  case LibFunc::ceilf:
+  case LibFunc::ceill:
+  case LibFunc::trunc:
+  case LibFunc::truncf:
+  case LibFunc::truncl:
+  case LibFunc::rint:
+  case LibFunc::rintf:
+  case LibFunc::rintl:
+  case LibFunc::nearbyint:
+  case LibFunc::nearbyintf:
+  case LibFunc::nearbyintl:
+  case LibFunc::round:
+  case LibFunc::roundf:
+  case LibFunc::roundl:
+  case LibFunc::sqrt:
+  case LibFunc::sqrtf:
+  case LibFunc::sqrtl:
+    return (NumParams == 1 && FTy.getReturnType()->isFloatingPointTy() &&
+            FTy.getReturnType() == FTy.getParamType(0));
+
+  case LibFunc::fmin:
+  case LibFunc::fminf:
+  case LibFunc::fminl:
+  case LibFunc::fmax:
+  case LibFunc::fmaxf:
+  case LibFunc::fmaxl:
+  case LibFunc::copysign:
+  case LibFunc::copysignf:
+  case LibFunc::copysignl:
+  case LibFunc::pow:
+  case LibFunc::powf:
+  case LibFunc::powl:
+    return (NumParams == 2 && FTy.getReturnType()->isFloatingPointTy() &&
+            FTy.getReturnType() == FTy.getParamType(0) &&
+            FTy.getReturnType() == FTy.getParamType(1));
+
+  case LibFunc::ffs:
+  case LibFunc::ffsl:
+  case LibFunc::ffsll:
+  case LibFunc::isdigit:
+  case LibFunc::isascii:
+  case LibFunc::toascii:
+    return (NumParams == 1 && FTy.getReturnType()->isIntegerTy(32) &&
+            FTy.getParamType(0)->isIntegerTy());
+
+  case LibFunc::fls:
+  case LibFunc::flsl:
+  case LibFunc::flsll:
+  case LibFunc::abs:
+  case LibFunc::labs:
+  case LibFunc::llabs:
+    return (NumParams == 1 && FTy.getReturnType()->isIntegerTy() &&
+            FTy.getReturnType() == FTy.getParamType(0));
+
+  case LibFunc::cxa_atexit:
+    return (NumParams == 3 && FTy.getReturnType()->isIntegerTy() &&
+            FTy.getParamType(0)->isPointerTy() &&
+            FTy.getParamType(1)->isPointerTy() &&
+            FTy.getParamType(2)->isPointerTy());
+
+  case LibFunc::sinpi:
+  case LibFunc::cospi:
+    return (NumParams == 1 && FTy.getReturnType()->isDoubleTy() &&
+            FTy.getReturnType() == FTy.getParamType(0));
+
+  case LibFunc::sinpif:
+  case LibFunc::cospif:
+    return (NumParams == 1 && FTy.getReturnType()->isFloatTy() &&
+            FTy.getReturnType() == FTy.getParamType(0));
+
+  default:
+    // Assume the other functions are correct.
+    // FIXME: It'd be really nice to cover them all.
+    return true;
+  }
+}
+
+bool TargetLibraryInfoImpl::getLibFunc(const Function &FDecl,
+                                       LibFunc::Func &F) const {
+  const DataLayout *DL =
+      FDecl.getParent() ? &FDecl.getParent()->getDataLayout() : nullptr;
+  return getLibFunc(FDecl.getName(), F) &&
+         isValidProtoForLibFunc(*FDecl.getFunctionType(), F, DL);
+}
+
 void TargetLibraryInfoImpl::disableAllFunctions() {
   memset(AvailableArray, 0, sizeof(AvailableArray));
 }
 
-TargetLibraryInfo TargetLibraryAnalysis::run(Module &M) {
+static bool compareByScalarFnName(const VecDesc &LHS, const VecDesc &RHS) {
+  return std::strncmp(LHS.ScalarFnName, RHS.ScalarFnName,
+                      std::strlen(RHS.ScalarFnName)) < 0;
+}
+
+static bool compareByVectorFnName(const VecDesc &LHS, const VecDesc &RHS) {
+  return std::strncmp(LHS.VectorFnName, RHS.VectorFnName,
+                      std::strlen(RHS.VectorFnName)) < 0;
+}
+
+static bool compareWithScalarFnName(const VecDesc &LHS, StringRef S) {
+  return std::strncmp(LHS.ScalarFnName, S.data(), S.size()) < 0;
+}
+
+static bool compareWithVectorFnName(const VecDesc &LHS, StringRef S) {
+  return std::strncmp(LHS.VectorFnName, S.data(), S.size()) < 0;
+}
+
+void TargetLibraryInfoImpl::addVectorizableFunctions(ArrayRef<VecDesc> Fns) {
+  VectorDescs.insert(VectorDescs.end(), Fns.begin(), Fns.end());
+  std::sort(VectorDescs.begin(), VectorDescs.end(), compareByScalarFnName);
+
+  ScalarDescs.insert(ScalarDescs.end(), Fns.begin(), Fns.end());
+  std::sort(ScalarDescs.begin(), ScalarDescs.end(), compareByVectorFnName);
+}
+
+void TargetLibraryInfoImpl::addVectorizableFunctionsFromVecLib(
+    enum VectorLibrary VecLib) {
+  switch (VecLib) {
+  case Accelerate: {
+    const VecDesc VecFuncs[] = {
+        // Floating-Point Arithmetic and Auxiliary Functions
+        {"ceilf", "vceilf", 4},
+        {"fabsf", "vfabsf", 4},
+        {"llvm.fabs.f32", "vfabsf", 4},
+        {"floorf", "vfloorf", 4},
+        {"sqrtf", "vsqrtf", 4},
+        {"llvm.sqrt.f32", "vsqrtf", 4},
+
+        // Exponential and Logarithmic Functions
+        {"expf", "vexpf", 4},
+        {"llvm.exp.f32", "vexpf", 4},
+        {"expm1f", "vexpm1f", 4},
+        {"logf", "vlogf", 4},
+        {"llvm.log.f32", "vlogf", 4},
+        {"log1pf", "vlog1pf", 4},
+        {"log10f", "vlog10f", 4},
+        {"llvm.log10.f32", "vlog10f", 4},
+        {"logbf", "vlogbf", 4},
+
+        // Trigonometric Functions
+        {"sinf", "vsinf", 4},
+        {"llvm.sin.f32", "vsinf", 4},
+        {"cosf", "vcosf", 4},
+        {"llvm.cos.f32", "vcosf", 4},
+        {"tanf", "vtanf", 4},
+        {"asinf", "vasinf", 4},
+        {"acosf", "vacosf", 4},
+        {"atanf", "vatanf", 4},
+
+        // Hyperbolic Functions
+        {"sinhf", "vsinhf", 4},
+        {"coshf", "vcoshf", 4},
+        {"tanhf", "vtanhf", 4},
+        {"asinhf", "vasinhf", 4},
+        {"acoshf", "vacoshf", 4},
+        {"atanhf", "vatanhf", 4},
+    };
+    addVectorizableFunctions(VecFuncs);
+    break;
+  }
+  case NoLibrary:
+    break;
+  }
+}
+
+bool TargetLibraryInfoImpl::isFunctionVectorizable(StringRef funcName) const {
+  funcName = sanitizeFunctionName(funcName);
+  if (funcName.empty())
+    return false;
+
+  std::vector<VecDesc>::const_iterator I = std::lower_bound(
+      VectorDescs.begin(), VectorDescs.end(), funcName,
+      compareWithScalarFnName);
+  return I != VectorDescs.end() && StringRef(I->ScalarFnName) == funcName;
+}
+
+StringRef TargetLibraryInfoImpl::getVectorizedFunction(StringRef F,
+                                                       unsigned VF) const {
+  F = sanitizeFunctionName(F);
+  if (F.empty())
+    return F;
+  std::vector<VecDesc>::const_iterator I = std::lower_bound(
+      VectorDescs.begin(), VectorDescs.end(), F, compareWithScalarFnName);
+  while (I != VectorDescs.end() && StringRef(I->ScalarFnName) == F) {
+    if (I->VectorizationFactor == VF)
+      return I->VectorFnName;
+    ++I;
+  }
+  return StringRef();
+}
+
+StringRef TargetLibraryInfoImpl::getScalarizedFunction(StringRef F,
+                                                       unsigned &VF) const {
+  F = sanitizeFunctionName(F);
+  if (F.empty())
+    return F;
+
+  std::vector<VecDesc>::const_iterator I = std::lower_bound(
+      ScalarDescs.begin(), ScalarDescs.end(), F, compareWithVectorFnName);
+  if (I == VectorDescs.end() || StringRef(I->VectorFnName) != F)
+    return StringRef();
+  VF = I->VectorizationFactor;
+  return I->ScalarFnName;
+}
+
+TargetLibraryInfo TargetLibraryAnalysis::run(Module &M,
+                                             ModuleAnalysisManager &) {
   if (PresetInfoImpl)
     return TargetLibraryInfo(*PresetInfoImpl);
 
   return TargetLibraryInfo(lookupInfoImpl(Triple(M.getTargetTriple())));
 }
 
-TargetLibraryInfo TargetLibraryAnalysis::run(Function &F) {
+TargetLibraryInfo TargetLibraryAnalysis::run(Function &F,
+                                             FunctionAnalysisManager &) {
   if (PresetInfoImpl)
     return TargetLibraryInfo(*PresetInfoImpl);
 
@@ -774,7 +1136,7 @@ TargetLibraryInfo TargetLibraryAnalysis::run(Function &F) {
       lookupInfoImpl(Triple(F.getParent()->getTargetTriple())));
 }
 
-TargetLibraryInfoImpl &TargetLibraryAnalysis::lookupInfoImpl(Triple T) {
+TargetLibraryInfoImpl &TargetLibraryAnalysis::lookupInfoImpl(const Triple &T) {
   std::unique_ptr<TargetLibraryInfoImpl> &Impl =
       Impls[T.normalize()];
   if (!Impl)

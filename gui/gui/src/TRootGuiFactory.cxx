@@ -21,6 +21,7 @@
 #include "TRootGuiFactory.h"
 #include "TRootApplication.h"
 #include "TRootCanvas.h"
+#include "TRootBrowser.h"
 #include "TRootBrowserLite.h"
 #include "TRootContextMenu.h"
 #include "TRootControlBar.h"
@@ -30,19 +31,20 @@
 
 ClassImp(TRootGuiFactory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRootGuiFactory ctor.
+
 TRootGuiFactory::TRootGuiFactory(const char *name, const char *title)
    : TGuiFactory(name, title)
 {
-   // TRootGuiFactory ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TApplicationImp
+
 TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
                       Int_t *argc, char **argv)
 {
-   // Create a ROOT native GUI version of TApplicationImp
-
    TRootApplication *app = new TRootApplication(classname, argc, argv);
    if (!app->Client()) {
       delete app;
@@ -51,31 +53,31 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
    return app;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TCanvasImp
+
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
-   // Create a ROOT native GUI version of TCanvasImp
-
    return new TRootCanvas(c, title, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TCanvasImp
+
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
-   // Create a ROOT native GUI version of TCanvasImp
-
    return new TRootCanvas(c, title, x, y, width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TBrowserImp
+
 TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
                                                UInt_t width, UInt_t height,
                                                Option_t *opt)
 {
-   // Create a ROOT native GUI version of TBrowserImp
-
    TString browserVersion(gEnv->GetValue("Browser.Name", "TRootBrowserLite"));
    TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp",
                                                                browserVersion);
@@ -90,16 +92,19 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
          height, browserOptions.Data());
       if (imp) return imp;
    }
-   return new TRootBrowserLite(b, title, width, height);
+   if (browserVersion.Contains("Lite", TString::kIgnoreCase))
+      return new TRootBrowserLite(b, title, width, height);
+   else
+      return new TRootBrowser(b, title, width, height, browserOptions.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TBrowserImp
+
 TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
                                                Int_t x, Int_t y, UInt_t width,
                                                UInt_t height, Option_t *opt)
 {
-   // Create a ROOT native GUI version of TBrowserImp
-
    TString browserVersion(gEnv->GetValue("Browser.Name", "TRootBrowserLite"));
    TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp",
                                                                browserVersion);
@@ -114,31 +119,34 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
          height, browserOptions.Data());
       if (imp) return imp;
    }
-   return new TRootBrowserLite(b, title, x, y, width, height);
+   if (browserVersion.Contains("Lite", TString::kIgnoreCase))
+      return new TRootBrowserLite(b, title, x, y, width, height);
+   else
+      return new TRootBrowser(b, title, x, y, width, height, browserOptions.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TContextMenuImp
+
 TContextMenuImp *TRootGuiFactory::CreateContextMenuImp(TContextMenu *c,
                                              const char *name, const char *)
 {
-   // Create a ROOT native GUI version of TContextMenuImp
-
    return new TRootContextMenu(c, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TControlBarImp
+
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
-   // Create a ROOT native GUI version of TControlBarImp
-
    return new TRootControlBar(c, title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a ROOT native GUI version of TControlBarImp
+
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title,
                                                      Int_t x, Int_t y)
 {
-   // Create a ROOT native GUI version of TControlBarImp
-
    return new TRootControlBar(c, title, x, y);
 }

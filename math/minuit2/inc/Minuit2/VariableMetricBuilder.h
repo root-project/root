@@ -23,6 +23,7 @@ namespace ROOT {
 
 /**
    Build (find) function minimum using the Variable Metric method (MIGRAD)
+
  */
 class VariableMetricBuilder : public MinimumBuilder {
 
@@ -41,7 +42,7 @@ public:
    const VariableMetricEDMEstimator& Estimator() const {return fEstimator;}
    const DavidonErrorUpdator& ErrorUpdator() const {return fErrorUpdator;}
 
-   void AddResult(std::vector<MinimumState>& result, const MinimumState & state, bool store = false) const;
+   void AddResult(std::vector<MinimumState>& result, const MinimumState & state) const;
 
 private:
 

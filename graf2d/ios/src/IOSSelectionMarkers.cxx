@@ -5,10 +5,11 @@ namespace ROOT {
 namespace iOS {
 namespace GraphicUtils {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void DrawSelectionMarker(CGContextRef ctx, const CGPoint &point)
 {
-   //
    const CGFloat externalRadius = 5.f;
    const CGFloat internalRadius = 4.f;
 
@@ -19,10 +20,11 @@ void DrawSelectionMarker(CGContextRef ctx, const CGPoint &point)
    CGContextFillEllipseInRect(ctx, CGRectMake(point.x - internalRadius, point.y - internalRadius, 2 * internalRadius, 2 * internalRadius));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void DrawBoxSelectionMarkers(CGContextRef ctx, const CGRect &box)
 {
-   //
    DrawSelectionMarker(ctx, box.origin);
    DrawSelectionMarker(ctx, CGPointMake(box.origin.x, box.origin.y + box.size.height));
    DrawSelectionMarker(ctx, CGPointMake(box.origin.x + box.size.width, box.origin.y));

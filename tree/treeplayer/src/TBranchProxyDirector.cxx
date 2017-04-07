@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TBranchProxyDirector                                                   //
-//                                                                        //
-// This class is used to 'drive' and hold a serie of TBranchProxy objects //
-// which represent and give access to the content of TTree object.        //
-// This is intended to be used as part of a generate Selector class       //
-// which will hold the directory and its associate                        //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
+/** TBranchProxyDirector
+This class is used to 'drive' and hold a serie of TBranchProxy objects
+which represent and give access to the content of TTree object.
+This is intended to be used as part of a generate Selector class
+which will hold the directory and its associate
+*/
 
 #include "TBranchProxyDirector.h"
 #include "TBranchProxy.h"
@@ -33,12 +29,13 @@
 
 namespace std {} using namespace std;
 
-ClassImp(ROOT::TBranchProxyDirector);
+ClassImp(ROOT::Internal::TBranchProxyDirector);
 
 namespace ROOT {
+namespace Internal {
 
    // Helper function to call Reset on each TBranchProxy
-   void Reset(TBranchProxy *x) { x->Reset(); }
+   void Reset(Detail::TBranchProxy *x) { x->Reset(); }
 
    // Helper function to call SetReadEntry on all TFriendProxy
    void ResetReadEntry(TFriendProxy *x) { x->ResetReadEntry(); }
@@ -66,7 +63,7 @@ namespace ROOT {
       // Simple constructor
    }
 
-   void TBranchProxyDirector::Attach(TBranchProxy* p) {
+   void TBranchProxyDirector::Attach(Detail::TBranchProxy* p) {
 
       // Attach a TBranchProxy object to this director.  The director just
       // 'remembers' this BranchProxy and does not own it.  It will be use
@@ -157,4 +154,5 @@ namespace ROOT {
       return oldtree;
    }
 
+} // namespace Internal
 } // namespace ROOT

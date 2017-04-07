@@ -12,16 +12,7 @@
 #ifndef ROOT_TGeoShapeAssembly
 #define ROOT_TGeoShapeAssembly
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoShapeAssembly - The shape encapsulating an assembly (union) of     //
-//         volumes. Automatically created by TGeoVolumeAssembly class     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoVolumeAssembly;
 

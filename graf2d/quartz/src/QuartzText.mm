@@ -14,6 +14,8 @@
 #include <vector>
 #include <cmath>
 
+#include <Availability.h>
+
 #include "QuartzText.h"
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
@@ -24,6 +26,20 @@
 
 namespace ROOT {
 namespace Quartz {
+
+#ifdef MAC_OS_X_VERSION_10_11
+
+const CTFontOrientation defaultFontOrientation = kCTFontOrientationDefault;
+const CTFontOrientation horizontalFontOrientation = kCTFontOrientationHorizontal;
+const CTFontOrientation verticalFontOrientation = kCTFontOrientationVertical;
+
+#else
+// Constants deprecated starting from 10.11
+const CTFontOrientation defaultFontOrientation = kCTFontDefaultOrientation;
+const CTFontOrientation horizontalFontOrientation = kCTFontHorizontalOrientation;
+const CTFontOrientation verticalFontOrientation = kCTFontVerticalOrientation;
+
+#endif
 
 namespace {
 
@@ -46,7 +62,7 @@ CGRect BBoxForCTRun(CTFontRef font, CTRunRef run)
    if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
       std::vector<CGGlyph> glyphs(nGlyphs);
       CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
-      bbox = CTFontGetBoundingRectsForGlyphs(font, kCTFontDefaultOrientation,
+      bbox = CTFontGetBoundingRectsForGlyphs(font, defaultFontOrientation,
                                              &glyphs[0], 0, nGlyphs);
    }
 
@@ -60,8 +76,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
              : fCTLine(0),
                fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -75,8 +89,6 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
                fCTFont(font)
 
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -89,8 +101,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
 
@@ -116,8 +126,6 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
    CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
@@ -139,10 +147,7 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t
             : fCTLine(0),
               fCTFont(font)
 {
-   //TODO: why don't I have asserts on parameters here?
-
    //Create attributed string with font and color.
-   //TODO: Make code more general, this constructor is copy&paste.
    using MacOSX::Util::CFScopeGuard;
 
    const CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
@@ -227,7 +232,8 @@ void TextLine::Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CF
    if (!wrappedCString.Get())
       throw std::runtime_error("TextLine: cstr wrapper");
 
-   CFScopeGuard<CFAttributedStringRef> attributedString(CFAttributedStringCreate(kCFAllocatorDefault, wrappedCString.Get(), stringAttribs.Get()));
+   CFScopeGuard<CFAttributedStringRef> attributedString(CFAttributedStringCreate(kCFAllocatorDefault,
+                                                        wrappedCString.Get(), stringAttribs.Get()));
    fCTLine = CTLineCreateWithAttributedString(attributedString.Get());
 
    if (!fCTLine)
@@ -249,7 +255,8 @@ void TextLine::Init(const std::vector<UniChar> &unichars, UInt_t nAttribs, CFStr
    if (!wrappedUniString.Get())
       throw std::runtime_error("TextLine: cstr wrapper");
 
-   const CFScopeGuard<CFAttributedStringRef> attributedString(CFAttributedStringCreate(kCFAllocatorDefault, wrappedUniString.Get(), stringAttribs.Get()));
+   const CFScopeGuard<CFAttributedStringRef> attributedString(CFAttributedStringCreate(kCFAllocatorDefault,
+                                                              wrappedUniString.Get(), stringAttribs.Get()));
    fCTLine = CTLineCreateWithAttributedString(attributedString.Get());
 
    if (!fCTLine)
@@ -327,7 +334,7 @@ void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<U
    }
 
    std::vector<CGSize> glyphAdvances(glyphs.size());
-   CTFontGetAdvancesForGlyphs(font, kCTFontHorizontalOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
+   CTFontGetAdvancesForGlyphs(font, horizontalFontOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
 
    CGFloat currentX = x;
    std::vector<CGPoint> glyphPositions(glyphs.size());

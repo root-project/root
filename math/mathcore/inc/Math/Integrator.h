@@ -14,30 +14,39 @@
 #ifndef ROOT_Math_Integrator
 #define ROOT_Math_Integrator
 
-#ifndef ROOT_Math_AllIntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IntegratorOptions
 #include "Math/IntegratorOptions.h"
-#endif
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 
 #include <memory>
 
 
+/**
+   @defgroup NumAlgo Numerical Algorithms
+   Numerical Algorithm classes from the \ref MathCorePage and \ref MathMorePage libraries.
+   @ingroup MathCore
+   @ingroup MathMore
+ */
+
 
 /**
 
 @defgroup Integration Numerical Integration
+
+Classes for numerical integration of functions. 
+These classes provide algorithms for integration of one-dimensional functions, with several adaptive and non-adaptive methods 
+and for integration of multi-dimensional function using an adaptive method or MonteCarlo Integration (GSLMCIntegrator).
+The basic classes ROOT::Math::IntegratorOneDim provides a common interface for the one-dimensional methods while the class 
+ROOT::Math::IntegratorMultiDim provides the interface for the multi-dimensional ones. 
+The methods can be configured (e.g  setting the default method with its defult parameters) using the ROOT::Math::IntegratorOneDimOptions and 
+ROOT::Math::IntegratorMultiDimOptions classes.
+
+@ingroup  NumAlgo
 
 */
 
@@ -107,7 +116,7 @@ public:
        NOTE: When the default values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions
     */
     explicit
-    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, unsigned int rule = 0) :
+    IntegratorOneDim(IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, unsigned int rule = 0) :
        fIntegrator(0), fFunc(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
@@ -118,15 +127,15 @@ public:
 
        @param f      integration function (1D interface). It is copied inside
        @param type   integration type (adaptive, non-adaptive, etc..)
-       @param absTol desired absolute Error
-       @param relTol desired relative Error
+       @param absTol desired absolute tolerance. The algorithm will stop when either the absolute OR the relative tolerance are satisfied.
+       @param relTol desired relative tolerance 
        @param size maximum number of sub-intervals
        @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)
 
-       NOTE: When the default values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions
+       NOTE: When no values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions
     */
    explicit
-   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, int rule = 0) :
+   IntegratorOneDim(const IGenFunction &f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, int rule = 0) :
       fIntegrator(0), fFunc(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
@@ -138,24 +147,28 @@ public:
 
        @param f      integration function (any C++ callable object implementing operator()(double x)
        @param type   integration type (adaptive, non-adaptive, etc..)
-       @param absTol desired absolute Error
-       @param relTol desired relative Error
+       @param absTol desired absolute tolerance. The algorithm will stop when either the absolute OR the relative tolerance are satisfied.
+       @param relTol desired relative tolerance
        @param size maximum number of sub-intervals
        @param rule Gauss-Kronrod integration rule (only for GSL ADAPTIVE type)
+
+       NOTE: When no values are passed, the values used are taken from the default defined in ROOT::Math::IntegratorOneDimOptions
+
     */
 
    template<class Function>
    explicit
-   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int size = 0, int rule = 0) :
+   IntegratorOneDim(Function & f, IntegrationOneDim::Type type = IntegrationOneDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int size = 0, int rule = 0) :
       fIntegrator(0), fFunc(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, size, rule);
       SetFunction(f);
    }
 
-   /// destructor (will delete contained pointer)
+   /// destructor (will delete contained pointers)
    virtual ~IntegratorOneDim() {
       if (fIntegrator) delete fIntegrator;
+      if (fFunc) delete fFunc;
    }
 
    // disable copy constructur and assignment operator
@@ -185,7 +198,8 @@ public:
    void SetFunction  (const IGenFunction &f, bool copy = false) {
       if (!fIntegrator) return;
       if (copy) {
-         fFunc = std::auto_ptr<IGenFunction>(f.Clone() );
+         if (fFunc) delete fFunc; 
+         fFunc = f.Clone();
          fIntegrator->SetFunction(*fFunc);
          return;
       }
@@ -454,7 +468,7 @@ protected:
 private:
 
    VirtualIntegratorOneDim * fIntegrator;   // pointer to integrator interface class
-   std::auto_ptr<IGenFunction> fFunc;       // pointer to owned function
+   IGenFunction            * fFunc;         // pointer to owned function
 
 };
 
@@ -469,9 +483,7 @@ private:
 #ifndef __CINT__
 
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 template<class Function>
 void ROOT::Math::IntegratorOneDim::SetFunction( Function & f) {

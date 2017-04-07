@@ -57,12 +57,19 @@ namespace ROOT {
 namespace ROOT {
    namespace Math {
 
-      struct MathMoreLibrary {
+      class MathMoreLib {
+
+      public:
 
          // adding this method with force the auto-loading of the library
          static void Load();
       };
+
+      typedef MathMoreLib MathMoreLibrary; 
    }
+
 }
+
+
 
 #endif  // ROOT_Math_PdfFuncMathMore

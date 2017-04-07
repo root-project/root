@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstates usage pre-scaling for automatic 2D projections.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstates usage pre-scaling for automatic 2D projections.
+///
+/// \image html eve_projection_prescale.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 const char* esd_geom_file_name =
    "http://root.cern.ch/files/alice_ESDgeometry.root";

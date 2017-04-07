@@ -95,7 +95,7 @@ static unsigned getXCoreSectionFlags(SectionKind K, bool IsCPRel) {
   return Flags;
 }
 
-const MCSection *
+MCSection *
 XCoreTargetObjectFile::getExplicitSectionGlobal(const GlobalValue *GV,
                                                 SectionKind Kind, Mangler &Mang,
                                                 const TargetMachine &TM) const {
@@ -108,9 +108,10 @@ XCoreTargetObjectFile::getExplicitSectionGlobal(const GlobalValue *GV,
                                     getXCoreSectionFlags(Kind, IsCPRel));
 }
 
-const MCSection *XCoreTargetObjectFile::
-SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
-                       const TargetMachine &TM) const{
+MCSection *
+XCoreTargetObjectFile::SelectSectionForGlobal(const GlobalValue *GV,
+                                              SectionKind Kind, Mangler &Mang,
+                                              const TargetMachine &TM) const {
 
   bool UseCPRel = GV->isLocalLinkage(GV->getLinkage());
 
@@ -121,19 +122,22 @@ SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
     if (Kind.isMergeableConst8())       return MergeableConst8Section;
     if (Kind.isMergeableConst16())      return MergeableConst16Section;
   }
-  Type *ObjType = GV->getType()->getPointerElementType();
+  Type *ObjType = GV->getValueType();
+  auto &DL = GV->getParent()->getDataLayout();
   if (TM.getCodeModel() == CodeModel::Small || !ObjType->isSized() ||
-      TM.getDataLayout()->getTypeAllocSize(ObjType) < CodeModelLargeSize) {
+      DL.getTypeAllocSize(ObjType) < CodeModelLargeSize) {
     if (Kind.isReadOnly())              return UseCPRel? ReadOnlySection
                                                        : DataRelROSection;
     if (Kind.isBSS() || Kind.isCommon())return BSSSection;
-    if (Kind.isDataRel())               return DataSection;
+    if (Kind.isData())
+      return DataSection;
     if (Kind.isReadOnlyWithRel())       return DataRelROSection;
   } else {
     if (Kind.isReadOnly())              return UseCPRel? ReadOnlySectionLarge
                                                        : DataRelROSectionLarge;
     if (Kind.isBSS() || Kind.isCommon())return BSSSectionLarge;
-    if (Kind.isDataRel())               return DataSectionLarge;
+    if (Kind.isData())
+      return DataSectionLarge;
     if (Kind.isReadOnlyWithRel())       return DataRelROSectionLarge;
   }
 
@@ -141,9 +145,10 @@ SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
   report_fatal_error("Target does not support TLS or Common sections");
 }
 
-const MCSection *
-XCoreTargetObjectFile::getSectionForConstant(SectionKind Kind,
-                                             const Constant *C) const {
+MCSection *XCoreTargetObjectFile::getSectionForConstant(const DataLayout &DL,
+                                                        SectionKind Kind,
+                                                        const Constant *C,
+                                                        unsigned &Align) const {
   if (Kind.isMergeableConst4())           return MergeableConst4Section;
   if (Kind.isMergeableConst8())           return MergeableConst8Section;
   if (Kind.isMergeableConst16())          return MergeableConst16Section;

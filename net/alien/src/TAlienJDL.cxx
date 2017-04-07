@@ -28,66 +28,66 @@
 
 ClassImp(TAlienJDL)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the executable.
+
 void TAlienJDL::SetExecutable(const char *value, const char *description)
 {
-   // Sets the executable.
-
    if (value)
       SetValue("Executable", AddQuotes(value));
    if (description)
       SetDescription("Executable", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the arguments.
+
 void TAlienJDL::SetArguments(const char *value, const char *description)
 {
-   // Sets the arguments.
-
    if (value)
       SetValue("Arguments", AddQuotes(value));
    if (description)
       SetDescription("Arguments", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets eMail address.
+
 void TAlienJDL::SetEMail(const char *value, const char *description)
 {
-   // Sets eMail address.
-
    if (value)
       SetValue("Email", AddQuotes(value));
    if (description)
       SetDescription("Email", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets OutputDirectory.
+
 void TAlienJDL::SetOutputDirectory(const char *value, const char *description)
 {
-   // Sets OutputDirectory.
-
    if (value)
       SetValue ("OutputDir", AddQuotes(value));
    if (description)
       SetDescription("OutputDir", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets merged OutputDirectory.
+
 void TAlienJDL::SetMergedOutputDirectory ( const char * value,const char* description)
 {
-   // Sets merged OutputDirectory.
-
    if (value)
       SetValue ("MergeOutputDir", AddQuotes(value));
    if (description)
       SetDescription("MergeOutputDir", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets OutputDirectory.
+
 void TAlienJDL:: SetPrice(UInt_t price,const char* description)
 {
-   // Sets OutputDirectory.
-
    TString pricestring(Form("%d",price));
    SetValue("Price", AddQuotes(pricestring.Data()));
 
@@ -95,11 +95,11 @@ void TAlienJDL:: SetPrice(UInt_t price,const char* description)
       SetDescription("Price", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To inform AliEn master about estimated Time-To-Live of included nodes.
+
 void TAlienJDL:: SetTTL(UInt_t ttl, const char *description)
 {
-   // To inform AliEn master about estimated Time-To-Live of included nodes.
-
    TString ttlstring;
    ttlstring+= ttl;
    SetValue("TTL", ttlstring.Data());
@@ -108,33 +108,33 @@ void TAlienJDL:: SetTTL(UInt_t ttl, const char *description)
       SetDescription("TTL", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets Job Tag
+
 void TAlienJDL::SetJobTag(const char* value,const char* description)
 {
-   // Sets Job Tag
-
    if (value)
       SetValue("JobTag", AddQuotes(value));
    if (description)
       SetDescription("JobTag", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets InputDataListFormat - can be "xml-single" or "xml-multi"
+
 void TAlienJDL::SetInputDataListFormat(const char* value,const char* description)
 {
-   // Sets InputDataListFormat - can be "xml-single" or "xml-multi"
-
    if (value)
       SetValue("InputDataListFormat", AddQuotes(value));
    if (description)
       SetDescription("InputDataListFormat", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets InputDataList name
+
 void TAlienJDL::SetInputDataList(const char* value,const char* description)
 {
-   // Sets InputDataList name
-
    if (value)
       SetValue("InputDataList", AddQuotes(value));
    if (description)
@@ -142,13 +142,13 @@ void TAlienJDL::SetInputDataList(const char* value,const char* description)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the split mode.
+
 void TAlienJDL::SetSplitMode(const char *value, UInt_t maxnumberofinputfiles,
                              UInt_t maxinputfilesize, const char *d1, const char *d2,
                              const char *d3)
 {
-   // Sets the split mode.
-
    if (value && !strcasecmp(value, "SE")) {
 
       SetSplitArguments(value,d1);
@@ -164,11 +164,11 @@ void TAlienJDL::SetSplitMode(const char *value, UInt_t maxnumberofinputfiles,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the SplitMaxNumOfFiles.
+
 void TAlienJDL::SetSplitModeMaxNumOfFiles(UInt_t maxnumberofinputfiles, const char *description)
 {
-   // Sets the SplitMaxNumOfFiles.
-
    TString val;
    val += maxnumberofinputfiles;
    SetValue ( "SplitMaxInputFileNumber", AddQuotes ( val.Data() ) );
@@ -177,11 +177,11 @@ void TAlienJDL::SetSplitModeMaxNumOfFiles(UInt_t maxnumberofinputfiles, const ch
       SetDescription("SplitMaxInputFileNumber", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the SplitMaxInputFileSize.
+
 void TAlienJDL::SetSplitModeMaxInputFileSize(UInt_t maxinputfilesize, const char *description)
 {
-   // Sets the SplitMaxInputFileSize.
-
    TString val;
    val += maxinputfilesize;
    SetValue ( "SplitMaxInputFileSize", AddQuotes ( val.Data() ) );
@@ -189,31 +189,32 @@ void TAlienJDL::SetSplitModeMaxInputFileSize(UInt_t maxinputfilesize, const char
       SetDescription("SplitMaxInputFileSize", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the split.
+
 void TAlienJDL::SetSplitArguments(const char *splitarguments, const char *description)
 {
-   // Sets the split.
-
    if (splitarguments)
       SetValue("Split", AddQuotes(splitarguments));
    if (description)
       SetDescription("Split", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the validation command.
+
 void TAlienJDL::SetValidationCommand(const char *value, const char *description)
 {
-   // Sets the validation command.
-
    SetValue("Validationcommand", AddQuotes(value));
    if (description)
       SetDescription("Validationcommand", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the Maxium init failed
+
 void TAlienJDL::SetMaxInitFailed(Int_t maxInitFailed, const char *description)
 {
-   // Sets the Maxium init failed
    TString str;
    str += maxInitFailed;
    SetValue("MaxInitFailed", AddQuotes(str.Data()));
@@ -221,77 +222,78 @@ void TAlienJDL::SetMaxInitFailed(Int_t maxInitFailed, const char *description)
       SetDescription("MaxInitFailed", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the Own Command
+
 void TAlienJDL::SetOwnCommand(const char *command, const char *value, const char *description)
 {
-   // Sets the Own Command
    if ((command) && (value))
      SetValue(command, AddQuotes(value));
    if ((command) && (description))
      SetDescription(command, description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a requirement.
+
 void TAlienJDL::AddToRequirements(const char *value, const char *description)
 {
-   // Adds a requirement.
-
    if (value)
       AddToReqSet("Requirements", value);
    if (description)
       AddToSetDescription("Requirements", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a file to the input sandbox.
+
 void TAlienJDL::AddToInputSandbox(const char *value, const char *description)
 {
-   // Adds a file to the input sandbox.
-
    if (value)
       AddToSet("InputFile", value);
    if (description)
       AddToSetDescription("InputFile", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a file to the output sandbox.
+
 void TAlienJDL::AddToOutputSandbox(const char *value, const char *description)
 {
-   // Adds a file to the output sandbox.
-
    if (value)
       AddToSet("OutputFile", value);
    if (description)
       AddToSetDescription("OutputFile", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a file to the input data.
+
 void TAlienJDL::AddToInputData(const char *value, const char *description)
 {
-   // Adds a file to the input data.
-
    if (value)
       AddToSet("InputData", value);
    if (description)
       AddToSetDescription("InputData", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a file to the input data collection.
+
 void TAlienJDL::AddToInputDataCollection(const char *value, const char *description)
 {
-   // Adds a file to the input data collection.
-
    if (value)
       AddToSet("InputDataCollection", value);
    if (description)
       AddToSetDescription("InputDataCollection", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a package name to the package section.
+
 void TAlienJDL::AddToPackages(const char *name, const char *version,
                               const char *type, const char *description)
 {
-   // Adds a package name to the package section.
-
    if (name) {
       TString packagename = type;
       packagename += "@";
@@ -306,33 +308,33 @@ void TAlienJDL::AddToPackages(const char *name, const char *version,
       AddToSetDescription("Packages", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a package.
+
 void TAlienJDL::AddToPackages(const char *name, const char *description)
 {
-   // Adds a package.
-
    AddToSet("Packages", name);
    if (description)
       AddToSetDescription("Packages", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds an output archive definition
+
 void TAlienJDL::AddToOutputArchive(const char* value,const char* description)
 {
-   // Adds an output archive definition
-
    if (value)
       AddToSet("OutputArchive", value);
    if (description)
       AddToSetDescription("OutputArchive", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a value to a key value which hosts a set of values.
+/// E.g. InputSandbox: {"file1","file2"}
+
 void TAlienJDL::AddToReqSet(const char *key, const char *value)
 {
-   // Adds a value to a key value which hosts a set of values.
-   // E.g. InputSandbox: {"file1","file2"}
-
    const char *oldValue = GetValue(key);
    TString newString;
    if (oldValue)
@@ -350,12 +352,12 @@ void TAlienJDL::AddToReqSet(const char *key, const char *value)
    SetValue(key, newString);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a package name to the package section.
+
 void TAlienJDL::AddToMerge(const char *filenameToMerge, const char *jdlToSubmit,
                            const char *mergedFile, const char *description )
 {
-   // Adds a package name to the package section.
-
    TString mergename ( filenameToMerge );
    mergename += ":";
    mergename += jdlToSubmit;
@@ -366,21 +368,21 @@ void TAlienJDL::AddToMerge(const char *filenameToMerge, const char *jdlToSubmit,
       AddToSetDescription("Merge", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a package name the the package section.
+
 void TAlienJDL::AddToMerge(const char *merge, const char *description)
 {
-   // Adds a package name the the package section.
-
    AddToSet("Merge", merge);
    if (description)
       AddToSetDescription("Merge", description);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tests the submission of a simple job.
+
 Bool_t TAlienJDL::SubmitTest()
 {
-   // Tests the submission of a simple job.
-
    Info("SubmitTest", "submitting test job /bin/date");
 
    if (!gGrid) {
@@ -401,11 +403,11 @@ Bool_t TAlienJDL::SubmitTest()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the specified value to the specified command.
+
 void TAlienJDL::SetValueByCmd(TString cmd, TString value)
 {
-   // Set the specified value to the specified command.
-
    if ( !cmd.CompareTo ( "Executable" ) ) SetExecutable ( value.Data() );
    else if ( !cmd.CompareTo ( "Arguments" ) ) SetArguments ( value.Data() );
    else if ( !cmd.CompareTo ( "Email" ) ) SetEMail ( value.Data() );
@@ -436,11 +438,11 @@ void TAlienJDL::SetValueByCmd(TString cmd, TString value)
       Error ( "SetValueByCmd()","Cmd Value not supported.." );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// fills the TAlienJDL from inputfile (should be AliEn JDL file)
+
 void TAlienJDL::Parse(const char *filename)
 {
-   // fills the TAlienJDL from inputfile (should be AliEn JDL file)
-
    std::ifstream file;
    file.open ( filename );
    if ( !file.is_open() )  {
@@ -481,8 +483,9 @@ void TAlienJDL::Parse(const char *filename)
    file.close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented
+
 void TAlienJDL::Simulate()
 {
-   // Not implemented
 }

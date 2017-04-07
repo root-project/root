@@ -34,10 +34,9 @@ namespace llvm {
     Type *LLVMTy;
 
   public:
-    EVT() : V((MVT::SimpleValueType)(MVT::INVALID_SIMPLE_VALUE_TYPE)),
-            LLVMTy(nullptr) {}
-    EVT(MVT::SimpleValueType SVT) : V(SVT), LLVMTy(nullptr) { }
-    EVT(MVT S) : V(S), LLVMTy(nullptr) {}
+    LLVM_CONSTEXPR EVT() : V(MVT::INVALID_SIMPLE_VALUE_TYPE), LLVMTy(nullptr) {}
+    LLVM_CONSTEXPR EVT(MVT::SimpleValueType SVT) : V(SVT), LLVMTy(nullptr) {}
+    LLVM_CONSTEXPR EVT(MVT S) : V(S), LLVMTy(nullptr) {}
 
     bool operator==(EVT VT) const {
       return !(*this != VT);
@@ -90,6 +89,19 @@ namespace llvm {
       return VecTy;
     }
 
+    /// Return the type converted to an equivalently sized integer or vector
+    /// with integer element type. Similar to changeVectorElementTypeToInteger,
+    /// but also handles scalars.
+    EVT changeTypeToInteger() {
+      if (isVector())
+        return changeVectorElementTypeToInteger();
+
+      if (isSimple())
+        return MVT::getIntegerVT(getSizeInBits());
+
+      return changeExtendedTypeToInteger();
+    }
+
     /// isSimple - Test if the given EVT is simple (as opposed to being
     /// extended).
     bool isSimple() const {
@@ -110,6 +122,11 @@ namespace llvm {
     /// isInteger - Return true if this is an integer, or a vector integer type.
     bool isInteger() const {
       return isSimple() ? V.isInteger() : isExtendedInteger();
+    }
+
+    /// isScalarInteger - Return true if this is an integer, but not a vector.
+    bool isScalarInteger() const {
+      return isSimple() ? V.isScalarInteger() : isExtendedScalarInteger();
     }
 
     /// isVector - Return true if this is a vector value type.
@@ -150,6 +167,11 @@ namespace llvm {
     /// is1024BitVector - Return true if this is a 1024-bit vector type.
     bool is1024BitVector() const {
       return isSimple() ? V.is1024BitVector() : isExtended1024BitVector();
+    }
+
+    /// is2048BitVector - Return true if this is a 2048-bit vector type.
+    bool is2048BitVector() const {
+      return isSimple() ? V.is2048BitVector() : isExtended2048BitVector();
     }
 
     /// isOverloaded - Return true if this is an overloaded type for TableGen.
@@ -343,12 +365,14 @@ namespace llvm {
     // Methods for handling the Extended-type case in functions above.
     // These are all out-of-line to prevent users of this header file
     // from having a dependency on Type.h.
+    EVT changeExtendedTypeToInteger() const;
     EVT changeExtendedVectorElementTypeToInteger() const;
     static EVT getExtendedIntegerVT(LLVMContext &C, unsigned BitWidth);
     static EVT getExtendedVectorVT(LLVMContext &C, EVT VT,
                                    unsigned NumElements);
     bool isExtendedFloatingPoint() const LLVM_READONLY;
     bool isExtendedInteger() const LLVM_READONLY;
+    bool isExtendedScalarInteger() const LLVM_READONLY;
     bool isExtendedVector() const LLVM_READONLY;
     bool isExtended16BitVector() const LLVM_READONLY;
     bool isExtended32BitVector() const LLVM_READONLY;
@@ -357,9 +381,10 @@ namespace llvm {
     bool isExtended256BitVector() const LLVM_READONLY;
     bool isExtended512BitVector() const LLVM_READONLY;
     bool isExtended1024BitVector() const LLVM_READONLY;
+    bool isExtended2048BitVector() const LLVM_READONLY;
     EVT getExtendedVectorElementType() const;
     unsigned getExtendedVectorNumElements() const LLVM_READONLY;
-    unsigned getExtendedSizeInBits() const;
+    unsigned getExtendedSizeInBits() const LLVM_READONLY;
   };
 
 } // End llvm namespace

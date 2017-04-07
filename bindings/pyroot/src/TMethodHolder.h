@@ -30,7 +30,7 @@ namespace PyROOT {
       virtual Int_t GetPriority();
 
       virtual Int_t GetMaxArgs();
-      virtual PyObject* GetArgSpec( Int_t iarg );
+      virtual PyObject* GetCoVarNames();
       virtual PyObject* GetArgDefault( Int_t iarg );
       virtual PyObject* GetScopeProxy();
 
@@ -38,12 +38,12 @@ namespace PyROOT {
 
    public:
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 );
 
-      virtual Bool_t Initialize();
+      virtual Bool_t Initialize( TCallContext* ctxt = 0 );
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual Bool_t    ConvertAndSetArgs( PyObject* args, TCallContext* ctxt = 0 );
-      virtual PyObject* Execute( void* self, TCallContext* ctxt = 0 );
+      virtual PyObject* Execute( void* self, ptrdiff_t offset, TCallContext* ctxt = 0 );
 
    protected:
       Cppyy::TCppMethod_t GetMethod()   { return fMethod; }
@@ -52,14 +52,14 @@ namespace PyROOT {
       std::string         GetSignatureString();
       std::string         GetReturnTypeName();
 
-      virtual Bool_t InitExecutor_( TExecutor*& );
+      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
 
    private:
       void Copy_( const TMethodHolder& );
       void Destroy_() const;
 
-      PyObject* CallFast( void*, TCallContext* );
-      PyObject* CallSafe( void*, TCallContext* );
+      PyObject* CallFast( void*, ptrdiff_t, TCallContext* );
+      PyObject* CallSafe( void*, ptrdiff_t, TCallContext* );
 
       Bool_t InitConverters_();
 
@@ -76,7 +76,6 @@ namespace PyROOT {
 
    // cached values
       Int_t  fArgsRequired;
-      Long_t fOffset;
 
    // admin
       Bool_t fIsInitialized;

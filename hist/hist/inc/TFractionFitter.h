@@ -12,9 +12,7 @@
 # include "TObjArray.h"
 #endif
 
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
 
 #include <vector>
 
@@ -25,14 +23,6 @@ namespace ROOT {
       class Fitter;
    }
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// TFractionFitter
-//
-// Fits MC fractions to data histogram (a la HMCMLL, see R. Barlow and C. Beeston,
-// Comp. Phys. Comm. 77 (1993) 219-228, and http://www.hep.man.ac.uk/~roger/hfrac.f).
-//
-///////////////////////////////////////////////////////////////////////////////
 
 class TFractionFitter: public TObject {
 public:
@@ -117,7 +107,7 @@ protected:
 
    Int_t     fNpar;               // number of fit parameters
 
-   ClassDef(TFractionFitter, 1)   // Fits MC fractions to data histogram
+   ClassDef(TFractionFitter, 0);   // Fits MC fractions to data histogram
 };
 
 //

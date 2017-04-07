@@ -67,24 +67,12 @@
 
 #include <limits>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
-#endif
-#ifndef ROOT_TMatrixDBasefwd
 #include "TMatrixDBasefwd.h"
-#endif
-#ifndef ROOT_TVectorFfwd
 #include "TVectorFfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 template<class Element> class TVectorT;
 template<class Element> class TElementActionT;
@@ -209,8 +197,23 @@ public:
 
    virtual TMatrixTBase<Element> &Randomize(Element alpha,Element beta,Double_t &seed);
 
+   // make it public since it can be called by TMatrixTRow
+   static Element & NaNValue();
+
    ClassDef(TMatrixTBase,5) // Matrix base class (template)
 };
+
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TMatrixTBase<double>::Class();
+#endif // __CINT__
+
 
 template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
 {

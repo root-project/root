@@ -33,16 +33,16 @@
 #include <KeySymbols.h>
 
 
-//______________________________________________________________________________
-//
-//
-// GL-overaly control GUI for TEveCaloLego.
-//
-//
+/** \class TEveCaloLegoOverlay
+\ingroup TEve
+GL-overlay control GUI for TEveCaloLego.
+*/
 
 ClassImp(TEveCaloLegoOverlay);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
    TGLCameraOverlay(),
 
@@ -73,8 +73,6 @@ TEveCaloLegoOverlay::TEveCaloLegoOverlay() :
 
    fActiveID(-1), fActiveCol(kRed-4)
 {
-   // Constructor.
-
    fPlaneAxis = new TAxis();
 }
 
@@ -99,14 +97,14 @@ Bool_t TEveCaloLegoOverlay::SetSliderVal(Event_t* event, TGLRnrCtx &rnrCtx)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TEveCaloLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
                                    TGLOvlSelectRecord & selRec,
                                    Event_t            * event)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    if (selRec.GetN() < 2) return kFALSE;
 
 
@@ -196,45 +194,45 @@ Bool_t TEveCaloLegoOverlay::Handle(TGLRnrCtx          & rnrCtx,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has entered overlay area.
+
 Bool_t TEveCaloLegoOverlay::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
-   // Mouse has entered overlay area.
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left overlay area.
+
 void TEveCaloLegoOverlay::MouseLeave()
 {
-   // Mouse has left overlay area.
-
    fActiveID = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color and transparency of scales.
+
 void TEveCaloLegoOverlay::SetScaleColorTransparency(Color_t colIdx, Char_t transp)
 {
-   // Set color and transparency of scales.
-
    fScaleColor = colIdx;
    fScaleTransparency = transp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set scale coordinates in range [0,1].
+
 void TEveCaloLegoOverlay::SetScalePosition(Double_t x, Double_t y)
 {
-   // Set scale coordinates in range [0,1].
-
    fScaleCoordX = x;
    fScaleCoordY = y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set frame attributes.
+
 void TEveCaloLegoOverlay:: SetFrameAttribs(Color_t frameColor, Char_t lineTransp, Char_t bgTransp)
 {
-   // Set frame attribs.
-
    fFrameColor = frameColor;
    fFrameLineTransp = lineTransp;
    fFrameBgTransp = bgTransp;
@@ -278,11 +276,11 @@ void TEveCaloLegoOverlay::RenderHeader(TGLRnrCtx& rnrCtx)
    font.PostRender();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render menu for plane-value and the plane if marked.
+
 void TEveCaloLegoOverlay::RenderPlaneInterface(TGLRnrCtx &rnrCtx)
 {
-   // Render menu for plane-value and the plane if marked.
-
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LINE_BIT | GL_POINT_BIT);
    glEnable(GL_POINT_SMOOTH);
    glHint(GL_POINT_SMOOTH_HINT, GL_NICEST);
@@ -440,7 +438,7 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    }
    glEnd();
 
-   // draw points in case suare is below pixels
+   // draw points in case square is below pixels
    glBegin(GL_POINTS);
    for (Int_t i=0; i < ne; ++i)
       glVertex2f(0, i* scaleStepY);
@@ -516,8 +514,8 @@ void TEveCaloLegoOverlay::RenderLogaritmicScales(TGLRnrCtx& rnrCtx)
    glPopAttrib();
 } // end draw scales
 
+////////////////////////////////////////////////////////////////////////////////
 
-/******************************************************************************/
 void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
 {
    // Draw slider of calo 2D in mode TEveCalo:fValColor.
@@ -595,7 +593,7 @@ void TEveCaloLegoOverlay::RenderPaletteScales(TGLRnrCtx& rnrCtx)
    glPopAttrib();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
 
 void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
 {
@@ -632,7 +630,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
    if (cam.IsOrthographic())
    {
       // in 2D need pixel cell dimension
-      // project lego eta-phi boundraries
+      // project lego eta-phi boundaries
       TGLVector3 rng(fCalo->GetEtaRng(), fCalo->GetPhiRng(), 0);
       TGLVertex3 p;
       TGLVector3 res = cam.WorldDeltaToViewport(p, rng);
@@ -694,7 +692,7 @@ void TEveCaloLegoOverlay::Render(TGLRnrCtx& rnrCtx)
       RenderPlaneInterface(rnrCtx);
    }
 
-   // draw info text on yop right corner
+   // draw info text on top right corner
    if (fHeaderTxt.Length())
    {
       RenderHeader(rnrCtx);

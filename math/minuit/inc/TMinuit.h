@@ -8,9 +8,6 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-// ---------------------------------- minuit.h
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -23,13 +20,9 @@
 #ifndef ROOT_TMinuit
 #define ROOT_TMinuit
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
 
 class TMinuit : public TNamed {
 
@@ -161,7 +154,7 @@ public:
         Int_t        fStatus;           //Status flag for the last called Minuit function
         Int_t        fKe1cr;            //
         Int_t        fKe2cr;            //
-        Bool_t       fLwarn;            //true if warning messges are to be put out (default=true)
+        Bool_t       fLwarn;            //true if warning messages are to be put out (default=true)
         Bool_t       fLrepor;           //true if exceptional conditions are put out (default=false)
         Bool_t       fLimset;           //true if a parameter is up against limits (for MINOS)
         Bool_t       fLnolim;           //true if there are no limits on any parameters (not yet used)
@@ -266,7 +259,6 @@ public:
    virtual void   mnwerr();
    virtual Int_t  Release( Int_t parNo );
    virtual Int_t  SetErrorDef( Double_t up );
-   virtual void   SetFCN(void *fcn);
    virtual void   SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
    virtual void   SetGraphicsMode(Bool_t mode=kTRUE) {fGraphicsMode = mode;}
    virtual void   SetMaxIterations(Int_t maxiter=500) {fMaxIterations = maxiter;}

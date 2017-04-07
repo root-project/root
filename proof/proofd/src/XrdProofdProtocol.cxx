@@ -126,31 +126,31 @@ public:
    void RegisterDirectives();
 };
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdProtCfg::XrdProofdProtCfg(const char *cfg, XrdSysError *edest)
                  : XrdProofdConfig(cfg, edest)
 {
-   // Constructor
-
    fPort = -1;
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register directives for configuration
+
 void XrdProofdProtCfg::RegisterDirectives()
 {
-   // Register directives for configuration
-
    Register("port", new XrdProofdDirective("port", this, &DoDirectiveClass));
    Register("xrd.protocol", new XrdProofdDirective("xrd.protocol", this, &DoDirectiveClass));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse directives
+
 int XrdProofdProtCfg::DoDirective(XrdProofdDirective *d,
                                   char *val, XrdOucStream *cfg, bool)
 {
-   // Parse directives
-
    if (!d) return -1;
 
    XrdOucString port(val);
@@ -173,13 +173,13 @@ XrdVERSIONINFO(XrdgetProtocolPort,xproofd);
 #endif
 
 extern "C" {
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This protocol is meant to live in a shared library. The interface below is
+/// used by the server to obtain a copy of the protocol object that can be used
+/// to decide whether or not a link is talking a particular protocol.
+
 XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
 {
-   // This protocol is meant to live in a shared library. The interface below is
-   // used by the server to obtain a copy of the protocol object that can be used
-   // to decide whether or not a link is talking a particular protocol.
-
    // Return the protocol object to be used if static init succeeds
    if (XrdProofdProtocol::Configure(parms, pi)) {
 
@@ -188,12 +188,12 @@ XrdProtocol *XrdgetProtocol(const char *, char *parms, XrdProtocol_Config *pi)
    return (XrdProtocol *)0;
 }
 
-//_________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called early on to determine the port we need to use. The
+/// The default is ostensibly 1093 but can be overidden; which we allow.
+
 int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Config *pi)
 {
-      // This function is called early on to determine the port we need to use. The
-      // The default is ostensibly 1093 but can be overidden; which we allow.
-
       // Default XPD_DEF_PORT (1093)
       int port = XPD_DEF_PORT;
 
@@ -212,11 +212,12 @@ int XrdgetProtocolPort(const char * /*pname*/, char * /*parms*/, XrdProtocol_Con
       return port;
 }}
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protocol constructor
+
 XrdProofdProtocol::XrdProofdProtocol(XrdProtocol_Config *pi)
    : XrdProtocol("xproofd protocol handler"), fProtLink(this)
 {
-   // Protocol constructor
    fLink = 0;
    fArgp = 0;
    fPClient = 0;
@@ -230,10 +231,11 @@ XrdProofdProtocol::XrdProofdProtocol(XrdProtocol_Config *pi)
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get response instance corresponding to stream ID 'sid'
+
 XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
 {
-   // Get response instance corresponding to stream ID 'sid'
    XPDLOC(ALL, "Protocol::Response")
 
    TRACE(HDBG, "sid: "<<sid<<", size: "<<fResponses.size());
@@ -245,10 +247,11 @@ XrdProofdResponse *XrdProofdProtocol::Response(kXR_unt16 sid)
    return (XrdProofdResponse *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new response instance for stream ID 'sid'
+
 XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
 {
-   // Create new response instance for stream ID 'sid'
    XPDLOC(ALL, "Protocol::GetNewResponse")
 
    XrdOucString msg;
@@ -282,10 +285,11 @@ XrdProofdResponse *XrdProofdProtocol::GetNewResponse(kXR_unt16 sid)
    return fResponses[sid-1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check whether the request matches this protocol
+
 XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 {
-   // Check whether the request matches this protocol
    XPDLOC(ALL, "Protocol::Match")
 
    struct ClientInitHandShake hsdata;
@@ -293,7 +297,7 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
 
    static hs_response_t hsresp = {0, 0, kXR_int32(htonl(XPROOFD_VERSBIN)), 0};
 
-   XrdProofdProtocol *xp;
+   XrdProtocol *xp = nullptr;
    int dlen;
    TRACE(HDBG, "enter");
 
@@ -325,22 +329,31 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
          } else {
             lp->setEtext("link transfered");
          }
-         return (XrdProtocol *)0;
+         return xp;
       }
       TRACE(XERR, "peeked incomplete or empty information! (dlen: "<<dlen<<" bytes)");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
-   // Verify that this is our protocol
+   // If this is is not our protocol, we check if it a data serving request via xrootd
    hsdata.third  = ntohl(hsdata.third);
    if (dlen != sizeof(hsdata) ||  hsdata.first || hsdata.second
-       || !(hsdata.third == 1) || hsdata.fourth || hsdata.fifth) return 0;
+       || !(hsdata.third == 1) || hsdata.fourth || hsdata.fifth) {
+
+      // Check if it is a request to open a file via 'xrootd'
+      if (fgMgr->Xrootd() && (xp = fgMgr->Xrootd()->Match(lp))) {
+         TRACE(ALL, "matched xrootd protocol on link: serving a file");
+      } else {
+         TRACE(XERR, "failed to match any known or enabled protocol");
+      }
+      return xp;
+   }
 
    // Respond to this request with the handshake response
    if (!lp->Send((char *)&hsresp, sizeof(hsresp))) {
       lp->setEtext("Match: handshake failed");
       TRACE(XERR, "handshake failed");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
    // We can now read all 20 bytes and discard them (no need to wait for it)
@@ -348,34 +361,37 @@ XrdProtocol *XrdProofdProtocol::Match(XrdLink *lp)
    if (lp->Recv(hsbuff, len) != len) {
       lp->setEtext("Match: reread failed");
       TRACE(XERR, "reread failed");
-      return (XrdProtocol *)0;
+      return xp;
    }
 
    // Get a protocol object off the stack (if none, allocate a new one)
-   if (!(xp = fgProtStack.Pop()))
-      xp = new XrdProofdProtocol();
+   XrdProofdProtocol *xpp = nullptr;
+   if (!(xpp = fgProtStack.Pop()))
+      xpp = new XrdProofdProtocol();
 
    // Bind the protocol to the link and return the protocol
-   xp->fLink = lp;
-   snprintf(xp->fSecEntity.prot, XrdSecPROTOIDSIZE, "host");
-   xp->fSecEntity.host = strdup((char *)lp->Host());
+   xpp->fLink = lp;
+   snprintf(xpp->fSecEntity.prot, XrdSecPROTOIDSIZE, "host");
+   xpp->fSecEntity.host = strdup((char *)lp->Host());
 
    // Dummy data used by 'proofd'
    kXR_int32 dum[2];
-   if (xp->GetData("dummy",(char *)&dum[0],sizeof(dum)) != 0) {
-      xp->Recycle(0,0,0);
-      return (XrdProtocol *)0;
+   if (xpp->GetData("dummy",(char *)&dum[0],sizeof(dum)) != 0) {
+      xpp->Recycle(0,0,0);
    }
 
+   xp = (XrdProtocol *) xpp;
+
    // We are done
-   return (XrdProtocol *)xp;
+   return xp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the connection to a rootd daemon to serve a file access request
+/// Return 0 on success, -1 on failure
+
 int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
 {
-   // Transfer the connection to a rootd daemon to serve a file access request
-   // Return 0 on success, -1 on failure
    XPDLOC(ALL, "Protocol::StartRootd")
 
    const char *prog = fgMgr->RootdExe();
@@ -469,12 +485,12 @@ int XrdProofdProtocol::StartRootd(XrdLink *lp, XrdOucString &emsg)
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return statistics info about the protocol.
+/// Not really implemented yet: this is a reduced XrdXrootd version.
+
 int XrdProofdProtocol::Stats(char *buff, int blen, int)
 {
-   // Return statistics info about the protocol.
-   // Not really implemented yet: this is a reduced XrdXrootd version.
-
    static char statfmt[] = "<stats id=\"xproofd\"><num>%ld</num></stats>";
 
    // If caller wants only size, give it to them
@@ -485,11 +501,11 @@ int XrdProofdProtocol::Stats(char *buff, int blen, int)
    return snprintf(buff, blen, statfmt, fgCount);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset static and local vars
+
 void XrdProofdProtocol::Reset()
 {
-   // Reset static and local vars
-
    // Init local vars
    fLink      = 0;
    fPid       = -1;
@@ -517,12 +533,13 @@ void XrdProofdProtocol::Reset()
    }
 }
 
-//______________________________________________________________________________
-int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
+////////////////////////////////////////////////////////////////////////////////
+/// Protocol configuration tool
+/// Function: Establish configuration at load time.
+/// Output: 1 upon success or 0 otherwise.
+
+int XrdProofdProtocol::Configure(char *parms, XrdProtocol_Config *pi)
 {
-   // Protocol configuration tool
-   // Function: Establish configuration at load time.
-   // Output: 1 upon success or 0 otherwise.
    XPDLOC(ALL, "Protocol::Configure")
 
    XrdOucString mp;
@@ -571,7 +588,7 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
 
    // Process the config file for directives meaningful to us
    // Create and Configure the manager
-   fgMgr = new XrdProofdManager(pi, &fgEDest);
+   fgMgr = new XrdProofdManager(parms, pi, &fgEDest);
    if (fgMgr->Config(0)) return 0;
    mp = "global manager created";
    TRACE(ALL, mp);
@@ -584,20 +601,21 @@ int XrdProofdProtocol::Configure(char *, XrdProtocol_Config *pi)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the information received on the active link.
+/// (We ignore the argument here)
+
 int XrdProofdProtocol::Process(XrdLink *)
 {
-   // Process the information received on the active link.
-   // (We ignore the argument here)
    XPDLOC(ALL, "Protocol::Process")
 
    int rc = 0;
-   TRACEP(this, DBG, "instance: " << this);
+   TRACET(TraceID(), DBG, "instance: " << this);
 
    // Read the next request header
    if ((rc = GetData("request", (char *)&fRequest, sizeof(fRequest))) != 0)
       return rc;
-   TRACEP(this, HDBG, "after GetData: rc: " << rc);
+   TRACET(TraceID(), HDBG, "after GetData: rc: " << rc);
 
    // Deserialize the data
    fRequest.header.requestid = ntohs(fRequest.header.requestid);
@@ -609,7 +627,7 @@ int XrdProofdProtocol::Process(XrdLink *)
    XrdProofdResponse *response = 0;
    if (!(response = Response(sid))) {
       if (!(response = GetNewResponse(sid))) {
-         TRACEP(this, XERR, "could not get Response instance for rid: "<< sid);
+         TRACET(TraceID(), XERR, "could not get Response instance for rid: "<< sid);
          return rc;
       }
    }
@@ -617,7 +635,7 @@ int XrdProofdProtocol::Process(XrdLink *)
    response->Set(fRequest.header.streamid);
    response->Set(fLink);
 
-   TRACEP(this, REQ, "sid: " << sid << ", req id: " << fRequest.header.requestid <<
+   TRACET(TraceID(), REQ, "sid: " << sid << ", req id: " << fRequest.header.requestid <<
                 " (" << XrdProofdAux::ProofRequestTypes(fRequest.header.requestid)<<
                 ")" << ", dlen: " <<fRequest.header.dlen);
 
@@ -645,17 +663,18 @@ int XrdProofdProtocol::Process(XrdLink *)
    return Process2();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Local processing method: here the request is dispatched to the appropriate
+/// method
+
 int XrdProofdProtocol::Process2()
 {
-   // Local processing method: here the request is dispatched to the appropriate
-   // method
    XPDLOC(ALL, "Protocol::Process2")
 
    int rc = 0;
    XPD_SETRESP(this, "Process2");
 
-   TRACEP(this, REQ, "req id: " << fRequest.header.requestid << " (" <<
+   TRACET(TraceID(), REQ, "req id: " << fRequest.header.requestid << " (" <<
                 XrdProofdAux::ProofRequestTypes(fRequest.header.requestid) << ")");
 
    ResetCtrlcGuard_t ctrlcguard(this, fRequest.header.requestid);
@@ -666,7 +685,7 @@ int XrdProofdProtocol::Process2()
       TouchAdminPath();
       // We must have a client instance if here
       if (!fPClient) {
-         TRACEP(this, XERR, "client undefined!!! ");
+         TRACET(TraceID(), XERR, "client undefined!!! ");
          response->Send(kXR_InvalidRequest,"client undefined!!! ");
          return 0;
       }
@@ -714,10 +733,11 @@ int XrdProofdProtocol::Process2()
    return rc;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recycle call. Release the instance and give it back to the stack.
+
 void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 {
-   // Recycle call. Release the instance and give it back to the stack.
    XPDLOC(ALL, "Protocol::Recycle")
 
    const char *srvtype[6] = {"ANY", "MasterWorker", "MasterMaster",
@@ -730,7 +750,7 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
                    srvtype[fConnType+1]);
    else
       XPDFORM(buf, "user disconnected; type: %s", srvtype[fConnType+1]);
-   TRACEP(this, LOGIN, buf);
+   TRACET(TraceID(), LOGIN, buf);
 
    // If we have a buffer, release it
    if (fArgp) {
@@ -806,11 +826,12 @@ void XrdProofdProtocol::Recycle(XrdLink *, int, const char *)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate a buffer to handle quantum bytes; if argp points to an existing
+/// buffer, its size is checked and re-allocated if needed
+
 XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
 {
-   // Allocate a buffer to handle quantum bytes; if argp points to an existing
-   // buffer, its size is checked and re-allocated if needed
    XPDLOC(ALL, "Protocol::GetBuff")
 
    TRACE(HDBG, "len: "<<quantum);
@@ -840,26 +861,27 @@ XrdBuffer *XrdProofdProtocol::GetBuff(int quantum, XrdBuffer *argp)
    return argp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release a buffer previously allocated via GetBuff
+
 void XrdProofdProtocol::ReleaseBuff(XrdBuffer *argp)
 {
-   // Release a buffer previously allocated via GetBuff
-
    XrdSysMutexHelper mh(fgBMutex);
    fgBPool->Release(argp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get data from the open link
+
 int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
 {
-   // Get data from the open link
    XPDLOC(ALL, "Protocol::GetData")
 
    int rlen;
 
    // Read the data but reschedule the link if we have not received all of the
    // data within the timeout interval.
-   TRACEP(this, HDBG, "dtype: "<<(dtype ? dtype : " - ")<<", blen: "<<blen);
+   TRACET(TraceID(), HDBG, "dtype: "<<(dtype ? dtype : " - ")<<", blen: "<<blen);
 
    // No need to lock:the link is disable while we are here
    rlen = fLink->Recv(buff, blen, fgReadWait);
@@ -867,32 +889,33 @@ int XrdProofdProtocol::GetData(const char *dtype, char *buff, int blen)
       if (rlen != -ENOMSG && rlen != -ECONNRESET) {
          XrdOucString emsg = "link read error: errno: ";
          emsg += -rlen;
-         TRACEP(this, XERR, emsg.c_str());
+         TRACET(TraceID(), XERR, emsg.c_str());
          return (fLink ? fLink->setEtext(emsg.c_str()) : -1);
       } else {
-         TRACEP(this, HDBG, "connection closed by peer (errno: "<<-rlen<<")");
+         TRACET(TraceID(), HDBG, "connection closed by peer (errno: "<<-rlen<<")");
          return -1;
       }
    }
    if (rlen < blen) {
-      TRACEP(this, DBG, dtype << " timeout; read " <<rlen <<" of " <<blen <<" bytes - rescheduling");
+      TRACET(TraceID(), DBG, dtype << " timeout; read " <<rlen <<" of " <<blen <<" bytes - rescheduling");
       return 1;
    }
-   TRACEP(this, HDBG, "rlen: "<<rlen);
+   TRACET(TraceID(), HDBG, "rlen: "<<rlen);
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data over the open link. Segmentation is done here, if required.
+
 int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
                                 kXR_int32 sid, XrdSrvBuffer **buf, bool savebuf)
 {
-   // Send data over the open link. Segmentation is done here, if required.
    XPDLOC(ALL, "Protocol::SendData")
 
    int rc = 0;
 
-   TRACEP(this, HDBG, "length: "<<fRequest.header.dlen<<" bytes ");
+   TRACET(TraceID(), HDBG, "length: "<<fRequest.header.dlen<<" bytes ");
 
    // Buffer length
    int len = fRequest.header.dlen;
@@ -925,7 +948,7 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
             { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
             XPDFORM(msg, "EXT: server ID: %d, problems sending: %d bytes to server",
                          sid, quantum);
-            TRACEP(this, XERR, msg);
+            TRACET(TraceID(), XERR, msg);
             return -1;
          }
       } else {
@@ -938,11 +961,11 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
             { XrdSysMutexHelper mh(fgBMutex); fgBPool->Release(argp); }
             XPDFORM(msg, "INT: client ID: %d, problems sending: %d bytes to client",
                          cid, quantum);
-            TRACEP(this, XERR, msg);
+            TRACET(TraceID(), XERR, msg);
             return -1;
          }
       }
-      TRACEP(this, HDBG, msg);
+      TRACET(TraceID(), HDBG, msg);
       // Next segment
       len -= quantum;
       if (len < quantum)
@@ -956,18 +979,19 @@ int XrdProofdProtocol::SendData(XrdProofdProofServ *xps,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send data over the open client links of session 'xps'.
+/// Used when all the connected clients are eligible to receive the message.
+/// Segmentation is done here, if required.
+
 int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
                                  XrdSrvBuffer **buf, bool savebuf)
 {
-   // Send data over the open client links of session 'xps'.
-   // Used when all the connected clients are eligible to receive the message.
-   // Segmentation is done here, if required.
    XPDLOC(ALL, "Protocol::SendDataN")
 
    int rc = 0;
 
-   TRACEP(this, HDBG, "length: "<<fRequest.header.dlen<<" bytes ");
+   TRACET(TraceID(), HDBG, "length: "<<fRequest.header.dlen<<" bytes ");
 
    // Buffer length
    int len = fRequest.header.dlen;
@@ -1007,10 +1031,11 @@ int XrdProofdProtocol::SendDataN(XrdProofdProofServ *xps,
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a request to forward a message to another process
+
 int XrdProofdProtocol::SendMsg()
 {
-   // Handle a request to forward a message to another process
    XPDLOC(ALL, "Protocol::SendMsg")
 
    static const char *crecv[5] = {"master proofserv", "top master",
@@ -1028,7 +1053,7 @@ int XrdProofdProtocol::SendMsg()
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
       XPDFORM(msg, "%s: session ID not found: %d", (Internal() ? "INT" : "EXT"), psid);
-      TRACEP(this, XERR, msg.c_str());
+      TRACET(TraceID(), XERR, msg.c_str());
       response->Send(kXR_InvalidRequest, msg.c_str());
       return 0;
    }
@@ -1042,17 +1067,17 @@ int XrdProofdProtocol::SendMsg()
          // Notify
          XPDFORM(msg, "EXT: sending %d bytes to proofserv (psid: %d, xps: %p, status: %d,"
                      " cid: %d)", len, psid, xps, xps->Status(), fCID);
-         TRACEP(this, HDBG, msg.c_str());
+         TRACET(TraceID(), HDBG, msg.c_str());
       }
 
       // Send to proofsrv our client ID
       if (fCID == -1) {
-         TRACEP(this, REQ, "EXT: error getting clientSID");
+         TRACET(TraceID(), REQ, "EXT: error getting clientSID");
          response->Send(kXP_ServerError,"EXT: getting clientSID");
          return 0;
       }
       if (SendData(xps, fCID)) {
-         TRACEP(this, REQ, "EXT: error sending message to proofserv");
+         TRACET(TraceID(), REQ, "EXT: error sending message to proofserv");
          response->Send(kXP_reconnecting,"EXT: sending message to proofserv");
          return 0;
       }
@@ -1066,20 +1091,20 @@ int XrdProofdProtocol::SendMsg()
           // Notify
           XPDFORM(msg, "INT: sending %d bytes to client/master (psid: %d, xps: %p, status: %d)",
                        len, psid, xps, xps->Status());
-          TRACEP(this, HDBG, msg.c_str());
+          TRACET(TraceID(), HDBG, msg.c_str());
       }
       bool saveStartMsg = 0;
       XrdSrvBuffer *savedBuf = 0;
       // Additional info about the message
       if (opt & kXPD_setidle) {
-         TRACEP(this, DBG, "INT: setting proofserv in 'idle' state");
+         TRACET(TraceID(), DBG, "INT: setting proofserv in 'idle' state");
          xps->SetStatus(kXPD_idle);
          PostSession(-1, fPClient->UI().fUser.c_str(),
                          fPClient->UI().fGroup.c_str(), xps);
       } else if (opt & kXPD_querynum) {
-         TRACEP(this, DBG, "INT: got message with query number");
+         TRACET(TraceID(), DBG, "INT: got message with query number");
       } else if (opt & kXPD_startprocess) {
-         TRACEP(this, DBG, "INT: setting proofserv in 'running' state");
+         TRACET(TraceID(), DBG, "INT: setting proofserv in 'running' state");
          xps->SetStatus(kXPD_running);
          PostSession(1, fPClient->UI().fUser.c_str(),
                         fPClient->UI().fGroup.c_str(), xps);
@@ -1090,7 +1115,7 @@ int XrdProofdProtocol::SendMsg()
          // We broadcast log messages only not idle to catch the
          // result from processing
          if (xps->Status() == kXPD_running) {
-            TRACEP(this, DBG, "INT: broadcasting log message");
+            TRACET(TraceID(), DBG, "INT: broadcasting log message");
             opt |= kXPD_fb_prog;
          }
       }
@@ -1121,7 +1146,7 @@ int XrdProofdProtocol::SendMsg()
          if (ii > 3) ii = 3;
          if (ii < 0) ii = 4;
          XPDFORM(msg, "INT: message sent to %s (%d bytes)", crecv[ii], len);
-         TRACEP(this, DBG, msg);
+         TRACET(TraceID(), DBG, msg);
       }
       // Notify to proofsrv
       response->Send();
@@ -1131,10 +1156,11 @@ int XrdProofdProtocol::SendMsg()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle generic request of a urgent message to be forwarded to the server
+
 int XrdProofdProtocol::Urgent()
 {
-   // Handle generic request of a urgent message to be forwarded to the server
    XPDLOC(ALL, "Protocol::Urgent")
 
    unsigned int rc = 0;
@@ -1147,17 +1173,17 @@ int XrdProofdProtocol::Urgent()
    int int1 = ntohl(fRequest.proof.int2);
    int int2 = ntohl(fRequest.proof.int3);
 
-   TRACEP(this, REQ, "psid: "<<psid<<", type: "<< type);
+   TRACET(TraceID(), REQ, "psid: "<<psid<<", type: "<< type);
 
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      TRACEP(this, XERR, "session ID not found: "<<psid);
+      TRACET(TraceID(), XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"Urgent: session ID not found");
       return 0;
    }
 
-   TRACEP(this, DBG, "xps: "<<xps<<", status: "<<xps->Status());
+   TRACET(TraceID(), DBG, "xps: "<<xps<<", status: "<<xps->Status());
 
    // Check ID matching
    if (!xps->Match(psid)) {
@@ -1192,16 +1218,17 @@ int XrdProofdProtocol::Urgent()
 
    // Notify to user
    response->Send();
-   TRACEP(this, DBG, "request propagated to proofsrv");
+   TRACET(TraceID(), DBG, "request propagated to proofsrv");
 
    // Over
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle an interrupt request
+
 int XrdProofdProtocol::Interrupt()
 {
-   // Handle an interrupt request
    XPDLOC(ALL, "Protocol::Interrupt")
 
    int rc = 0;
@@ -1211,12 +1238,12 @@ int XrdProofdProtocol::Interrupt()
    // Unmarshall the data
    int psid = ntohl(fRequest.interrupt.sid);
    int type = ntohl(fRequest.interrupt.type);
-   TRACEP(this, REQ, "psid: "<<psid<<", type:"<<type);
+   TRACET(TraceID(), REQ, "psid: "<<psid<<", type:"<<type);
 
    // Find server session
    XrdProofdProofServ *xps = 0;
    if (!fPClient || !(xps = fPClient->GetServer(psid))) {
-      TRACEP(this, XERR, "session ID not found: "<<psid);
+      TRACET(TraceID(), XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"Interrupt: session ID not found");
       return 0;
    }
@@ -1232,7 +1259,7 @@ int XrdProofdProtocol::Interrupt()
       XrdOucString msg;
       XPDFORM(msg, "xps: %p, link ID: %s, proofsrv PID: %d",
                    xps, xps->Response()->TraceID(), xps->SrvPID());
-      TRACEP(this, DBG, msg.c_str());
+      TRACET(TraceID(), DBG, msg.c_str());
 
       // Propagate the type as unsolicited
       if (xps->Response()->Send(kXR_attn, kXPD_interrupt, type) != 0) {
@@ -1243,27 +1270,28 @@ int XrdProofdProtocol::Interrupt()
 
       // Notify to user
       response->Send();
-      TRACEP(this, DBG, "interrupt propagated to proofsrv");
+      TRACET(TraceID(), DBG, "interrupt propagated to proofsrv");
    }
 
    // Over
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a ping request.
+/// For internal connections, ping is done asynchronously to avoid locking
+/// problems; the session checker verifies that the admin file has been touched
+/// recently enough; touching is done in Process2, so we have nothing to do here
+
 int XrdProofdProtocol::Ping()
 {
-   // Handle a ping request.
-   // For internal connections, ping is done asynchronously to avoid locking
-   // problems; the session checker verifies that the admin file has been touched
-   // recently enough; touching is done in Process2, so we have nothing to do here
    XPDLOC(ALL, "Protocol::Ping")
 
    int rc = 0;
    if (Internal()) {
       if (TRACING(HDBG)) {
          XPD_SETRESP(this, "Ping");
-         TRACEP(this,  HDBG, "INT: nothing to do ");
+         TRACET(TraceID(),  HDBG, "INT: nothing to do ");
       }
       return 0;
    }
@@ -1273,13 +1301,13 @@ int XrdProofdProtocol::Ping()
    int psid = ntohl(fRequest.sendrcv.sid);
    int asyncopt = ntohl(fRequest.sendrcv.opt);
 
-   TRACEP(this, REQ, "psid: "<<psid<<", async: "<<asyncopt);
+   TRACET(TraceID(), REQ, "psid: "<<psid<<", async: "<<asyncopt);
 
    // For connections to servers find the server session; manager connections
    // (psid == -1) do not have any session attached
    XrdProofdProofServ *xps = 0;
    if (!fPClient || (psid > -1 && !(xps = fPClient->GetServer(psid)))) {
-      TRACEP(this,  XERR, "session ID not found: "<<psid);
+      TRACET(TraceID(),  XERR, "session ID not found: "<<psid);
       response->Send(kXR_InvalidRequest,"session ID not found");
       return 0;
    }
@@ -1288,21 +1316,21 @@ int XrdProofdProtocol::Ping()
    kXR_int32 pingres = (psid > -1) ? 0 : 1;
    if (psid > -1 && xps && xps->IsValid()) {
 
-      TRACEP(this,  DBG, "EXT: psid: "<<psid);
+      TRACET(TraceID(),  DBG, "EXT: psid: "<<psid);
 
       // This is the max time we will privide an answer
       kXR_int32 checkfq = fgMgr->SessionMgr()->CheckFrequency();
 
       // If asynchronous return the timeout for an answer
       if (asyncopt == 1) {
-         TRACEP(this, DBG, "EXT: async: notifying timeout to client: "<<checkfq<<" secs");
+         TRACET(TraceID(), DBG, "EXT: async: notifying timeout to client: "<<checkfq<<" secs");
          response->Send(kXR_ok, checkfq);
       }
 
       // Admin path
       XrdOucString path(xps->AdminPath());
       if (path.length() <= 0) {
-         TRACEP(this,  XERR, "EXT: admin path is empty! - protocol error");
+         TRACET(TraceID(),  XERR, "EXT: admin path is empty! - protocol error");
          if (asyncopt == 0)
             response->Send(kXP_ServerError, "EXT: admin path is empty! - protocol error");
          return 0;
@@ -1315,7 +1343,7 @@ int XrdProofdProtocol::Ping()
       // Stat the admin file
       struct stat st0;
       if (stat(path.c_str(), &st0) != 0) {
-         TRACEP(this,  XERR, "EXT: cannot stat admin path: "<<path);
+         TRACET(TraceID(),  XERR, "EXT: cannot stat admin path: "<<path);
          if (asyncopt == 0)
             response->Send(kXP_ServerError, "EXT: cannot stat admin path");
          return 0;
@@ -1329,7 +1357,7 @@ int XrdProofdProtocol::Ping()
          if ((now - st0.st_mtime) > checkfq - 5) {
             // Send the request (asking for further propagation)
             if (xps->VerifyProofServ(1) != 0) {
-               TRACEP(this,  XERR, "EXT: could not send verify request to proofsrv");
+               TRACET(TraceID(),  XERR, "EXT: could not send verify request to proofsrv");
                if (asyncopt == 0)
                   response->Send(kXP_ServerError, "EXT: could not verify reuqest to proofsrv");
                return 0;
@@ -1345,7 +1373,7 @@ int XrdProofdProtocol::Ping()
                   }
                }
                // Wait 1 sec
-               TRACEP(this, DBG, "EXT: waiting "<<ns<<" secs for session "<<pid<<
+               TRACET(TraceID(), DBG, "EXT: waiting "<<ns<<" secs for session "<<pid<<
                                  " to touch the admin path");
                sleep(1);
             }
@@ -1360,7 +1388,7 @@ int XrdProofdProtocol::Ping()
       }
 
       // Notify the client
-      TRACEP(this, DBG, "EXT: notified the result to client: "<<pingres);
+      TRACET(TraceID(), DBG, "EXT: notified the result to client: "<<pingres);
       if (asyncopt == 0) {
          response->Send(kXR_ok, pingres);
       } else {
@@ -1376,7 +1404,7 @@ int XrdProofdProtocol::Ping()
       return 0;
    } else if (psid > -1)  {
       // This is a failure for connections to sessions
-      TRACEP(this, XERR, "session ID not found: "<<psid);
+      TRACET(TraceID(), XERR, "session ID not found: "<<psid);
    }
 
    // Send the result
@@ -1386,11 +1414,12 @@ int XrdProofdProtocol::Ping()
    return 0;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Post change of session status
+
 void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
                                     XrdProofdProofServ *xps)
 {
-   // Post change of session status
    XPDLOC(ALL, "Protocol::PostSession")
 
    // Tell the priority manager
@@ -1427,14 +1456,15 @@ void XrdProofdProtocol::PostSession(int on, const char *u, const char *g,
    return;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recording time of the last request on this instance
+
 void XrdProofdProtocol::TouchAdminPath()
 {
-   // Recording time of the last request on this instance
    XPDLOC(ALL, "Protocol::TouchAdminPath")
 
    XPD_SETRESPV(this, "TouchAdminPath");
-   TRACEP(this, HDBG, fAdminPath);
+   TRACET(TraceID(), HDBG, fAdminPath);
 
    if (fAdminPath.length() > 0) {
       int rc = 0;
@@ -1450,7 +1480,7 @@ void XrdProofdProtocol::TouchAdminPath()
          }
          if (rc != 0 && rc != -ENOENT) {
             const char *type = Internal() ? "internal" : "external";
-            TRACEP(this, XERR, type<<": problems touching "<<apath<<"; errno: "<<-rc);
+            TRACET(TraceID(), XERR, type<<": problems touching "<<apath<<"; errno: "<<-rc);
          }
       }
    }
@@ -1458,13 +1488,14 @@ void XrdProofdProtocol::TouchAdminPath()
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set and propagate a Ctrl-C request
+
 int XrdProofdProtocol::CtrlC()
 {
-   // Set and propagate a Ctrl-C request
    XPDLOC(ALL, "Protocol::CtrlC")
 
-   TRACEP(this, ALL, "handling request");
+   TRACET(TraceID(), ALL, "handling request");
 
    { XrdSysMutexHelper mhp(fCtrlcMutex);
       fIsCtrlC = 1;

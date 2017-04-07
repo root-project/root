@@ -9,36 +9,41 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixTCramerInv                                                    //
-//                                                                      //
-// Encapsulate templates of Cramer Inversion routines.                  //
-//                                                                      //
-// The 4x4, 5x5 and 6x6 are adapted from routines written by            //
-// Mark Fischler and Steven Haywood as part of the CLHEP package        //
-//                                                                      //
-// Although for sizes <= 6x6 the Cramer Inversion has a gain in speed   //
-// compared to factorization schemes (like LU) , one pays a price in    //
-// accuracy  .                                                          //
-//                                                                      //
-// For Example:                                                         //
-//  H * H^-1 = U, where H is a 5x5 Hilbert matrix                       //
-//                      U is a 5x5 Unity matrix                         //
-//                                                                      //
-// LU    : |U_jk| < 10e-13 for  j!=k                                    //
-// Cramer: |U_jk| < 10e-7  for  j!=k                                    //
-//                                                                      //
-//  however Cramer algorithm is about 10 (!) times faster               //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTCramerInv
+    \ingroup Matrix
+
+TMatrixTCramerInv
+
+Encapsulate templates of Cramer Inversion routines.
+
+The 4x4, 5x5 and 6x6 are adapted from routines written by
+Mark Fischler and Steven Haywood as part of the CLHEP package
+
+Although for sizes <= 6x6 the Cramer Inversion has a gain in speed
+compared to factorization schemes (like LU) , one pays a price in
+accuracy  .
+
+For Example:
+~~~
+  H * H^-1 = U, where H is a 5x5 Hilbert matrix
+                      U is a 5x5 Unity matrix
+
+ LU    : |U_jk| < 10e-13 for  j!=k
+ Cramer: |U_jk| < 10e-7  for  j!=k
+~~~
+
+however Cramer algorithm is about 10 (!) times faster
+*/
 
 #include "TMatrixTCramerInv.h"
+#include "TError.h"
 
 #if !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
 NamespaceImp(TMatrixTCramerInv);
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -69,7 +74,8 @@ Bool_t TMatrixTCramerInv::Inv2x2(TMatrixT<Element> &m,Double_t *determ)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -155,7 +161,8 @@ Bool_t TMatrixTCramerInv::Inv3x3(TMatrixT<Element> &m,Double_t *determ)
 #define GF32 14
 #define GF33 15
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -292,7 +299,8 @@ Bool_t TMatrixTCramerInv::Inv4x4(TMatrixT<Element> &m,Double_t *determ)
 #define GM43 23
 #define GM44 24
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -524,7 +532,8 @@ Bool_t TMatrixTCramerInv::Inv5x5(TMatrixT<Element> &m,Double_t *determ)
 #define GA54 34
 #define GA55 35
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
 {
@@ -954,9 +963,7 @@ Bool_t TMatrixTCramerInv::Inv6x6(TMatrixT<Element> &m,Double_t *determ)
    return kTRUE;
 }
 
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
 
 template Bool_t TMatrixTCramerInv::Inv2x2<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv3x3<Float_t>(TMatrixF&,Double_t*);
@@ -964,9 +971,7 @@ template Bool_t TMatrixTCramerInv::Inv4x4<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv5x5<Float_t>(TMatrixF&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv6x6<Float_t>(TMatrixF&,Double_t*);
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
 template Bool_t TMatrixTCramerInv::Inv2x2<Double_t>(TMatrixD&,Double_t*);
 template Bool_t TMatrixTCramerInv::Inv3x3<Double_t>(TMatrixD&,Double_t*);

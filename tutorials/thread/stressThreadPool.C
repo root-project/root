@@ -1,8 +1,19 @@
-// Usage:
-// root [0] .L stressThreadPool.C++
-// root [1] stressThreadPool(5, true)
-// where 5 is a number of Threads in the pool
-// there will be then nThreads * 10 tasks pushed to the test
+/// \file
+/// \ingroup tutorial_thread
+///
+/// Usage:
+///
+/// ~~~{.cpp}
+/// root [0] .L stressThreadPool.C++
+/// root [1] stressThreadPool(5, true)
+/// ~~~
+///
+/// where 5 is a number of Threads in the pool
+/// there will be then nThreads * 10 tasks pushed to the test
+///
+/// \macro_code
+///
+/// \author Victor Perevovchikov
 
 // STD
 #include <iostream>

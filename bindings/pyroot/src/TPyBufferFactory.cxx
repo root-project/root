@@ -10,6 +10,14 @@
 
 #if PY_VERSION_HEX >= 0x03000000
 static PyObject* PyBuffer_FromReadWriteMemory( void* ptr, int size ) {
+#if PY_VERSION_HEX > 0x03000000
+   if ( !ptr ) {        // p3 will set an exception if nullptr, just rely on size == 0
+      static long dummy[1];
+      ptr = dummy;
+      size = 0;
+   }
+#endif
+
    Py_buffer bufinfo = { ptr, NULL, size, 1, 0, 1, NULL, NULL, NULL, NULL,
 #if PY_VERSION_HEX < 0x03030000
       { 0, 0 },
@@ -79,10 +87,11 @@ namespace {
       return nlen;            // return nlen after all, since have nothing better
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the buffer as a linear char array.
+
    const char* buffer_get( PyObject* self, int idx )
    {
-   // Retrieve the buffer as a linear char array.
       if ( idx < 0 || idx >= buffer_length( self ) ) {
          PyErr_SetString( PyExc_IndexError, "buffer index out of range" );
          return 0;
@@ -107,7 +116,8 @@ namespace {
       return buf;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_IMPLEMENT_PYBUFFER_METHODS( name, type, stype, F1, F2 )       \
    PyObject* name##_buffer_str( PyObject* self )                             \
    {                                                                         \
@@ -169,10 +179,11 @@ namespace {
    }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allow the user to fix up the actual (type-strided) size of the buffer.
+
    PyObject* buffer_setsize( PyObject* self, PyObject* pynlen )
    {
-   // Allow the user to fix up the actual (type-strided) size of the buffer.
       Py_ssize_t nlen = PyInt_AsSsize_t( pynlen );
       if ( nlen == -1 && PyErr_Occurred() )
          return 0;
@@ -187,40 +198,43 @@ namespace {
       return Py_None;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return a typecode in the style of module array
+
    PyObject* buf_typecode( PyObject* pyobject, void* )
    {
-   // return a typecode in the style of module array
       if ( PyObject_TypeCheck( pyobject, &PyBoolBuffer_Type ) )
-         return PyBytes_FromString( (char*)"b" );
+         return PyROOT_PyUnicode_FromString( (char*)"b" );
       else if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
-         return PyBytes_FromString( (char*)"h" );
+         return PyROOT_PyUnicode_FromString( (char*)"h" );
       else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
-         return PyBytes_FromString( (char*)"H" );
+         return PyROOT_PyUnicode_FromString( (char*)"H" );
       else if ( PyObject_TypeCheck( pyobject, &PyIntBuffer_Type ) )
-         return PyBytes_FromString( (char*)"i" );
+         return PyROOT_PyUnicode_FromString( (char*)"i" );
       else if ( PyObject_TypeCheck( pyobject, &PyUIntBuffer_Type ) )
-         return PyBytes_FromString( (char*)"I" );
+         return PyROOT_PyUnicode_FromString( (char*)"I" );
       else if ( PyObject_TypeCheck( pyobject, &PyLongBuffer_Type ) )
-         return PyBytes_FromString( (char*)"l" );
+         return PyROOT_PyUnicode_FromString( (char*)"l" );
       else if ( PyObject_TypeCheck( pyobject, &PyULongBuffer_Type ) )
-         return PyBytes_FromString( (char*)"L" );
+         return PyROOT_PyUnicode_FromString( (char*)"L" );
       else if ( PyObject_TypeCheck( pyobject, &PyFloatBuffer_Type ) )
-         return PyBytes_FromString( (char*)"f" );
+         return PyROOT_PyUnicode_FromString( (char*)"f" );
       else if ( PyObject_TypeCheck( pyobject, &PyDoubleBuffer_Type ) )
-         return PyBytes_FromString( (char*)"d" );
+         return PyROOT_PyUnicode_FromString( (char*)"d" );
 
       PyErr_SetString( PyExc_TypeError, "received unknown buffer object" );
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyGetSetDef buffer_getset[] = {
       { (char*)"typecode", (getter)buf_typecode, NULL, NULL, NULL },
       { (char*)NULL, NULL, NULL, NULL, NULL }
    };
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyMethodDef buffer_methods[] = {
       { (char*)"SetSize", (PyCFunction)buffer_setsize, METH_O, NULL },
       { (char*)NULL, NULL, 0, NULL }
@@ -272,7 +286,8 @@ PyROOT::TPyBufferFactory::TPyBufferFactory()
    PYROOT_INSTALL_PYBUFFER_METHODS( Double, Double_t )
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyROOT::TPyBufferFactory::~TPyBufferFactory()
 {
 }

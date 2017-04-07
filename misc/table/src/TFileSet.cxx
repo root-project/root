@@ -37,34 +37,35 @@
 
 ClassImp(TFileSet)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TFileSet::TFileSet()
          : TDataSet()
 {
-   //to be documented
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Creates TFileSet
+/// Convert the "opearting system" file system tree into the memory resided TFileSet
+///
+///  Parameters:
+///  -----------
+///  dirname  - the name of the "native file system" directory
+///             to convert into TFileSet
+///  setname  - the name of this TFileSet (it is the "base name"
+///                                 of the "dirname" by default)
+///  expand   - flag whether the "dirname" must be "expanded
+///             (kTRUE by default)
+///  maxDeep  - the max number of the levels of the directory to read in
+///             (=10 by default)
+///  Note: If the "dirname" points to non-existent object, for examoe it is dead-link
+///  ----  the object is marked as "Zombie" and this flag is propagated upwards
+
 TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, Int_t maxDepth)
            : TDataSet()
 {
-  //
-  // Creates TFileSet
-  // Convert the "opearting system" file system tree into the memory resided TFileSet
-  //
-  //  Parameters:
-  //  -----------
-  //  dirname  - the name of the "native file system" directory
-  //             to convert into TFileSet
-  //  setname  - the name of this TFileSet (it is the "base name"
-  //                                 of the "dirname" by default)
-  //  expand   - flag whether the "dirname" must be "expanded
-  //             (kTRUE by default)
-  //  maxDeep  - the max number of the levels of the directory to read in
-  //             (=10 by default)
-  //  Note: If the "dirname" points to non-existent object, for examoe it is dead-link
-  //  ----  the object is marked as "Zombie" and this flag is propagated upwards
-
    if (!maxDepth) return;
 
    Long64_t size;
@@ -118,26 +119,29 @@ TFileSet::TFileSet(const TString &dirname,const Char_t *setname,Bool_t expand, I
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TFileSet::~TFileSet()
 {
-   //to be documented
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Bool_t TFileSet::IsEmpty() const
 {
-   //to be documented
    return  strcmp(GetTitle(),"file")!=0 ? kTRUE : kFALSE ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This implementation is done in the TDataSet::Purge() method in mind
+/// Since this method returns non-zero for files the last are NOT "purged"
+/// by TDataSet::Purge()
+///
+
 Long_t TFileSet::HasData() const
 {
-   // This implementation is done in the TDataSet::Purge() method in mind
-   // Since this method returns non-zero for files the last are NOT "purged"
-   // by TDataSet::Purge()
-   //
    return strcmp(GetTitle(),"file")==0 ? 1 : 0;
 
    //  this must be like this:
@@ -145,11 +149,12 @@ Long_t TFileSet::HasData() const
    //  Alas TObject::IsFolder() isn't defined as "const" (IT IS in 2.25/03)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the title of this TFileSet is "file" it is NOT folder
+/// see: TFileSet(TString &dirname,const Char_t *setname,Bool_t expand)
+///
+
 Bool_t TFileSet::IsFolder() const
 {
-   // If the title of this TFileSet is "file" it is NOT folder
-   // see: TFileSet(TString &dirname,const Char_t *setname,Bool_t expand)
-   //
    return strcmp(GetTitle(),"file")!=0;
 }

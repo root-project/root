@@ -1,13 +1,15 @@
-/////////////////////////////////////////////////////////////////////////
-//
-// 'Bayesian Calculator' RooStats tutorial macro #701
-// author: Gregory Schott
-// date Sep 2009
-//
-// This tutorial shows an example of using the BayesianCalculator class
-//
-/////////////////////////////////////////////////////////////////////////
-
+/// \file
+/// \ingroup tutorial_roostats
+/// \notebook
+/// 'Bayesian Calculator' RooStats tutorial macro #701
+///
+/// This tutorial shows an example of using the BayesianCalculator class
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Gregory Schott
 
 #include "RooRealVar.h"
 #include "RooWorkspace.h"
@@ -44,7 +46,7 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
   RooDataSet data("data","",RooArgSet(*(w->var("x")),*(w->var("n"))),"n");
   data.add(RooArgSet(*(w->var("x"))),w->var("n")->getVal());
 
-  // to suppress messgaes when pdf goes to zero
+  // to suppress messages when pdf goes to zero
   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
 
   RooArgSet * nuisPar = 0;

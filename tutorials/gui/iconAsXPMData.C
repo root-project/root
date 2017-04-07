@@ -1,7 +1,10 @@
-// A simple example of creating icon image from XPM data,
-// included into the code.
-//
-// Author: Ilka Antcheva   27/09/2007
+/// \file
+/// \ingroup tutorial_gui
+/// A simple example of creating icon image from XPM data, included into the code.
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   27/09/2007
 
 #include <TGClient.h>
 #include <TGButton.h>

@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_THbookFile
 #include "THbookFile.h"
-#endif
 
 
 class THbookTree : public TTree {

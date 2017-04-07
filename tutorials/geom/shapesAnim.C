@@ -1,5 +1,10 @@
-//macro illustrating how to animate a geometry picture using a Timer
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_geom
+/// Macro illustrating how to animate a geometry picture using a Timer
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 Double_t pi;
 Float_t theta = 0;

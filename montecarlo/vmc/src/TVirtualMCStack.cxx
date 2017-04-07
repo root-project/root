@@ -12,18 +12,23 @@
 
 #include "TVirtualMCStack.h"
 
-//______________________________________________________________________________
-//
-// Interface to a user defined particles stack.
-//______________________________________________________________________________
+/** \class TVirtualMCStack
+    \ingroup vmc
+
+Interface to a user defined particles stack.
+*/
 
 ClassImp(TVirtualMCStack)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TVirtualMCStack::TVirtualMCStack()
   : TObject()
 {}
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TVirtualMCStack::~TVirtualMCStack()
 {}

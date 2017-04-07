@@ -13,14 +13,11 @@
 #ifndef ROOT_Fit_BasicFCN
 #define ROOT_Fit_BasicFCN
 
-#ifndef ROOT_Math_FitMethodFunction
 #include "Math/FitMethodFunction.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
+#include "Math/IParamFunctionfwd.h"
 
 #include <memory>
 

@@ -34,35 +34,32 @@ lt_symlist_t lt_preloaded_symbols[] = {
 
 ClassImp(TGraphStruct)
 
+/** \class TGraphStruct
+\ingroup gviz
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Graph Structure class</h2></center>
 The Graph Structure is an interface to the graphviz package.
-<p>
+
 The graphviz package is a graph visualization system. This interface consists in
 three classes:
-<ol>
-<li> TGraphStruct: holds the graph structure. It uses the graphiz library to
-     layout the graphs and the ROOT graphics to paint them.
-<li> TGraphNode: Is a graph node object which can be added in a TGraphStruct.
-<li> TGraphEdge: Is an edge object connecting two nodes which can be added in
-     a TGraphStruct.
-</ol>
-End_Html
+
+  - TGraphStruct: holds the graph structure. It uses the graphviz library to
+    layout the graphs and the ROOT graphics to paint them.
+  - TGraphNode: Is a graph node object which can be added in a TGraphStruct.
+  - TGraphEdge: Is an edge object connecting two nodes which can be added in
+    a TGraphStruct.
+
 Begin_Macro(source)
 ../../../tutorials/graphs/graphstruct.C
 End_Macro
-Begin_Html
+
 A graph structure can be dumped into a "dot" file using DumpAsDotFile.
-End_Html */
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Structure default constructor.
 
-//______________________________________________________________________________
 TGraphStruct::TGraphStruct()
 {
-   // Graph Structure default constructor.
-
    fNodes   = 0;
    fEdges   = 0;
    fGVGraph = 0;
@@ -71,12 +68,11 @@ TGraphStruct::TGraphStruct()
    SetMargin();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Structure default destructor.
 
-//______________________________________________________________________________
 TGraphStruct::~TGraphStruct()
 {
-   // Graph Structure default destructor.
-
    gvFreeLayout(fGVC,(Agraph_t*)fGVGraph);
    agclose((Agraph_t*)fGVGraph);
    gvFreeContext(fGVC);
@@ -86,26 +82,24 @@ TGraphStruct::~TGraphStruct()
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add the edge "edge" in this TGraphStruct.
 
-//______________________________________________________________________________
 void TGraphStruct::AddEdge(TGraphEdge *edge)
 {
-   // Add the edge "edge" in this TGraphStruct.
-
    if (!fEdges) fEdges = new TList;
 
    fEdges->Add(edge);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create an edge between n1 and n2 and put it in this graph.
+///
+/// Two edges can connect the same nodes the same way, so there
+/// is no need to check if an edge already exists.
 
-//______________________________________________________________________________
 TGraphEdge *TGraphStruct::AddEdge(TGraphNode *n1, TGraphNode *n2)
 {
-   // Create an edge between n1 and n2 and put it in this graph.
-   //
-   // Two edges can connect the same nodes the same way, so there
-   // is no need to check if an edge already exists.
-
    if (!fEdges) fEdges = new TList;
 
    TGraphEdge *edge = new TGraphEdge(n1, n2);
@@ -114,23 +108,21 @@ TGraphEdge *TGraphStruct::AddEdge(TGraphNode *n1, TGraphNode *n2)
    return edge;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add the node "node" in this TGraphStruct.
 
-//______________________________________________________________________________
 void TGraphStruct::AddNode(TGraphNode *node)
 {
-   // Add the node "node" in this TGraphStruct.
-
    if (!fNodes) fNodes = new TList;
 
    fNodes->Add(node);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create the node "name" if it does not exist and add it to this TGraphStruct.
 
-//______________________________________________________________________________
 TGraphNode *TGraphStruct::AddNode(const char *name, const char *title)
 {
-   // Create the node "name" if it does not exist and add it to this TGraphStruct.
-
    if (!fNodes) fNodes = new TList;
 
    TGraphNode *node = (TGraphNode*)fNodes->FindObject(name);
@@ -143,13 +135,11 @@ TGraphNode *TGraphStruct::AddNode(const char *name, const char *title)
    return node;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this graph structure as a "dot" file.
 
-
-//______________________________________________________________________________
 void TGraphStruct::DumpAsDotFile(const char *filename)
 {
-   // Dump this graph structure as a "dot" file.
-
    if (!fGVGraph) {
      Int_t ierr = Layout();
      if (ierr) return;
@@ -162,12 +152,11 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the graph
 
-//______________________________________________________________________________
 void TGraphStruct::Draw(Option_t *option)
 {
-   // Draw the graph
-
    if (!fGVGraph) {
      Int_t ierr = Layout();
      if (ierr) return;
@@ -204,12 +193,11 @@ void TGraphStruct::Draw(Option_t *option)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the graph into a GraphViz data structure
 
-//______________________________________________________________________________
 Int_t TGraphStruct::Layout()
 {
-   // Layout the graph into a GraphViz data structure
-
    TGraphNode *node;
    TGraphEdge *edge;
 
@@ -279,12 +267,11 @@ Int_t TGraphStruct::Layout()
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TGraphStruct::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    out<<"   TGraphStruct *graphstruct = new  TGraphStruct();"<<std::endl;
 
    // Save the nodes
@@ -334,8 +321,8 @@ void TGraphStruct::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   graphstruct->Draw();"<<std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
 void TGraphStruct::Streamer(TBuffer &/*b*/)
 {
 }

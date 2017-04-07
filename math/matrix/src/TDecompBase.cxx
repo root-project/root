@@ -9,107 +9,114 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Decomposition Base class                                              //
-//                                                                       //
-// This class forms the base for all the decompositions methods in the   //
-// linear algebra package .                                              //
-// It or its derived classes have installed the methods to solve         //
-// equations,invert matrices and calculate determinants while monitoring //
-// the accuracy.                                                         //
-//                                                                       //
-// Each derived class has always the following methods available:        //
-//                                                                       //
-// Condition() :                                                         //
-//   In an iterative scheme the condition number for matrix inversion is //
-//   calculated . This number is of interest for estimating the accuracy //
-//   of x in the equation Ax=b                                           //
-//   For example:                                                        //
-//     A is a (10x10) Hilbert matrix which looks deceivingly innocent    //
-//     and simple, A(i,j) = 1/(i+j+1)                                    //
-//     b(i) = Sum_j A(i,j), so a sum of a row in A                       //
-//                                                                       //
-//     the solution is x(i) = 1. i=0,.,9                                 //
-//                                                                       //
-//   However,                                                            //
-//     TMatrixD m....; TVectorD b.....                                   //
-//     TDecompLU lu(m); lu.SetTol(1.0e-12); lu.Solve(b); b.Print()       //
-//   gives,                                                              //
-//                                                                       //
-//   {1.000,1.000,1.000,1.000,0.998,1.000,0.993,1.001,0.996,1.000}       //
-//                                                                       //
-//   Looking at the condition number, this is in line with expected the  //
-//   accuracy . The condition number is 3.957e+12 . As a simple rule of  //
-//   thumb, a condition number of 1.0e+n means that you lose up to n     //
-//   digits of accuracy in a solution . Since doubles are stored with 15 //
-//   digits, we can expect the accuracy to be as small as 3 digits .     //
-//                                                                       //
-// Det(Double_t &d1,Double_t &d2)                                        //
-//   The determinant is d1*TMath::Power(2.,d2)                           //
-//   Expressing the determinant this way makes under/over-flow very      //
-//   unlikely .                                                          //
-//                                                                       //
-// Decompose()                                                           //
-//   Here the actually decomposition is performed . One can change the   //
-//   matrix A after the decomposition constructor has been called        //
-//   without effecting the decomposition result                          //
-//                                                                       //
-// Solve(TVectorD &b)                                                    //
-//  Solve A x = b . x is supplied through the argument and replaced with //
-//  the solution .                                                       //
-//                                                                       //
-// TransSolve(TVectorD &b)                                               //
-//  Solve A^T x = b . x is supplied through the argument and replaced    //
-//  with the solution .                                                  //
-//                                                                       //
-// MultiSolve(TMatrixD    &B)                                            //
-//  Solve A X = B . where X and are now matrices . X is supplied through //
-//  the argument and replaced with the solution .                        //
-//                                                                       //
-// Invert(TMatrixD &inv)                                                 //
-//  This is of course just a call to MultiSolve with as input argument   //
-//  the unit matrix . Note that for a matrix a(m,n) with m > n  a        //
-//  pseudo-inverse is calculated .                                       //
-//                                                                       //
-// Tolerances and Scaling                                                //
-// ----------------------                                                //
-// The tolerance parameter (which is a member of this base class) plays  //
-// a crucial role in all operations of the decomposition classes . It    //
-// gives the user a powerful tool to monitor and steer the operations    //
-// Its default value is sqrt(epsilon) where 1+epsilon = 1                //
-//                                                                       //
-// If you do not want to be bothered by the following considerations,    //
-// like in most other linear algebra packages, just set the tolerance    //
-// with SetTol to an arbitrary small number .                            //
-//                                                                       //
-// The tolerance number is used by each decomposition method to decide   //
-// whether the matrix is near singular, except of course SVD which can   //
-// handle singular matrices .                                            //
-// For each decomposition this will be checked in a different way; in LU //
-// the matrix is considered singular when, at some point in the          //
-// decomposition, a diagonal element < fTol . Therefore, we had to set in//
-// the example above of the (10x10) Hilbert, which is near singular, the //
-// tolerance on 10e-12 . (The fact that we have to set the tolerance <   //
-// sqrt(epsilon) is a clear indication that we are losing precision .)   //
-//                                                                       //
-// If the matrix is flagged as being singular, operations with the       //
-// decomposition will fail and will return matrices/vectors that are     //
-// invalid .                                                             //
-//                                                                       //
-// The observant reader will notice that by scaling the complete matrix  //
-// by some small number the decomposition will detect a singular matrix .//
-// In this case the user will have to reduce the tolerance number by this//
-// factor . (For CPU time saving we decided not to make this an automatic//
-// procedure) .                                                          //
-//                                                                       //
-// Code for this could look as follows:                                  //
-// const Double_t max_abs = Abs(a).Max();                                //
-// const Double_t scale = TMath::Min(max_abs,1.);                        //
-// a.SetTol(a.GetTol()*scale);                                           //
-//                                                                       //
-// For usage examples see $ROOTSYS/test/stressLinear.cxx                 //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompBase
+    \ingroup Matrix
+
+ Decomposition Base class
+
+ This class forms the base for all the decompositions methods in the
+ linear algebra package .
+ It or its derived classes have installed the methods to solve
+ equations,invert matrices and calculate determinants while monitoring
+ the accuracy.
+
+ Each derived class has always the following methods available:
+
+ #### Condition() :
+   In an iterative scheme the condition number for matrix inversion is
+   calculated . This number is of interest for estimating the accuracy
+   of x in the equation Ax=b
+   For example:
+     A is a (10x10) Hilbert matrix which looks deceivingly innocent
+     and simple, A(i,j) = 1/(i+j+1)
+     b(i) = Sum_j A(i,j), so a sum of a row in A
+
+     the solution is x(i) = 1. i=0,.,9
+
+   However,
+~~~
+     TMatrixD m....; TVectorD b.....
+     TDecompLU lu(m); lu.SetTol(1.0e-12); lu.Solve(b); b.Print()
+~~~
+   gives,
+
+~~~
+   {1.000,1.000,1.000,1.000,0.998,1.000,0.993,1.001,0.996,1.000}
+~~~
+
+   Looking at the condition number, this is in line with expected the
+   accuracy . The condition number is 3.957e+12 . As a simple rule of
+   thumb, a condition number of 1.0e+n means that you lose up to n
+   digits of accuracy in a solution . Since doubles are stored with 15
+   digits, we can expect the accuracy to be as small as 3 digits .
+
+ #### Det(Double_t &d1,Double_t &d2)
+   The determinant is d1*TMath::Power(2.,d2)
+   Expressing the determinant this way makes under/over-flow very
+   unlikely .
+
+ #### Decompose()
+   Here the actually decomposition is performed . One can change the
+   matrix A after the decomposition constructor has been called
+   without effecting the decomposition result
+
+ #### Solve(TVectorD &b)
+  Solve A x = b . x is supplied through the argument and replaced with
+  the solution .
+
+ #### TransSolve(TVectorD &b)
+  Solve A^T x = b . x is supplied through the argument and replaced
+  with the solution .
+
+ #### MultiSolve(TMatrixD    &B)
+  Solve A X = B . where X and are now matrices . X is supplied through
+  the argument and replaced with the solution .
+
+ #### Invert(TMatrixD &inv)
+  This is of course just a call to MultiSolve with as input argument
+  the unit matrix . Note that for a matrix a(m,n) with m > n  a
+  pseudo-inverse is calculated .
+
+ ### Tolerances and Scaling
+
+ The tolerance parameter (which is a member of this base class) plays
+ a crucial role in all operations of the decomposition classes . It
+ gives the user a powerful tool to monitor and steer the operations
+ Its default value is sqrt(epsilon) where 1+epsilon = 1
+
+ If you do not want to be bothered by the following considerations,
+ like in most other linear algebra packages, just set the tolerance
+ with SetTol to an arbitrary small number .
+
+ The tolerance number is used by each decomposition method to decide
+ whether the matrix is near singular, except of course SVD which can
+ handle singular matrices .
+ For each decomposition this will be checked in a different way; in LU
+ the matrix is considered singular when, at some point in the
+ decomposition, a diagonal element < fTol . Therefore, we had to set in
+ the example above of the (10x10) Hilbert, which is near singular, the
+ tolerance on 10e-12 . (The fact that we have to set the tolerance <
+ sqrt(epsilon) is a clear indication that we are losing precision .)
+
+ If the matrix is flagged as being singular, operations with the
+ decomposition will fail and will return matrices/vectors that are
+ invalid .
+
+ The observant reader will notice that by scaling the complete matrix
+ by some small number the decomposition will detect a singular matrix .
+ In this case the user will have to reduce the tolerance number by this
+ factor . (For CPU time saving we decided not to make this an automatic
+ procedure) .
+
+ Code for this could look as follows:
+~~~
+ const Double_t max_abs = Abs(a).Max();
+ const Double_t scale = TMath::Min(max_abs,1.);
+ a.SetTol(a.GetTol()*scale);
+~~~
+
+ For usage examples see $ROOTSYS/test/stressLinear.cxx
+*/
 
 #include "TDecompBase.h"
 #include "TMath.h"
@@ -117,11 +124,11 @@
 
 ClassImp(TDecompBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompBase::TDecompBase()
 {
-// Default constructor
-
    fTol       = std::numeric_limits<double>::epsilon();
    fDet1      = 0;
    fDet2      = 0;
@@ -130,18 +137,18 @@ TDecompBase::TDecompBase()
    fColLwb    = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompBase::TDecompBase(const TDecompBase &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
 {
-
 // Estimates lower bound for norm1 of inverse of A. Returns norm
 // estimate in est.  iter sets the maximum number of iterations to be used.
 // The return value indicates the number of iterations remaining on exit from
@@ -197,10 +204,10 @@ Int_t TDecompBase::Hager(Double_t &est,Int_t iter)
    return iter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double_t &d2)
 {
-
 // Returns product of matrix diagonal elements in d1 and d2. d1 is a mantissa and d2
 // an exponent for powers of 2. If matrix is in diagonal or triangular-matrix form this
 // will be the determinant.
@@ -244,11 +251,11 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix condition number
+
 Double_t TDecompBase::Condition()
 {
-// Matrix condition number
-
    if ( !TestBit(kCondition) ) {
       fCondition = -1;
       if (TestBit(kSingular))
@@ -267,11 +274,11 @@ Double_t TDecompBase::Condition()
    return fCondition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve set of equations with RHS in columns of B
+
 Bool_t TDecompBase::MultiSolve(TMatrixD &B)
 {
-// Solve set of equations with RHS in columns of B
-
    const TMatrixDBase &m = GetDecompMatrix();
    R__ASSERT(m.IsValid() && B.IsValid());
 
@@ -286,11 +293,11 @@ Bool_t TDecompBase::MultiSolve(TMatrixD &B)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix determinant det = d1*TMath::Power(2.,d2)
+
 void TDecompBase::Det(Double_t &d1,Double_t &d2)
 {
-// Matrix determinant det = d1*TMath::Power(2.,d2)
-
    if ( !TestBit(kDetermined) ) {
       if ( !TestBit(kDecomposed) )
          Decompose();
@@ -311,11 +318,11 @@ void TDecompBase::Det(Double_t &d1,Double_t &d2)
    d2 = fDet2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class members
+
 void TDecompBase::Print(Option_t * /*opt*/) const
 {
-// Print class members
-
    printf("fTol       = %.4e\n",fTol);
    printf("fDet1      = %.4e\n",fDet1);
    printf("fDet2      = %.4e\n",fDet2);
@@ -324,11 +331,11 @@ void TDecompBase::Print(Option_t * /*opt*/) const
    printf("fColLwb    = %d\n",fColLwb);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompBase &TDecompBase::operator=(const TDecompBase &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
       fTol       = source.fTol;
@@ -341,12 +348,12 @@ TDecompBase &TDecompBase::operator=(const TDecompBase &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a Householder-transformation through the parameters up and b .
+
 Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t &beta,
                       Double_t tol)
 {
-// Define a Householder-transformation through the parameters up and b .
-
    const Int_t n = vc.GetNrows();
    const Double_t * const vp = vc.GetMatrixArray();
 
@@ -376,12 +383,12 @@ Bool_t DefHouseHolder(const TVectorD &vc,Int_t lp,Int_t l,Double_t &up,Double_t 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDRow &cr)
 {
-// Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = (cr.GetMatrix())->GetNcols();
 
@@ -405,12 +412,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i*inc_c] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TMatrixDColumn &cc)
 {
-// Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = (cc.GetMatrix())->GetNrows();
 
@@ -434,12 +441,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i*inc_c] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Apply Householder-transformation.
+
 void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
                       Int_t lp,Int_t l,TVectorD &cv)
 {
-//  Apply Householder-transformation.
-
    const Int_t nv = vc.GetNrows();
    const Int_t nc = cv.GetNrows();
 
@@ -462,12 +469,12 @@ void ApplyHouseHolder(const TVectorD &vc,Double_t up,Double_t beta,
       cp[i] += s*vp[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Defines a Givens-rotation by calculating 2 rotation parameters c and s.
+/// The rotation is defined with the vector components v1 and v2.
+
 void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
 {
-// Defines a Givens-rotation by calculating 2 rotation parameters c and s.
-// The rotation is defined with the vector components v1 and v2.
-
    const Double_t a1 = TMath::Abs(v1);
    const Double_t a2 = TMath::Abs(v2);
    if (a1 > a2) {
@@ -490,13 +497,13 @@ void DefGivens(Double_t v1,Double_t v2,Double_t &c,Double_t &s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define and apply a Givens-rotation by calculating 2 rotation
+/// parameters c and s. The rotation is defined with and applied to the vector
+/// components v1 and v2.
+
 void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
 {
-// Define and apply a Givens-rotation by calculating 2 rotation
-// parameters c and s. The rotation is defined with and applied to the vector
-// components v1 and v2.
-
    const Double_t a1 = TMath::Abs(v1);
    const Double_t a2 = TMath::Abs(v2);
    if (a1 > a2) {
@@ -523,12 +530,12 @@ void DefAplGivens(Double_t &v1,Double_t &v2,Double_t &c,Double_t &s)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Apply a Givens transformation as defined by c and s to the vector components
+/// v1 and v2 .
+
 void ApplyGivens(Double_t &z1,Double_t &z2,Double_t c,Double_t s)
 {
-// Apply a Givens transformation as defined by c and s to the vector compenents
-// v1 and v2 .
-
    const Double_t w = z1*c+z2*s;
    z2 = -z1*s+z2*c;
    z1 = w;

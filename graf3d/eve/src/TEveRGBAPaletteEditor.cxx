@@ -23,13 +23,16 @@
 #include "TGSlider.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-//
-// Sub-editor for TEveRGBAPalette class.
+/** \class TEveRGBAPaletteSubEditor
+\ingroup TEve
+Sub-editor for TEveRGBAPalette class.
+*/
 
 ClassImp(TEveRGBAPaletteSubEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    TGVerticalFrame(p),
 
@@ -47,10 +50,6 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    fDefaultColor(0),
    fFixColorRange(0)
 {
-   // Constructor.
-
-   // Int_t labelW = 42;
-
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
@@ -148,13 +147,11 @@ TEveRGBAPaletteSubEditor::TEveRGBAPaletteSubEditor(const TGWindow* p) :
    AddFrame(fMinMax, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
 {
-   // Set model object.
-
    fM = p;
 
    if (fM->fUIDoubleRep)
@@ -185,23 +182,19 @@ void TEveRGBAPaletteSubEditor::SetModel(TEveRGBAPalette* p)
    fOverflowAction ->Select(fM->fOverflowAction, kFALSE);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Emit "Changed()" signal.
 
-//______________________________________________________________________________
 void TEveRGBAPaletteSubEditor::Changed()
 {
-   // Emit "Changed()" signal.
-
    Emit("Changed()");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MinMax.
 
-//______________________________________________________________________________
 void TEveRGBAPaletteSubEditor::DoMinMax()
 {
-   // Slot for MinMax.
-
    if (fM->fUIDoubleRep)
    {
       Double_t min = fMinMax->GetMin();
@@ -231,96 +224,95 @@ void TEveRGBAPaletteSubEditor::DoMinMax()
    fM->MinMaxValChanged();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Interpolate.
 
-//______________________________________________________________________________
 void TEveRGBAPaletteSubEditor::DoInterpolate()
 {
-   // Slot for Interpolate.
-
    fM->SetInterpolate(fInterpolate->IsOn());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for ShowDefValue.
+
 void TEveRGBAPaletteSubEditor::DoShowDefValue()
 {
-   // Slot for ShowDefValue.
-
    fM->SetShowDefValue(fShowDefValue->IsOn());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for DefaultColor.
+
 void TEveRGBAPaletteSubEditor::DoDefaultColor(Pixel_t color)
 {
-   // Slot for DefaultColor.
-
    fM->SetDefaultColorPixel(color);
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for FixColorRange.
+
 void TEveRGBAPaletteSubEditor::DoFixColorRange()
 {
-   // Slot for FixColorRange.
-
    fM->SetFixColorRange(fFixColorRange->IsOn());
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for UnderColor.
+
 void TEveRGBAPaletteSubEditor::DoUnderColor(Pixel_t color)
 {
-   // Slot for UnderColor.
-
    fM->SetUnderColorPixel(color);
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for OverColor.
+
 void TEveRGBAPaletteSubEditor::DoOverColor(Pixel_t color)
 {
-   // Slot for OverColor.
-
    fM->SetOverColorPixel(color);
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for UnderflowAction.
+
 void TEveRGBAPaletteSubEditor::DoUnderflowAction(Int_t mode)
 {
-   // Slot for UnderflowAction.
-
    fM->SetUnderflowAction(mode);
    Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for OverflowAction.
+
 void TEveRGBAPaletteSubEditor::DoOverflowAction(Int_t mode)
 {
-   // Slot for OverflowAction.
-
    fM->SetOverflowAction(mode);
    Changed();
 }
 
 
-//______________________________________________________________________________
-//
-// Editor for TEveRGBAPalette class.
+/** \class TEveRGBAPaletteEditor
+\ingroup TEve
+Editor for TEveRGBAPalette class.
+*/
 
 ClassImp(TEveRGBAPaletteEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRGBAPaletteEditor::TEveRGBAPaletteEditor(const TGWindow *p, Int_t width, Int_t height,
                                              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM (0),
    fSE(0)
 {
-   // Constructor.
-
    MakeTitle("TEveRGBAPalette");
 
    fSE = new TEveRGBAPaletteSubEditor(this);
@@ -328,13 +320,11 @@ TEveRGBAPaletteEditor::TEveRGBAPaletteEditor(const TGWindow *p, Int_t width, Int
    fSE->Connect("Changed()", "TEveRGBAPaletteEditor", this, "Update()");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveRGBAPaletteEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveRGBAPalette*>(obj);
    fSE->SetModel(fM);
 }

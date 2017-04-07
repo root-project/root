@@ -17,6 +17,7 @@ namespace PyROOT {
    void InitRoot();
 
 // construct a Python shadow class for the named C++ class
+   PyObject* GetScopeProxy( Cppyy::TCppScope_t );
    PyObject* CreateScopeProxy( Cppyy::TCppScope_t );
    PyObject* CreateScopeProxy( PyObject*, PyObject* args );
    PyObject* CreateScopeProxy(

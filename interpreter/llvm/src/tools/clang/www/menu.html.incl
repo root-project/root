@@ -5,6 +5,7 @@
 
   <div class="submenu">
     <label>Clang Info</label>
+    <a href="http://llvm.org/releases/download.html">Download</a>
     <a href="/index.html">About</a>
     <a href="/features.html">Features</a>
     <a href="/comparison.html">Comparisons</a>
@@ -32,9 +33,9 @@
 
   <div class="submenu">
     <label>Communication</label>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-users">cfe-users List</a>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev">cfe-dev List</a>
-    <a href="http://lists.cs.uiuc.edu/mailman/listinfo/cfe-commits">cfe-commits List</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-users">cfe-users List</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-dev">cfe-dev List</a>
+    <a href="http://lists.llvm.org/mailman/listinfo/cfe-commits">cfe-commits List</a>
     <a href="http://llvm.org/bugs/">Bug Reports</a>
     <a href="http://planet.clang.org/">Planet Clang</a>
     <a href="irc://irc.oftc.net/llvm">IRC: irc.oftc.net#llvm</a>

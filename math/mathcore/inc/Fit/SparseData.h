@@ -13,14 +13,8 @@
 #ifndef ROOT_Fit_SparseData
 #define ROOT_Fit_SparseData
 
-#include <vector>
-
-#ifndef ROOT_Fit_DataVector
-#include "Fit/DataVector.h"
-#endif
-#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
-#endif
+#include <vector>
 
 namespace ROOT {
 

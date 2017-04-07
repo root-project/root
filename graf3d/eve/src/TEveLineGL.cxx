@@ -15,44 +15,36 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-//==============================================================================
-// TEveLineGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveLine class.
+/** \class TEveLineGL
+\ingroup TEve
+GL-renderer for TEveLine class.
+*/
 
 ClassImp(TEveLineGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLineGL::TEveLineGL() : TPointSet3DGL(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 Bool_t TEveLineGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveLine>(obj);
    return kTRUE;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Direct GL rendering for TEveLine.
 
-//______________________________________________________________________________
 void TEveLineGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Direct GL rendering for TEveLine.
-
    // printf("TEveLineGL::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
 
    TEveLine& q = *fM;

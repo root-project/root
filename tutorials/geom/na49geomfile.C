@@ -1,6 +1,12 @@
+/// \file
+/// \ingroup tutorial_geom
+///  Before executing this macro, the file makegeometry.C must have been executed
+///
+/// \macro_code
+///
+/// \author Andrei Gheata
+
 void na49geomfile() {
-//   Before executing this macro, the file makegeometry.C must have been executed
-//
    gBenchmark->Start("geometry");
    TGeometry *n49 =(TGeometry*)gROOT->FindObject("na49");
    if (n49) {

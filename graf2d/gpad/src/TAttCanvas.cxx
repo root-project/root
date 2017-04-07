@@ -14,30 +14,33 @@
 
 ClassImp(TAttCanvas)
 
-//______________________________________________________________________________
-//
-//     Manages canvas attributes. Referenced by TStyle.
-//
+/** \class TAttCanvas
+\ingroup gpad
+\ingroup GraphicsAtt
 
-//______________________________________________________________________________
+Manages canvas attributes. Referenced by TStyle.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TAttCanvas::TAttCanvas()
 {
-   // Default constructor.
-
    ResetAttCanvas();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TAttCanvas::~TAttCanvas()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 void TAttCanvas::Copy(TAttCanvas &attcanvas) const
 {
-   // Copy constructor.
-
    attcanvas.fXBetween     = fXBetween;
    attcanvas.fYBetween     = fYBetween;
    attcanvas.fTitleFromTop = fTitleFromTop;
@@ -46,17 +49,18 @@ void TAttCanvas::Copy(TAttCanvas &attcanvas) const
    attcanvas.fAdate        = fAdate;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print canvas attributes.
+
 void TAttCanvas::Print(Option_t *) const
 {
-   // Print canvas attributes.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print canvas attributes.
+
 void TAttCanvas::ResetAttCanvas(Option_t *)
 {
-   // Print canvas attributes.
-
    fXBetween     = 2;
    fYBetween     = 2;
    fTitleFromTop = 1.2;

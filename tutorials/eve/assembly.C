@@ -1,12 +1,17 @@
-// Geometry detector assembly example
-// Author: Andrei Gheata
-//
-// Modified to save the assebly as shape-extract.
-// 1. Run root assembly.C
-//    This will produce assembly.root containing the extract.
-// 2. Display the assebly as:
-//    root show_extract.C("assembly.root")
-
+/// \file
+/// \ingroup tutorial_eve
+/// Geometry detector assembly example
+///
+/// Modified to save the assebly as shape-extract.
+/// 1. Run `root assembly.C`
+///    This will produce assembly.root containing the extract.
+/// 2. Display the assebly as:
+///    `root show_extract.C("assembly.root")`
+///
+/// \image html eve_assembly.png
+/// \macro_code
+///
+/// \author Andrei Gheata
 
 void assembly()
 {

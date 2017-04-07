@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofLite                                                           //
-//                                                                      //
-// This class starts a PROOF session on the local machine: no daemons,  //
-// client and master merged, communications via UNIX-like sockets.      //
-// By default the number of workers started is NumberOfCores+1; a       //
-// different number can be forced on construction.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofLite
+\ingroup proofkernel
+
+This class starts a PROOF session on the local machine: no daemons,
+client and master merged, communications via UNIX-like sockets.
+By default the number of workers started is NumberOfCores+1; a
+different number can be forced on construction.
+
+*/
 
 #include "TProofLite.h"
 
@@ -52,26 +51,27 @@
 #include "TTree.h"
 #include "TVirtualProofPlayer.h"
 #include "TSelector.h"
+#include "TPackMgr.h"
 
 ClassImp(TProofLite)
 
 Int_t TProofLite::fgWrksMax = -2; // Unitialized max number of workers
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF environment. Starting PROOF involves either connecting
+/// to a master server, which in turn will start a set of slave servers, or
+/// directly starting as master server (if master = ""). Masterurl is of
+/// the form: [proof[s]://]host[:port]. Conffile is the name of the config
+/// file describing the remote PROOF cluster (this argument alows you to
+/// describe different cluster configurations).
+/// The default is proof.conf. Confdir is the directory where the config
+/// file and other PROOF related files are (like motd and noproof files).
+/// Loglevel is the log level (default = 1). User specified custom config
+/// files will be first looked for in $HOME/.conffile.
+
 TProofLite::TProofLite(const char *url, const char *conffile, const char *confdir,
                        Int_t loglevel, const char *alias, TProofMgr *mgr)
 {
-   // Create a PROOF environment. Starting PROOF involves either connecting
-   // to a master server, which in turn will start a set of slave servers, or
-   // directly starting as master server (if master = ""). Masterurl is of
-   // the form: [proof[s]://]host[:port]. Conffile is the name of the config
-   // file describing the remote PROOF cluster (this argument alows you to
-   // describe different cluster configurations).
-   // The default is proof.conf. Confdir is the directory where the config
-   // file and other PROOF related files are (like motd and noproof files).
-   // Loglevel is the log level (default = 1). User specified custom config
-   // files will be first looked for in $HOME/.conffile.
-
    fUrl.SetUrl(url);
 
    // Default initializations
@@ -143,17 +143,17 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    gProof = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the PROOF environment. Starting PROOF involves either connecting
+/// to a master server, which in turn will start a set of slave servers, or
+/// directly starting as master server (if master = ""). For a description
+/// of the arguments see the TProof ctor. Returns the number of started
+/// master or slave servers, returns 0 in case of error, in which case
+/// fValid remains false.
+
 Int_t TProofLite::Init(const char *, const char *conffile,
                        const char *confdir, Int_t loglevel, const char *)
 {
-   // Start the PROOF environment. Starting PROOF involves either connecting
-   // to a master server, which in turn will start a set of slave servers, or
-   // directly starting as master server (if master = ""). For a description
-   // of the arguments see the TProof ctor. Returns the number of started
-   // master or slave servers, returns 0 in case of error, in which case
-   // fValid remains false.
-
    R__ASSERT(gSystem);
 
    fValid = kFALSE;
@@ -324,42 +324,15 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 #endif
    }
 
-   fPackageLock             = 0;
-   fEnabledPackagesOnClient = 0;
    fLoadedMacros            = 0;
-   fGlobalPackageDirList    = 0;
    if (TestBit(TProof::kIsClient)) {
 
       // List of directories where to look for global packages
       TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
-      if (globpack.Length() > 0) {
-         Int_t ng = 0;
-         Int_t from = 0;
-         TString ldir;
-         while (globpack.Tokenize(ldir, from, ":")) {
-            TProofServ::ResolveKeywords(ldir);
-            if (gSystem->AccessPathName(ldir, kReadPermission)) {
-               Warning("Init", "directory for global packages %s does not"
-                               " exist or is not readable", ldir.Data());
-            } else {
-               // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
-               TString key = Form("G%d", ng++);
-               if (!fGlobalPackageDirList) {
-                  fGlobalPackageDirList = new THashList();
-                  fGlobalPackageDirList->SetOwner();
-               }
-               fGlobalPackageDirList->Add(new TNamed(key,ldir));
-            }
-         }
-      }
-
-      TString lockpath(fPackageDir);
-      lockpath.ReplaceAll("/", "%");
-      lockpath.Insert(0, TString::Format("%s/%s", gSystem->TempDirectory(), kPROOF_PackageLockFile));
-      fPackageLock = new TProofLockPath(lockpath.Data());
-
-      fEnabledPackagesOnClient = new TList;
-      fEnabledPackagesOnClient->SetOwner();
+      TProofServ::ResolveKeywords(globpack);
+      Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
+      if (gDebug > 0)
+         Info("Init", " %d global package directories registered", nglb);
    }
 
    // Start workers
@@ -396,11 +369,11 @@ Int_t TProofLite::Init(const char *, const char *conffile,
 
    return fActiveSlaves->GetSize();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofLite::~TProofLite()
 {
-   // Destructor
-
    // Shutdown the workers
    RemoveWorkers(0);
 
@@ -425,28 +398,18 @@ TProofLite::~TProofLite()
    gSystem->Unlink(fSockPath);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to determine the number of workers giving priority to users request.
+/// Otherwise use the system information, if available, or just start
+/// the minimal number, i.e. 2 .
+
 Int_t TProofLite::GetNumberOfWorkers(const char *url)
 {
-   // Static method to determine the number of workers giving priority to users request.
-   // Otherwise use the system information, if available, or just start
-   // the minimal number, i.e. 2 .
-
    Bool_t notify = kFALSE;
    if (fgWrksMax == -2) {
       // Find the max number of workers, if any
       TString sysname = "system.rootrc";
-#ifdef ROOTETCDIR
-      char *s = gSystem->ConcatFileName(ROOTETCDIR, sysname);
-#else
-      TString etc = gRootDir;
-#ifdef WIN32
-      etc += "\\etc";
-#else
-      etc += "/etc";
-#endif
-      char *s = gSystem->ConcatFileName(etc, sysname);
-#endif
+      char *s = gSystem->ConcatFileName(TROOT::GetEtcDir(), sysname);
       TEnv sysenv(0);
       sysenv.ReadFile(s, kEnvGlobal);
       fgWrksMax = sysenv.GetValue("ProofLite.MaxWorkers", -1);
@@ -520,11 +483,11 @@ Int_t TProofLite::GetNumberOfWorkers(const char *url)
    return nWorkers;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start up PROOF workers.
+
 Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
 {
-   // Start up PROOF workers.
-
    // Create server socket on the assigned UNIX sock path
    if (!fServSock) {
       if ((fServSock = new TServerSocket(fSockPath))) {
@@ -698,11 +661,11 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify setting-up operation message
+
 void TProofLite::NotifyStartUp(const char *action, Int_t done, Int_t tot)
 {
-   // Notify setting-up operation message
-
    Int_t frac = (Int_t) (done*100.)/tot;
    char msg[512] = {0};
    if (frac >= 100) {
@@ -715,11 +678,11 @@ void TProofLite::NotifyStartUp(const char *action, Int_t done, Int_t tot)
    fprintf(stderr,"%s", msg);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create environment files for worker 'ord'
+
 Int_t TProofLite::SetProofServEnv(const char *ord)
 {
-   // Create environment files for worker 'ord'
-
    // Check input
    if (!ord || strlen(ord) <= 0) {
       Error("SetProofServEnv", "ordinal string undefined");
@@ -767,7 +730,7 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
 
    // Package dir
    fprintf(frc,"# Users packages\n");
-   fprintf(frc, "ProofServ.PackageDir: %s\n", fPackageDir.Data());
+   fprintf(frc, "ProofServ.PackageDir: %s\n", fPackMgr->GetDir());
 
    // Image
    fprintf(frc,"# Server image\n");
@@ -792,17 +755,9 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
       return -1;
    }
    // ROOTSYS
-#ifdef R__HAVE_CONFIG
-   fprintf(fenv, "export ROOTSYS=%s\n", ROOTPREFIX);
-#else
-   fprintf(fenv, "export ROOTSYS=%s\n", gSystem->Getenv("ROOTSYS"));
-#endif
+   fprintf(fenv, "export ROOTSYS=%s\n", TROOT::GetRootSys().Data());
    // Conf dir
-#ifdef R__HAVE_CONFIG
-   fprintf(fenv, "export ROOTCONFDIR=%s\n", ROOTETCDIR);
-#else
-   fprintf(fenv, "export ROOTCONFDIR=%s\n", gSystem->Getenv("ROOTSYS"));
-#endif
+   fprintf(fenv, "export ROOTCONFDIR=%s\n", TROOT::GetRootSys().Data());
    // TMPDIR
    fprintf(fenv, "export TMPDIR=%s\n", gSystem->TempDirectory());
    // Log file in the log dir
@@ -839,13 +794,13 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve some keywords in 's'
+///    <logfilewrk>, <user>, <rootsys>, <cpupin>
+
 void TProofLite::ResolveKeywords(TString &s, const char *ord,
    const char *logfile)
 {
-   // Resolve some keywords in 's'
-   //    <logfilewrk>, <user>, <rootsys>, <cpupin>
-
    if (!logfile) return;
 
    // Log file
@@ -919,19 +874,20 @@ void TProofLite::ResolveKeywords(TString &s, const char *ord,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the sandbox for this session
+
 Int_t TProofLite::CreateSandbox()
 {
-   // Create the sandbox for this session
-
    // Make sure the sandbox area exist and is writable
    if (GetSandbox(fSandbox, kTRUE, "ProofLite.Sandbox") != 0) return -1;
 
-   // Package Dir
-   fPackageDir = gEnv->GetValue("Proof.PackageDir", "");
-   if (fPackageDir.IsNull())
-      fPackageDir.Form("%s/%s", fSandbox.Data(), kPROOF_PackDir);
-   if (AssertPath(fPackageDir, kTRUE) != 0) return -1;
+   // Package Manager
+   TString packdir = gEnv->GetValue("Proof.PackageDir", "");
+   if (packdir.IsNull())
+      packdir.Form("%s/%s", fSandbox.Data(), kPROOF_PackDir);
+   if (AssertPath(packdir, kTRUE) != 0) return -1;
+   fPackMgr = new TPackMgr(packdir);
 
    // Cache Dir
    fCacheDir = gEnv->GetValue("Proof.CacheDir", "");
@@ -987,11 +943,11 @@ Int_t TProofLite::CreateSandbox()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print status of PROOF-Lite cluster.
+
 void TProofLite::Print(Option_t *option) const
 {
-   // Print status of PROOF-Lite cluster.
-
    TString ord;
    if (gProofServ) ord.Form("%s ", gProofServ->GetOrdinal());
    if (IsParallel())
@@ -1038,13 +994,13 @@ void TProofLite::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TProofQueryResult instance for this query.
+
 TProofQueryResult *TProofLite::MakeQueryResult(Long64_t nent, const char *opt,
                                                Long64_t fst, TDSet *dset,
                                                const char *selec)
 {
-   // Create a TProofQueryResult instance for this query.
-
    // Increment sequential number
    Int_t seqnum = -1;
    if (fQMgr) {
@@ -1063,11 +1019,11 @@ TProofQueryResult *TProofLite::MakeQueryResult(Long64_t nent, const char *opt,
    return pqr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set query in running state.
+
 void TProofLite::SetQueryRunning(TProofQueryResult *pq)
 {
-   // Set query in running state.
-
    // Record current position in the log file at start
    fflush(fLogFileW);
    Int_t startlog = lseek(fileno(fLogFileW), (off_t) 0, SEEK_END);
@@ -1078,14 +1034,7 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
 
    // Build the list of loaded PAR packages
    TString parlist = "";
-   TIter nxp(fEnabledPackagesOnClient);
-   TObjString *os= 0;
-   while ((os = (TObjString *)nxp())) {
-      if (parlist.Length() <= 0)
-         parlist = os->GetName();
-      else
-         parlist += Form(";%s",os->GetName());
-   }
+   fPackMgr->GetEnabledPackages(parlist);
 
    // Set in running state
    pq->SetRunning(startlog, parlist, GetParallel());
@@ -1095,16 +1044,16 @@ void TProofLite::SetQueryRunning(TProofQueryResult *pq)
    pq->SetProcessInfo(pq->GetEntries(), GetCpuTime(), GetBytesRead());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the specified drawing action on a data set (TDSet).
+/// Event- or Entry-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// Returns -1 in case of error or number of selected events otherwise.
+
 Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
                                 const char *selection, Option_t *option,
                                 Long64_t nentries, Long64_t first)
 {
-   // Execute the specified drawing action on a data set (TDSet).
-   // Event- or Entry-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // Returns -1 in case of error or number of selected events otherwise.
-
    if (!IsValid()) return -1;
 
    // Make sure that asynchronous processing is not active
@@ -1124,16 +1073,16 @@ Long64_t TProofLite::DrawSelect(TDSet *dset, const char *varexp,
    return Process(dset, "draw:", opt, nentries, first);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TDSet) using the specified selector (.C) file.
+/// Entry- or event-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option,
                              Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector (.C) file.
-   // Entry- or event-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    // For the time being cannot accept other queries if not idle, even if in async
    // mode; needs to set up an event handler to manage that
 
@@ -1330,6 +1279,9 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       SetupWorkers(1, startedWorkers);
    }
 
+   // This is the end of preparation
+   fQuerySTW.Reset();
+
    Long64_t rv = 0;
    if (!(pq->IsDraw())) {
       if (selector && strlen(selector)) {
@@ -1339,6 +1291,16 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
       }
    } else {
       rv = fPlayer->DrawSelect(dset, varexp, selection, opt, nentries, first);
+   }
+
+   // This is the end of merging
+   fQuerySTW.Stop();
+   Float_t rt = fQuerySTW.RealTime();
+   // Update the query content
+   TQueryResult *qr = GetQueryResult();
+   if (qr) {
+      qr->SetTermTime(rt);
+      // Preparation time is always null in PROOF-Lite
    }
 
    // Disable feedback, if required
@@ -1443,50 +1405,12 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    return rv;
 }
 
-//______________________________________________________________________________
-Int_t TProofLite::CreateSymLinks(TList *files, TList *wrks)
-{
-   // Create in each worker sandbox symlinks to the files in the list
-   // Used to make the cache information available to workers.
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the dataset manager from directives or from defaults
+/// Return 0 on success, -1 on failure
 
-   Int_t rc = 0;
-   if (files) {
-      TList *wls = (wrks) ? wrks : fActiveSlaves;
-      TIter nxf(files);
-      TObjString *os = 0;
-      while ((os = (TObjString *) nxf())) {
-         // Expand target
-         TString tgt(os->GetName());
-         gSystem->ExpandPathName(tgt);
-         // Loop over active workers
-         TIter nxw(wls);
-         TSlave *wrk = 0;
-         while ((wrk = (TSlave *) nxw())) {
-            // Link name
-            TString lnk = Form("%s/%s", wrk->GetWorkDir(), gSystem->BaseName(os->GetName()));
-            gSystem->Unlink(lnk);
-            if (gSystem->Symlink(tgt, lnk) != 0) {
-               rc++;
-               Warning("CreateSymLinks", "problems creating sym link: %s", lnk.Data());
-            } else {
-               PDB(kGlobal,1)
-                  Info("CreateSymLinks", "created sym link: %s", lnk.Data());
-            }
-         }
-      }
-   } else {
-      Warning("CreateSymLinks", "files list is undefined");
-   }
-   // Done
-   return rc;
-}
-
-//______________________________________________________________________________
 Int_t TProofLite::InitDataSetManager()
 {
-   // Initialize the dataset manager from directives or from defaults
-   // Return 0 on success, -1 on failure
-
    fDataSetManager = 0;
 
    // Default user and group
@@ -1577,23 +1501,23 @@ Int_t TProofLite::InitDataSetManager()
    return (fDataSetManager ? 0 : -1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of file cache. If all is true show all caches also on
+/// slaves. If everything is ok all caches are to be the same.
+
 void TProofLite::ShowCache(Bool_t)
 {
-   // List contents of file cache. If all is true show all caches also on
-   // slaves. If everything is ok all caches are to be the same.
-
    if (!IsValid()) return;
 
    Printf("*** Local file cache %s ***", fCacheDir.Data());
    gSystem->Exec(Form("%s %s", kLS, fCacheDir.Data()));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove files from all file caches.
+
 void TProofLite::ClearCache(const char *file)
 {
-    // Remove files from all file caches.
-
    if (!IsValid()) return;
 
    fCacheLock->Lock();
@@ -1605,16 +1529,16 @@ void TProofLite::ClearCache(const char *file)
    fCacheLock->Unlock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy the specified macro in the cache directory. The macro file is
+/// uploaded if new or updated. If existing, the corresponding header
+/// basename(macro).h or .hh, is also uploaded. For the other arguments
+/// see TProof::Load().
+/// Returns 0 in case of success and -1 in case of error.
+
 Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
                        TList *wrks)
 {
-   // Copy the specified macro in the cache directory. The macro file is
-   // uploaded if new or updated. If existing, the corresponding header
-   // basename(macro).h or .hh, is also uploaded. For the other arguments
-   // see TProof::Load().
-   // Returns 0 in case of success and -1 in case of error.
-
    if (!IsValid()) return -1;
 
    if (!macro || !macro[0]) {
@@ -1646,31 +1570,29 @@ Int_t TProofLite::Load(const char *macro, Bool_t notOnClient, Bool_t uniqueOnly,
             }
             gSystem->FreeDirectory(dirp);
          }
-         // Create the relevant symlinks
-         CreateSymLinks(&cachedFiles, wrks);
       }
    }
 
    return TProof::Load(macro, notOnClient, uniqueOnly, wrks);
 }
 
-//______________________________________________________________________________
-Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
-                                   TSelector **selector, Int_t opt, TList *wrks)
-{
-   // Copy a macro, and its possible associated .h[h] file,
-   // to the cache directory, from where the workers can get the file.
-   // If headerRequired is 1, return -1 in case the header is not found.
-   // If headerRequired is 0, try to copy header too.
-   // If headerRequired is -1, don't look for header, only copy macro.
-   // If the selector pionter is not 0, consider the macro to be a selector
-   // and try to load the selector and set it to the pointer.
-   // The mask 'opt' is an or of ESendFileOpt:
-   //       kCpBin   (0x8)     Retrieve from the cache the binaries associated
-   //                          with the file
-   //       kCp      (0x10)    Retrieve the files from the cache
-   // Return -1 in case of error, 0 otherwise.
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a macro, and its possible associated .h[h] file,
+/// to the cache directory, from where the workers can get the file.
+/// If headerRequired is 1, return -1 in case the header is not found.
+/// If headerRequired is 0, try to copy header too.
+/// If headerRequired is -1, don't look for header, only copy macro.
+/// If the selector pionter is not 0, consider the macro to be a selector
+/// and try to load the selector and set it to the pointer.
+/// The mask 'opt' is an or of ESendFileOpt:
+///       kCpBin   (0x8)     Retrieve from the cache the binaries associated
+///                          with the file
+///       kCp      (0x10)    Retrieve the files from the cache
+/// Return -1 in case of error, 0 otherwise.
 
+Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
+                                   TSelector **selector, Int_t opt, TList *)
+{
    // Relevant pointers
    TString cacheDir = fCacheDir;
    gSystem->ExpandPathName(cacheDir);
@@ -1780,6 +1702,7 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
    dot = binname.Last('.');
    if (dot != kNPOS)
       binname.Replace(dot,1,"_");
+   TString pcmname = TString::Format("%s_ACLiC_dict_rdict.pcm", binname.Data());
    binname += ".";
 
    FileStat_t stlocal, stcache;
@@ -1791,7 +1714,8 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
       if (dirp) {
          const char *e = 0;
          while ((e = gSystem->GetDirEntry(dirp))) {
-            if (!strncmp(e, binname.Data(), binname.Length())) {
+            if (!strncmp(e, binname.Data(), binname.Length()) ||
+                !strncmp(e, pcmname.Data(), pcmname.Length())) {
                TString fncache = Form("%s/%s", cacheDir.Data(), e);
                Bool_t docp = kTRUE;
                if (!gSystem->GetPathInfo(fncache, stcache)) {
@@ -1830,7 +1754,8 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
    if (dirp) {
       const char *e = 0;
       while ((e = gSystem->GetDirEntry(dirp))) {
-         if (!strncmp(e, binname.Data(), binname.Length())) {
+         if (!strncmp(e, binname.Data(), binname.Length()) ||
+             !strncmp(e, pcmname.Data(), pcmname.Length())) {
             Bool_t docp = kTRUE;
             if (!gSystem->GetPathInfo(e, stlocal)) {
                TString fncache = Form("%s/%s", cacheDir.Data(), e);
@@ -1884,21 +1809,17 @@ Int_t TProofLite::CopyMacroToCache(const char *macro, Int_t headerRequired,
 
    cacheLock->Unlock();
 
-   // Create symlinks
-   if (opt & (kCp | kCpBin))
-      CreateSymLinks(cachedFiles, wrks);
-
    cachedFiles->SetOwner();
    delete cachedFiles;
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove old sessions dirs keep at most 'Proof.MaxOldSessions' (default 10)
+
 Int_t TProofLite::CleanupSandbox()
 {
-   // Remove old sessions dirs keep at most 'Proof.MaxOldSessions' (default 10)
-
    Int_t maxold = gEnv->GetValue("Proof.MaxOldSessions", 1);
 
    if (maxold < 0) return 0;
@@ -1946,11 +1867,11 @@ Int_t TProofLite::CleanupSandbox()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the list of queries.
+
 TList *TProofLite::GetListOfQueries(Option_t *opt)
 {
-   // Get the list of queries.
-
    Bool_t all = ((strchr(opt,'A') || strchr(opt,'a'))) ? kTRUE : kFALSE;
 
    TList *ql = new TList;
@@ -2009,18 +1930,18 @@ TList *TProofLite::GetListOfQueries(Option_t *opt)
    return fQueries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the 'dataSet' on the cluster under the current
+/// user, group and the given 'dataSetName'.
+/// Fails if a dataset named 'dataSetName' already exists, unless 'optStr'
+/// contains 'O', in which case the old dataset is overwritten.
+/// If 'optStr' contains 'V' the dataset files are verified (default no
+/// verification).
+/// Returns kTRUE on success.
+
 Bool_t TProofLite::RegisterDataSet(const char *uri,
                                    TFileCollection *dataSet, const char* optStr)
 {
-   // Register the 'dataSet' on the cluster under the current
-   // user, group and the given 'dataSetName'.
-   // Fails if a dataset named 'dataSetName' already exists, unless 'optStr'
-   // contains 'O', in which case the old dataset is overwritten.
-   // If 'optStr' contains 'V' the dataset files are verified (default no
-   // verification).
-   // Returns kTRUE on success.
-
    if (!fDataSetManager) {
       Info("RegisterDataSet", "dataset manager not available");
       return kFALSE;
@@ -2073,13 +1994,13 @@ Bool_t TProofLite::RegisterDataSet(const char *uri,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set/Change the name of the default tree. The tree name may contain
+/// subdir specification in the form "subdir/name".
+/// Returns 0 on success, -1 otherwise.
+
 Int_t TProofLite::SetDataSetTreeName(const char *dataset, const char *treename)
 {
-   // Set/Change the name of the default tree. The tree name may contain
-   // subdir specification in the form "subdir/name".
-   // Returns 0 on success, -1 otherwise.
-
    if (!fDataSetManager) {
       Info("ExistsDataSet", "dataset manager not available");
       return kFALSE;
@@ -2104,11 +2025,11 @@ Int_t TProofLite::SetDataSetTreeName(const char *dataset, const char *treename)
                                       (UInt_t)TDataSetManager::kSetDefaultTree);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if 'dataset' described by 'uri' exists, kFALSE otherwise
+
 Bool_t TProofLite::ExistsDataSet(const char *uri)
 {
-   // Returns kTRUE if 'dataset' described by 'uri' exists, kFALSE otherwise
-
    if (!fDataSetManager) {
       Info("ExistsDataSet", "dataset manager not available");
       return kFALSE;
@@ -2123,11 +2044,11 @@ Bool_t TProofLite::ExistsDataSet(const char *uri)
    return fDataSetManager->ExistsDataSet(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// lists all datasets that match given uri
+
 TMap *TProofLite::GetDataSets(const char *uri, const char *srvex)
 {
-   // lists all datasets that match given uri
-
    if (!fDataSetManager) {
       Info("GetDataSets", "dataset manager not available");
       return (TMap *)0;
@@ -2142,12 +2063,12 @@ TMap *TProofLite::GetDataSets(const char *uri, const char *srvex)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shows datasets in locations that match the uri
+/// By default shows the user's datasets and global ones
+
 void TProofLite::ShowDataSets(const char *uri, const char *opt)
 {
-   // Shows datasets in locations that match the uri
-   // By default shows the user's datasets and global ones
-
    if (!fDataSetManager) {
       Info("GetDataSet", "dataset manager not available");
       return;
@@ -2156,12 +2077,12 @@ void TProofLite::ShowDataSets(const char *uri, const char *opt)
    fDataSetManager->ShowDataSets(uri, opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a list of TFileInfo objects describing the files of the specified
+/// dataset.
+
 TFileCollection *TProofLite::GetDataSet(const char *uri, const char *)
 {
-   // Get a list of TFileInfo objects describing the files of the specified
-   // dataset.
-
    if (!fDataSetManager) {
       Info("GetDataSet", "dataset manager not available");
       return (TFileCollection *)0;
@@ -2176,12 +2097,12 @@ TFileCollection *TProofLite::GetDataSet(const char *uri, const char *)
    return fDataSetManager->GetDataSet(uri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the specified dataset from the PROOF cluster.
+/// Files are not deleted.
+
 Int_t TProofLite::RemoveDataSet(const char *uri, const char *)
 {
-   // Remove the specified dataset from the PROOF cluster.
-   // Files are not deleted.
-
    if (!fDataSetManager) {
       Info("RemoveDataSet", "dataset manager not available");
       return -1;
@@ -2201,14 +2122,14 @@ Int_t TProofLite::RemoveDataSet(const char *uri, const char *)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows users to request staging of a particular dataset. Requests are
+/// saved in a special dataset repository and must be honored by the endpoint.
+/// This is the special PROOF-Lite re-implementation of the TProof function
+/// and includes code originally implemented in TProofServ.
+
 Bool_t TProofLite::RequestStagingDataSet(const char *dataset)
 {
-   // Allows users to request staging of a particular dataset. Requests are
-   // saved in a special dataset repository and must be honored by the endpoint.
-   // This is the special PROOF-Lite re-implementation of the TProof function
-   // and includes code originally implemented in TProofServ.
-
    if (!dataset) {
       Error("RequestStagingDataSet", "invalid dataset specified");
       return kFALSE;
@@ -2266,13 +2187,13 @@ Bool_t TProofLite::RequestStagingDataSet(const char *dataset)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
+/// failure. Dataset not found equals to a failure. PROOF-Lite
+/// re-implementation of the equivalent function in TProofServ.
+
 Bool_t TProofLite::CancelStagingDataSet(const char *dataset)
 {
-   // Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
-   // failure. Dataset not found equals to a failure. PROOF-Lite
-   // re-implementation of the equivalent function in TProofServ.
-
    if (!dataset) {
       Error("CancelStagingDataSet", "invalid dataset specified");
       return kFALSE;
@@ -2293,14 +2214,14 @@ Bool_t TProofLite::CancelStagingDataSet(const char *dataset)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Obtains a TFileCollection showing the staging status of the specified
+/// dataset. A valid dataset manager and dataset staging requests repository
+/// must be present on the endpoint. PROOF-Lite version of the equivalent
+/// function from TProofServ.
+
 TFileCollection *TProofLite::GetStagingStatusDataSet(const char *dataset)
 {
-   // Obtains a TFileCollection showing the staging status of the specified
-   // dataset. A valid dataset manager and dataset staging requests repository
-   // must be present on the endpoint. PROOF-Lite version of the equivalent
-   // function from TProofServ.
-
    if (!dataset) {
       Error("GetStagingStatusDataSet", "invalid dataset specified");
       return 0;
@@ -2327,12 +2248,12 @@ TFileCollection *TProofLite::GetStagingStatusDataSet(const char *dataset)
    return fc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify if all files in the specified dataset are available.
+/// Print a list and return the number of missing files.
+
 Int_t TProofLite::VerifyDataSet(const char *uri, const char *optStr)
 {
-   // Verify if all files in the specified dataset are available.
-   // Print a list and return the number of missing files.
-
    if (!fDataSetManager) {
       Info("VerifyDataSet", "dataset manager not available");
       return -1;
@@ -2355,39 +2276,39 @@ Int_t TProofLite::VerifyDataSet(const char *uri, const char *optStr)
    return VerifyDataSetParallel(uri, optStr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the content of the dataset cache, if any (matching 'dataset', if defined).
+
 void TProofLite::ClearDataSetCache(const char *dataset)
 {
-   // Clear the content of the dataset cache, if any (matching 'dataset', if defined).
-
    if (fDataSetManager) fDataSetManager->ClearCache(dataset);
    // Done
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display the content of the dataset cache, if any (matching 'dataset', if defined).
+
 void TProofLite::ShowDataSetCache(const char *dataset)
 {
-   // Display the content of the dataset cache, if any (matching 'dataset', if defined).
-
    // For PROOF-Lite act locally
    if (fDataSetManager) fDataSetManager->ShowCache(dataset);
    // Done
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that the input data objects are available to the workers in a
+/// dedicated file in the cache; the objects are taken from the dedicated list
+/// and / or the specified file.
+/// If the fInputData is empty the specified file is sent over.
+/// If there is no specified file, a file named "inputdata.root" is created locally
+/// with the content of fInputData and sent over to the master.
+/// If both fInputData and the specified file are not empty, a copy of the file
+/// is made locally and augmented with the content of fInputData.
+
 void TProofLite::SendInputDataFile()
 {
-   // Make sure that the input data objects are available to the workers in a
-   // dedicated file in the cache; the objects are taken from the dedicated list
-   // and / or the specified file.
-   // If the fInputData is empty the specified file is sent over.
-   // If there is no specified file, a file named "inputdata.root" is created locally
-   // with the content of fInputData and sent over to the master.
-   // If both fInputData and the specified file are not empty, a copy of the file
-   // is made locally and augmented with the content of fInputData.
-
    // Prepare the file
    TString dataFile;
    PrepareInputDataFile(dataFile);
@@ -2413,11 +2334,11 @@ void TProofLite::SendInputDataFile()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle remove request.
+
 Int_t TProofLite::Remove(const char *ref, Bool_t all)
 {
-   // Handle remove request.
-
    PDB(kGlobal, 1)
       Info("Remove", "Enter: %s, %d", ref, all);
 
@@ -2469,12 +2390,12 @@ Int_t TProofLite::Remove(const char *ref, Bool_t all)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a tree header (a tree with nonexisting files) object for
+/// the DataSet.
+
 TTree *TProofLite::GetTreeHeader(TDSet *dset)
 {
-   // Creates a tree header (a tree with nonexisting files) object for
-   // the DataSet.
-
    TTree *t = 0;
    if (!dset) {
       Error("GetTreeHeader", "undefined TDSet");
@@ -2517,17 +2438,17 @@ TTree *TProofLite::GetTreeHeader(TDSet *dset)
    return t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the fUniqueSlave list the active slaves that have a unique
+/// (user) file system image. This information is used to transfer files
+/// only once to nodes that share a file system (an image). Submasters
+/// which are not in fUniqueSlaves are put in the fNonUniqueMasters
+/// list. That list is used to trigger the transferring of files to
+/// the submaster's unique slaves without the need to transfer the file
+/// to the submaster.
+
 void TProofLite::FindUniqueSlaves()
 {
-   // Add to the fUniqueSlave list the active slaves that have a unique
-   // (user) file system image. This information is used to transfer files
-   // only once to nodes that share a file system (an image). Submasters
-   // which are not in fUniqueSlaves are put in the fNonUniqueMasters
-   // list. That list is used to trigger the transferring of files to
-   // the submaster's unique slaves without the need to transfer the file
-   // to the submaster.
-
    fUniqueSlaves->Clear();
    fUniqueMonitor->RemoveAll();
    fAllUniqueSlaves->Clear();
@@ -2551,12 +2472,12 @@ void TProofLite::FindUniqueSlaves()
    fAllUniqueMonitor->DeActivateAll();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of the data directory in the sandbox.
+/// This is the place where files produced by the client queries are kept
+
 void TProofLite::ShowData()
 {
-   // List contents of the data directory in the sandbox.
-   // This is the place where files produced by the client queries are kept
-
    if (!IsValid()) return;
 
    // Get worker infos
@@ -2568,11 +2489,11 @@ void TProofLite::ShowData()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of the data directory 'dirname'
+
 void TProofLite::ShowDataDir(const char *dirname)
 {
-   // List contents of the data directory 'dirname'
-
    if (!dirname) return;
 
    FileStat_t dirst;
@@ -2597,15 +2518,15 @@ void TProofLite::ShowDataDir(const char *dirname)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simulate dynamic addition, for test purposes.
+/// Here we decide how many workers to add, we create them and set the
+/// environment.
+/// This call is called regularly by Collect if the opton is enabled.
+/// Returns the number of new workers added, or <0 on errors.
+
 Int_t TProofLite::PollForNewWorkers()
 {
-   // Simulate dynamic addition, for test purposes.
-   // Here we decide how many workers to add, we create them and set the
-   // environment.
-   // This call is called regularly by Collect if the opton is enabled.
-   // Returns the number of new workers added, or <0 on errors.
-
    // Max workers
    if (fDynamicStartupNMax <= 0) {
       SysInfo_t si;

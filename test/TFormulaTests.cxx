@@ -1,4 +1,3 @@
-#ifndef __CINT__
 #include <cassert>
 #include <vector>
 #include <algorithm>
@@ -10,9 +9,11 @@
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TFormula.h>
-#include <TFormulaOld.h>
+#include <v5/TFormula.h>
 #include <TRandom.h>
 #include <iostream>
+#include "TFormulaParsingTests.h"
+
 using namespace std;
 
 
@@ -41,7 +42,7 @@ protected:
 public:
                TFormulaTests(TString name, TString formula): TFormula(name,formula){}
    virtual     ~TFormulaTests(){}
-   Bool_t      Parser();
+   Bool_t      ParserNew();
    Bool_t      GetVarVal();
    Bool_t      GetParVal();
    Bool_t      AddVar();
@@ -54,6 +55,10 @@ public:
    Bool_t      SetPars2();
    Bool_t      Eval();
    Bool_t      Stress(Int_t n = 10000);
+
+   Bool_t      Parser();
+
+   
 
 };
 
@@ -116,7 +121,7 @@ Bool_t TFormulaTests::SetVar()
    vars[0] = SDpair("var",1);
    vars[1] = SDpair("var2",2);
    vars[2] = SDpair("var3",3); 
-   test->AddVariables(vars, 3);
+   test->SetVariables(vars, 3);
    for(Int_t i = 0 ; i < 3; ++i)
    {
       SDpair var = vars[i];
@@ -138,17 +143,17 @@ Bool_t TFormulaTests::AddVars()
 {
    Bool_t successful = true;
    TFormula *test = new TFormula("AddVarsTest","var1 + var2 + var3");
-   SDpair *vars = new SDpair[3];
-   vars[0] = SDpair("var",1);
-   vars[1] = SDpair("var2",2);
-   vars[2] = SDpair("var3",3); 
+   TString vars[] = {"var1","var2","var3"};
+   // SDpair *vars = new SDpair[3];
+   // vars[0] = SDpair("var",1);
+   // vars[1] = SDpair("var2",2);
+   // vars[2] = SDpair("var3",3); 
    test->AddVariables(vars, 3);
    for(Int_t i = 0; i < 3; ++i)
    {
-      SDpair var = vars[i];
-      if(test->GetVariable(var.first) != var.second)
+      if(test->GetVariable(vars[i]) != 0.0)
       {
-         printf("fail:%s\t%lf\n",var.first.Data(),var.second);
+         printf("fail:%s\t%lf\n",vars[i].Data(),test->GetVariable(vars[i]));
          successful = false;
       }
    }   
@@ -163,7 +168,7 @@ Bool_t TFormulaTests::SetVars()
    vars[0] = SDpair("var",1);
    vars[1] = SDpair("var2",2);
    vars[2] = SDpair("var3",3); 
-   test->AddVariables(vars, 3);
+   test->SetVariables(vars, 3);
    for(Int_t i = 0 ; i < 3; ++i)
    {
       SDpair v = vars[i];
@@ -287,7 +292,7 @@ Bool_t TFormulaTests::Eval()
    return successful;
 }
 
-Bool_t TFormulaTests::Parser()
+Bool_t TFormulaTests::ParserNew()
 {
    //x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)
 
@@ -362,13 +367,13 @@ Bool_t TFormulaTests::Stress(Int_t n)
    for(Int_t i = 0; i < n ; ++i)
    {
       vars[i] = SDpair(TString::Format("x%d",i),i+1);
-      params[i] = SDpair(TString::Format("%d",i),i+1);
+      params[i] = SDpair(TString::Format("p%d",i),i+1);
       formula.Append(TString::Format("+ %s + %s*gausn(0) - [%d]",vars[i].first.Data(),vars[i].first.Data(),i));
       //cout << formula.Data() << endl;
    }
    for(Int_t i = n; i < n*5; ++i)
    {
-      params[i] = SDpair(TString::Format("%d",i),i+1);
+      params[i] = SDpair(TString::Format("p%d",i),i+1);
       formula.Append(TString::Format("*[%d]",i));
       //cout << formula.Data() << endl;
    }
@@ -384,7 +389,7 @@ Bool_t TFormulaTests::Stress(Int_t n)
       // vars[i] = SDpair(TString::Format("x",i),i+1);
       for (int j = 0; j < 5; ++j) {
          double val = 2.0;
-         params[i+j] = SDpair(TString::Format("%d",i+j),val);
+         params[i+j] = SDpair(TString::Format("p%d",i+j),val);
          //cout << "set parameter " << i+j << " value " << j+1 << endl;
          parv.push_back(val);
       }
@@ -397,7 +402,7 @@ Bool_t TFormulaTests::Stress(Int_t n)
    for(Int_t i = i0; i < n*5; ++i)
    {
       double val = i;
-      params[i] = SDpair(TString::Format("%d",i),val);
+      params[i] = SDpair(TString::Format("p%d",i),val);
       //cout << "set parameter " << i << " value " << i+1 << endl;
       parv.push_back(val);
       formula.Append(TString::Format("+[%d]",i));
@@ -441,19 +446,19 @@ Bool_t TFormulaTests::Stress(Int_t n)
 
    std::cout << "\n\n Testing old TFormula \n" << endl;
 
-   TFormulaOld::SetMaxima(5000,5000,5000);
+   ROOT::v5::TFormula::SetMaxima(5000,5000,5000);
 
-   gBenchmark->Start(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
-   TFormulaOld *testOld = new TFormulaOld("TFStressTestOld",formula);
-   gBenchmark->Show(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula Initialization with %d variables and %d parameters\n",n,n*5));
+   ROOT::v5::TFormula *testOld = new ROOT::v5::TFormula("TFStressTestOld",formula);
+   gBenchmark->Show(TString::Format("ROOT::v5::TFormula Initialization with %d variables and %d parameters\n",n,n*5));
    // gBenchmark->Start(TString::Format("Adding %d variables\n",n));
    // test->AddVariables(vars,n);
    // gBenchmark->Show(TString::Format("Adding %d variables\n",n));
-   gBenchmark->Start(TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula: Setting %d parameters\n",n*5));
    testOld->SetParameters(&parv[0]);
-   gBenchmark->Show( TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+   gBenchmark->Show( TString::Format("ROOT::v5::TFormula: Setting %d parameters\n",n*5));
 
-   gBenchmark->Start(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   gBenchmark->Start(TString::Format("ROOT::v5::TFormula: %d Evaluations\n",neval));
    TRandom rndm2;
    std::cout << "start evaluatuons  " << std::endl;
    s = 0;
@@ -470,15 +475,33 @@ Bool_t TFormulaTests::Stress(Int_t n)
    printf("Evaluation time :\t");
    w.Print();
    std::cout << "result = " <<  s << std::endl; 
-   gBenchmark->Show(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   gBenchmark->Show(TString::Format("ROOT::v5::TFormula: %d Evaluations\n",neval));
    //testOld->Print("v");
-   gBenchmark->Show("TFormulaOld Stress Total Time");
+   gBenchmark->Show("ROOT::v5::TFormula Stress Total Time");
 
    
    return true;
 }
+
+
+bool TFormulaTests::Parser() {
+   std::cout << "Test parsing of expression compatible with old TFormula" << std::endl;
+   TFormulaParsingTests t;
+   int nfailed = t.runTests();
+   if (nfailed != 0) {
+      std::cout << "ERROR - Parsing test of TFormula failed - number of failures is " << nfailed << std::endl;
+      return false;
+   }
+   return true; 
+}
+   
+
+
+
 int main(int argc, char **argv)
 {
+   printf("starting .....\n");
+
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    Int_t n = 200;
@@ -490,9 +513,15 @@ int main(int argc, char **argv)
 
 
 
-   //testFormula = "x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)";
-   testFormula = "x - [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*landau(0)+expo(10)";
-   TFormulaTests * test = new TFormulaTests("TFtests",testFormula);
+   testFormula = "x- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*landau(0)+expo(10)";
+   //testFormula = "x - [test]^(TMath::Sin(pi*y*TMath::DegToRad())) - pol2(0) + gausn(0)*landau(0)+expo(10)";
+
+   printf("creating formula .....\n");
+   TFormulaTests * test = new TFormulaTests("TFtests","");
+   test->AddVariable("var",0);
+   test->AddVariable("var1",0);
+   test->Compile(testFormula);
+      
 
 #ifdef LATER
 
@@ -518,7 +547,7 @@ int main(int argc, char **argv)
    test->AddVariables(testVars,Nvars);
    test->SetParameters(testParams);
 
-   printf("Parser test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
+   printf("Parser test:%s\n",(test->ParserNew() ? "PASSED" : "FAILED"));
    printf("GetVariableValue test:%s\n",(test->GetVarVal() ? "PASSED" : "FAILED")); 
    printf("GetParameterValue test:%s\n",(test->GetParVal() ? "PASSED" : "FAILED"));   
    printf("AddVariable test:%s\n",(test->AddVar() ? "PASSED" : "FAILED"));
@@ -532,11 +561,12 @@ int main(int argc, char **argv)
    printf("Eval test:%s\n",(test->Eval() ? "PASSED" : "FAILED"));
 #endif
    printf("Stress test:%s\n",(test->Stress(n) ? "PASSED" : "FAILED"));
+   printf("Parsing test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
 
    return 0;
 }
 
-#endif
+
 
 
 

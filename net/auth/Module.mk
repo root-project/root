@@ -11,6 +11,7 @@ MODDIRI      := $(MODDIR)/inc
 AUTHDIR      := $(MODDIR)
 AUTHDIRS     := $(AUTHDIR)/src
 AUTHDIRI     := $(AUTHDIR)/inc
+AUTHDIRR     := $(AUTHDIR)/res
 
 ##### libRootAuth #####
 RAUTHL       := $(MODDIRI)/LinkDefRoot.h
@@ -81,13 +82,26 @@ EXTRA_RAUTHLIBS  += -lz
 endif
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH))
+RAUTHH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(RAUTHH))
+ALLHDRS      += $(RAUTHH_REL)
 ALLLIBS      += $(RAUTHLIB)
 ALLMAPS      += $(RAUTHMAP)
 ifneq ($(AFSLIB),)
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(AFSAUTHH))
+AFSAUTHH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(AFSAUTHH))
+ALLHDRS      += $(AFSAUTHH_REL)
 ALLLIBS      += $(AFSAUTHLIB)
 ALLMAPS      += $(AFSAUTHMAP)
+endif
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RAUTHH_REL) $(AFSAUTHH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RAUTHLIB)\" \\n
+ifneq ($(AFSLIB),)
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(AFSAUTHLIB)\" \\n
+endif
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
 endif
 
 # include all dependency files
@@ -155,8 +169,9 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS)
+$(RAUTHO):      CXXFLAGS += $(EXTRA_RAUTHFLAGS) -I$(AUTHDIRR)
 $(AFSAUTHO):    CXXFLAGS += $(AFSINCDIR) $(AFSEXTRACFLAGS)
 ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(AUTHDIRS)/TAuthenticate.o): CXXFLAGS += -Wno-deprecated-declarations
 endif
+$(DAEMONUTILSO): CXXFLAGS += -I$(ROOT_SRCDIR)/net/rpdutils/res

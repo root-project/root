@@ -1,19 +1,25 @@
-// Example macro to show unuran capabilities
-// The results are compared with what is obtained using TRandom or TF1::GetRandom
-// The macro is divided in 3 parts:
-//    - testStringAPI         :  show how to use string API of UNURAN to generate Gaussian random numbers
-//    - testDistr1D           :  show how to pass a 1D distribution object to UNURAN to generate numbers
-//                               according to the given distribution object
-//    - testDistrMultiDIm     :  show how to pass a multidimensional distribution object to UNURAN
-//
-//
-// To execute the macro type in:
-//
-// root[0]: gSystem->Load("libMathCore");
-// root[0]: gSystem->Load("libUnuran");
-// root[0]: .x  unuranDemo.C+
-//
-//Author: Lorenzo Moneta
+/// \file
+/// \ingroup tutorial_unuran
+/// Example macro to show unuran capabilities
+/// The results are compared with what is obtained using TRandom or TF1::GetRandom
+/// The macro is divided in 3 parts:
+///    - testStringAPI         :  show how to use string API of UNURAN to generate Gaussian random numbers
+///    - testDistr1D           :  show how to pass a 1D distribution object to UNURAN to generate numbers
+///                               according to the given distribution object
+///    - testDistrMultiDIm     :  show how to pass a multidimensional distribution object to UNURAN
+///
+///
+/// To execute the macro type in:
+///
+/// ~~~{.cpp}
+/// root[0]: gSystem->Load("libMathCore");
+/// root[0]: gSystem->Load("libUnuran");
+/// root[0]: .x  unuranDemo.C+
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 
 #include "TStopwatch.h"
@@ -36,10 +42,8 @@
 #include "TApplication.h"
 #include "TCanvas.h"
 
-#ifndef __CINT__  // need to exclude to avoid CINT re-defining them
 #include "Math/ProbFunc.h"
 #include "Math/DistFunc.h"
-#endif
 
 #include <iostream>
 #include <cassert>
@@ -197,7 +201,7 @@ double gaus3d(double *x, double *p) {
    return result;
 }
 
-// test of unuran passing as input a mluti-dimension distribution object
+// test of unuran passing as input a multi-dimension distribution object
 void testDistrMultiDim() {
 
    cout << "\nTest Multidimensional distributions\n\n";
@@ -241,7 +245,7 @@ void testDistrMultiDim() {
    h1->Draw();
 
 
-   // need to set a reasanable number of points in TF1 to get accettable quality from GetRandom to
+   // need to set a reasonable number of points in TF1 to get acceptable quality from GetRandom to
    int np = 200;
    f->SetNpx(np);
    f->SetNpy(np);

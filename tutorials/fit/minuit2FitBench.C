@@ -1,12 +1,13 @@
-//+ Fitting 1-D histograms with minuit2
-// @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005
-
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2005 ROOT Foundation,  CERN/PH-SFT                   *
- *                                                                    *
- **********************************************************************/
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook
+/// Demonstrate performance and usage of Minuit2 and Fumili2 for monodimensional fits.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TH1.h"
 #include "TF1.h"
@@ -20,8 +21,7 @@
 #include "TMath.h"
 #include "TROOT.h"
 #include "TFrame.h"
-
-//#include "Fit/FitConfig.h"
+/*#include "Fit/FitConfig.h"*/
 
 
 TF1 *fitFcn;

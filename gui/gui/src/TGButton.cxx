@@ -122,12 +122,12 @@ ClassImp(TGCheckButton)
 ClassImp(TGRadioButton)
 ClassImp(TGSplitButton)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create button base class part.
+
 TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
     : TGFrame(p, 1, 1, options)
 {
-   // Create button base class part.
-
    fWidgetId    = id;
    fWidgetFlags = kWidgetWantFocus;
    fMsgWindow   = p;
@@ -135,6 +135,7 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    fTip         = 0;
    fGroup       = 0;
    fStyle       = 0;
+   fTWidth = fTHeight = 0;
 
    fNormGC   = norm;
    fState    = kButtonUp;
@@ -164,11 +165,11 @@ TGButton::TGButton(const TGWindow *p, Int_t id, GContext_t norm, UInt_t options)
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete button.
+
 TGButton::~TGButton()
 {
-   // Delete button.
-
    // remove from button group
    if (fGroup) {
       fGroup->Remove(this);
@@ -178,11 +179,11 @@ TGButton::~TGButton()
    if (fTip) delete fTip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set button state.
+
 void TGButton::SetState(EButtonState state, Bool_t emit)
 {
-   // Set button state.
-
    Bool_t was = !IsDown();   // kTRUE if button was off
 
    if (state == kButtonDisabled)
@@ -214,11 +215,11 @@ void TGButton::SetState(EButtonState state, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the button style (modern or classic).
+
 void TGButton::SetStyle(UInt_t newstyle)
 {
-   // Set the button style (modern or classic).
-
    fStyle = newstyle;
    fBgndColor = fBackground;
    if (fStyle > 0) {
@@ -229,11 +230,11 @@ void TGButton::SetStyle(UInt_t newstyle)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the button style (modern or classic).
+
 void TGButton::SetStyle(const char *style)
 {
-   // Set the button style (modern or classic).
-
    fBgndColor = fBackground;
    if (style && strstr(style, "modern")) {
       fStyle = 1;
@@ -245,7 +246,8 @@ void TGButton::SetStyle(const char *style)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TGButton::IsDown() const
 {
    if (fStyle > 0)
@@ -253,10 +255,10 @@ Bool_t TGButton::IsDown() const
    return !(fOptions & kRaisedFrame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGButton::SetDown(Bool_t on, Bool_t emit)
 {
-
    // Set button state down according to the parameter 'on'.
 
    if (GetState() == kButtonDisabled) return;
@@ -264,19 +266,19 @@ void TGButton::SetDown(Bool_t on, Bool_t emit)
    SetState(on ? kButtonDown : kButtonUp, emit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets new button-group for this button.
+
 void TGButton::SetGroup(TGButtonGroup *group)
 {
-   // Sets new button-group for this button.
-
    fGroup = group;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGButton::HandleButton(Event_t *event)
 {
-   // Handle mouse button event.
-
    Bool_t click = kFALSE;
 
    if (fTip) fTip->Hide();
@@ -327,11 +329,11 @@ Bool_t TGButton::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit button signals.
+
 void TGButton::EmitSignals(Bool_t was)
 {
-   // Emit button signals.
-
    Bool_t now = !IsDown();       // kTRUE if button now is off
 
    // emit signals
@@ -346,11 +348,11 @@ void TGButton::EmitSignals(Bool_t was)
    if ((was != now) && IsToggleButton()) Toggled(!now); // emit Toggled  = was != now
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGButton::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (fTip) {
       if (event->fType == kEnterNotify)
          fTip->Reset();
@@ -385,13 +387,13 @@ Bool_t TGButton::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tool tip text associated with this button. The delay is in
+/// milliseconds (minimum 250). To remove tool tip call method with
+/// text = 0.
+
 void TGButton::SetToolTipText(const char *text, Long_t delayms)
 {
-   // Set tool tip text associated with this button. The delay is in
-   // milliseconds (minimum 250). To remove tool tip call method with
-   // text = 0.
-
    if (fTip) {
       delete fTip;
       fTip = 0;
@@ -401,32 +403,32 @@ void TGButton::SetToolTipText(const char *text, Long_t delayms)
       fTip = new TGToolTip(fClient->GetDefaultRoot(), this, text, delayms);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set enabled or disabled state of button
+
 void TGButton::SetEnabled(Bool_t e)
 {
-   // Set enabled or disabled state of button
-
    SetState(e ? kButtonUp : kButtonDisabled);
 
    if (e) fWidgetFlags |= kWidgetIsEnabled;
    else   fWidgetFlags &= ~kWidgetIsEnabled;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGButton::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context for highlighted frame background.
+
 const TGGC &TGButton::GetHibckgndGC()
 {
-   // Return graphics context for highlighted frame background.
-
    if (!fgHibckgndGC) {
       GCValues_t gval;
       gval.fMask = kGCForeground | kGCBackground | kGCTile |
@@ -442,40 +444,40 @@ const TGGC &TGButton::GetHibckgndGC()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text button widget. The hotstring will be adopted and deleted
+/// by the text button.
+
 TGTextButton::TGTextButton(const TGWindow *p, TGHotString *s, Int_t id,
                            GContext_t norm, FontStruct_t font,
                            UInt_t options) : TGButton(p, id, norm, options)
 {
-   // Create a text button widget. The hotstring will be adopted and deleted
-   // by the text button.
-
    fLabel = s;
    fFontStruct = font;
 
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text button widget.
+
 TGTextButton::TGTextButton(const TGWindow *p, const char *s, Int_t id,
                            GContext_t norm, FontStruct_t font,
                            UInt_t options) : TGButton(p, id, norm, options)
 {
-   // Create a text button widget.
-
    fLabel = new TGHotString(!p && !s ? GetName() : s);
    fFontStruct = font;
 
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text button widget and set cmd string at same time.
+
 TGTextButton::TGTextButton(const TGWindow *p, const char *s, const char *cmd,
                            Int_t id, GContext_t norm, FontStruct_t font,
                            UInt_t options) : TGButton(p, id, norm, options)
 {
-   // Create a text button widget and set cmd string at same time.
-
    fLabel = new TGHotString(s);
    fFontStruct = font;
    fCommand = cmd;
@@ -483,11 +485,11 @@ TGTextButton::TGTextButton(const TGWindow *p, const char *s, const char *cmd,
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization used by the different ctors.
+
 void TGTextButton::Init()
 {
-   // Common initialization used by the different ctors.
-
    int hotchar;
 
    fTMode       = kTextCenterX | kTextCenterY;
@@ -537,11 +539,11 @@ void TGTextButton::Init()
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a text button widget.
+
 TGTextButton::~TGTextButton()
 {
-   // Delete a text button widget.
-
    if (fHKeycode && (fParent->MustCleanup() != kDeepCleanup)) {
       const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
       if (main) {
@@ -566,11 +568,11 @@ TGTextButton::~TGTextButton()
    delete fTLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// layout text button
+
 void TGTextButton::Layout()
 {
-   // layout text button
-
    delete fTLayout;
 
    TGFont *font = fClient->GetFontPool()->FindFont(fFontStruct);
@@ -586,11 +588,11 @@ void TGTextButton::Layout()
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new button text.
+
 void TGTextButton::SetText(TGHotString *new_label)
 {
-   // Set new button text.
-
    int hotchar;
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
 
@@ -627,21 +629,21 @@ void TGTextButton::SetText(TGHotString *new_label)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new button text.
+
 void TGTextButton::SetText(const TString &new_label)
 {
-   // Set new button text.
-
    SetText(new TGHotString(new_label));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text justification. Mode is an OR of the bits:
+/// kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
+/// kTextCenterY.
+
 void TGTextButton::SetTextJustify(Int_t mode)
 {
-   // Set text justification. Mode is an OR of the bits:
-   // kTextTop, kTextBottom, kTextLeft, kTextRight, kTextCenterX and
-   // kTextCenterY.
-
    fTMode = mode;
 
    SetWindowAttributes_t wattr;
@@ -689,11 +691,11 @@ void TGTextButton::SetTextJustify(Int_t mode)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the text button.
+
 void TGTextButton::DoRedraw()
 {
-   // Draw the text button.
-
    int x, y;
    UInt_t w = GetWidth() - 1;
    UInt_t h = GetHeight()- 1;
@@ -757,11 +759,11 @@ void TGTextButton::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle key event. This function will be called when the hotkey is hit.
+
 Bool_t TGTextButton::HandleKey(Event_t *event)
 {
-   // Handle key event. This function will be called when the hotkey is hit.
-
    Bool_t click = kFALSE;
    Bool_t was = !IsDown();   // kTRUE if button was off
 
@@ -801,32 +803,32 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns default size
+
 TGDimension TGTextButton::GetDefaultSize() const
 {
-   // returns default size
-
    UInt_t w = GetOptions() & kFixedWidth ? fWidth : fTWidth + fMLeft + fMRight + 8;
    UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 7;
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure.
+
 FontStruct_t TGTextButton::GetDefaultFontStruct()
 {
-   // Return default font structure.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If global is kTRUE font is changed globally, otherwise - locally.
+
 void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
 {
-   // Changes text font.
-   // If global is kTRUE font is changed globally, otherwise - locally.
-
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
       if (!v) return;
@@ -847,24 +849,24 @@ void TGTextButton::SetFont(FontStruct_t font, Bool_t global)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If global is true color is changed globally, otherwise - locally.
+
 void TGTextButton::SetFont(const char *fontName, Bool_t global)
 {
-   // Changes text font specified by name.
-   // If global is true color is changed globally, otherwise - locally.
-
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
       SetFont(font->GetFontStruct(), global);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If global is true color is changed globally, otherwise - locally.
+
 void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
 {
-   // Changes text color.
-   // If global is true color is changed globally, otherwise - locally.
-
    TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
@@ -879,23 +881,23 @@ void TGTextButton::SetTextColor(Pixel_t color, Bool_t global)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if text attributes are unique,
+/// returns kFALSE if text attributes are shared (global).
+
 Bool_t TGTextButton::HasOwnFont() const
 {
-   // Returns kTRUE if text attributes are unique,
-   // returns kFALSE if text attributes are shared (global).
-
    return fHasOwnFont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a picture button widget. The picture is not adopted and must
+/// later be freed by the user once the picture button is deleted (a single
+/// picture reference might be used by other buttons).
+
 TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       Int_t id, GContext_t norm, UInt_t option) : TGButton(p, id, norm, option)
 {
-   // Create a picture button widget. The picture is not adopted and must
-   // later be freed by the user once the picture button is deleted (a single
-   // picture reference might be used by other buttons).
-
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button %d", id);
       fPic = fClient->GetPicture("mb_question_s.xpm");
@@ -915,16 +917,16 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a picture button widget and set action command. The picture is
+/// not adopted and must later be freed by the user once the picture button
+/// is deleted (a single picture reference might be used by other
+/// buttons).
+
 TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
       const char *cmd, Int_t id, GContext_t norm, UInt_t option)
    : TGButton(p, id, norm, option)
 {
-   // Create a picture button widget and set action command. The picture is
-   // not adopted and must later be freed by the user once the picture button
-   // is deleted (a single picture reference might be used by other
-   // buttons).
-
    if (!pic) {
       Error("TGPictureButton", "pixmap not found for button\n%s",
             cmd ? cmd : "");
@@ -947,12 +949,12 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const TGPicture *pic,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a picture button. Where pic is the file name of the picture.
+
 TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
    Int_t id, GContext_t norm, UInt_t option) : TGButton(p, id, norm, option)
 {
-   // Create a picture button. Where pic is the file name of the picture.
-
    if (!pic || !pic[0]) {
       if (p) Error("TGPictureButton", "pixmap not found for button");
       fPic = fClient->GetPicture("mb_question_s.xpm");
@@ -972,21 +974,21 @@ TGPictureButton::TGPictureButton(const TGWindow *p, const char *pic,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGPictureButton::~TGPictureButton()
 {
-   // Destructor.
-
    if (fOwnDisabledPic) fClient->FreePicture(fPicD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change a picture in a picture button. The picture is not adopted and
+/// must later be freed by the user once the picture button is deleted
+/// (a single picture reference might be used by other buttons).
+
 void TGPictureButton::SetPicture(const TGPicture *new_pic)
 {
-   // Change a picture in a picture button. The picture is not adopted and
-   // must later be freed by the user once the picture button is deleted
-   // (a single picture reference might be used by other buttons).
-
    if (!new_pic) {
       Error("SetPicture", "pixmap not found for button %d\n%s",
             fWidgetId, fCommand.Data());
@@ -1006,11 +1008,11 @@ void TGPictureButton::SetPicture(const TGPicture *new_pic)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw picture button.
+
 void TGPictureButton::DoRedraw()
 {
-   // Redraw picture button.
-
    if (!fPic) {
       TGFrame::DoRedraw();
       return;
@@ -1050,11 +1052,11 @@ void TGPictureButton::DoRedraw()
    pic->Draw(fId, fNormGC, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates disabled picture.
+
 void TGPictureButton::CreateDisabledPicture()
 {
-   // Creates disabled picture.
-
    TImage *img = TImage::Create();
    if (!img) return;
    TImage *img2 = TImage::Create();
@@ -1077,11 +1079,11 @@ void TGPictureButton::CreateDisabledPicture()
    delete img2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes disabled picture.
+
 void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
 {
-   // Changes disabled picture.
-
    if (!pic) return;
 
    if (fOwnDisabledPic && fPicD) fClient->FreePicture(fPicD);
@@ -1090,42 +1092,42 @@ void TGPictureButton::SetDisabledPicture(const TGPicture *pic)
    fOwnDisabledPic = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a check button widget. The hotstring will be adopted and deleted
+/// by the check button.
+
 TGCheckButton::TGCheckButton(const TGWindow *p, TGHotString *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
    : TGTextButton(p, s, id, norm, font, option)
 {
-   // Create a check button widget. The hotstring will be adopted and deleted
-   // by the check button.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a check button widget.
+
 TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
    : TGTextButton(p, s, id, norm, font, option)
 {
-   // Create a check button widget.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a check button widget.
+
 TGCheckButton::TGCheckButton(const TGWindow *p, const char *s, const char *cmd,
                              Int_t id, GContext_t norm, FontStruct_t font,
                              UInt_t option) : TGTextButton(p, s, cmd, id, norm, font, option)
 {
-   // Create a check button widget.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common check button initialization.
+
 void TGCheckButton::Init()
 {
-   // Common check button initialization.
-
    fPrevState =
    fState     = kButtonUp;
    fHKeycode = 0;
@@ -1167,22 +1169,22 @@ void TGCheckButton::Init()
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a check button.
+
 TGCheckButton::~TGCheckButton()
 {
-   // Delete a check button.
-
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
    if (fDisOn)  fClient->FreePicture(fDisOn);
    if (fDisOff) fClient->FreePicture(fDisOff);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default size
+
 TGDimension TGCheckButton::GetDefaultSize() const
 {
-   // default size
-
    UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 9;
    UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
 
@@ -1192,11 +1194,11 @@ TGDimension TGCheckButton::GetDefaultSize() const
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set check button state.
+
 void TGCheckButton::SetState(EButtonState state, Bool_t emit)
 {
-   // Set check button state.
-
    if (state == kButtonDisabled)
       fWidgetFlags &= ~kWidgetIsEnabled;
    else
@@ -1204,22 +1206,22 @@ void TGCheckButton::SetState(EButtonState state, Bool_t emit)
    PSetState(state, emit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signals.
+
 void TGCheckButton::EmitSignals(Bool_t /*wasUp*/)
 {
-   // Emit signals.
-
    if (fState == kButtonUp)   Released();            // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
    Clicked();                                        // emit Clicked
    Toggled(fStateOn);                                // emit Toggled
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set check button state.
+
 void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
 {
-   // Set check button state.
-
    if (state != fState) {
       if (state == kButtonUp) {
          if (fPrevState == kButtonDisabled) {
@@ -1251,12 +1253,12 @@ void TGCheckButton::PSetState(EButtonState state, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of a check button to disabled and either on or
+/// off.
+
 void TGCheckButton::SetDisabledAndSelected(Bool_t enable)
 {
-   // Set the state of a check button to disabled and either on or
-   // off.
-
    if (!enable) {
       if (fState == kButtonDisabled && fStateOn) {
          PSetState(kButtonUp, kFALSE);         // enable button
@@ -1272,11 +1274,11 @@ void TGCheckButton::SetDisabledAndSelected(Bool_t enable)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGCheckButton::HandleButton(Event_t *event)
 {
-   // Handle mouse button event.
-
    Bool_t click = kFALSE;
 
    if (fTip) fTip->Hide();
@@ -1316,11 +1318,11 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGCheckButton::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (fTip) {
       if (event->fType == kEnterNotify)
          fTip->Reset();
@@ -1345,11 +1347,11 @@ Bool_t TGCheckButton::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle key event. This function will be called when the hotkey is hit.
+
 Bool_t TGCheckButton::HandleKey(Event_t *event)
 {
-   // Handle key event. This function will be called when the hotkey is hit.
-
    Bool_t click = kFALSE;
 
    if (event->fType == kGKeyPress)
@@ -1379,11 +1381,11 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the check button widget.
+
 void TGCheckButton::DoRedraw()
 {
-   // Draw the check button widget.
-
    int x, y, y0;
 
    TGFrame::DoRedraw();
@@ -1435,63 +1437,63 @@ void TGCheckButton::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure.
+
 FontStruct_t TGCheckButton::GetDefaultFontStruct()
 {
-   // Return default font structure.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGCheckButton::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a radio button widget. The hotstring will be adopted and deleted
+/// by the radio button.
+
 TGRadioButton::TGRadioButton(const TGWindow *p, TGHotString *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
    : TGTextButton(p, s, id, norm, font, option)
 {
-   // Create a radio button widget. The hotstring will be adopted and deleted
-   // by the radio button.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a radio button widget.
+
 TGRadioButton::TGRadioButton(const TGWindow *p, const char *s, Int_t id,
                              GContext_t norm, FontStruct_t font, UInt_t option)
    : TGTextButton(p, s, id, norm, font, option)
 {
-   // Create a radio button widget.
-
    Init();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a radio button widget.
+
 TGRadioButton::TGRadioButton(const TGWindow *p, const char *s, const char *cmd,
                              Int_t id, GContext_t norm,
                              FontStruct_t font, UInt_t option)
     : TGTextButton(p, s, cmd, id, norm, font, option)
 {
-   // Create a radio button widget.
-
    Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common radio button initialization.
+
 void TGRadioButton::Init()
 {
-   // Common radio button initialization.
-
    fPrevState =
    fState     = kButtonUp;
    fHKeycode  = 0;
@@ -1531,22 +1533,22 @@ void TGRadioButton::Init()
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a radio button.
+
 TGRadioButton::~TGRadioButton()
 {
-   // Delete a radio button.
-
    if (fOn)  fClient->FreePicture(fOn);
    if (fOff) fClient->FreePicture(fOff);
    if (fDisOn)  fClient->FreePicture(fDisOn);
    if (fDisOff) fClient->FreePicture(fDisOff);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default size
+
 TGDimension TGRadioButton::GetDefaultSize() const
 {
-   // default size
-
    UInt_t w = !fTWidth ? fOff->GetWidth() : fTWidth + fOff->GetWidth() + 10;
    UInt_t h = !fTHeight ? fOff->GetHeight() : fTHeight + 2;
 
@@ -1555,11 +1557,11 @@ TGDimension TGRadioButton::GetDefaultSize() const
 
    return TGDimension(w, h);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radio button state.
+
 void TGRadioButton::SetState(EButtonState state, Bool_t emit)
 {
-   // Set radio button state.
-
    if (state == kButtonDisabled)
       fWidgetFlags &= ~kWidgetIsEnabled;
    else
@@ -1567,12 +1569,12 @@ void TGRadioButton::SetState(EButtonState state, Bool_t emit)
    PSetState(state, emit);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of a radio button to disabled and either on or
+/// off.
+
 void TGRadioButton::SetDisabledAndSelected(Bool_t enable)
 {
-   // Set the state of a radio button to disabled and either on or
-   // off.
-
    if (!enable) {
       if (fState == kButtonDisabled && fStateOn) {
          PSetState(kButtonUp, kFALSE);         // enable button
@@ -1588,22 +1590,22 @@ void TGRadioButton::SetDisabledAndSelected(Bool_t enable)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signals.
+
 void TGRadioButton::EmitSignals(Bool_t /*wasUp*/)
 {
-   // Emit signals.
-
    if (fState == kButtonUp) Released();              // emit Released
    if (fState == kButtonDown) Pressed();             // emit Pressed
    Clicked();                                        // emit Clicked
    Toggled(fStateOn);                                // emit Toggled
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set radio button state.
+
 void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
 {
-   // Set radio button state.
-
    if (state != fState) {
       //      fPrevState = fState = state;
       if (state == kButtonUp) {
@@ -1636,11 +1638,11 @@ void TGRadioButton::PSetState(EButtonState state, Bool_t emit)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event.
+
 Bool_t TGRadioButton::HandleButton(Event_t *event)
 {
-   // Handle mouse button event.
-
    Bool_t click = kFALSE;
    Bool_t toggled = kFALSE;
 
@@ -1685,11 +1687,11 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGRadioButton::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (fTip) {
       if (event->fType == kEnterNotify)
          fTip->Reset();
@@ -1714,11 +1716,11 @@ Bool_t TGRadioButton::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle key event. This function will be called when the hotkey is hit.
+
 Bool_t TGRadioButton::HandleKey(Event_t *event)
 {
-   // Handle key event. This function will be called when the hotkey is hit.
-
    if (event->fType == kGKeyPress)
       gVirtualX->SetKeyAutoRepeat(kFALSE);
    else
@@ -1744,11 +1746,11 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a radio button.
+
 void TGRadioButton::DoRedraw()
 {
-   // Draw a radio button.
-
    Int_t tx, ty, y0;
 
    TGFrame::DoRedraw();
@@ -1801,31 +1803,31 @@ void TGRadioButton::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure.
+
 FontStruct_t TGRadioButton::GetDefaultFontStruct()
 {
-   // Return default font structure.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGRadioButton::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a button widget as a C++ statement(s) on output stream out.
+
 void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a button widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    if (option && strstr(option, "keep_names"))
@@ -1858,11 +1860,11 @@ void TGButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a text button widget as a C++ statement(s) on output stream out.
+
 void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a text button widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
    TString outext(fLabel->GetString());
    if (fLabel->GetHotPos() > 0)
@@ -1925,11 +1927,11 @@ void TGTextButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TGButton::SavePrimitive(out,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a picture button widget as a C++ statement(s) on output stream out.
+
 void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a picture button widget as a C++ statement(s) on output stream out.
-
    if (!fPic) {
       Error("SavePrimitive()", "pixmap not found for picture button %d ", fWidgetId);
       return;
@@ -1975,11 +1977,11 @@ void TGPictureButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    TGButton::SavePrimitive(out,option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a check button widget as a C++ statement(s) on output stream out.
+
 void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a check button widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    TString outext(fLabel->GetString());
@@ -2043,11 +2045,11 @@ void TGCheckButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a radio button widget as a C++ statement(s) on output stream out.
+
 void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a radio button widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    TString outext(fLabel->GetString());
@@ -2111,17 +2113,17 @@ void TGRadioButton::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() << "->SetWrapLength(" << fWrapLength << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a menu button widget. The hotstring will be adopted and
+/// deleted by the menu button. This constructior creates a
+/// menubutton with a popup menu attached that appears when the
+/// button for it is clicked. The popup menu is adopted.
+
 TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
                            TGPopupMenu *popmenu, Bool_t split, Int_t id,
                            GContext_t norm, FontStruct_t fontstruct, UInt_t options)
                            : TGTextButton(p, menulabel, id, norm, fontstruct, options)
 {
-   // Create a menu button widget. The hotstring will be adopted and
-   // deleted by the menu button. This constructior creates a
-   // menubutton with a popup menu attached that appears when the
-   // button for it is clicked. The popup menu is adopted.
-
    fFontStruct = fontstruct;
    fMBWidth = 16;
    fMenuLabel = new TGHotString(*menulabel);
@@ -2208,11 +2210,11 @@ TGSplitButton::TGSplitButton(const TGWindow *p, TGHotString* menulabel,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common initialization used by the different ctors.
+
 void TGSplitButton::Init()
 {
-   // Common initialization used by the different ctors.
-
    Int_t hotchar;
 
    fTMode       = kTextCenterX | kTextCenterY;
@@ -2252,20 +2254,20 @@ void TGSplitButton::Init()
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a split button widget.
+
 TGSplitButton::~TGSplitButton()
 {
-   // Delete a split button widget.
-
    if (fPopMenu) delete fPopMenu;
    if (fMenuLabel) delete fMenuLabel;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw triangle (arrow) on which user can click to open Popup.
+
 void TGSplitButton::DrawTriangle(const GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw triangle (arrow) on which user can click to open Popup.
-
    Point_t points[3];
 
    points[0].fX = x;
@@ -2278,11 +2280,11 @@ void TGSplitButton::DrawTriangle(const GContext_t gc, Int_t x, Int_t y)
    gVirtualX->FillPolygon(fId, gc, points, 3);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate the size of the button.
+
 void TGSplitButton::CalcSize()
 {
-   // Calculate the size of the button.
-
    Int_t max_ascent, max_descent;
    fTWidth = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
    gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
@@ -2293,11 +2295,11 @@ void TGSplitButton::CalcSize()
    fWidth = fTBWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in case the button is split.
+
 Bool_t TGSplitButton::HandleSButton(Event_t *event)
 {
-   // Handle mouse button event in case the button is split.
-
    if (fState == kButtonDisabled) return kFALSE;
 
    Bool_t activate = kFALSE;
@@ -2424,11 +2426,11 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event in case of split menu.
+
 Bool_t TGSplitButton::HandleSCrossing(Event_t *event)
 {
-   // Handle mouse crossing event in case of split menu.
-
    if (fTip) {
       if (event->fType == kEnterNotify)
          fTip->Reset();
@@ -2466,11 +2468,11 @@ Bool_t TGSplitButton::HandleSCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle key event. This function will be called when the hotkey is hit.
+
 Bool_t TGSplitButton::HandleSKey(Event_t *event)
 {
-   // Handle key event. This function will be called when the hotkey is hit.
-
    if (fState == kButtonDisabled) return kFALSE;
 
    Bool_t click = kFALSE;
@@ -2514,11 +2516,11 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup the attached menu.
+
 void TGSplitButton::SetMenuState(Bool_t state)
 {
-   // Popup the attached menu.
-
    if (state) {
       Int_t    ax, ay;
       Window_t wdummy;
@@ -2555,11 +2557,11 @@ void TGSplitButton::SetMenuState(Bool_t state)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the text button.
+
 void TGSplitButton::DoRedraw()
 {
-   // Draw the text button.
-
    int x, y;
    TGFrame::DoRedraw();
 
@@ -2660,12 +2662,12 @@ void TGSplitButton::DoRedraw()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If on kTRUE bind arrow, popup menu hot keys, otherwise
+/// remove key bindings.
+
 void TGSplitButton::BindKeys(Bool_t on)
 {
-   // If on kTRUE bind arrow, popup menu hot keys, otherwise
-   // remove key bindings.
-
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Up), kAnyModifier, on);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Down), kAnyModifier, on);
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Enter), kAnyModifier, on);
@@ -2673,11 +2675,11 @@ void TGSplitButton::BindKeys(Bool_t on)
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_Escape), kAnyModifier, on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If on kTRUE bind Menu hot keys, otherwise remove key bindings.
+
 void TGSplitButton::BindMenuKeys(Bool_t on)
 {
-   // If on kTRUE bind Menu hot keys, otherwise remove key bindings.
-
    TGMenuEntry *e = 0;
    TIter next(fPopMenu->GetListOfEntries());
 
@@ -2698,21 +2700,21 @@ void TGSplitButton::BindMenuKeys(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns default size
+
 TGDimension TGSplitButton::GetDefaultSize() const
 {
-   // returns default size
-
    UInt_t w = GetOptions() & kFixedWidth ? fWidth + fMBWidth : fTWidth + fMLeft + fMRight + fMBWidth + 8;
    UInt_t h = GetOptions() & kFixedHeight ? fHeight : fTHeight + fMTop + fMBottom + 7;
    return TGDimension(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new button text.
+
 void TGSplitButton::SetText(TGHotString *new_label)
 {
-   // Set new button text.
-
    Int_t hotchar;
    static Bool_t longlabeltip = kFALSE;
    const TGMainFrame *main = (TGMainFrame *) GetMainFrame();
@@ -2778,20 +2780,20 @@ void TGSplitButton::SetText(TGHotString *new_label)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new button text.
+
 void TGSplitButton::SetText(const TString &new_label)
 {
-   // Set new button text.
-
    SetText(new TGHotString(new_label));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If global is kTRUE font is changed globally, otherwise - locally.
+
 void TGSplitButton::SetFont(FontStruct_t font, Bool_t global)
 {
-   // Changes text font.
-   // If global is kTRUE font is changed globally, otherwise - locally.
-
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
       if (!v) return;
@@ -2812,34 +2814,34 @@ void TGSplitButton::SetFont(FontStruct_t font, Bool_t global)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If global is true color is changed globally, otherwise - locally.
+
 void TGSplitButton::SetFont(const char *fontName, Bool_t global)
 {
-   // Changes text font specified by name.
-   // If global is true color is changed globally, otherwise - locally.
-
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
       SetFont(font->GetFontStruct(), global);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the state of the Menu Button part
+
 void TGSplitButton::SetMBState(EButtonState state)
 {
-   // Set the state of the Menu Button part
-
    if (state != fMBState) {
       fMBState = state;
       DoRedraw();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the split status of a button.
+
 void TGSplitButton::SetSplit(Bool_t split)
 {
-   // Set the split status of a button.
-
    if(split) {
       fStayDown = kFALSE;
       Disconnect(fPopMenu, "PoppedDown()");
@@ -2873,11 +2875,11 @@ void TGSplitButton::SetSplit(Bool_t split)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button events.
+
 Bool_t TGSplitButton::HandleButton(Event_t *event)
 {
-   // Handle button events.
-
    if (fState == kButtonDisabled) return kFALSE;
 
    if (fSplit) return HandleSButton(event);
@@ -2953,11 +2955,11 @@ Bool_t TGSplitButton::HandleButton(Event_t *event)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGSplitButton::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (fSplit) {
       return HandleSCrossing(event);
    } else {
@@ -2965,11 +2967,11 @@ Bool_t TGSplitButton::HandleCrossing(Event_t *event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle key event. This function will be called when the hotkey is hit.
+
 Bool_t TGSplitButton::HandleKey(Event_t *event)
 {
-   // Handle key event. This function will be called when the hotkey is hit.
-
    Bool_t click = kFALSE;
 
    if (fState == kButtonDisabled) return kTRUE;
@@ -3099,11 +3101,11 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a motion event in a TGSplitButton.
+
 Bool_t TGSplitButton::HandleMotion(Event_t *event)
 {
-   // Handle a motion event in a TGSplitButton.
-
    if (fKeyNavigate) return kTRUE;
 
    if (fSplit) {
@@ -3123,11 +3125,11 @@ Bool_t TGSplitButton::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// layout text button
+
 void TGSplitButton::Layout()
 {
-   // layout text button
-
    UInt_t dummya = 0, dummyb = 0;
    delete fTLayout;
 
@@ -3155,11 +3157,11 @@ void TGSplitButton::Layout()
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a menu item activation.
+
 void TGSplitButton::HandleMenu(Int_t id)
 {
-   // Handle a menu item activation.
-
    SetMenuState(kFALSE);
 
    if (fSplit) {

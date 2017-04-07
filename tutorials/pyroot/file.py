@@ -1,12 +1,15 @@
-#
-# This macro displays the physical ROOT file structure
-#
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+## This macro displays the physical ROOT file structure
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPaveLabel, TPave, TLine, TArrow, TText, TPaveText
 from ROOT import gROOT
-
-
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'ROOT File description', 200, 10, 700, 550 )
 

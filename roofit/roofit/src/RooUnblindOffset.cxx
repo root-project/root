@@ -14,21 +14,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Implementation of BlindTools' offset blinding method
-// A RooUnblindOffset object is a real valued function
-// object, constructed from a blind value holder and a 
-// set of unblinding parameters. When supplied to a PDF
-// in lieu of a regular parameter, the blind value holder
-// supplied to the unblinder objects will in a fit be minimized 
-// to blind value corresponding to the actual minimum of the
-// parameter. The transformation is chosen such that the
-// the error on the blind parameters is indentical to that
-// of the unblind parameter
-// END_HTML
-//
+/** \class RooUnblindOffset
+    \ingroup Roofit
+
+Implementation of BlindTools' offset blinding method
+A RooUnblindOffset object is a real valued function
+object, constructed from a blind value holder and a
+set of unblinding parameters. When supplied to a PDF
+in lieu of a regular parameter, the blind value holder
+supplied to the unblinded objects will in a fit be minimized
+to blind value corresponding to the actual minimum of the
+parameter. The transformation is chosen such that the
+the error on the blind parameters is identical to that
+of the unblind parameter
+**/
 
 #include "RooFit.h"
 
@@ -36,71 +35,62 @@
 #include "RooArgSet.h"
 #include "RooUnblindOffset.h"
 
-
 using namespace std;
 
 ClassImp(RooUnblindOffset)
-;
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
 
-
-//_____________________________________________________________________________
-RooUnblindOffset::RooUnblindOffset() 
+RooUnblindOffset::RooUnblindOffset()
 {
-  // Default constructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
-
-//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-					 const char *blindString, Double_t scale, RooAbsReal& cpasym)
-  : RooAbsHiddenReal(name,title), 
+                const char *blindString, Double_t scale, RooAbsReal& cpasym)
+  : RooAbsHiddenReal(name,title),
   _value("value","Offset blinded value",this,cpasym),
-  _blindEngine(blindString,RooBlindTools::full,0.,scale) 
-{  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+  _blindEngine(blindString,RooBlindTools::full,0.,scale)
+{
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
 
-//_____________________________________________________________________________
 RooUnblindOffset::RooUnblindOffset(const char *name, const char *title,
-				   const char *blindString, Double_t scale, RooAbsReal& cpasym,
-				   RooAbsCategory& blindState)
+               const char *blindString, Double_t scale, RooAbsReal& cpasym,
+               RooAbsCategory& blindState)
   : RooAbsHiddenReal(name,title,blindState),
-    _value("value","Offset blinded value",this,cpasym), 
+    _value("value","Offset blinded value",this,cpasym),
     _blindEngine(blindString,RooBlindTools::full,0.,scale)
-{  
-  // Constructor from a given RooAbsReal (to hold the blind value) and a set of blinding parameters
+{
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
 
-
-//_____________________________________________________________________________
-RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) : 
-  RooAbsHiddenReal(other, name), 
+RooUnblindOffset::RooUnblindOffset(const RooUnblindOffset& other, const char* name) :
+  RooAbsHiddenReal(other, name),
   _value("asym",this,other._value),
-  _blindEngine(other._blindEngine) 
+  _blindEngine(other._blindEngine)
 {
-  // Copy constructor
-
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
 
-
-//_____________________________________________________________________________
-RooUnblindOffset::~RooUnblindOffset() 
+RooUnblindOffset::~RooUnblindOffset()
 {
-  // Destructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate RooBlindTools unhide-offset method on blind value
 
-
-//_____________________________________________________________________________
 Double_t RooUnblindOffset::evaluate() const
 {
-  // Evaluate RooBlindTools unhide-offset method on blind value
-
   if (isHidden()) {
     // Blinding is active for this event
     return _blindEngine.UnHideOffset(_value);
@@ -109,8 +99,3 @@ Double_t RooUnblindOffset::evaluate() const
     return _value ;
   }
 }
-
-
-
-
-

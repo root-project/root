@@ -21,18 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
+#include "TBuffer.h"
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
-#ifndef ROOT_TUUID
 #include "TUUID.h"
-#endif
 
 class TBrowser;
 class TKey;
@@ -62,6 +55,13 @@ public:
          // later and cd to the new directory.
          if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
+         else CdNull();
+      }
+      TContext() : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
+      {
+         // Store the current directory so we can restore it
+         // later and cd to the new directory.
+         if ( fDirectory ) fDirectory->RegisterContext(this);
       }
       TContext(TDirectory* newCurrent) : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
       {
@@ -69,6 +69,7 @@ public:
          // later and cd to the new directory.
          if ( fDirectory ) fDirectory->RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
+         else CdNull();
       }
       ~TContext()
       {

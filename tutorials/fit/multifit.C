@@ -1,21 +1,28 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+///  Fitting multiple functions to different ranges of a 1-D histogram
+///      Example showing how to fit in a sub-range of an histogram
+///  An histogram is created and filled with the bin contents and errors
+///  defined in the table below.
+///  3 gaussians are fitted in sub-ranges of this histogram.
+///  A new function (a sum of 3 gaussians) is fitted on another subrange
+///  Note that when fitting simple functions, such as gaussians, the initial
+///  values of parameters are automatically computed by ROOT.
+///  In the more complicated case of the sum of 3 gaussians, the initial values
+///  of parameters must be given. In this particular case, the initial values
+///  are taken from the result of the individual fits.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TH1.h"
 #include "TF1.h"
 
 void multifit() {
-//  Fitting multiple functions to different ranges of a 1-D histogram
-// To see the output of this macro, click begin_html <a href="gif/multifit.gif" >here</a> end_html
-//      Example showing how to fit in a sub-range of an histogram
-//  An histogram is created and filled with the bin contents and errors
-//  defined in the table below.
-//  3 gaussians are fitted in sub-ranges of this histogram.
-//  A new function (a sum of 3 gaussians) is fitted on another subrange
-//  Note that when fitting simple functions, such as gaussians, the initial
-//  values of parameters are automatically computed by ROOT.
-//  In the more complicated case of the sum of 3 gaussians, the initial values
-//  of parameters must be given. In this particular case, the initial values
-//  are taken from the result of the individual fits.
-//Author: Rene Brun
-
    const Int_t np = 49;
    Float_t x[np] = {1.913521, 1.953769, 2.347435, 2.883654, 3.493567,
                     4.047560, 4.337210, 4.364347, 4.563004, 5.054247,

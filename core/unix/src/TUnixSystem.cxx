@@ -134,18 +134,12 @@
 #if defined(MAC_OS_X_VERSION_10_5)
 #   define HAVE_UTMPX_H
 #   define UTMP_NO_ADDR
-#   ifndef ut_user
-#      define ut_user ut_name
-#   endif
 #endif
 
 #if defined(R__FBSD)
 #   include <sys/param.h>
 #   if __FreeBSD_version >= 900007
 #      define HAVE_UTMPX_H
-#      ifndef ut_user
-#        define ut_user ut_name
-#      endif
 #   endif
 #endif
 
@@ -199,12 +193,8 @@ extern "C" {
 #   define HAVE_DLADDR
 #endif
 #if defined(R__MACOSX)
-#   if defined(MAC_OS_X_VERSION_10_5)
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #      define HAVE_DLADDR
-#   else
-#      define USE_GDB_STACK_TRACE
-#   endif
 #endif
 
 #ifdef HAVE_BACKTRACE_SYMBOLS_FD
@@ -263,6 +253,29 @@ enum {
 #endif
 // End FPE handling includes
 
+namespace {
+   // Depending on the platform the struct utmp (or utmpx) has either ut_name or ut_user
+   // which are semantically equivalent. Instead of using preprocessor magic,
+   // which is bothersome for cxx modules use SFINAE.
+
+   template<typename T>
+   struct ut_name {
+      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_name)>::value, int>::type = 0>
+      static char getValue(U* ue, int) {
+         return ue->ut_name[0];
+      }
+
+      template<typename U = T, typename std::enable_if<std::is_member_pointer<decltype(&U::ut_user)>::value, int>::type = 0>
+      static char getValue(U* ue, long) {
+         return ue->ut_user[0];
+      }
+   };
+
+   static char get_ut_name(STRUCT_UTMP *ue) {
+      // 0 is an integer literal forcing an overload pickup in case both ut_name and ut_user are present.
+      return ut_name<STRUCT_UTMP>::getValue(ue, 0);
+   }
+}
 
 struct TUtmpContent {
    STRUCT_UTMP *fUtmpContents;
@@ -279,7 +292,7 @@ struct TUtmpContent {
 
       UInt_t n = fEntries;
       while (n--) {
-         if (ue->ut_name[0] && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
+         if (get_ut_name(ue) && !strncmp(tty, ue->ut_line, sizeof(ue->ut_line)))
             return ue;
          ue++;
       }
@@ -386,19 +399,20 @@ public:
    ULong_t *GetBits() { return (ULong_t *)fds_bits; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unix signal handler.
+
 static void SigHandler(ESignals sig)
 {
-   // Unix signal handler.
-
    if (gSystem)
       ((TUnixSystem*)gSystem)->DispatchSignals(sig);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static const char *GetExePath()
 {
-   thread_local TString exepath;
+   TTHREAD_TLS_DECL(TString,exepath);
    if (exepath == "") {
 #if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);
@@ -440,10 +454,13 @@ static const char *GetExePath()
 }
 
 #if defined(HAVE_DLADDR) && !defined(R__MACOSX)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void SetRootSys()
 {
-#ifndef ROOTPREFIX
+#ifdef ROOTPREFIX
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
+#endif
    void *addr = (void *)SetRootSys;
    Dl_info info;
    if (dladdr(addr, &info) && info.dli_fname && info.dli_fname[0]) {
@@ -456,8 +473,8 @@ static void SetRootSys()
          gSystem->Setenv("ROOTSYS", gSystem->DirName(rs));
       }
    }
-#else
-   return;
+#ifdef ROOTPREFIX
+   }
 #endif
 }
 #endif
@@ -465,7 +482,8 @@ static void SetRootSys()
 #if defined(R__MACOSX)
 static TString gLinkedDylibs;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */)
 {
    static int i = 0;
@@ -481,10 +499,12 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TString lib = _dyld_get_image_name(i++);
 
-   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
-   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
+   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.so";
+   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.dylib";
 
-#ifndef ROOTPREFIX
+#ifdef ROOTPREFIX
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
+#endif
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
    // first loaded is the app so set ROOTSYS to app bundle
    if (i == 1) {
@@ -510,6 +530,8 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
       }
    }
 #endif
+#ifdef ROOTPREFIX
+   }
 #endif
 
    // when libSystem.B.dylib is loaded we have finished loading all dylibs
@@ -544,15 +566,16 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
 ClassImp(TUnixSystem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TUnixSystem::TUnixSystem() : TSystem("Unix", "Unix System")
 { }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset to original state.
+
 TUnixSystem::~TUnixSystem()
 {
-   // Reset to original state.
-
    UnixResetSignals();
 
    delete fReadmask;
@@ -562,11 +585,11 @@ TUnixSystem::~TUnixSystem()
    delete fSignals;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize Unix system interface.
+
 Bool_t TUnixSystem::Init()
 {
-   // Initialize Unix system interface.
-
    if (TSystem::Init())
       return kTRUE;
 
@@ -582,7 +605,6 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigSegmentationViolation, SigHandler);
    UnixSignal(kSigIllegalInstruction,    SigHandler);
    UnixSignal(kSigSystem,                SigHandler);
-   UnixSignal(kSigPipe,                  SigHandler);
    UnixSignal(kSigAlarm,                 SigHandler);
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
@@ -596,27 +618,22 @@ Bool_t TUnixSystem::Init()
    SetRootSys();
 #endif
 
-#ifndef ROOTPREFIX
-   gRootDir = Getenv("ROOTSYS");
-   if (gRootDir == 0)
-      gRootDir= "/usr/local/root";
-#else
-   gRootDir = ROOTPREFIX;
-#endif
+   // This is a fallback in case TROOT::GetRootSys() can't determine ROOTSYS
+   gRootDir = "/usr/local/root";
 
    return kFALSE;
 }
 
 //---- Misc --------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the application name (from command line, argv[0]) and copy it in
+/// gProgName. Copy the application pathname in gProgPath.
+/// If name is 0 let the system set the actual executable name and path
+/// (works on MacOS X and Linux).
+
 void TUnixSystem::SetProgname(const char *name)
 {
-   // Set the application name (from command line, argv[0]) and copy it in
-   // gProgName. Copy the application pathname in gProgPath.
-   // If name is 0 let the system set the actual executable name and path
-   // (works on MacOS X and Linux).
-
    if (gProgName)
       delete [] gProgName;
    if (gProgPath)
@@ -634,11 +651,11 @@ void TUnixSystem::SetProgname(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set DISPLAY environment variable based on utmp entry. Only for UNIX.
+
 void TUnixSystem::SetDisplay()
 {
-   // Set DISPLAY environment variable based on utmp entry. Only for UNIX.
-
    if (!Getenv("DISPLAY")) {
       char *tty = ::ttyname(0);  // device user is logged in on
       if (tty) {
@@ -664,11 +681,18 @@ void TUnixSystem::SetDisplay()
             }
 #ifndef UTMP_NO_ADDR
             else if (utmp_entry->ut_addr) {
-               struct hostent *he;
-               if ((he = gethostbyaddr((const char*)&utmp_entry->ut_addr,
-                                       sizeof(utmp_entry->ut_addr), AF_INET))) {
+
+               struct sockaddr_in addr;
+               addr.sin_family = AF_INET;
+               addr.sin_port = 0;
+               memcpy(&addr.sin_addr, &utmp_entry->ut_addr, sizeof(addr.sin_addr));
+               memset(&addr.sin_zero[0], 0, sizeof(addr.sin_zero));
+               struct sockaddr *sa = (struct sockaddr *) &addr;    // input
+
+               char hbuf[NI_MAXHOST];
+               if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   char disp[64];
-                  snprintf(disp, sizeof(disp), "%s:0.0", he->h_name);
+                  snprintf(disp, sizeof(disp), "%s:0.0", hbuf);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           disp);
@@ -680,11 +704,11 @@ void TUnixSystem::SetDisplay()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return system error string.
+
 const char *TUnixSystem::GetError()
 {
-   // Return system error string.
-
    Int_t err = GetErrno();
    if (err == 0 && GetLastErrorString() != "")
       return GetLastErrorString();
@@ -699,11 +723,11 @@ const char *TUnixSystem::GetError()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the system's host name.
+
 const char *TUnixSystem::HostName()
 {
-   // Return the system's host name.
-
    if (fHostname == "") {
       char hn[64];
 #if defined(R__SOLARIS)
@@ -718,12 +742,12 @@ const char *TUnixSystem::HostName()
 
 //---- EventLoop ---------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a file handler to the list of system file handlers. Only adds
+/// the handler if it is not already in the list of file handlers.
+
 void TUnixSystem::AddFileHandler(TFileHandler *h)
 {
-   // Add a file handler to the list of system file handlers. Only adds
-   // the handler if it is not already in the list of file handlers.
-
    R__LOCKGUARD2(gSystemMutex);
 
    TSystem::AddFileHandler(h);
@@ -740,12 +764,12 @@ void TUnixSystem::AddFileHandler(TFileHandler *h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a file handler from the list of file handlers. Returns
+/// the handler or 0 if the handler was not in the list of file handlers.
+
 TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
 {
-   // Remove a file handler from the list of file handlers. Returns
-   // the handler or 0 if the handler was not in the list of file handlers.
-
    if (!h) return 0;
 
    R__LOCKGUARD2(gSystemMutex);
@@ -773,24 +797,24 @@ TFileHandler *TUnixSystem::RemoveFileHandler(TFileHandler *h)
    return oh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a signal handler to list of system signal handlers. Only adds
+/// the handler if it is not already in the list of signal handlers.
+
 void TUnixSystem::AddSignalHandler(TSignalHandler *h)
 {
-   // Add a signal handler to list of system signal handlers. Only adds
-   // the handler if it is not already in the list of signal handlers.
-
    R__LOCKGUARD2(gSystemMutex);
 
    TSystem::AddSignalHandler(h);
    UnixSignal(h->GetSignal(), SigHandler);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a signal handler from list of signal handlers. Returns
+/// the handler or 0 if the handler was not in the list of signal handlers.
+
 TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
 {
-   // Remove a signal handler from list of signal handlers. Returns
-   // the handler or 0 if the handler was not in the list of signal handlers.
-
    if (!h) return 0;
 
    R__LOCKGUARD2(gSystemMutex);
@@ -811,53 +835,53 @@ TSignalHandler *TUnixSystem::RemoveSignalHandler(TSignalHandler *h)
    return oh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If reset is true reset the signal handler for the specified signal
+/// to the default handler, else restore previous behaviour.
+
 void TUnixSystem::ResetSignal(ESignals sig, Bool_t reset)
 {
-   // If reset is true reset the signal handler for the specified signal
-   // to the default handler, else restore previous behaviour.
-
    if (reset)
       UnixResetSignal(sig);
    else
       UnixSignal(sig, SigHandler);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset signals handlers to previous behaviour.
+
 void TUnixSystem::ResetSignals()
 {
-   // Reset signals handlers to previous behaviour.
-
    UnixResetSignals();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If ignore is true ignore the specified signal, else restore previous
+/// behaviour.
+
 void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
 {
-   // If ignore is true ignore the specified signal, else restore previous
-   // behaviour.
-
    UnixIgnoreSignal(sig, ignore);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the argument is true the SIGALRM signal handler is set so that
+/// interrupted syscalls will not be restarted by the kernel. This is
+/// typically used in case one wants to put a timeout on an I/O operation.
+/// By default interrupted syscalls will always be restarted (for all
+/// signals). This can be controlled for each a-synchronous TTimer via
+/// the method TTimer::SetInterruptSyscalls().
+
 void TUnixSystem::SigAlarmInterruptsSyscalls(Bool_t set)
 {
-   // When the argument is true the SIGALRM signal handler is set so that
-   // interrupted syscalls will not be restarted by the kernel. This is
-   // typically used in case one wants to put a timeout on an I/O operation.
-   // By default interrupted syscalls will always be restarted (for all
-   // signals). This can be controlled for each a-synchronous TTimer via
-   // the method TTimer::SetInterruptSyscalls().
-
    UnixSigAlarmInterruptsSyscalls(set);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the bitmap of conditions that trigger a floating point exception.
+
 Int_t TUnixSystem::GetFPEMask()
 {
-   // Return the bitmap of conditions that trigger a floating point exception.
-
    Int_t mask = 0;
 
 #if defined(R__LINUX) && !defined(__powerpc__)
@@ -935,12 +959,12 @@ Int_t TUnixSystem::GetFPEMask()
    return mask;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set which conditions trigger a floating point exception.
+/// Return the previous set of conditions.
+
 Int_t TUnixSystem::SetFPEMask(Int_t mask)
 {
-   // Set which conditions trigger a floating point exception.
-   // Return the previous set of conditions.
-
    if (mask) { }  // use mask to avoid warning
 
    Int_t old = GetFPEMask();
@@ -1030,11 +1054,11 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    return old;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dispatch a single event.
+
 void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
-   // Dispatch a single event.
-
    Bool_t pollOnce = pendingOnly;
 
    while (1) {
@@ -1121,11 +1145,11 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sleep milliSec milliseconds.
+
 void TUnixSystem::Sleep(UInt_t milliSec)
 {
-   // Sleep milliSec milliseconds.
-
    struct timeval tv;
 
    tv.tv_sec  = milliSec / 1000;
@@ -1134,16 +1158,16 @@ void TUnixSystem::Sleep(UInt_t milliSec)
    select(0, 0, 0, 0, &tv);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select on file descriptors. The timeout to is in millisec. Returns
+/// the number of ready descriptors, or 0 in case of timeout, or < 0 in
+/// case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
+/// the errno has been reset and the method can be called again. Returns
+/// -4 in case the list did not contain any file handlers or file handlers
+/// with file descriptor >= 0.
+
 Int_t TUnixSystem::Select(TList *act, Long_t to)
 {
-   // Select on file descriptors. The timeout to is in millisec. Returns
-   // the number of ready descriptors, or 0 in case of timeout, or < 0 in
-   // case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
-   // the errno has been reset and the method can be called again. Returns
-   // -4 in case the list did not contain any file handlers or file handlers
-   // with file descriptor >= 0.
-
    Int_t rc = -4;
 
    TFdSet rd, wr;
@@ -1182,16 +1206,16 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select on the file descriptor related to file handler h.
+/// The timeout to is in millisec. Returns the number of ready descriptors,
+/// or 0 in case of timeout, or < 0 in case of an error, with -2 being EINTR
+/// and -3 EBADF. In case of EINTR the errno has been reset and the method
+/// can be called again. Returns -4 in case the file handler is 0 or does
+/// not have a file descriptor >= 0.
+
 Int_t TUnixSystem::Select(TFileHandler *h, Long_t to)
 {
-   // Select on the file descriptor related to file handler h.
-   // The timeout to is in millisec. Returns the number of ready descriptors,
-   // or 0 in case of timeout, or < 0 in case of an error, with -2 being EINTR
-   // and -3 EBADF. In case of EINTR the errno has been reset and the method
-   // can be called again. Returns -4 in case the file handler is 0 or does
-   // not have a file descriptor >= 0.
-
    Int_t rc = -4;
 
    TFdSet rd, wr;
@@ -1223,11 +1247,11 @@ Int_t TUnixSystem::Select(TFileHandler *h, Long_t to)
 
 //---- handling of system events -----------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if some signals were raised and call their Notify() member.
+
 Bool_t TUnixSystem::CheckSignals(Bool_t sync)
 {
-   // Check if some signals were raised and call their Notify() member.
-
    TSignalHandler *sh;
    Int_t sigdone = -1;
    {
@@ -1254,11 +1278,11 @@ Bool_t TUnixSystem::CheckSignals(Bool_t sync)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if children have finished.
+
 void TUnixSystem::CheckChilds()
 {
-   // Check if children have finished.
-
 #if 0  //rdm
    int pid;
    while ((pid = UnixWaitchild()) > 0) {
@@ -1273,12 +1297,12 @@ void TUnixSystem::CheckChilds()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is activity on some file descriptors and call their
+/// Notify() member.
+
 Bool_t TUnixSystem::CheckDescriptors()
 {
-   // Check if there is activity on some file descriptors and call their
-   // Notify() member.
-
    TFileHandler *fh;
    Int_t  fddone = -1;
    Bool_t read   = kFALSE;
@@ -1316,12 +1340,12 @@ Bool_t TUnixSystem::CheckDescriptors()
 
 //---- Directories -------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a Unix file system directory. Returns 0 in case of success and
+/// -1 if the directory could not be created.
+
 int TUnixSystem::MakeDirectory(const char *name)
 {
-   // Make a Unix file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created.
-
    TSystem *helper = FindHelper(name);
    if (helper)
       return helper->MakeDirectory(name);
@@ -1329,11 +1353,11 @@ int TUnixSystem::MakeDirectory(const char *name)
    return UnixMakedir(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a Unix file system directory. Returns 0 if directory does not exist.
+
 void *TUnixSystem::OpenDirectory(const char *name)
 {
-   // Open a Unix file system directory. Returns 0 if directory does not exist.
-
    TSystem *helper = FindHelper(name);
    if (helper)
       return helper->OpenDirectory(name);
@@ -1341,11 +1365,11 @@ void *TUnixSystem::OpenDirectory(const char *name)
    return UnixOpendir(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a Unix file system directory.
+
 void TUnixSystem::FreeDirectory(void *dirp)
 {
-   // Close a Unix file system directory.
-
    TSystem *helper = FindHelper(0, dirp);
    if (helper) {
       helper->FreeDirectory(dirp);
@@ -1356,11 +1380,11 @@ void TUnixSystem::FreeDirectory(void *dirp)
       ::closedir((DIR*)dirp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next Unix file system directory entry. Returns 0 if no more entries.
+
 const char *TUnixSystem::GetDirEntry(void *dirp)
 {
-   // Get next Unix file system directory entry. Returns 0 if no more entries.
-
    TSystem *helper = FindHelper(0, dirp);
    if (helper)
       return helper->GetDirEntry(dirp);
@@ -1371,22 +1395,22 @@ const char *TUnixSystem::GetDirEntry(void *dirp)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change directory. Returns kTRUE in case of success, kFALSE otherwise.
+
 Bool_t TUnixSystem::ChangeDirectory(const char *path)
 {
-   // Change directory. Returns kTRUE in case of success, kFALSE otherwise.
-
    Bool_t ret = (Bool_t) (::chdir(path) == 0);
    if (fWdpath != "")
       fWdpath = "";   // invalidate path cache
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
 const char *TUnixSystem::WorkingDirectory()
 {
-   // Return working directory.
-
    // don't use cache as user can call chdir() directly somewhere else
    //if (fWdpath != "")
    //   return fWdpath.Data();
@@ -1394,28 +1418,57 @@ const char *TUnixSystem::WorkingDirectory()
    R__LOCKGUARD2(gSystemMutex);
 
    static char cwd[kMAXPATHLEN];
-   if (::getcwd(cwd, kMAXPATHLEN) == 0) {
-      fWdpath = "/";
-      Error("WorkingDirectory", "getcwd() failed");
-   }
+   FillWithCwd(cwd);
    fWdpath = cwd;
+
    return fWdpath.Data();
 }
 
-//______________________________________________________________________________
+//////////////////////////////////////////////////////////////////////////////
+/// Return working directory.
+
+std::string TUnixSystem::GetWorkingDirectory() const
+{
+   char cwd[kMAXPATHLEN];
+   FillWithCwd(cwd);
+   return std::string(cwd);
+}
+
+//////////////////////////////////////////////////////////////////////////////
+/// Fill buffer with current working directory.
+
+void TUnixSystem::FillWithCwd(char *cwd) const
+{
+   if (::getcwd(cwd, kMAXPATHLEN) == 0) {
+      Error("WorkingDirectory", "getcwd() failed");
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
 const char *TUnixSystem::HomeDirectory(const char *userName)
 {
-   // Return the user's home directory.
-
    return UnixHomedirectory(userName);
 }
 
-//______________________________________________________________________________
+//////////////////////////////////////////////////////////////////////////////
+/// Return the user's home directory.
+
+std::string TUnixSystem::GetHomeDirectory(const char *userName) const
+{
+   char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
+   auto res = UnixHomedirectory(userName, path, mydir);
+   if (res) return std::string(res);
+   else return std::string();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a user configured or systemwide directory to create
+/// temporary files in.
+
 const char *TUnixSystem::TempDirectory() const
 {
-   // Return a user configured or systemwide directory to create
-   // temporary files in.
-
    const char *dir = gSystem->Getenv("TMPDIR");
    if (!dir || gSystem->AccessPathName(dir, kWritePermission))
       dir = "/tmp";
@@ -1423,17 +1476,17 @@ const char *TUnixSystem::TempDirectory() const
    return dir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a secure temporary file by appending a unique
+/// 6 letter string to base. The file will be created in
+/// a standard (system) directory or in the directory
+/// provided in dir. The full filename is returned in base
+/// and a filepointer is returned for safely writing to the file
+/// (this avoids certain security problems). Returns 0 in case
+/// of error.
+
 FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
 {
-   // Create a secure temporary file by appending a unique
-   // 6 letter string to base. The file will be created in
-   // a standard (system) directory or in the directory
-   // provided in dir. The full filename is returned in base
-   // and a filepointer is returned for safely writing to the file
-   // (this avoids certain security problems). Returns 0 in case
-   // of error.
-
    char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
    base = b;
    base += "XXXXXX";
@@ -1455,11 +1508,11 @@ FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Concatenate a directory and a file name.
+
 const char *TUnixSystem::PrependPathName(const char *dir, TString& name)
 {
-   // Concatenate a directory and a file name.
-
    if (name.IsNull() || name == ".") {
       if (dir) {
          name = dir;
@@ -1479,13 +1532,13 @@ const char *TUnixSystem::PrependPathName(const char *dir, TString& name)
 
 //---- Paths & Files -----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns FALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 {
-   // Returns FALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->AccessPathName(path, mode);
@@ -1497,14 +1550,14 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy a file. If overwrite is true and file already exists the
+/// file will be overwritten. Returns 0 when successful, -1 in case
+/// of file open failure, -2 in case the file already exists and overwrite
+/// was false and -3 in case of error during copy.
+
 int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
 {
-   // Copy a file. If overwrite is true and file already exists the
-   // file will be overwritten. Returns 0 when successful, -1 in case
-   // of file open failure, -2 in case the file already exists and overwrite
-   // was false and -3 in case of error during copy.
-
    if (!AccessPathName(t) && !overwrite)
       return -2;
 
@@ -1534,22 +1587,22 @@ int TUnixSystem::CopyFile(const char *f, const char *t, Bool_t overwrite)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename a file. Returns 0 when successful, -1 in case of failure.
+
 int TUnixSystem::Rename(const char *f, const char *t)
 {
-   // Rename a file. Returns 0 when successful, -1 in case of failure.
-
    int ret = ::rename(f, t);
    GetLastErrorString() = GetError();
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns TRUE if the url in 'path' points to the local file system.
+/// This is used to avoid going through the NIC card for local operations.
+
 Bool_t TUnixSystem::IsPathLocal(const char *path)
 {
-   // Returns TRUE if the url in 'path' points to the local file system.
-   // This is used to avoid going through the NIC card for local operations.
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->IsPathLocal(path);
@@ -1557,14 +1610,14 @@ Bool_t TUnixSystem::IsPathLocal(const char *path)
    return TSystem::IsPathLocal(path);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TUnixSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TSystem *helper = FindHelper(path);
    if (helper)
       return helper->GetPathInfo(path, buf);
@@ -1572,36 +1625,36 @@ int TUnixSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return UnixFilestat(path, buf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file system: id, bsize, bfree, blocks.
+/// Id      is file system type (machine dependend, see statfs())
+/// Bsize   is block size of file system
+/// Blocks  is total number of blocks in file system
+/// Bfree   is number of free blocks in file system
+/// The function returns 0 in case of success and 1 if the file system could
+/// not be stat'ed.
+
 int TUnixSystem::GetFsInfo(const char *path, Long_t *id, Long_t *bsize,
                            Long_t *blocks, Long_t *bfree)
 {
-   // Get info about a file system: id, bsize, bfree, blocks.
-   // Id      is file system type (machine dependend, see statfs())
-   // Bsize   is block size of file system
-   // Blocks  is total number of blocks in file system
-   // Bfree   is number of free blocks in file system
-   // The function returns 0 in case of success and 1 if the file system could
-   // not be stat'ed.
-
    return UnixFSstat(path, id, bsize, blocks, bfree);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a link from file1 to file2. Returns 0 when successful,
+/// -1 in case of failure.
+
 int TUnixSystem::Link(const char *from, const char *to)
 {
-   // Create a link from file1 to file2. Returns 0 when successful,
-   // -1 in case of failure.
-
    return ::link(from, to);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a symlink from file1 to file2. Returns 0 when successful,
+/// -1 in case of failure.
+
 int TUnixSystem::Symlink(const char *from, const char *to)
 {
-   // Create a symlink from file1 to file2. Returns 0 when successful,
-   // -1 in case of failure.
-
 #if defined(R__AIX)
    return ::symlink((char*)from, (char*)to);
 #else
@@ -1609,12 +1662,12 @@ int TUnixSystem::Symlink(const char *from, const char *to)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlink, i.e. remove, a file or directory. Returns 0 when successful,
+/// -1 in case of failure.
+
 int TUnixSystem::Unlink(const char *name)
 {
-   // Unlink, i.e. remove, a file or directory. Returns 0 when successful,
-   // -1 in case of failure.
-
    TSystem *helper = FindHelper(name);
    if (helper)
       return helper->Unlink(name);
@@ -1647,15 +1700,15 @@ const char
 
 
 #ifndef G__OLDEXPAND
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
+/// environment variables in a pathname. If compatibility is not an issue
+/// you can use on Unix directly $XXX. Returns kFALSE in case of success
+/// or kTRUE in case of error.
+
 Bool_t TUnixSystem::ExpandPathName(TString &path)
 {
-   // Expand a pathname getting rid of special shell characters like ~.$, etc.
-   // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
-   // environment variables in a pathname. If compatibility is not an issue
-   // you can use on Unix directly $XXX. Returns kFALSE in case of success
-   // or kTRUE in case of error.
-
    const char *p, *patbuf = (const char *)path;
 
    // skip leading blanks
@@ -1674,24 +1727,20 @@ expand:
    path.ReplaceAll("$(","$");
    path.ReplaceAll(")","");
 
-   if ((p = ExpandFileName(path))) {
-      path = p;
-      return kFALSE;
-   }
-   return kTRUE;
+   return ExpandFileName(path);
 }
 #endif
 
 #ifdef G__OLDEXPAND
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characters like ~.$, etc.
+/// For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
+/// environment variables in a pathname. If compatibility is not an issue
+/// you can use on Unix directly $XXX. Returns kFALSE in case of success
+/// or kTRUE in case of error.
+
 Bool_t TUnixSystem::ExpandPathName(TString &patbuf0)
 {
-   // Expand a pathname getting rid of special shell characters like ~.$, etc.
-   // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
-   // environment variables in a pathname. If compatibility is not an issue
-   // you can use on Unix directly $XXX. Returns kFALSE in case of success
-   // or kTRUE in case of error.
-
    const char *patbuf = (const char *)patbuf0;
    const char *hd, *p;
    //   char   cmd[kMAXPATHLEN],
@@ -1783,44 +1832,44 @@ again:
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand a pathname getting rid of special shell characaters like ~.$, etc.
+/// For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
+/// environment variables in a pathname. If compatibility is not an issue
+/// you can use on Unix directly $XXX. The user must delete returned string.
+/// Returns the expanded pathname or 0 in case of error.
+/// The user must delete returned string (delete []).
+
 char *TUnixSystem::ExpandPathName(const char *path)
 {
-   // Expand a pathname getting rid of special shell characaters like ~.$, etc.
-   // For Unix/Win32 compatibility use $(XXX) instead of $XXX when using
-   // environment variables in a pathname. If compatibility is not an issue
-   // you can use on Unix directly $XXX. The user must delete returned string.
-   // Returns the expanded pathname or 0 in case of error.
-   // The user must delete returned string (delete []).
-
    TString patbuf = path;
    if (ExpandPathName(patbuf))
       return 0;
    return StrDup(patbuf.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file permission bits. Returns -1 in case or error, 0 otherwise.
+
 int TUnixSystem::Chmod(const char *file, UInt_t mode)
 {
-   // Set the file permission bits. Returns -1 in case or error, 0 otherwise.
-
    return ::chmod(file, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the process file creation mode mask.
+
 int TUnixSystem::Umask(Int_t mask)
 {
-   // Set the process file creation mode mask.
-
    return ::umask(mask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a files modification and access times. If actime = 0 it will be
+/// set to the modtime. Returns 0 on success and -1 in case of error.
+
 int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
 {
-   // Set a files modification and access times. If actime = 0 it will be
-   // set to the modtime. Returns 0 on success and -1 in case of error.
-
    if (!actime)
       actime = modtime;
 
@@ -1830,14 +1879,14 @@ int TUnixSystem::Utime(const char *file, Long_t modtime, Long_t actime)
    return ::utime(file, &t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find location of file "wfil" in a search path.
+/// The search path is specified as a : separated list of directories.
+/// Return value is pointing to wfile for compatibility with
+/// Which(const char*,const char*,EAccessMode) version.
+
 const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode mode)
 {
-   // Find location of file "wfil" in a search path.
-   // The search path is specified as a : separated list of directories.
-   // Return value is pointing to wfile for compatibility with
-   // Which(const char*,const char*,EAccessMode) version.
-
    TString show;
    if (gEnv->GetValue("Root.ShowPath", 0))
       show.Form("Which: %s =", wfil.Data());
@@ -1911,11 +1960,11 @@ const char *TUnixSystem::FindFile(const char *search, TString& wfil, EAccessMode
 
 //---- Users & Groups ----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the user's id. If user = 0, returns current user's id.
+
 Int_t TUnixSystem::GetUid(const char *user)
 {
-   // Returns the user's id. If user = 0, returns current user's id.
-
    if (!user || !user[0])
       return getuid();
    else {
@@ -1926,20 +1975,20 @@ Int_t TUnixSystem::GetUid(const char *user)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective user id. The effective id corresponds to the
+/// set id bit on the file being executed.
+
 Int_t TUnixSystem::GetEffectiveUid()
 {
-   // Returns the effective user id. The effective id corresponds to the
-   // set id bit on the file being executed.
-
    return geteuid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the group's id. If group = 0, returns current user's group.
+
 Int_t TUnixSystem::GetGid(const char *group)
 {
-   // Returns the group's id. If group = 0, returns current user's group.
-
    if (!group || !group[0])
       return getgid();
    else {
@@ -1950,21 +1999,21 @@ Int_t TUnixSystem::GetGid(const char *group)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the effective group id. The effective group id corresponds
+/// to the set id bit on the file being executed.
+
 Int_t TUnixSystem::GetEffectiveGid()
 {
-   // Returns the effective group id. The effective group id corresponds
-   // to the set id bit on the file being executed.
-
    return getegid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. The returned
+/// structure must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
 {
-   // Returns all user info in the UserGroup_t structure. The returned
-   // structure must be deleted by the user. In case of error 0 is returned.
-
    typedef std::map<Int_t /*uid*/, UserGroup_t> UserInfoCache_t;
    static UserInfoCache_t gUserInfo;
 
@@ -1991,25 +2040,25 @@ UserGroup_t *TUnixSystem::GetUserInfo(Int_t uid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all user info in the UserGroup_t structure. If user = 0, returns
+/// current user's id info. The returned structure must be deleted by the
+/// user. In case of error 0 is returned.
+
 UserGroup_t *TUnixSystem::GetUserInfo(const char *user)
 {
-   // Returns all user info in the UserGroup_t structure. If user = 0, returns
-   // current user's id info. The returned structure must be deleted by the
-   // user. In case of error 0 is returned.
-
    return GetUserInfo(GetUid(user));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// The returned structure must be deleted by the user. In case of
+/// error 0 is returned.
+
 UserGroup_t *TUnixSystem::GetGroupInfo(Int_t gid)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // The returned structure must be deleted by the user. In case of
-   // error 0 is returned.
-
    struct group *grp = getgrgid(gid);
    if (grp) {
       UserGroup_t *gr = new UserGroup_t;
@@ -2021,83 +2070,83 @@ UserGroup_t *TUnixSystem::GetGroupInfo(Int_t gid)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all group info in the UserGroup_t structure. The only active
+/// fields in the UserGroup_t structure for this call are:
+///    fGid and fGroup
+/// If group = 0, returns current user's group. The returned structure
+/// must be deleted by the user. In case of error 0 is returned.
+
 UserGroup_t *TUnixSystem::GetGroupInfo(const char *group)
 {
-   // Returns all group info in the UserGroup_t structure. The only active
-   // fields in the UserGroup_t structure for this call are:
-   //    fGid and fGroup
-   // If group = 0, returns current user's group. The returned structure
-   // must be deleted by the user. In case of error 0 is returned.
-
    return GetGroupInfo(GetGid(group));
 }
 
 //---- environment manipulation ------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set environment variable.
+
 void TUnixSystem::Setenv(const char *name, const char *value)
 {
-   // Set environment variable.
-
    ::setenv(name, value, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get environment variable.
+
 const char *TUnixSystem::Getenv(const char *name)
 {
-   // Get environment variable.
-
    return ::getenv(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unset environment variable.
+
 void TUnixSystem::Unsetenv(const char *name)
 {
-   // Unset environment variable.
-
    ::unsetenv(name);
 }
 
 //---- Processes ---------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a command.
+
 int TUnixSystem::Exec(const char *shellcmd)
 {
-   // Execute a command.
-
    return ::system(shellcmd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a pipe.
+
 FILE *TUnixSystem::OpenPipe(const char *command, const char *mode)
 {
-   // Open a pipe.
-
    return ::popen(command, mode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the pipe.
+
 int TUnixSystem::ClosePipe(FILE *pipe)
 {
-   // Close the pipe.
-
    return ::pclose(pipe);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get process id.
+
 int TUnixSystem::GetPid()
 {
-   // Get process id.
-
    return ::getpid();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exit the application.
+
 void TUnixSystem::Exit(int code, Bool_t mode)
 {
-   // Exit the application.
-
    // Insures that the files and sockets are closed before any library is unloaded
    // and before emptying CINT.
    if (gROOT) {
@@ -2112,44 +2161,110 @@ void TUnixSystem::Exit(int code, Bool_t mode)
       ::_exit(code);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Abort the application.
+
 void TUnixSystem::Abort(int)
 {
-   // Abort the application.
-
    ::abort();
 }
 
-//______________________________________________________________________________
+
+#ifdef R__MACOSX
+/// Use CoreSymbolication to retrieve the stacktrace.
+#include <mach/mach.h>
+extern "C" {
+  // Adapted from https://github.com/mountainstorm/CoreSymbolication
+  // Under the hood the framework basically just calls through to a set of C++ libraries
+  typedef struct {
+    void* csCppData;
+    void* csCppObj;
+  } CSTypeRef;
+  typedef CSTypeRef CSSymbolicatorRef;
+  typedef CSTypeRef CSSourceInfoRef;
+  typedef CSTypeRef CSSymbolOwnerRef;
+  typedef CSTypeRef CSSymbolRef;
+
+  CSSymbolicatorRef CSSymbolicatorCreateWithPid(pid_t pid);
+  CSSymbolRef CSSymbolicatorGetSymbolWithAddressAtTime(CSSymbolicatorRef cs, vm_address_t addr, uint64_t time);
+  CSSourceInfoRef CSSymbolicatorGetSourceInfoWithAddressAtTime(CSSymbolicatorRef cs, vm_address_t addr, uint64_t time);
+  const char* CSSymbolGetName(CSSymbolRef sym);
+  CSSymbolOwnerRef CSSymbolGetSymbolOwner(CSSymbolRef sym);
+  const char* CSSymbolOwnerGetPath(CSSymbolOwnerRef symbol);
+  const char* CSSourceInfoGetPath(CSSourceInfoRef info);
+  int CSSourceInfoGetLineNumber(CSSourceInfoRef info);
+}
+
+bool CSTypeRefIdValid(CSTypeRef ref) {
+   return ref.csCppData || ref.csCppObj;
+}
+
+void macosx_backtrace() {
+void* addrlist[kMAX_BACKTRACE_DEPTH];
+  // retrieve current stack addresses
+  int numstacks = backtrace( addrlist, sizeof( addrlist ) / sizeof( void* ));
+
+  CSSymbolicatorRef symbolicator = CSSymbolicatorCreateWithPid(getpid());
+
+  // skip TUnixSystem::Backtrace(), macosx_backtrace()
+  static const int skipFrames = 2;
+  for (int i = skipFrames; i < numstacks; ++i) {
+    // No debug info, try to get at least the symbol name.
+    CSSymbolRef sym = CSSymbolicatorGetSymbolWithAddressAtTime(symbolicator,
+                                                               (vm_address_t)addrlist[i],
+                                                               0x80000000u);
+    CSSymbolOwnerRef symOwner = CSSymbolGetSymbolOwner(sym);
+
+    if (const char* libPath = CSSymbolOwnerGetPath(symOwner)) {
+      printf("[%s]", libPath);
+    } else {
+      printf("[<unknown binary>]");
+    }
+
+    if (const char* symname = CSSymbolGetName(sym)) {
+      printf(" %s", symname);
+    }
+
+    CSSourceInfoRef sourceInfo
+      = CSSymbolicatorGetSourceInfoWithAddressAtTime(symbolicator,
+                                                     (vm_address_t)addrlist[i],
+                                                     0x80000000u /*"now"*/);
+    if (const char* sourcePath = CSSourceInfoGetPath(sourceInfo)) {
+      printf(" %s:%d", sourcePath, (int)CSSourceInfoGetLineNumber(sourceInfo));
+    } else {
+      printf(" (no debug info)");
+    }
+    printf("\n");
+  }
+}
+#endif // R__MACOSX
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a stack trace.
+
 void TUnixSystem::StackTrace()
 {
-   // Print a stack trace.
-
    if (!gEnv->GetValue("Root.Stacktrace", 1))
       return;
 
+#ifndef R__MACOSX
    TString gdbscript = gEnv->GetValue("Root.StacktraceScript", "");
    gdbscript = gdbscript.Strip();
    if (gdbscript != "") {
       if (AccessPathName(gdbscript, kReadPermission)) {
          fprintf(stderr, "Root.StacktraceScript %s does not exist\n", gdbscript.Data());
          gdbscript = "";
-      } else {
-         gdbscript += " ";
       }
    }
    if (gdbscript == "") {
-#ifdef ROOTETCDIR
-      gdbscript.Form("%s/gdb-backtrace.sh", ROOTETCDIR);
-#else
-      gdbscript.Form("%s/etc/gdb-backtrace.sh", Getenv("ROOTSYS"));
-#endif
+      gdbscript = "gdb-backtrace.sh";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), gdbscript);
       if (AccessPathName(gdbscript, kReadPermission)) {
          fprintf(stderr, "Error in <TUnixSystem::StackTrace> script %s is missing\n", gdbscript.Data());
          return;
       }
-      gdbscript += " ";
    }
+   gdbscript += " ";
 
    TString gdbmess = gEnv->GetValue("Root.StacktraceMessage", "");
    gdbmess = gdbmess.Strip();
@@ -2451,16 +2566,19 @@ void TUnixSystem::StackTrace()
       rc = exc_virtual_unwind(0, &context);
    }
 #endif
+#else //R__MACOSX
+  macosx_backtrace();
+#endif //R__MACOSX
 }
 
 //---- System Logging ----------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open connection to system log daemon. For the use of the options and
+/// facility see the Unix openlog man page.
+
 void TUnixSystem::Openlog(const char *name, Int_t options, ELogFacility facility)
 {
-   // Open connection to system log daemon. For the use of the options and
-   // facility see the Unix openlog man page.
-
    int fac = 0;
 
    switch (facility) {
@@ -2493,41 +2611,41 @@ void TUnixSystem::Openlog(const char *name, Int_t options, ELogFacility facility
    ::openlog(name, options, fac);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send mess to syslog daemon. Level is the logging level and mess the
+/// message that will be written on the log.
+
 void TUnixSystem::Syslog(ELogLevel level, const char *mess)
 {
-   // Send mess to syslog daemon. Level is the logging level and mess the
-   // message that will be written on the log.
-
    // ELogLevel matches exactly the Unix values.
    ::syslog(level, "%s", mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection to system log daemon.
+
 void TUnixSystem::Closelog()
 {
-   // Close connection to system log daemon.
-
    ::closelog();
 }
 
 //---- Standard output redirection ---------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect standard output (stdout, stderr) to the specified file.
+/// If the file argument is 0 the output is set again to stderr, stdout.
+/// The second argument specifies whether the output should be added to the
+/// file ("a", default) or the file be truncated before ("w").
+/// This function saves internally the current state into a static structure.
+/// The call can be made reentrant by specifying the opaque structure pointed
+/// by 'h', which is filled with the relevant information. The handle 'h'
+/// obtained on the first call must then be used in any subsequent call,
+/// included ShowOutput, to display the redirected output.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
                                   RedirectHandle_t *h)
 {
-   // Redirect standard output (stdout, stderr) to the specified file.
-   // If the file argument is 0 the output is set again to stderr, stdout.
-   // The second argument specifies whether the output should be added to the
-   // file ("a", default) or the file be truncated before ("w").
-   // This function saves internally the current state into a static structure.
-   // The call can be made reentrant by specifying the opaque structure pointed
-   // by 'h', which is filled with the relevant information. The handle 'h'
-   // obtained on the first call must then be used in any subsequent call,
-   // included ShowOutput, to display the redirected output.
-   // Returns 0 on success, -1 in case of error.
-
    // Instance to be used if the caller does not passes 'h'
    static RedirectHandle_t loch;
 
@@ -2654,54 +2772,54 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
 
 //---- dynamic loading and linking ---------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///dynamic linking of module
+
 Func_t TUnixSystem::DynFindSymbol(const char * /*module*/, const char *entry)
 {
-   //dynamic linking of module
-
    return TSystem::DynFindSymbol("*", entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a shared library. Returns 0 on successful loading, 1 in
+/// case lib was already loaded and -1 in case lib does not exist
+/// or in case of error.
+
 int TUnixSystem::Load(const char *module, const char *entry, Bool_t system)
 {
-   // Load a shared library. Returns 0 on successful loading, 1 in
-   // case lib was already loaded and -1 in case lib does not exist
-   // or in case of error.
-
    return TSystem::Load(module, entry, system);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unload a shared library.
+
 void TUnixSystem::Unload(const char *module)
 {
-   // Unload a shared library.
-
    if (module) { TSystem::Unload(module); }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List symbols in a shared library.
+
 void TUnixSystem::ListSymbols(const char * /*module*/, const char * /*regexp*/)
 {
-   // List symbols in a shared library.
-
    Error("ListSymbols", "not yet implemented");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all loaded shared libraries.
+
 void TUnixSystem::ListLibraries(const char *regexp)
 {
-   // List all loaded shared libraries.
-
    TSystem::ListLibraries(regexp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of shared libraries loaded at the start of the executable.
+/// Returns 0 in case list cannot be obtained or in case of error.
+
 const char *TUnixSystem::GetLinkedLibraries()
 {
-   // Get list of shared libraries loaded at the start of the executable.
-   // Returns 0 in case list cannot be obtained or in case of error.
-
    static TString linkedLibs;
    static Bool_t once = kFALSE;
 
@@ -2766,7 +2884,7 @@ const char *TUnixSystem::GetLinkedLibraries()
    TRegexp sovers = "\\.so\\.[0-9]+";
 #endif
 #endif
-   FILE *p = OpenPipe(TString::Format("%s %s", cLDD, exe), "r");
+   FILE *p = OpenPipe(TString::Format("%s '%s'", cLDD, exe), "r");
    if (p) {
       TString ldd;
       while (ldd.Gets(p)) {
@@ -2810,20 +2928,20 @@ const char *TUnixSystem::GetLinkedLibraries()
 
 //---- Time & Date -------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time in milliseconds since 0:00 Jan 1 1995.
+
 TTime TUnixSystem::Now()
 {
-   // Get current time in milliseconds since 0:00 Jan 1 1995.
-
    return UnixNow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle and dispatch timers. If mode = kTRUE dispatch synchronous
+/// timers else a-synchronous timers.
+
 Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
 {
-   // Handle and dispatch timers. If mode = kTRUE dispatch synchronous
-   // timers else a-synchronous timers.
-
    if (!fTimers) return kFALSE;
 
    fInsideNotify = kTRUE;
@@ -2849,20 +2967,20 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
    return timedout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add timer to list of system timers.
+
 void TUnixSystem::AddTimer(TTimer *ti)
 {
-   // Add timer to list of system timers.
-
    TSystem::AddTimer(ti);
    ResetTimer(ti);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove timer from list of system timers.
+
 TTimer *TUnixSystem::RemoveTimer(TTimer *ti)
 {
-   // Remove timer from list of system timers.
-
    if (!ti) return 0;
 
    R__LOCKGUARD2(gSystemMutex);
@@ -2873,96 +2991,79 @@ TTimer *TUnixSystem::RemoveTimer(TTimer *ti)
    return t;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a-sync timer.
+
 void TUnixSystem::ResetTimer(TTimer *ti)
 {
-   // Reset a-sync timer.
-
    if (!fInsideNotify && ti && ti->IsAsync())
       UnixSetitimer(NextTimeOut(kFALSE));
 }
 
 //---- RPC ---------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of host. Returns an TInetAddress
+/// object. To see if the hostname lookup was successfull call
+/// TInetAddress::IsValid().
+
 TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 {
-   // Get Internet Protocol (IP) address of host. Returns an TInetAddress
-   // object. To see if the hostname lookup was successfull call
-   // TInetAddress::IsValid().
+   TInetAddress ia;
+   struct addrinfo hints;
+   struct addrinfo *result, *rp;
+   memset(&hints, 0, sizeof(struct addrinfo));
+   hints.ai_family = AF_INET;       // only IPv4
+   hints.ai_socktype = 0;           // any socket type
+   hints.ai_protocol = 0;           // any protocol
+   hints.ai_flags = AI_CANONNAME;   // get canonical name
 
-   struct hostent *host_ptr;
-   const char     *host;
-   int             type;
-   UInt_t          addr;    // good for 4 byte addresses
-
-   // Note that http://linux.die.net/man/3/gethostbyaddr
-   // claims:
-   //   The gethostbyname*() and gethostbyaddr*() functions are obsolete.
-   //   Applications should use getaddrinfo(3) and getnameinfo(3) instead.
-
-   // gethostbyaddr return the address of static data, we need to insure
-   // exclusive access ... the 'right' solution is to switch to getaddrinfo
-
-   R__LOCKGUARD(gROOTMutex);
-
-#ifdef HASNOT_INETATON
-   if ((addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) {
-#else
-   struct in_addr ad;
-   if (inet_aton(hostname, &ad)) {
-      memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
-#endif
-      type = AF_INET;
-      if ((host_ptr = gethostbyaddr((const char *)&addr,
-                                    sizeof(addr), AF_INET))) {
-         host = host_ptr->h_name;
-         TInetAddress a(host, ntohl(addr), type);
-         UInt_t addr2;
-         Int_t  i;
-         for (i = 1; host_ptr->h_addr_list[i]; i++) {
-            memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-            a.AddAddress(ntohl(addr2));
-         }
-         for (i = 0; host_ptr->h_aliases[i]; i++)
-            a.AddAlias(host_ptr->h_aliases[i]);
-         return a;
+   // obsolete gethostbyname() replaced by getaddrinfo()
+   int rc = getaddrinfo(hostname, nullptr, &hints, &result);
+   if (rc != 0) {
+      if (rc == EAI_NONAME) {
+         if (gDebug > 0) Error("GetHostByName", "unknown host '%s'", hostname);
+         ia.fHostname = "UnNamedHost";
       } else {
-         host = "UnNamedHost";
+         Error("GetHostByName", "getaddrinfo failed for '%s': %s", hostname, gai_strerror(rc));
+         ia.fHostname = "UnknownHost";
       }
-   } else if ((host_ptr = gethostbyname(hostname))) {
-      // Check the address type for an internet host
-      if (host_ptr->h_addrtype != AF_INET) {
-         Error("GetHostByName", "%s is not an internet host\n", hostname);
-         return TInetAddress();
-      }
-      memcpy(&addr, host_ptr->h_addr, host_ptr->h_length);
-      host = host_ptr->h_name;
-      type = host_ptr->h_addrtype;
-      TInetAddress a(host, ntohl(addr), type);
-      UInt_t addr2;
-      Int_t  i;
-      for (i = 1; host_ptr->h_addr_list[i]; i++) {
-         memcpy(&addr2, host_ptr->h_addr_list[i], host_ptr->h_length);
-         a.AddAddress(ntohl(addr2));
-      }
-      for (i = 0; host_ptr->h_aliases[i]; i++)
-         a.AddAlias(host_ptr->h_aliases[i]);
-      return a;
-   } else {
-      if (gDebug > 0) Error("GetHostByName", "unknown host %s", hostname);
-      return TInetAddress(hostname, 0, -1);
+      return ia;
    }
 
-   return TInetAddress(host, ntohl(addr), type);
+   std::string hostcanon(result->ai_canonname ? result->ai_canonname : hostname);
+   ia.fHostname = hostcanon.data();
+   ia.fFamily = result->ai_family;
+   ia.fAddresses[0] = ntohl(((struct sockaddr_in *)(result->ai_addr))->sin_addr.s_addr);
+   // with getaddrinfo() no way to get list of aliases for a hostname
+   if (hostcanon.compare(hostname) != 0) ia.AddAlias(hostname);
+
+   // check on numeric hostname
+   char tmp[sizeof(struct in_addr)];
+   if (inet_pton(AF_INET, hostcanon.data(), tmp) == 1) {
+      char hbuf[NI_MAXHOST];
+      if (getnameinfo(result->ai_addr, result->ai_addrlen, hbuf, sizeof(hbuf), nullptr, 0, 0) == 0)
+         ia.fHostname = hbuf;
+   }
+
+   // check other addresses (if exist)
+   rp = result->ai_next;
+   for (; rp != nullptr; rp = rp->ai_next) {
+      UInt_t arp = ntohl(((struct sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr);
+      if ( !(std::find(ia.fAddresses.begin(), ia.fAddresses.end(), arp) != ia.fAddresses.end()) )
+         ia.AddAddress(arp);
+   }
+
+   freeaddrinfo(result);
+   return ia;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of host and port #.
+
 TInetAddress TUnixSystem::GetSockName(int sock)
 {
-   // Get Internet Protocol (IP) address of host and port #.
-
-   struct sockaddr_in addr;
+   struct sockaddr addr;
 #if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
 #elif defined(USE_SOCKLEN_T)
@@ -2971,36 +3072,34 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    int len = sizeof(addr);
 #endif
 
-   if (getsockname(sock, (struct sockaddr *)&addr, &len) == -1) {
-      SysError("GetSockName", "getsockname");
-      return TInetAddress();
+   TInetAddress ia;
+   if (getsockname(sock, &addr, &len) == -1) {
+      SysError("GetSockName", "getsockname failed");
+      return ia;
    }
 
-   struct hostent *host_ptr;
-   const char *hostname;
-   int         family;
-   UInt_t      iaddr;
+   if (addr.sa_family != AF_INET) return ia; // only IPv4
+   ia.fFamily = addr.sa_family;
+   struct sockaddr_in *addrin = (struct sockaddr_in *)&addr;
+   ia.fPort = ntohs(addrin->sin_port);
+   ia.fAddresses[0] = ntohl(addrin->sin_addr.s_addr);
 
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
-                                 sizeof(addr.sin_addr), AF_INET))) {
-      memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
-      hostname = host_ptr->h_name;
-      family   = host_ptr->h_addrtype;
-   } else {
-      memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-      hostname = "????";
-      family   = AF_INET;
-   }
+   char hbuf[NI_MAXHOST];
+   if (getnameinfo(&addr, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, 0) != 0) {
+      Error("GetSockName", "getnameinfo failed");
+      ia.fHostname = "????";
+   } else
+      ia.fHostname = hbuf;
 
-   return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
+   return ia;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Internet Protocol (IP) address of remote host and port #.
+
 TInetAddress TUnixSystem::GetPeerName(int sock)
 {
-   // Get Internet Protocol (IP) address of remote host and port #.
-
-   struct sockaddr_in addr;
+   struct sockaddr addr;
 #if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
 #elif defined(USE_SOCKLEN_T)
@@ -3009,35 +3108,33 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    int len = sizeof(addr);
 #endif
 
-   if (getpeername(sock, (struct sockaddr *)&addr, &len) == -1) {
-      SysError("GetPeerName", "getpeername");
-      return TInetAddress();
+   TInetAddress ia;
+   if (getpeername(sock, &addr, &len) == -1) {
+      SysError("GetPeerName", "getpeername failed");
+      return ia;
    }
 
-   struct hostent *host_ptr;
-   const char *hostname;
-   int         family;
-   UInt_t      iaddr;
+   if (addr.sa_family != AF_INET) return ia; // only IPv4
+   ia.fFamily = addr.sa_family;
+   struct sockaddr_in *addrin = (struct sockaddr_in *)&addr;
+   ia.fPort = ntohs(addrin->sin_port);
+   ia.fAddresses[0] = ntohl(addrin->sin_addr.s_addr);
 
-   if ((host_ptr = gethostbyaddr((const char *)&addr.sin_addr,
-                                 sizeof(addr.sin_addr), AF_INET))) {
-      memcpy(&iaddr, host_ptr->h_addr, host_ptr->h_length);
-      hostname = host_ptr->h_name;
-      family   = host_ptr->h_addrtype;
-   } else {
-      memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-      hostname = "????";
-      family   = AF_INET;
-   }
+   char hbuf[NI_MAXHOST];
+   if (getnameinfo(&addr, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, 0) != 0) {
+      Error("GetPeerName", "getnameinfo failed");
+      ia.fHostname = "????";
+   } else
+      ia.fHostname = hbuf;
 
-   return TInetAddress(hostname, ntohl(iaddr), family, ntohs(addr.sin_port));
+   return ia;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get port # of internet service.
+
 int TUnixSystem::GetServiceByName(const char *servicename)
 {
-   // Get port # of internet service.
-
    struct servent *sp;
 
    if ((sp = getservbyname(servicename, kProtocolName)) == 0) {
@@ -3048,11 +3145,11 @@ int TUnixSystem::GetServiceByName(const char *servicename)
    return ntohs(sp->s_port);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of internet service.
+
 char *TUnixSystem::GetServiceByPort(int port)
 {
-   // Get name of internet service.
-
    struct servent *sp;
 
    if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
@@ -3063,12 +3160,12 @@ char *TUnixSystem::GetServiceByPort(int port)
    return sp->s_name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to service servicename on server servername.
+
 int TUnixSystem::ConnectService(const char *servername, int port,
                                 int tcpwindowsize, const char *protocol)
 {
-   // Connect to service servicename on server servername.
-
    if (!strcmp(servername, "unix")) {
       return UnixUnixConnect(port);
    } else if (!gSystem->AccessPathName(servername) || servername[0] == '/') {
@@ -3082,67 +3179,67 @@ int TUnixSystem::ConnectService(const char *servername, int port,
    return UnixTcpConnect(servername, port, tcpwindowsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a connection to a service on a server. Returns -1 in case
+/// connection cannot be opened.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Is called via the TSocket constructor.
+
 int TUnixSystem::OpenConnection(const char *server, int port, int tcpwindowsize, const char *protocol)
 {
-   // Open a connection to a service on a server. Returns -1 in case
-   // connection cannot be opened.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Is called via the TSocket constructor.
-
    return ConnectService(server, port, tcpwindowsize, protocol);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce TCP/IP service.
+/// Open a socket, bind to it and start listening for TCP/IP connections
+/// on the port. If reuse is true reuse the address, backlog specifies
+/// how many sockets can be waiting to be accepted.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns socket fd or -1 if socket() failed, -2 if bind() failed
+/// or -3 if listen() failed.
+
 int TUnixSystem::AnnounceTcpService(int port, Bool_t reuse, int backlog,
                                     int tcpwindowsize)
 {
-   // Announce TCP/IP service.
-   // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
-   // or -3 if listen() failed.
-
    return UnixTcpService(port, reuse, backlog, tcpwindowsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce UDP service.
+
 int TUnixSystem::AnnounceUdpService(int port, int backlog)
 {
-   // Announce UDP service.
-
    return UnixUdpService(port, backlog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce unix domain service on path "kServerPath/<port>"
+
 int TUnixSystem::AnnounceUnixService(int port, int backlog)
 {
-   // Announce unix domain service on path "kServerPath/<port>"
-
    return UnixUnixService(port, backlog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Announce unix domain service on path 'sockpath'
+
 int TUnixSystem::AnnounceUnixService(const char *sockpath, int backlog)
 {
-   // Announce unix domain service on path 'sockpath'
-
    return UnixUnixService(sockpath, backlog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection. In case of an error return -1. In case
+/// non-blocking I/O is enabled and no connections are available
+/// return -2.
+
 int TUnixSystem::AcceptConnection(int sock)
 {
-   // Accept a connection. In case of an error return -1. In case
-   // non-blocking I/O is enabled and no connections are available
-   // return -2.
-
    int soc = -1;
 
    while ((soc = ::accept(sock, 0, 0)) == -1 && GetErrno() == EINTR)
@@ -3160,11 +3257,11 @@ int TUnixSystem::AcceptConnection(int sock)
    return soc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close socket.
+
 void TUnixSystem::CloseConnection(int sock, Bool_t force)
 {
-   // Close socket.
-
    if (sock < 0) return;
 
 #if !defined(R__AIX) || defined(_AIX41) || defined(_AIX43)
@@ -3176,13 +3273,13 @@ void TUnixSystem::CloseConnection(int sock, Bool_t force)
       ResetErrno();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer headed by a length indicator. Length is the size of
+/// the buffer. Returns the number of bytes received in buf or -1 in
+/// case of error.
+
 int TUnixSystem::RecvBuf(int sock, void *buf, int length)
 {
-   // Receive a buffer headed by a length indicator. Length is the size of
-   // the buffer. Returns the number of bytes received in buf or -1 in
-   // case of error.
-
    Int_t header;
 
    if (UnixRecv(sock, &header, sizeof(header), 0) > 0) {
@@ -3202,12 +3299,12 @@ int TUnixSystem::RecvBuf(int sock, void *buf, int length)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a buffer headed by a length indicator. Returns length of sent buffer
+/// or -1 in case of error.
+
 int TUnixSystem::SendBuf(int sock, const void *buf, int length)
 {
-   // Send a buffer headed by a length indicator. Returns length of sent buffer
-   // or -1 in case of error.
-
    Int_t header = htonl(length);
 
    if (UnixSend(sock, &header, sizeof(header), 0) < 0) {
@@ -3223,18 +3320,18 @@ int TUnixSystem::SendBuf(int sock, const void *buf, int length)
    return length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive exactly length bytes into buffer. Use opt to receive out-of-band
+/// data or to have a peek at what is in the buffer (see TSocket). Buffer
+/// must be able to store at least length bytes. Returns the number of
+/// bytes received (can be 0 if other side of connection was closed) or -1
+/// in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
+/// in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
+/// errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+/// (EPIPE || ECONNRESET).
+
 int TUnixSystem::RecvRaw(int sock, void *buf, int length, int opt)
 {
-   // Receive exactly length bytes into buffer. Use opt to receive out-of-band
-   // data or to have a peek at what is in the buffer (see TSocket). Buffer
-   // must be able to store at least length bytes. Returns the number of
-   // bytes received (can be 0 if other side of connection was closed) or -1
-   // in case of error, -2 in case of MSG_OOB and errno == EWOULDBLOCK, -3
-   // in case of MSG_OOB and errno == EINVAL and -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
-   // (EPIPE || ECONNRESET).
-
    int flag;
 
    switch (opt) {
@@ -3264,14 +3361,14 @@ int TUnixSystem::RecvRaw(int sock, void *buf, int length, int opt)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send exactly length bytes from buffer. Use opt to send out-of-band
+/// data (see TSocket). Returns the number of bytes sent or -1 in case of
+/// error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+/// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+
 int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
 {
-   // Send exactly length bytes from buffer. Use opt to send out-of-band
-   // data (see TSocket). Returns the number of bytes sent or -1 in case of
-   // error. Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
    int flag;
 
    switch (opt) {
@@ -3299,11 +3396,11 @@ int TUnixSystem::SendRaw(int sock, const void *buf, int length, int opt)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set socket option.
+
 int TUnixSystem::SetSockOpt(int sock, int opt, int val)
 {
-   // Set socket option.
-
    if (sock < 0) return -1;
 
    switch (opt) {
@@ -3369,11 +3466,11 @@ int TUnixSystem::SetSockOpt(int sock, int opt, int val)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get socket option.
+
 int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 {
-   // Get socket option.
-
    if (sock < 0) return -1;
 
 #if defined(USE_SOCKLEN_T) || defined(_AIX43)
@@ -3502,11 +3599,11 @@ static struct Signalmap_t {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call the signal handler associated with the signal.
+
 static void sighandler(int sig)
 {
-   // Call the signal handler associated with the signal.
-
    for (int i= 0; i < kMAXSIGNALS; i++) {
       if (gSignalMap[i].fCode == sig) {
          (*gSignalMap[i].fHandler)((ESignals)i);
@@ -3515,11 +3612,11 @@ static void sighandler(int sig)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle and dispatch signals.
+
 void TUnixSystem::DispatchSignals(ESignals sig)
 {
-   // Handle and dispatch signals.
-
    switch (sig) {
    case kSigAlarm:
       DispatchTimers(kFALSE);
@@ -3559,11 +3656,11 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       CheckSignals(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a signal handler for a signal.
+
 void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 {
-   // Set a signal handler for a signal.
-
    if (gEnv && !gEnv->GetValue("Root.ErrorHandlers", 1))
       return;
 
@@ -3597,12 +3694,12 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If ignore is true ignore the specified signal, else restore previous
+/// behaviour.
+
 void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
 {
-   // If ignore is true ignore the specified signal, else restore previous
-   // behaviour.
-
    TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
    TTHREAD_TLS_ARRAY(struct sigaction,kMAXSIGNALS,oldsigact);
 
@@ -3628,16 +3725,16 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the argument is true the SIGALRM signal handler is set so that
+/// interrupted syscalls will not be restarted by the kernel. This is
+/// typically used in case one wants to put a timeout on an I/O operation.
+/// By default interrupted syscalls will always be restarted (for all
+/// signals). This can be controlled for each a-synchronous TTimer via
+/// the method TTimer::SetInterruptSyscalls().
+
 void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
 {
-   // When the argument is true the SIGALRM signal handler is set so that
-   // interrupted syscalls will not be restarted by the kernel. This is
-   // typically used in case one wants to put a timeout on an I/O operation.
-   // By default interrupted syscalls will always be restarted (for all
-   // signals). This can be controlled for each a-synchronous TTimer via
-   // the method TTimer::SetInterruptSyscalls().
-
    if (gSignalMap[kSigAlarm].fHandler) {
       struct sigaction sigact;
 #if defined(R__SUN)
@@ -3669,19 +3766,19 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the signal name associated with a signal.
+
 const char *TUnixSystem::UnixSigname(ESignals sig)
 {
-   // Return the signal name associated with a signal.
-
    return gSignalMap[sig].fSigName;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore old signal handler for specified signal.
+
 void TUnixSystem::UnixResetSignal(ESignals sig)
 {
-   // Restore old signal handler for specified signal.
-
    if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
       if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0) < 0)
@@ -3692,22 +3789,22 @@ void TUnixSystem::UnixResetSignal(ESignals sig)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Restore old signal handlers.
+
 void TUnixSystem::UnixResetSignals()
 {
-   // Restore old signal handlers.
-
    for (int sig = 0; sig < kMAXSIGNALS; sig++)
       UnixResetSignal((ESignals)sig);
 }
 
 //---- time --------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time in milliseconds since 0:00 Jan 1 1995.
+
 Long64_t TUnixSystem::UnixNow()
 {
-   // Get current time in milliseconds since 0:00 Jan 1 1995.
-
    static std::atomic<time_t> jan95{0};
    if (!jan95) {
       struct tm tp;
@@ -3731,11 +3828,11 @@ Long64_t TUnixSystem::UnixNow()
    return Long64_t(t.tv_sec-(Long_t)jan95)*1000 + t.tv_usec/1000;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set interval timer to time-out in ms milliseconds.
+
 int TUnixSystem::UnixSetitimer(Long_t ms)
 {
-   // Set interval timer to time-out in ms milliseconds.
-
    struct itimerval itv;
    itv.it_value.tv_sec     = 0;
    itv.it_value.tv_usec    = 0;
@@ -3753,16 +3850,16 @@ int TUnixSystem::UnixSetitimer(Long_t ms)
 
 //---- file descriptors --------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for events on the file descriptors specified in the readready and
+/// writeready masks or for timeout (in milliseconds) to occur. Returns
+/// the number of ready descriptors, or 0 in case of timeout, or < 0 in
+/// case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
+/// the errno has been reset and the method can be called again.
+
 int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                             Long_t timeout)
 {
-   // Wait for events on the file descriptors specified in the readready and
-   // writeready masks or for timeout (in milliseconds) to occur. Returns
-   // the number of ready descriptors, or 0 in case of timeout, or < 0 in
-   // case of an error, with -2 being EINTR and -3 EBADF. In case of EINTR
-   // the errno has been reset and the method can be called again.
-
    int retcode;
 
    fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
@@ -3791,19 +3888,26 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 
 //---- directories -------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the user's home directory.
+
 const char *TUnixSystem::UnixHomedirectory(const char *name)
 {
-   // Returns the user's home directory.
-
    static char path[kMAXPATHLEN], mydir[kMAXPATHLEN] = { '\0' };
-   struct passwd *pw;
+   return UnixHomedirectory(name, path, mydir);
+}
 
+////////////////////////////////////////////////////////////////////////////
+/// Returns the user's home directory.
+
+const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *mydir)
+{
+   struct passwd *pw;
    if (name) {
       pw = getpwnam(name);
       if (pw) {
          strncpy(path, pw->pw_dir, kMAXPATHLEN-1);
-         path[sizeof(path)-1] = '\0';
+         path[kMAXPATHLEN-1] = '\0';
          return path;
       }
    } else {
@@ -3812,32 +3916,32 @@ const char *TUnixSystem::UnixHomedirectory(const char *name)
       pw = getpwuid(getuid());
       if (pw && pw->pw_dir) {
          strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
-         mydir[sizeof(mydir)-1] = '\0';
+         mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       } else if (gSystem->Getenv("HOME")) {
          strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
-         mydir[sizeof(mydir)-1] = '\0';
+         mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       }
    }
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a Unix file system directory. Returns 0 in case of success and
+/// -1 if the directory could not be created (either already exists or
+/// illegal path name).
+
 int TUnixSystem::UnixMakedir(const char *dir)
 {
-   // Make a Unix file system directory. Returns 0 in case of success and
-   // -1 if the directory could not be created (either already exists or
-   // illegal path name).
-
    return ::mkdir(StripOffProto(dir, "file:"), 0755);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory.
+
 void *TUnixSystem::UnixOpendir(const char *dir)
 {
-   // Open a directory.
-
    struct stat finfo;
 
    const char *edir = StripOffProto(dir, "file:");
@@ -3859,11 +3963,11 @@ void *TUnixSystem::UnixOpendir(const char *dir)
 #   define REAL_DIR_ENTRY(dp) (dp->d_ino != 0)
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the next directory entry.
+
 const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 {
-   // Returns the next directory entry.
-
    DIR *dirp = (DIR*)dirp1;
 #ifdef HAS_DIRENT
    struct dirent *dp;
@@ -3885,14 +3989,14 @@ const char *TUnixSystem::UnixGetdirentry(void *dirp1)
 
 //---- files -------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 int TUnixSystem::UnixFilestat(const char *fpath, FileStat_t &buf)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    const char *path = StripOffProto(fpath, "file:");
    buf.fIsLink = kFALSE;
 
@@ -3926,18 +4030,18 @@ int TUnixSystem::UnixFilestat(const char *fpath, FileStat_t &buf)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file system: id, bsize, bfree, blocks.
+/// Id      is file system type (machine dependend, see statfs())
+/// Bsize   is block size of file system
+/// Blocks  is total number of blocks in file system
+/// Bfree   is number of free blocks in file system
+/// The function returns 0 in case of success and 1 if the file system could
+/// not be stat'ed.
+
 int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
                             Long_t *blocks, Long_t *bfree)
 {
-   // Get info about a file system: id, bsize, bfree, blocks.
-   // Id      is file system type (machine dependend, see statfs())
-   // Bsize   is block size of file system
-   // Blocks  is total number of blocks in file system
-   // Bfree   is number of free blocks in file system
-   // The function returns 0 in case of success and 1 if the file system could
-   // not be stat'ed.
-
    struct statfs statfsbuf;
 #if (defined(R__SOLARIS) && !defined(R__LINUX))
    if (statfs(path, &statfsbuf, sizeof(struct statfs), 0) == 0) {
@@ -3981,27 +4085,27 @@ int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait till child is finished.
+
 int TUnixSystem::UnixWaitchild()
 {
-   // Wait till child is finished.
-
    int status;
    return (int) waitpid(0, &status, WNOHANG);
 }
 
 //---- RPC -------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a TCP/IP connection to server and connect to a service (i.e. port).
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Is called via the TSocket constructor. Returns -1 in case of error.
+
 int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
                                 int tcpwindowsize)
 {
-   // Open a TCP/IP connection to server and connect to a service (i.e. port).
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Is called via the TSocket constructor. Returns -1 in case of error.
-
    short  sport;
    struct servent *sp;
 
@@ -4047,12 +4151,12 @@ int TUnixSystem::UnixTcpConnect(const char *hostname, int port,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a UDP socket connection
+/// Is called via the TSocket constructor. Returns -1 in case of error.
+
 int TUnixSystem::UnixUdpConnect(const char *hostname, int port)
 {
-   // Creates a UDP socket connection
-   // Is called via the TSocket constructor. Returns -1 in case of error.
-
    short  sport;
    struct servent *sp;
 
@@ -4092,19 +4196,19 @@ int TUnixSystem::UnixUdpConnect(const char *hostname, int port)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a Unix domain socket.
+
 int TUnixSystem::UnixUnixConnect(int port)
 {
-   // Connect to a Unix domain socket.
-
    return UnixUnixConnect(TString::Format("%s/%d", kServerPath, port));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a Unix domain socket. Returns -1 in case of error.
+
 int TUnixSystem::UnixUnixConnect(const char *sockpath)
 {
-   // Connect to a Unix domain socket. Returns -1 in case of error.
-
    if (!sockpath || strlen(sockpath) <= 0) {
       ::SysError("TUnixSystem::UnixUnixConnect", "socket path undefined");
       return -1;
@@ -4139,21 +4243,21 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a socket, bind to it and start listening for TCP/IP connections
+/// on the port. If reuse is true reuse the address, backlog specifies
+/// how many sockets can be waiting to be accepted. If port is 0 a port
+/// scan will be done to find a free port. This option is mutual exlusive
+/// with the reuse option.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns socket fd or -1 if socket() failed, -2 if bind() failed
+/// or -3 if listen() failed.
+
 int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
                                 int tcpwindowsize)
 {
-   // Open a socket, bind to it and start listening for TCP/IP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted. If port is 0 a port
-   // scan will be done to find a free port. This option is mutual exlusive
-   // with the reuse option.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns socket fd or -1 if socket() failed, -2 if bind() failed
-   // or -3 if listen() failed.
-
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
    struct servent *sp;
@@ -4199,8 +4303,9 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    } else {
       int bret;
       do {
-         inserver.sin_port = htons(tryport++);
+         inserver.sin_port = htons(tryport);
          bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixTcpService", "bind (port scan)");
@@ -4219,15 +4324,15 @@ int TUnixSystem::UnixTcpService(int port, Bool_t reuse, int backlog,
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a socket, bind to it and start listening for UDP connections
+/// on the port. If reuse is true reuse the address, backlog specifies
+/// how many sockets can be waiting to be accepted. If port is 0 a port
+/// scan will be done to find a free port. This option is mutual exlusive
+/// with the reuse option.
+
 int TUnixSystem::UnixUdpService(int port, int backlog)
 {
-   // Open a socket, bind to it and start listening for UDP connections
-   // on the port. If reuse is true reuse the address, backlog specifies
-   // how many sockets can be waiting to be accepted. If port is 0 a port
-   // scan will be done to find a free port. This option is mutual exlusive
-   // with the reuse option.
-
    const short kSOCKET_MINPORT = 5000, kSOCKET_MAXPORT = 15000;
    short  sport, tryport = kSOCKET_MINPORT;
    struct servent *sp;
@@ -4260,8 +4365,9 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    } else {
       int bret;
       do {
-         inserver.sin_port = htons(tryport++);
+         inserver.sin_port = htons(tryport);
          bret = ::bind(sock, (struct sockaddr*) &inserver, sizeof(inserver));
+         tryport++;
       } while (bret < 0 && GetErrno() == EADDRINUSE && tryport < kSOCKET_MAXPORT);
       if (bret < 0) {
          ::SysError("TUnixSystem::UnixUdpService", "bind (port scan)");
@@ -4280,12 +4386,12 @@ int TUnixSystem::UnixUdpService(int port, int backlog)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a socket, bind to it and start listening for Unix domain connections
+/// to it. Returns socket fd or -1.
+
 int TUnixSystem::UnixUnixService(int port, int backlog)
 {
-   // Open a socket, bind to it and start listening for Unix domain connections
-   // to it. Returns socket fd or -1.
-
    int oldumask;
 
    // Assure that socket directory exists
@@ -4306,12 +4412,12 @@ int TUnixSystem::UnixUnixService(int port, int backlog)
    return UnixUnixService(sockpath, backlog);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a socket on path 'sockpath', bind to it and start listening for Unix
+/// domain connections to it. Returns socket fd or -1.
+
 int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
 {
-   // Open a socket on path 'sockpath', bind to it and start listening for Unix
-   // domain connections to it. Returns socket fd or -1.
-
    if (!sockpath || strlen(sockpath) <= 0) {
       ::SysError("TUnixSystem::UnixUnixService", "socket path undefined");
       return -1;
@@ -4353,15 +4459,15 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
    return sock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive exactly length bytes into buffer. Returns number of bytes
+/// received. Returns -1 in case of error, -2 in case of MSG_OOB
+/// and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
+/// and -4 in case of kNoBlock and errno == EWOULDBLOCK.
+/// Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
+
 int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
 {
-   // Receive exactly length bytes into buffer. Returns number of bytes
-   // received. Returns -1 in case of error, -2 in case of MSG_OOB
-   // and errno == EWOULDBLOCK, -3 in case of MSG_OOB and errno == EINVAL
-   // and -4 in case of kNoBlock and errno == EWOULDBLOCK.
-   // Returns -5 if pipe broken or reset by peer (EPIPE || ECONNRESET).
-
    ResetErrno();
 
    if (sock < 0) return -1;
@@ -4404,14 +4510,14 @@ int TUnixSystem::UnixRecv(int sock, void *buffer, int length, int flag)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send exactly length bytes from buffer. Returns -1 in case of error,
+/// otherwise number of sent bytes. Returns -4 in case of kNoBlock and
+/// errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
+/// (EPIPE || ECONNRESET).
+
 int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 {
-   // Send exactly length bytes from buffer. Returns -1 in case of error,
-   // otherwise number of sent bytes. Returns -4 in case of kNoBlock and
-   // errno == EWOULDBLOCK. Returns -5 if pipe broken or reset by peer
-   // (EPIPE || ECONNRESET).
-
    if (sock < 0) return -1;
 
    int once = 0;
@@ -4446,11 +4552,11 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 
 //---- Dynamic Loading ---------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get shared library search path. Static utility function.
+
 static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 {
-   // Get shared library search path. Static utility function.
-
    static TString dynpath;
    static Bool_t initialized = kFALSE;
    if (!initialized) {
@@ -4467,11 +4573,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
-#ifdef ROOTLIBDIR
-         rdynpath = ".:"; rdynpath += ROOTLIBDIR;
-#else
-         rdynpath = ".:"; rdynpath += gRootDir; rdynpath += "/lib";
-#endif
+         rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
 #if defined (R__AIX)
@@ -4492,16 +4594,9 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       else {
          dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
       }
-
-#ifdef ROOTLIBDIR
-      if (!dynpath.Contains(ROOTLIBDIR)) {
-         dynpath += ":"; dynpath += ROOTLIBDIR;
+      if (!dynpath.Contains(TROOT::GetLibDir())) {
+         dynpath += ":"; dynpath += TROOT::GetLibDir();
       }
-#else
-      if (!dynpath.Contains(TString::Format("%s/lib", gRootDir))) {
-         dynpath += ":"; dynpath += gRootDir; dynpath += "/lib";
-      }
-#endif
       if (gCling) {
          dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
       } else
@@ -4538,11 +4633,11 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
    return dynpath;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new directory to the dynamic path.
+
 void TUnixSystem::AddDynamicPath(const char *path)
 {
-   // Add a new directory to the dynamic path.
-
    if (path) {
       TString oldpath = DynamicPath(0, kFALSE);
       oldpath.Append(":");
@@ -4551,34 +4646,34 @@ void TUnixSystem::AddDynamicPath(const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the dynamic path (used to find shared libraries).
+
 const char *TUnixSystem::GetDynamicPath()
 {
-   // Return the dynamic path (used to find shared libraries).
-
    return DynamicPath(0, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the dynamic path to a new value.
+/// If the value of 'path' is zero, the dynamic path is reset to its
+/// default value.
+
 void TUnixSystem::SetDynamicPath(const char *path)
 {
-   // Set the dynamic path to a new value.
-   // If the value of 'path' is zero, the dynamic path is reset to its
-   // default value.
-
    if (!path)
       DynamicPath(0, kTRUE);
    else
       DynamicPath(path);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the path of a shared library (searches for library in the
+/// shared library search path). If no file name extension is provided
+/// it first tries .so, .sl, .dl and then .a (for AIX).
+
 const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
 {
-   // Returns the path of a shared library (searches for library in the
-   // shared library search path). If no file name extension is provided
-   // it first tries .so, .sl, .dl and then .a (for AIX).
-
    char buf[PATH_MAX + 1];
    char *res = realpath(sLib.Data(), buf);
    if (res) sLib = buf;
@@ -4632,11 +4727,11 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
 #include <mach/mach.h>
 #include <mach/mach_error.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get system info for Mac OS X.
+
 static void GetDarwinSysInfo(SysInfo_t *sysinfo)
 {
-   // Get system info for Mac OS X.
-
    FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu hw.cpufrequency "
                                "hw.busfrequency hw.l2cachesize hw.memsize", "r");
    TString s;
@@ -4668,11 +4763,11 @@ static void GetDarwinSysInfo(SysInfo_t *sysinfo)
    gSystem->ClosePipe(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get CPU load on Mac OS X.
+
 static void ReadDarwinCpu(long *ticks)
 {
-   // Get CPU load on Mac OS X.
-
    mach_msg_type_number_t count;
    kern_return_t kr;
    host_cpu_load_info_data_t cpu;
@@ -4691,12 +4786,12 @@ static void ReadDarwinCpu(long *ticks)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get CPU stat for Mac OS X. Use sampleTime to set the interval over which
+/// the CPU load will be measured, in ms (default 1000).
+
 static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
-   // Get CPU stat for Mac OS X. Use sampleTime to set the interval over which
-   // the CPU load will be measured, in ms (default 1000).
-
    Double_t avg[3];
    if (getloadavg(avg, sizeof(avg)) < 0) {
       ::Error("TUnixSystem::GetDarwinCpuInfo", "getloadavg failed");
@@ -4727,11 +4822,11 @@ static void GetDarwinCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get VM stat for Mac OS X.
+
 static void GetDarwinMemInfo(MemInfo_t *meminfo)
 {
-   // Get VM stat for Mac OS X.
-
    static Int_t pshift = 0;
    static DIR *dirp;
    vm_statistics_data_t vm_info;
@@ -4785,16 +4880,16 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
    meminfo->fSwapFree  = meminfo->fSwapTotal - meminfo->fSwapUsed;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get process info for this process on Mac OS X.
+/// Code largely taken from:
+/// http://www.opensource.apple.com/source/top/top-15/libtop.c
+/// The virtual memory usage is slightly over estimated as we don't
+/// subtract shared regions, but the value makes more sense
+/// then pure vsize, which is useless on 64-bit machines.
+
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
-   // Get process info for this process on Mac OS X.
-   // Code largely taken from:
-   // http://www.opensource.apple.com/source/top/top-15/libtop.c
-   // The virtual memory usage is slightly over estimated as we don't
-   // subtract shared regions, but the value makes more sense
-   // then pure vsize, which is useless on 64-bit machines.
-
 #ifdef _LP64
 #define vm_region vm_region_64
 #endif
@@ -4900,11 +4995,11 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 #endif
 
 #if defined(R__LINUX)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get system info for Linux. Only fBusSpeed is not set.
+
 static void GetLinuxSysInfo(SysInfo_t *sysinfo)
 {
-   // Get system info for Linux. Only fBusSpeed is not set.
-
    TString s;
    FILE *f = fopen("/proc/cpuinfo", "r");
    if (f) {
@@ -4952,11 +5047,11 @@ static void GetLinuxSysInfo(SysInfo_t *sysinfo)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get CPU load on Linux.
+
 static void ReadLinuxCpu(long *ticks)
 {
-   // Get CPU load on Linux.
-
    ticks[0] = ticks[1] = ticks[2] = ticks[3] = 0;
 
    TString s;
@@ -4968,12 +5063,12 @@ static void ReadLinuxCpu(long *ticks)
    fclose(f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get CPU stat for Linux. Use sampleTime to set the interval over which
+/// the CPU load will be measured, in ms (default 1000).
+
 static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
 {
-   // Get CPU stat for Linux. Use sampleTime to set the interval over which
-   // the CPU load will be measured, in ms (default 1000).
-
    Double_t avg[3] = { -1., -1., -1. };
 #ifndef R__WINGCC
    if (getloadavg(avg, sizeof(avg)) < 0) {
@@ -5007,11 +5102,11 @@ static void GetLinuxCpuInfo(CpuInfo_t *cpuinfo, Int_t sampleTime)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get VM stat for Linux.
+
 static void GetLinuxMemInfo(MemInfo_t *meminfo)
 {
-   // Get VM stat for Linux.
-
    TString s;
    FILE *f = fopen("/proc/meminfo", "r");
    if (!f) return;
@@ -5039,11 +5134,11 @@ static void GetLinuxMemInfo(MemInfo_t *meminfo)
    meminfo->fSwapUsed = meminfo->fSwapTotal - meminfo->fSwapFree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get process info for this process on Linux.
+
 static void GetLinuxProcInfo(ProcInfo_t *procinfo)
 {
-   // Get process info for this process on Linux.
-
    struct rusage ru;
    if (getrusage(RUSAGE_SELF, &ru) < 0) {
       ::SysError("TUnixSystem::GetLinuxProcInfo", "getrusage failed");
@@ -5069,13 +5164,13 @@ static void GetLinuxProcInfo(ProcInfo_t *procinfo)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns static system info, like OS type, CPU type, number of CPUs
+/// RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
+/// 0 otherwise.
+
 int TUnixSystem::GetSysInfo(SysInfo_t *info) const
 {
-   // Returns static system info, like OS type, CPU type, number of CPUs
-   // RAM size, etc into the SysInfo_t structure. Returns -1 in case of error,
-   // 0 otherwise.
-
    if (!info) return -1;
 
    static SysInfo_t sysinfo;
@@ -5093,13 +5188,13 @@ int TUnixSystem::GetSysInfo(SysInfo_t *info) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns cpu load average and load info into the CpuInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
+/// interval over which the CPU load will be measured, in ms (default 1000).
+
 int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
 {
-   // Returns cpu load average and load info into the CpuInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise. Use sampleTime to set the
-   // interval over which the CPU load will be measured, in ms (default 1000).
-
    if (!info) return -1;
 
 #if defined(R__MACOSX)
@@ -5111,12 +5206,12 @@ int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ram and swap memory usage info into the MemInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise.
+
 int TUnixSystem::GetMemInfo(MemInfo_t *info) const
 {
-   // Returns ram and swap memory usage info into the MemInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
-
    if (!info) return -1;
 
 #if defined(R__MACOSX)
@@ -5128,12 +5223,12 @@ int TUnixSystem::GetMemInfo(MemInfo_t *info) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns cpu and memory used by this process into the ProcInfo_t structure.
+/// Returns -1 in case of error, 0 otherwise.
+
 int TUnixSystem::GetProcInfo(ProcInfo_t *info) const
 {
-   // Returns cpu and memory used by this process into the ProcInfo_t structure.
-   // Returns -1 in case of error, 0 otherwise.
-
    if (!info) return -1;
 
 #if defined(R__MACOSX)

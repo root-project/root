@@ -13,27 +13,17 @@
 #define ROOT_TGraphQQ
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGraphQQ                                                             //
-//                                                                      //
-// to create and to draw quantile-quantile plots                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TGraphQQ : public TGraph{
 protected:
-   Int_t     fNy0;    //size of the fY0 dataset
-   Double_t  fXq1;    //x1 coordinate of the interquartile line
-   Double_t  fXq2;    //x2 coordinate of the interquartile line
-   Double_t  fYq1;    //y1 coordinate of the interquartile line
-   Double_t  fYq2;    //y2 coordinate of the interquartile line
-   Double_t *fY0;     //!second dataset, if specified
-   TF1      *fF;      //theoretical density function, if specified
+   Int_t     fNy0;    ///< size of the fY0 dataset
+   Double_t  fXq1;    ///< x1 coordinate of the interquartile line
+   Double_t  fXq2;    ///< x2 coordinate of the interquartile line
+   Double_t  fYq1;    ///< y1 coordinate of the interquartile line
+   Double_t  fYq2;    ///< y2 coordinate of the interquartile line
+   Double_t *fY0;     ///<! second dataset, if specified
+   TF1      *fF;      ///< theoretical density function, if specified
 
    void      Quartiles();
    void      MakeQuantiles();

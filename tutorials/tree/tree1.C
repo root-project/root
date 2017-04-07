@@ -1,26 +1,41 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// This example is a variant of hsimple.C but using a TTree instead
+/// of a TNtuple. It shows:
+///   - how to fill a Tree with a few simple variables.
+///   - how to read this Tree
+///   - how to browse and analyze the Tree via the TBrowser and TTreeViewer
+/// This example can be run in many different ways:
+///   1. Using the Cling interpreter
+/// ~~~
+/// .x tree1.C
+/// ~~~
+///   2. Using the automatic compiler interface
+/// ~~~
+/// .x tree1.C++
+/// ~~~
+///   3. 
+/// ~~~
+/// .L tree1.C  or .L tree1.C++
+/// tree1()
+/// ~~~
+/// One can also run the write and read parts in two separate sessions.
+/// For example following one of the sessions above, one can start the session:
+/// ~~~
+///   .L tree1.C
+///   tree1r();
+/// ~~~
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TBrowser.h"
 #include "TH2.h"
 #include "TRandom.h"
-
-// This example is a variant of hsimple.C but using a TTree instead
-// of a TNtuple. It shows :
-//   -how to fill a Tree with a few simple variables.
-//   -how to read this Tree
-//   -how to browse and analyze the Tree via the TBrowser and TTreeViewer
-// This example can be run in many different ways:
-//  way1:  .x tree1.C    using the CINT interpreter
-//  way2:  .x tree1.C++  using the automatic compiler interface
-//  way3:  .L tree1.C  or .L tree1.C++
-//          tree1()
-// One can also run the write and read parts in two separate sessions.
-// For example following one of the sessions above, one can start the session:
-//   .L tree1.C
-//   tree1r();
-//
-//  Author: Rene Brun
 
 void tree1w()
 {

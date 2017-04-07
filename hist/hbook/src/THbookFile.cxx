@@ -9,25 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////
-//  This class is an interface to the Hbook objects in Hbook files
-//  Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
-//  NB: a THbookFile can only be used in READ mode
-//      Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
-//
-// Example of use:
-//  gSystem->Load("libHbook");
-//  THbookFile f("myfile.hbook");
-//  f.ls();
-//  TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
-//  h1->Fit("gaus");
-//  THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
-//  T->Print();  //show the Hbook ntuple variables
-//  T->Draw("x","y<0"); // as in normal TTree::Draw
-//
-//  THbookFile can be browsed via TBrowser.
-//
-////////////////////////////////////////////////////////////////////////
+/** \class THbookFile
+    \ingroup Hist
+ This class is an interface to the Hbook objects in Hbook files.
+ Any Hbook object (1-D, 2-D, Profile, RWN or CWN can be read
+
+ NB: a THbookFile can only be used in READ mode
+        Use the utility in $ROOTSYS/bin/h2root to convert Hbook to Root
+
+ Example of use:
+
+     gSystem->Load("libHbook");
+     THbookFile f("myfile.hbook");
+     f.ls();
+     TH1F *h1 = (TH1F*)f.Get(1);  //import histogram ID=1 in h1
+     h1->Fit("gaus");
+     THbookTree *T = (THbookTree*)f.Get(111); //import ntuple header
+     T->Print();  //show the Hbook ntuple variables
+     T->Draw("x","y<0"); // as in normal TTree::Draw
+
+ THbookFile can be browsed via TBrowser.
+*/
 
 #include <stdlib.h>
 #include <string.h>
@@ -47,7 +49,13 @@
 #include "TSystem.h"
 #include "TMath.h"
 
-#define PAWC_SIZE 2000000
+// NOTE: THe following comments and declarations are a duplicate
+// of those in main/src/h2root.cxx
+
+// Note that with gcc3.4 or above the size of PAWC_SIZE must be the same
+// as in the Fortran definition in hbook.f and zebra
+// Also, the arrays must be declared extern like on Windows
+#define PAWC_SIZE 4000000
 
 //  Define the names of the Fortran common blocks for the different OSs
 
@@ -57,11 +65,11 @@
 #  define hcbits hcbits_
 #  define hcbook hcbook_
 #  define rzcl rzcl_
-int pawc[PAWC_SIZE];
-int quest[100];
-int hcbits[37];
-int hcbook[51];
-int rzcl[11];
+extern "C" int pawc[PAWC_SIZE];
+extern "C" int quest[100];
+extern "C" int hcbits[37];
+extern "C" int hcbook[51];
+extern "C" int rzcl[11];
 #else
 #  define pawc   PAWC
 #  define quest  QUEST
@@ -239,20 +247,21 @@ Int_t  *THbookFile::fgLuns   = 0;
 
 ClassImp(THbookFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///the constructor
+
 THbookFile::THbookFile() : TNamed(),fLun(0),fLrecl(0)
 {
-   //the constructor
    fList = new TList();
    fKeys = new TList();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Constructor for an HBook file object
+
 THbookFile::THbookFile(const char *fname, Int_t lrecl)
            :TNamed(fname,"")
 {
-//  Constructor for an HBook file object
-
    // Initialize the Hbook/Zebra store
    Int_t i;
    if (!fgPawInit) {
@@ -322,21 +331,22 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 THbookFile::~THbookFile()
 {
-   //destructor
    if (!fList) return;
    Close();
    delete fList;
    delete fKeys;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be implemented
+
 void THbookFile::Browse(TBrowser *b)
 {
-// to be implemented
-
    if( b ) {
       b->Add(fList, "memory");
       b->Add(fKeys, "IDs on disk");
@@ -344,11 +354,11 @@ void THbookFile::Browse(TBrowser *b)
    cd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// change directory to dirname
+
 Bool_t THbookFile::cd(const char *dirname)
 {
-// change directory to dirname
-
    Int_t nch = strlen(dirname);
    if (nch == 0) {
 #ifndef WIN32
@@ -380,11 +390,11 @@ Bool_t THbookFile::cd(const char *dirname)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the Hbook file
+
 void THbookFile::Close(Option_t *)
 {
-// Close the Hbook file
-
    if(!IsOpen()) return;
    if (!fList) return;
 
@@ -403,32 +413,35 @@ void THbookFile::Close(Option_t *)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///remove id from file and memory
+
 void THbookFile::DeleteID(Int_t id)
 {
-   //remove id from file and memory
    hdelet(id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return object with name in fList in memory
+
 TObject *THbookFile::FindObject(const char *name) const
 {
-// return object with name in fList in memory
    return fList->FindObject(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return object with pointer obj in fList in memory
+
 TObject *THbookFile::FindObject(const TObject *obj) const
 {
-// return object with pointer obj in fList in memory
    return fList->FindObject(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// import Hbook object with identifier idd in memory
+
 TObject *THbookFile::Get(Int_t idd)
 {
-// import Hbook object with identifier idd in memory
-
    Int_t id = 0;
    for (Int_t key=1;key<1000000;key++) {
       int z0 = 0;
@@ -496,11 +509,11 @@ TObject *THbookFile::Get(Int_t idd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read in memory all columns of entry number of ntuple id from the Hbook file
+
 Int_t THbookFile::GetEntry(Int_t entry, Int_t id, Int_t atype, Float_t *x)
 {
-// Read in memory all columns of entry number of ntuple id from the Hbook file
-
    Int_t ier = 0;
    if (atype == 0) {
       hgnf(id,entry+1,x[0],ier);
@@ -510,11 +523,11 @@ Int_t THbookFile::GetEntry(Int_t entry, Int_t id, Int_t atype, Float_t *x)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read in memory only the branch bname
+
 Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id)
 {
-// Read in memory only the branch bname
-
    if (entry == gLastEntry) return 0;
    gLastEntry = entry;
    Int_t ier = 0;
@@ -530,14 +543,14 @@ Int_t THbookFile::GetEntryBranch(Int_t entry, Int_t id)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function is called from the first entry in TTreePlayer::InitLoop
+/// It analyzes the list of variables involved in the current query
+/// and pre-process the internal Hbook tables to speed-up the search
+/// at the next entries.
+
 void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
 {
-// This function is called from the first entry in TTreePlayer::InitLoop
-// It analyzes the list of variables involved in the current query
-// and pre-process the internal Hbook tables to speed-up the search
-// at the next entries.
-
    if (!formula) return;
    Int_t ncodes = formula->GetNcodes();
    for (Int_t i=1;i<=ncodes;i++) {
@@ -557,19 +570,20 @@ void THbookFile::InitLeaves(Int_t id, Int_t var, TTreeFormula *formula)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE in case file is open and kFALSE if file is not open.
+
 Bool_t THbookFile::IsOpen() const
 {
-   // Returns kTRUE in case file is open and kFALSE if file is not open.
-
    return fLun == 0 ? kFALSE : kTRUE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set branch address
+
 void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 {
-   //Set branch address
    Int_t *iadd = (Int_t*)add;
    Int_t &aadd = *iadd;
 #ifndef WIN32
@@ -579,18 +593,18 @@ void THbookFile::SetBranchAddress(Int_t id, const char *bname, void *add)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert this Hbook file to a Root file with name rootname.
+/// if rootname="', rootname = hbook file name with .root instead of .hbook
+/// By default, the Root file is connected and returned
+/// option:
+///       - "NO" do not connect the Root file
+///       - "C"  do not compress file (default is to compress)
+///       - "L"  do not convert names to lower case (default is to convert)
+
 TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
                                 Option_t *option)
 {
-// Convert this Hbook file to a Root file with name rootname.
-// if rootname="', rootname = hbook file name with .root instead of .hbook
-// By default, the Root file is connected and returned
-// option:
-//       - "NO" do not connect the Root file
-//       - "C"  do not compress file (default is to compress)
-//       - "L"  do not convert names to lower case (default is to convert)
-
    TString opt = option;
    opt.ToLower();
 
@@ -625,11 +639,11 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the Column-Wise-Ntuple id to a Root Tree
+
 TObject *THbookFile::ConvertCWN(Int_t id)
 {
-// Convert the Column-Wise-Ntuple id to a Root Tree
-
    const int nchar=9;
    int nvar;
    int i,j;
@@ -778,11 +792,11 @@ TObject *THbookFile::ConvertCWN(Int_t id)
    return tree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the Row-Wise-Ntuple id to a Root Tree
+
 TObject *THbookFile::ConvertRWN(Int_t id)
 {
-// Convert the Row-Wise-Ntuple id to a Root Tree
-
    const int nchar=9;
    int nvar;
    int i,j;
@@ -850,19 +864,19 @@ TObject *THbookFile::ConvertRWN(Int_t id)
    return tree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert an Hbook profile histogram into a Root TProfile
+///
+/// the following structure is used in Hbook
+///    lcid points to the profile in array iq
+///    lcont = lq(lcid-1)
+///    lw    = lq(lcont)
+///    ln    = lq(lw)
+///      if option S jbyt(iq(lw),1,2) = 1
+///      if option I jbyt(iq(lw),1,2) = 2
+
 TObject *THbookFile::ConvertProfile(Int_t id)
 {
-// Convert an Hbook profile histogram into a Root TProfile
-//
-// the following structure is used in Hbook
-//    lcid points to the profile in array iq
-//    lcont = lq(lcid-1)
-//    lw    = lq(lcont)
-//    ln    = lq(lw)
-//      if option S jbyt(iq(lw),1,2) = 1
-//      if option I jbyt(iq(lw),1,2) = 2
-
    if (id > 0) snprintf(idname,127,"h%d",id);
    else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
@@ -899,11 +913,11 @@ TObject *THbookFile::ConvertProfile(Int_t id)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert an Hbook 1-d histogram into a Root TH1F
+
 TObject *THbookFile::Convert1D(Int_t id)
 {
-// Convert an Hbook 1-d histogram into a Root TH1F
-
    if (id > 0) snprintf(idname,127,"h%d",id);
    else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
@@ -951,11 +965,11 @@ TObject *THbookFile::Convert1D(Int_t id)
    return h1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert an Hbook 2-d histogram into a Root TH2F
+
 TObject *THbookFile::Convert2D(Int_t id)
 {
-// Convert an Hbook 2-d histogram into a Root TH2F
-
    if (id > 0) snprintf(idname,127,"h%d",id);
    else        snprintf(idname,127,"h_%d",-id);
    hnoent(id,nentries);
@@ -986,11 +1000,11 @@ TObject *THbookFile::Convert2D(Int_t id)
    return h2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List contents of Hbook directory
+
 void THbookFile::ls(const char *path) const
 {
-// List contents of Hbook directory
-
    Int_t nch = strlen(path);
    if (nch == 0) {
 #ifndef WIN32

@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridJob
 #include "TGridJob.h"
-#endif
 
 
 class TAlienJob : public TGridJob {

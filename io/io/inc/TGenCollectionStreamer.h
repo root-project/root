@@ -11,15 +11,6 @@
 #ifndef ROOT_TGenCollectionStreamer
 #define ROOT_TGenCollectionStreamer
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGenCollectionStreamer
-//
-// Streamer around an arbitrary STL like container, which implements basic
-// container functionality.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGenCollectionProxy.h"
 #include "TCollectionProxyFactory.h"
 

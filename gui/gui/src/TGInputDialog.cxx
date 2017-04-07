@@ -25,7 +25,8 @@
 ClassImp(TGInputDialog)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
                              const char *prompt, const char *defval,
                              char *retstr, UInt_t options) :
@@ -126,19 +127,19 @@ TGInputDialog::TGInputDialog(const TGWindow *p, const TGWindow *main,
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup dialog.
+
 TGInputDialog::~TGInputDialog()
 {
-   // Cleanup dialog.
-
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button and text enter events
+
 Bool_t TGInputDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle button and text enter events
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {

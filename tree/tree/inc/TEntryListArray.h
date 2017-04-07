@@ -12,9 +12,7 @@
 #ifndef ROOT_TEntryListArray
 #define ROOT_TEntryListArray
 
-#ifndef ROOT_TEntryList
 #include "TEntryList.h"
-#endif
 
 class TTree;
 class TDirectory;
@@ -31,10 +29,10 @@ private:
    TEntryListArray& operator=(const TEntryListArray&); // Not implemented
 
 protected:
-   TList *fSubLists; //a list of underlying entry lists for each event of a TEntryList
-   Long64_t         fEntry; // the entry number, when the list is used for subentries
-   TEntryListArray *fLastSubListQueried; //! last sublist checked by GetSubListForEntry
-   TIter *fSubListIter; //! to iterate over fSubLists and keep last one checked
+   TList *fSubLists;                     ///<  a list of underlying entry lists for each event of a TEntryList
+   Long64_t         fEntry;              ///<  the entry number, when the list is used for subentries
+   TEntryListArray *fLastSubListQueried; ///<! last sublist checked by GetSubListForEntry
+   TIter *fSubListIter;                  ///<! to iterate over fSubLists and keep last one checked
 
    void Init();
    virtual void AddEntriesAndSubLists(const TEntryList *elist);
@@ -101,9 +99,7 @@ public:
 #ifndef ROOT_TEntryListArray
 #define ROOT_TEntryListArray
 
-#ifndef ROOT_TEntryList
 #include "TEntryList.h"
-#endif
 
 class TTree;
 class TDirectory;

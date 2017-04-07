@@ -51,13 +51,13 @@ enum EPaveStatsWid {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of TPaveStats GUI.
+
 TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height,
    UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of TPaveStats GUI.
-
    fPaveStats = 0;
 
    MakeTitle("Stat Options");
@@ -127,17 +127,18 @@ TPaveStatsEditor::TPaveStatsEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f4, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of fill editor.
+
 TPaveStatsEditor::~TPaveStatsEditor()
 {
-  // Destructor of fill editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TPaveStatsEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    // about stat options
    fHistoName->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
    fEntries->Connect("Toggled(Bool_t)","TPaveStatsEditor",this,"DoStatOptions()");
@@ -160,11 +161,11 @@ void TPaveStatsEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set GUI widgets according to the used TPaveStats attributes.
+
 void TPaveStatsEditor::SetModel(TObject* obj)
 {
-   // Set GUI widgets according to the used TPaveStats attributes.
-
    fPaveStats = (TPaveStats *)obj;
    fAvoidSignal = kTRUE;
 
@@ -219,11 +220,11 @@ void TPaveStatsEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the stat options.
+
 void TPaveStatsEditor::DoStatOptions()
 {
-   // Slot connected to the stat options.
-
    if (fAvoidSignal) return;
    Int_t stat = 0;
    if (fHistoName->GetState()   == kButtonDown) stat +=1;
@@ -251,11 +252,11 @@ void TPaveStatsEditor::DoStatOptions()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the fit options.
+
 void TPaveStatsEditor::DoFitOptions()
 {
-   // Slot connected to the fit options.
-
    if (fAvoidSignal) return;
    Int_t fit = 0;
    if (fNameValues->GetState()  == kButtonDown) fit +=1;
@@ -268,12 +269,12 @@ void TPaveStatsEditor::DoFitOptions()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the selection of the button 'Errors':
+/// check button Values should be selected if Errors is selected.
+
 void TPaveStatsEditor::SetValuesON(Bool_t on)
 {
-   // Slot connected to the selection of the button 'Errors':
-   // check button Values should be selected if Errors is selected.
-
    if (fAvoidSignal) return;
    if (on == kTRUE) fNameValues->SetState(kButtonDown);
 }

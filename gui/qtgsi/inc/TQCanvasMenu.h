@@ -24,9 +24,7 @@
 
 #include "qobject.h"
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TCanvas;
 class TObject;

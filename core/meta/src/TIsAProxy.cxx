@@ -17,13 +17,9 @@
 #include <map>
 #include <type_traits>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClass                                                               //
-//                                                                      //
-// TIsAProxy implementation class.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TIsAProxy
+TIsAProxy implementation class.
+*/
 
 namespace {
    struct DynamicType {
@@ -45,44 +41,45 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard initializing constructor
+
 TIsAProxy::TIsAProxy(const std::type_info& typ)
    : fType(&typ), fClass(nullptr), fLast(nullptr),
      fSubTypesReaders(0), fSubTypesWriteLockTaken(kFALSE),
      fVirtual(kFALSE), fInit(kFALSE)
 {
-   // Standard initializing constructor
-
    static_assert(sizeof(ClassMap_t)<=sizeof(fSubTypes), "ClassMap size is to large for array");
 
    ::new(fSubTypes) ClassMap_t();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard destructor
+
 TIsAProxy::~TIsAProxy()
 {
-   // Standard destructor
-
    ClassMap_t* m = GetMap(fSubTypes);
    m->clear();
    m->~ClassMap_t();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set class pointer
+///   This method is not thread safe
+
 void TIsAProxy::SetClass(TClass *cl)
 {
-   // Set class pointer
-   //   This method is not thread safe
    GetMap(fSubTypes)->clear();
    fClass = cl;
    fLast = nullptr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// IsA callback
+
 TClass* TIsAProxy::operator()(const void *obj)
 {
-   // IsA callback
-
    if ( !fInit )  {
       if ( !fClass.load() && fType ) {
          auto cls = TClass::GetClass(*fType);
@@ -125,11 +122,11 @@ TClass* TIsAProxy::operator()(const void *obj)
    return last == nullptr? nullptr: last->second;
 }
 
-//______________________________________________________________________________
-inline void* TIsAProxy::FindSubType(const type_info* type) const
-{
-   // See if we have already cached the TClass that correspond to this type_info.
+////////////////////////////////////////////////////////////////////////////////
+/// See if we have already cached the TClass that correspond to this std::type_info.
 
+inline void* TIsAProxy::FindSubType(const std::type_info* type) const
+{
    bool needToWait = kTRUE;
    do {
      ++fSubTypesReaders;
@@ -155,11 +152,11 @@ inline void* TIsAProxy::FindSubType(const type_info* type) const
    return returnValue;
 }
 
-//______________________________________________________________________________
-void* TIsAProxy::CacheSubType(const type_info* type, TClass* cls)
-{
-   // Record the TClass found for a type_info, so that we can retrieved it faster.
+////////////////////////////////////////////////////////////////////////////////
+/// Record the TClass found for a std::type_info, so that we can retrieved it faster.
 
+void* TIsAProxy::CacheSubType(const std::type_info* type, TClass* cls)
+{
    //See if another thread has the write lock, wait if it does
    Bool_t expected = kFALSE;
    while(! fSubTypesWriteLockTaken.compare_exchange_strong(expected,kTRUE) ) {

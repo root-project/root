@@ -1,3 +1,5 @@
+OUTDIR=output
+
 MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	Histograms.md Graphs.md FittingHistograms.md ALittleC++.md Cling.md \
 	ObjectOwnership.md Graphics.md FoldersTasks.md InputOutput.md \
@@ -6,13 +8,13 @@ MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
 	TutorialsandTests.md ExampleAnalysis.md Networking.md Threads.md \
 	PROOF.md WritingGUI.md ROOTandQt.md HTMLDoc.md InstallandBuild.md
 
-HTMLFILES=$(MDFILES:.md=.html)
-PDFFILES=$(MDFILES:.md=.pdf)
+HTMLFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.html))
+PDFFILES=$(addprefix $(OUTDIR)/,$(MDFILES:.md=.pdf))
 
 LATEXA4PREFIX=ROOTUsersGuideA4
 LATEXLETTERPREFIX=ROOTUsersGuideLetter
 
-OPTIONS=-s -S -f markdown --toc --chapters --number-sections
+OPTIONS=-s -S -f markdown --toc --toc-depth=2 --chapters --number-sections
 OPTIONSHTML=-H css/github.css --mathjax
 OPTIONSEPUB=--mathml
 OPTIONSLATEXA4=--template=./template.tex --variable=geometry:a4paper -V geometry:margin=1.5cm
@@ -35,7 +37,8 @@ $(LATEXA4PREFIX).ind: $(LATEXA4PREFIX).toc ROOTUsersGuide.ist
 	makeindex -s ROOTUsersGuide.ist $(LATEXA4PREFIX).idx
 
 pdfa4: $(LATEXA4PREFIX).tex $(LATEXA4PREFIX).ind
-	pdflatex -interaction=batchmode $(LATEXA4PREFIX).tex || true
+	@mkdir -p $(OUTDIR)
+	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXA4PREFIX).tex || true
 
 $(LATEXLETTERPREFIX).tex: $(MDFILES)
 	pandoc $(OPTIONS) $(OPTIONSLATEXLETTER) -t latex $(MDFILES) \
@@ -48,24 +51,29 @@ $(LATEXLETTERPREFIX).ind: $(LATEXLETTERPREFIX).toc ROOTUsersGuide.ist
 	makeindex -s ROOTUsersGuide.ist $(LATEXLETTERPREFIX).idx
 
 pdfletter: $(MDFILES) $(LATEXLETTERPREFIX).toc $(LATEXLETTERPREFIX).ind
-	pdflatex -interaction=batchmode $(LATEXLETTERPREFIX).tex || true
+	@mkdir -p $(OUTDIR)
+	pdflatex -interaction=batchmode -output-directory=$(OUTDIR) $(LATEXLETTERPREFIX).tex || true
 
 html: $(MDFILES)
+	@mkdir -p $(OUTDIR)
 	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) \
-	-o ROOTUsersGuide.html
+	-o $(OUTDIR)/ROOTUsersGuide.html
 
 epub: $(MDFILES) metadata.xml title.txt
+	@mkdir -p $(OUTDIR)
 	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
-	title.txt $(MDFILES) -o ROOTUsersGuide.epub
+	title.txt $(MDFILES) -o $(OUTDIR)/ROOTUsersGuide.epub
 
 # --number-offset unfortunately not supported in PDF output :(
-%.pdf: %.md
+$(OUTDIR)/%.pdf: %.md
+	@mkdir -p $(OUTDIR)
 	@echo Generating PDF chapter: $@
 	@pandoc $(OPTIONS) $(OPTIONSPDF) $^ -o $@
 
 pdf_chapters: $(PDFFILES)
 
-%.html: %.md
+$(OUTDIR)/%.html: %.md
+	@mkdir -p $(OUTDIR)
 	@echo Generating HTML chapter: $@
 	@( OFFSET=$$( for F in $(MDFILES) ; do echo $$F ; done | \
 	   grep -n "^$^$$" | head -n1 | cut -d: -f1 ) && \

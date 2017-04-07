@@ -22,9 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TDirectory;
 class TCollection;
@@ -33,12 +31,12 @@ class TCollection;
 class TEventList : public TNamed {
 
 protected:
-   Int_t            fN;           //  Number of elements in the list
-   Int_t            fSize;        //  Size of array
-   Int_t            fDelta;       //  Increment size
-   Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
-   Long64_t        *fList;        //[fN]Array of elements
-   TDirectory      *fDirectory;   //! Pointer to directory holding this tree
+   Int_t            fN;           ///<  Number of elements in the list
+   Int_t            fSize;        ///<  Size of array
+   Int_t            fDelta;       ///<  Increment size
+   Bool_t           fReapply;     ///<  If true, TTree::Draw will 'reapply' the original cut
+   Long64_t        *fList;        ///<[fN]Array of elements
+   TDirectory      *fDirectory;   ///<! Pointer to directory holding this tree
 
 public:
    TEventList();

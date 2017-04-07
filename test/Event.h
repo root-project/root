@@ -49,7 +49,7 @@ public:
    Track() : fTriggerBits(64) { fNsp = 0; fPointValue = 0; }
    Track(const Track& orig);
    Track(Float_t random);
-   virtual ~Track() {Clear();}
+   virtual ~Track() {Clear(); delete [] fPointValue; fPointValue = nullptr; }
    Track &operator=(const Track &orig);
 
    void          Set(Float_t random);
@@ -125,6 +125,9 @@ private:
 
    static TClonesArray *fgTracks;
    static TH1F         *fgHist;
+
+   Event(const Event&) = delete;
+   Event &operator=(const Event&) = delete;
 
 public:
    Event();

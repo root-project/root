@@ -18,67 +18,66 @@
 
 ClassImp(TBRIK)
 
+/** \class TBRIK
+\ingroup g3d
+A box with faces perpendicular to the axes.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/brik.gif"> </P> End_Html
-// BRIK is a box with faces perpendicular to the axes. It has 6 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx         half-length of the box along the x-axis
-//     - dy         half-length of the box along the y-axis
-//     - dz         half-length of the box along the z-axis
+\image html g3d_brik.png
+It has 6 parameters:
 
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx:         half-length of the box along the x-axis
+  - dy:         half-length of the box along the y-axis
+  - dz:         half-length of the box along the z-axis
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape default constructor
+
 TBRIK::TBRIK()
 {
-   // BRIK shape default constructor
-
    fDx = 0.;
    fDy = 0.;
    fDz = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape normal constructor
 
-//______________________________________________________________________________
 TBRIK::TBRIK(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz)
       : TShape (name, title,material)
 {
-   // BRIK shape normal constructor
-
    fDx = dx;
    fDy = dy;
    fDz = dz;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// BRIK shape default destructor
 
-//______________________________________________________________________________
 TBRIK::~TBRIK()
 {
-  // BRIK shape default destructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a BRIK
+///
+/// Compute the closest distance of approach from point px,py to each corner
+/// point of the BRIK.
 
-//______________________________________________________________________________
 Int_t TBRIK::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a BRIK
-   //
-   // Compute the closest distance of approach from point px,py to each corner
-   // point of the BRIK.
-
    const Int_t numPoints = 8;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create BRIK points
 
-//______________________________________________________________________________
 void TBRIK::SetPoints(Double_t *points) const
 {
-   // Create BRIK points
-
    if (points) {
       points[ 0] = -fDx ; points[ 1] = -fDy ; points[ 2] = -fDz;
       points[ 3] = -fDx ; points[ 4] =  fDy ; points[ 5] = -fDz;
@@ -91,23 +90,21 @@ void TBRIK::SetPoints(Double_t *points) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
 
-//______________________________________________________________________________
 void TBRIK::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    gSize3D.numPoints += 8;
    gSize3D.numSegs   += 12;
    gSize3D.numPolys  += 6;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3D
 
-//______________________________________________________________________________
 const TBuffer3D & TBRIK::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3D
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

@@ -9,17 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <algorithm>
-
-#include "TColor.h"
-
-#include "TGLIncludes.h"
 #include "TGLPlotBox.h"
 
-//______________________________________________________________________________
-//
-// Implementation of a box around a histogram/function for
-// plot-painters.
+#include "TColor.h"
+#include "TGLIncludes.h"
+
+#include <algorithm>
+
+
+/** \class TGLPlotBox
+\ingroup opengl
+Implementation of a box around a histogram/function for plot-painters.
+*/
 
 ClassImp(TGLPlotBox)
 
@@ -54,7 +55,10 @@ const Int_t TGLPlotBox::fgFrontPairs[][2] =
     {1, 2},
     {2, 3}
    };
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///Front point is 0.
+
 TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                : fFrameColor(0),
                  fXOYSelectable(xoy),
@@ -68,8 +72,6 @@ TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
                  fDrawBack(kTRUE),
                  fDrawFront(kTRUE)
 {
-   // Constructor.
-   //Front point is 0.
    fSelectablePairs[0][0] = xoz;
    fSelectablePairs[0][1] = yoz;
    //Front point is 1.
@@ -84,13 +86,15 @@ TGLPlotBox::TGLPlotBox(Bool_t xoy, Bool_t xoz, Bool_t yoz)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Empty dtor to suppress g++ warnings.
+
 TGLPlotBox::~TGLPlotBox()
 {
-   // Empty dtor to suppress g++ warnings.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotBox::DrawBack(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
                           Bool_t highColor)const
 {
@@ -154,7 +158,8 @@ void TGLPlotBox::DrawBack(Int_t selected, Bool_t selectionPass, const std::vecto
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGLPlotBox::DrawFront()const
 {
    using namespace Rgl;
@@ -173,11 +178,12 @@ void TGLPlotBox::DrawFront()const
    DrawQuadOutline(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]], f3DBox[vertInd[3]]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw back box for a plot.
+
 void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector<Double_t> &zLevels,
                          Bool_t highColor)const
 {
-   // Draw back box for a plot.
    if (fDrawBack)
       DrawBack(selected, selectionPass, zLevels, highColor);
 
@@ -186,11 +192,11 @@ void TGLPlotBox::DrawBox(Int_t selected, Bool_t selectionPass, const std::vector
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up a frame box.
+
 void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, const Rgl::Range_t &y, const Rgl::Range_t &z)
 {
-   // Set up a frame box.
-
    f3DBox[0].Set(x.first,  y.first,  z.first);
    f3DBox[1].Set(x.second, y.first,  z.first);
    f3DBox[2].Set(x.second, y.second, z.first);
@@ -201,11 +207,12 @@ void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, const Rgl::Range_t &y, const 
    f3DBox[7].Set(x.first,  y.second, z.second);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up a frame box.
+
 void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, Double_t xr, const Rgl::Range_t &y, Double_t yr,
                             const Rgl::Range_t &z, Double_t zr)
 {
-   // Set up a frame box.
    fRangeXU = xr;
    fRangeYU = yr;
    fRangeZU = zr;
@@ -213,11 +220,11 @@ void TGLPlotBox::SetPlotBox(const Rgl::Range_t &x, Double_t xr, const Rgl::Range
    SetPlotBox(x, y, z);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Back box color.
+
 void TGLPlotBox::SetFrameColor(const TColor *color)
 {
-   // Back box color.
-
    fFrameColor = color;
 }
 
@@ -231,12 +238,12 @@ namespace {
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert 3d points into window coordinate system
+/// and find the nearest.
+
 Int_t TGLPlotBox::FindFrontPoint()const
 {
-   // Convert 3d points into window coordinate system
-   // and find the nearest.
-
    Double_t mvMatrix[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mvMatrix);
    Double_t prMatrix[16] = {0.};
@@ -281,37 +288,39 @@ Int_t TGLPlotBox::FindFrontPoint()const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The nearest point.
+
 Int_t TGLPlotBox::GetFrontPoint()const
 {
-   // The nearest point.
-
    return fFrontPoint;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get 3D box.
+
 const TGLVertex3 *TGLPlotBox::Get3DBox()const
 {
-   // Get 3D box.
-
    return f3DBox;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get 2D box.
+
 const TGLVertex3 *TGLPlotBox::Get2DBox()const
 {
-   // Get 2D box.
    return f2DBoxU;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Draw back plane with number 'plane'
+
 void TGLPlotBox::DrawBackPlane(Int_t plane, Bool_t selectionPass,
                                const std::vector<Double_t> &zLevels)const
 {
-   //Draw back plane with number 'plane'
    using namespace Rgl;
    const Int_t *vertInd = fgFramePlanes[plane];
    DrawQuadFilled(f3DBox[vertInd[0]], f3DBox[vertInd[1]], f3DBox[vertInd[2]],

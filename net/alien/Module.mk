@@ -36,9 +36,18 @@ endif
 ifeq ($(HASXRD),yes)
 ifeq ($(BUILDALIEN),yes)
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ALIENH))
+ALIENH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ALIENH))
+ALLHDRS     += $(ALIENH_REL)
 ALLLIBS     += $(ALIENLIB)
 ALLMAPS     += $(ALIENMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ALIENH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ALIENLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ALIENDEP)

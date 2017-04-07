@@ -102,12 +102,12 @@ Bool_t TTimeOutTimer::Notify()
 
 ClassImp(TMonitor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a monitor object. If mainloop is true the monitoring will be
+/// done in the main event loop.
+
 TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
 {
-   // Create a monitor object. If mainloop is true the monitoring will be
-   // done in the main event loop.
-
    R__ASSERT(gSystem);
 
    fActive    = new TList;
@@ -117,11 +117,11 @@ TMonitor::TMonitor(Bool_t mainloop) : TObject() , TQObject()
    fReady     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
 {
-   // Copy constructor
-
    TSocketHandler *sh = 0;
    // Active list
    fActive   = new TList;
@@ -147,11 +147,11 @@ TMonitor::TMonitor(const TMonitor &m) : TObject() , TQObject()
    fReady = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the monitor object. Does not delete sockets being monitored.
+
 TMonitor::~TMonitor()
 {
-   // Cleanup the monitor object. Does not delete sockets being monitored.
-
    fActive->Delete();
    SafeDelete(fActive);
 
@@ -159,26 +159,26 @@ TMonitor::~TMonitor()
    SafeDelete(fDeActive);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add socket to the monitor's active list. If interest=kRead then we
+/// want to monitor the socket for read readiness, if interest=kWrite
+/// then we monitor the socket for write readiness, if interest=kRead|kWrite
+/// then we monitor both read and write readiness.
+
 void TMonitor::Add(TSocket *sock, Int_t interest)
 {
-   // Add socket to the monitor's active list. If interest=kRead then we
-   // want to monitor the socket for read readiness, if interest=kWrite
-   // then we monitor the socket for write readiness, if interest=kRead|kWrite
-   // then we monitor both read and write readiness.
-
    fActive->Add(new TSocketHandler(this, sock, interest, fMainLoop));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set interest mask for socket sock to interest. If the socket is not
+/// in the active list move it or add it there.
+/// If interest=kRead then we want to monitor the socket for read readiness,
+/// if interest=kWrite then we monitor the socket for write readiness,
+/// if interest=kRead|kWrite then we monitor both read and write readiness.
+
 void TMonitor::SetInterest(TSocket *sock, Int_t interest)
 {
-   // Set interest mask for socket sock to interest. If the socket is not
-   // in the active list move it or add it there.
-   // If interest=kRead then we want to monitor the socket for read readiness,
-   // if interest=kWrite then we monitor the socket for write readiness,
-   // if interest=kRead|kWrite then we monitor both read and write readiness.
-
    TSocketHandler *s = 0;
 
    if (!interest)
@@ -208,11 +208,11 @@ void TMonitor::SetInterest(TSocket *sock, Int_t interest)
    fActive->Add(new TSocketHandler(this, sock, interest, fMainLoop));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a socket from the monitor.
+
 void TMonitor::Remove(TSocket *sock)
 {
-   // Remove a socket from the monitor.
-
    TIter next(fActive);
    TSocketHandler *s;
 
@@ -235,20 +235,20 @@ void TMonitor::Remove(TSocket *sock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all sockets from the monitor.
+
 void TMonitor::RemoveAll()
 {
-   // Remove all sockets from the monitor.
-
    fActive->Delete();
    fDeActive->Delete();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate a de-activated socket.
+
 void TMonitor::Activate(TSocket *sock)
 {
-   // Activate a de-activated socket.
-
    TIter next(fDeActive);
    TSocketHandler *s;
 
@@ -262,11 +262,11 @@ void TMonitor::Activate(TSocket *sock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate all de-activated sockets.
+
 void TMonitor::ActivateAll()
 {
-   // Activate all de-activated sockets.
-
    TIter next(fDeActive);
    TSocketHandler *s;
 
@@ -278,11 +278,11 @@ void TMonitor::ActivateAll()
    fInterrupt = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// De-activate a socket.
+
 void TMonitor::DeActivate(TSocket *sock)
 {
-   // De-activate a socket.
-
    TIter next(fActive);
    TSocketHandler *s;
 
@@ -296,11 +296,11 @@ void TMonitor::DeActivate(TSocket *sock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// De-activate all activated sockets.
+
 void TMonitor::DeActivateAll()
 {
-   // De-activate all activated sockets.
-
    TIter next(fActive);
    TSocketHandler *s;
 
@@ -312,15 +312,15 @@ void TMonitor::DeActivateAll()
    fInterrupt = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to socket for which an event is waiting.
+/// Select can be interrupt by a call to Interrupt() (e.g. connected with a
+/// Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
+/// in such a case.
+/// Return 0 in case of error.
+
 TSocket *TMonitor::Select()
 {
-   // Return pointer to socket for which an event is waiting.
-   // Select can be interrupt by a call to Interrupt() (e.g. connected with a
-   // Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
-   // in such a case.
-   // Return 0 in case of error.
-
    fReady = 0;
 
    while (!fReady && !fInterrupt)
@@ -336,17 +336,17 @@ TSocket *TMonitor::Select()
    return fReady;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to socket for which an event is waiting.
+/// Wait a maximum of timeout milliseconds.
+/// If return is due to timeout it returns (TSocket *)-1.
+/// Select() can be interrupt by a call to Interrupt() (e.g. connected with a
+/// Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
+/// in such a case.
+/// Return 0 in case of any other error situation.
+
 TSocket *TMonitor::Select(Long_t timeout)
 {
-   // Return pointer to socket for which an event is waiting.
-   // Wait a maximum of timeout milliseconds.
-   // If return is due to timeout it returns (TSocket *)-1.
-   // Select() can be interrupt by a call to Interrupt() (e.g. connected with a
-   // Ctrl-C handler); a call to ResetInterrupt() before Select() is advisable
-   // in such a case.
-   // Return 0 in case of any other error situation.
-
    if (timeout < 0)
       return TMonitor::Select();
 
@@ -367,15 +367,15 @@ TSocket *TMonitor::Select(Long_t timeout)
    return fReady;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return numbers of sockets that are ready for reading or writing.
+/// Wait a maximum of timeout milliseconds.
+/// Return 0 if timed-out. Return < 0 in case of error.
+/// If rdready and/or wrready are not 0, the lists of sockets with
+/// something to read and/or write are also returned.
+
 Int_t TMonitor::Select(TList *rdready, TList *wrready, Long_t timeout)
 {
-   // Return numbers of sockets that are ready for reading or writing.
-   // Wait a maximum of timeout milliseconds.
-   // Return 0 if timed-out. Return < 0 in case of error.
-   // If rdready and/or wrready are not 0, the lists of sockets with
-   // something to read and/or write are also returned.
-
    Int_t nr = -2;
 
    TSocketHandler *h = 0;
@@ -414,29 +414,29 @@ Int_t TMonitor::Select(TList *rdready, TList *wrready, Long_t timeout)
    return nr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by TSocketHandler::Notify() to signal which socket is ready
+/// to be read or written. User should not call this routine. The ready
+/// socket will be returned via the Select() user function.
+/// The Ready(TSocket *sock) signal is emitted.
+
 void TMonitor::SetReady(TSocket *sock)
 {
-   // Called by TSocketHandler::Notify() to signal which socket is ready
-   // to be read or written. User should not call this routine. The ready
-   // socket will be returned via the Select() user function.
-   // The Ready(TSocket *sock) signal is emitted.
-
    fReady = sock;
    Ready(fReady);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of sockets in the active list. If timeout > 0, remove from
+/// the list those sockets which did not have any activity since timeout
+/// millisecs. If timeout = 0, then reset activity timestamp on all active
+/// sockets. This time out is typically used if GetActive() is used to see
+/// how many remotes still need to send something. If they pass the timeout
+/// they will be skipped and GetActive() will return 0 and the loop can be
+/// exited.
+
 Int_t TMonitor::GetActive(Long_t timeout) const
 {
-   // Return number of sockets in the active list. If timeout > 0, remove from
-   // the list those sockets which did not have any activity since timeout
-   // millisecs. If timeout = 0, then reset activity timestamp on all active
-   // sockets. This time out is typically used if GetActive() is used to see
-   // how many remotes still need to send something. If they pass the timeout
-   // they will be skipped and GetActive() will return 0 and the loop can be
-   // exited.
-
    if (timeout >= 0) {
       TIter next(fActive);
       TSocketHandler *s;
@@ -467,20 +467,20 @@ Int_t TMonitor::GetActive(Long_t timeout) const
    return fActive->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of sockets in the de-active list.
+
 Int_t TMonitor::GetDeActive() const
 {
-   // Return number of sockets in the de-active list.
-
    return fDeActive->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if socket 's' is in the active list. Avoids the duplication
+/// of active list via TMonitor::GetListOfActives().
+
 Bool_t TMonitor::IsActive(TSocket *sock) const
 {
-   // Check if socket 's' is in the active list. Avoids the duplication
-   // of active list via TMonitor::GetListOfActives().
-
    TIter next(fActive);
    while (TSocketHandler *h = (TSocketHandler*) next())
       if (sock == h->GetSocket())
@@ -490,13 +490,13 @@ Bool_t TMonitor::IsActive(TSocket *sock) const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list with all active sockets. This list must be deleted
+/// by the user. DO NOT call Delete() on this list as it will delete
+/// the sockets that are still being used by the monitor.
+
 TList *TMonitor::GetListOfActives() const
 {
-   // Returns a list with all active sockets. This list must be deleted
-   // by the user. DO NOT call Delete() on this list as it will delete
-   // the sockets that are still being used by the monitor.
-
    TList *list = new TList;
 
    TIter next(fActive);
@@ -507,13 +507,13 @@ TList *TMonitor::GetListOfActives() const
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a list with all de-active sockets. This list must be deleted
+/// by the user. DO NOT call Delete() on this list as it will delete
+/// the sockets that are still being used by the monitor.
+
 TList *TMonitor::GetListOfDeActives() const
 {
-   // Returns a list with all de-active sockets. This list must be deleted
-   // by the user. DO NOT call Delete() on this list as it will delete
-   // the sockets that are still being used by the monitor.
-
    TList *list = new TList;
 
    TIter next(fDeActive);
@@ -524,10 +524,10 @@ TList *TMonitor::GetListOfDeActives() const
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when some socket is ready
+
 void TMonitor::Ready(TSocket *sock)
 {
-   // Emit signal when some socket is ready
-
    Emit("Ready(TSocket*)", (Long_t)sock);
 }

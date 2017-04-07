@@ -42,9 +42,18 @@ endif
 endif
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA6H))
+PYTHIA6H_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYTHIA6H))
+ALLHDRS     += $(PYTHIA6H_REL)
 ALLLIBS     += $(PYTHIA6LIB)
 ALLMAPS     += $(PYTHIA6MAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PYTHIA6H_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Montecarlo_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PYTHIA6LIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PYTHIA6DEP)

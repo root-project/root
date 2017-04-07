@@ -15,59 +15,58 @@
 #include "TContextMenu.h"
 
 
-//==============================================================================
-// TGLLogicalShape
-//==============================================================================
+/** \class TGLLogicalShape
+\ingroup opengl
+Abstract logical shape - a GL 'drawable' - base for all shapes -
+faceset sphere etc. Logical shapes are a unique piece of geometry,
+described in it's local frame - e.g if we have three spheres in :
 
-//______________________________________________________________________________
-//
-// Abstract logical shape - a GL 'drawable' - base for all shapes -
-// faceset sphere etc. Logical shapes are a unique piece of geometry,
-// described in it's local frame - e.g if we have three spheres in :
-// Sphere A - Radius r1, center v1
-// Sphere B - Radius r2, center v2
-// Sphere C - Radius r1, center v3
-//
-// Spheres A and C can share a common logical sphere of radius r1 - and
-// place them with two physicals with translations of v1 & v2.  Sphere B
-// requires a different logical (radius r2), placed with physical with
-// translation v2.
-//
-// Physical shapes know about and can share logicals. Logicals do not
-// about (aside from reference counting) physicals or share them.
-//
-// This sharing of logical shapes greatly reduces memory consumption and
-// scene (re)build times in typical detector geometries which have many
-// repeated objects placements.
-//
-// TGLLogicalShapes have reference counting, performed by the client
-// physical shapes which are using it.
-//
-// Display list information is also stored here, possibly per LOD
-// level. Most classes do not support LOD (only sphere and tube) and
-// therefore reasonable defaults are encoded in the following virtual
-// functions:
-//
-// * ELODAxes SupportedLODAxes()  { return kLODAxesNone; }
-// * Int_t    DLCacheSize()       { return 1; }
-// * UInt_t   DLOffset(lod);      // Transform lod into DL offset.
-// * Short_t  QuantizeShapeLOD(); // Quantize lod.
-//
-// Classes that have per-LOD display-lists than override these functions.
-// 'UShort_t fDLValid' is used as a bit-field determining validity of
-// each quantized LOD-level; hopefully one will not have more than 16
-// LOD levels per class.
-// See also: TGLPhysicalShape::CalculateShapeLOD() where LOD is calculated.
-//
-// See base/src/TVirtualViewer3D for description of common external 3D
-// viewer architecture and how external viewer clients use it.
-//
+  - Sphere A - Radius r1, center v1
+  - Sphere B - Radius r2, center v2
+  - Sphere C - Radius r1, center v3
+
+Spheres A and C can share a common logical sphere of radius r1 - and
+place them with two physicals with translations of v1 & v2.  Sphere B
+requires a different logical (radius r2), placed with physical with
+translation v2.
+
+Physical shapes know about and can share logicals. Logicals do not
+about (aside from reference counting) physicals or share them.
+
+This sharing of logical shapes greatly reduces memory consumption and
+scene (re)build times in typical detector geometries which have many
+repeated objects placements.
+
+TGLLogicalShapes have reference counting, performed by the client
+physical shapes which are using it.
+
+Display list information is also stored here, possibly per LOD
+level. Most classes do not support LOD (only sphere and tube) and
+therefore reasonable defaults are encoded in the following virtual
+functions:
+~~~ {.cpp}
+ * ELODAxes SupportedLODAxes()  { return kLODAxesNone; }
+ * Int_t    DLCacheSize()       { return 1; }
+ * UInt_t   DLOffset(lod);      // Transform lod into DL offset.
+ * Short_t  QuantizeShapeLOD(); // Quantize lod.
+~~~
+Classes that have per-LOD display-lists than override these functions.
+'UShort_t fDLValid' is used as a bit-field determining validity of
+each quantized LOD-level; hopefully one will not have more than 16
+LOD levels per class.
+See also: TGLPhysicalShape::CalculateShapeLOD() where LOD is calculated.
+
+See base/src/TVirtualViewer3D for description of common external 3D
+viewer architecture and how external viewer clients use it.
+*/
 
 ClassImp(TGLLogicalShape);
 
 Bool_t TGLLogicalShape::fgIgnoreSizeForCameraInterest = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLLogicalShape::TGLLogicalShape() :
    fRef           (0),
    fFirstPhysical (0),
@@ -80,10 +79,11 @@ TGLLogicalShape::TGLLogicalShape() :
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with external object.
+
 TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fRef           (0),
    fFirstPhysical (0),
@@ -96,10 +96,11 @@ TGLLogicalShape::TGLLogicalShape(TObject* obj) :
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
 {
-   // Constructor with external object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from TBuffer3D.
+
 TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fRef           (0),
    fFirstPhysical (0),
@@ -112,8 +113,6 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    fRefStrong     (kFALSE),
    fOwnExtObj     (kFALSE)
 {
-   // Constructor from TBuffer3D.
-
    // Use the bounding box in buffer if valid
    if (buffer.SectionsValid(TBuffer3D::kBoundingBox)) {
       fBoundingBox.Set(buffer.fBBVertex);
@@ -131,11 +130,11 @@ TGLLogicalShape::TGLLogicalShape(const TBuffer3D & buffer) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy logical shape.
+
 TGLLogicalShape::~TGLLogicalShape()
 {
-   // Destroy logical shape.
-
    // Physicals should have been cleared elsewhere as they are managed
    // by the scene. But this could change.
    if (fRef > 0) {
@@ -154,23 +153,23 @@ TGLLogicalShape::~TGLLogicalShape()
 // Physical shape ref-counting, replica management
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add reference to given physical shape.
+
 void TGLLogicalShape::AddRef(TGLPhysicalShape* phys) const
 {
-   // Add reference to given physical shape.
-
    phys->fNextPhysical = fFirstPhysical;
    fFirstPhysical = phys;
    ++fRef;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove reference to given physical shape, potentially deleting
+/// *this* object when hitting zero ref-count (if fRefStrong is
+/// true).
+
 void TGLLogicalShape::SubRef(TGLPhysicalShape* phys) const
 {
-   // Remove reference to given physical shape, potentially deleting
-   // *this* object when hitting zero ref-count (if fRefStrong is
-   // true).
-
    assert(phys != 0);
 
    Bool_t found = kFALSE;
@@ -197,11 +196,11 @@ void TGLLogicalShape::SubRef(TGLPhysicalShape* phys) const
       delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy all physicals attached to this logical.
+
 void TGLLogicalShape::DestroyPhysicals()
 {
-   // Destroy all physicals attached to this logical.
-
    TGLPhysicalShape *curr = fFirstPhysical, *next;
    while (curr)
    {
@@ -215,13 +214,13 @@ void TGLLogicalShape::DestroyPhysicals()
    fFirstPhysical = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unreferenced first physical in the list, returning its id and
+/// making it fit for destruction somewhere else.
+/// Returns 0 if there are no replicas attached.
+
 UInt_t TGLLogicalShape::UnrefFirstPhysical()
 {
-   // Unreference first physical in the list, returning its id and
-   // making it fit for destruction somewhere else.
-   // Returns 0 if there are no replicas attached.
-
    if (fFirstPhysical == 0) return 0;
 
    TGLPhysicalShape *phys = fFirstPhysical;
@@ -237,11 +236,11 @@ UInt_t TGLLogicalShape::UnrefFirstPhysical()
 // Bounding-boxes
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update bounding-boxed of all dependent physicals.
+
 void TGLLogicalShape::UpdateBoundingBoxesOfPhysicals()
 {
-   // Update bounding-boxed of all dependent physicals.
-
    TGLPhysicalShape* pshp = fFirstPhysical;
    while (pshp)
    {
@@ -255,12 +254,12 @@ void TGLLogicalShape::UpdateBoundingBoxesOfPhysicals()
 // Display-list cache
 /**************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify capture of draws into display list cache kTRUE - capture,
+/// kFALSE direct draw. Return kTRUE is state changed, kFALSE if not.
+
 Bool_t TGLLogicalShape::SetDLCache(Bool_t cache)
 {
-   // Modify capture of draws into display list cache kTRUE - capture,
-   // kFALSE direct draw. Return kTRUE is state changed, kFALSE if not.
-
    if (cache == fDLCache)
       return kFALSE;
 
@@ -270,21 +269,21 @@ Bool_t TGLLogicalShape::SetDLCache(Bool_t cache)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if draws should be display list cached
+/// kFALSE otherwise.
+///
+/// Here we check that:
+/// a) fScene is set (Scene manages link to GL-context);
+/// b) secondary selection is not in progress as different
+///    render-path is usually taken in this case.
+///
+/// Otherwise we return internal bool.
+///
+/// Override this in sub-class if different behaviour is required.
+
 Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   // Returns kTRUE if draws should be display list cached
-   // kFALSE otherwise.
-   //
-   // Here we check that:
-   // a) fScene is set (Scene manages link to GL-context);
-   // b) secondary selection is not in progress as different
-   //    render-path is usually taken in this case.
-   //
-   // Otherwise we return internal bool.
-   //
-   // Override this in sub-class if different behaviour is required.
-
    if (!fDLCache || !fScene   ||
        (rnrCtx.SecSelection() && SupportsSecondarySelect()))
    {
@@ -293,38 +292,38 @@ Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear all entries for all LODs for this drawable from the
+/// display list cache but keeping the reserved ids from GL context.
+
 void TGLLogicalShape::DLCacheClear()
 {
-   // Clear all entries for all LODs for this drawable from the
-   // display list cache but keeping the reserved ids from GL context.
-
    fDLValid = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Drop all entries for all LODs for this drawable from the display
+/// list cache, WITHOUT returning the reserved ids to GL context.
+///
+/// This is called by scene if it realized that the GL context was
+/// destroyed.
+
 void TGLLogicalShape::DLCacheDrop()
 {
-   // Drop all entries for all LODs for this drawable from the display
-   // list cache, WITHOUT returning the reserved ids to GL context.
-   //
-   // This is called by scene if it realized that the GL context was
-   // destroyed.
-
    fDLBase  = 0;
    fDLValid = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Purge all entries for all LODs for this drawable from the
+/// display list cache, returning the reserved ids to GL context.
+///
+/// If you override this function:
+/// 1. call the base-class version from it;
+/// 2. call it from the destructor of the derived class!
+
 void TGLLogicalShape::DLCachePurge()
 {
-   // Purge all entries for all LODs for this drawable from the
-   // display list cache, returning the reserved ids to GL context.
-   //
-   // If you override this function:
-   // 1. call the base-class version from it;
-   // 2. call it from the destructor of the derived class!
-
    if (fDLBase != 0)
    {
       PurgeDLRange(fDLBase, fDLSize);
@@ -333,12 +332,12 @@ void TGLLogicalShape::DLCachePurge()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Purge given display-list range.
+/// Utility function.
+
 void TGLLogicalShape::PurgeDLRange(UInt_t base, Int_t size) const
 {
-   // Purge given display-list range.
-   // Utility function.
-
    if (fScene)
    {
       fScene->GetGLCtxIdentity()->RegisterDLNameRangeToWipe(base, size);
@@ -350,26 +349,26 @@ void TGLLogicalShape::PurgeDLRange(UInt_t base, Int_t size) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Logical shapes usually support only discreet LOD values,
+/// especially in view of display-list caching.
+/// This function should be overriden to perform the desired quantization.
+/// See TGLSphere.
+
 Short_t TGLLogicalShape::QuantizeShapeLOD(Short_t shapeLOD,
                                           Short_t /*combiLOD*/) const
 {
-   // Logical shapes usually support only discreet LOD values,
-   // especially in view of display-list caching.
-   // This function should be overriden to perform the desired quantization.
-   // See TGLSphere.
-
    return shapeLOD;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the GL drawable, using draw flags. If DL caching is enabled
+/// (see SetDLCache) then attempt to draw from the cache, if not found
+/// attempt to capture the draw - done by DirectDraw() - into a new cache entry.
+/// If not cached just call DirectDraw() for normal non DL cached drawing.
+
 void TGLLogicalShape::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw the GL drawable, using draw flags. If DL caching is enabled
-   // (see SetDLCache) then attempt to draw from the cache, if not found
-   // attempt to capture the draw - done by DirectDraw() - into a new cache entry.
-   // If not cached just call DirectDraw() for normal non DL cached drawing.
-
    // Debug tracing
    if (gDebug > 4) {
       Info("TGLLogicalShape::Draw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
@@ -417,13 +416,13 @@ entry_point:
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the logical shape in highlight mode.
+/// If lvl argument is less than 0 (-1 by default), the index into color-set
+/// is taken from the physical shape itself.
+
 void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl) const
 {
-   // Draw the logical shape in highlight mode.
-   // If lvl argument is less than 0 (-1 by default), the index into color-set
-   // is taken from the physical shape itself.
-
    if (lvl < 0) lvl = pshp->GetSelected();
 
    glColor4ubv(rnrCtx.ColorSet().Selection(lvl).CArr());
@@ -432,15 +431,15 @@ void TGLLogicalShape::DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* p
    TGLUtil::UnlockColor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method called-back after a secondary selection hit
+/// is recorded (see TGLViewer::HandleButton(), Ctrl-Button1).
+/// The ptr argument holds the GL pick-record of the closest hit.
+///
+/// This base-class implementation simply prints out the result.
+
 void TGLLogicalShape::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& rec)
 {
-   // Virtual method called-back after a secondary selection hit
-   // is recorded (see TGLViewer::HandleButton(), Ctrl-Button1).
-   // The ptr argument holds the GL pick-record of the closest hit.
-   //
-   // This base-class implementation simply prints out the result.
-
    printf("TGLLogicalShape::ProcessSelection %d names on the stack (z1=%g, z2=%g).\n",
           rec.GetN(), rec.GetMinZ(), rec.GetMaxZ());
    printf("  Names: ");
@@ -448,41 +447,42 @@ void TGLLogicalShape::ProcessSelection(TGLRnrCtx& /*rnrCtx*/, TGLSelectRecord& r
    printf("\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke popup menu or our bound external TObject (if any), using passed
+/// 'menu' object, at location 'x' 'y'
+
 void TGLLogicalShape::InvokeContextMenu(TContextMenu& menu, UInt_t x, UInt_t y) const
 {
-   // Invoke popup menu or our bound external TObject (if any), using passed
-   // 'menu' object, at location 'x' 'y'
    if (fExternalObj) {
       menu.Popup(x, y, fExternalObj);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if size of this shape should be ignored when determining if
+/// the object should be drawn. In this base-class we simply return state of
+/// static flag fgIgnoreSizeForCameraInterest.
+///
+/// Several sub-classes override this virtual function.
+
 Bool_t TGLLogicalShape::IgnoreSizeForOfInterest() const
 {
-   // Return true if size of this shape should be ignored when determining if
-   // the object should be drawn. In this base-class we simply return state of
-   // static flag fgIgnoreSizeForCameraInterest.
-   //
-   // Several sub-classes override this virtual function.
-
    return fgIgnoreSizeForCameraInterest;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of static fgIgnoreSizeForCameraInterest flag.
+/// When this is true all objects, also very small, will be drawn by GL.
+
 Bool_t TGLLogicalShape::GetIgnoreSizeForCameraInterest()
 {
-   // Get state of static fgIgnoreSizeForCameraInterest flag.
-   // When this is true all objects, also very small, will be drawn by GL.
-
    return fgIgnoreSizeForCameraInterest;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of static fgIgnoreSizeForCameraInterest flag.
+
 void TGLLogicalShape::SetIgnoreSizeForCameraInterest(Bool_t isfci)
 {
-   // Set state of static fgIgnoreSizeForCameraInterest flag.
-
    fgIgnoreSizeForCameraInterest = isfci;
 }

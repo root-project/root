@@ -14,16 +14,19 @@
 #include "TMath.h"
 
 
-//______________________________________________________________________________
-//
-// Axes for non-linear projections. Show scale of TEveProjectionManager
-// children. With different step mode tick-marks can positioned
-// equidistant or placed with value monotonically increasing from lower left corner
-// of bounding box.
+/** \class TEveProjectionAxes
+\ingroup TEve
+Axes for non-linear projections. Show scale of TEveProjectionManager
+children. With different step mode tick-marks can positioned
+equidistant or placed with value monotonically increasing from lower left corner
+of bounding box.
+*/
 
 ClassImp(TEveProjectionAxes);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    TEveElement(),
    TNamed("TEveProjectionAxes", ""),
@@ -37,8 +40,6 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    fDrawCenter(kFALSE),
    fDrawOrigin(kFALSE)
 {
-   // Constructor.
-
    fCanEditMainTrans = kFALSE;
    fManager->AddDependent(this);
 
@@ -51,27 +52,27 @@ TEveProjectionAxes::TEveProjectionAxes(TEveProjectionManager* m, Bool_t useCS) :
    fLabelOffset = 0.01;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveProjectionAxes::~TEveProjectionAxes()
 {
-   // Destructor.
-
    fManager->RemoveDependent(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEveProjectionAxes::Paint(Option_t*)
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TAttBBox; fill bounding-box information.
+
 void TEveProjectionAxes::ComputeBBox()
 {
-   // Virtual from TAttBBox; fill bounding-box information.
-
    static const TEveException eH("TEveProjectionManager::ComputeBBox ");
 
    BBoxZero();
@@ -84,10 +85,10 @@ void TEveProjectionAxes::ComputeBBox()
    AssertBBoxExtents(0.1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TEveProjectionAxes icon.
+
 const TGPicture* TEveProjectionAxes::GetListTreeIcon(Bool_t)
 {
-   // Return TEveProjectionAxes icon.
-
    return TEveElement::fgListTreeIcons[6];
 }

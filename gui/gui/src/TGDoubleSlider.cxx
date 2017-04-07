@@ -66,14 +66,14 @@ ClassImp(TGDoubleSlider)
 ClassImp(TGDoubleVSlider)
 ClassImp(TGDoubleHSlider)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slider constructor.
+
 TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
                                UInt_t options, ULong_t back,
                                Bool_t reversed, Bool_t mark_ends)
    : TGFrame(p, w, h, options, back)
 {
-   // Slider constructor.
-
    fSliderPic = 0;
 
    fWidgetId    = id;
@@ -83,6 +83,12 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    fScaleType = type;
    fScale = 10;
    fMove = 0;
+
+   fPos = fSmin = fSmax = 0.0;
+   fRelPos = 0;
+   fVmin = fVmax = 0.0;
+   fPressPoint = 0;
+   fPressSmin = fPressSmax = 0.0;
 
    fReversedScale = reversed;
    fMarkEnds = mark_ends;
@@ -94,11 +100,11 @@ TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t typ
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Avoid boundaries to be equal.
+
 void TGDoubleSlider::FixBounds(Float_t &min, Float_t &max)
 {
-   // Avoid boundaries to be equal.
-
    if (min > max) min = max;
 
    Float_t eps = 1e-6;
@@ -114,11 +120,11 @@ void TGDoubleSlider::FixBounds(Float_t &min, Float_t &max)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the slider type as a string - used in SavePrimitive()
+
 TString TGDoubleSlider::GetSString() const
 {
-   // Returns the slider type as a string - used in SavePrimitive()
-
    TString stype;
 
    if (fScaleType) {
@@ -144,11 +150,11 @@ TString TGDoubleSlider::GetSString() const
    return stype;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the cursor shape depending on the slider area.
+
 void TGDoubleSlider::ChangeCursor(Event_t *event)
 {
-   // Change the cursor shape depending on the slider area.
-
    static Cursor_t topCur = kNone, leftCur = kNone;
    static Cursor_t botCur = kNone, rightCur = kNone;
    Int_t hw = 0, wh = 0, xy = 0, yx = 0;
@@ -206,15 +212,16 @@ void TGDoubleSlider::ChangeCursor(Event_t *event)
       gVirtualX->SetCursor(fId, kNone);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical slider widget.
+
 TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t id,
                                  UInt_t options, ULong_t back,
                                  Bool_t reversed, Bool_t mark_ends)
     : TGDoubleSlider(p, kDoubleSliderWidth, h, type, id, options, back,
                      reversed, mark_ends)
 {
-   // Create a vertical slider widget.
-
+   fYp = 0;
    fSliderPic = fClient->GetPicture("sliderv.xpm");
 
    if (!fSliderPic)
@@ -225,19 +232,19 @@ TGDoubleVSlider::TGDoubleVSlider(const TGWindow *p, UInt_t h, UInt_t type, Int_t
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete vertical slider widget.
+
 TGDoubleVSlider::~TGDoubleVSlider()
 {
-   // Delete vertical slider widget.
-
    if (fSliderPic) fClient->FreePicture(fSliderPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw vertical slider widget.
+
 void TGDoubleVSlider::DoRedraw()
 {
-   // Redraw vertical slider widget.
-
    FixBounds(fVmin, fVmax);
 
    // cleanup the drawable
@@ -299,11 +306,11 @@ void TGDoubleVSlider::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical slider.
+
 Bool_t TGDoubleVSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical slider.
-
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       // constrain to the slider width
       if (event->fX < (Int_t)fWidth/2-7 || event->fX > (Int_t)fWidth/2+7) {
@@ -346,11 +353,11 @@ Bool_t TGDoubleVSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical slider.
+
 Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in vertical slider.
-
    ChangeCursor(event);
    if (fMove == 0) return kTRUE;
 
@@ -399,15 +406,16 @@ Bool_t TGDoubleVSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create horizontal slider widget.
+
 TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t id,
                                  UInt_t options, ULong_t back,
                                  Bool_t reversed, Bool_t mark_ends)
     : TGDoubleSlider(p, w, kDoubleSliderHeight, type, id, options, back,
                      reversed, mark_ends)
 {
-   // Create horizontal slider widget.
-
+   fXp = 0;
    fSliderPic = fClient->GetPicture("sliderh.xpm");
 
    if (!fSliderPic)
@@ -418,19 +426,19 @@ TGDoubleHSlider::TGDoubleHSlider(const TGWindow *p, UInt_t w, UInt_t type, Int_t
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a horizontal slider widget.
+
 TGDoubleHSlider::~TGDoubleHSlider()
 {
-   // Delete a horizontal slider widget.
-
    if (fSliderPic) fClient->FreePicture(fSliderPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw horizontal slider widget.
+
 void TGDoubleHSlider::DoRedraw()
 {
-   // Redraw horizontal slider widget.
-
    FixBounds(fVmin, fVmax);
 
    // cleanup drawable
@@ -489,11 +497,11 @@ void TGDoubleHSlider::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in horizontal slider widget.
+
 Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in horizontal slider widget.
-
    if (event->fType == kButtonPress && event->fCode == kButton1) {
       // constrain to the slider height
       if (event->fY < (Int_t)fHeight/2-7 || event->fY > (Int_t)fHeight/2+7) {
@@ -536,11 +544,11 @@ Bool_t TGDoubleHSlider::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in horizontal slide widget.
+
 Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in horizontal slide widget.
-
    ChangeCursor(event);
    if (fMove == 0) return kTRUE;
 
@@ -589,11 +597,11 @@ Bool_t TGDoubleHSlider::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGDoubleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    SaveUserColor(out, option);
 
    out <<"   TGDoubleHSlider *";
@@ -627,11 +635,11 @@ void TGDoubleHSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal slider as a C++ statement(s) on output stream out.
+
 void TGDoubleVSlider::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal slider as a C++ statement(s) on output stream out.
-
    SaveUserColor(out, option);
 
    out<<"   TGDoubleVSlider *";

@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-//  This file defines the abtract input interface.
+//  This file defines the abstract input interface.
 //
 //  Axel Naumann <axel@cern.ch>, 2011-05-12
 //===----------------------------------------------------------------------===//
@@ -38,6 +38,8 @@ namespace textinput {
     virtual bool HavePendingInput(bool wait) = 0;
     virtual bool HaveBufferedInput() const { return false; }
     virtual bool ReadInput(size_t& nRead, InputData& in) = 0;
+
+    virtual bool IsFromTTY() = 0;
   private:
     TextInputContext* fContext; // Context object
   };

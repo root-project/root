@@ -15,19 +15,21 @@
 #include "TStyle.h"
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// A generic, speed-optimised mapping from value to RGBA color
-// supporting different wrapping and range truncation modes.
-//
-// Flag fFixColorRange: specifies how the palette is mapped to signal values:
-//  true  - LowLimit -> HighLimit
-//  false - MinValue -> MaxValue
+/** \class TEveRGBAPalette
+\ingroup TEve
+A generic, speed-optimised mapping from value to RGBA color
+supporting different wrapping and range truncation modes.
 
+Flag fFixColorRange: specifies how the palette is mapped to signal values:
+  - true  - LowLimit -> HighLimit
+  - false - MinValue -> MaxValue
+*/
 
 ClassImp(TEveRGBAPalette);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRGBAPalette::TEveRGBAPalette() :
    TObject(), TQObject(),
    TEveRefCnt(),
@@ -49,8 +51,6 @@ TEveRGBAPalette::TEveRGBAPalette() :
 
    fNBins(0), fCAMin(0), fCAMax(0), fColorArray(0)
 {
-   // Constructor.
-
    SetLimits(0, 1024);
    SetMinMax(0,  512);
 
@@ -59,7 +59,9 @@ TEveRGBAPalette::TEveRGBAPalette() :
    SetOverColor(2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
                                  Bool_t showdef, Bool_t fixcolrng) :
    TObject(), TQObject(),
@@ -82,8 +84,6 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
 
    fNBins(0), fCAMin(0), fCAMax(0), fColorArray(0)
 {
-   // Constructor.
-
    SetLimits(min, max);
    SetMinMax(min, max);
 
@@ -92,21 +92,19 @@ TEveRGBAPalette::TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp,
    SetOverColor(2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveRGBAPalette::~TEveRGBAPalette()
 {
-   // Destructor.
-
    delete [] fColorArray;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set RGBA color 'pixel' for signal-value 'val'.
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
 {
-   // Set RGBA color 'pixel' for signal-value 'val'.
-
    using namespace TMath;
    Float_t div  = Max(1, fCAMax - fCAMin);
    Int_t   nCol = gStyle->GetNumberOfColors();
@@ -127,11 +125,11 @@ void TEveRGBAPalette::SetupColor(Int_t val, UChar_t* pixel) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct internal color array that maps signal value to RGBA color.
+
 void TEveRGBAPalette::SetupColorArray() const
 {
-   // Construct internal color array that maps signal value to RGBA color.
-
    if (fColorArray)
       delete [] fColorArray;
 
@@ -148,11 +146,11 @@ void TEveRGBAPalette::SetupColorArray() const
       SetupColor(v, p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear internal color array.
+
 void TEveRGBAPalette::ClearColorArray()
 {
-   // Clear internal color array.
-
    if (fColorArray) {
       delete [] fColorArray;
       fColorArray = 0;
@@ -160,14 +158,12 @@ void TEveRGBAPalette::ClearColorArray()
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set low/high limits on signal value. Current min/max values are
+/// clamped into the new limits.
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetLimits(Int_t low, Int_t high)
 {
-   // Set low/high limits on signal value. Current min/max values are
-   // clamped into the new limits.
-
    fLowLimit  = low;
    fHighLimit = high;
 
@@ -179,11 +175,11 @@ void TEveRGBAPalette::SetLimits(Int_t low, Int_t high)
    ClearColorArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set low/high limits and rescale current min/max values.
+
 void TEveRGBAPalette::SetLimitsScaleMinMax(Int_t low, Int_t high)
 {
-   // Set low/high limits and rescale current min/max values.
-
    Float_t rng_old = fHighLimit - fLowLimit;
    Float_t rng_new = high - low;
 
@@ -195,43 +191,41 @@ void TEveRGBAPalette::SetLimitsScaleMinMax(Int_t low, Int_t high)
    ClearColorArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current min value.
+
 void TEveRGBAPalette::SetMin(Int_t min)
 {
-   // Set current min value.
-
    fMinVal = TMath::Min(min, fMaxVal);
    ClearColorArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current max value.
+
 void TEveRGBAPalette::SetMax(Int_t max)
 {
-   // Set current max value.
-
    fMaxVal = TMath::Max(max, fMinVal);
    ClearColorArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current min/max values.
+
 void TEveRGBAPalette::SetMinMax(Int_t min, Int_t max)
 {
-   // Set current min/max values.
-
    fMinVal = min;
    fMaxVal = max;
    ClearColorArray();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag determining whether GUI editor and overlays should show limits
+/// and axis values as real values with mapping from integer value i to real
+/// value d as: d = f*i + fc
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetUIDoubleRep(Bool_t b, Double_t f, Double_t c)
 {
-   // Set flag determining whether GUI editor and overlays should show limits
-   // and axis values as real values with mapping from integer value i to real
-   // value d as: d = f*i + fc
-
    fUIDoubleRep = b;
    if (fUIDoubleRep) {
       fUIf = f;  fUIc = c;
@@ -240,51 +234,49 @@ void TEveRGBAPalette::SetUIDoubleRep(Bool_t b, Double_t f, Double_t c)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set interpolation flag. This determines how colors from ROOT's
+/// palette are mapped into RGBA values for given signal.
+
 void TEveRGBAPalette::SetInterpolate(Bool_t b)
 {
-   // Set interpolation flag. This determines how colors from ROOT's
-   // palette are mapped into RGBA values for given signal.
-
    fInterpolate = b;
    ClearColorArray();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag specifying how the palette is mapped to signal values:
+///  true  - LowLimit -> HighLimit
+///  false - MinValue -> MaxValue
+
 void TEveRGBAPalette::SetFixColorRange(Bool_t v)
 {
-   // Set flag specifying how the palette is mapped to signal values:
-   //  true  - LowLimit -> HighLimit
-   //  false - MinValue -> MaxValue
-
    fFixColorRange = v;
    ClearColorArray();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set default color.
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetDefaultColor(Color_t ci)
 {
-   // Set default color.
-
    fDefaultColor = ci;
    TEveUtil::ColorFromIdx(ci, fDefaultRGBA, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default color.
+
 void TEveRGBAPalette::SetDefaultColorPixel(Pixel_t pix)
 {
-   // Set default color.
-
    SetDefaultColor(Color_t(TColor::GetColor(pix)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default color.
+
 void TEveRGBAPalette::SetDefaultColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
-   // Set default color.
-
    fDefaultColor = Color_t(TColor::GetColor(r, g, b));
    fDefaultRGBA[0] = r;
    fDefaultRGBA[1] = g;
@@ -292,30 +284,28 @@ void TEveRGBAPalette::SetDefaultColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar
    fDefaultRGBA[3] = a;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set underflow color.
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetUnderColor(Color_t ci)
 {
-   // Set underflow color.
-
    fUnderColor = ci;
    TEveUtil::ColorFromIdx(ci, fUnderRGBA, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set underflow color.
+
 void TEveRGBAPalette::SetUnderColorPixel(Pixel_t pix)
 {
-   // Set underflow color.
-
    SetUnderColor(Color_t(TColor::GetColor(pix)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set underflow color.
+
 void TEveRGBAPalette::SetUnderColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
-   // Set underflow color.
-
    fUnderColor = Color_t(TColor::GetColor(r, g, b));
    fUnderRGBA[0] = r;
    fUnderRGBA[1] = g;
@@ -323,30 +313,28 @@ void TEveRGBAPalette::SetUnderColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t
    fUnderRGBA[3] = a;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set overflow color.
 
-//______________________________________________________________________________
 void TEveRGBAPalette::SetOverColor(Color_t ci)
 {
-   // Set overflow color.
-
    fOverColor = ci;
    TEveUtil::ColorFromIdx(ci, fOverRGBA, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set overflow color.
+
 void TEveRGBAPalette::SetOverColorPixel(Pixel_t pix)
 {
-   // Set overflow color.
-
    SetOverColor(Color_t(TColor::GetColor(pix)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set overflow color.
+
 void TEveRGBAPalette::SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a)
 {
-   // Set overflow color.
-
    fOverColor = Color_t(TColor::GetColor(r, g, b));
    fOverRGBA[0] = r;
    fOverRGBA[1] = g;
@@ -354,13 +342,13 @@ void TEveRGBAPalette::SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t 
    fOverRGBA[3] = a;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit the "MinMaxValChanged()" signal.
+/// This is NOT called automatically from SetMin/Max functions but
+/// it IS called from TEveRGBAPaletteEditor after it changes the
+/// min/max values.
+
 void TEveRGBAPalette::MinMaxValChanged()
 {
-   // Emit the "MinMaxValChanged()" signal.
-   // This is NOT called automatically from SetMin/Max functions but
-   // it IS called from TEveRGBAPaletteEditor after it changes the
-   // min/max values.
-
    Emit("MinMaxValChanged()");
 }

@@ -14,17 +14,11 @@
 #define ROOT_Fit_FitConfig
 
 
-#ifndef ROOT_Fit_ParameterSettings
 #include "Fit/ParameterSettings.h"
-#endif
 
-#ifndef ROOT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 
 #include <vector>
@@ -98,6 +92,12 @@ public:
       number of parameters settings
     */
    unsigned int NPar() const { return fSettings.size(); }
+
+   /**
+      return a vector of stored parameter values (i.e initial fit parameters)
+    */
+   std::vector<double> ParamsValues() const;
+
 
    /**
       set the parameter settings from a model function.

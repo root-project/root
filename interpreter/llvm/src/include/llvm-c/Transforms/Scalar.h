@@ -19,7 +19,7 @@
 #ifndef LLVM_C_TRANSFORMS_SCALAR_H
 #define LLVM_C_TRANSFORMS_SCALAR_H
 
-#include "llvm-c/Core.h"
+#include "llvm-c/Types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +34,9 @@ extern "C" {
 
 /** See llvm::createAggressiveDCEPass function. */
 void LLVMAddAggressiveDCEPass(LLVMPassManagerRef PM);
+
+/** See llvm::createBitTrackingDCEPass function. */
+void LLVMAddBitTrackingDCEPass(LLVMPassManagerRef PM);
 
 /** See llvm::createAlignmentFromAssumptionsPass function. */
 void LLVMAddAlignmentFromAssumptionsPass(LLVMPassManagerRef PM);
@@ -101,13 +104,13 @@ void LLVMAddReassociatePass(LLVMPassManagerRef PM);
 /** See llvm::createSCCPPass function. */
 void LLVMAddSCCPPass(LLVMPassManagerRef PM);
 
-/** See llvm::createScalarReplAggregatesPass function. */
+/** See llvm::createSROAPass function. */
 void LLVMAddScalarReplAggregatesPass(LLVMPassManagerRef PM);
 
-/** See llvm::createScalarReplAggregatesPass function. */
+/** See llvm::createSROAPass function. */
 void LLVMAddScalarReplAggregatesPassSSA(LLVMPassManagerRef PM);
 
-/** See llvm::createScalarReplAggregatesPass function. */
+/** See llvm::createSROAPass function. */
 void LLVMAddScalarReplAggregatesPassWithThreshold(LLVMPassManagerRef PM,
                                                   int Threshold);
 

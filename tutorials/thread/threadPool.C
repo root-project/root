@@ -1,6 +1,16 @@
-// Usage:
-// root [0] .L threadPool.C++
-// root [1] threadPool(10)  10 = numThreads
+/// \file
+/// \ingroup tutorial_thread
+///
+/// Usage:
+///
+/// ~~~{.cpp}
+/// root [0] .L threadPool.C++
+/// root [1] threadPool(10)  10 = numThreads
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Victor Perevovchikov
 
 // STD
 #include <iostream>

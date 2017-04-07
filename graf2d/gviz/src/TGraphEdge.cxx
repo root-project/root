@@ -19,19 +19,18 @@
 
 ClassImp(TGraphEdge)
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Graph Edge class</h2></center>
-TGraphEdge is an edge object connecting two nodes which can be added in a
+/** \class TGraphEdge
+\ingroup gviz
+
+An edge object connecting two nodes which can be added in a
 TGraphStruct.
-End_Html */
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Edge default constructor.
 
-//______________________________________________________________________________
 TGraphEdge::TGraphEdge(): TObject(), TAttLine()
 {
-   // Graph Edge default constructor.
-
    fNode1  = 0;
    fNode2  = 0;
    fGVEdge = 0;
@@ -42,13 +41,12 @@ TGraphEdge::TGraphEdge(): TObject(), TAttLine()
    fArrY   = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Edge normal constructor.
 
-//______________________________________________________________________________
 TGraphEdge::TGraphEdge(TGraphNode *n1, TGraphNode *n2)
            :TObject(), TAttLine()
 {
-   // Graph Edge normal constructor.
-
    fNode1  = n1;
    fNode2  = n2;
    fGVEdge = 0;
@@ -59,25 +57,23 @@ TGraphEdge::TGraphEdge(TGraphNode *n1, TGraphNode *n2)
    fArrY   = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Edge default destructor.
 
-//______________________________________________________________________________
 TGraphEdge::~TGraphEdge()
 {
-   // Graph Edge default destructor.
-
    if (fNode1) delete fNode1;
    if (fNode2) delete fNode2;
-   if (fX) delete [] fX; fX = 0;
-   if (fY) delete [] fY; fY = 0;
-   if (fN) delete [] fN; fN = 0;
+   if (fX) { delete [] fX; fX = 0; }
+   if (fY) { delete [] fY; fY = 0; }
+   if (fN) { delete [] fN; fN = 0; }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create the GraphViz edge into the GraphViz data structure gv.
 
-//______________________________________________________________________________
 void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
 {
-   // Create the GraphViz edge into the GraphViz data structure gv.
-
    if (gv) {
       Agnode_t *n1 = (Agnode_t*)fNode1->GetGVNode();
       Agnode_t *n2 = (Agnode_t*)fNode2->GetGVNode();
@@ -91,12 +87,11 @@ void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to an edge.
 
-//______________________________________________________________________________
 Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to an edge.
-
    Int_t i,n,a,dist=999;
 
    TPolyLine *polyline;
@@ -112,12 +107,11 @@ Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
 
-//______________________________________________________________________________
 void TGraphEdge::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-
    Int_t i,n,a;
 
    TPolyLine *polyline;
@@ -131,19 +125,18 @@ void TGraphEdge::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Layout this edge in the GraphViz space. This is done after gvLayout
+/// has been performed.
 
-//______________________________________________________________________________
 void TGraphEdge::Layout()
 {
-   // Layout this edge in the GraphViz space. This is done after gvLayout
-   // has been performed.
-
    bezier bz;
    Int_t i,j;
 
-   if (fX) delete [] fX; fX = 0;
-   if (fY) delete [] fY; fY = 0;
-   if (fN) delete [] fN; fN = 0;
+   if (fX) { delete [] fX; fX = 0; }
+   if (fY) { delete [] fY; fY = 0; }
+   if (fN) { delete [] fN; fN = 0; }
 
    Int_t np = ED_spl((Agedge_t*)fGVEdge)->size;
    fN       = new Int_t[np+1];
@@ -175,12 +168,11 @@ void TGraphEdge::Layout()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this edge with its current attributes.
 
-//______________________________________________________________________________
 void TGraphEdge::Paint(Option_t *)
 {
-   // Paint this edge with its current attributes.
-
    Int_t i,n,a;
 
    TArrow arrow;
@@ -208,24 +200,24 @@ void TGraphEdge::Paint(Option_t *)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TGraphEdge::SavePrimitive(std::ostream &, Option_t *)
 {
-   // Save primitive as a C++ statement(s) on output stream out
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save attributes as a C++ statement(s) on output stream out
+/// called by TGraphStruct::SavePrimitive.
+
 void TGraphEdge::SaveAttributes(std::ostream &out, const char* name)
 {
-   // Save attributes as a C++ statement(s) on output stream out
-   // called by TGraphStruct::SavePrimitive.
-
    SaveLineAttributes(out,name,1,1,1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
 void TGraphEdge::Streamer(TBuffer &/*b*/)
 {
 }

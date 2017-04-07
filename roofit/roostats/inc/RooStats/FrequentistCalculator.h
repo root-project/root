@@ -11,29 +11,12 @@
 #ifndef ROOSTATS_FrequentistCalculator
 #define ROOSTATS_FrequentistCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-The use of ToyMCSampler as the TestStatSampler is assumed.
-</p>
-END_HTML
-*/
-//
 
-
-
-#ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
-#endif
 
-#ifndef ROOSTATS_ToyMCSampler
 #include "RooStats/ToyMCSampler.h"
-#endif
 
-#ifndef ROOSTATS_DetailedOutputAggregator
 #include "RooStats/DetailedOutputAggregator.h"
-#endif
 
 #include "RooFitResult.h"
 
@@ -55,55 +38,55 @@ namespace RooStats {
          fNToysAlt(-1),
          fNToysNullTail(0),
          fNToysAltTail(0),
-	 fFitInfo(NULL),
-	 fStoreFitInfo(false)
+    fFitInfo(NULL),
+    fStoreFitInfo(false)
       {
       }
 
       ~FrequentistCalculator() {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-	 if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-	 if( fFitInfo ) delete fFitInfo;
+    if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+    if( fFitInfo ) delete fFitInfo;
       }
 
 
-      // set number of toys
+      /// set number of toys
       void SetToys(int toysNull, int toysAlt) { fNToysNull = toysNull; fNToysAlt = toysAlt; }
 
-      // set least number of toys in tails
+      /// set least number of toys in tails
       void SetNToysInTails(int toysNull, int toysAlt) { fNToysNullTail = toysNull; fNToysAltTail = toysAlt; }
 
-      // set given nuisance parameters to a specific value that will be used instead of their
-      // profiled value for Null toys
+      /// set given nuisance parameters to a specific value that will be used instead of their
+      /// profiled value for Null toys
       void SetConditionalMLEsNull( const RooArgSet* c ) {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-         
+
          if( c ) fConditionalMLEsNull = (const RooArgSet*)c->snapshot();
          else fConditionalMLEsNull = NULL;
       }
 
-      // set given nuisance parameters to a specific value that will be used instead of their
-      // profiled value for Alternate toys
+      /// set given nuisance parameters to a specific value that will be used instead of their
+      /// profiled value for Alternate toys
       void SetConditionalMLEsAlt( const RooArgSet* c ) {
          if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-         
+
          if( c ) fConditionalMLEsAlt = (const RooArgSet*)c->snapshot();
          else fConditionalMLEsAlt = NULL;
       }
 
       void StoreFitInfo(bool val = true) {
-	      fStoreFitInfo = val;
+         fStoreFitInfo = val;
       }
 
       const RooArgSet* GetFitInfo() const {
-	      return fFitInfo;
+         return fFitInfo;
       }
 
    protected:
-      // configure TestStatSampler for the Null run
+      /// configure TestStatSampler for the Null run
       int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
-      // configure TestStatSampler for the Alt run
+      /// configure TestStatSampler for the Alt run
       int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
       void PreHook() const;
@@ -113,7 +96,7 @@ namespace RooStats {
       // MLE inputs
       const RooArgSet* fConditionalMLEsNull;
       const RooArgSet* fConditionalMLEsAlt;
-   
+
       // different number of toys for null and alt
       int fNToysNull;
       int fNToysAlt;

@@ -1,8 +1,18 @@
-// tutorial illustrating the use of TMath::Permute
-//  can be run with:
-// root > .x permute.C
-// root > .x permute.C+ with ACLIC
-//Author: Federico Carminati
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// Tutorial illustrating the use of TMath::Permute
+/// can be run with:
+///
+/// ~~~{.cpp}
+/// root > .x permute.C
+/// root > .x permute.C+ with ACLIC
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Federico Carminati
 
 #include <TMath.h>
 

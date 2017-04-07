@@ -17,7 +17,7 @@ namespace PyROOT {
 
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
       virtual PyObject* Call(
-         ObjectProxy*, PyObject* args, PyObject* kwds, TCallContext* ctx = 0 );
+         ObjectProxy*&, PyObject* args, PyObject* kwds, TCallContext* ctx = 0 );
    };
 
 } // namespace PyROOT

@@ -20,15 +20,9 @@
 // Please, see TFITS.cxx for info about implementation                  //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
 class TArrayI;
 class TArrayD;
@@ -75,23 +69,23 @@ public:
    };
 
 protected:
-   TString             fFilePath;         // Path to HDU's file including filter
-   TString             fBaseFilePath;     // Path to HDU's file excluding filter
-   struct HDURecord   *fRecords;          // HDU metadata records
-   Int_t               fNRecords;         // Number of records
-   enum EHDUTypes      fType;             // HDU type
-   TString             fExtensionName;    // Extension Name
-   Int_t               fNumber;           // HDU number (1=PRIMARY)
-   TArrayI            *fSizes;            // Image sizes in each dimension (when fType == kImageHDU)
-   TArrayD            *fPixels;           // Image pixels (when fType == kImageHDU)
-   struct Column      *fColumnsInfo;      // Information about columns (when fType == kTableHDU)
-   Int_t               fNColumns;         // Number of columns (when fType == kTableHDU)
-   Int_t               fNRows;            // Number of rows (when fType == kTableHDU)
-   union  Cell        *fCells;            // Table cells (when fType == kTableHDU). Cells are ordered in the following way:
-                                          // fCells[0..fNRows-1] -> cells of column 0
-                                          // fCells[fNRows..2*fNRows-1] -> cells of column 1
-                                          // fCells[2*fNRows..3*fNRows-1] -> cells of column 2
-                                          // fCells[(fNColumns-1)*fNRows..fNColumns*fNRows-1] -> cells of column fNColumns-1
+   TString             fFilePath;         ///< Path to HDU's file including filter
+   TString             fBaseFilePath;     ///< Path to HDU's file excluding filter
+   struct HDURecord   *fRecords;          ///< HDU metadata records
+   Int_t               fNRecords;         ///< Number of records
+   enum EHDUTypes      fType;             ///< HDU type
+   TString             fExtensionName;    ///< Extension Name
+   Int_t               fNumber;           ///< HDU number (1=PRIMARY)
+   TArrayI            *fSizes;            ///< Image sizes in each dimension (when fType == kImageHDU)
+   TArrayD            *fPixels;           ///< Image pixels (when fType == kImageHDU)
+   struct Column      *fColumnsInfo;      ///< Information about columns (when fType == kTableHDU)
+   Int_t               fNColumns;         ///< Number of columns (when fType == kTableHDU)
+   Int_t               fNRows;            ///< Number of rows (when fType == kTableHDU)
+   union  Cell        *fCells;            ///< Table cells (when fType == kTableHDU). Cells are ordered in the following way:
+                                          ///< fCells[0..fNRows-1] -> cells of column 0
+                                          ///< fCells[fNRows..2*fNRows-1] -> cells of column 1
+                                          ///< fCells[2*fNRows..3*fNRows-1] -> cells of column 2
+                                          ///< fCells[(fNColumns-1)*fNRows..fNColumns*fNRows-1] -> cells of column fNColumns-1
 
 
    Bool_t            LoadHDU(TString& filepath_filter);

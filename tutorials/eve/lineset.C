@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TEveStraightLineSet.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of class TEveStraightLineSet.
+///
+/// \image html eve_lineset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TEveStraightLineSet* lineset(Int_t nlines = 40, Int_t nmarkers = 4)
 {

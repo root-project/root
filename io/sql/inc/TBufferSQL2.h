@@ -5,26 +5,11 @@
 #ifndef ROOT_TBufferSQL2
 #define ROOT_TBufferSQL2
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TBufferSQL2 class used in TSQLFile to convert binary object data    //
-// to SQL statements, supplied to DB server                            //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TMap;
 class TExMap;
@@ -48,22 +33,22 @@ friend class TSQLStructure;
 
 protected:
 
-   TSQLFile*        fSQL;                  //!   instance of TSQLFile
-   TSQLStructure*   fStructure;            //!   structures, created by object storing
-   TSQLStructure*   fStk;                  //!   pointer on current active structure (stack head)
-   TExMap*          fObjMap;               //!   Map between stored objects and object id
-   TString          fReadBuffer;           //!   Buffer for read value
-   Int_t            fErrorFlag;            //!   Error id value
-   Bool_t           fExpectedChain;        //!   flag to resolve situation when several elements of same basic type stored as FastArray
-   Int_t            fCompressLevel;        //!   compress level used to minimize size of data in database
-   Int_t            fReadVersionBuffer;    //!   buffer, used to by ReadVersion method
-   Long64_t         fObjIdCounter;         //!   counter of objects id
-   Bool_t           fIgnoreVerification;   //!   ignore verification of names
-   TSQLObjectData*  fCurrentData;          //!
-   TObjArray*       fObjectsInfos;         //!   array of objects info for selected key
-   Long64_t         fFirstObjId;           //!   id of first object to be read from the database
-   Long64_t         fLastObjId;            //!   id of last object correspond to this key
-   TMap*            fPoolsMap;             //!   map of pools with data from different tables
+   TSQLFile*        fSQL;                  ///<!   instance of TSQLFile
+   TSQLStructure*   fStructure;            ///<!   structures, created by object storing
+   TSQLStructure*   fStk;                  ///<!   pointer on current active structure (stack head)
+   TExMap*          fObjMap;               ///<!   Map between stored objects and object id
+   TString          fReadBuffer;           ///<!   Buffer for read value
+   Int_t            fErrorFlag;            ///<!   Error id value
+   Bool_t           fExpectedChain;        ///<!   flag to resolve situation when several elements of same basic type stored as FastArray
+   Int_t            fCompressLevel;        ///<!   compress level used to minimize size of data in database
+   Int_t            fReadVersionBuffer;    ///<!   buffer, used to by ReadVersion method
+   Long64_t         fObjIdCounter;         ///<!   counter of objects id
+   Bool_t           fIgnoreVerification;   ///<!   ignore verification of names
+   TSQLObjectData*  fCurrentData;          ///<!
+   TObjArray*       fObjectsInfos;         ///<!   array of objects info for selected key
+   Long64_t         fFirstObjId;           ///<!   id of first object to be read from the database
+   Long64_t         fLastObjId;            ///<!   id of last object correspond to this key
+   TMap*            fPoolsMap;             ///<!   map of pools with data from different tables
 
    // TBufferSQL2 objects cannot be copied or assigned
    TBufferSQL2(const TBufferSQL2 &);       // not implemented
@@ -266,7 +251,7 @@ public:
    virtual void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0);
+   virtual void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0);
    virtual void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
    virtual void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual void     StreamObject(TObject *obj);
@@ -287,7 +272,9 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string &s);
+   virtual   void     ReadStdString(std::string *s);
+   using              TBuffer::ReadStdString;
+   virtual   void     ReadCharStar(char* &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -304,7 +291,9 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
-   virtual   void     WriteStdString(const std::string &s);
+   virtual   void     WriteStdString(const std::string *s);
+   using              TBuffer::WriteStdString;
+   virtual   void     WriteCharStar(char *s);
 
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
    virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
@@ -315,7 +304,7 @@ public:
 
    // end of redefined virtual functions
 
-ClassDef(TBufferSQL2,1);    //a specialized TBuffer to convert data to SQL statements or read data from SQL tables
+   ClassDef(TBufferSQL2, 0);    //a specialized TBuffer to convert data to SQL statements or read data from SQL tables
 };
 
 #endif

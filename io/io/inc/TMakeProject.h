@@ -12,19 +12,8 @@
 #ifndef ROOT_TMakeProject
 #define ROOT_TMakeProject
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMakeProject                                                         //
-//                                                                      //
-// Helper class implementing the TFile::MakeProject.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include <stdio.h>
-#ifndef ROOT_TOBJECT_H
 #include "TString.h"
-#endif
 
 class TList;
 class TVirtualStreamerInfo;

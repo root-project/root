@@ -23,20 +23,20 @@
 
 ClassImp(TRWLock)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create reader/write lock.
+
 TRWLock::TRWLock() : fLockFree(&fMutex)
 {
-   // Create reader/write lock.
-
    fReaders = 0;
    fWriters = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Obtain a reader lock. Returns always 0.
+
 Int_t TRWLock::ReadLock()
 {
-   // Obtain a reader lock. Returns always 0.
-
    fMutex.Lock();
 
    while (fWriters)
@@ -49,12 +49,12 @@ Int_t TRWLock::ReadLock()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock reader lock. Returns -1 if thread was not locked,
+/// 0 if everything ok.
+
 Int_t TRWLock::ReadUnLock()
 {
-   // Unlock reader lock. Returns -1 if thread was not locked,
-   // 0 if everything ok.
-
    fMutex.Lock();
 
    if (fReaders == 0) {
@@ -69,11 +69,11 @@ Int_t TRWLock::ReadUnLock()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Obtain a writer lock. Returns always 0.
+
 Int_t TRWLock::WriteLock()
 {
-   // Obtain a writer lock. Returns always 0.
-
    fMutex.Lock();
 
    while (fWriters || fReaders)
@@ -86,12 +86,12 @@ Int_t TRWLock::WriteLock()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock writer lock. Returns -1 if thread was not locked,
+/// 0 if everything ok.
+
 Int_t TRWLock::WriteUnLock()
 {
-   // Unlock writer lock. Returns -1 if thread was not locked,
-   // 0 if everything ok.
-
    fMutex.Lock();
 
    if (fWriters == 0) {

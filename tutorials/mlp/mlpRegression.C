@@ -1,14 +1,20 @@
-//  This macro shows the use of an ANN for regression analysis:
-//given a set {i} of input vectors i and a set {o} of output vectors o,
-//one looks for the unknown function f(i)=o.
-//The ANN can approximate this function; TMLPAnalyzer::DrawTruthDeviation
-//methods can be used to evaluate the quality of the approximation.
-//
-//For simplicity, we use a known function to create test and training data.
-//In reality this function is usually not known, and the data comes e.g.
-//from measurements.
-//
-//Axel Naumann, 2005-02-02
+/// \file
+/// \ingroup tutorial_mlp
+///  This macro shows the use of an ANN for regression analysis:
+/// given a set {i} of input vectors i and a set {o} of output vectors o,
+/// one looks for the unknown function f(i)=o.
+/// The ANN can approximate this function; TMLPAnalyzer::DrawTruthDeviation
+/// methods can be used to evaluate the quality of the approximation.
+///
+/// For simplicity, we use a known function to create test and training data.
+/// In reality this function is usually not known, and the data comes e.g.
+/// from measurements.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Axel Naumann, 2005-02-02
 
 Double_t theUnknownFunction(Double_t x, Double_t y) {
    return sin((1.7+x)*(x-0.3)-2.3*(y+0.7));
@@ -80,5 +86,6 @@ void mlpRegression() {
    TGraph2D* g2Extrapolate=new TGraph2D("ANN extrapolation",
                                         "ANN extrapolation, ANN output - truth",
                                         225, vx, vy, delta);
+
    g2Extrapolate->Draw("TRI2");
 }

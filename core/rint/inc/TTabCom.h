@@ -36,15 +36,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObjString
 #include "TObjString.h"
-#endif
-#ifndef ROOT_TRegExp
 #include "TRegexp.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 #define MAX_LEN_PAT 1024               // maximum length of a pattern

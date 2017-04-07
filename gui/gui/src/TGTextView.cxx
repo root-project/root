@@ -52,11 +52,11 @@ TGGC         *TGTextView::fgDefaultSelectedGC = 0;
 const TGGC   *TGTextView::fgDefaultSelectedBackgroundGC = 0;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify when timer times out and reset the timer.
+
 Bool_t TViewTimer::Notify()
 {
-   // Notify when timer times out and reset the timer.
-
    fView->HandleTimer(this);
    Reset();
    return kFALSE;
@@ -65,11 +65,11 @@ Bool_t TViewTimer::Notify()
 ClassImp(TGTextView)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a text view widget.
+
 void TGTextView::Init(ULong_t back)
 {
-   // Initialize a text view widget.
-
    // set in TGResourcePool via .rootrc
    fFont        = GetDefaultFontStruct();
    fNormGC      = GetDefaultGC();
@@ -110,23 +110,23 @@ void TGTextView::Init(ULong_t back)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text view widget.
+
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
                        UInt_t sboptions, ULong_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
-   // Create a text view widget.
-
    Init(back);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text view widget.
+
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
                        Int_t id, UInt_t sboptions, ULong_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
-   // Create a text view widget.
-
    Init(back);
    TGLongPosition pos, srcStart, srcEnd;
    pos.fX = pos.fY = 0;
@@ -136,75 +136,75 @@ TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
    fText->InsText(pos, text, srcStart, srcEnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text view widget.
+
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
                        ULong_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
-   // Create a text view widget.
-
    Init(back);
    TGLongPosition pos;
    pos.fX = pos.fY = 0;
    fText->InsText(pos, string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup text view widget.
+
 TGTextView::~TGTextView()
 {
-   // Cleanup text view widget.
-
    delete fScrollTimer;
    delete fText;
    delete fClipText;
    delete [] fDNDTypeList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set background  color
+
 void TGTextView::SetBackground(Pixel_t p)
 {
-   // set background  color
-
    fCanvas->SetBackgroundColor(p);
    fWhiteGC.SetBackground(p);
    fWhiteGC.SetForeground(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set selected text background color
+
 void TGTextView::SetSelectBack(Pixel_t p)
 {
-   // set selected text background color
-
    fSelbackGC.SetBackground(p);
    fSelbackGC.SetForeground(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set selected text color
+
 void TGTextView::SetSelectFore(Pixel_t p)
 {
-   // set selected text color
-
    fSelGC.SetBackground(p);
    fSelGC.SetForeground(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a new text buffer. The text will be deleted by this object.
+
 void TGTextView::SetText(TGText *text)
 {
-   // Adopt a new text buffer. The text will be deleted by this object.
-
    Clear();
    delete fText;
    fText = text;
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add text to the view widget.
+
 void TGTextView::AddText(TGText *text)
 {
-   // Add text to the view widget.
-
    UInt_t h1 = (UInt_t)ToScrYCoord(fText->RowCount());
 
    fText->AddText(text);
@@ -221,11 +221,11 @@ void TGTextView::AddText(TGText *text)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line of text to the view widget.
+
 void TGTextView::AddLine(const char *string)
 {
-   // Add a line of text to the view widget.
-
    UInt_t h1 = (UInt_t)ToScrYCoord(fText->RowCount());
 
    AddLineFast(string);
@@ -241,34 +241,34 @@ void TGTextView::AddLine(const char *string)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line of text to the view widget.
+/// Fast version. Use it if you are going to add
+/// several lines, than call Update().
+
 void TGTextView::AddLineFast(const char *string)
 {
-   // Add a line of text to the view widget.
-   // Fast version. Use it if you are going to add
-   // several lines, than call Update().
-
    TGLongPosition pos;
    pos.fX = 0;
    pos.fY = fText->RowCount();
    fText->InsText(pos, string);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update the whole window of text view
+
 void TGTextView::Update()
 {
-   // update the whole window of text view
-
    Layout();
    fExposedRegion.Empty();
    UpdateRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return width of longest line.
+
 Long_t TGTextView::ReturnLongestLineWidth()
 {
-   // Return width of longest line.
-
    Long_t count = 0, longest = 0, width;
    Long_t rows = fText->RowCount();
    while (count < rows) {
@@ -281,12 +281,12 @@ Long_t TGTextView::ReturnLongestLineWidth()
    return longest;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for string in text. If direction is true search forward.
+/// Returns true if string is found.
+
 Bool_t TGTextView::Search(const char *string, Bool_t direction, Bool_t caseSensitive)
 {
-   // Search for string in text. If direction is true search forward.
-   // Returns true if string is found.
-
    TGLongPosition pos, pos2;
    pos2.fX = pos2.fY = 0;
    if (fIsMarked) {
@@ -325,11 +325,11 @@ Bool_t TGTextView::Search(const char *string, Bool_t direction, Bool_t caseSensi
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text entry font.
+
 void TGTextView::SetFont(FontStruct_t font)
 {
-   // Changes text entry font.
-
    if (font != fFont) {
       fFont = font;
       fNormGC.SetFont(gVirtualX->GetFontHandle(fFont));
@@ -338,11 +338,11 @@ void TGTextView::SetFont(FontStruct_t font)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert line number to screen coordinate.
+
 Long_t TGTextView::ToScrYCoord(Long_t yCoord)
 {
-   // Convert line number to screen coordinate.
-
    if (yCoord * (fMaxAscent + fMaxDescent) <= 0) {
       return 0;
    }
@@ -352,11 +352,11 @@ Long_t TGTextView::ToScrYCoord(Long_t yCoord)
    return yCoord * (fMaxAscent + fMaxDescent) - fVisible.fY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert column number in specified line to screen coordinate.
+
 Long_t TGTextView::ToScrXCoord(Long_t xCoord, Long_t line)
 {
-   // Convert column number in specified line to screen coordinate.
-
    TGLongPosition pos;
    char *buffer;
 
@@ -376,19 +376,19 @@ Long_t TGTextView::ToScrXCoord(Long_t xCoord, Long_t line)
    return width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert y screen coordinate to line number.
+
 Long_t TGTextView::ToObjYCoord(Long_t yCoord)
 {
-   // Convert y screen coordinate to line number.
-
    return  yCoord / (fMaxAscent + fMaxDescent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert x screen coordinate to column in specified line.
+
 Long_t TGTextView::ToObjXCoord(Long_t xCoord, Long_t line)
 {
-   // Convert x screen coordinate to column in specified line.
-
    TGLongPosition pos;
    char *buffer, *travelBuffer;
    char charBuffer;
@@ -422,11 +422,11 @@ Long_t TGTextView::ToObjXCoord(Long_t xCoord, Long_t line)
    return pos.fX;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear text view widget.
+
 void TGTextView::Clear(Option_t *)
 {
-   // Clear text view widget.
-
    TGView::Clear();
    fIsMarked  = kFALSE;
    fIsSaved   = kTRUE;
@@ -445,12 +445,12 @@ void TGTextView::Clear(Option_t *)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a file in the text view widget. Return false in case file does not
+/// exist.
+
 Bool_t TGTextView::LoadFile(const char *filename, Long_t startpos, Long_t length)
 {
-   // Load a file in the text view widget. Return false in case file does not
-   // exist.
-
    FILE *fp;
    if (!(fp = fopen(filename, "r")))
       return kFALSE;
@@ -463,11 +463,11 @@ Bool_t TGTextView::LoadFile(const char *filename, Long_t startpos, Long_t length
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load text from a text buffer. Return false in case of failure.
+
 Bool_t TGTextView::LoadBuffer(const char *txtbuf)
 {
-   // Load text from a text buffer. Return false in case of failure.
-
    if (!txtbuf || !txtbuf[0]) {
       return kFALSE;
    }
@@ -478,11 +478,11 @@ Bool_t TGTextView::LoadBuffer(const char *txtbuf)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy selected text to clipboard.
+
 Bool_t TGTextView::Copy()
 {
-   // Copy selected text to clipboard.
-
    TGLongPosition insPos, startPos, endPos;
 
    if (!fIsMarked) {
@@ -509,11 +509,11 @@ Bool_t TGTextView::Copy()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select all text in the viewer.
+
 Bool_t TGTextView::SelectAll()
 {
-   // Select all text in the viewer.
-
    if (fText->RowCount() == 1 && fText->GetLineLength(0) == 0) {
       return kFALSE;
    }
@@ -531,11 +531,11 @@ Bool_t TGTextView::SelectAll()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw lines in exposed region.
+
 void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw lines in exposed region.
-
    char *buffer;
 
    TGLongPosition pos;
@@ -666,11 +666,11 @@ void TGTextView::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGTextView::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (event->fWindow != fCanvas->GetId())
       return kTRUE;
 
@@ -711,11 +711,11 @@ Bool_t TGTextView::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle scroll timer.
+
 Bool_t TGTextView::HandleTimer(TTimer *)
 {
-   // Handle scroll timer.
-
    static const Int_t kAutoScrollFudge = 10;
    static const Int_t kAcceleration[kAutoScrollFudge + 1] = {1, 1, 1, 1, 2, 3, 4, 6, 8, 12, 16};
 
@@ -816,11 +816,11 @@ Bool_t TGTextView::HandleTimer(TTimer *)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in text editor.
+
 Bool_t TGTextView::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in text editor.
-
    if (event->fWindow != fCanvas->GetId()) {
       return kFALSE;
    }
@@ -894,22 +894,19 @@ Bool_t TGTextView::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
-Bool_t TGTextView::HandleDoubleClick(Event_t *event)
-{
-   // handle double click
+////////////////////////////////////////////////////////////////////////////////
+/// handle double click
 
-   if (event->fWindow != fCanvas->GetId()) {
-      return kFALSE;
-   }
+Bool_t TGTextView::HandleDoubleClick(Event_t *)
+{
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in the text editor widget.
+
 Bool_t TGTextView::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in the text editor widget.
-
    if ((ToObjYCoord(fVisible.fY+event->fY) == fMousePos.fY) &&
        (ToObjXCoord(fVisible.fX+event->fX, ToObjYCoord(fVisible.fY + event->fY)) == fMousePos.fX)) {
       return kTRUE;
@@ -951,22 +948,22 @@ Bool_t TGTextView::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection clear event.
+
 Bool_t TGTextView::HandleSelectionClear(Event_t * /*event*/)
 {
-   // Handle selection clear event.
-
    if (fIsMarked) {
       UnMark();
    }
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request to send current clipboard contents to requestor window.
+
 Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
 {
-   // Handle request to send current clipboard contents to requestor window.
-
    Event_t reply;
    char *buffer, *temp_buffer;
    Long_t len, prev_len, temp_len, count;
@@ -1042,14 +1039,14 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if given a text file
+/// Uses the specification given on p86 of the Camel book
+/// - Text files have no NULLs in the first block
+/// - and less than 30% of characters with high bit set
+
 static Bool_t IsTextFile(const char *candidate)
 {
-   // Returns true if given a text file
-   // Uses the specification given on p86 of the Camel book
-   // - Text files have no NULLs in the first block
-   // - and less than 30% of characters with high bit set
-
    Int_t i;
    Int_t nchars;
    Int_t weirdcount = 0;
@@ -1082,11 +1079,11 @@ static Bool_t IsTextFile(const char *candidate)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Drop event
+
 Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
 {
-   // Handle Drop event
-
    static Atom_t rootObj = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
 
@@ -1131,20 +1128,20 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Drag position event
+
 Atom_t TGTextView::HandleDNDPosition(Int_t /*x*/, Int_t /*y*/, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
-   // Handle Drag position event
-
    return action;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Drag Enter event
+
 Atom_t TGTextView::HandleDNDEnter(Atom_t *typelist)
 {
-   // Handle Drag Enter event
-
    static Atom_t rootObj  = gVirtualX->InternAtom("application/root", kFALSE);
    static Atom_t uriObj  = gVirtualX->InternAtom("text/uri-list", kFALSE);
    Atom_t ret = kNone;
@@ -1157,19 +1154,19 @@ Atom_t TGTextView::HandleDNDEnter(Atom_t *typelist)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Drag Leave event
+
 Bool_t TGTextView::HandleDNDLeave()
 {
-   // Handle Drag Leave event
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark a text region from xPos to yPos.
+
 void TGTextView::Mark(Long_t xPos, Long_t yPos)
 {
-   // Mark a text region from xPos to yPos.
-
    TGLongPosition posStart, posEnd, pos;
 
    pos.fY = yPos;
@@ -1288,11 +1285,11 @@ void TGTextView::Mark(Long_t xPos, Long_t yPos)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear marked region.
+
 void TGTextView::UnMark()
 {
-   // Clear marked region.
-
    if (!fIsMarked ||
        ((fMarkedEnd.fY == fMarkedStart.fY) &&
        (fMarkedEnd.fX == fMarkedStart.fX))) {
@@ -1307,11 +1304,11 @@ void TGTextView::UnMark()
    UpdateRegion(0, y, fCanvas->GetWidth(), h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust widget width to longest line.
+
 void TGTextView::AdjustWidth()
 {
-   // Adjust widget width to longest line.
-
    Long_t line = fText->GetLongestLine();
    if (line <= 0) {
       return;
@@ -1324,20 +1321,20 @@ void TGTextView::AdjustWidth()
    Resize((UInt_t)size, fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the components of view.
+
 void TGTextView::Layout()
 {
-   // Layout the components of view.
-
    VLayout();
    HLayout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Horizontal layout of widgets (canvas, scrollbar).
+
 void TGTextView::HLayout()
 {
-   // Horizontal layout of widgets (canvas, scrollbar).
-
    if (!fHsb) return;
 
    Int_t tcw, tch;
@@ -1372,11 +1369,11 @@ void TGTextView::HLayout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Vertical layout of widgets (canvas, scrollbar).
+
 void TGTextView::VLayout()
 {
-   // Vertical layout of widgets (canvas, scrollbar).
-
    Int_t  tcw, tch;
    Long_t lines;
 
@@ -1409,11 +1406,11 @@ void TGTextView::VLayout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the range for the kVertical or kHorizontal scrollbar.
+
 void TGTextView::SetSBRange(Int_t direction)
 {
-   // Set the range for the kVertical or kHorizontal scrollbar.
-
    if (direction == kVertical) {
       if (!fVsb) {
          return;
@@ -1451,11 +1448,11 @@ void TGTextView::SetSBRange(Int_t direction)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position of horizontal scrollbar.
+
 void TGTextView::SetHsbPosition(Long_t newPos)
 {
-   // Set position of horizontal scrollbar.
-
    if (fHsb && fHsb->IsMapped()) {
       fHsb->SetPosition(Int_t(newPos));
    } else {
@@ -1463,11 +1460,11 @@ void TGTextView::SetHsbPosition(Long_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position of vertical scrollbar.
+
 void TGTextView::SetVsbPosition(Long_t newPos)
 {
-   // Set position of vertical scrollbar.
-
    if (fVsb && fVsb->IsMapped()) {
       fVsb->SetPosition(Int_t(newPos));
    } else {
@@ -1475,22 +1472,22 @@ void TGTextView::SetVsbPosition(Long_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGTextView::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont) {
       fgDefaultFont = gClient->GetResourcePool()->GetDocumentFixedFont();
    }
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show bottom of the page.
+
 void TGTextView::ShowBottom()
 {
-   // Show bottom of the page.
-
    Int_t  tch;
    Long_t lines, newPos;
 
@@ -1503,29 +1500,29 @@ void TGTextView::ShowBottom()
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show top of the page.
+
 void TGTextView::ShowTop()
 {
-   // Show top of the page.
-
    SetVsbPosition(0);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text color.
+
 void TGTextView::SetForegroundColor(Pixel_t col)
 {
-   // Set text color.
-
    fNormGC.SetBackground(col);
    fNormGC.SetForeground(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGTextView::GetDefaultGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -1533,11 +1530,11 @@ const TGGC &TGTextView::GetDefaultGC()
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return selection graphics context in use.
+
 const TGGC &TGTextView::GetDefaultSelectedGC()
 {
-   // Return selection graphics context in use.
-
    if (!fgDefaultSelectedGC) {
       fgDefaultSelectedGC = new TGGC(*gClient->GetResourcePool()->GetSelectedGC());
       fgDefaultSelectedGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -1545,22 +1542,22 @@ const TGGC &TGTextView::GetDefaultSelectedGC()
    return *fgDefaultSelectedGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context for highlighted frame background.
+
 const TGGC &TGTextView::GetDefaultSelectedBackgroundGC()
 {
-   // Return graphics context for highlighted frame background.
-
    if (!fgDefaultSelectedBackgroundGC) {
       fgDefaultSelectedBackgroundGC = gClient->GetResourcePool()->GetSelectedBckgndGC();
    }
    return *fgDefaultSelectedBackgroundGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a text edit widget as a C++ statement(s) on output stream out
+
 void TGTextView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a text edit widget as a C++ statement(s) on output stream out
-
    char quote = '"';
    out << "   TGTextView *";
    out << GetName() << " = new TGTextView(" << fParent->GetName()

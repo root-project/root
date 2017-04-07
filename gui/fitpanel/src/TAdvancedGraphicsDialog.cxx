@@ -113,12 +113,12 @@ TAdvancedGraphicsDialog::TAdvancedGraphicsDialog(const TGWindow *p, const TGWind
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the frame that contains all the necessary information for
+/// the Contour method.
+
 void TAdvancedGraphicsDialog::CreateContourFrame()
 {
-   // Create the frame that contains all the necessary information for
-   // the Contour method.
-
    fContourFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fContourFrame);
 
@@ -194,12 +194,12 @@ void TAdvancedGraphicsDialog::CreateContourFrame()
    fContourFrame->AddFrame(frame, new TGLayoutHints(kLHintsExpandX, 5, 5, 0, 5));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the frame that contains all the necessary information for
+/// the Scan method.
+
 void TAdvancedGraphicsDialog::CreateScanFrame()
 {
-   // Create the frame that contains all the necessary information for
-   // the Scan method.
-
    fScanFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fScanFrame);
 
@@ -259,12 +259,12 @@ void TAdvancedGraphicsDialog::CreateScanFrame()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the frame that contains all the necessary information for
+/// the Confidence Level  method.
+
 void TAdvancedGraphicsDialog::CreateConfFrame()
 {
-   // Create the frame that contains all the necessary information for
-   // the Confidence Level  method.
-
    fConfFrame = new TGVerticalFrame(fTab);
    TGHorizontalFrame* frame = new TGHorizontalFrame(fConfFrame);
 
@@ -304,11 +304,11 @@ void TAdvancedGraphicsDialog::AddParameters(TGComboBox* comboBox)
    comboBox->Select(kAGD_PARCOUNTER, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect the slots (buttons mainly + specific methods)
+
 void TAdvancedGraphicsDialog::ConnectSlots()
 {
-   // Connect the slots (buttons mainly + specific methods)
-
    // Buttons
    fClose->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "CloseWindow()");
    fDraw->Connect("Clicked()", "TAdvancedGraphicsDialog", this, "DoDraw()");
@@ -317,23 +317,23 @@ void TAdvancedGraphicsDialog::ConnectSlots()
    fScanPar->Connect("Selected(Int_t)", "TAdvancedGraphicsDialog", this, "DoChangedScanPar(Int_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes the Min and Max default values of the scan method,
+/// depending on the selected parameter.
+
 void TAdvancedGraphicsDialog::DoChangedScanPar(Int_t selected)
 {
-   // Changes the Min and Max default values of the scan method,
-   // depending on the selected parameter.
-
    double val = fFitter->GetParameter( selected - kAGD_PARCOUNTER );
    double err = fFitter->GetParError(  selected - kAGD_PARCOUNTER );
    fScanMin->SetNumber( val -2 * err );
    fScanMax->SetNumber( val +2 * err );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calls the correspoding method, depending on the selected tab.
+
 void TAdvancedGraphicsDialog::DoDraw()
 {
-   // Calls the correspoding method, depending on the selected tab.
-
    if ( fTab->GetCurrent() == 0 ) {
       DrawContour();
    } else if ( fTab->GetCurrent() == 1 ) {
@@ -343,12 +343,12 @@ void TAdvancedGraphicsDialog::DoDraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates all necessary data for the Contour method from its
+/// tab. Then it call Virtual Fitter to perform it.
+
 void TAdvancedGraphicsDialog::DrawContour()
 {
-   // Generates all necessary data for the Contour method from its
-   // tab. Then it call Virtual Fitter to perform it.
-
    static TGraph * graph = 0;
    std::string options;
    if ( ! (fContourOver->GetState() == kButtonDown) ) {
@@ -374,12 +374,12 @@ void TAdvancedGraphicsDialog::DrawContour()
    gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates all necessary data for the Scan method from its
+/// tab. Then it call Virtual Fitter to perform it.
+
 void TAdvancedGraphicsDialog::DrawScan()
 {
-   // Generates all necessary data for the Scan method from its
-   // tab. Then it call Virtual Fitter to perform it.
-
    static TGraph * graph = 0;
    if ( graph )
       delete graph;
@@ -396,12 +396,12 @@ void TAdvancedGraphicsDialog::DrawScan()
    gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generates all necessary data for the Scan method from its
+/// tab. Then it call Virtual Fitter to perform it.
+
 void TAdvancedGraphicsDialog::DrawConfidenceLevels()
 {
-   // Generates all necessary data for the Scan method from its
-   // tab. Then it call Virtual Fitter to perform it.
-
    const ROOT::Fit::FitResult& result = fFitter->GetFitResult();
    const ROOT::Fit::FitResult::IModelFunction* function = result.FittedFunction();
    const ROOT::Fit::BinData* data = dynamic_cast<const ROOT::Fit::BinData*>(&(fFitter->GetFitData()));
@@ -460,10 +460,10 @@ void TAdvancedGraphicsDialog::DrawConfidenceLevels()
    gPad->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup dialog.
+
 TAdvancedGraphicsDialog::~TAdvancedGraphicsDialog()
 {
-   // Cleanup dialog.
-
    Cleanup();
 }

@@ -18,46 +18,43 @@
 
 ClassImp(TSliderBox)
 
-//______________________________________________________________________________
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSliderBox                                                           //
-//                                                                      //
-//  The moving box in a TSlider                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
+/** \class TSliderBox
+\ingroup gpad
 
-//______________________________________________________________________________
+The moving box in a TSlider
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox default constructor.
+
 TSliderBox::TSliderBox(): TWbox()
 {
-   // SliderBox default constructor.
-
    fSlider = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox normal constructor.
 
-//______________________________________________________________________________
 TSliderBox::TSliderBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TWbox(x1,y1,x2,y2,color,bordersize,bordermode)
 {
-   // SliderBox normal constructor.
-
    fSlider = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// SliderBox default destructor.
 
-//______________________________________________________________________________
 TSliderBox::~TSliderBox()
 {
-   // SliderBox default destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Interaction with a slider.
 
-//______________________________________________________________________________
 void TSliderBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Interaction with a slider.
+   if (!gPad) return;
 
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
@@ -288,9 +285,9 @@ again:
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TSliderBox::SavePrimitive(std::ostream &, Option_t * /*= ""*/)
 {
-    // Save primitive as a C++ statement(s) on output stream out
 }

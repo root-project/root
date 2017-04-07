@@ -22,6 +22,8 @@
 
 #include "TMatrixDSym.h" // needed for inverting the matrix
 
+#include "ThreadLocalStorage.h"
+
 #include <iostream>
 #include <cassert>
 #include <algorithm>
@@ -40,8 +42,11 @@
 
 // initialize the static instances
 
-
-ROOT::Math::IMultiGenFunction * TMinuitMinimizer::fgFunc = 0;
+// Implement a thread local static member
+static ROOT::Math::IMultiGenFunction *&GetGlobalFuncPtr() {
+   TTHREAD_TLS(ROOT::Math::IMultiGenFunction *) fgFunc = nullptr;
+   return fgFunc;
+}
 TMinuit * TMinuitMinimizer::fgMinuit = 0;
 bool TMinuitMinimizer::fgUsed = false;
 bool TMinuitMinimizer::fgUseStaticMinuit = true;   // default case use static Minuit instance
@@ -210,7 +215,7 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    InitTMinuit(fDim);
 
    // assign to the static pointer (NO Thread safety here)
-   fgFunc = const_cast<ROOT::Math::IMultiGenFunction *>(&func);
+   GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGenFunction *>(&func);
    fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
 
    // switch off gradient calculations
@@ -230,7 +235,7 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
    InitTMinuit(fDim);
 
    // assign to the static pointer (NO Thread safety here)
-   fgFunc = const_cast<ROOT::Math::IMultiGradFunction *>(&func);
+   GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGradFunction *>(&func);
    fMinuit->SetFCN(&TMinuitMinimizer::FcnGrad);
 
    // set gradient
@@ -245,14 +250,14 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGradFunction & func)
 void TMinuitMinimizer::Fcn( int &, double * , double & f, double * x , int /* iflag */) {
    // implementation of FCN static function used internally by TMinuit.
    // Adapt IMultiGenFunction interface to TMinuit FCN static function
-   f = fgFunc->operator()(x);
+   f = GetGlobalFuncPtr()->operator()(x);
 }
 
 void TMinuitMinimizer::FcnGrad( int &, double * g, double & f, double * x , int iflag ) {
    // implementation of FCN static function used internally by TMinuit.
    // Adapt IMultiGradFunction interface to TMinuit FCN static function in the case of user
    // provided gradient.
-   ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( fgFunc);
+   ROOT::Math::IMultiGradFunction * gFunc = dynamic_cast<ROOT::Math::IMultiGradFunction *> ( GetGlobalFuncPtr());
 
    assert(gFunc != 0);
    f = gFunc->operator()(x);
@@ -485,7 +490,7 @@ bool TMinuitMinimizer::Minimize() {
    if (fMinuit->fNpar <= 0) {
       // retrieve parameters values  from TMinuit
       RetrieveParams();
-      fMinuit->fAmin = (*fgFunc)(&fParams.front());
+      fMinuit->fAmin = (*GetGlobalFuncPtr())(&fParams.front());
       if (printlevel > 0) Info("TMinuitMinimizer::Minimize","There are no free parameter - just compute the function value");
       return true;
    }

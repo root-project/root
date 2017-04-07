@@ -11,17 +11,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11TTF                                                             //
-//                                                                      //
-// Interface to low level X11 (Xlib). This class gives access to basic  //
-// X11 graphics via the parent class TGX11. However, all text and font  //
-// handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX  //
-// is redirected to point to this class.                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGX11TTF
+\ingroup x11
+
+Interface to low level X11 (Xlib). This class gives access to basic
+X11 graphics via the parent class TGX11. However, all text and font
+handling is done via the Freetype TrueType library. When the
+shared library containing this class is loaded the global gVirtualX
+is redirected to point to this class.
+*/
 
 #include <stdlib.h>
 
@@ -52,20 +50,26 @@ struct RXImage:XImage{};
 /////////////////////////  xft font data //////////////////////////////////////
 class TXftFontData : public TNamed, public TRefCnt {
 public:
-   XFontStruct   *fFontStruct;   // fontstruct
+   GContext_t     fGC;           // graphics context
    XftFont       *fXftFont;      // xft font
 
-   TXftFontData(FontStruct_t font, XftFont *xftfont, const char *name) :
+   TXftFontData(GContext_t gc, XftFont *xftfont, const char *name) :
       TNamed(name, ""), TRefCnt(), fXftFont(xftfont)
    {
       SetRefCount(1);
-      fFontStruct = (XFontStruct*)font;
+      fGC = gc;
+   }
+
+   void MapGCFont(GContext_t gc, FontStruct_t font)
+   {
+      fGC = gc; fXftFont = (XftFont *)font;
    }
 
    ~TXftFontData()
    {
-      if (fFontStruct) ((TGX11*)gVirtualX)->DeleteFont((FontStruct_t)fFontStruct);
-      if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
+      if (References() == 1) {
+         if (fXftFont) XftFontClose((Display*)gVirtualX->GetDisplay(), fXftFont);
+      }
    }
 };
 
@@ -81,26 +85,26 @@ public:
       return (TXftFontData*)fList->FindObject(name);
    }
 
-   TXftFontData *FindByStruct(FontStruct_t font)
+   TXftFontData *FindByFont(FontStruct_t font)
    {
       TIter next(fList);
       TXftFontData *d = 0;
 
       while ((d = (TXftFontData*) next())) {
-         if (d->fFontStruct == (XFontStruct*)font) {
+         if (d->fXftFont == (XftFont *)font) {
             return d;
          }
       }
       return 0;
    }
 
-   TXftFontData *FindByHandle(FontH_t id)
+   TXftFontData *FindByGC(GContext_t gc)
    {
       TIter next(fList);
       TXftFontData *d = 0;
 
       while ((d = (TXftFontData*) next())) {
-         if (d->fFontStruct->fid == id) {
+         if (d->fGC == gc) {
             return d;
          }
       }
@@ -109,27 +113,36 @@ public:
 
    void AddFont(TXftFontData *data)
    {
+      // Loop over all existing TXftFontData, if we already have one with the same
+      // font data, set the reference counter of this one beyond 1 so it does
+      // delete the font pointer
+      TIter next(fList);
+      TXftFontData *d = 0;
+
+      while ((d = (TXftFontData*) next())) {
+         if (d->fXftFont == data->fXftFont) {
+           data->AddReference();
+         }
+      }
+
       fList->Add(data);
    }
 
    void FreeFont(TXftFontData *data)
    {
-      if (data->RemoveReference() > 0)  return;
       fList->Remove(data);
       delete data;
    }
 };
 #endif  // R__HAS_XFT
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTFX11Init                                                           //
-//                                                                      //
-// Small utility class that takes care of switching the current         //
-// gVirtualX to the new TGX11TTF class as soon as the shared library    //
-// containing this class is loaded.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTFX11Init
+\ingroup GraphicsBackends
+
+Small utility class that takes care of switching the current
+gVirtualX to the new TGX11TTF class as soon as the shared library
+containing this class is loaded.
+*/
 
 class TTFX11Init {
 public:
@@ -140,33 +153,31 @@ static TTFX11Init gTTFX11Init;
 
 ClassImp(TGX11TTF)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create copy of TGX11 but now use TrueType fonts.
+
 TGX11TTF::TGX11TTF(const TGX11 &org) : TGX11(org)
 {
-   // Create copy of TGX11 but now use TrueType fonts.
-
    SetName("X11TTF");
    SetTitle("ROOT interface to X11 with TrueType fonts");
 
    if (!TTF::fgInit) TTF::Init();
 
    fHasTTFonts = kTRUE;
+   fHasXft = kFALSE;
    fAlign.x = 0;
    fAlign.y = 0;
 
 #ifdef R__HAS_XFT
    fXftFontHash = 0;
-   if (gEnv->GetValue("X11.UseXft", 0)) {
-      fXftFontHash = new TXftFontHash();
-   }
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method setting TGX11TTF as the acting gVirtualX.
+
 void TGX11TTF::Activate()
 {
-   // Static method setting TGX11TTF as the acting gVirtualX.
-
    if (gVirtualX && dynamic_cast<TGX11*>(gVirtualX)) {
       TGX11 *oldg = (TGX11 *) gVirtualX;
       gVirtualX = new TGX11TTF(*oldg);
@@ -174,11 +185,22 @@ void TGX11TTF::Activate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize X11 system. Returns kFALSE in case of failure.
+
 Bool_t TGX11TTF::Init(void *display)
 {
-   // Initialize X11 system. Returns kFALSE in case of failure.
-
+#ifdef R__HAS_XFT
+   fXftFontHash = 0;
+   XFontStruct *fs = 0;
+   if (display) fs = XLoadQueryFont((Display *)display, "-*-helvetica-*-r-*-*-14-*-*-*-*-*-*-*");
+   if (!fs) gEnv->SetValue("X11.UseXft", 1);
+   if (display && fs) XFreeFont((Display *)display, fs);
+   if (gEnv->GetValue("X11.UseXft", 0)) {
+      fHasXft = kTRUE;
+      fXftFontHash = new TXftFontHash();
+   }
+#endif
    Bool_t r = TGX11::Init(display);
 
    if (fDepth > 8) {
@@ -190,13 +212,13 @@ Bool_t TGX11TTF::Init(void *display)
    return r;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute alignment variables. The alignment is done on the horizontal string
+/// then the rotation is applied on the alignment variables.
+/// SetRotation and LayoutGlyphs should have been called before.
+
 void TGX11TTF::Align(void)
 {
-   // Compute alignment variables. The alignment is done on the horizontal string
-   // then the rotation is applied on the alignment variables.
-   // SetRotation and LayoutGlyphs should have been called before.
-
    EAlign align = (EAlign) fTextAlign;
 
    // vertical alignment
@@ -222,13 +244,13 @@ void TGX11TTF::Align(void)
    fAlign.y = fAlign.y >> 6;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw FT_Bitmap bitmap to xim image at position bx,by using specified
+/// foreground color.
+
 void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
                          RXImage *xim, Int_t bx, Int_t by)
 {
-   // Draw FT_Bitmap bitmap to xim image at position bx,by using specified
-   // foreground color.
-
    UChar_t d = 0, *s = source->buffer;
 
    if (TTF::fgSmoothing) {
@@ -289,7 +311,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
       delete [] bcol;
 
       // if fore or background have changed from previous character
-      // recalculate the 3 smooting colors (interpolation between fore-
+      // recalculate the 3 smoothing colors (interpolation between fore-
       // and background colors)
       if (fore != col[4].pixel || back != col[0].pixel) {
          col[4].pixel = fore;
@@ -303,7 +325,7 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
             QueryColors(fColormap, &col[4], 1);
          }
 
-         // interpolate between fore and backgound colors
+         // interpolate between fore and background colors
          for (x = 3; x > 0; x--) {
             col[x].red   = (col[4].red  *x + col[0].red  *(4-x)) /4;
             col[x].green = (col[4].green*x + col[0].green*(4-x)) /4;
@@ -345,13 +367,13 @@ void TGX11TTF::DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGX11::DrawText.
+
 void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                         const char *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGX11::DrawText.
-
    if (!fHasTTFonts) {
       TGX11::DrawText(x, y, angle, mgn, text, mode);
    } else {
@@ -364,13 +386,13 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text using TrueType fonts. If TrueType fonts are not available the
+/// text is drawn with TGX11::DrawText.
+
 void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                         const wchar_t *text, ETextMode mode)
 {
-   // Draw text using TrueType fonts. If TrueType fonts are not available the
-   // text is drawn with TGX11::DrawText.
-
    if (!fHasTTFonts) {
       TGX11::DrawText(x, y, angle, mgn, text, mode);
    } else {
@@ -383,11 +405,11 @@ void TGX11TTF::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the background of the current window in an XImage.
+
 RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Get the background of the current window in an XImage.
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -409,11 +431,11 @@ RXImage *TGX11TTF::GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return (RXImage*)XGetImage((Display*)fDisplay, cws, x, y, w, h, AllPlanes, ZPixmap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if there is really something to render.
+
 Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Test if there is really something to render.
-
    Window_t cws = GetCurrentWindow();
    UInt_t width;
    UInt_t height;
@@ -436,13 +458,13 @@ Bool_t TGX11TTF::IsVisible(Int_t x, Int_t y, UInt_t w, UInt_t h)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the string rendering in the pad.
+/// LayoutGlyphs should have been called before.
+
 void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
 {
-   // Perform the string rendering in the pad.
-   // LayoutGlyphs should have been called before.
-
-   TTGlyph* glyph = TTF::fgGlyphs;
+   TTF::TTGlyph* glyph = TTF::fgGlyphs;
    GC *gc;
 
    // compute the size and position of the XImage that will contain the text
@@ -527,11 +549,11 @@ void TGX11TTF::RenderString(Int_t x, Int_t y, ETextMode mode)
    XDestroyImage(xim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set specified font.
+
 void TGX11TTF::SetTextFont(Font_t fontnumber)
 {
-   // Set specified font.
-
    fTextFont = fontnumber;
    if (!fHasTTFonts) {
       TGX11::SetTextFont(fontnumber);
@@ -540,18 +562,18 @@ void TGX11TTF::SetTextFont(Font_t fontnumber)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text font to specified name.
+/// mode       : loading flag
+/// mode=0     : search if the font exist (kCheck)
+/// mode=1     : search the font and load it if it exists (kLoad)
+/// font       : font name
+///
+/// Set text font to specified name. This function returns 0 if
+/// the specified font is found, 1 if not.
+
 Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
 {
-   // Set text font to specified name.
-   // mode       : loading flag
-   // mode=0     : search if the font exist (kCheck)
-   // mode=1     : search the font and load it if it exists (kLoad)
-   // font       : font name
-   //
-   // Set text font to specified name. This function returns 0 if
-   // the specified font is found, 1 if not.
-
    if (!fHasTTFonts) {
       return TGX11::SetTextFont(fontname, mode);
    } else {
@@ -559,11 +581,11 @@ Int_t TGX11TTF::SetTextFont(char *fontname, ETextSetMode mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set current text size.
+
 void TGX11TTF::SetTextSize(Float_t textsize)
 {
-   // Set current text size.
-
    fTextSize = textsize;
    if (!fHasTTFonts) {
       TGX11::SetTextSize(textsize);
@@ -575,11 +597,11 @@ void TGX11TTF::SetTextSize(Float_t textsize)
 #ifdef R__HAS_XFT
 
 ///////////////////////////// Xft font methods /////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parses an XLFD name and opens a font.
+
 FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
 {
-   // Parses an XLFD name and opens a font.
-
    if (!fXftFontHash) {
       return TGX11::LoadQueryFont(font_name);
    }
@@ -588,83 +610,131 @@ FontStruct_t TGX11TTF::LoadQueryFont(const char *font_name)
 
    // already loaded
    if (data) {
-      data->AddReference();
-      return (FontStruct_t)data->fFontStruct;
-   }
-
-   // load both X11 and Xft fonts
-   FontStruct_t font = TGX11::LoadQueryFont(font_name);
-
-   if (!font) {
-      return font;
+      return (FontStruct_t)data->fXftFont;
    }
 
    XftFont *xftfont = XftFontOpenXlfd((Display*)fDisplay, fScreenNumber, font_name);
 
-   data = new TXftFontData(font, xftfont, font_name);
+   data = new TXftFontData(0, xftfont, font_name);
    fXftFontHash->AddFont(data);
 
-   return font;
+   return (FontStruct_t)xftfont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly delete font structure obtained with LoadQueryFont().
+
 void TGX11TTF::DeleteFont(FontStruct_t fs)
 {
-   // Explicitely delete font structure obtained with LoadQueryFont().
-
    if (!fXftFontHash) {
       TGX11::DeleteFont(fs);
       return;
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(fs);
+   TXftFontData *data = fXftFontHash->FindByFont(fs);
 
-   if (!data) {
-      TGX11::DeleteFont(fs);
-      return;
-   }
-
-   fXftFontHash->FreeFont(data);
+   if (data)
+      fXftFontHash->FreeFont(data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitly delete a graphics context.
+
+void TGX11TTF::DeleteGC(GContext_t gc)
+{
+   if (!fXftFontHash) {
+      TGX11::DeleteGC(gc);
+      return;
+   }
+
+   TXftFontData *gcdata = fXftFontHash->FindByGC(gc);
+   if (gcdata) fXftFontHash->FreeFont(gcdata);
+   TGX11::DeleteGC(gc);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return handle to font described by font structure.
+
+FontH_t TGX11TTF::GetFontHandle(FontStruct_t fs)
+{
+   if (!fXftFontHash) {
+      return TGX11::GetFontHandle(fs);
+   }
+
+   return (FontH_t)fs;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the font associated with the graphics context gc
+
+FontStruct_t TGX11TTF::GetGCFont(GContext_t gc)
+{
+   if (!fXftFontHash) {
+      return 0;
+   }
+
+   TXftFontData *data = fXftFontHash->FindByGC(gc);
+
+   // no XftFont data
+   if (!data) return 0;
+
+   return (FontStruct_t)data->fXftFont;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Map the XftFont with the Graphics Context using it.
+
+void TGX11TTF::MapGCFont(GContext_t gc, FontStruct_t font)
+{
+   if (!fXftFontHash)
+      return;
+
+   TXftFontData *gcdata = fXftFontHash->FindByGC(gc);
+   TXftFontData *fontdata = fXftFontHash->FindByFont(font);
+
+   if (gcdata) { // && (gcdata->fXftFont == 0)) {
+      gcdata->fXftFont = (XftFont *)font;
+   }
+   else if (fontdata) {
+      TXftFontData *data = new TXftFontData(gc, (XftFont *)font, fontdata->GetName());
+      fXftFontHash->AddFont(data);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return length of string in pixels. Size depends on font
+
 Int_t TGX11TTF::TextWidth(FontStruct_t font, const char *s, Int_t len)
 {
-   // Return length of string in pixels. Size depends on font
-
    if (!fXftFontHash) {
       return TGX11::TextWidth(font, s, len);
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(font);
+   TXftFontData *data = fXftFontHash->FindByFont(font);
 
-   if (!data) {
-      return TGX11::TextWidth(font, s, len);
-   }
+   if (!data) return 0;
 
    XftFont *xftfont = data->fXftFont;
 
-   if (!xftfont) {
-      return TGX11::TextWidth(font, s, len);
+   if (xftfont) {
+      XGlyphInfo glyph_info;
+      XftTextExtents8((Display *)fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
+      return glyph_info.xOff;
    }
-
-   XGlyphInfo glyph_info;
-   XftTextExtents8((Display*)fDisplay, xftfont, (XftChar8 *)s, len, &glyph_info);
-
-   return glyph_info.xOff;
+   return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Return some font properties
+
 void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent)
 {
-   //  Return some font properties
-
    if (!fXftFontHash) {
       TGX11::GetFontProperties(font, max_ascent, max_descent);
       return;
    }
 
-   TXftFontData *data = fXftFontHash->FindByStruct(font);
+   TXftFontData *data = fXftFontHash->FindByFont(font);
 
    if (!data) {
       TGX11::GetFontProperties(font, max_ascent, max_descent);
@@ -682,12 +752,12 @@ void TGX11TTF::GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &ma
    max_descent = xftfont->descent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text string
+
 void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
                           const char *text, Int_t len)
 {
-   // Draw text string
-
    XftDraw  *xftdraw;
    XftColor  xftcolor;
    XColor    xcolor;
@@ -711,10 +781,10 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
    }
 
    GCValues_t gval;
-   gval.fMask = kGCForeground | kGCBackground | kGCFont;  // retrieve GC values
+   gval.fMask = kGCForeground | kGCBackground;  // retrieve GC values
    GetGCValues(gc, gval);
 
-   TXftFontData *data = fXftFontHash->FindByHandle(gval.fFont);
+   TXftFontData *data = fXftFontHash->FindByGC(gc);
 
    // no XftFont data
    if (!data) {
@@ -771,3 +841,4 @@ void TGX11TTF::DrawString(Drawable_t xwindow, GContext_t gc, Int_t x, Int_t y,
 }
 
 #endif // R__HAS_XFT
+

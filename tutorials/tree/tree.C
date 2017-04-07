@@ -1,7 +1,14 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Display the Tree data structures
+/// 
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void tree() {
-   //
-   // This macro displays the Tree data structures
-   //Author: Rene Brun
    TCanvas* c1 = new TCanvas("c1","Tree Data Structure",200,10,750,940);
    c1->Range(0,-0.1,1,1.15);
 
@@ -17,7 +24,7 @@ void tree() {
    TPaveText* treePave = new TPaveText(.01,.75,.15,1.00);
    treePave->SetFillColor(18);
    treePave->SetTextAlign(12);
-   TText *tnt = treePave->AddText("TreePave");
+   TText *tnt = treePave->AddText("Tree");
    tnt->SetTextAlign(22);
    tnt->SetTextSize(0.030);
    treePave->AddText("fScanField");

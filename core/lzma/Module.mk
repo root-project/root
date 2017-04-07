@@ -12,7 +12,7 @@ LZMADIR      := $(MODDIR)
 LZMADIRS     := $(LZMADIR)/src
 LZMADIRI     := $(LZMADIR)/inc
 
-LZMAVERS     := xz-5.0.3
+LZMAVERS     := xz-5.2.1
 ifeq ($(BUILTINLZMA),yes)
 LZMALIBDIRS  := $(call stripsrc,$(MODDIRS)/$(LZMAVERS))
 LZMALIBDIRI  := -I$(LZMALIBDIRS)/src/liblzma/api

@@ -42,7 +42,10 @@ parameters:
 the histogram represents counts
 
 	-  "`WL`" Weighted log likelihood method. To be used when the histogram has been filled with
-   weights different than 1. 
+	weights different than 1.
+
+    -   "`P`" Use Pearson chi-square method, using expected errors instead of the observed one given by `TH1::GetBinError` (default case).
+         The expected error is instead estimated from the the square-root of the bin function value.
 
 	-   "`Q`" Quiet mode (minimum printing)
 
@@ -1050,18 +1053,19 @@ Each minimizer can be configured using the `ROOT::Math::MinimizerOptions` class.
 *   *Tolerance* (`MinimizerOptions::SetTolerance(double )`)  tolerance used to control the iterations.
 *   *Maximum number of function calls* (`MinimizerOptions::SetMaxFunctionCalls(int )`).
 *   *Maximum number of iterations* (`MinimizerOptions::SetMaxIterations(int )`). Note that this is not used by *Minuit*
-*   *FCN Upper value for Error Definition* (`MinimizerOptions::SetMaxIterations(int )`). Value in the minimization function used to compute the parameter errors.
+*   *FCN Upper value for Error Definition* (`MinimizerOptions::SetErrorDef(double )`). Value in the minimization function used to compute the parameter errors.
     The default is to get the uncertainties at the 68% CL is a value of 1 for a chi-squared function minimization  and 0.5 for a log-likelihood function.
 *   *Strategy* (`MinimizerOptions::SetStrategy(int )`), minimization strategy used. For each minimization strategy *Minuit* uses different configuration parameters
     (e.g. different requirements in computing derivatives, computing full Hessian (strategy = 2) or an approximate version.  The default is a value of 1. In this case the full Hessian matrix
     is computed only after the minimization. 
-*  *Precision* (`MinimizerOptions::SetTolerance(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
+*  *Precision* (`MinimizerOptions::SetPrecision(double )`).  Precision value in the evaluation of the minimization function. Default is numerical double precision.  
 
 Note that not all the options are implemented by all the minimizers.
 For example in *Minuit* is possible to set the maximum number of function calls, but not the maximum number of iterations.  The Strategy and the Precision options apply instead only for *Minuit*  (and
 *Minuit2*).
 
-The class supports alo setting different default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (e.g. `MinimizerOptions::SetDefaultPrintLevel(int )`).
+The class supports also setting global default values for the options, by using the static functions `MinimizerOptions::SetDefault...` (for example `MinimizerOptions::SetDefaultPrintLevel(int )`). The
+static functions can be also used to set the minimizer options when using `TH1::Fit` or `TGraph::Fit`.
 The list of the current option values can be inspected by using `MinimizerOptions::Print`.
 ```{.cpp}
 ROOT::Math::MinimizerOptions() opt;
@@ -1263,18 +1267,10 @@ conversion of the original FORTRAN version. The main changes are:
 The `Minuit` package acts on a multi parameter FORTRAN function to
 which one must give the generic name `FCN`. In the ROOT
 implementation, the function `FCN` is defined via the `Minuit`
-`SetFCN` member function when a `HistogramFit` command is invoked. The
+`SetFCN` member function when an histogram fitting is invoked. The
 value of `FCN` will in general depend on one or more variable
 parameters.
 
-To take a simple example, in case of ROOT histograms (classes
-**`TH1C`**, **`TH1S`**, **`TH1F`**, **`TH1D`**) the `Fit` function
-defines the `Minuit` fitting function as being `H1FitChisquare` or
-`H1FitLikelihood` depending on the options selected. `H1FitChisquare`
-calculates the chi-square between the user fitting function (Gaussian,
-polynomial, user defined, etc) and the data for given values of the
-parameters. It is the task of `Minuit` to find those values of the
-parameters which give the lowest value of chi-square.
 
 ### The Transformation of Limited Parameters
 

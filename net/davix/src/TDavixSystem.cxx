@@ -63,7 +63,8 @@ extern const char* ca_check_opt;
 extern const char* s3_seckey_opt;
 extern const char* s3_acckey_opt;
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixSystem::TDavixSystem(const char *url) :
    TSystem(url),
    d_ptr(new TDavixFileInternal(url, "WEB"))
@@ -72,7 +73,8 @@ TDavixSystem::TDavixSystem(const char *url) :
    SetTitle("WebDAV system administration");
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixSystem::TDavixSystem() :
    TSystem(),
    d_ptr(new TDavixFileInternal("", "WEB"))
@@ -81,20 +83,23 @@ TDavixSystem::TDavixSystem() :
    SetTitle("WebDAV system administration");
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDavixSystem::~TDavixSystem()
 {
    SafeDelete(d_ptr);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TDavixSystem::FreeDirectory(void *dirp)
 {
    d_ptr->davixPosix->closedir(static_cast<DAVIX_DIR *>(dirp), NULL);
    d_ptr->removeDird(dirp);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TDavixSystem::GetDirEntry(void *dirp)
 {
    struct dirent *dir;
@@ -108,7 +113,8 @@ const char *TDavixSystem::GetDirEntry(void *dirp)
    return (dir) ? (dir->d_name) : NULL;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void *TDavixSystem::OpenDirectory(const char *dir)
 {
    DavixError *davixErr = NULL;
@@ -123,13 +129,15 @@ void *TDavixSystem::OpenDirectory(const char *dir)
    return d;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixSystem::ConsistentWith(const char * /*path*/, void *dirptr)
 {
    return (Bool_t) d_ptr->isMyDird(dirptr);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDavixSystem::GetPathInfo(const char *path, FileStat_t &buf)
 {
    struct stat st;
@@ -149,14 +157,16 @@ Int_t TDavixSystem::GetPathInfo(const char *path, FileStat_t &buf)
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TDavixSystem::IsPathLocal(const char *path)
 {
    (void) path;
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDavixSystem::Locate(const char *path, TString &endurl)
 {
    DavixError *davixErr = NULL;
@@ -182,7 +192,8 @@ Int_t TDavixSystem::Locate(const char *path, TString &endurl)
    return 0;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TDavixSystem::MakeDirectory(const char *dir)
 {
    DavixError *davixErr = NULL;
@@ -195,7 +206,8 @@ Int_t TDavixSystem::MakeDirectory(const char *dir)
    return ret;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int TDavixSystem::Unlink(const char *path)
 {
    DavixError *davixErr = NULL;

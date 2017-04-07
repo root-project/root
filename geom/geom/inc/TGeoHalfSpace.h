@@ -12,20 +12,7 @@
 #ifndef ROOT_TGeoHalfSpace
 #define ROOT_TGeoHalfSpace
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoHalfSpace - A half-space defined by:                               //
-//            p[3] - an arbitrary point on the plane                      //
-//            n[3] - normal at the plane in point P                       //
-//    A half-space is not really a shape, because it is infinite. The     //
-//    normal vector points "outside" the half-space                       //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 
 class TGeoHalfSpace : public TGeoBBox
 {

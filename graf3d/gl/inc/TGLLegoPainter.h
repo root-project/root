@@ -12,18 +12,10 @@
 #ifndef ROOT_TGLLegoPainter
 #define ROOT_TGLLegoPainter
 
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TGLPlotCamera;
 class TAxis;

@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooMoment represents the first, second, or third order derivative
-// of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-// derivator class.
-// END_HTML
-//
+/**
+\file RooMoment.cxx
+\class RooMoment
+\ingroup Roofitcore
+
+RooMoment represents the first, second, or third order derivative
+of any RooAbsReal as calculated (numerically) by the MathCore Richardson
+derivator class.
+**/
 
 
 #include "RooFit.h"
@@ -52,15 +53,17 @@ ClassImp(RooMoment)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooMoment::RooMoment() 
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t centr, Bool_t takeRoot) :
   RooAbsMoment(name, title,func,x,orderIn,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
@@ -101,7 +104,8 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
 		     Int_t orderIn, Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
   RooAbsMoment(name, title,func,x,orderIn,takeRoot),
@@ -109,7 +113,6 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
-
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   _nset.add(nset) ;
@@ -150,7 +153,8 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooMoment::RooMoment(const RooMoment& other, const char* name) :
   RooAbsMoment(other, name), 
   _xf("xf",this,other._xf),
@@ -161,18 +165,20 @@ RooMoment::RooMoment(const RooMoment& other, const char* name) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooMoment::~RooMoment() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate value  
+
 Double_t RooMoment::evaluate() const 
 {
-  // Calculate value  
   Double_t ratio = _ixf / _if ;
   Double_t ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
   return ret ;

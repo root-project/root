@@ -156,29 +156,29 @@ krb5_context TKSocket::fgContext = 0;
 krb5_ccache TKSocket::fgCCDef = 0;
 krb5_principal TKSocket::fgClient = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TKSocket::TKSocket(TSocket *s)
    : fSocket(s), fServer(0), fAuthContext(0)
 {
-   // Constructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TKSocket::~TKSocket()
 {
-   // Destructor
-
    krb5_free_principal(fgContext, fServer);
    krb5_auth_con_free(fgContext, fAuthContext);
    delete fSocket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to 'server' on 'port'
+
 TKSocket *TKSocket::Connect(const char *server, Int_t port)
 {
-   // Connect to 'server' on 'port'
-
    Int_t rc;
 
    if (fgContext == 0) {
@@ -252,12 +252,12 @@ TKSocket *TKSocket::Connect(const char *server, Int_t port)
    return ks;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read block on information from server. The result is stored in buf.
+/// The number of read bytes is returned; -1 is returned in case of error.
+
 Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
 {
-   // Read block on information from server. The result is stored in buf.
-   // The number of read bytes is returned; -1 is returned in case of error.
-
    Int_t rc;
    Desc_t desc;
    Int_t fd = fSocket->GetDescriptor();
@@ -319,11 +319,11 @@ Int_t TKSocket::BlockRead(char *&buf, EEncoding &type)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Block-send 'length' bytes to server from 'buf'.
+
 Int_t TKSocket::BlockWrite(const char *buf, Int_t length, EEncoding type)
 {
-   // Block-send 'length' bytes to server from 'buf'.
-
    Desc_t desc;
    krb5_data in;
    krb5_data enc;

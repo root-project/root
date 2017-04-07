@@ -1,3 +1,23 @@
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+## Example of function called when a mouse event occurs in a pad.
+## When moving the mouse in the canvas, a second canvas shows the
+## projection along X of the bin corresponding to the Y position
+## of the mouse. The resulting histogram is fitted with a gaussian.
+## A "dynamic" line shows the current bin position in Y.
+## This more elaborated example can be used as a starting point
+## to develop more powerful interactive applications exploiting CINT
+## as a development engine.
+##
+## Note that a class is used to hold on to the canvas that display
+## the selected slice.
+##
+## \macro_image
+## \macro_code
+##
+## \author Rene Brun, Johann Cohen-Tanugi, Wim Lavrijsen
+
 import sys
 
 from ROOT import gRandom, gPad, gROOT, gVirtualX
@@ -6,20 +26,6 @@ from ROOT import TCanvas, TH2, TH2F, Double
 
 
 class DynamicExec:
-   """Example of function called when a mouse event occurs in a pad.
-When moving the mouse in the canvas, a second canvas shows the
-projection along X of the bin corresponding to the Y position
-of the mouse. The resulting histogram is fitted with a gaussian.
-A "dynamic" line shows the current bin position in Y.
-This more elaborated example can be used as a starting point
-to develop more powerful interactive applications exploiting CINT
-as a development engine.
-
-Note that a class is used to hold on to the canvas that display
-the selected slice.
-
-Original author: Rene Brun
-Modified and pythonized:  Johann Cohen-Tanugi, Wim Lavrijsen"""
 
    def __init__( self ):
       self._cX   = None
@@ -99,23 +105,23 @@ Modified and pythonized:  Johann Cohen-Tanugi, Wim Lavrijsen"""
       hp.GetFunction( 'gaus' ).SetLineColor( kRed )
       hp.GetFunction( 'gaus' ).SetLineWidth( 6 )
       canvas.Update()
-     
+
 
 if __name__ == '__main__':
  # create a new canvas.
    c1 = TCanvas('c1', 'Dynamic Slice Example', 10, 10, 700, 500 )
    c1.SetFillColor( 42 )
    c1.SetFrameFillColor( 33 )
- 
+
  # create a 2-d histogram, fill and draw it
    hpxpy  = TH2F( 'hpxpy', 'py vs px', 40, -4, 4, 40, -4, 4 )
    hpxpy.SetStats( 0 )
    x, y = Double( 0.1 ), Double( 0.101 )
-   for i in xrange( 50000 ):
+   for i in range( 50000 ):
      gRandom.Rannor( x, y )
      hpxpy.Fill( x, y )
    hpxpy.Draw( 'COL' )
-  
+
  # Add a TExec object to the canvas (explicit use of __main__ is for IPython)
    import __main__
    __main__.slicer = DynamicExec()

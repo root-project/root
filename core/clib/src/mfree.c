@@ -27,6 +27,7 @@ Boston, MA 02111-1307, USA.
 
 #include "mmprivate.h"
 
+#include <stddef.h>
 /* Return memory to the heap.
    Like `mfree' but don't call a mfree_hook if there is one.  */
 

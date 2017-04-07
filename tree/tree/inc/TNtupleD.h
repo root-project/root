@@ -21,17 +21,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
 class TBrowser;
 
 class TNtupleD : public TTree {
 
 protected:
-   Int_t       fNvar;            //  Number of columns
-   Double_t    *fArgs;           //! [fNvar] Array of variables
+   Int_t       fNvar;            ///<  Number of columns
+   Double_t    *fArgs;           ///<! [fNvar] Array of variables
 
    virtual Int_t  Fill();
 

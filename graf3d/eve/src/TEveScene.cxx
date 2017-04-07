@@ -22,25 +22,22 @@
 #include "TList.h"
 #include "TExMap.h"
 
+/** \class TEveScene
+\ingroup TEve
+Eve representation of TGLScene.
+The GLScene is owned by this class - it is created on construction
+time and deleted at destruction.
 
-//==============================================================================
-//==============================================================================
-// TEveScene
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Eve representation of TGLScene.
-// The GLScene is owned by this class - it is created on construction
-// time and deleted at destruction.
-//
-// Normally all objects are positioned directly in global scene-space.
-// By setting the fHierarchical flag, positions of children get
-// calculated by multiplying the transformation matrices of all parents.
+Normally all objects are positioned directly in global scene-space.
+By setting the fHierarchical flag, positions of children get
+calculated by multiplying the transformation matrices of all parents.
+*/
 
 ClassImp(TEveScene);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveScene::TEveScene(const char* n, const char* t) :
    TEveElementList(n, t),
    fPad    (0),
@@ -49,8 +46,6 @@ TEveScene::TEveScene(const char* n, const char* t) :
    fSmartRefresh (kTRUE),
    fHierarchical (kFALSE)
 {
-   // Constructor.
-
    fPad = new TEvePad;
    fPad->GetListOfPrimitives()->Add(this);
    fGLScene = new TGLScenePad(fPad);
@@ -59,7 +54,9 @@ TEveScene::TEveScene(const char* n, const char* t) :
    fGLScene->SetSmartRefresh(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
    TEveElementList(n, t),
    fPad    (0),
@@ -68,8 +65,6 @@ TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
    fSmartRefresh (kTRUE),
    fHierarchical (kFALSE)
 {
-   // Constructor.
-
    fPad = new TEvePad;
    fPad->GetListOfPrimitives()->Add(this);
    fGLScene->SetPad(fPad);
@@ -78,11 +73,11 @@ TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
    fGLScene->SetSmartRefresh(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveScene::~TEveScene()
 {
-   // Destructor.
-
    fDestructing = kStandard;
 
    gEve->GetViewers()->SceneDestructing(this);
@@ -91,24 +86,20 @@ TEveScene::~TEveScene()
    delete fPad;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveElement; here we simply append this scene to
+/// the list.
 
-//______________________________________________________________________________
 void TEveScene::CollectSceneParents(List_t& scenes)
 {
-   // Virtual from TEveElement; here we simply append this scene to
-   // the list.
-
    scenes.push_back(this);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint the scene.
 
-//______________________________________________________________________________
 void TEveScene::Repaint(Bool_t dropLogicals)
 {
-   // Repaint the scene.
-
    if (dropLogicals) fGLScene->SetSmartRefresh(kFALSE);
    fGLScene->PadPaint(fPad);
    if (dropLogicals) fGLScene->SetSmartRefresh(kTRUE);
@@ -140,12 +131,12 @@ void TEveScene::Repaint(Bool_t dropLogicals)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Entry point for hierarchical transformation update.
+/// Calls the recursive variant on all children.
+
 void TEveScene::RetransHierarchically()
 {
-   // Entry point for hierarchical transformation update.
-   // Calls the recursive variant on all children.
-
    fGLScene->BeginUpdate();
 
    RetransHierarchicallyRecurse(this, RefMainTrans());
@@ -153,12 +144,12 @@ void TEveScene::RetransHierarchically()
    fGLScene->EndUpdate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set transformation matrix for physical shape of element el in
+/// the GL-scene and recursively descend into children (if enabled).
+
 void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& tp)
 {
-   // Set transformation matrix for physical shape of element el in
-   // the GL-scene and recursively descend into children (if enabled).
-
    static const TEveException eh("TEveScene::RetransHierarchicallyRecurse ");
 
    TEveTrans t(tp);
@@ -180,22 +171,20 @@ void TEveScene::RetransHierarchicallyRecurse(TEveElement* el, const TEveTrans& t
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set scene's name.
 
-//______________________________________________________________________________
 void TEveScene::SetName(const char* n)
 {
-   // Set scene's name.
-
    TEveElementList::SetName(n);
    fGLScene->SetName(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the scene. Iterate over children and calls PadPaint().
+
 void TEveScene::Paint(Option_t* option)
 {
-   // Paint the scene. Iterate over children and calls PadPaint().
-
    if (GetRnrState())
    {
       for(List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
@@ -203,14 +192,12 @@ void TEveScene::Paint(Option_t* option)
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element from the scene.
+/// It is not an error if the element is not found in the scene.
 
-//______________________________________________________________________________
 void TEveScene::DestroyElementRenderers(TEveElement* element)
 {
-   // Remove element from the scene.
-   // It is not an error if the element is not found in the scene.
-
    static const TEveException eh("TEveScene::DestroyElementRenderers ");
 
    fGLScene->BeginUpdate();
@@ -218,54 +205,47 @@ void TEveScene::DestroyElementRenderers(TEveElement* element)
    fGLScene->EndUpdate(changed, changed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element represented by object rnrObj from the scene.
+/// It is not an error if the element is not found in the scene.
+
 void TEveScene::DestroyElementRenderers(TObject* rnrObj)
 {
-   // Remove element represented by object rnrObj from the scene.
-   // It is not an error if the element is not found in the scene.
-
    fGLScene->BeginUpdate();
    Bool_t changed = fGLScene->DestroyLogical(rnrObj, kFALSE);
    fGLScene->EndUpdate(changed, changed);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon for scene.
 
-//______________________________________________________________________________
 const TGPicture* TEveScene::GetListTreeIcon(Bool_t)
 {
-   // Return icon for scene.
-
    return TEveElement::fgListTreeIcons[2];
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveSceneList
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// List of Scenes providing common operations on TEveScene collections.
+/** \class TEveSceneList
+\ingroup TEve
+List of Scenes providing common operations on TEveScene collections.
+*/
 
 ClassImp(TEveSceneList);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSceneList::TEveSceneList(const char* n, const char* t) :
    TEveElementList(n, t)
 {
-   // Constructor.
-
    SetChildClass(TEveScene::Class());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy all scenes and their contents.
+/// Tho object with non-zero deny-destroy will still survive.
+
 void TEveSceneList::DestroyScenes()
 {
-   // Destroy all scenes and their contents.
-   // Tho object with non-zero deny-destroy will still survive.
-
    List_i i = fChildren.begin();
    while (i != fChildren.end())
    {
@@ -275,13 +255,11 @@ void TEveSceneList::DestroyScenes()
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint scenes that are tagged as changed.
 
-//______________________________________________________________________________
 void TEveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
 {
-   // Repaint scenes that are tagged as changed.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveScene* s = (TEveScene*) *i;
@@ -292,23 +270,22 @@ void TEveSceneList::RepaintChangedScenes(Bool_t dropLogicals)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint all scenes.
+
 void TEveSceneList::RepaintAllScenes(Bool_t dropLogicals)
 {
-   // Repaint all scenes.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       ((TEveScene*) *i)->Repaint(dropLogicals);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over all scenes and remove all instances of element from them.
+
 void TEveSceneList::DestroyElementRenderers(TEveElement* element)
 {
-   // Loop over all scenes and remove all instances of element from
-   // them.
-
    static const TEveException eh("TEveSceneList::DestroyElementRenderers ");
 
    TObject* obj = element->GetRenderObject(eh);
@@ -318,17 +295,17 @@ void TEveSceneList::DestroyElementRenderers(TEveElement* element)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over all scenes and update them accordingly:
+///  1. if scene is marked as changed, it is repainted;
+///  2. otherwise iteration is done over the set of stamped elements and
+///     their physical/logical shapes are updated accordingly.
+///
+/// This allows much finer update granularity without resetting of
+/// complex GL-viewer and GL-scene state.
+
 void TEveSceneList::ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap)
 {
-   // Loop over all scenes and update them accordingly:
-   //   a) if scene is marked as changed, it is repainted;
-   //   b) otherwise iteration is done over the set of stamped elements and
-   //      their physical/logical shapes are updated accordingly.
-   //
-   // This allows much finer update granularity without resetting of
-   // complex GL-viewer and GL-scene state.
-
    // We need changed elements sorted by their "render object" as we do
    // parallel iteration over this list and the list of logical shapes
    // in every scene.

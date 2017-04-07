@@ -2,10 +2,6 @@
 # CMakeLists.txt file for building ROOT net/net package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(math/mathcore)
-
-
 ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc inc/*.h)
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx)
 
@@ -14,8 +10,9 @@ if(NOT ssl)
   list(REMOVE_ITEM sources TSSLSocket.cxx)
   set(ssllib)
 else()
-  set(ssllib ${OPENSSL_LIBRARIES})
+  set(ssllib ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS})
   add_definitions(-DR__SSL)
+  include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
 if(NOT ssl OR NOT CRYPTLIBS)
@@ -32,6 +29,6 @@ endif()
 
 ROOT_GENERATE_DICTIONARY(G__Net ${headers} MODULE Net LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
-ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES MathCore RIO)
+ROOT_LINKER_LIBRARY(Net ${sources} G__Net.cxx LIBRARIES ${ssllib} ${CRYPTLIBS} DEPENDENCIES RIO BUILTINS OPENSSL)
 
 ROOT_INSTALL_HEADERS()

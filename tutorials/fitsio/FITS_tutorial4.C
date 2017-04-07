@@ -1,5 +1,12 @@
-// Open a FITS file whose primary array represents
-// a spectrum (flux vs wavelength)
+/// \file
+/// \ingroup tutorial_FITS
+/// Open a FITS file whose primary array represents
+/// a spectrum (flux vs wavelength)
+///
+/// \macro_code
+///
+/// \author Claudi Martinez
+
 void FITS_tutorial4()
 {
    printf("\n\n--------------------------------\n");
@@ -43,5 +50,3 @@ void FITS_tutorial4()
    delete v;
    delete hdu;
 }
-
-

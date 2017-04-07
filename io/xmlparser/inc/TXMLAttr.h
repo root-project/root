@@ -12,18 +12,7 @@
 #ifndef ROOT_TXMLAttr
 #define ROOT_TXMLAttr
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLAttr                                                             //
-//                                                                      //
-// TXMLAttr is the attribute of an Element. It contains the name (key)  //
-// and the value of the attribute.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 
 class TXMLAttr : public TObject {
@@ -32,8 +21,8 @@ private:
    TXMLAttr(const TXMLAttr&); // Not implemented
    TXMLAttr& operator=(const TXMLAttr&); // Not implemented
 
-   const char *fKey;        // XML attribute key
-   const char *fValue;      // XML attribute value
+   const char *fKey;        ///< XML attribute key
+   const char *fValue;      ///< XML attribute value
 
 public:
    TXMLAttr(const char *key, const char *value) : fKey(key), fValue(value) { }

@@ -9,100 +9,101 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TUUID                                                                //
-//                                                                      //
-// This class defines a UUID (Universally Unique IDentifier), also      //
-// known as GUIDs (Globally Unique IDentifier). A UUID is 128 bits      //
-// long, and if generated according to this algorithm, is either        //
-// guaranteed to be different from all other UUIDs/GUIDs generated      //
-// until 3400 A.D. or extremely likely to be different. UUIDs were      //
-// originally used in the Network Computing System (NCS) and            //
-// later in the Open Software Foundation's (OSF) Distributed Computing  //
-// Environment (DCE).                                                   //
-//                                                                      //
-// Structure of universal unique IDs (UUIDs).                           //
-//                                                                      //
-// Depending on the network data representation, the multi-             //
-// octet unsigned integer fields are subject to byte swapping           //
-// when communicated between dissimilar endian machines.                //
-//                                                                      //
-// +-----------------------------------+                                //
-// |     low 32 bits of time           |  0-3   .fTimeLow               //
-// +-------------------------------+----                                //
-// |     mid 16 bits of time       |      4-5   .fTimeMid               //
-// +-------+-----------------------+                                    //
-// | vers. |   hi 12 bits of time  |      6-7   .fTimeHiAndVersion      //
-// +-------+-------+---------------+                                    //
-// |Res | clkSeqHi |                      8     .fClockSeqHiAndReserved //
-// +---------------+                                                    //
-// |   clkSeqLow   |                      9     .fClockSeqLow           //
-// +---------------+------------------+                                 //
-// |            node ID               |   10-15 .fNode                  //
-// +----------------------------------+                                 //
-//                                                                      //
-// The adjusted time stamp is split into three fields, and the          //
-// clockSeq is split into two fields.                                   //
-//                                                                      //
-// The timestamp is a 60-bit value. For UUID version 1, this            //
-// is represented by Coordinated Universal Time (UTC/GMT) as            //
-// a count of 100-nanosecond intervals since 00:00:00.00,               //
-// 15 October 1582 (the date of Gregorian reform to the                 //
-// Christian calendar).                                                 //
-//                                                                      //
-// The version number is multiplexed in the 4 most significant          //
-// bits of the 'fTimeHiAndVersion' field. There are two defined         //
-// versions:                                                            //
-//               MSB <---                                               //
-// Version      4-Bit Code      Description                             //
-// ------------------------------------------------------------         //
-// |  1           0 0 0 1     DCE version, as specified herein.         //
-// |  2           0 0 1 0     DCE Security version, with                //
-// |                          embedded POSIX UIDs.                      //
-// |  3           0 0 1 1     node id is a random value                 //
-// ------------------------------------------------------------         //
-//                                                                      //
-// Clock Sequence                                                       //
-//                                                                      //
-// The clock sequence value must be changed whenever:                   //
-//                                                                      //
-//    The UUID generator detects that the local value of UTC            //
-//    has gone backward; this may be due to re-syncing of the system    //
-//    clock.                                                            //
-//                                                                      //
-// While a node is operational, the UUID service always saves           //
-// the last UTC used to create a UUID. Each time a new UUID             //
-// is created, the current UTC is compared to the saved value           //
-// and if either the current value is less or the saved value           //
-// was lost, then the clock sequence is incremented modulo              //
-// 16,384, thus avoiding production of duplicted UUIDs.                 //
-//                                                                      //
-// The clock sequence must be initialized to a random number            //
-// to minimize the correlation across system. This provides             //
-// maximum protection against node identifiers that may move            //
-// or switch from system to system rapidly.                             //
-//                                                                      //
-// Clock Adjustment                                                     //
-//                                                                      //
-// UUIDs may be created at a rate greater than the system clock         //
-// resolution. Therefore, the system must also maintain an              //
-// adjustment value to be added to the lower-order bits of the          //
-// time. Logically, each time the system clock ticks, the               //
-// adjustment value is cleared. Every time a UUID is generated,         //
-// the current adjustment value is read and incremented, and            //
-// then added to the UTC time field of the UUID.                        //
-//                                                                      //
-// Clock Overrun                                                        //
-//                                                                      //
-// The 100-nanosecond granularity of time should prove sufficient       //
-// even for bursts of UUID production in the next generation of         //
-// high-performance multiprocessors. If a system overruns the           //
-// clock adjustment by requesting too many UUIDs within a single        //
-// system clock tick, the UUID generator will stall until the           //
-// system clock catches up.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TUUID
+\ingroup Base
+
+This class defines a UUID (Universally Unique IDentifier), also
+known as GUIDs (Globally Unique IDentifier). A UUID is 128 bits
+long, and if generated according to this algorithm, is either
+guaranteed to be different from all other UUIDs/GUIDs generated
+until 3400 A.D. or extremely likely to be different. UUIDs were
+originally used in the Network Computing System (NCS) and
+later in the Open Software Foundation's (OSF) Distributed Computing
+Environment (DCE).
+
+Structure of universal unique IDs (UUIDs).
+
+Depending on the network data representation, the multi-
+octet unsigned integer fields are subject to byte swapping
+when communicated between dissimilar endian machines.
+~~~ {.cpp}
++-----------------------------------+
+|     low 32 bits of time           |  0-3   .fTimeLow
++-------------------------------+----
+|     mid 16 bits of time       |      4-5   .fTimeMid
++-------+-----------------------+
+| vers. |   hi 12 bits of time  |      6-7   .fTimeHiAndVersion
++-------+-------+---------------+
+|Res | clkSeqHi |                      8     .fClockSeqHiAndReserved
++---------------+
+|   clkSeqLow   |                      9     .fClockSeqLow
++---------------+------------------+
+|            node ID               |   10-15 .fNode
++----------------------------------+
+~~~
+
+The adjusted time stamp is split into three fields, and the
+clockSeq is split into two fields.
+
+The timestamp is a 60-bit value. For UUID version 1, this
+is represented by Coordinated Universal Time (UTC/GMT) as
+a count of 100-nanosecond intervals since 00:00:00.00,
+15 October 1582 (the date of Gregorian reform to the
+Christian calendar).
+
+The version number is multiplexed in the 4 most significant
+bits of the 'fTimeHiAndVersion' field. There are two defined
+versions:
+~~~ {.cpp}
+              MSB <---
+Version      4-Bit Code      Description
+------------------------------------------------------------
+|  1           0 0 0 1     DCE version, as specified herein.
+|  2           0 0 1 0     DCE Security version, with
+|                          embedded POSIX UIDs.
+|  3           0 0 1 1     node id is a random value
+------------------------------------------------------------
+~~~
+
+## Clock Sequence
+
+The clock sequence value must be changed whenever:
+
+   The UUID generator detects that the local value of UTC
+   has gone backward; this may be due to re-syncing of the system
+   clock.
+
+While a node is operational, the UUID service always saves
+the last UTC used to create a UUID. Each time a new UUID
+is created, the current UTC is compared to the saved value
+and if either the current value is less or the saved value
+was lost, then the clock sequence is incremented modulo
+16,384, thus avoiding production of duplicated UUIDs.
+
+The clock sequence must be initialized to a random number
+to minimize the correlation across system. This provides
+maximum protection against node identifiers that may move
+or switch from system to system rapidly.
+
+## Clock Adjustment
+
+UUIDs may be created at a rate greater than the system clock
+resolution. Therefore, the system must also maintain an
+adjustment value to be added to the lower-order bits of the
+time. Logically, each time the system clock ticks, the
+adjustment value is cleared. Every time a UUID is generated,
+the current adjustment value is read and incremented, and
+then added to the UTC time field of the UUID.
+
+## Clock Overrun
+
+The 100-nanosecond granularity of time should prove sufficient
+even for bursts of UUID production in the next generation of
+high-performance multiprocessors. If a system overruns the
+clock adjustment by requesting too many UUIDs within a single
+system clock tick, the UUID generator will stall until the
+system clock catches up.
+*/
 
 #include "TROOT.h"
 #include "TUUID.h"
@@ -125,15 +126,15 @@
 #include <sys/sysinfo.h>
 #endif
 #endif
-
+#include <chrono>
 
 ClassImp(TUUID)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a UUID.
+
 TUUID::TUUID()
 {
-   // Create a UUID.
-
    TTHREAD_TLS(uuid_time_t) time_last;
    TTHREAD_TLS(UShort_t) clockseq(0);
    TTHREAD_TLS(Bool_t) firstTime(kTRUE);
@@ -142,15 +143,20 @@ TUUID::TUUID()
    if (firstTime) {
       R__LOCKGUARD2(gROOTMutex); // rand and random are not thread safe.
 
+      UInt_t seed;
       if (gSystem) {
          // try to get a unique seed per process
-         UInt_t seed = (UInt_t) (Long64_t(gSystem->Now()) + gSystem->GetPid());
-#ifdef R__WIN32
-         srand(seed);
-#else
-         srandom(seed);
-#endif
+         seed = (UInt_t)(Long64_t(gSystem->Now()) + gSystem->GetPid());
+      } else {
+         using namespace std::chrono;
+         system_clock::time_point today = system_clock::now();
+         seed = (UInt_t)(system_clock::to_time_t ( today )) + ::getpid();
       }
+#ifdef R__WIN32
+      srand(seed);
+#else
+      srandom(seed);
+#endif
       GetCurrentTime(time_last_ptr);
 #ifdef R__WIN32
       clockseq = 1+(UShort_t)(65536*rand()/(RAND_MAX+1.0));
@@ -177,19 +183,19 @@ TUUID::TUUID()
    fUUIDIndex = 1<<30;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// delete this TUUID
+
 TUUID::~TUUID()
 {
-   // delete this TUUID
-
    //gROOT->GetUUIDs()->RemoveUUID(fUUIDIndex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two time values.
+
 Int_t TUUID::CmpTime(uuid_time_t *t1, uuid_time_t *t2)
 {
-   // Compare two time values.
-
    if (t1->high < t2->high) return -1;
    if (t1->high > t2->high) return 1;
    if (t1->low  < t2->low)  return -1;
@@ -197,12 +203,12 @@ Int_t TUUID::CmpTime(uuid_time_t *t1, uuid_time_t *t2)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set this UUID to the value specified in uuid ((which must be in
+/// TUUID::AsString() format).
+
 void TUUID::SetFromString(const char *uuid)
 {
-   // Set this UUID to the value specified in uuid ((which must be in
-   // TUUID::AsString() format).
-
    // Format is tttttttt-tttt-cccc-cccc-nnnnnnnnnnnn.
    Long_t  timeLo;
    int     timeMid;
@@ -235,11 +241,11 @@ void TUUID::SetFromString(const char *uuid)
    fUUIDIndex             = 1<<30;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TUUID with uuid (which must be in TUUID::AsString() format).
+
 TUUID::TUUID(const char *uuid)
 {
-   // Initialize a TUUID with uuid (which must be in TUUID::AsString() format).
-
    fTimeLow               = 0;
    fTimeMid               = 0;
    fTimeHiAndVersion      = 0;
@@ -254,11 +260,11 @@ TUUID::TUUID(const char *uuid)
       SetFromString(uuid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream UUID into output buffer.
+
 void TUUID::FillBuffer(char *&buffer)
 {
-   // Stream UUID into output buffer.
-
    Version_t version = TUUID::Class_Version();
    tobuf(buffer, version);
    tobuf(buffer, fTimeLow);
@@ -270,11 +276,11 @@ void TUUID::FillBuffer(char *&buffer)
       tobuf(buffer, fNode[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream UUID from input buffer.
+
 void TUUID::ReadBuffer(char *&buffer)
 {
-   // Stream UUID from input buffer.
-
    Version_t version;
    frombuf(buffer, &version);
    frombuf(buffer, &fTimeLow);
@@ -286,13 +292,13 @@ void TUUID::ReadBuffer(char *&buffer)
       frombuf(buffer, &fNode[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream UUID from input buffer.
+/// This function is for the exclusive use of TDirectory::Streamer() to
+/// read a non-versioned version of TUUID.
+
 void TUUID::StreamerV1(TBuffer &b)
 {
-   // Stream UUID from input buffer.
-   // This function is for the exclusive use of TDirectory::Streamer() to
-   // read a non-versioned version of TUUID.
-
    b >> fTimeLow;
    b >> fTimeMid;
    b >> fTimeHiAndVersion;
@@ -303,11 +309,11 @@ void TUUID::StreamerV1(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a UUID from timestamp, clockseq and node id.
+
 void TUUID::Format(UShort_t clockseq, uuid_time_t ts)
 {
-   // Make a UUID from timestamp, clockseq and node id.
-
    fTimeLow = ts.low;
    fTimeMid = (UShort_t)(ts.high & 0xFFFF);
    fTimeHiAndVersion = (UShort_t)((ts.high >> 16) & 0x0FFF);
@@ -318,13 +324,13 @@ void TUUID::Format(UShort_t clockseq, uuid_time_t ts)
    GetNodeIdentifier();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get current time as 60 bit 100ns ticks since whenever.
+/// Compensate for the fact that real clock resolution is less
+/// than 100ns.
+
 void TUUID::GetCurrentTime(uuid_time_t *timestamp)
 {
-   // Get current time as 60 bit 100ns ticks since whenever.
-   // Compensate for the fact that real clock resolution is less
-   // than 100ns.
-
    const UShort_t uuids_per_tick = 1024;
 
    TTHREAD_TLS(uuid_time_t) time_last;
@@ -372,11 +378,11 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
    timestamp->low  = time_now.low;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get system time with 100ns precision. Time is since Oct 15, 1582.
+
 void TUUID::GetSystemTime(uuid_time_t *timestamp)
 {
-   // Get system time with 100ns precision. Time is since Oct 15, 1582.
-
 #ifdef R__WIN32
    ULARGE_INTEGER time;
    GetSystemTimeAsFileTime((FILETIME *)&time);
@@ -404,12 +410,12 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get node identifier. Try first to get network address, if no
+/// network interface try random info based on some machine parameters.
+
 void TUUID::GetNodeIdentifier()
 {
-   // Get node identifier. Try first to get network address, if no
-   // network interface try random info based on some machine parameters.
-
    static UInt_t adr = 0;
 
    if (gSystem) {
@@ -465,11 +471,11 @@ void TUUID::GetNodeIdentifier()
    fTimeHiAndVersion |= (3 << 12);    // version == 3: random node info
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get random info based on some machine parameters.
+
 void TUUID::GetRandomInfo(UChar_t seed[16])
 {
-   // Get random info based on some machine parameters.
-
 #ifdef R__WIN32
    struct randomness {
       MEMORYSTATUS  m;
@@ -517,19 +523,19 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
    md5.Final(seed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print UUID.
+
 void TUUID::Print() const
 {
-   // Print UUID.
-
    printf("%s\n", AsString());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return UUID as string. Copy string immediately since it will be reused.
+
 const char *TUUID::AsString() const
 {
-   // Return UUID as string. Copy string immediately since it will be reused.
-
    static char uuid[40];
 
    snprintf(uuid,40, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
@@ -540,11 +546,11 @@ const char *TUUID::AsString() const
    return uuid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute 16-bit hash value of the UUID.
+
 UShort_t TUUID::Hash() const
 {
-   // Compute 16-bit hash value of the UUID.
-
    Short_t  c0 = 0, c1 = 0, x, y;
    char    *c = (char *) &fTimeLow;
 
@@ -587,14 +593,14 @@ UShort_t TUUID::Hash() const
    return UShort_t((y << 8) + x);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two UUIDs "lexically" and return
+///   - -1   this is lexically before u
+///   -  0   this is equal to u
+///   -  1   this is lexically after u
+
 Int_t TUUID::Compare(const TUUID &u) const
 {
-   // Compare two UUIDs "lexically" and return
-   //    -1   this is lexically before u
-   //     0   this is equal to u
-   //     1   this is lexically after u
-
 #define CHECK(f1, f2) if (f1 != f2) return f1 < f2 ? -1 : 1;
    CHECK(fTimeLow, u.fTimeLow)
    CHECK(fTimeMid, u.fTimeMid)
@@ -610,12 +616,12 @@ Int_t TUUID::Compare(const TUUID &u) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get address of host encoded in UUID. If host id is not an ethernet
+/// address, but random info, then the returned TInetAddress is not valid.
+
 TInetAddress TUUID::GetHostAddress() const
 {
-   // Get address of host encoded in UUID. If host id is not an ethernet
-   // address, but random info, then the returned TInetAddress is not valid.
-
    if ((fTimeHiAndVersion >> 12) == 1) {
       UInt_t addr;
       memcpy(&addr, fNode, 4);
@@ -624,11 +630,11 @@ TInetAddress TUUID::GetHostAddress() const
    return TInetAddress();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get time from UUID.
+
 TDatime TUUID::GetTime() const
 {
-   // Get time from UUID.
-
    TDatime     dt;
    uuid_time_t ts;
 
@@ -649,31 +655,31 @@ TDatime TUUID::GetTime() const
    return dt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return uuid in specified buffer (16 byte = 128 bits).
+
 void TUUID::GetUUID(UChar_t uuid[16]) const
 {
-   // Return uuid in specified buffer (16 byte = 128 bits).
-
    memcpy(uuid, &fTimeLow, 16);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set this UUID to the value specified in uuid ((which must be in
+/// TUUID::AsString() format).
+
 void TUUID::SetUUID(const char *uuid)
 {
-   // Set this UUID to the value specified in uuid ((which must be in
-   // TUUID::AsString() format).
-
    if (!uuid || !*uuid)
       Error("SetUUID", "null string not allowed");
    else
       SetFromString(uuid);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Input operator.  Delegate to Streamer.
+
 TBuffer &operator<<(TBuffer &buf, const TUUID &uuid)
 {
-   // Input operator.  Delegate to Streamer.
-
    R__ASSERT( buf.IsWriting() );
 
    const_cast<TUUID&>(uuid).Streamer(buf);

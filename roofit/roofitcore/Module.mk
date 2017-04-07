@@ -32,7 +32,7 @@ ROOFITCOREH1   := Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h \
                   RooBanner.h RooBinning.h RooBinnedGenContext.h RooBrentRootFinder.h  RooCategory.h \
                   RooCategoryProxy.h RooCategorySharedProperties.h \
                   RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h \
-                  RooCmdConfig.h RooComplex.h RooConstVar.h RooConvCoefVar.h \
+                  RooCmdConfig.h RooConstVar.h RooConvCoefVar.h \
                   RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h \
                   RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h \
                   RooDirItem.h RooDLLSignificanceMCSModule.h RooAbsAnaConvPdf.h \
@@ -100,9 +100,18 @@ ROOFITCORELIB  := $(LPATH)/libRooFitCore.$(SOEXT)
 ROOFITCOREMAP  := $(ROOFITCORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS        += $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOFITCOREH))
+ROOFITCOREH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(ROOFITCOREH))
+ALLHDRS        += $(ROOFITCOREH_REL)
 ALLLIBS        += $(ROOFITCORELIB)
 ALLMAPS        += $(ROOFITCOREMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ROOFITCOREH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Roofit_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ROOFITCORELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES   += $(ROOFITCOREDEP)
@@ -148,5 +157,3 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(ROOFITCOREDO): NOOPT = $(OPT)
-# FIXME: Temporarily until we understand where the errors come from.
-$(ROOFITCOREDO): CXXFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(CXXFLAGS))

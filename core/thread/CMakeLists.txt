@@ -1,23 +1,23 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/thread package
 ############################################################################
-ROOT_USE_PACKAGE(core)
 
-set(headers TCondition.h TConditionImp.h TMutex.h TMutexImp.h
-            TRWLock.h TSemaphore.h TThread.h TThreadFactory.h
-            TThreadImp.h TAtomicCount.h TThreadPool.h ThreadLocalStorage.h)
+set(headers TAtomicCount.h TCondition.h TConditionImp.h TMutex.h TMutexImp.h
+            TRWLock.h ROOT/TRWSpinLock.hxx TSemaphore.h TThread.h TThreadFactory.h
+            TThreadImp.h ROOT/TThreadedObject.hxx TThreadPool.h
+            ThreadLocalStorage.h ROOT/TSpinMutex.hxx)
 if(NOT WIN32)
   set(headers ${headers} TPosixCondition.h TPosixMutex.h
                          TPosixThread.h TPosixThreadFactory.h PosixThreadInc.h)
-  set(installoptions OPTIONS REGEX "Win32" EXCLUDE)
+  set(installoptions FILTER "Win32")
 else()
   set(headers ${headers} TWin32Condition.h TWin32Mutex.h
                          TWin32Thread.h TWin32ThreadFactory.h)
-  set(installoptions OPTIONS REGEX "Posix" EXCLUDE)
+  set(installoptions FILTER "Posix")
 endif()
 
 set(sources TCondition.cxx TConditionImp.cxx TMutex.cxx TMutexImp.cxx
-            TRWLock.cxx TSemaphore.cxx TThread.cxx TThreadFactory.cxx
+            TRWLock.cxx TRWSpinLock.cxx TSemaphore.cxx TThread.cxx TThreadFactory.cxx
             TThreadImp.cxx)
 if(NOT WIN32)
   set(sources ${sources} TPosixCondition.cxx TPosixMutex.cxx
@@ -27,8 +27,15 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
+if (imt)
+  set(sources_imt TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx)
+  set(headers_imt ROOT/TThreadExecutor.hxx ROOT/TPoolManager.hxx)
+endif()
+
+include_directories(${TBB_INCLUDE_DIRS})
+
+ROOT_GENERATE_DICTIONARY(G__Thread ${headers} ${headers_imt} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_OBJECT_LIBRARY(ThreadObjs ${sources} G__Thread.cxx)
-ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> LIBRARIES  ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
+ROOT_LINKER_LIBRARY(Thread $<TARGET_OBJECTS:ThreadObjs> ${sources_imt} LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${TBB_LIBRARIES} DEPENDENCIES Core BUILTINS TBB)
 ROOT_INSTALL_HEADERS(${installoptions})

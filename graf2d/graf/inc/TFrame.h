@@ -13,17 +13,7 @@
 #define ROOT_TFrame
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFrame                                                               //
-//                                                                      //
-// TFrame   A TWbox for drawing histogram frames.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TWbox
 #include "TWbox.h"
-#endif
 
 
 class TFrame : public TWbox {

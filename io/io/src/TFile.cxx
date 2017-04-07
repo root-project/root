@@ -9,53 +9,67 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// A ROOT file is a suite of consecutive data records (TKey's) with
-// the following format (see also the TKey class). If the key is
-// located past the 32 bit file limit (> 2 GB) then some fields will
-// be 8 instead of 4 bytes:
-//    1->4            Nbytes    = Length of compressed object (in bytes)
-//    5->6            Version   = TKey version identifier
-//    7->10           ObjLen    = Length of uncompressed object
-//    11->14          Datime    = Date and time when object was written to file
-//    15->16          KeyLen    = Length of the key structure (in bytes)
-//    17->18          Cycle     = Cycle of key
-//    19->22 [19->26] SeekKey   = Pointer to record itself (consistency check)
-//    23->26 [27->34] SeekPdir  = Pointer to directory header
-//    27->27 [35->35] lname     = Number of bytes in the class name
-//    28->.. [36->..] ClassName = Object Class Name
-//    ..->..          lname     = Number of bytes in the object name
-//    ..->..          Name      = lName bytes with the name of the object
-//    ..->..          lTitle    = Number of bytes in the object title
-//    ..->..          Title     = Title of the object
-//    ----->          DATA      = Data bytes associated to the object
-//
-// The first data record starts at byte fBEGIN (currently set to kBEGIN).
-// Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
-// it is a large file (> 2 GB) and the offsets will be 8 bytes long and
-// fUnits will be set to 8:
-//    1->4            "root"      = Root file identifier
-//    5->8            fVersion    = File format version
-//    9->12           fBEGIN      = Pointer to first data record
-//    13->16 [13->20] fEND        = Pointer to first free word at the EOF
-//    17->20 [21->28] fSeekFree   = Pointer to FREE data record
-//    21->24 [29->32] fNbytesFree = Number of bytes in FREE data record
-//    25->28 [33->36] nfree       = Number of free data records
-//    29->32 [37->40] fNbytesName = Number of bytes in TNamed at creation time
-//    33->33 [41->41] fUnits      = Number of bytes for file pointers
-//    34->37 [42->45] fCompress   = Compression level and algorithm
-//    38->41 [46->53] fSeekInfo   = Pointer to TStreamerInfo record
-//    42->45 [54->57] fNbytesInfo = Number of bytes in TStreamerInfo record
-//    46->63 [58->75] fUUID       = Universal Unique ID
-//Begin_Html
-/*
-<img src="gif/file_layout.gif">
+/**
+  \defgroup IO Input/Output Library
+
+  The library collecting the ROOT classes dedicated to data input and output.
+
 */
-//End_Html
-//
-// The structure of a directory is shown in TDirectoryFile::TDirectoryFile
-//
-////////////////////////////////////////////////////////////////////////////////
+
+/**
+\file TFile.cxx
+\class TFile
+\ingroup IO
+
+A ROOT file is a suite of consecutive data records (TKey instances) with
+a well defined format.
+
+If the key is located past the 32 bit file limit (> 2 GB) then some fields will
+be 8 instead of 4 bytes:
+
+Byte Range      | Member Name | Description
+----------------|-----------|--------------
+1->4            | Nbytes    | Length of compressed object (in bytes)
+5->6            | Version   | TKey version identifier
+7->10           | ObjLen    | Length of uncompressed object
+11->14          | Datime    | Date and time when object was written to file
+15->16          | KeyLen    | Length of the key structure (in bytes)
+17->18          | Cycle     | Cycle of key
+19->22 [19->26] | SeekKey   | Pointer to record itself (consistency check)
+23->26 [27->34] | SeekPdir  | Pointer to directory header
+27->27 [35->35] | lname     | Number of bytes in the class name
+28->.. [36->..] | ClassName | Object Class Name
+..->..          | lname     | Number of bytes in the object name
+..->..          | Name      | lName bytes with the name of the object
+..->..          | lTitle    | Number of bytes in the object title
+..->..          | Title     | Title of the object
+----->          | DATA      | Data bytes associated to the object
+
+The first data record starts at byte fBEGIN (currently set to kBEGIN).
+Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
+it is a large file (> 2 GB) and the offsets will be 8 bytes long and
+fUnits will be set to 8:
+Byte Range      | Record Name | Description
+----------------|-------------|------------
+1->4            | "root"      | Root file identifier
+5->8            | fVersion    | File format version
+9->12           | fBEGIN      | Pointer to first data record
+13->16 [13->20] | fEND        | Pointer to first free word at the EOF
+17->20 [21->28] | fSeekFree   | Pointer to FREE data record
+21->24 [29->32] | fNbytesFree | Number of bytes in FREE data record
+25->28 [33->36] | nfree       | Number of free data records
+29->32 [37->40] | fNbytesName | Number of bytes in TNamed at creation time
+33->33 [41->41] | fUnits      | Number of bytes for file pointers
+34->37 [42->45] | fCompress   | Compression level and algorithm
+38->41 [46->53] | fSeekInfo   | Pointer to TStreamerInfo record
+42->45 [54->57] | fNbytesInfo | Number of bytes in TStreamerInfo record
+46->63 [58->75] | fUUID       | Universal Unique ID
+
+Begin_Macro
+../../../tutorials/io/file.C
+End_Macro
+The structure of a directory is shown in TDirectoryFile::TDirectoryFile
+*/
 
 #include "RConfig.h"
 
@@ -133,6 +147,9 @@ Bool_t   TFile::fgCacheFileForce = kFALSE;
 Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
 UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = 0;
+#ifdef R__USE_IMT
+ROOT::TRWSpinLock TFile::fgRwLock;
+#endif
 
 const Int_t kBEGIN = 100;
 
@@ -150,11 +167,11 @@ AddPseudoGlobals() {
 }
 } gAddPseudoGlobals;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// File default Constructor.
+
 TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 {
-   // File default Constructor.
-
    fD               = -1;
    fFree            = 0;
    fWritten         = 0;
@@ -200,109 +217,111 @@ TFile::TFile() : TDirectoryFile(), fInfoCache(0)
       Info("TFile", "default ctor");
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Opens or creates a local ROOT file.
+///
+/// \param[in] fname1 The name of the file
+/// \param[in] option Specifies the mode in which the file is opened
+/// \param[in] ftitle The title of the file
+/// \param[in] compress Specifies the compression algorithm and level
+///
+/// It is recommended to specify fname1 as "<file>.root". The suffix ".root"
+/// will be used by object browsers to automatically identify the file as
+/// a ROOT file. If the constructor fails in any way IsZombie() will
+/// return true. Use IsOpen() to check if the file is (still) open.
+/// To open non-local files use the static TFile::Open() method, that
+/// will take care of opening the files using the correct remote file
+/// access plugin.
+///
+/// Option | Description
+/// -------|------------
+/// NEW or CREATE | Create a new file and open it for writing, if the file already exists the file is not opened.
+/// RECREATE      | Create a new file, if the file already exists it will be overwritten.
+/// UPDATE        | Open an existing file for writing. If no file exists, it is created.
+/// READ          | Open an existing file for reading (default).
+/// NET           | Used by derived remote file access classes, not a user callable option.
+/// WEB           | Used by derived remote http access class, not a user callable option.
+///
+/// If option = "" (default), READ is assumed.
+/// The file can be specified as a URL of the form:
+///
+///     file:///user/rdm/bla.root or file:/user/rdm/bla.root
+///
+/// The file can also be a member of an archive, in which case it is
+/// specified as:
+///
+///     multi.zip#file.root or multi.zip#0
+///
+/// which will open file.root which is a member of the file multi.zip
+/// archive or member 1 from the archive. For more on archive file
+/// support see the TArchiveFile class.
+/// TFile and its remote access plugins can also be used to open any
+/// file, i.e. also non ROOT files, using:
+///
+///     file.tar?filetype=raw
+///
+/// This is convenient because the many remote file access plugins allow
+/// easy access to/from the many different mass storage systems.
+/// The title of the file (ftitle) will be shown by the ROOT browsers.
+/// A ROOT file (like a Unix file system) may contain objects and
+/// directories. There are no restrictions for the number of levels
+/// of directories.
+/// A ROOT file is designed such that one can write in the file in pure
+/// sequential mode (case of BATCH jobs). In this case, the file may be
+/// read sequentially again without using the file index written
+/// at the end of the file. In case of a job crash, all the information
+/// on the file is therefore protected.
+/// A ROOT file can be used interactively. In this case, one has the
+/// possibility to delete existing objects and add new ones.
+/// When an object is deleted from the file, the freed space is added
+/// into the FREE linked list (fFree). The FREE list consists of a chain
+/// of consecutive free segments on the file. At the same time, the first
+/// 4 bytes of the freed record on the file are overwritten by GAPSIZE
+/// where GAPSIZE = -(Number of bytes occupied by the record).
+/// Option compress is used to specify the compression level and algorithm:
+///
+///     compress = 100 * algorithm + level
+///
+/// Level | Explanation
+/// ------|-------------
+/// 0   | objects written to this file will not be compressed.
+/// 1   | minimal compression level but fast.
+/// ... | ....
+/// 9   | maximal compression level but slower and might use more memory.
+/// (For the currently supported algorithms, the maximum level is 9)
+/// If compress is negative it indicates the compression level is not set yet.
+/// The enumeration ROOT::ECompressionAlgorithm associates each
+/// algorithm with a number. There is a utility function to help
+/// to set the value of compress. For example,
+///     ROOT::CompressionSettings(ROOT::kLZMA, 1)
+/// will build an integer which will set the compression to use
+/// the LZMA algorithm and compression level 1.  These are defined
+/// in the header file <em>Compression.h</em>.
+/// Note that the compression settings may be changed at any time.
+/// The new compression settings will only apply to branches created
+/// or attached after the setting is changed and other objects written
+/// after the setting is changed.
+/// In case the file does not exist or is not a valid ROOT file,
+/// it is made a Zombie. One can detect this situation with a code like:
+/// ~~~{.cpp}
+/// TFile f("file.root");
+/// if (f.IsZombie()) {
+///    std::cout << "Error opening file" << std::endl;
+///    exit(-1);
+/// }
+/// ~~~
+///  When opening the file, the system checks the validity of this directory.
+///  If something wrong is detected, an automatic Recovery is performed. In
+///  this case, the file is scanned sequentially reading all logical blocks
+///  and attempting to rebuild a correct directory (see TFile::Recover).
+///  One can disable the automatic recovery procedure when reading one
+///  or more files by setting the environment variable "TFile.Recover: 0"
+///  in the system.rootrc file.
+///
+
 TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t compress)
            : TDirectoryFile(), fUrl(fname1,kTRUE), fInfoCache(0), fOpenPhases(0)
 {
-   // Opens or creates a local ROOT file whose name is fname1. It is
-   // recommended to specify fname1 as "<file>.root". The suffix ".root"
-   // will be used by object browsers to automatically identify the file as
-   // a ROOT file. If the constructor fails in any way IsZombie() will
-   // return true. Use IsOpen() to check if the file is (still) open.
-   //
-   // To open non-local files use the static TFile::Open() method, that
-   // will take care of opening the files using the correct remote file
-   // access plugin.
-   //
-   // If option = NEW or CREATE   create a new file and open it for writing,
-   //                             if the file already exists the file is
-   //                             not opened.
-   //           = RECREATE        create a new file, if the file already
-   //                             exists it will be overwritten.
-   //           = UPDATE          open an existing file for writing.
-   //                             if no file exists, it is created.
-   //           = READ            open an existing file for reading (default).
-   //           = NET             used by derived remote file access
-   //                             classes, not a user callable option
-   //           = WEB             used by derived remote http access
-   //                             class, not a user callable option
-   // If option = "" (default), READ is assumed.
-   //
-   // The file can be specified as a URL of the form:
-   //    file:///user/rdm/bla.root or file:/user/rdm/bla.root
-   //
-   // The file can also be a member of an archive, in which case it is
-   // specified as:
-   //    multi.zip#file.root or multi.zip#0
-   // which will open file.root which is a member of the file multi.zip
-   // archive or member 1 from the archive. For more on archive file
-   // support see the TArchiveFile class.
-   //
-   // TFile and its remote access plugins can also be used to open any
-   // file, i.e. also non ROOT files, using:
-   //    file.tar?filetype=raw
-   // This is convenient because the many remote file access plugins allow
-   // easy access to/from the many different mass storage systems.
-   //
-   // The title of the file (ftitle) will be shown by the ROOT browsers.
-   //
-   // A ROOT file (like a Unix file system) may contain objects and
-   // directories. There are no restrictions for the number of levels
-   // of directories.
-   //
-   // A ROOT file is designed such that one can write in the file in pure
-   // sequential mode (case of BATCH jobs). In this case, the file may be
-   // read sequentially again without using the file index written
-   // at the end of the file. In case of a job crash, all the information
-   // on the file is therefore protected.
-   //
-   // A ROOT file can be used interactively. In this case, one has the
-   // possibility to delete existing objects and add new ones.
-   // When an object is deleted from the file, the freed space is added
-   // into the FREE linked list (fFree). The FREE list consists of a chain
-   // of consecutive free segments on the file. At the same time, the first
-   // 4 bytes of the freed record on the file are overwritten by GAPSIZE
-   // where GAPSIZE = -(Number of bytes occupied by the record).
-   //
-   // Option compress is used to specify the compression level and algorithm:
-   //  compress = 100 * algorithm + level
-   //  level = 0, objects written to this file will not be compressed.
-   //  level = 1, minimal compression level but fast.
-   //  ....
-   //  level = 9, maximal compression level but slower and might use more memory.
-   // (For the currently supported algorithms, the maximum level is 9)
-   // If compress is negative it indicates the compression level is not set yet.
-   //
-   // The enumeration ROOT::ECompressionAlgorithm associates each
-   // algorithm with a number. There is a utility function to help
-   // to set the value of compress. For example,
-   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
-   // will build an integer which will set the compression to use
-   // the LZMA algorithm and compression level 1.  These are defined
-   // in the header file Compression.h.
-   //
-   // Note that the compression settings may be changed at any time.
-   // The new compression settings will only apply to branches created
-   // or attached after the setting is changed and other objects written
-   // after the setting is changed.
-   //
-   // In case the file does not exist or is not a valid ROOT file,
-   // it is made a Zombie. One can detect this situation with a code like:
-   //    TFile f("file.root");
-   //    if (f.IsZombie()) {
-   //       std::cout << "Error opening file" << std::endl;
-   //       exit(-1);
-   //    }
-   //
-   //  When opening the file, the system checks the validity of this directory.
-   //  If something wrong is detected, an automatic Recovery is performed. In
-   //  this case, the file is scanned sequentially reading all logical blocks
-   //  and attempting to rebuild a correct directory (see TFile::Recover).
-   //  One can disable the automatic recovery procedure when reading one
-   //  or more files by setting the environment variable "TFile.Recover: 0"
-   //  in the system.rootrc file.
-   //
-
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
@@ -502,7 +521,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    return;
 
 zombie:
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    {
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
@@ -511,19 +530,19 @@ zombie:
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFile objects can not be copied.
+
 TFile::TFile(const TFile &) : TDirectoryFile(), fInfoCache(0)
 {
-   // TFile objects can not be copied.
-
    MayNotUse("TFile::TFile(const TFile &)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// File destructor.
+
 TFile::~TFile()
 {
-   // File destructor.
-
    Close();
 
    SafeDelete(fAsyncHandle);
@@ -552,14 +571,17 @@ TFile::~TFile()
       Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a TFile object.
+///
+/// \param[in] create Create a new file.
+///
+/// TFile implementations providing asynchronous open functionality need to
+/// override this method to run the appropriate checks before calling this
+/// standard initialization part. See TXNetFile::Init for an example.
+
 void TFile::Init(Bool_t create)
 {
-   // Initialize a TFile object.
-   // TFile implementations providing asynchronous open functionality need to
-   // override this method to run the appropriate checks before calling this
-   // standard initialization part. See TXNetFile::Init for an example.
-
    if (fInitDone)
       // Already called once
       return;
@@ -836,7 +858,10 @@ void TFile::Init(Bool_t create)
                goto zombie;
             }
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
-            Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+            // Don't complain about missing streamer info for empty files.
+            if (fKeys->GetSize()) {
+               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file.",GetName());
+            }
          }
       }
    }
@@ -857,24 +882,26 @@ zombie:
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
-   // error in file opening occured, make this object a zombie
+   // error in file opening occurred, make this object a zombie
    fWritable = kFALSE;
    MakeZombie();
    gDirectory = gROOT;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a file.
+///
+/// \param[in] option If option == "R", all TProcessIDs referenced by this file are deleted.
+///
+/// Calling TFile::Close("R") might be necessary in case one reads a long list
+/// of files having TRef, writing some of the referenced objects or TRef
+/// to a new file. If the TRef or referenced objects of the file being closed
+/// will not be referenced again, it is possible to minimize the size
+/// of the TProcessID data structures in memory by forcing a delete of
+/// the unused TProcessID.
+
 void TFile::Close(Option_t *option)
 {
-   // Close a file.
-   // If option == "R", all TProcessIDs referenced by this file are deleted.
-   // Calling TFile::Close("R") might be necessary in case one reads a long list
-   // of files having TRef, writing some of the referenced objects or TRef
-   // to a new file. If the TRef or referenced objects of the file being closed
-   // will not be referenced again, it is possible to minimize the size
-   // of the TProcessID data structures in memory by forcing a delete of
-   // the unused TProcessID.
-
    TString opt = option;
 
    opt.ToLower();
@@ -967,30 +994,31 @@ void TFile::Close(Option_t *option)
    }
 }
 
-//____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates key for object and converts data to buffer.
+
 TKey* TFile::CreateKey(TDirectory* mother, const TObject* obj, const char* name, Int_t bufsize)
 {
-   // Creates key for object and converts data to buffer.
-
    return new TKey(obj, name, bufsize, mother);
 }
 
-//____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates key for object and converts data to buffer.
+
 TKey* TFile::CreateKey(TDirectory* mother, const void* obj, const TClass* cl, const char* name, Int_t bufsize)
 {
-   // Creates key for object and converts data to buffer.
-
    return new TKey(obj, cl, name, bufsize, mother);
 }
 
-//____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the current ROOT file if any.
+///
+/// Note that if 'cd' has been called on a TDirectory that does not belong to a file,
+/// gFile will be unchanged and still points to the file of the previous current
+/// directory that was a file.
+
 TFile *&TFile::CurrentFile()
 {
-   // Return the current ROOT file if any.
-   // Note that if 'cd' has been called on a TDirectory that does not belong to a file,
-   // gFile will be unchanged and still points to the file of the previous current
-   // directory that was a file.
-
    static TFile *currentFile = 0;
    if (!gThreadTsd)
       return currentFile;
@@ -998,45 +1026,51 @@ TFile *&TFile::CurrentFile()
       return *(TFile**)(*gThreadTsd)(&currentFile,ROOT::kFileThreadSlot);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete object namecycle.
+///
+/// \param[in] namecycle Encodes the name and cycle of the objects to delete
+///
+/// Namecycle identifies an object in the top directory of the file namecycle
+/// has the format <em>name;cycle</em>.
+///   - <em>name  = *</em> means all objects
+///   - <em>cycle = *</em> means all cycles (memory and keys)
+///   - <em>cycle = ""</em> or cycle = 9999 ==> apply to a memory object
+/// When name=* use T* to delete subdirectories also
+///
+/// Examples:
+/// name/cycle | Action
+/// -----------|-------
+/// foo   | delete object named foo in memory
+/// foo;1 | delete cycle 1 of foo on file
+/// foo;* | delete all cycles of foo on disk and also from memory
+/// *;2   | delete all objects on file having the cycle 2
+/// *;*   | delete all objects from memory and file
+/// T*;*  | delete all objects from memory and file and all subdirectories
+
 void TFile::Delete(const char *namecycle)
 {
-   // Delete object namecycle.
-   // Namecycle identifies an object in the top directory of the file
-   //   namecycle has the format name;cycle
-   //   name  = * means all
-   //   cycle = * means all cycles (memory and keys)
-   //   cycle = "" or cycle = 9999 ==> apply to a memory object
-   //   When name=* use T* to delete subdirectories also
-   //
-   // Examples:
-   //     foo   : delete object named foo in memory
-   //     foo;1 : delete cycle 1 of foo on file
-   //     foo;* : delete all cycles of foo on disk and also from memory
-   //     *;2   : delete all objects on file having the cycle 2
-   //     *;*   : delete all objects from memory and file
-   //    T*;*   : delete all objects from memory and file and all subdirectories
-
    if (gDebug)
       Info("Delete", "deleting name = %s", namecycle);
 
    TDirectoryFile::Delete(namecycle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill Graphics Structure and Paint.
+///
+/// Loop on all objects (memory or file) and all subdirectories.
+
 void TFile::Draw(Option_t *option)
 {
-   // Fill Graphics Structure and Paint.
-   // Loop on all objects (memory or file) and all subdirectories.
-
    GetList()->R__FOR_EACH(TObject,Draw)(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw map of objects in this file.
+
 void TFile::DrawMap(const char *keys, Option_t *option)
 {
-   // Draw map of objects in this file.
-
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TFileDrawMap"))) {
       if (h->LoadPlugin() == -1)
@@ -1045,10 +1079,11 @@ void TFile::DrawMap(const char *keys, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Synchronize a file's in-memory and on-disk states.
+
 void TFile::Flush()
 {
-   // Synchronize a file's in-core and on-disk states.
    if (IsOpen() && fWritable) {
       FlushWriteCache();
       if (SysSync(fD) < 0) {
@@ -1059,48 +1094,52 @@ void TFile::Flush()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Flush the write cache if active.
+///
+/// Return kTRUE in case of error
+
 Bool_t TFile::FlushWriteCache()
 {
-   // Flush the write cache if active.
-   // Return kTRUE in case of error
-
    if (fCacheWrite && IsOpen() && fWritable)
       return fCacheWrite->Flush();
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Encode file output buffer.
+///
+/// The file output buffer contains only the FREE data record.
+
 void TFile::FillBuffer(char *&buffer)
 {
-   // Encode file output buffer.
-   // The file output buffer contains only the FREE data record.
-
    Version_t version = TFile::Class_Version();
    tobuf(buffer, version);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the best buffer size of objects on this file.
+///
+/// The best buffer size is estimated based on the current mean value
+/// and standard deviation of all objects written so far to this file.
+/// Returns mean value + one standard deviation.
+
 Int_t TFile::GetBestBuffer() const
 {
-   // Return the best buffer size of objects on this file.
-   // The best buffer size is estimated based on the current mean value
-   // and standard deviation of all objects written so far to this file.
-   // Returns mean value + one standard deviation.
-
    if (!fWritten) return TBuffer::kInitialSize;
    Double_t mean = fSumBuffer/fWritten;
    Double_t rms2 = TMath::Abs(fSum2Buffer/fSumBuffer -mean*mean);
    return (Int_t)(mean + sqrt(rms2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the file compression factor.
+///
+/// Add total number of compressed/uncompressed bytes for each key.
+/// Returns the ratio of the two.
+
 Float_t TFile::GetCompressionFactor()
 {
-   // Return the file compression factor.
-   // Add total number of compressed/uncompressed bytes for each key.
-   // return ratio of the two.
-
    Short_t  keylen;
    UInt_t   datime;
    Int_t    nbytes, objlen, nwh = 64;
@@ -1140,27 +1179,27 @@ Float_t TFile::GetCompressionFactor()
    return uncomp/comp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method returning errno. Is overriden in TRFIOFile.
+
 Int_t TFile::GetErrno() const
 {
-   // Method returning errno. Is overriden in TRFIOFile.
-
    return TSystem::GetErrno();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method resetting the errno. Is overridden in TRFIOFile.
+
 void TFile::ResetErrno() const
 {
-   // Method resetting the errno. Is overridden in TRFIOFile.
-
    TSystem::ResetErrno();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the current read cache.
+
 TFileCacheRead *TFile::GetCacheRead(TObject* tree) const
 {
-   // Return a pointer to the current read cache.
-
    if (!tree) {
       if (!fCacheRead && fCacheReadMap->GetSize() == 1) {
          TIter next(fCacheReadMap);
@@ -1173,30 +1212,31 @@ TFileCacheRead *TFile::GetCacheRead(TObject* tree) const
    return cache;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the current write cache.
+
 TFileCacheWrite *TFile::GetCacheWrite() const
 {
-   // Return a pointer to the current write cache.
-
    return fCacheWrite;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the logical record header starting at a certain postion.
+///
+/// \param[in] maxbytes Bytes which are read into buf.
+/// \param[out] nbytes Number of bytes in record if negative, this is a deleted
+/// record if 0, cannot read record, wrong value of argument first
+/// \param[out] objlen Uncompressed object size
+/// \param[out] keylen Length of logical record header
+///
+/// The function reads nread bytes
+/// where nread is the minimum of maxbytes and the number of bytes
+/// before the end of file. The function returns nread.
+/// Note that the arguments objlen and keylen are returned only
+/// if maxbytes >=16
+
 Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &nbytes, Int_t &objlen, Int_t &keylen)
 {
-   // Read the logical record header starting at position first.
-   // Maxbytes bytes are read into buf the function reads nread bytes
-   // where nread is the minimum of maxbytes and the number of bytes
-   // before the end of file. The function returns nread.
-   // In output arguments:
-   //    nbytes : number of bytes in record
-   //             if negative, this is a deleted record
-   //             if 0, cannot read record, wrong value of argument first
-   //    objlen : uncompressed object size
-   //    keylen : length of logical record header
-   // Note that the arguments objlen and keylen are returned only
-   // if maxbytes >=16
-
    nbytes = 0;
    objlen = 0;
    keylen = 0;
@@ -1237,12 +1277,12 @@ Int_t TFile::GetRecordHeader(char *buf, Long64_t first, Int_t maxbytes, Int_t &n
    return nread;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current file size. Returns -1 in case the file could not
+/// be stat'ed.
+
 Long64_t TFile::GetSize() const
 {
-   // Returns the current file size. Returns -1 in case the file could not
-   // be stat'ed.
-
    Long64_t size;
 
    if (fArchive && fArchive->GetMember()) {
@@ -1257,33 +1297,41 @@ Long64_t TFile::GetSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the cached list of StreamerInfos used in this file.
+
 const TList *TFile::GetStreamerInfoCache()
 {
-   // Returns the cached list of StreamerInfos used in this file.
-
    return fInfoCache ?  fInfoCache : (fInfoCache=GetStreamerInfoList());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the list of TStreamerInfo objects written to this file.
+///
+/// The function returns a TList. It is the user's responsibility
+/// to delete the list created by this function.
+///
+/// Note the list, in addition to TStreamerInfo object, contains sometimes
+/// a TList named 'listOfRules' and containing the schema evolution rules
+/// related to the file's content.
+///
+/// Using the list, one can access additional information, e.g.:
+/// ~~~{.cpp}
+/// TFile f("myfile.root");
+/// auto list = f.GetStreamerInfoList();
+/// auto info = dynamic_cast<TStreamerInfo*>(list->FindObject("MyClass"));
+/// if (info) auto classversionid = info->GetClassVersion();
+/// delete list;
+/// ~~~
+///
+
 TList *TFile::GetStreamerInfoList()
 {
-   // Read the list of TStreamerInfo objects written to this file.
-   // The function returns a TList. It is the user'responsability
-   // to delete the list created by this function.
-   //
-   // Using the list, one can access additional information,eg:
-   //   TFile f("myfile.root");
-   //   TList *list = f.GetStreamerInfoList();
-   //   TStreamerInfo *info = (TStreamerInfo*)list->FindObject("MyClass");
-   //   Int_t classversionid = info->GetClassVersion();
-   //   delete list;
-
    if (fIsPcmFile) return 0; // No schema evolution for ROOT PCM files.
 
    TList *list = 0;
    if (fSeekInfo) {
-      TDirectory::TContext ctx(gDirectory,this); // gFile and gDirectory used in ReadObj
+      TDirectory::TContext ctxt(this); // gFile and gDirectory used in ReadObj
       TKey *key = new TKey(this);
       char *buffer = new char[fNbytesInfo+1];
       char *buf    = buffer;
@@ -1312,14 +1360,15 @@ TList *TFile::GetStreamerInfoList()
    return list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List file contents.
+///
+/// Indentation is used to identify the file tree.
+/// Subdirectories are listed first, then objects in memory,
+/// then objects on the file.
+
 void TFile::ls(Option_t *option) const
 {
-   // List File contents.
-   // Indentation is used to identify the file tree.
-   // Subdirectories are listed first, then objects in memory,
-   // then objects on the file.
-
    TROOT::IndentLevel();
    std::cout <<ClassName()<<"**\t\t"<<GetName()<<"\t"<<GetTitle()<<std::endl;
    TROOT::IncreaseDirLevel();
@@ -1327,25 +1376,26 @@ void TFile::ls(Option_t *option) const
    TROOT::DecreaseDirLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE in case file is open and kFALSE if file is not open.
+
 Bool_t TFile::IsOpen() const
 {
-   // Returns kTRUE in case file is open and kFALSE if file is not open.
-
    return fD == -1 ? kFALSE : kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark unused bytes on the file.
+///
+/// The list of free segments is in the fFree linked list.
+/// When an object is deleted from the file, the freed space is added
+/// into the FREE linked list (fFree). The FREE list consists of a chain
+/// of consecutive free segments on the file. At the same time, the first
+/// 4 bytes of the freed record on the file are overwritten by GAPSIZE
+/// where GAPSIZE = -(Number of bytes occupied by the record).
+
 void TFile::MakeFree(Long64_t first, Long64_t last)
 {
-   // Mark unused bytes on the file.
-   // The list of free segments is in the fFree linked list.
-   // When an object is deleted from the file, the freed space is added
-   // into the FREE linked list (fFree). The FREE list consists of a chain
-   // of consecutive free segments on the file. At the same time, the first
-   // 4 bytes of the freed record on the file are overwritten by GAPSIZE
-   // where GAPSIZE = -(Number of bytes occupied by the record).
-
    TFree *f1      = (TFree*)fFree->First();
    if (!f1) return;
    TFree *newfree = f1->AddFree(fFree,first,last);
@@ -1371,39 +1421,41 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    delete [] psave;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List the contents of a file sequentially.
+/// For each logical record found, it prints:
+///
+///     Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
+///
+/// Example of output
+///
+///     20010404/150437  At:64        N=150       TFile
+///     20010404/150440  At:214       N=28326     TBasket        CX =  1.13
+///     20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
+///     20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
+///     20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
+///     20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
+///     20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
+///     20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
+///     20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
+///     20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
+///     20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
+///     20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
+///     20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
+///     20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
+///     20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
+///     20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
+///     20010404/150442  At:380262    N=509       TH1F           CX =  1.93
+///     20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
+///     20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
+///     20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
+///     20010404/150442  At:402823    N=307       KeysList
+///     20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
+///     20010404/150443  At:407678    N=86        FreeSegments
+///     20010404/150443  At:407764    N=1         END
+
 void TFile::Map()
 {
-   // List the contents of a file sequentially.
-   // For each logical record found, it prints:
-   //  Date/Time  Record_Adress Logical_Record_Length  ClassName  CompressionFactor
-   //
-   //  Example of output
-   //  20010404/150437  At:64        N=150       TFile
-   //  20010404/150440  At:214       N=28326     TBasket        CX =  1.13
-   //  20010404/150440  At:28540     N=29616     TBasket        CX =  1.08
-   //  20010404/150440  At:58156     N=29640     TBasket        CX =  1.08
-   //  20010404/150440  At:87796     N=29076     TBasket        CX =  1.10
-   //  20010404/150440  At:116872    N=10151     TBasket        CX =  3.15
-   //  20010404/150441  At:127023    N=28341     TBasket        CX =  1.13
-   //  20010404/150441  At:155364    N=29594     TBasket        CX =  1.08
-   //  20010404/150441  At:184958    N=29616     TBasket        CX =  1.08
-   //  20010404/150441  At:214574    N=29075     TBasket        CX =  1.10
-   //  20010404/150441  At:243649    N=9583      TBasket        CX =  3.34
-   //  20010404/150442  At:253232    N=28324     TBasket        CX =  1.13
-   //  20010404/150442  At:281556    N=29641     TBasket        CX =  1.08
-   //  20010404/150442  At:311197    N=29633     TBasket        CX =  1.08
-   //  20010404/150442  At:340830    N=29091     TBasket        CX =  1.10
-   //  20010404/150442  At:369921    N=10341     TBasket        CX =  3.09
-   //  20010404/150442  At:380262    N=509       TH1F           CX =  1.93
-   //  20010404/150442  At:380771    N=1769      TH2F           CX =  4.32
-   //  20010404/150442  At:382540    N=1849      TProfile       CX =  1.65
-   //  20010404/150442  At:384389    N=18434     TNtuple        CX =  4.51
-   //  20010404/150442  At:402823    N=307       KeysList
-   //  20010404/150443  At:403130    N=4548      StreamerInfo   CX =  3.65
-   //  20010404/150443  At:407678    N=86        FreeSegments
-   //  20010404/150443  At:407764    N=1         END
-
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1475,32 +1527,33 @@ void TFile::Map()
    Printf("%d/%06d  At:%lld  N=%-8d  %-14s",date,time,idcur,1,"END");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint all objects in the file.
+
 void TFile::Paint(Option_t *option)
 {
-   // Paint all objects in the file.
-
    GetList()->R__FOR_EACH(TObject,Paint)(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print all objects in the file.
+
 void TFile::Print(Option_t *option) const
 {
-   // Print all objects in the file.
-
    Printf("TFile: name=%s, title=%s, option=%s", GetName(), GetTitle(), GetOption());
    GetList()->R__FOR_EACH(TObject,Print)(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a buffer from the file at the offset 'pos' in the file.
+///
+/// Returns kTRUE in case of failure.
+/// Compared to ReadBuffer(char*, Int_t), this routine does _not_
+/// change the cursor on the physical file representation (fD)
+/// if the data is in this TFile's cache.
+
 Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
 {
-   // Read a buffer from the file at the offset 'pos' in the file.
-   // Returns kTRUE in case of failure.
-   // Compared to ReadBuffer(char*, Int_t), this routine does _not_
-   // change the cursor on the physical file representation (fD)
-   // if the data is in this TFile's cache.
-
    if (IsOpen()) {
 
       SetOffset(pos);
@@ -1545,12 +1598,12 @@ Bool_t TFile::ReadBuffer(char *buf, Long64_t pos, Int_t len)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a buffer from the file. This is the basic low level read operation.
+/// Returns kTRUE in case of failure.
+
 Bool_t TFile::ReadBuffer(char *buf, Int_t len)
 {
-   // Read a buffer from the file. This is the basic low level read operation.
-   // Returns kTRUE in case of failure.
-
    if (IsOpen()) {
 
       Int_t st;
@@ -1592,15 +1645,16 @@ Bool_t TFile::ReadBuffer(char *buf, Int_t len)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the nbuf blocks described in arrays pos and len.
+///
+/// The value pos[i] is the seek position of block i of length len[i].
+/// Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
+/// This function is overloaded by TNetFile, TWebFile, etc.
+/// Returns kTRUE in case of failure.
+
 Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
 {
-   // Read the nbuf blocks described in arrays pos and len,
-   // where pos[i] is the seek position of block i of length len[i].
-   // Note that for nbuf=1, this call is equivalent to TFile::ReafBuffer.
-   // This function is overloaded by TNetFile, TWebFile, etc.
-   // Returns kTRUE in case of failure.
-
    // called with buf=0, from TFileCacheRead to pass list of readahead buffers
    if (!buf) {
       for (Int_t j = 0; j < nbuf; j++) {
@@ -1661,13 +1715,14 @@ Bool_t TFile::ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read buffer via cache.
+///
+/// Returns 0 if the requested block is not in the cache, 1 in case read via
+/// cache was successful, 2 in case read via cache failed.
+
 Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
 {
-   // Read buffer via cache. Returns 0 if the requested block is
-   // not in the cache, 1 in case read via cache was successful,
-   // 2 in case read via cache failed.
-
    Long64_t off = GetRelOffset();
    if (fCacheRead) {
       Int_t st = fCacheRead->ReadBuffer(buf, off, len);
@@ -1695,14 +1750,15 @@ Int_t TFile::ReadBufferViaCache(char *buf, Int_t len)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the FREE linked list.
+///
+/// Every file has a linked list (fFree) of free segments.
+/// This linked list has been written on the file via WriteFree
+/// as a single data record.
+
 void TFile::ReadFree()
 {
-   // Read the FREE linked list.
-   // Every file has a linked list (fFree) of free segments.
-   // This linked list has been written on the file via WriteFree
-   // as a single data record.
-
    // Avoid problem with file corruption.
    if (fNbytesFree < 0 || fNbytesFree > fEND) {
       fNbytesFree = 0;
@@ -1722,12 +1778,13 @@ void TFile::ReadFree()
    delete headerfree;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The TProcessID with number pidf is read from this file.
+///
+/// If the object is not already entered in the gROOT list, it is added.
+
 TProcessID  *TFile::ReadProcessID(UShort_t pidf)
 {
-   //The TProcessID with number pidf is read from this file.
-   //If the object is not already entered in the gROOT list, it is added.
-
    TProcessID *pid = 0;
    TObjArray *pids = GetListOfProcessIDs();
    if (pidf < pids->GetSize()) pid = (TProcessID *)pids->UncheckedAt(pidf);
@@ -1748,60 +1805,80 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
       return pid;
    }
-      //check that a similar pid is not already registered in fgPIDs
+
+   //check that a similar pid is not already registered in fgPIDs
    TObjArray *pidslist = TProcessID::GetPIDs();
    TIter next(pidslist);
    TProcessID *p;
+   bool found = false;
+   R__RWLOCK_ACQUIRE_READ(fgRwLock);
    while ((p = (TProcessID*)next())) {
       if (!strcmp(p->GetTitle(),pid->GetTitle())) {
-         delete pid;
-         pids->AddAtAndExpand(p,pidf);
-         p->IncrementCount();
-         return p;
+         found = true;
+         break;
       }
    }
+   R__RWLOCK_RELEASE_READ(fgRwLock);
+
+   if (found) {
+      delete pid;
+      pids->AddAtAndExpand(p,pidf);
+      p->IncrementCount();
+      return p;
+   }
+
    pids->AddAtAndExpand(pid,pidf);
    pid->IncrementCount();
+
+   R__RWLOCK_ACQUIRE_WRITE(fgRwLock);
    pidslist->Add(pid);
    Int_t ind = pidslist->IndexOf(pid);
    pid->SetUniqueID((UInt_t)ind);
+   R__RWLOCK_RELEASE_WRITE(fgRwLock);
+
    return pid;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attempt to recover file if not correctly closed
+///
+/// The function returns the number of keys that have been recovered.
+/// If no keys can be recovered, the file will be declared Zombie by
+/// the calling function. This function is automatically called when
+/// opening a file.
+/// If the file is open in read only mode, the file is not modified.
+/// If open in update mode and the function finds something to recover,
+/// a new directory header is written to the file. When opening the file gain
+/// no message from Recover will be reported.
+/// If keys have been recovered, the file is usable and you can safely
+/// read the corresponding objects.
+/// If the file is not usable (a zombie), you can test for this case
+/// with code like:
+///
+/// ~~~{.cpp}
+/// TFile f("myfile.root");
+/// if (f.IsZombie()) {<actions to take if file is unusable>}
+/// ~~~
+///
+/// If the file has been recovered, the bit kRecovered is set in the TFile object in memory.
+/// You can test if the file has been recovered with
+///
+///     if (f.TestBit(TFile::kRecovered)) {... the file has been recovered}
+///
+/// When writing TTrees to a file, it is important to save the Tree header
+/// at regular intervals (see TTree::AutoSave). If a file containing a Tree
+/// is recovered, the last Tree header written to the file will be used.
+/// In this case all the entries in all the branches written before writing
+/// the header are valid entries.
+/// One can disable the automatic recovery procedure by setting
+///
+///     TFile.Recover 0
+///
+/// in the <em>system.rootrc</em> file.
+
 Int_t TFile::Recover()
 {
-   // Attempt to recover file if not correctly closed.
-   // The function returns the number of keys that have been recovered.
-   // If no keys can be recovered, the file will be declared Zombie by
-   // the calling function. This function is automatically called when
-   // opening a file.
-   //
-   // If the file is open in read only mode, the file is not modified.
-   // If open in update mode and the function finds something to recover,
-   //  a new directory header is written to the file. When opening the file gain
-   //  no message from Recover will be reported.
-   // If keys have been recovered, the file is usable and you can safely
-   // read the corresponding objects.
-   // If the file is not usable (a zombie), you can test for this case
-   // with code like:
-   //   TFile f("myfile.root");
-   //   if (f.IsZombie()) {file is unusable)
-   // If the file has been recovered, the bit kRecovered is set in the TFile object in memory.
-   // You can test if the file has been recovered with
-   //   if (f.TestBit(TFile::kRecovered)) {.. the file has been recovered}
-   //
-   // When writing TTrees to a file, it is important to save the Tree header
-   // at regular intervals (see TTree::AutoSave). If a file containing a Tree
-   // is recovered, the last Tree header written to the file will be used.
-   // In this case all the entries in all the branches written before writing
-   // the header are valid entries.
-   //
-   // One can disable the automatic recovery procedure by setting
-   // TFile.Recover 0
-   // in the system.rootrc file.
-
    Short_t  keylen,cycle;
    UInt_t   datime;
    Int_t    nbytes,date,time,objlen,nwheader;
@@ -1903,17 +1980,19 @@ Int_t TFile::Recover()
    return nrecov;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reopen a file with a different access mode.
+///
+/// For example, it is possible to change from READ to
+/// UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
+/// mode argument can be either "READ" or "UPDATE". The method returns
+/// 0 in case the mode was successfully modified, 1 in case the mode
+/// did not change (was already as requested or wrong input arguments)
+/// and -1 in case of failure, in which case the file cannot be used
+/// anymore. The current directory (gFile) is changed to this file.
+
 Int_t TFile::ReOpen(Option_t *mode)
 {
-   // Reopen a file with a different access mode, like from READ to
-   // UPDATE or from NEW, CREATE, RECREATE, UPDATE to READ. Thus the
-   // mode argument can be either "READ" or "UPDATE". The method returns
-   // 0 in case the mode was successfully modified, 1 in case the mode
-   // did not change (was already as requested or wrong input arguments)
-   // and -1 in case of failure, in which case the file cannot be used
-   // anymore. The current directory (gFile) is changed to this file.
-
    cd();
 
    TString opt = mode;
@@ -2002,11 +2081,11 @@ Int_t TFile::ReOpen(Option_t *mode)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position from where to start reading.
+
 void TFile::SetOffset(Long64_t offset, ERelativeTo pos)
 {
-   // Set position from where to start reading.
-
    switch (pos) {
       case kBeg:
          fOffset = offset + fArchiveOffset;
@@ -2023,11 +2102,11 @@ void TFile::SetOffset(Long64_t offset, ERelativeTo pos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Seek to a specific position in the file. Pos it either kBeg, kCur or kEnd.
+
 void TFile::Seek(Long64_t offset, ERelativeTo pos)
 {
-   // Seek to a specific position in the file. Pos it either kBeg, kCur or kEnd.
-
    int whence = 0;
    switch (pos) {
       case kBeg:
@@ -2053,10 +2132,12 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
    fOffset = retpos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments for function SetCompressionSettings
+///
+
 void TFile::SetCompressionAlgorithm(Int_t algorithm)
 {
-   // See comments for function SetCompressionSettings
    if (algorithm < 0 || algorithm >= ROOT::kUndefinedCompressionAlgorithm) algorithm = 0;
    if (fCompress < 0) {
       // if the level is not defined yet use 1 as a default
@@ -2067,10 +2148,11 @@ void TFile::SetCompressionAlgorithm(Int_t algorithm)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments for function SetCompressionSettings
+
 void TFile::SetCompressionLevel(Int_t level)
 {
-   // See comments for function SetCompressionSettings
    if (level < 0) level = 0;
    if (level > 99) level = 99;
    if (fCompress < 0) {
@@ -2083,63 +2165,47 @@ void TFile::SetCompressionLevel(Int_t level)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to specify the compression level and algorithm.
+///
+/// See the TFile constructor for the details.
+
 void TFile::SetCompressionSettings(Int_t settings)
 {
-   // Used to specify the compression level and algorithm:
-   //  settings = 100 * algorithm + level
-   //
-   //  level = 0, objects written to this file will not be compressed.
-   //  level = 1, minimal compression level but fast.
-   //  ....
-   //  level = 9, maximal compression level but slower and might use more memory.
-   // (For the currently supported algorithms, the maximum level is 9)
-   // If compress is negative it indicates the compression level is not set yet.
-   //
-   // The enumeration ROOT::ECompressionAlgorithm associates each
-   // algorithm with a number. There is a utility function to help
-   // to set the value of the argument. For example,
-   //   ROOT::CompressionSettings(ROOT::kLZMA, 1)
-   // will build an integer which will set the compression to use
-   // the LZMA algorithm and compression level 1.  These are defined
-   // in the header file Compression.h.
-   //
-   // Note that the compression settings may be changed at any time.
-   // The new compression settings will only apply to branches created
-   // or attached after the setting is changed and other objects written
-   // after the setting is changed.
    fCompress = settings;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a pointer to the read cache.
+///
+/// <b>This relinquishes ownership</b> of the previous cache, so if you do not
+/// already have a pointer to the previous cache (and there was a previous
+/// cache), you ought to retrieve (and delete it if needed) using:
+///
+///     TFileCacheRead *older = myfile->GetCacheRead();
+///
+/// The action specifies how to behave when detaching a cache from the
+/// the TFile.  If set to (default) kDisconnect, the contents of the cache
+/// will be flushed when it is removed from the file, and it will disconnect
+/// the cache object from the file.  In almost all cases, this is what you want.
+/// If you want to disconnect the cache temporarily from this tree and re-attach
+/// later to the same fil, you can set action to kDoNotDisconnect.  This will allow
+/// things like prefetching to continue in the background while it is no longer the
+/// default cache for the TTree.  Except for a few expert use cases, kDisconnect is
+/// likely the correct setting.
+///
+/// WARNING: if action=kDoNotDisconnect, you MUST delete the cache before TFile.
+///
+
 void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree, ECacheAction action)
 {
-   // Set a pointer to the read cache.
-   // NOTE:  This relinquish ownership of the previous cache, so if you do not
-   // already have a pointer to the previous cache (and there was a previous
-   // cache), you ought to retrieve (and delete it if needed) using:
-   //    TFileCacheRead *older = myfile->GetCacheRead();
-   //
-   // NOTE: the action specifies how to behave when detaching a cache from the
-   // the TFile.  If set to (default) kDisconnect, the contents of the cache
-   // will be flushed when it is removed from the file, and it will disconnect
-   // the cache object from the file.  In almost all cases, this is what you want.
-   // If you want to disconnect the cache temporarily from this tree and re-attach
-   // later to the same fil, you can set action to kDoNotDisconnect.  This will allow
-   // things like prefetching to continue in the background while it is no longer the
-   // default cache for the TTree.  Except for a few expert use cases, kDisconnect is
-   // likely the correct setting.
-   //
-   // WARNING: if action=kDoNotDisconnect, you MUST delete the cache before TFile.
-   //
-
    if (tree) {
       if (cache) fCacheReadMap->Add(tree, cache);
       else {
          // The only addition to fCacheReadMap is via an interface that takes
          // a TFileCacheRead* so the C-cast is safe.
          TFileCacheRead* tpf = (TFileCacheRead *)fCacheReadMap->GetValue(tree);
-         fCacheReadMap->RemoveEntry(tree);
+         fCacheReadMap->Remove(tree);
          if (tpf && (tpf->GetFile() == this) && (action != kDoNotDisconnect)) tpf->SetFile(0, action);
       }
    }
@@ -2149,29 +2215,30 @@ void TFile::SetCacheRead(TFileCacheRead *cache, TObject* tree, ECacheAction acti
    fCacheRead = cache;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a pointer to the write cache.
+///
+/// If file is null the existing write cache is deleted.
+
 void TFile::SetCacheWrite(TFileCacheWrite *cache)
 {
-   // Set a pointer to the write cache.
-   // If file is null the existing write cache is deleted.
-
    if (!cache && fCacheWrite) delete fCacheWrite;
    fCacheWrite = cache;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size in bytes of the file header.
+
 Int_t TFile::Sizeof() const
 {
-   // Return the size in bytes of the file header.
-
    return 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a TFile object.
+
 void TFile::Streamer(TBuffer &b)
 {
-   // Stream a TFile object.
-
    if (b.IsReading()) {
       b.ReadVersion();  //Version_t v = b.ReadVersion();
    } else {
@@ -2179,29 +2246,30 @@ void TFile::Streamer(TBuffer &b)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment statistics for buffer sizes of objects in this file.
+
 void TFile::SumBuffer(Int_t bufsize)
 {
-   // Increment statistics for buffer sizes of objects in this file.
-
    fWritten++;
    fSumBuffer  += double(bufsize);
    fSum2Buffer += double(bufsize) * double(bufsize); // avoid reaching MAXINT for temporary
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write memory objects to this file.
+///
+/// Loop on all objects in memory (including subdirectories).
+/// A new key is created in the KEYS linked list for each object.
+/// The list of keys is then saved on the file (via WriteKeys)
+/// as a single data record.
+/// For values of opt see TObject::Write().
+/// The directory header info is rewritten on the directory header record.
+/// The linked list of FREE segments is written.
+/// The file header is written (bytes 1->fBEGIN).
+
 Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
 {
-   // Write memory objects to this file.
-   // Loop on all objects in memory (including subdirectories).
-   // A new key is created in the KEYS linked list for each object.
-   // The list of keys is then saved on the file (via WriteKeys)
-   // as a single data record.
-   // For values of opt see TObject::Write().
-   // The directory header info is rewritten on the directory header record.
-   // The linked list of FREE segments is written.
-   // The file header is written (bytes 1->fBEGIN).
-
    if (!IsWritable()) {
       if (!TestBit(kWriteError)) {
          // Do not print the warning if we already had a SysError.
@@ -2227,21 +2295,21 @@ Int_t TFile::Write(const char *, Int_t opt, Int_t bufsiz)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One can not save a const TDirectory object.
+
 Int_t TFile::Write(const char *n, Int_t opt, Int_t bufsize) const
 {
-   // One can not save a const TDirectory object.
-
    Error("Write const","A const TFile object should not be saved. We try to proceed anyway.");
    return const_cast<TFile*>(this)->Write(n, opt, bufsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a buffer to the file. This is the basic low level write operation.
+/// Returns kTRUE in case of failure.
+
 Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write a buffer to the file. This is the basic low level write operation.
-   // Returns kTRUE in case of failure.
-
    if (IsOpen() && fWritable) {
 
       Int_t st;
@@ -2279,12 +2347,12 @@ Bool_t TFile::WriteBuffer(const char *buf, Int_t len)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write buffer via cache. Returns 0 if cache is not active, 1 in case
+/// write via cache was successful, 2 in case write via cache failed.
+
 Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
 {
-   // Write buffer via cache. Returns 0 if cache is not active, 1 in case
-   // write via cache was successful, 2 in case write via cache failed.
-
    if (!fCacheWrite) return 0;
 
    Int_t st;
@@ -2302,42 +2370,73 @@ Int_t TFile::WriteBufferViaCache(const char *buf, Int_t len)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write FREE linked list on the file.
+/// The linked list of FREE segments (fFree) is written as a single data
+/// record.
+
 void TFile::WriteFree()
 {
-   // Write FREE linked list on the file.
-   // The linked list of FREE segments (fFree) is written as a single data
-   // record.
-
    //*-* Delete old record if it exists
-   if (fSeekFree != 0){
+   if (fSeekFree != 0) {
       MakeFree(fSeekFree, fSeekFree + fNbytesFree -1);
    }
 
-   Int_t nbytes = 0;
-   TFree *afree;
-   TIter next (fFree);
-   while ((afree = (TFree*) next())) {
-      nbytes += afree->Sizeof();
-   }
-   if (!nbytes) return;
+   Bool_t largeFile = (fEND > TFile::kStartBigFile);
 
-   TKey *key    = new TKey(fName,fTitle,IsA(),nbytes,this);
-   if (key->GetSeekKey() == 0) {
+   auto createKey = [this]() {
+      Int_t nbytes = 0;
+      TFree *afree;
+      TIter next (fFree);
+      while ((afree = (TFree*) next())) {
+         nbytes += afree->Sizeof();
+      }
+      if (!nbytes) return (TKey*)nullptr;
+
+      TKey *key = new TKey(fName,fTitle,IsA(),nbytes,this);
+
+      if (key->GetSeekKey() == 0) {
+         delete key;
+         return (TKey*)nullptr;
+      }
+      return key;
+   };
+
+   TKey *key = createKey();
+   if (!key) return;
+
+   if (!largeFile && (fEND > TFile::kStartBigFile)) {
+      // The free block list is large enough to bring the file to larger
+      // than 2Gb, the references/offsets are now 64bits in the output
+      // so we need to redo the calculattion since the list of free block
+      // information will not fit in the original size.
+      key->Delete();
       delete key;
-      return;
+
+      key = createKey();
+      if (!key) return;
    }
+
+   Int_t nbytes = key->GetObjlen();
    char *buffer = key->GetBuffer();
    char *start = buffer;
 
-   next.Reset();
+   TIter next (fFree);
+   TFree *afree;
    while ((afree = (TFree*) next())) {
+      // We could 'waste' time here and double check that
+      //   (buffer+afree->Sizeof() < (start+nbytes)
       afree->FillBuffer(buffer);
    }
-   if ( (buffer-start)!=nbytes ) {
-      // Most likely one of the 'free' segment was used to store this
-      // TKey, so we had one less TFree to store than we planned.
-      memset(buffer,0,nbytes-(buffer-start));
+   auto actualBytes = buffer-start;
+   if ( actualBytes != nbytes ) {
+      if (actualBytes < nbytes) {
+         // Most likely one of the 'free' segment was used to store this
+         // TKey, so we had one less TFree to store than we planned.
+         memset(buffer,0,nbytes-actualBytes);
+      } else {
+         Error("WriteFree","The free block list TKey wrote more data than expected (%d vs %ld). Most likely there has been an out-of-bound write.",nbytes,(long int)actualBytes);
+      }
    }
    fNbytesFree = key->GetNbytes();
    fSeekFree   = key->GetSeekKey();
@@ -2345,11 +2444,11 @@ void TFile::WriteFree()
    delete key;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write File Header.
+
 void TFile::WriteHeader()
 {
-   // Write File Header.
-
    SafeDelete(fInfoCache);
    TFree *lastfree = (TFree*)fFree->Last();
    if (lastfree) fEND  = lastfree->GetFirst();
@@ -2391,78 +2490,74 @@ void TFile::WriteHeader()
    delete [] psave;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate source code necessary to access the objects stored in the file.
+///
+/// Generate code in directory dirname for all classes specified in
+/// argument classes If classes = "*" (default and currently the
+/// only supported value), the function generates an include file
+/// for each class in the StreamerInfo list for which a TClass
+/// object does not exist.
+///
+/// The code generated includes:
+///   - <em>dirnameProjectHeaders.h</em>, which contains one #include statement per generated header file
+///   - <em>dirnameProjectSource.cxx</em>,which contains all the constructors and destructors implementation.
+/// and one header per class that is not nested inside another class.
+/// The header file name is the fully qualified name of the class after all the special characters
+/// "<>,:" are replaced by underscored.  For example for std::pair<edm::Vertex,int> the file name is
+/// pair_edm__Vertex_int_.h
+///
+/// In the generated classes, map, multimap when the first template parameter is a class
+/// are replaced by a vector of pair. set and multiset when the tempalte parameter
+/// is a class are replaced by a vector. This is required since we do not have the
+/// code needed to order and/or compare the object of the classes.
+/// This is a quick explanation of the options available:
+/// Option | Details
+/// -------|--------
+/// new (default) | A new directory dirname is created. If dirname already exist, an error message is printed and the function returns.
+/// recreate      | If dirname does not exist, it is created (like in "new"). If dirname already exist, all existing files in dirname are deleted before creating the new files.
+/// update        | New classes are added to the existing directory. Existing classes with the same name are replaced by the new definition. If the directory dirname doest not exist, same effect as "new".
+/// genreflex     | Use genreflex rather than rootcint to generate the dictionary.
+/// par           | Create a PAR file with the minimal set of code needed to read the content of the ROOT file. The name of the PAR file is basename(dirname), with extension '.par' enforced; the PAR file will be created at dirname(dirname).
+///
+/// If, in addition to one of the 3 above options, the option "+" is specified,
+/// the function will generate:
+///   - a script called MAKEP to build the shared lib
+///   - a dirnameLinkDef.h file
+///   - rootcint will be run to generate a dirnameProjectDict.cxx file
+///   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
+///   - a shared lib dirname.so will be created.
+/// If the option "++" is specified, the generated shared lib is dynamically
+/// linked with the current executable module.
+/// If the option "+" and "nocompile" are specified, the utility files are generated
+/// as in the option "+" but they are not executed.
+/// Example:
+///  file.MakeProject("demo","*","recreate++");
+///   - creates a new directory demo unless it already exist
+///   - clear the previous directory content
+///   - generate the xxx.h files for all classes xxx found in this file
+///    and not yet known to the CINT dictionary.
+///   - creates the build script MAKEP
+///   - creates a LinkDef.h file
+///   - runs rootcint generating demoProjectDict.cxx
+///   - compiles demoProjectDict.cxx into demoProjectDict.o
+///   - generates a shared lib demo.so
+///   - dynamically links the shared lib demo.so to the executable
+///  If only the option "+" had been specified, one can still link the
+///  shared lib to the current executable module with:
+///
+///      gSystem->load("demo/demo.so");
+///
+/// The following feature is not yet enabled:
+/// One can restrict the list of classes to be generated by using expressions like:
+///
+///     classes = "Ali*" generate code only for classes starting with Ali
+///     classes = "myClass" generate code for class MyClass only.
+///
+
 void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                         Option_t *option)
 {
-   // Generate code in directory dirname for all classes specified in
-   // argument classes If classes = "*" (default and currently the
-   // only supported value), the function generates an include file
-   // for each class in the StreamerInfo list for which a TClass
-   // object does not exist.
-   //
-   // The code generated includes:
-   //    dirnameProjectHeaders.h  // contains one #include statement per generated header file
-   //    dirnameProjectSource.cxx // contains all the constructors and destructors implementation.
-   // and one header per class that is not nested inside another class.
-   // The header file name is the fully qualified name of the class after all the special characters
-   // "<>,:" are replaced by underscored.  For example for std::pair<edm::Vertex,int> the file name is
-   // pair_edm__Vertex_int_.h
-   //
-   // In the generated classes, map, multimap when the first template parameter is a class
-   // are replaced by a vector of pair. set and multiset when the tempalte parameter
-   // is a class are replaced by a vector. This is required since we do not have the
-   // code needed to order and/or compare the object of the classes.
-   //
-   // If option = "new" (default) a new directory dirname is created.
-   //                   If dirname already exist, an error message is printed
-   //                   and the function returns.
-   // If option = "recreate", then;
-   //                   if dirname does not exist, it is created (like in "new")
-   //                   if dirname already exist, all existing files in dirname
-   //                   are deleted before creating the new files.
-   // If option = "update", then new classes are added to the existing directory.
-   //                   Existing classes with the same name are replaced by the
-   //                   new definition. If the directory dirname doest not exist,
-   //                   same effect as "new".
-   // If option = "genreflex", then use genreflex rather than rootcint to generate
-   //                   the dictionary.
-   // If option = "par", create a PAR file with the minimal set of code needed to read the content
-   //                   of the ROOT file. The name of the PAR file is basename(dirname), with extension
-   //                   '.par' enforced; the PAR file will be created at dirname(dirname) .
-   // If, in addition to one of the 3 above options, the option "+" is specified,
-   // the function will generate:
-   //   - a script called MAKEP to build the shared lib
-   //   - a dirnameLinkDef.h file
-   //   - rootcint will be run to generate a dirnameProjectDict.cxx file
-   //   - dirnameProjectDict.cxx will be compiled with the current options in compiledata.h
-   //   - a shared lib dirname.so will be created.
-   // If the option "++" is specified, the generated shared lib is dynamically
-   // linked with the current executable module.
-   // If the option "+" and "nocompile" are specified, the utility files are generated
-   // as in the option "+" but they are not executed.
-   // Example:
-   //  file.MakeProject("demo","*","recreate++");
-   //  - creates a new directory demo unless it already exist
-   //  - clear the previous directory content
-   //  - generate the xxx.h files for all classes xxx found in this file
-   //    and not yet known to the CINT dictionary.
-   //  - creates the build script MAKEP
-   //  - creates a LinkDef.h file
-   //  - runs rootcint generating demoProjectDict.cxx
-   //  - compiles demoProjectDict.cxx into demoProjectDict.o
-   //  - generates a shared lib demo.so
-   //  - dynamically links the shared lib demo.so to the executable
-   //  If only the option "+" had been specified, one can still link the
-   //  shared lib to the current executable module with:
-   //     gSystem->load("demo/demo.so");
-   //
-   // The following feature is not yet enabled:
-   // One can restrict the list of classes to be generated by using expressions like:
-   //   classes = "Ali*" generate code only for classes starting with Ali
-   //   classes = "myClass" generate code for class MyClass only.
-   //
-
    TString opt = option;
    opt.ToLower();
    Bool_t makepar = kFALSE;
@@ -2646,40 +2741,36 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
       TIter enext( info->GetElements() );
       TStreamerElement *el;
-      const ROOT::TSchemaMatch* rules = 0;
+      ROOT::Detail::TSchemaRuleSet::TMatches rules;
       if (cl && cl->GetSchemaRules()) {
          rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
       }
       while( (el=(TStreamerElement*)enext()) ) {
-         if (rules) {
-            for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-               ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
-               if( rule->IsRenameRule() || rule->IsAliasRule() )
-                  continue;
-               // Check whether this is an 'attribute' rule.
-               if ( rule->HasTarget( el->GetName()) && rule->GetAttributes()[0] != 0 ) {
-                  TString attr( rule->GetAttributes() );
-                  attr.ToLower();
-                  if (attr.Contains("owner")) {
-                     if (attr.Contains("notowner")) {
-                        el->SetBit(TStreamerElement::kDoNotDelete);
-                     } else {
-                        el->ResetBit(TStreamerElement::kDoNotDelete);
-                     }
+         for(auto rule : rules) {
+            if( rule->IsRenameRule() || rule->IsAliasRule() )
+               continue;
+            // Check whether this is an 'attribute' rule.
+            if ( rule->HasTarget( el->GetName()) && rule->GetAttributes()[0] != 0 ) {
+               TString attr( rule->GetAttributes() );
+               attr.ToLower();
+               if (attr.Contains("owner")) {
+                  if (attr.Contains("notowner")) {
+                     el->SetBit(TStreamerElement::kDoNotDelete);
+                  } else {
+                     el->ResetBit(TStreamerElement::kDoNotDelete);
                   }
                }
             }
          }
          TMakeProject::GenerateMissingStreamerInfos(&extrainfos, el);
       }
-      delete rules;
       TVirtualStreamerInfo *alternate = (TVirtualStreamerInfo*)list->FindObject(info->GetName());
       if (alternate) {
          if ((info->GetClass() && info->GetClassVersion() == info->GetClass()->GetClassVersion())
              || (info->GetClassVersion() > alternate->GetClassVersion()) ) {
             list->AddAfter(alternate, info);
             list->Remove(alternate);
-         } // otherwise ingnore this info as not being the official one.
+         } // otherwise ignore this info as not being the official one.
       } else {
          list->Add(info);
       }
@@ -2830,34 +2921,29 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
          if (cl->HasInterpreterInfo()) continue; // skip known classes
-         const ROOT::TSchemaMatch* rules = 0;
          if (cl->GetSchemaRules()) {
-            rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
+            auto rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
             TString strrule;
-            if (rules) {
-               for(Int_t art = 0; art < rules->GetEntries(); ++art) {
-                  ROOT::TSchemaRule *rule = (ROOT::TSchemaRule*)rules->At(art);
-                  strrule.Clear();
-                  if (genreflex) {
-                     rule->AsString(strrule,"x");
-                     strrule.Append("\n");
-                     if ( selections.Index(strrule) == kNPOS ) {
-                        selections.Append(strrule);
-                     }
-                  } else {
-                     rule->AsString(strrule);
-                     if (strncmp(strrule.Data(),"type=",5)==0) {
-                        strrule.Remove(0,5);
-                     }
-                     fprintf(fp,"#pragma %s;\n",strrule.Data());
+            for(auto rule : rules) {
+               strrule.Clear();
+               if (genreflex) {
+                  rule->AsString(strrule,"x");
+                  strrule.Append("\n");
+                  if ( selections.Index(strrule) == kNPOS ) {
+                     selections.Append(strrule);
                   }
+               } else {
+                  rule->AsString(strrule);
+                  if (strncmp(strrule.Data(),"type=",5)==0) {
+                     strrule.Remove(0,5);
+                  }
+                  fprintf(fp,"#pragma %s;\n",strrule.Data());
                }
             }
-            delete rules;
          }
 
       }
-      if (TClassEdit::IsSTLCont(info->GetName())) {
+      if ((info->GetClass() && info->GetClass()->GetCollectionType()) || TClassEdit::IsSTLCont(info->GetName())) {
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
@@ -3016,11 +3102,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          return;
       }
       // Get Makefile.arch
-#ifdef ROOTETCDIR
-      TString mkarchsrc = TString::Format("%s/Makefile.arch", ROOTETCDIR);
-#else
-      TString mkarchsrc("$(ROOTSYS)/etc/Makefile.arch");
-#endif
+      TString mkarchsrc = TString::Format("%s/Makefile.arch", TROOT::GetEtcDir().Data());
       if (gSystem->ExpandPathName(mkarchsrc))
          Warning("MakeProject", "problems expanding '%s'", mkarchsrc.Data());
       TString mkarchdst = TString::Format("%s/Makefile.arch", clean_dirname.Data());
@@ -3102,13 +3184,14 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
    delete filelist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create makefile at 'filemake' for PAR package 'pack'.
+///
+/// Called by MakeProject when option 'par' is given.
+/// Return 0 on success, -1 on error.
+
 Int_t TFile::MakeProjectParMake(const char *pack, const char *filemake)
 {
-   // Create makefile at 'filemake' for PAR package 'pack'.
-   // Called by MakeProject when option 'par' is given.
-   // Return 0 on success, -1 on error.
-
    // Output file path must be defined
    if (!filemake || (filemake && strlen(filemake) <= 0)) {
       Error("MakeProjectParMake", "path for output file undefined!");
@@ -3224,13 +3307,13 @@ Int_t TFile::MakeProjectParMake(const char *pack, const char *filemake)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create BUILD.sh and SETUP.C under 'proofinf' for PAR package 'pack'.
+/// Called by MakeProject when option 'par' is given.
+/// Return 0 on success, -1 on error.
+
 Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
 {
-   // Create BUILD.sh and SETUP.C under 'proofinf' for PAR package 'pack'.
-   // Called by MakeProject when option 'par' is given.
-   // Return 0 on success, -1 on error.
-
    // Output directory path must be defined ...
    if (!proofinf || (proofinf && strlen(proofinf) <= 0)) {
       Error("MakeProjectParProofInf", "directory path undefined!");
@@ -3340,15 +3423,16 @@ Int_t TFile::MakeProjectParProofInf(const char *pack, const char *proofinf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the list of StreamerInfo from this file.
+///
+/// The key with name holding the list of TStreamerInfo objects is read.
+/// The corresponding TClass objects are updated.
+/// Note that this function is not called if the static member fgReadInfo is false.
+/// (see TFile::SetReadStreamerInfo)
+
 void TFile::ReadStreamerInfo()
 {
-   // Read the list of StreamerInfo from this file.
-   // The key with name holding the list of TStreamerInfo objects is read.
-   // The corresponding TClass objects are updated.
-   // Note that this function is not called if the static member fgReadInfo is falsse.
-   //  (see TFile::SetReadStreamerInfo)
-
    TList *list = GetStreamerInfoList();
    if (!list) {
       MakeZombie();
@@ -3453,35 +3537,37 @@ void TFile::ReadStreamerInfo()
    delete list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify if the streamerinfos must be read at file opening.
+///
+/// If fgReadInfo is true (default) TFile::ReadStreamerInfo is called
+///  when opening the file.
+/// It may be interesting to set fgReadInfo to false to speedup the file
+/// opening time or in case libraries containing classes referenced
+/// by the file have not yet been loaded.
+/// if fgReadInfo is false, one can still read the StreamerInfo with
+///    myfile.ReadStreamerInfo();
+
 void TFile::SetReadStreamerInfo(Bool_t readinfo)
 {
-   // static function to set fgReadInfo.
-   // If fgReadInfo is true (default) TFile::ReadStreamerInfo is called
-   //  when opening the file.
-   // It may be interesting to set fgReadInfo to false to speedup the file
-   // opening time or in case libraries containing classes referenced
-   // by the file have not yet been loaded.
-   // if fgReadInfo is false, one can still read the StreamerInfo with
-   //    myfile.ReadStreamerInfo();
-
    fgReadInfo = readinfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the streamerinfos are to be read at file opening.
+///
+/// See TFile::SetReadStreamerInfo for more documentation.
+
 Bool_t TFile::GetReadStreamerInfo()
 {
-   // static function to get the value of fgReadInfo.
-   // See TFile::SetReadStreamerInfo for more documentation.
-
    return fgReadInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the StreamerInfo of all classes written to this file.
+
 void TFile::ShowStreamerInfo()
 {
-   // Show the StreamerInfo of all classes written to this file.
-
    TList *list = GetStreamerInfoList();
    if (!list) return;
 
@@ -3489,12 +3575,12 @@ void TFile::ShowStreamerInfo()
    delete list;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the ProcessID pidd is already in the file,
+/// if not, add it and return the index  number in the local file list.
+
 UShort_t TFile::WriteProcessID(TProcessID *pidd)
 {
-   // Check if the ProcessID pidd is already in the file,
-   // if not, add it and return the index  number in the local file list.
-
    TProcessID *pid = pidd;
    if (!pid) pid = TProcessID::GetPID();
    TObjArray *pids = GetListOfProcessIDs();
@@ -3517,19 +3603,24 @@ UShort_t TFile::WriteProcessID(TProcessID *pidd)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the list of TStreamerInfo as a single object in this file
+/// The class Streamer description for all classes written to this file
+/// is saved. See class TStreamerInfo.
+
 void TFile::WriteStreamerInfo()
 {
-   // Write the list of TStreamerInfo as a single object in this file
-   // The class Streamer description for all classes written to this file
-   // is saved. See class TStreamerInfo.
-
    //if (!gFile) return;
    if (!fWritable) return;
    if (!fClassIndex) return;
    if (fIsPcmFile) return; // No schema evolution for ROOT PCM files.
-   //no need to update the index if no new classes added to the file
-   if (fClassIndex->fArray[0] == 0) return;
+   if (fClassIndex->fArray[0] == 0
+       && fSeekInfo != 0) {
+      // No need to update the index if no new classes added to the file
+      // but write once an empty StreamerInfo list to mark that there is no need
+      // for StreamerInfos in this file.
+      return;
+   }
    if (gDebug > 0) Info("WriteStreamerInfo", "called for file %s",GetName());
 
    SafeDelete(fInfoCache);
@@ -3598,15 +3689,16 @@ void TFile::WriteStreamerInfo()
    list.RemoveLast(); // remove the listOfRules.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a file for reading through the file cache.
+///
+/// The file will be downloaded to the cache and opened from there.
+/// If the download fails, it will be opened remotely.
+/// The file will be downloaded to the directory specified by SetCacheFileDir().
+
 TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
-   // Static member function allowing to open a file for reading through the file
-   // cache. The file will be downloaded to the cache and opened from there.
-   // If the download fails, it will be opened remotely.
-   // The file will be downloaded to the directory specified by SetCacheFileDir().
-
    TFile *f = 0;
 
    if (fgCacheFileDir == "") {
@@ -3779,44 +3871,43 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create / open a file
+///
+/// The type of the file can be either a
+/// TFile, TNetFile, TWebFile or any TFile derived class for which an
+/// plugin library handler has been registered with the plugin manager
+/// (for the plugin manager see the TPluginManager class). The returned
+/// type of TFile depends on the file name specified by 'url'.
+/// If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
+/// sequentially in the specified order until a successful open.
+/// If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
+/// will be returned, with "http:" a TWebFile, with "file:" a local TFile,
+/// etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
+/// for regular expressions that will be checked) and as last a local file will
+/// be tried.
+/// Before opening a file via TNetFile a check is made to see if the URL
+/// specifies a local file. If that is the case the file will be opened
+/// via a normal TFile. To force the opening of a local file via a
+/// TNetFile use either TNetFile directly or specify as host "localhost".
+/// The netopt argument is only used by TNetFile. For the meaning of the
+/// options and other arguments see the constructors of the individual
+/// file classes. In case of error returns 0.
+///
+/// For TFile implementations supporting asynchronous file open, see
+/// TFile::AsyncOpen(...), it is possible to request a timeout with the
+/// option <b>TIMEOUT=<secs></b>: the timeout must be specified in seconds and
+/// it will be internally checked with granularity of one millisec.
+/// For remote files there is the option: <b>CACHEREAD</b> opens an existing
+/// file for reading through the file cache. The file will be downloaded to
+/// the cache and opened from there. If the download fails, it will be opened remotely.
+/// The file will be downloaded to the directory specified by SetCacheFileDir().
+///
+/// *The caller is responsible for deleting the pointer.*
+
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
 {
-   // Static member function allowing the creation/opening of either a
-   // TFile, TNetFile, TWebFile or any TFile derived class for which an
-   // plugin library handler has been registered with the plugin manager
-   // (for the plugin manager see the TPluginManager class). The returned
-   // type of TFile depends on the file name specified by 'url'.
-   // If 'url' is a '|'-separated list of file URLs, the 'URLs' are tried
-   // sequentially in the specified order until a successful open.
-   // If the file starts with "root:", "roots:" or "rootk:" a TNetFile object
-   // will be returned, with "http:" a TWebFile, with "file:" a local TFile,
-   // etc. (see the list of TFile plugin handlers in $ROOTSYS/etc/system.rootrc
-   // for regular expressions that will be checked) and as last a local file will
-   // be tried.
-   // Before opening a file via TNetFile a check is made to see if the URL
-   // specifies a local file. If that is the case the file will be opened
-   // via a normal TFile. To force the opening of a local file via a
-   // TNetFile use either TNetFile directly or specify as host "localhost".
-   // The netopt argument is only used by TNetFile. For the meaning of the
-   // options and other arguments see the constructors of the individual
-   // file classes. In case of error returns 0.
-   //
-   // For TFile implementations supporting asynchronous file open, see
-   // TFile::AsyncOpen(...), it is possible to request a timeout with the
-   // option:
-   //  TIMEOUT=<secs>   the timeout must be specified in seconds and
-   //                   it will be internally checked with granularity of
-   //                   one millisec.
-   //
-   // For remote files there is the option:
-   //  CACHEREAD     opens an existing file for reading through the file cache.
-   //                The file will be downloaded to the cache and opened from there.
-   //                If the download fails, it will be opened remotely.
-   //                The file will be downloaded to the directory specified by
-   //                SetCacheFileDir().
-
    TPluginHandler *h;
    TFile *f = 0;
    EFileType type = kFile;
@@ -4027,32 +4118,37 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Submit an asynchronous open request.
+
+/// See TFile::Open(const char *, ...) for an
+/// explanation of the arguments. A handler is returned which is to be passed
+/// to TFile::Open(TFileOpenHandle *) to get the real TFile instance once
+/// the file is open.
+/// This call never blocks and it is provided to allow parallel submission
+/// of file opening operations expected to take a long time.
+/// TFile::Open(TFileOpenHandle *) may block if the file is not yet ready.
+/// The sequence
+///
+///     TFile::Open(TFile::AsyncOpen(const char *, ...))
+///
+/// is equivalent to
+///
+///     TFile::Open(const char *, ...)
+///
+/// To be effective, the underlying TFile implementation must be able to
+/// support asynchronous open functionality. Currently, only TXNetFile
+/// supports it. If the functionality is not implemented, this call acts
+/// transparently by returning an handle with the arguments for the
+/// standard synchronous open run by TFile::Open(TFileOpenHandle *).
+/// The retuned handle will be adopted by TFile after opening completion
+/// in TFile::Open(TFileOpenHandle *); if opening is not finalized the
+/// handle must be deleted by the caller.
+
 TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
                                   const char *ftitle, Int_t compress,
                                   Int_t netopt)
 {
-   // Static member function to submit an open request. The request will be
-   // processed asynchronously. See TFile::Open(const char *, ...) for an
-   // explanation of the arguments. A handler is returned which is to be passed
-   // to TFile::Open(TFileOpenHandle *) to get the real TFile instance once
-   // the file is open.
-   // This call never blocks and it is provided to allow parallel submission
-   // of file opening operations expected to take a long time.
-   // TFile::Open(TFileOpenHandle *) may block if the file is not yet ready.
-   // The sequence
-   //    TFile::Open(TFile::AsyncOpen(const char *, ...))
-   // is equivalent to
-   //    TFile::Open(const char *, ...) .
-   // To be effective, the underlying TFile implementation must be able to
-   // support asynchronous open functionality. Currently, only TXNetFile
-   // supports it. If the functionality is not implemented, this call acts
-   // transparently by returning an handle with the arguments for the
-   // standard synchronous open run by TFile::Open(TFileOpenHandle *).
-   // The retuned handle will be adopted by TFile after opening completion
-   // in TFile::Open(TFileOpenHandle *); if opening is not finalized the
-   // handle must be deleted by the caller.
-
    TFileOpenHandle *fh = 0;
    TPluginHandler *h;
    TFile *f = 0;
@@ -4121,7 +4217,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       gSystem->Unlink(rh.fFile);
    }
 
-   // Make sure that no error occured
+   // Make sure that no error occurred
    if (notfound) {
       SafeDelete(f);
       // Save the arguments in the handler, so that a standard open can be
@@ -4144,13 +4240,14 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
    return fh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Waits for the completion of an asynchronous open request.
+///
+/// Returns the pointer to the associated TFile, transferring ownership of the
+/// handle to the TFile instance.
+
 TFile *TFile::Open(TFileOpenHandle *fh)
 {
-   // Waits for the completion of an asynchronous open request.
-   // Returns the associated TFile, transferring ownership of the
-   // handle to the TFile instance.
-
    TFile *f = 0;
 
    // Note that the request may have failed
@@ -4180,11 +4277,11 @@ TFile *TFile::Open(TFileOpenHandle *fh)
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system open. All arguments like in POSIX open().
+
 Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 {
-   // Interface to system open. All arguments like in POSIX open().
-
 #if defined(R__WINGCC)
    // ALWAYS use binary mode - even cygwin text should be in unix format
    // although this is posix default it has to be set explicitly
@@ -4196,37 +4293,39 @@ Int_t TFile::SysOpen(const char *pathname, Int_t flags, UInt_t mode)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system close. All arguments like in POSIX close().
+
 Int_t TFile::SysClose(Int_t fd)
 {
-   // Interface to system close. All arguments like in POSIX close().
-
    if (fd < 0) return 0;
    return ::close(fd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system read. All arguments like in POSIX read().
+
 Int_t TFile::SysRead(Int_t fd, void *buf, Int_t len)
 {
-   // Interface to system read. All arguments like in POSIX read().
-
    return ::read(fd, buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system write. All arguments like in POSIX write().
+
 Int_t TFile::SysWrite(Int_t fd, const void *buf, Int_t len)
 {
-   // Interface to system write. All arguments like in POSIX write().
-
    return ::write(fd, buf, len);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system lseek.
+///
+/// All arguments like in POSIX lseek()
+/// except that the offset and return value are of a type which are
+/// able to handle 64 bit file systems.
+
 Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 {
-   // Interface to system lseek. All arguments like in POSIX lseek()
-   // except that the offset and return value are of a type which are
-   // able to handle 64 bit file systems.
-
 #if defined (R__SEEK64)
    return ::lseek64(fd, offset, whence);
 #elif defined(WIN32)
@@ -4236,22 +4335,24 @@ Long64_t TFile::SysSeek(Int_t fd, Long64_t offset, Int_t whence)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return file stat information.
+///
+/// The interface and return value is
+/// identical to TSystem::GetPathInfo(). The function returns 0 in
+/// case of success and 1 if the file could not be stat'ed.
+
 Int_t TFile::SysStat(Int_t, Long_t *id, Long64_t *size, Long_t *flags,
                      Long_t *modtime)
 {
-   // Return file stat information. The interface and return value is
-   // identical to TSystem::GetPathInfo(). The function returns 0 in
-   // case of success and 1 if the file could not be stat'ed.
-
    return gSystem->GetPathInfo(fRealName, id, size, flags, modtime);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to system fsync. All arguments like in POSIX fsync().
+
 Int_t TFile::SysSync(Int_t fd)
 {
-   // Interface to system fsync. All arguments like in POSIX fsync().
-
    if (TestBit(kDevNull)) return 0;
 
 #ifndef WIN32
@@ -4261,44 +4362,44 @@ Int_t TFile::SysSync(Int_t fd)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the total number of bytes written so far to the file.
+
 Long64_t TFile::GetBytesWritten() const
 {
-   // Return the total number of bytes written so far to the file.
-
    return fCacheWrite ? fCacheWrite->GetBytesInCache() + fBytesWrite : fBytesWrite;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the total number of bytes read from all files.
+
 Long64_t TFile::GetFileBytesRead()
 {
-   // Static function returning the total number of bytes read from all files.
-
    return fgBytesRead;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the total number of bytes written to all files.
+/// Does not take into account what might still be in the write caches.
+
 Long64_t TFile::GetFileBytesWritten()
 {
-   // Static function returning the total number of bytes written to all files.
-   // Does not take into account what might still be in the write caches.
-
    return fgBytesWrite;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the total number of read calls from all files.
+
 Int_t TFile::GetFileReadCalls()
 {
-   // Static function returning the total number of read calls from all files.
-
    return fgReadCalls;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning the readahead buffer size.
+
 Int_t TFile::GetReadaheadSize()
 {
-   // Static function returning the readahead buffer size.
-
    return fgReadaheadSize;
 }
 
@@ -4320,13 +4421,13 @@ Long64_t TFile::GetFileCounter() { return fgFileCounter; }
 //______________________________________________________________________________
 void TFile::IncrementFileCounter() { fgFileCounter++; }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the directory where to locally stage/cache remote files.
+/// If the directory is not writable by us return kFALSE.
+
 Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
                               Bool_t forcecacheread )
 {
-   // Sets the directory where to locally stage/cache remote files.
-   // If the directory is not writable by us return kFALSE.
-
    TString cached = cachedir;
    if (!cached.EndsWith("/"))
       cached += "/";
@@ -4335,7 +4436,7 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
       // try to create it
       gSystem->mkdir(cached, kTRUE);
       if (gSystem->AccessPathName(cached, kFileExists)) {
-         ::Error("TFile::SetCacheFileDir", "no suffcient permissions on cache directory %s or cannot create it", cachedir);
+         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", cachedir);
          fgCacheFileDir = "";
          return kFALSE;
       }
@@ -4349,22 +4450,23 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the directory where to locally stage/cache remote files.
+
 const char *TFile::GetCacheFileDir()
 {
-   // Get the directory where to locally stage/cache remote files.
-
    return fgCacheFileDir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Try to shrink the cache to the desired size.
+///
+/// With the clenupinterval you can specify the minimum amount of time after
+/// the previous cleanup before the cleanup operation is repeated in
+/// the cache directory
+
 Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
 {
-   // We try to shrink the cache to the desired size.
-   // With the clenupinterval you can specify the minimum amount of time after
-   // the previous cleanup before the cleanup operation is repeated in
-   // the cache directory
-
    if (fgCacheFileDir == "") {
       return kFALSE;
    }
@@ -4418,52 +4520,53 @@ Bool_t TFile::ShrinkCacheFileDir(Long64_t shrinksize, Long_t cleanupinterval)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets open timeout time (in ms). Returns previous timeout value.
+
 UInt_t TFile::SetOpenTimeout(UInt_t timeout)
 {
-   // Sets open timeout time (in ms). Returns previous timeout value.
-
    UInt_t to = fgOpenTimeout;
    fgOpenTimeout = timeout;
    return to;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns open timeout (in ms).
+
 UInt_t TFile::GetOpenTimeout()
 {
-   // Returns open timeout (in ms).
-
    return fgOpenTimeout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets only staged flag. Returns previous value of flag.
+/// When true we check before opening the file if it is staged, if not,
+/// the open fails.
+
 Bool_t TFile::SetOnlyStaged(Bool_t onlystaged)
 {
-   // Sets only staged flag. Returns previous value of flag.
-   // When true we check before opening the file if it is staged, if not,
-   // the open fails.
-
    Bool_t f = fgOnlyStaged;
    fgOnlyStaged = onlystaged;
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns staged only flag.
+
 Bool_t TFile::GetOnlyStaged()
 {
-   // Returns staged only flag.
-
    return fgOnlyStaged;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if 'url' matches the coordinates of this file.
+///
+/// The check is implementation dependent and may need to be overload
+/// by each TFile implementation relying on this check.
+/// The default implementation checks the file name only.
+
 Bool_t TFile::Matches(const char *url)
 {
-   // Return kTRUE if 'url' matches the coordinates of this file.
-   // The check is implementation dependent and may need to be overload
-   // by each TFile implememtation relying on this check.
-   // The default implementation checks the file name only.
-
    // Check the full URL, including port and FQDN.
    TUrl u(url);
 
@@ -4482,12 +4585,12 @@ Bool_t TFile::Matches(const char *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if this async request matches the open request
+/// specified by 'url'
+
 Bool_t TFileOpenHandle::Matches(const char *url)
 {
-   // Return kTRUE if this async request matches the open request
-   // specified by 'url'
-
    if (fFile) {
       return fFile->Matches(url);
    } else if (fName.Length() > 0){
@@ -4510,14 +4613,15 @@ Bool_t TFileOpenHandle::Matches(const char *url)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve the file type as a function of the protocol field in 'name'
+///
+/// If defined, the string 'prefix' is added when testing the locality of
+/// a 'name' with network-like structure (i.e. root://host//path); if the file
+/// is local, on return 'prefix' will contain the actual local path of the file.
+
 TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *prefix)
 {
-   // Resolve the file type as a function of the protocol field in 'name'
-   // If defined, the string 'prefix' is added when testing the locality of
-   // a 'name' with network-like structure (i.e. root://host//path); if the file
-   // is local, on return 'prefix' will contain the actual local path of the file.
-
    EFileType type = kDefault;
 
    TPMERegexp re("^(root|xroot).*", "i");
@@ -4592,12 +4696,12 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get status of the async open request related to 'name'.
+
 TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
 {
-   // Get status of the async open request related to 'name'.
-
-   // Check the list of pending async opem requests
+   // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
       TFileOpenHandle *fh = 0;
@@ -4621,11 +4725,11 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    return kAOSNotAsync;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get status of the async open request related to 'handle'.
+
 TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
 {
-   // Get status of the async open request related to 'handle'.
-
    if (handle && handle->fFile) {
       if (!handle->fFile->IsZombie())
          return handle->fFile->GetAsyncOpenStatus();
@@ -4637,13 +4741,13 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(TFileOpenHandle *handle)
    return TFile::kAOSNotAsync;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get final URL for file being opened asynchronously.
+/// Returns 0 is the information is not yet available.
+
 const TUrl *TFile::GetEndpointUrl(const char* name)
 {
-   // Get final URL for file being opened asynchronously.
-   // Returns 0 is the information is not yet available.
-
-   // Check the list of pending async opem requests
+   // Check the list of pending async open requests
    if (fgAsyncOpenRequests && (fgAsyncOpenRequests->GetSize() > 0)) {
       TIter nxr(fgAsyncOpenRequests);
       TFileOpenHandle *fh = 0;
@@ -4668,11 +4772,11 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    return (const TUrl *)0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print file copy progress.
+
 void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
 {
-   // Print file copy progress.
-
    fprintf(stderr, "[TFile::Cp] Total %.02f MB\t|", (Double_t)size/1048576);
 
    for (int l = 0; l < 20; l++) {
@@ -4695,12 +4799,12 @@ void TFile::CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch)
    watch.Continue();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows to copy this file to the dst URL. Returns kTRUE in case of success,
+/// kFALSE otherwise.
+
 Bool_t TFile::Cp(const char *dst, Bool_t progressbar, UInt_t buffersize)
 {
-   // Allows to copy this file to the dst URL. Returns kTRUE in case of success,
-   // kFALSE otherwise.
-
    Bool_t rmdestiferror = kFALSE;
    TStopwatch watch;
    Bool_t success = kFALSE;
@@ -4829,13 +4933,13 @@ copyout:
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allows to copy file from src to dst URL. Returns kTRUE in case of success,
+/// kFALSE otherwise.
+
 Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
                  UInt_t buffersize)
 {
-   // Allows to copy file from src to dst URL. Returns kTRUE in case of success,
-   // kFALSE otherwise.
-
    TUrl sURL(src, kTRUE);
 
    // Files will be open in RAW mode
@@ -4889,7 +4993,7 @@ Bool_t TFile::ReadBufferAsync(Long64_t offset, Int_t len)
    if (len == 0) {
       // according POSIX spec if len is zero, all data following offset
       // is specified. Nevertheless ROOT uses zero to probe readahead
-      // capadilites.
+      // capabilities.
       advice = POSIX_FADV_NORMAL;
    }
    Double_t start = 0;
@@ -4913,12 +5017,14 @@ Bool_t TFile::ReadBufferAsync(Long64_t, Int_t)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Max number of bytes to prefetch.
+///
+/// By default this is 75% of the
+/// read cache size. But specific TFile implementations may need to change it
+
 Int_t TFile::GetBytesToPrefetch() const
 {
-   // Max number of bytes to prefetch. By default this is 75% of the
-   // read cache size. But specific TFile implementations may need to change it
-
    TFileCacheRead *cr = 0;
    if ((cr = GetCacheRead())) {
       Int_t bytes = cr->GetBufferSize() / 4 * 3;

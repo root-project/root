@@ -1,10 +1,17 @@
-// This program must be compiled and executed with Aclic as follows
-//
-// .x unuranFoamTest.C+
-//
-// it is an extension of tutorials foam_kanwa.C to compare
-// generation of a 2D distribution with unuran and Foam
-//_____________________________________________________________________________
+/// \file
+/// \ingroup tutorial_unuran
+/// This program must be compiled and executed with Aclic as follows
+///
+/// ~~~{.cpp}
+/// .x unuranFoamTest.C+
+/// ~~~
+///
+/// it is an extension of tutorials foam_kanwa.C to compare
+/// generation of a 2D distribution with unuran and Foam
+///
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TH2.h"
 #include "TF2.h"

@@ -37,7 +37,10 @@
 #include <string>
 
 /**
-@defgroup Interpolation Interpolation
+@defgroup Interpolation Interpolation Classes
+
+Classes for interpolation of points
+
 @ingroup NumAlgo
 */
 

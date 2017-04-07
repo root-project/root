@@ -1,12 +1,19 @@
-// example of fitting a 3D function
-// Typical multidimensional parametric regression where the predictor
-// depends on 3 variables
-//
-// In the case of 1 or 2D one can use the TGraph classes
-// but since no TGraph3D class exists this tutorial provide
-// an example of fitting 3D points
-//
-// Author: L. Moneta Dec. 2010
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -nodraw
+/// example of fitting a 3D function
+/// Typical multidimensional parametric regression where the predictor
+/// depends on 3 variables
+///
+/// In the case of 1 or 2D one can use the TGraph classes
+/// but since no TGraph3D class exists this tutorial provide
+/// an example of fitting 3D points
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
+
 
 #include "TRandom2.h"
 #include "TF3.h"
@@ -44,7 +51,7 @@ void exampleFit3D() {
    TF3 * f3 = new TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10);
    f3->SetParameters(2,2,2);
    ROOT::Fit::Fitter fitter;
-   // wrapped the TF1 in a IParamMultiFunction interface for teh Fitter class
+   // wrapped the TF1 in a IParamMultiFunction interface for the Fitter class
    ROOT::Math::WrappedMultiTF1 wf(*f3,3);
    fitter.SetFunction(wf);
    //

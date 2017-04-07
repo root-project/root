@@ -23,6 +23,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+/**
+ \class TEmulatedMapProxy
+ \ingroup IO
+
+Streamer around a map container. For optimization reasons this functionality
+is separated from the TEmulatedProxy.
+*/
+
 #include "TEmulatedMapProxy.h"
 #include "TClassEdit.h"
 #include "TStreamerInfo.h"
@@ -111,7 +119,6 @@ void TEmulatedMapProxy::ReadMap(UInt_t nElements, TBuffer &b)
             case kFloat16_t: b >> f;
                helper->flt = float(f);  break;
             case kDouble_t:  b >> helper->dbl;         break;
-            case kBOOL_t:    b >> helper->boolean;     break;
             case kUChar_t:   b >> helper->u_char;      break;
             case kUShort_t:  b >> helper->u_short;     break;
             case kUInt_t:    b >> helper->u_int;       break;
@@ -172,7 +179,6 @@ void TEmulatedMapProxy::WriteMap(UInt_t nElements, TBuffer &b)
             case kFloat_t:   b << i->flt;         break;
             case kFloat16_t: b << float(i->flt);  break;
             case kDouble_t:  b << i->dbl;         break;
-            case kBOOL_t:    b << i->boolean;     break;
             case kUChar_t:   b << i->u_char;      break;
             case kUShort_t:  b << i->u_short;     break;
             case kUInt_t:    b << i->u_int;       break;

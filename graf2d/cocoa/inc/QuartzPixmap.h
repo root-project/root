@@ -13,17 +13,14 @@
 #ifndef ROOT_QuartzPixmap
 #define ROOT_QuartzPixmap
 
+#include <vector>
+
 #include <Cocoa/Cocoa.h>
 
-#ifndef ROOT_CocoaGuiTypes
 #include "CocoaGuiTypes.h"
-#endif
-#ifndef ROOT_X11Drawable
+#include "CocoaUtils.h"
 #include "X11Drawable.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 ///////////////////////////////////////////////////////
 //                                                   //
@@ -31,7 +28,20 @@
 //                                                   //
 ///////////////////////////////////////////////////////
 
-@interface QuartzPixmap : NSObject<X11Drawable>
+@interface QuartzPixmap : NSObject<X11Drawable> {
+@private
+   //32-bit Obj-C requires i-var to be declared (for a synthesized prop.).
+   unsigned       fID;
+   //
+
+   unsigned       fWidth;
+   unsigned       fHeight;
+
+   std::vector<unsigned char> fData;
+   ROOT::MacOSX::Util::CFScopeGuard<CGContextRef> fContext;
+
+   unsigned       fScaleFactor;
+}
 
 - (id) initWithW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
 - (BOOL) resizeW : (unsigned) width H : (unsigned) height scaleFactor : (CGFloat) scaleFactor;
@@ -73,9 +83,18 @@
 //                                                     //
 /////////////////////////////////////////////////////////
 
-//TODO: split image and mask image?
+@interface QuartzImage : NSObject<X11Drawable> {
+@private
+   //32-bit Obj-C requires i-var to be declared (for a synthesized prop.).
+   BOOL fIsStippleMask;
+   unsigned fID;
+   //
+   unsigned       fWidth;
+   unsigned       fHeight;
 
-@interface QuartzImage : NSObject<X11Drawable>
+   ROOT::MacOSX::Util::CFScopeGuard<CGImageRef> fImage;
+   std::vector<unsigned char> fImageData;
+}
 
 - (id) initWithW : (unsigned) width H : (unsigned) height data : (unsigned char *) data;
 - (id) initMaskWithW : (unsigned) width H : (unsigned) height bitmapMask : (unsigned char *) mask;
@@ -84,7 +103,6 @@
 - (id) initFromImage : (QuartzImage *) image;
 - (id) initFromImageFlipped : (QuartzImage *) image;
 
-- (void) dealloc;
 @property (nonatomic, readonly) BOOL fIsStippleMask;
 - (CGImageRef) fImage;
 

@@ -85,21 +85,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
-#ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
-#endif
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 class TEnv;
 class TList;
@@ -108,12 +98,15 @@ class TFunction;
 class TMethodCall;
 class TPluginManager;
 
+#include <atomic>
 
 class TPluginHandler : public TObject {
 
 friend class TPluginManager;
 
 private:
+   using AtomicInt_t = std::atomic<Int_t>;
+
    TString      fBase;      // base class which will be extended by plugin
    TString      fRegexp;    // regular expression which must be matched in URI
    TString      fClass;     // class to be loaded from plugin library
@@ -122,7 +115,7 @@ private:
    TString      fOrigin;    // origin of plugin handler definition
    TMethodCall *fCallEnv;   //!ctor method call environment
    TFunction   *fMethod;    //!ctor method or global function
-   Int_t        fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok
+   AtomicInt_t  fCanCall;   //!if 1 fCallEnv is ok, -1 fCallEnv is not ok, 0 fCallEnv not setup yet.
    Bool_t       fIsMacro;   // plugin is a macro and not a library
    Bool_t       fIsGlobal;  // plugin ctor is a global function
 
@@ -158,6 +151,11 @@ public:
       auto nargs = sizeof...(params);
       if (!CheckForExecPlugin(nargs)) return 0;
 
+      // The fCallEnv object is shared, since the PluginHandler is a global
+      // resource ... and both SetParams and Execute ends up taking the lock
+      // individually anyway ...
+
+      R__LOCKGUARD2(gInterpreterMutex);
       fCallEnv->SetParams(params...);
 
       Long_t ret;
@@ -169,7 +167,7 @@ public:
    template <typename... T> Long_t ExecPlugin(int nargs, const T&... params)
    {
       // For backward compatibility.
-      if (gDebug > 1) {
+      if ((gDebug > 1) && (nargs != (int)sizeof...(params))) {
          Warning("ExecPlugin","Announced number of args different from the real number of argument passed %d vs %lu",
                  nargs, (unsigned long)sizeof...(params) );
       }

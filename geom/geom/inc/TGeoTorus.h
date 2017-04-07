@@ -12,20 +12,7 @@
 #ifndef ROOT_TGeoTorus
 #define ROOT_TGeoTorus
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoTorus - Torus segment class. A torus has 5 parameters :            //
-//            R    - axial radius                                         //
-//            Rmin - inner radius                                         //
-//            Rmax - outer radius                                         //
-//            Phi1 - starting phi                                         //
-//            Dphi - phi extent                                           //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoTorus : public TGeoBBox
 {

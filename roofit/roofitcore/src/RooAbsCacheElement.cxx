@@ -14,17 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsCacheElement is the abstract base class for objects to be stored
-// in RooAbsCache cache manager objects. Each storage element has an 
-// interface to pass on calls for server redirection, operation mode
-// change calls and constant term optimization management calls
-// END_HTML
-//
-//
-//
+/**
+\file RooAbsCacheElement.cxx
+\class RooAbsCacheElement
+\ingroup Roofitcore
+
+RooAbsCacheElement is the abstract base class for objects to be stored
+in RooAbsCache cache manager objects. Each storage element has an 
+interface to pass on calls for server redirection, operation mode
+change calls and constant term optimization management calls
+**/
 
 
 #include "RooFit.h"
@@ -38,38 +37,41 @@ ClassImp(RooAbsCacheElement)
    ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for server redirect calls
+
 Bool_t RooAbsCacheElement::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 { 
-  // Interface for server redirect calls
   return kFALSE ; 
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hook function to print cache guts in tree printing mode of RooAbsArgs
+
 void RooAbsCacheElement::printCompactTreeHook(std::ostream&, const char *, Int_t , Int_t )
 {
-  // Hook function to print cache guts in tree printing mode of RooAbsArgs
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for operation mode change calls
+
 void RooAbsCacheElement::operModeHook(RooAbsArg::OperMode) 
 {
-  // Interface for operation mode change calls
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for cache optimization calls. The default implementation is to forward all these
+/// calls to all contained RooAbsArg objects as publicized through containedArg()
+
 void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
 {
-  // Interface for cache optimization calls. The default implementation is to forward all these
-  // calls to all contained RooAbsArg objects as publicized through containedArg()
-  
   RooArgList list = containedArgs(OptimizeCaching) ;
   TIterator* iter = list.createIterator() ;
   RooAbsArg* arg ;
@@ -81,12 +83,12 @@ void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface for constant term optimization calls. The default implementation is to forward all these
+/// calls to all contained RooAbsArg objects as publicized through containedArg()
+
 void RooAbsCacheElement::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
 {
-  // Interface for constant term optimization calls. The default implementation is to forward all these
-  // calls to all contained RooAbsArg objects as publicized through containedArg()
-
   RooArgList list = containedArgs(FindConstantNodes) ;
   TIterator* iter = list.createIterator() ;
   RooAbsArg* arg ;

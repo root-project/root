@@ -1,42 +1,51 @@
-//+______________________________________________________________________________
-// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
-// Tests the generator TRandom3 against some ref values
-// and creates a timing table against TRandom, TRandom1 and TRandom2.
-//
-// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
-// Linux SLC4 64 bit and compiled with gcc 3.4
-//
-// Distribution            nanoseconds/call
-//                     TRandom  TRandom1 TRandom2 TRandom3
-// Rndm..............    5.000  105.000    7.000   10.000
-// RndmArray.........    4.000  104.000    6.000    9.000
-// Gaus..............   36.000  180.000   40.000   48.000
-// Rannor............  118.000  220.000  120.000  124.000
-// Landau............   22.000  123.000   26.000   31.000
-// Exponential.......   93.000  198.000   98.000  104.000
-// Binomial(5,0.5)...   30.000  548.000   46.000   65.000
-// Binomial(15,0.5)..   75.000 1615.000  125.000  178.000
-// Poisson(3)........   96.000  494.000  109.000  125.000
-// Poisson(10).......  138.000 1236.000  165.000  203.000
-// Poisson(70).......  818.000 1195.000  835.000  844.000
-// Poisson(100)......  837.000 1218.000  849.000  864.000
-// GausTF1...........   83.000  180.000   87.000   88.000
-// LandauTF1.........   80.000  180.000   83.000   86.000
-// GausUNURAN........   40.000  139.000   41.000   44.000
-// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
-// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
-//
-//
-// Note that this tutorial can be executed in interpreted or compiled mode
-//  Root > .x testrandom.C
-//  Root > .x testrandom.C++
-//
-//Authors: Rene Brun, Lorenzo Moneta
-
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// Performance test of all the ROOT random generator (TRandom, TRandom1, TRandom2 and TRandom3)
+/// Tests the generator TRandom3 against some ref values
+/// and creates a timing table against TRandom, TRandom1 and TRandom2.
+///
+/// E.g. on an an Intel Xeon Quad-core Harpertown (E5410) 2.33 GHz running
+/// Linux SLC4 64 bit and compiled with gcc 3.4
+///
+/// ~~~
+/// Distribution        nanoseconds/call
+///                     TRandom  TRandom1 TRandom2 TRandom3
+/// Rndm..............    5.000  105.000    7.000   10.000
+/// RndmArray.........    4.000  104.000    6.000    9.000
+/// Gaus..............   36.000  180.000   40.000   48.000
+/// Rannor............  118.000  220.000  120.000  124.000
+/// Landau............   22.000  123.000   26.000   31.000
+/// Exponential.......   93.000  198.000   98.000  104.000
+/// Binomial(5,0.5)...   30.000  548.000   46.000   65.000
+/// Binomial(15,0.5)..   75.000 1615.000  125.000  178.000
+/// Poisson(3)........   96.000  494.000  109.000  125.000
+/// Poisson(10).......  138.000 1236.000  165.000  203.000
+/// Poisson(70).......  818.000 1195.000  835.000  844.000
+/// Poisson(100)......  837.000 1218.000  849.000  864.000
+/// GausTF1...........   83.000  180.000   87.000   88.000
+/// LandauTF1.........   80.000  180.000   83.000   86.000
+/// GausUNURAN........   40.000  139.000   41.000   44.000
+/// PoissonUNURAN(10).   85.000  271.000   92.000  102.000
+/// PoissonUNURAN(100)   62.000  256.000   69.000   78.000
+/// ~~~
+///
+/// Note that this tutorial can be executed in interpreted or compiled mode
+///
+/// ~~~{.cpp}
+///  Root > .x testrandom.C
+///  Root > .x testrandom.C++
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \authors Rene Brun, Lorenzo Moneta
 
 #include <TRandom1.h>
 #include <TRandom2.h>
 #include <TRandom3.h>
+#include <TRandomGen.h>
 #include <TStopwatch.h>
 #include <TF1.h>
 #include <TUnuran.h>
@@ -54,10 +63,15 @@ void testAll() {
   TRandom *r1 = new TRandom1();
   TRandom *r2 = new TRandom2();
   TRandom *r3 = new TRandom3();
+  TRandom *r4 = new TRandomMixMax();
+  TRandom *r5 = new TRandomMixMax256();
+  TRandom *r6 = new TRandomMixMax17();
+  TRandom *r7 = new TRandomMT64();
+  TRandom *r8 = new TRandomRanlux48();
 
   TStopwatch sw;
   printf("Distribution            nanoseconds/call\n");
-  printf("                    TRandom  TRandom1 TRandom2 TRandom3\n");
+  printf("                    TRandom  TRandom1 TRandom2 TRandom3 MixMax240 MixMax256_2 MixMax17 MT_64 Ranlux48\n");
 
   sw.Start();
   for (i=0;i<N;i++) {
@@ -78,8 +92,42 @@ void testAll() {
   for (i=0;i<N;i++) {
      x = r3->Rndm(i);
   }
-  printf(" %8.3f\n",sw.CpuTime()*cpn);
+  printf(" %8.3f",sw.CpuTime()*cpn);
+  // new random generators
 
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r4->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r5->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r6->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r7->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  sw.Start();
+  for (i=0;i<N;i++) {
+     x = r8->Rndm(i);
+  }
+  printf(" %8.3f",sw.CpuTime()*cpn);
+
+  printf("\n\n");
+
+  
   const int NR = 1000;
   double rn[NR];
   sw.Start();
@@ -654,11 +702,11 @@ int testRandom3() {
      if (rc2 != 0) printf("state restoration failed\n");
 
      return rc1 + rc2;
-   }
+}
 
 
-void testrandom(double /* scale */ =0.1)
+void testrandom()
 {
-  testRandom3();
-  testAll();
+   testRandom3();
+   testAll();
 }

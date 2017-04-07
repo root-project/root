@@ -1,3 +1,16 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+/// Example of fitting with a linear function, using TLinearFitter
+/// This example is for a TGraphErrors, but it can also be used
+/// when fitting a histogram, a TGraph2D or a TMultiGraph
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TGraphErrors.h"
 #include "TF1.h"
 #include "TRandom.h"
@@ -10,18 +23,12 @@ void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p);
 
 void fitLinear()
 {
-   //Example of fitting with a linear function, using TLinearFitter
-   //This example is for a TGraphErrors, but it can also be used
-   //when fitting a histogram, a TGraph2D or a TMultiGraph
-   //Author: Anna Kreshuk
-
    Int_t n = 40;
    Double_t *x = new Double_t[n];
    Double_t *y = new Double_t[n];
    Double_t *e = new Double_t[n];
    TCanvas *myc = new TCanvas("myc",
       "Fitting 3 TGraphErrors with linear functions");
-   myc->SetFillColor(42);
    myc->SetGrid();
 
    //Generate points along a 3rd degree polynomial:
@@ -73,8 +80,6 @@ void fitLinear()
    leg->AddEntry(gre2, "sin(x) + sin(2*x)", "p");
    leg->AddEntry(gre4, "-2 + exp(-x)", "p");
    leg->Draw();
-   leg->SetFillColor(42);
-
 
 }
 

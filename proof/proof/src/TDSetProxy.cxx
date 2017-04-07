@@ -23,46 +23,46 @@
 
 ClassImp(TDSetProxy)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TDSetProxy::TDSetProxy()
 {
-   // Constructor
-
    fServ = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TDSetProxy::TDSetProxy(const char *type, const char *objname, const char *dir)
    : TDSet(type,objname,dir)
 {
-   // Constructor
-
    fServ = 0;
    fCurrent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the reference TProofServ instance
+
 void TDSetProxy::SetProofServ(TProofServ *serv)
 {
-   // Set the reference TProofServ instance
-
    fServ = serv;
    fCurrent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this instance
+
 void TDSetProxy::Reset()
 {
-   // Reset this instance
-
    delete fCurrent; fCurrent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the next packet
+
 TDSetElement *TDSetProxy::Next(Long64_t totalEntries)
 {
-   // Get the next packet
-
    fCurrent = fServ->GetNextPacket(totalEntries);
 
    // Check log file length (before processing the next packet, so we have the

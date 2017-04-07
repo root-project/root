@@ -10,8 +10,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TArrayL.h"
 #include "TTableMap.h"
+
+#include "TArrayL.h"
+#include "TBuffer.h"
 
 //////////////////////////////////////////////////////////////////////////////
 // TTableMap class is helper class to keep the list of the referencs to the
@@ -57,10 +59,11 @@ TTableMap::TTableMap(const TTable *table)
    //to be documented
 }
 
-//___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// UInt_t R__s, R__c;
+
 void TTableMap::Streamer(TBuffer &R__b)
 {
-   // UInt_t R__s, R__c;
    TArrayL vecIO;
    if (R__b.IsReading()) {
       Version_t v =  R__b.ReadVersion();

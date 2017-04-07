@@ -39,13 +39,13 @@ enum ECurlyArcWid {
    kCRLA_CY
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of CurlyArc GUI.
+
 TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of CurlyArc GUI.
-
    fCurlyArc = 0;
 
    MakeTitle("Curly Arc");
@@ -111,17 +111,18 @@ TCurlyArcEditor::TCurlyArcEditor(const TGWindow *p, Int_t width,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of CurlyArc editor.
+
 TCurlyArcEditor::~TCurlyArcEditor()
 {
-   // Destructor of CurlyArc editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TCurlyArcEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fCenterXEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");
    (fCenterXEntry->GetNumberEntry())->Connect("ReturnPressed()", "TCurlyArcEditor", this, "DoCenterXY()");
    fCenterYEntry->Connect("ValueSet(Long_t)", "TCurlyArcEditor", this, "DoCenterXY()");
@@ -136,11 +137,11 @@ void TCurlyArcEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used curly arc attributes.
+
 void TCurlyArcEditor::SetModel(TObject* obj)
 {
-   // Pick up the used curly arc attributes.
-
    fCurlyArc = (TCurlyArc *)obj;
    fAvoidSignal = kTRUE;
 
@@ -164,44 +165,44 @@ void TCurlyArcEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to set center .
+
 void TCurlyArcEditor::DoCenterXY()
 {
-   // Slot connected to set center .
-
    if (fAvoidSignal) return;
    fCurlyArc->SetCenter((Double_t)fCenterXEntry->GetNumber(), (Double_t)fCenterYEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the radius setting.
+
 void TCurlyArcEditor::DoRadius()
 {
-   // Slot connected to the radius setting.
-
    if (fAvoidSignal) return;
    fCurlyArc->SetRadius((Double_t)fRadiusEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the phimin setting.
+
 void TCurlyArcEditor::DoPhimin()
 {
-   // Slot connected to the phimin setting.
-
    if (fAvoidSignal) return;
    fCurlyArc->SetPhimin((Double_t)fPhiminEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the phimax setting.
+
 void TCurlyArcEditor::DoPhimax()
 {
-   // Slot connected to the phimax setting.
-
    if (fAvoidSignal) return;
    fCurlyArc->SetPhimax((Double_t)fPhimaxEntry->GetNumber());
    fCurlyArc->Paint(fCurlyArc->GetDrawOption());

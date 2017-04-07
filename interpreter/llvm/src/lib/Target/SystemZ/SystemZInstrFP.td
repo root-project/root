@@ -37,6 +37,10 @@ let hasSideEffects = 0 in {
   def LER : UnaryRR <"le", 0x38,   null_frag, FP32,  FP32>;
   def LDR : UnaryRR <"ld", 0x28,   null_frag, FP64,  FP64>;
   def LXR : UnaryRRE<"lx", 0xB365, null_frag, FP128, FP128>;
+
+  // For z13 we prefer LDR over LER to avoid partial register dependencies.
+  let isCodeGenOnly = 1 in
+    def LDR32 : UnaryRR<"ld", 0x28, null_frag, FP32, FP32>;
 }
 
 // Moves between two floating-point registers that also set the condition
@@ -46,9 +50,27 @@ let Defs = [CC], CCValues = 0xF, CompareZeroCCMask = 0xF in {
   defm LTDBR : LoadAndTestRRE<"ltdb", 0xB312, FP64>;
   defm LTXBR : LoadAndTestRRE<"ltxb", 0xB342, FP128>;
 }
-defm : CompareZeroFP<LTEBRCompare, FP32>;
-defm : CompareZeroFP<LTDBRCompare, FP64>;
-defm : CompareZeroFP<LTXBRCompare, FP128>;
+// Note that LTxBRCompare is not available if we have vector support,
+// since load-and-test instructions will partially clobber the target
+// (vector) register.
+let Predicates = [FeatureNoVector] in {
+  defm : CompareZeroFP<LTEBRCompare, FP32>;
+  defm : CompareZeroFP<LTDBRCompare, FP64>;
+  defm : CompareZeroFP<LTXBRCompare, FP128>;
+}
+
+// Use a normal load-and-test for compare against zero in case of
+// vector support (via a pseudo to simplify instruction selection).
+let Defs = [CC], usesCustomInserter = 1 in {
+  def LTEBRCompare_VecPseudo : Pseudo<(outs), (ins FP32:$R1, FP32:$R2), []>;
+  def LTDBRCompare_VecPseudo : Pseudo<(outs), (ins FP64:$R1, FP64:$R2), []>;
+  def LTXBRCompare_VecPseudo : Pseudo<(outs), (ins FP128:$R1, FP128:$R2), []>;
+}
+let Predicates = [FeatureVector] in {
+  defm : CompareZeroFP<LTEBRCompare_VecPseudo, FP32>;
+  defm : CompareZeroFP<LTDBRCompare_VecPseudo, FP64>;
+  defm : CompareZeroFP<LTXBRCompare_VecPseudo, FP128>;
+}
 
 // Moves between 64-bit integer and floating-point registers.
 def LGDR : UnaryRRE<"lgd", 0xB3CD, bitconvert, GR64, FP64>;
@@ -98,6 +120,9 @@ let canFoldAsLoad = 1, SimpleBDXLoad = 1 in {
   defm LE : UnaryRXPair<"le", 0x78, 0xED64, load, FP32, 4>;
   defm LD : UnaryRXPair<"ld", 0x68, 0xED65, load, FP64, 8>;
 
+  // For z13 we prefer LDE over LE to avoid partial register dependencies.
+  def LDE32 : UnaryRXE<"lde", 0xED24, null_frag, FP32, 4>;
+
   // These instructions are split after register allocation, so we don't
   // want a custom inserter.
   let Has20BitOffset = 1, HasIndex = 1, Is128Bit = 1 in {
@@ -141,7 +166,7 @@ def LDXBRA : UnaryRRF4<"ldxbra", 0xB345, FP128, FP128>,
              Requires<[FeatureFPExtension]>;
 
 def : Pat<(f32 (fround FP128:$src)),
-          (EXTRACT_SUBREG (LEXBR FP128:$src), subreg_hh32)>;
+          (EXTRACT_SUBREG (LEXBR FP128:$src), subreg_hr32)>;
 def : Pat<(f64 (fround FP128:$src)),
           (EXTRACT_SUBREG (LDXBR FP128:$src), subreg_h64)>;
 
@@ -230,26 +255,46 @@ let Predicates = [FeatureFPExtension] in {
 // Unary arithmetic
 //===----------------------------------------------------------------------===//
 
+// We prefer generic instructions during isel, because they do not
+// clobber CC and therefore give the scheduler more freedom. In cases
+// the CC is actually useful, the SystemZElimCompare pass will try to
+// convert generic instructions into opcodes that also set CC. Note
+// that lcdf / lpdf / lndf only affect the sign bit, and can therefore
+// be used with fp32 as well. This could be done for fp128, in which
+// case the operands would have to be tied.
+
 // Negation (Load Complement).
 let Defs = [CC], CCValues = 0xF, CompareZeroCCMask = 0xF in {
-  def LCEBR : UnaryRRE<"lceb", 0xB303, fneg, FP32,  FP32>;
-  def LCDBR : UnaryRRE<"lcdb", 0xB313, fneg, FP64,  FP64>;
+  def LCEBR : UnaryRRE<"lceb", 0xB303, null_frag, FP32,  FP32>;
+  def LCDBR : UnaryRRE<"lcdb", 0xB313, null_frag, FP64,  FP64>;
   def LCXBR : UnaryRRE<"lcxb", 0xB343, fneg, FP128, FP128>;
 }
+// Generic form, which does not set CC.
+def LCDFR : UnaryRRE<"lcdf", 0xB373, fneg, FP64,  FP64>;
+let isCodeGenOnly = 1 in
+  def LCDFR_32 : UnaryRRE<"lcdf", 0xB373, fneg, FP32,  FP32>;
 
 // Absolute value (Load Positive).
 let Defs = [CC], CCValues = 0xF, CompareZeroCCMask = 0xF in {
-  def LPEBR : UnaryRRE<"lpeb", 0xB300, fabs, FP32,  FP32>;
-  def LPDBR : UnaryRRE<"lpdb", 0xB310, fabs, FP64,  FP64>;
+  def LPEBR : UnaryRRE<"lpeb", 0xB300, null_frag, FP32,  FP32>;
+  def LPDBR : UnaryRRE<"lpdb", 0xB310, null_frag, FP64,  FP64>;
   def LPXBR : UnaryRRE<"lpxb", 0xB340, fabs, FP128, FP128>;
 }
+// Generic form, which does not set CC.
+def LPDFR : UnaryRRE<"lpdf", 0xB370, fabs, FP64,  FP64>;
+let isCodeGenOnly = 1 in
+  def LPDFR_32 : UnaryRRE<"lpdf", 0xB370, fabs, FP32,  FP32>;
 
 // Negative absolute value (Load Negative).
 let Defs = [CC], CCValues = 0xF, CompareZeroCCMask = 0xF in {
-  def LNEBR : UnaryRRE<"lneb", 0xB301, fnabs, FP32,  FP32>;
-  def LNDBR : UnaryRRE<"lndb", 0xB311, fnabs, FP64,  FP64>;
+  def LNEBR : UnaryRRE<"lneb", 0xB301, null_frag, FP32,  FP32>;
+  def LNDBR : UnaryRRE<"lndb", 0xB311, null_frag, FP64,  FP64>;
   def LNXBR : UnaryRRE<"lnxb", 0xB341, fnabs, FP128, FP128>;
 }
+// Generic form, which does not set CC.
+def LNDFR : UnaryRRE<"lndf", 0xB371, fnabs, FP64,  FP64>;
+let isCodeGenOnly = 1 in
+  def LNDFR_32 : UnaryRRE<"lndf", 0xB371, fnabs, FP32,  FP32>;
 
 // Square root.
 def SQEBR : UnaryRRE<"sqeb", 0xB314, fsqrt, FP32,  FP32>;
@@ -345,13 +390,13 @@ def MDB  : BinaryRXE<"mdb",  0xED1C, fmul, FP64, load, 8>;
 def MDEBR : BinaryRRE<"mdeb", 0xB30C, null_frag, FP64, FP32>;
 def : Pat<(fmul (f64 (fextend FP32:$src1)), (f64 (fextend FP32:$src2))),
           (MDEBR (INSERT_SUBREG (f64 (IMPLICIT_DEF)),
-                                FP32:$src1, subreg_h32), FP32:$src2)>;
+                                FP32:$src1, subreg_r32), FP32:$src2)>;
 
 // f64 multiplication of an FP32 register and an f32 memory.
 def MDEB : BinaryRXE<"mdeb", 0xED0C, null_frag, FP64, load, 4>;
 def : Pat<(fmul (f64 (fextend FP32:$src1)),
                 (f64 (extloadf32 bdxaddr12only:$addr))),
-          (MDEB (INSERT_SUBREG (f64 (IMPLICIT_DEF)), FP32:$src1, subreg_h32),
+          (MDEB (INSERT_SUBREG (f64 (IMPLICIT_DEF)), FP32:$src1, subreg_r32),
                 bdxaddr12only:$addr)>;
 
 // f128 multiplication of two FP64 registers.
@@ -402,10 +447,17 @@ let Defs = [CC], CCValues = 0xF in {
   def CDB : CompareRXE<"cdb", 0xED19, z_fcmp, FP64, load, 8>;
 }
 
+// Test Data Class.
+let Defs = [CC], CCValues = 0xC in {
+  def TCEB : TestRXE<"tceb", 0xED10, z_tdc, FP32>;
+  def TCDB : TestRXE<"tcdb", 0xED11, z_tdc, FP64>;
+  def TCXB : TestRXE<"tcxb", 0xED12, z_tdc, FP128>;
+}
+
 //===----------------------------------------------------------------------===//
 // Peepholes
 //===----------------------------------------------------------------------===//
 
-def : Pat<(f32  fpimmneg0), (LCEBR (LZER))>;
-def : Pat<(f64  fpimmneg0), (LCDBR (LZDR))>;
+def : Pat<(f32  fpimmneg0), (LCDFR_32 (LZER))>;
+def : Pat<(f64  fpimmneg0), (LCDFR (LZDR))>;
 def : Pat<(f128 fpimmneg0), (LCXBR (LZXR))>;

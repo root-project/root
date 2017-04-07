@@ -13,33 +13,20 @@
 #define ROOT_TButton
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TButton                                                              //
-//                                                                      //
-//  A TButton object is a specialized TPad including possible list
-//  of primitives used to build selections and options menus in a canvas.
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 class TButton : public TPad, public TAttText {
 
 private:
-   Bool_t fFocused;     // If cursor is in...
-   Bool_t fFraming;     // True if you want a frame to be painted when pressed
+   Bool_t fFocused;     ///< If cursor is in...
+   Bool_t fFraming;     ///< True if you want a frame to be painted when pressed
 
    TButton(const TButton &org);            // no copy ctor, use TObject::Clone()
    TButton &operator=(const TButton &rhs); // idem
 
 protected:
-   TString      fMethod;      //Method to be executed by this button
+   TString      fMethod;      ///< Method to be executed by this button
 
 public:
    TButton();

@@ -32,7 +32,7 @@ namespace RooStats {
 
   public:
 
-    /// Constructor 
+    /// Constructor
     HLFactory(const char *name,
               const char *fileName=0,
               bool isVerbose = false);
@@ -49,7 +49,7 @@ namespace RooStats {
     ~HLFactory();
 
     /// Add channel for the combination
-    int AddChannel(const char* label, 
+    int AddChannel(const char* label,
                    const char* SigBkgPdfName,
                    const char* BkgPdfName=0,
                    const char* datasetName=0);

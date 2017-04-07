@@ -12,16 +12,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/ModuleUtils.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
-static void appendToGlobalArray(const char *Array, 
-                                Module &M, Function *F, int Priority) {
+static void appendToGlobalArray(const char *Array, Module &M, Function *F,
+                                int Priority, Constant *Data) {
   IRBuilder<> IRB(M.getContext());
   FunctionType *FnTy = FunctionType::get(IRB.getVoidTy(), false);
 
@@ -30,21 +30,32 @@ static void appendToGlobalArray(const char *Array,
   SmallVector<Constant *, 16> CurrentCtors;
   StructType *EltTy;
   if (GlobalVariable *GVCtor = M.getNamedGlobal(Array)) {
-    // If there is a global_ctors array, use the existing struct type, which can
-    // have 2 or 3 fields.
-    ArrayType *ATy = cast<ArrayType>(GVCtor->getType()->getElementType());
-    EltTy = cast<StructType>(ATy->getElementType());
+    ArrayType *ATy = cast<ArrayType>(GVCtor->getValueType());
+    StructType *OldEltTy = cast<StructType>(ATy->getElementType());
+    // Upgrade a 2-field global array type to the new 3-field format if needed.
+    if (Data && OldEltTy->getNumElements() < 3)
+      EltTy = StructType::get(IRB.getInt32Ty(), PointerType::getUnqual(FnTy),
+                              IRB.getInt8PtrTy(), nullptr);
+    else
+      EltTy = OldEltTy;
     if (Constant *Init = GVCtor->getInitializer()) {
       unsigned n = Init->getNumOperands();
       CurrentCtors.reserve(n + 1);
-      for (unsigned i = 0; i != n; ++i)
-        CurrentCtors.push_back(cast<Constant>(Init->getOperand(i)));
+      for (unsigned i = 0; i != n; ++i) {
+        auto Ctor = cast<Constant>(Init->getOperand(i));
+        if (EltTy != OldEltTy)
+          Ctor = ConstantStruct::get(
+              EltTy, Ctor->getAggregateElement((unsigned)0),
+              Ctor->getAggregateElement(1),
+              Constant::getNullValue(IRB.getInt8PtrTy()), nullptr);
+        CurrentCtors.push_back(Ctor);
+      }
     }
     GVCtor->eraseFromParent();
   } else {
-    // Use a simple two-field struct if there isn't one already.
+    // Use the new three-field struct if there isn't one already.
     EltTy = StructType::get(IRB.getInt32Ty(), PointerType::getUnqual(FnTy),
-                            nullptr);
+                            IRB.getInt8PtrTy(), nullptr);
   }
 
   // Build a 2 or 3 field global_ctor entry.  We don't take a comdat key.
@@ -53,7 +64,8 @@ static void appendToGlobalArray(const char *Array,
   CSVals[1] = F;
   // FIXME: Drop support for the two element form in LLVM 4.0.
   if (EltTy->getNumElements() >= 3)
-    CSVals[2] = llvm::Constant::getNullValue(IRB.getInt8PtrTy());
+    CSVals[2] = Data ? ConstantExpr::getPointerCast(Data, IRB.getInt8PtrTy())
+                     : Constant::getNullValue(IRB.getInt8PtrTy());
   Constant *RuntimeCtorInit =
       ConstantStruct::get(EltTy, makeArrayRef(CSVals, EltTy->getNumElements()));
 
@@ -69,27 +81,48 @@ static void appendToGlobalArray(const char *Array,
                            GlobalValue::AppendingLinkage, NewInit, Array);
 }
 
-void llvm::appendToGlobalCtors(Module &M, Function *F, int Priority) {
-  appendToGlobalArray("llvm.global_ctors", M, F, Priority);
+void llvm::appendToGlobalCtors(Module &M, Function *F, int Priority, Constant *Data) {
+  appendToGlobalArray("llvm.global_ctors", M, F, Priority, Data);
 }
 
-void llvm::appendToGlobalDtors(Module &M, Function *F, int Priority) {
-  appendToGlobalArray("llvm.global_dtors", M, F, Priority);
+void llvm::appendToGlobalDtors(Module &M, Function *F, int Priority, Constant *Data) {
+  appendToGlobalArray("llvm.global_dtors", M, F, Priority, Data);
 }
 
-GlobalVariable *
-llvm::collectUsedGlobalVariables(Module &M, SmallPtrSetImpl<GlobalValue *> &Set,
-                                 bool CompilerUsed) {
-  const char *Name = CompilerUsed ? "llvm.compiler.used" : "llvm.used";
-  GlobalVariable *GV = M.getGlobalVariable(Name);
-  if (!GV || !GV->hasInitializer())
-    return GV;
+Function *llvm::checkSanitizerInterfaceFunction(Constant *FuncOrBitcast) {
+  if (isa<Function>(FuncOrBitcast))
+    return cast<Function>(FuncOrBitcast);
+  FuncOrBitcast->dump();
+  std::string Err;
+  raw_string_ostream Stream(Err);
+  Stream << "Sanitizer interface function redefined: " << *FuncOrBitcast;
+  report_fatal_error(Err);
+}
 
-  const ConstantArray *Init = cast<ConstantArray>(GV->getInitializer());
-  for (unsigned I = 0, E = Init->getNumOperands(); I != E; ++I) {
-    Value *Op = Init->getOperand(I);
-    GlobalValue *G = cast<GlobalValue>(Op->stripPointerCastsNoFollowAliases());
-    Set.insert(G);
+std::pair<Function *, Function *> llvm::createSanitizerCtorAndInitFunctions(
+    Module &M, StringRef CtorName, StringRef InitName,
+    ArrayRef<Type *> InitArgTypes, ArrayRef<Value *> InitArgs,
+    StringRef VersionCheckName) {
+  assert(!InitName.empty() && "Expected init function name");
+  assert(InitArgTypes.size() == InitArgTypes.size() &&
+         "Sanitizer's init function expects different number of arguments");
+  Function *Ctor = Function::Create(
+      FunctionType::get(Type::getVoidTy(M.getContext()), false),
+      GlobalValue::InternalLinkage, CtorName, &M);
+  BasicBlock *CtorBB = BasicBlock::Create(M.getContext(), "", Ctor);
+  IRBuilder<> IRB(ReturnInst::Create(M.getContext(), CtorBB));
+  Function *InitFunction =
+      checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+          InitName, FunctionType::get(IRB.getVoidTy(), InitArgTypes, false),
+          AttributeSet()));
+  InitFunction->setLinkage(Function::ExternalLinkage);
+  IRB.CreateCall(InitFunction, InitArgs);
+  if (!VersionCheckName.empty()) {
+    Function *VersionCheckFunction =
+        checkSanitizerInterfaceFunction(M.getOrInsertFunction(
+            VersionCheckName, FunctionType::get(IRB.getVoidTy(), {}, false),
+            AttributeSet()));
+    IRB.CreateCall(VersionCheckFunction, {});
   }
-  return GV;
+  return std::make_pair(Ctor, InitFunction);
 }

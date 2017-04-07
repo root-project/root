@@ -23,12 +23,12 @@
 
 ClassImp(TSessionLogView)
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an editor in a dialog.
+
 TSessionLogView::TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h) :
    TGTransientFrame(gClient->GetRoot(), viewer, w, h)
 {
-   // Create an editor in a dialog.
-
    fViewer = viewer;
    fTextView = new TGTextView(this, w, h, kSunkenFrame | kDoubleBorder);
    fL1 = new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 3, 3, 3, 3);
@@ -46,16 +46,17 @@ TSessionLogView::TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h) :
    Resize(GetDefaultSize());
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TSessionLogView::~TSessionLogView()
 {
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set title in editor window.
+
 void TSessionLogView::SetTitle()
 {
-   // Set title in editor window.
-
    TString title;
    title.Form("PROOF Processing Logs: %s", (fViewer->GetActDesc()->fProof ?
               fViewer->GetActDesc()->fProof->GetMaster() : "<dummy>"));
@@ -63,55 +64,56 @@ void TSessionLogView::SetTitle()
    SetIconName(title);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show editor.
+
 void TSessionLogView::Popup()
 {
-   // Show editor.
-
    MapWindow();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a text buffer in the editor.
+
 void TSessionLogView::AddBuffer(const char *buffer)
 {
-   // Load a text buffer in the editor.
-
    TGText txt;
    txt.LoadBuffer(buffer);
    fTextView->AddText(&txt);
    fTextView->ShowBottom();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear log window.
+
 void TSessionLogView::ClearLogView()
 {
-   // Clear log window.
-
    fTextView->Clear();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a text buffer in the editor.
+
 void TSessionLogView::LoadBuffer(const char *buffer)
 {
-   // Load a text buffer in the editor.
-
    fTextView->LoadBuffer(buffer);
    fTextView->ShowBottom();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a file in the editor.
+
 void TSessionLogView::LoadFile(const char *file)
 {
-   // Load a file in the editor.
-
    fTextView->LoadFile(file);
    fTextView->ShowBottom();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when closed via window manager action.
+
 void TSessionLogView::CloseWindow()
 {
-   // Called when closed via window manager action.
    if (fViewer->GetActDesc()->fProof) {
       fViewer->GetActDesc()->fProof->Disconnect(
             "LogMessage(const char*,Bool_t)", fViewer,
@@ -125,11 +127,11 @@ void TSessionLogView::CloseWindow()
    DestroyWindow();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process OK button.
+
 Bool_t TSessionLogView::ProcessMessage(Long_t msg, Long_t, Long_t)
 {
-   // Process OK button.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {

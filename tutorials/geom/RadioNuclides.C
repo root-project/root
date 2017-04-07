@@ -1,55 +1,87 @@
+/// \file
+/// \ingroup tutorial_geom
+/// Macro that demonstrates usage of radioactive elements/materials/mixtures
+/// with TGeo package.
+///
+/// A radionuclide (TGeoElementRN) derives from the class TGeoElement and
+/// provides additional information related to its radioactive properties and
+/// decay modes.
+///
+/// The radionuclides table is loaded on demand by any call:
+///
+/// ~~~{.cpp}
+///    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number,
+///                                                  Int_t atomic_charge,
+///                                                  Int_t isomeric_number)
+/// ~~~
+///
+/// The isomeric number is optional and the default value is 0.
+///
+/// To create a radioactive material based on a radionuclide, one should use the
+/// constructor:
+///
+/// ~~~{.cpp}
+///    TGeoMaterial(const char *name, TGeoElement *elem, Double_t density)
+/// ~~~
+///
+/// To create a radioactive mixture, one can use radionuclides as well as stable
+/// elements:
+///
+/// ~~~{.cpp}
+///    TGeoMixture(const char *name, Int_t nelements, Double_t density);
+///    TGeoMixture::AddElement(TGeoElement *elem, Double_t weight_fraction);
+/// ~~~
+///
+/// Once defined, one can retrieve the time evolution for the radioactive
+/// materials/mixtures by using one of the 2 methods:
+///
+/// ~~~{.cpp}
+///    void TGeoMaterial::FillMaterialEvolution(TObjArray *population,
+///                                             Double_t   precision=0.001)
+/// ~~~
+///
+/// To use this method, one has to provide an empty TObjArray object that will
+/// be filled with all elements coming from the decay chain of the initial
+/// radionuclides contained by the material/mixture. The precision represent the
+/// cumulative branching ratio for which decay products are still considered.
+/// The POPULATION list may contain stable elements as well as radionuclides,
+/// depending on the initial elements. To test if an element is a radionuclide:
+///
+/// ~~~{.cpp}
+///    Bool_t TGeoElement::IsRadioNuclide() const
+/// ~~~
+///
+/// All radionuclides in the output population list have attached objects that
+/// represent the time evolution of their fraction of nuclei with respect to the
+/// top radionuclide in the decay chain. These objects (Bateman solutions) can be
+/// retrieved and drawn:
+///
+/// ~~~{.cpp}
+///    TGeoBatemanSol *TGeoElementRN::Ratio();
+///    void TGeoBatemanSol::Draw();
+/// ~~~
+///
+/// Another method allows to create the evolution of a given radioactive
+/// material/mixture at a given moment in time:
+///
+/// ~~~{.cpp}
+///    TGeoMaterial::DecayMaterial(Double_t time, Double_t precision=0.001)
+/// ~~~
+///
+/// The method will create the mixture that result from the decay of a initial
+/// material/mixture at TIME, while all resulting elements having a fractional
+/// weight less than PRECISION are excluded.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Mihaela Gheata
+
 void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0.,
                     Double_t tmax=0., Bool_t logx=kFALSE);
 
 void RadioNuclides()
 {
-// Macro that demonstrates usage of radioactive elements/materials/mixtures
-// with TGeo package.
-//
-// A radionuclide (TGeoElementRN) derives from the class TGeoElement and
-// provides additional information related to its radioactive properties and
-// decay modes.
-//
-// The radionuclides table is loaded on demand by any call:
-//    TGeoElementRN *TGeoElementTable::GetElementRN(Int_t atomic_number,
-//                                                  Int_t atomic_charge,
-//                                                  Int_t isomeric_number)
-// The isomeric number is optional and the default value is 0.
-//
-// To create a radioactive material based on a radionuclide, one should use the
-// constructor:
-//    TGeoMaterial(const char *name, TGeoElement *elem, Double_t density)
-// To create a radioactive mixture, one can use radionuclides as well as stable
-// elements:
-//    TGeoMixture(const char *name, Int_t nelements, Double_t density);
-//    TGeoMixture::AddElement(TGeoElement *elem, Double_t weight_fraction);
-// Once defined, one can retrieve the time evolution for the radioactive
-// materials/mixtures by using one of the 2 methods:
-//
-//    void TGeoMaterial::FillMaterialEvolution(TObjArray *population,
-//                                             Double_t   precision=0.001)
-// To use this method, one has to provide an empty TObjArray object that will
-// be filled with all elements coming from the decay chain of the initial
-// radionuclides contained by the material/mixture. The precision represent the
-// cumulative branching ratio for which decay products are still considered.
-// The POPULATION list may contain stable elements as well as radionuclides,
-// depending on the initial elements. To test if an element is a radionuclide:
-//    Bool_t TGeoElement::IsRadioNuclide() const
-// All radionuclides in the output population list have attached objects that
-// represent the time evolution of their fraction of nuclei with respect to the
-// top radionuclide in the decay chain. These objects (Bateman solutions) can be
-// retrieved and drawn:
-//    TGeoBatemanSol *TGeoElementRN::Ratio();
-//    void TGeoBatemanSol::Draw();
-//
-// Another method allows to create the evolution of a given radioactive
-// material/mixture at a given moment in time:
-//    TGeoMaterial::DecayMaterial(Double_t time, Double_t precision=0.001)
-// The method will create the mixture that result from the decay of a initial
-// material/mixture at TIME, while all resulting elements having a fractional
-// weight less than PRECISION are excluded.
-//Author: Mihaela Gheata
-
    TGeoManager *geom = new TGeoManager("","");
    TGeoElementTable *table = gGeoManager->GetElementTable();
    TGeoElementRN *c14 = table->GetElementRN(14,6);
@@ -97,11 +129,11 @@ void RadioNuclides()
    pt->SetFillColor(5);
    pt->SetTextAlign(12);
    pt->SetTextColor(4);
-   text = pt->AddText("Time evolution of a population of radionuclides.");
-   text = pt->AddText("The concentration of a nuclide X represent the  ");
-   text = pt->AddText("ratio between the number of X nuclei and the    ");
-   text = pt->AddText("number of nuclei of the top element of the decay");
-   text = pt->AddText("from which X derives from at T=0.               ");
+   pt->AddText("Time evolution of a population of radionuclides.");
+   pt->AddText("The concentration of a nuclide X represent the  ");
+   pt->AddText("ratio between the number of X nuclei and the    ");
+   pt->AddText("number of nuclei of the top element of the decay");
+   pt->AddText("from which X derives from at T=0.               ");
    pt->Draw();
    c1->Modified();
    vect->Clear();

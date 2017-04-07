@@ -1,23 +1,32 @@
-// benchmark comparing write/read to/from keys or trees
-// for example for N=10000, the following output is produced
-// on a P IV 62.4GHz
-//
-// root -b -q bill.C    or root -b -q bill.C++
-//
-//billw0  : RT=  1.070 s, Cpu=  1.050 s, File size=  45508003 bytes, CX= 1
-//billr0  : RT=  0.740 s, Cpu=  0.730 s
-//billtw0 : RT=  0.720 s, Cpu=  0.660 s, File size=  45163959 bytes, CX= 1
-//billtr0 : RT=  0.420 s, Cpu=  0.420 s
-//billw1  : RT=  6.600 s, Cpu=  6.370 s, File size=  16215349 bytes, CX= 2.80687
-//billr1  : RT=  2.290 s, Cpu=  2.270 s
-//billtw1 : RT=  3.260 s, Cpu=  3.230 s, File size=   6880273 bytes, CX= 6.5642
-//billtr1 : RT=  0.990 s, Cpu=  0.980 s
-//billtot : RT= 18.290 s, Cpu= 15.920 s
-//******************************************************************
-//*  ROOTMARKS = 600.9   *  Root3.05/02   20030201/1840
-//******************************************************************
-//
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// Benchmark comparing row-wise and column-wise storage performance
+///
+/// The test consists in writing/reading to/from keys or trees
+/// To execute the benchmark:
+/// ~~~
+/// root -b -q bill.C    or root -b -q bill.C++
+/// ~~~
+/// for example for N=10000, the following output is produced
+/// on an 2.7 GHz Intel Core i7 (year 2011).
+/// The names featuring a "t" are relative to trees, the faster, the better.
+/// ~~~
+/// billw0  : RT=  0.803 s, Cpu=  0.800 s, File size=  45608143 bytes, CX= 1
+/// billr0  : RT=  0.388 s, Cpu=  0.390 s
+/// billtw0 : RT=  0.336 s, Cpu=  0.310 s, File size=  45266881 bytes, CX= 1.00034
+/// billtr0 : RT=  0.229 s, Cpu=  0.230 s
+/// billw1  : RT=  1.671 s, Cpu=  1.670 s, File size=  16760526 bytes, CX= 2.72078
+/// billr1  : RT=  0.667 s, Cpu=  0.680 s
+/// billtw1 : RT=  0.775 s, Cpu=  0.770 s, File size=   9540884 bytes, CX= 4.74501
+/// billtr1 : RT=  0.352 s, Cpu=  0.350 s
+/// billtot : RT=  5.384 s, Cpu=  5.290 s
+/// ******************************************************************
+/// *  ROOTMARKS =1763.9   *  Root6.05/03   20150914/948
+/// ******************************************************************
+/// ~~~
+/// \macro_code
+/// \author Rene Brun
 
 #include "TFile.h"
 #include "TSystem.h"
@@ -129,11 +138,11 @@ void bill() {
    gSystem->Unlink(bill);
    gSystem->Unlink(billt);
    totaltimer.Stop();
-   Double_t rtime = totaltimer.RealTime();
-   Double_t ctime = totaltimer.CpuTime();
-   printf("billtot : RT=%7.3f s, Cpu=%7.3f s\n",rtime,ctime);
+   Double_t realtime = totaltimer.RealTime();
+   Double_t cputime = totaltimer.CpuTime();
+   printf("billtot : RT=%7.3f s, Cpu=%7.3f s\n",realtime,cputime);
    //reference is a P IV 2.4 GHz
-   Float_t rootmarks = 600*(16.98 + 14.40)/(rtime + ctime);
+   Float_t rootmarks = 600*(16.98 + 14.40)/(realtime + cputime);
    printf("******************************************************************\n");
    printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),gROOT->GetVersionDate(),gROOT->GetVersionTime());
    printf("******************************************************************\n");

@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchProxyClassDescriptor                                          //
-//                                                                      //
-// Hold the processed information about a TClass used in a TBranch while//
-// TTreeProxyGenerator is parsing the TTree information.                //
-// Also contains the routine use to generate the appropriate code       //
-// fragment in the result of MakeProxy.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranchProxyClassDescriptor
+Hold the processed information about a TClass used in a TBranch while
+TTreeProxyGenerator is parsing the TTree information.
+Also contains the routine use to generate the appropriate code
+fragment in the result of MakeProxy.
+*/
 
 #include "TBranchProxyDescriptor.h"
 #include "TBranchProxyClassDescriptor.h"
@@ -29,9 +25,10 @@
 #include "TVirtualStreamerInfo.h"
 #include "TVirtualCollectionProxy.h"
 
-ClassImp(ROOT::TBranchProxyClassDescriptor);
+ClassImp(ROOT::Internal::TBranchProxyClassDescriptor);
 
 namespace ROOT {
+namespace Internal {
 
    void TBranchProxyClassDescriptor::NameToSymbol() {
 
@@ -370,7 +367,7 @@ namespace ROOT {
 
 
       // Declare the data members.
-      fprintf(hf,"%-*s%-*s %s;\n",  offset+3," ",  fMaxDatamemberType, "TBranchProxyHelper", "ffPrefix");
+      fprintf(hf,"%-*s%-*s %s;\n",  offset+3," ",  fMaxDatamemberType, "ROOT::Internal::TBranchProxyHelper", "ffPrefix");
 
       // If the real class is available, make it available via the arrow operator:
       if (IsLoaded()) {
@@ -454,4 +451,5 @@ namespace ROOT {
       //TBranchProxyDescriptor::OutputDecl(hf,offset,maxVarname);
    }
 
-}
+} // namespace Internal
+} // namespace ROOT

@@ -13,13 +13,9 @@
 #ifndef ROOT_TMinuitMinimizer
 #define ROOT_TMinuitMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TMinuit;
 
@@ -46,7 +42,10 @@ namespace ROOT {
 
 
 /**
-   TMinuitMinimizer class: minimizer implementation based on TMinuit.
+   TMinuitMinimizer class: 
+   ROOT::Math::Minimizer implementation based on TMinuit
+
+   @ingroup TMinuit
 */
 class TMinuitMinimizer  : public ROOT::Math::Minimizer {
 
@@ -270,10 +269,6 @@ private:
 
    ROOT::Minuit::EMinimizerType fType;
    TMinuit * fMinuit;
-
-   // need to have a static copy of the function
-   //NOTE: This is NOT thread safe.
-   static ROOT::Math::IMultiGenFunction * fgFunc;
 
    static TMinuit * fgMinuit;
 

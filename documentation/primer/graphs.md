@@ -1,14 +1,14 @@
 # Graphs #
 
 In this Chapter we will learn how to exploit some of the functionalities
-that ROOT provides to display data exploiting the class `TGraphErrors`,
+ROOT provides to display data exploiting the class `TGraphErrors`,
 which you already got to know previously.
 
 ## Read Graph Points from File ##
 
 The fastest way in which you can fill a graph with experimental data is
-to use the constructor which reads data points and their errors from a
-file in ASCII (i.e. standard text) format:
+to use the constructor which reads data points and their errors from an
+ASCII file (i.e. standard text) format:
 
 ``` {.cpp}
 TGraphErrors(const char *filename,
@@ -17,11 +17,11 @@ const char *format="%lg %lg %lg %lg", Option_t *option="");
 
 The format string can be:
 
--   `"\%lg \%lg"` read only 2 first columns into X,Y
+-   `"%lg %lg"` read only 2 first columns into X,Y
 
--   `"\%lg \%lg \%lg"` read only 3 first columns into X,Y and EY
+-   `"%lg %lg %lg"` read only 3 first columns into X,Y and EY
 
--   `"\%lg \%lg \%lg \%lg"` read only 4 first columns into X,Y,EX,EY
+-   `"%lg %lg %lg %lg"` read only 4 first columns into X,Y,EX,EY
 
 This approach has the nice feature of allowing the user to reuse the
 macro for many different data sets. Here is an example of an input file.
@@ -44,40 +44,11 @@ data points.
 9   44  4.8
 10  53  5.43
 ```
-
+\newpage
 ![](figures/graph_with_expectation.png)
 
 ``` {.cpp}
-// Reads the points from a file and produces a simple graph.
-int macro2(){
-
-    TCanvas* c=new TCanvas();
-    c->SetGrid();
-
-    TGraphErrors graph_expected("./macro2_input_expected.txt",
-                                "%lg %lg %lg");
-    graph_expected.SetTitle(
-       "Measurement XYZ and Expectation;
-        lenght [cm];
-        Arb.Units");
-    graph_expected.SetFillColor(kYellow);
-    graph_expected.DrawClone("E3AL"); // E3 draws the band
-
-    TGraphErrors graph("./macro2_input.txt","%lg %lg %lg");
-    graph.SetMarkerStyle(kCircle);
-    graph.SetFillColor(0);
-    graph.DrawClone("PESame");
-
-    // Draw the Legend
-    TLegend leg(.1,.7,.3,.9,"Lab. Lesson 2");
-    leg.SetFillColor(0);
-    leg.AddEntry(&graph_expected,"Expected Points");
-    leg.AddEntry(&graph,"Measured Points");
-    leg.DrawClone("Same");
-
-    graph.Print();
-}
-
+@ROOT_INCLUDE_FILE macros/macro2.C
 ```
 
 In addition to the inspection of the plot, you can check the actual
@@ -91,38 +62,20 @@ theoretical prediction.
 
 With ROOT you can profit from rather advanced plotting routines, like
 the ones implemented in the `TPolarGraph`, a class to draw graphs in
-polar coordinates. It is very easy to use, as you see in the example
-macro and the resulting Figure [4.1](#f41):
+polar coordinates. You can see the example macro in the following and the
+resulting Figure is [4.2](#f42):
 
 ``` {.cpp .numberLines}
- // Builds a polar graph in a square Canvas.
-
- void macro3(){
-   TCanvas* c = new TCanvas("myCanvas","myCanvas",600,600);
-   double rmin=0;
-   double rmax=TMath::Pi()*6;
-   const int npoints=1000;
-   Double_t r[npoints];
-   Double_t theta[npoints];
-   for (Int_t ipt = 0; ipt < npoints; ipt++) {
-       r[ipt] = ipt*(rmax-rmin)/npoints+rmin;
-       theta[ipt] = TMath::Sin(r[ipt]);
-   }
-   TGraphPolar grP1 (npoints,r,theta);
-   grP1.SetTitle("A Fan");
-   grP1.SetLineWidth(3);
-   grP1.SetLineColor(2);
-   grP1.DrawClone("AOL");
- }
+@ROOT_INCLUDE_FILE macros/macro3.C
 ```
 
 A new element was added on line 4, the size of the canvas: it is
 sometimes optically better to show plots in specific canvas sizes.
 
-[f41]: figures/polar_graph.png "f41"
-<a name="f41"></a>
+[f42]: figures/polar_graph.png "f42"
+<a name="f42"></a>
 
-![The graph of a fan obtained with ROOT.\label{f41}][f41]
+![The graph of a fan obtained with ROOT.\label{f42}][f42]
 
 ## 2D Graphs ##
 
@@ -138,54 +91,15 @@ ingredient, the ROOT `TRandom3` random number generator using the
 Mersenne Twister algorithm [@MersenneTwister].
 
 ``` {.cpp .numberLines}
- // Create, Draw and fit a TGraph2DErrors
- void macro4(){
-    gStyle->SetPalette(1);
-    const double e = 0.3;
-    const int nd = 500;
-
-    TRandom3 my_random_generator;
-    TF2 *f2 = new TF2("f2",
-                     "1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
-                     -6,6,-6,6);
-    f2->SetParameters(1,1);
-    TGraph2DErrors *dte = new TGraph2DErrors(nd);
-    // Fill the 2D graph
-    double rnd, x, y, z, ex, ey, ez;
-    for (Int_t i=0; i<nd; i++) {
-       f2->GetRandom2(x,y);
-       // A random number in [-e,e]
-       rnd = my_random_generator.Uniform(-e,e);
-       z = f2->Eval(x,y)*(1+rnd);
-       dte->SetPoint(i,x,y,z);
-       ex = 0.05*my_random_generator.Uniform();
-       ey = 0.05*my_random_generator.Uniform();
-       ez = TMath::Abs(z*rnd);
-       dte->SetPointError(i,ex,ey,ez);
-    }
-    // Fit function to generated data
-    f2->SetParameters(0.7,1.5);  // set initial values for fit
-    f2->SetTitle("Fitted 2D function");
-    dte->Fit(f2);
-    // Plot the result
-    TCanvas *c1 = new TCanvas();
-    f2->Draw("Surf1");
-    dte->Draw("P0 Same");
-    // Make the x and y projections
-    TCanvas* c_p= new TCanvas("ProjCan",
-                              "The Projections",1000,400);
-    c_p->Divide(2,1);
-    c_p->cd(1);
-    dte->Project("x")->Draw();
-    c_p->cd(2);
-    dte->Project("y")->Draw();
- }
+@ROOT_INCLUDE_FILE macros/macro4.C
 ```
 
 Let's go through the code, step by step to understand what is going on:
 
 -   Line *3*: This sets the palette colour code to a much nicer one than
     the default. Comment this line to give it a try.
+    [This article](https://root.cern.ch/drupal/content/rainbow-color-map)
+    gives more details about colour map choice.
 
 -   Line *7*: The instance of the random generator. You can then draw
     out of this instance random numbers distributed according to
@@ -193,8 +107,8 @@ Let's go through the code, step by step to understand what is going on:
     lines *27-29*. See the on-line documentation to appreciate the full
     power of this ROOT feature.
 
--   Line *12*: You are already familiar with the `TF1` class. This is
-    its two-dimensional correspondent. At line *24* two random numbers
+-   Line *8*: You are already familiar with the `TF1` class. This is
+    its two-dimensional version. At line *16* two random numbers
     distributed according to the `TF2` formula are drawn with the method
     `TF2::GetRandom2(double& a, double&b)`.
 
@@ -202,16 +116,45 @@ Let's go through the code, step by step to understand what is going on:
     the one-dimensional case, i.e. initialisation of parameters and
     calling of the `Fit()` method.
 
--   Line *32*: The *Surf1* option draws the `TF2` objects (but also
+-   Line *34*: The *Surf1* option draws the `TF2` objects (but also
     bi-dimensional histograms) as coloured surfaces with a wire-frame on
-    three-dimensional canvases. See Figure [4.2](#f42).
+    three-dimensional canvases. See Figure [4.3](#f43).
 
--   Line *37-41*: Here you learn how to create a canvas, partition it in
+-   Line *35-40*: Retrieve the axis pointer and define the axis titles.
+
+-   Line *41*: Draw the cloud of points on top of the coloured surface.
+
+-   Line *43-49*: Here you learn how to create a canvas, partition it in
     two sub-pads and access them. It is very handy to show multiple
     plots in the same window or image.
 
-[f42]: figures/fitted2dFunction.png "f42"
-<a name="f42"></a>
+[f43]: figures/fitted2dFunction.png "f43"
+<a name="f43"></a>
 
 ![A dataset fitted with a bidimensional function visualised as a colored
-surface.\label{f42}][f42]
+surface.\label{f43}][f43]
+
+\newpage
+
+## Multiple graphs ##
+
+The class `TMultigraph` allows to manipulate a set of graphs as a single entity.
+It is a collection of `TGraph` (or derived) objects. When drawn, the X and Y axis
+ranges are automatically computed such as all the graphs will be visible.
+
+``` {.cpp .numberLines}
+@ROOT_INCLUDE_FILE macros/multigraph.C
+```
+- Line *6* creates the multigraph.
+
+- Line *9-28*: create two graphs with errors and add them in the multigraph.
+
+- Line *30-32*: draw the multigraph. The axis limits are computed automatically
+  to make sure all the graphs' points will be in range.
+
+[f44]: figures/multigraph.png "f44"
+<a name="f44"></a>
+
+![A set of graphs grouped in a multigraph.\label{f44}][f44]
+
+[^3] https://root.cern.ch/drupal/content/rainbow-color-map

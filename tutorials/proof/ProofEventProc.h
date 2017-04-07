@@ -1,15 +1,14 @@
+/// \file
+/// \ingroup tutorial_ProofEventProc
+///
+/// Selector to process trees containing Event structures
+///
+/// \macro_code
+///
+/// \author Gerardo Ganis (gerardo.ganis@cern.ch)
+
 #ifndef ProofEventProc_h
 #define ProofEventProc_h
-
-//////////////////////////////////////////////////////////
-//
-// Example of TSelector implementation to process trees
-// containing 'Event' structures, e.g. the files under
-// http://root.cern.ch/files/data .
-// See tutorials/proof/runProof.C, option "eventproc", for
-// an example of how to run this selector.
-//
-//////////////////////////////////////////////////////////
 
 #include <TROOT.h>
 #include <TChain.h>
@@ -96,7 +95,7 @@ public :
                       fEntMin = -1; fEntMax = -1; fProcElems = 0; fProcElem = 0;}
    virtual ~ProofEventProc() {if (fProcElems) { fProcElems->SetOwner(kFALSE);
                                                 delete fProcElems;} }
-   virtual Int_t   Version() const {return 1;}
+   virtual Int_t   Version() const {return 2;}
    virtual void    Begin(TTree *);
    virtual void    SlaveBegin(TTree *tree);
    virtual void    Init(TTree *tree);
@@ -163,8 +162,11 @@ Bool_t ProofEventProc::Notify()
    // to the generated code, but the routine can be extended by the
    // user if needed.
 
-   TString fn(fChain->GetCurrentFile()->GetName());
-   Info("Notify", "processing file: %s", fn.Data());
+   TString fn;
+   if (fChain) {
+      fn = fChain->GetCurrentFile()->GetName();
+      Info("Notify", "processing file: %s", fn.Data());
+   }
 
    // Save information about previous element, if any
    if (fProcElem) fProcElem->Add(fEntMin, fEntMax);

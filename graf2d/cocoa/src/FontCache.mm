@@ -57,7 +57,6 @@ const CFStringRef fixedFontNames[FontCache::nPadFonts] =
                                       CFSTR("Symbol-Italic")
                                      };
 
-
 //______________________________________________________________________________
 CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 {
@@ -225,7 +224,7 @@ void CreateXLFDString(const X11::XLFDName &xlfd, std::string &xlfdString)
     } else
         xlfdString += "-*";
 
-    xlfdString += "-*-*-*-*-*-*-*-";//TODO: something more reasonable?
+    xlfdString += "-*-*-*-*-*-*-*-";
 }
 
 }
@@ -434,7 +433,7 @@ unsigned FontCache::GetTextWidth(FontStruct_t font, const char *text, int nChars
 
    //Glyps' advances for a text.
    std::vector<CGSize> glyphAdvances(glyphs.size());
-   CTFontGetAdvancesForGlyphs(fontRef, kCTFontHorizontalOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
+   CTFontGetAdvancesForGlyphs(fontRef, Quartz::horizontalFontOrientation, &glyphs[0], &glyphAdvances[0], glyphs.size());
 
    CGFloat textWidth = 0.;
    for (size_type i = 0, e = glyphAdvances.size(); i < e; ++i)
@@ -505,7 +504,7 @@ CTFontRef FontCache::SelectSymbolFont(Float_t fontSize, unsigned fontIndex)
    font_map_iterator it = fFonts[fontIndex].find(fixedSize);//In ROOT, 11 is a font from symbol.ttf.
 
    if (it == fFonts[fontIndex].end()) {
-      //This GetValue + Which I took from Olivier's code.
+      //This GetValue
       const char * const fontDirectoryPath = gEnv->GetValue("Root.TTFontPath","$(ROOTSYS)/fonts");//This one I do not own.
       char * const fontFileName = gSystem->Which(fontDirectoryPath, "symbol.ttf", kReadPermission);//This must be deleted.
 

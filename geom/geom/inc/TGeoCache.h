@@ -13,23 +13,13 @@
 #ifndef ROOT_TGeoCache
 #define ROOT_TGeoCache
 
-#ifndef ROOT_TGeoNode
 #include "TGeoNode.h"
-#endif
 
-#ifndef ROOT_TGeoStateInfo
 #include "TGeoStateInfo.h"
-#endif
 
 // forward declarations
 class TGeoManager;
 class TGeoHMatrix;
-
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// TGeoCacheState - class storing the state of the cache at a given moment //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
 
 class TGeoCacheState : public TObject
 {
@@ -59,12 +49,6 @@ public:
 
    ClassDef(TGeoCacheState, 0)       // class storing the cache state
 };
-
-/////////////////////////////////////////////////////////////////////////////
-//                                                                         //
-// TGeoNodeCache - cache of reusable physical nodes                        //
-//                                                                         //
-/////////////////////////////////////////////////////////////////////////////
 
 class TGeoNodeCache : public TObject
 {

@@ -71,18 +71,18 @@ class GlobusAuthInit {
 }};
 static GlobusAuthInit globusauth_init;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Globus authentication code.
+/// Returns 0 in case authentication failed
+///         1 in case of success
+///         2 in case of the remote node doesn not seem to support
+///           Globus Authentication
+///         3 in case of the remote node doesn not seem to have
+///           certificates for our CA or is unable to init credentials
+
 Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
                          TString & details)
 {
-   // Globus authentication code.
-   // Returns 0 in case authentication failed
-   //         1 in case of success
-   //         2 in case of the remote node doesn not seem to support
-   //           Globus Authentication
-   //         3 in case of the remote node doesn not seem to have
-   //           certificates for our CA or is unable to init credentials
-
    int auth = 0, rc;
    int retval = 0, kind = 0, type = 0, server_auth = 0, brcv = 0, bsnd = 0;
    gss_ctx_id_t glbContextHandle = GSS_C_NO_CONTEXT;
@@ -139,7 +139,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
       return -1;
    }
    if (gDebug > 3)
-      Info("GlobusAuthenticate", " Credential Handle is 0x%x",
+      Info("GlobusAuthenticate", " Credential Handle is %p",
            gGlbCredHandle);
 
    // Inquire credentials for subject name and convert it in human readable form ...
@@ -193,7 +193,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
          if (gDebug > 0)
             Error("GlobusAuthenticate",
                   "Length of Issuer name not send correctly: bytes sent: %d (tot len: %d)",
-                  bsnd - 1, strlen(buf));
+                  bsnd - 1, (int) strlen(buf));
          return 0;
       }
       // Now we send it to the server daemon
@@ -240,7 +240,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
                   "recv host subj: did not receive all the bytes"
                   " (recv: %d, due >%d)", brcv, retval);
                Error("GlobusAuthenticate", "recv host subj: (%d) %s",
-                  strlen(host_subj), host_subj);
+                  (int) strlen(host_subj), host_subj);
             }
             if (host_subj) delete[] host_subj;
             return 0;
@@ -262,7 +262,7 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
        0 ? (GSS_C_DELEG_FLAG | GSS_C_MUTUAL_FLAG) : GSS_C_MUTUAL_FLAG;
    if (gDebug > 3)
       Info("GlobusAuthenticate",
-           " gssReqFlags: %p, GlbCredentials: %p", gssReqFlags, gGlbCredHandle);
+           " gssReqFlags: 0x%x, GlbCredentials: %p", gssReqFlags, gGlbCredHandle);
 
    // Now we are ready to start negotiating with the Server
    if ((majStat =
@@ -382,13 +382,13 @@ Int_t GlobusAuthenticate(TAuthenticate * tAuth, TString & user,
    return auth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fetchs from the shared memory segment created by 'proofd'.
+/// the delegated credentials needed to autheticate the slaves ...
+/// The shared memory segment is destroyed.
+
 int GlobusGetDelCred()
 {
-   // This function fetchs from the shared memory segment created by 'proofd'.
-   // the delegated credentials needed to autheticate the slaves ...
-   // The shared memory segment is destroyed.
-
    struct shmid_ds shm_ds;
    OM_uint32 majStat = 0;
    OM_uint32 minStat = 0;
@@ -417,7 +417,7 @@ int GlobusGetDelCred()
       return 1;
    } else if (gDebug > 3)
       Info("GlobusGetDelCred:",
-           "Globus Credentials successfully imported (0x%x)",
+           "Globus Credentials successfully imported (%p)",
            gGlbDelCredHandle);
 
    if (credential) delete[] credential;
@@ -449,11 +449,11 @@ int GlobusGetDelCred()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle error ...
+
 void GlobusError(const char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
 {
-   // Handle error ...
-
    char *glbErr = 0;
 
    if (!globus_gss_assist_display_status_str
@@ -468,12 +468,12 @@ void GlobusError(const char *mess, OM_uint32 majs, OM_uint32 mins, int toks)
    if (glbErr) delete[] glbErr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determines calling environment.
+/// Returns 0 if successful; 1 otherwise.
+
 Int_t GlobusGetLocalEnv(Int_t *localEnv, TString protocol)
 {
-   // Determines calling environment.
-   // Returns 0 if successful; 1 otherwise.
-
    int retval = 0;
 
    // Calling application
@@ -494,7 +494,7 @@ Int_t GlobusGetLocalEnv(Int_t *localEnv, TString protocol)
             Info("GlobusGetLocalEnv",
                  "PROOF environment, called by the MASTER/SLAVE");
             Info("GlobusGetLocalEnv",
-                 "string with pointer to del cred is 0x%x",
+                 "string with pointer to del cred is %p",
                  gGlbDelCredHandle);
          }
          *localEnv = 2;
@@ -535,14 +535,14 @@ Int_t GlobusGetLocalEnv(Int_t *localEnv, TString protocol)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get subject name from credential handle cred.
+/// Returns 0 is successfull, 1 otherwise.
+
 Int_t GlobusNameFromCred(gss_cred_id_t cred, TString &subjName)
 {
-   // Get subject name from credential handle cred.
-   // Returns 0 is successfull, 1 otherwise.
-
    if (gDebug > 2)
-      Info("GlobusNamesFromCred", "Enter: Handle: 0x%p", cred);
+      Info("GlobusNamesFromCred", "Enter: Handle: %p", cred);
 
    // Inquire credentials for Subject name and convert it in human readable form ...
    OM_uint32 majStat = 0;
@@ -577,11 +577,11 @@ Int_t GlobusNameFromCred(gss_cred_id_t cred, TString &subjName)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns lifetime of established sec context 'ctx'
+
 Int_t GlobusGetSecContLifeTime(gss_ctx_id_t ctx)
 {
-   // Returns lifetime of established sec context 'ctx'
-
    OM_uint32 majStat = 0;
    OM_uint32 minStat = 0;
    OM_uint32 gssRetFlags = 0;
@@ -608,11 +608,11 @@ Int_t GlobusGetSecContLifeTime(gss_ctx_id_t ctx)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function cleans up security context ctx
+
 Int_t GlobusCleanupContext(gss_ctx_id_t ctx)
 {
-   // This function cleans up security context ctx
-
    OM_uint32 majStat = 0;
    OM_uint32 minStat = 0;
 
@@ -628,14 +628,14 @@ Int_t GlobusCleanupContext(gss_ctx_id_t ctx)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Globus version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+/// Check if Subj matches the one in Ctx
+/// Returns: 1 if ok, 0 if not
+/// Deactivates Ctx is not valid
+
 Int_t GlobusCheckSecCtx(const char *subj, TRootSecContext *ctx)
 {
-   // Globus version of CheckSecCtx to be passed to TAuthenticate::AuthExists
-   // Check if Subj matches the one in Ctx
-   // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid
-
    Int_t rc = 0;
 
    if (ctx->IsActive())
@@ -644,11 +644,11 @@ Int_t GlobusCheckSecCtx(const char *subj, TRootSecContext *ctx)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function cleans up shared memories associated with Globus
+
 void GlobusCleanupShm()
 {
-   // This function cleans up shared memories associated with Globus
-
    if (gROOT->IsProofServ()) {
       struct shmid_ds shm_ds;
       int rc;
@@ -662,7 +662,7 @@ void GlobusCleanupShm()
             if ((rc == EINVAL) || (rc == EIDRM)) {
                if (gDebug > 3)
                   Info("GlobusCleanupShm:",
-                       "credentials shared memory segment %s"
+                       "credentials shared memory segment "
                        "already marked as destroyed");
             } else {
                Warning("GlobusCleanupShm:",
@@ -680,14 +680,14 @@ void GlobusCleanupShm()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if SubjName match the one assigned to sec context Ctx
+/// Check also validity of Ctx.
+/// Returns 1 if everything is ok, 0 if non-matching
+/// -1 if Ctx is no more valid and should be discarded
+
 Int_t GlobusCheckSecContext(const char *subjName, gss_ctx_id_t ctx)
 {
-   // Checks if SubjName match the one assigned to sec context Ctx
-   // Check also validity of Ctx.
-   // Returns 1 if everything is ok, 0 if non-matching
-   // -1 if Ctx is no more valid and should be discarded
-
    if (!ctx)
       return 0;
 
@@ -730,7 +730,7 @@ Int_t GlobusCheckSecContext(const char *subjName, gss_ctx_id_t ctx)
             theName[nameBuffer.length]= '\0';
             if (gDebug > 2)
                Info("GlobusCheckSecContext","with subject name: %s (%d)",
-                                             theName, nameBuffer.length);
+                                             theName, (int) nameBuffer.length);
             if (!strcmp(theName, subjName)) {
                if (gDebug > 2)
                   Info("GlobusCheckSecContext",
@@ -757,12 +757,12 @@ Int_t GlobusCheckSecContext(const char *subjName, gss_ctx_id_t ctx)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get Credential Handle, either from scratch, or from delegated info ...
+/// Returns 0 is successfull, 1 otherwise.
+
 int GlobusGetCredHandle(Int_t localEnv, gss_cred_id_t * credHandle)
 {
-   // Get Credential Handle, either from scratch, or from delegated info ...
-   // Returns 0 is successfull, 1 otherwise.
-
    int retval = 0;
    OM_uint32 majStat = 0;
    OM_uint32 minStat = 0;
@@ -880,13 +880,13 @@ int GlobusGetCredHandle(Int_t localEnv, gss_cred_id_t * credHandle)
    return retval;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resolve the details string from localEnv. If opt == 0 just fill the string,
+/// otherwise initialize the envs, prompting the user, if needed
+/// Returns 0 is successfull, 1 otherwise.
+
 void GlobusGetDetails(Int_t localEnv, Int_t opt, TString &details)
 {
-   // Resolve the details string from localEnv. If opt == 0 just fill the string,
-   // otherwise initialize the envs, prompting the user, if needed
-   // Returns 0 is successfull, 1 otherwise.
-
    if (localEnv < 2) {
 
       // User settings
@@ -988,13 +988,13 @@ void GlobusGetDetails(Int_t localEnv, Int_t opt, TString &details)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get issuer name from the certificate read either from the
+/// certificate file or from the proxy file.
+/// Returns 0 is successfull, 1 otherwise.
+
 Int_t GlobusIssuerName(TString &issuerName)
 {
-   // Get issuer name from the certificate read either from the
-   // certificate file or from the proxy file.
-   // Returns 0 is successfull, 1 otherwise.
-
    if (gDebug > 2)
       Info("GlobusIssuerName", "enter");
 
@@ -1010,7 +1010,7 @@ Int_t GlobusIssuerName(TString &issuerName)
          fn = Form("%s/.globus/usercert.pem",gSystem->HomeDirectory());
       if (gSystem->AccessPathName(fn, kReadPermission)) {
          emsg += fn;
-         Error("GlobusIssuerName", emsg.Data());
+         Error("GlobusIssuerName", "%s", emsg.Data());
          return 1;
       }
    }

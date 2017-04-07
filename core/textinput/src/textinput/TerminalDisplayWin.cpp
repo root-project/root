@@ -15,38 +15,44 @@
 
 #ifdef _WIN32
 #include "textinput/TerminalDisplayWin.h"
-
 #include "textinput/Color.h"
+
+#include <assert.h>
 
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
     TerminalDisplay(false), fStartLine(0), fIsAttached(false),
-    fDefaultAttributes(0) {
+    fDefaultAttributes(0), fOldCodePage(::GetConsoleOutputCP()) {
+    DWORD mode;
+    SetIsTTY(::GetConsoleMode(::GetStdHandle(STD_INPUT_HANDLE), &mode) != 0);
+
     fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
     bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
-    SetIsTTY(isConsole);
-    if (isConsole) {
+    if (!isConsole) {
       // Prevent redirection from stealing our console handle,
       // simply open our own.
-      fOut = ::CreateFile("CONOUT$", GENERIC_READ | GENERIC_WRITE,
+      fOut = ::CreateFileA("CONOUT$", GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL, NULL);
       ::GetConsoleMode(fOut, &fOldMode);
-      fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
 
       CONSOLE_SCREEN_BUFFER_INFO csbi;
       ::GetConsoleScreenBufferInfo(fOut, &csbi);
       fDefaultAttributes = csbi.wAttributes;
-    }
+      assert(fDefaultAttributes != 0 && "~TerminalDisplayWin broken");
+    } else
+      ::SetConsoleOutputCP(65001); // Force UTF-8 output
+    fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
     HandleResizeEvent();
   }
 
   TerminalDisplayWin::~TerminalDisplayWin() {
-    if (IsTTY()) {
+    if (fDefaultAttributes) {
       ::SetConsoleTextAttribute(fOut, fDefaultAttributes);
       // We allocated CONOUT$:
       CloseHandle(fOut);
-    }
+    } else
+      ::SetConsoleOutputCP(fOldCodePage);
   }
 
   void
@@ -80,6 +86,7 @@ namespace textinput {
 
   void
   TerminalDisplayWin::CheckCursorPos() {
+    if (!IsTTY()) return;
     // Did something print something on the screen?
     // I.e. did the cursor move?
     CONSOLE_SCREEN_BUFFER_INFO CSI;
@@ -108,8 +115,10 @@ namespace textinput {
 
   void
   TerminalDisplayWin::MoveInternal(Pos P) {
-    COORD C = {P.fCol, P.fLine + fStartLine};
-    ::SetConsoleCursorPosition(fOut, C);
+    if (IsTTY()) {
+      COORD C = {P.fCol, P.fLine + fStartLine};
+      ::SetConsoleCursorPosition(fOut, C);
+    }
   }
 
   void
@@ -151,7 +160,7 @@ namespace textinput {
   TerminalDisplayWin::EraseToRight() {
     DWORD NumWritten;
     COORD C = {fWritePos.fCol, fWritePos.fLine + fStartLine};
-    ::FillConsoleOutputCharacter(fOut, ' ', GetWidth() - C.X, C,
+    ::FillConsoleOutputCharacterA(fOut, ' ', GetWidth() - C.X, C,
       &NumWritten);
     // It wraps, so move up and reset WritePos:
     //MoveUp();
@@ -162,7 +171,7 @@ namespace textinput {
   TerminalDisplayWin::WriteRawString(const char *text, size_t len) {
     DWORD NumWritten = 0;
     if (IsTTY()) {
-      WriteConsole(fOut, text, (DWORD) len, &NumWritten, NULL);
+      WriteConsoleA(fOut, text, (DWORD) len, &NumWritten, NULL);
     } else {
       WriteFile(fOut, text, (DWORD) len, &NumWritten, NULL);
     }
@@ -174,21 +183,19 @@ namespace textinput {
   void
   TerminalDisplayWin::Attach() {
     // set to noecho
-    if (fIsAttached) return;
-    if (IsTTY() && !::SetConsoleMode(fOut, fMyMode)) {
+    if (fIsAttached || !IsTTY()) return;
+    if (!::SetConsoleMode(fOut, fMyMode)) {
       ShowError("attaching to console output");
     }
     CONSOLE_SCREEN_BUFFER_INFO Info;
-    if (IsTTY()) {
-      if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
-        ShowError("attaching / getting console info");
-      } else {
-        fStartLine = Info.dwCursorPosition.Y;
-        if (Info.dwCursorPosition.X) {
-          // Whooa - where are we?! Newline and cross fingers:
-          WriteRawString("\n", 1);
-          ++fStartLine;
-        }
+    if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
+      ShowError("attaching / getting console info");
+    } else {
+      fStartLine = Info.dwCursorPosition.Y;
+      if (Info.dwCursorPosition.X) {
+        // Whooa - where are we?! Newline and cross fingers:
+        WriteRawString("\n", 1);
+        ++fStartLine;
       }
     }
     fIsAttached = true;
@@ -196,8 +203,8 @@ namespace textinput {
 
   void
   TerminalDisplayWin::Detach() {
-    if (!fIsAttached) return;
-    if (IsTTY() && !SetConsoleMode(fOut, fOldMode)) {
+    if (!fIsAttached || !IsTTY()) return;
+    if (!SetConsoleMode(fOut, fOldMode)) {
       ShowError("detaching to console output");
     }
     TerminalDisplay::Detach();
@@ -208,9 +215,9 @@ namespace textinput {
   TerminalDisplayWin::ShowError(const char* Where) const {
     DWORD Err = GetLastError();
     LPVOID MsgBuf = 0;
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
       FORMAT_MESSAGE_IGNORE_INSERTS, NULL, Err, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-      (LPTSTR) &MsgBuf, 0, NULL);
+      (LPSTR) &MsgBuf, 0, NULL);
 
     printf("Error %d in textinput::TerminalDisplayWin %s: %s\n", Err, Where, MsgBuf);
     LocalFree(MsgBuf);

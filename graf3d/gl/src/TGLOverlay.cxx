@@ -11,24 +11,19 @@
 
 #include "TGLOverlay.h"
 
-//==============================================================================
-// TGLOverlayElement
-//==============================================================================
-
-//______________________________________________________________________
-//
-// An overlay element. Supports drawing (Render) and event-handling
-//
-//
+/** \class TGLOverlayElement
+\ingroup opengl
+An overlay element. Supports drawing (Render) and event-handling
+*/
 
 ClassImp(TGLOverlayElement);
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has entered this element.
+/// Return TRUE if you want additional events.
+
 Bool_t TGLOverlayElement::MouseEnter(TGLOvlSelectRecord& /*selRec*/)
 {
-   // Mouse has enetered this element.
-   // Return TRUE if you want additional events.
-
    return kFALSE;
 }
 
@@ -44,32 +39,29 @@ Bool_t TGLOverlayElement::MouseStillInside(TGLOvlSelectRecord& /*selRec*/)
    return kTRUE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLOverlayElement::Handle(TGLRnrCtx          & /*rnrCtx*/,
                                  TGLOvlSelectRecord & /*selRec*/,
                                  Event_t            * /*event*/)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    return kFALSE;
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left the element.
+
 void TGLOverlayElement::MouseLeave()
 {
-   // Mouse has left the element.
 }
 
 
-//==============================================================================
-// TGLOverlayList
-//==============================================================================
-
-//______________________________________________________________________
-//
-// Manage a collection of overlay elements.
-//
-// Not used yet.
+/** \class TGLOverlayList
+\ingroup opengl
+Manage a collection of overlay elements.
+Not used yet.
+*/
 
 ClassImp(TGLOverlayList);

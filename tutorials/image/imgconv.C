@@ -1,10 +1,16 @@
+/// \file
+/// \ingroup tutorial_image
+/// \notebook -nodraw
+/// Open rose512.jpg and save it in the following formats:
+///  .png, .gif, .xpm and tiff.
+///
+/// \macro_code
+///
+/// \author Valeriy Onuchin
+
 void imgconv()
 {
-   // Open rose512.jpg and save it in the following formats:
-   //  .png, .gif, .xpm and tiff.
-   //Author: Valeriy Onuchin
-
-   TImage *img = TImage::Open("rose512.jpg");
+   TImage *img = TImage::Open("$ROOTSYS/tutorials/image/rose512.jpg");
    if (!img) {
       printf("Could not create an image... exit\n");
       return;

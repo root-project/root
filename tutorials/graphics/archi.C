@@ -1,8 +1,14 @@
-void archi() {
-   //
-   // This macro displays the ROOT architecture
-   //Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// This macro displays the ROOT architecture.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+void archi() {
    TCanvas *c1 = new TCanvas("c1","Dictionary Architecture",20,10,750,930);
    c1->SetBorderSize(0);
    c1->Range(0,0,20.5,26);

@@ -11,6 +11,7 @@
 //
 //===----------------------------------------------------------------------===//
 #include "clang/Basic/LangOptions.h"
+#include "llvm/ADT/StringRef.h"
 
 using namespace clang;
 
@@ -30,9 +31,15 @@ void LangOptions::resetNonModularOptions() {
   // FIXME: This should not be reset; modules can be different with different
   // sanitizer options (this affects __has_feature(address_sanitizer) etc).
   Sanitize.clear();
-  SanitizerBlacklistFile.clear();
+  SanitizerBlacklistFiles.clear();
 
   CurrentModule.clear();
-  ImplementationOfModule.clear();
 }
 
+bool LangOptions::isNoBuiltinFunc(const char *Name) const {
+  StringRef FuncName(Name);
+  for (unsigned i = 0, e = NoBuiltinFuncs.size(); i != e; ++i)
+    if (FuncName.equals(NoBuiltinFuncs[i]))
+      return true;
+  return false;
+}

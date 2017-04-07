@@ -10,7 +10,6 @@
 #include "ValuePrinterSynthesizer.h"
 
 #include "cling/Interpreter/Interpreter.h"
-#include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -30,27 +29,24 @@ using namespace clang;
 
 namespace cling {
 
-  ValuePrinterSynthesizer::ValuePrinterSynthesizer(clang::Sema* S,
-                                                   llvm::raw_ostream* Stream)
-    : TransactionTransformer(S), m_Context(&S->getASTContext()) {
-    if (Stream)
-      m_ValuePrinterStream.reset(Stream);
-    else
-      m_ValuePrinterStream.reset(new llvm::raw_os_ostream(std::cout));
-  }
+  ValuePrinterSynthesizer::ValuePrinterSynthesizer(clang::Sema* S)
+    : WrapperTransformer(S), m_Context(&S->getASTContext()),
+      m_LookupResult(nullptr) { }
 
 
   // pin the vtable here.
   ValuePrinterSynthesizer::~ValuePrinterSynthesizer()
   { }
 
-  void ValuePrinterSynthesizer::Transform() {
-    if (getTransaction()->getCompilationOpts().ValuePrinting
-        == CompilationOptions::VPDisabled)
-      return;
+  ASTTransformer::Result ValuePrinterSynthesizer::Transform(clang::Decl* D) {
+    if (getCompilationOpts().ValuePrinting == CompilationOptions::VPDisabled)
+      return Result(D, true);
 
-    if (!tryAttachVP(getTransaction()->getWrapperFD()))
-      return setTransaction(0); // On error set to NULL.
+    FunctionDecl* FD = cast<FunctionDecl>(D);
+    assert(utils::Analyze::IsWrapper(FD) && "Expected wrapper");
+    if (tryAttachVP(FD))
+      return Result(FD, true);
+    return Result(0, false);
   }
 
   bool ValuePrinterSynthesizer::tryAttachVP(FunctionDecl* FD) {
@@ -69,26 +65,25 @@ namespace cling {
       CompoundStmt* CS = cast<CompoundStmt>(FD->getBody());
       assert(CS && "Missing body?");
 
-      const CompilationOptions& CO(getTransaction()->getCompilationOpts());
-      switch (CO.ValuePrinting) {
+      switch (getCompilationOpts().ValuePrinting) {
       case CompilationOptions::VPDisabled:
         assert(0 && "Don't wait that long. Exit early!");
         break;
       case CompilationOptions::VPEnabled:
         break;
       case CompilationOptions::VPAuto: {
-        CompilationOptions& CO = getTransaction()->getCompilationOpts();
         // FIXME: Propagate the flag to the nested transactions also, they
         // must have the same CO as their parents.
-        CO.ValuePrinting = CompilationOptions::VPEnabled;
+        getCompilationOpts().ValuePrinting = CompilationOptions::VPEnabled;
         if ((int)CS->size() > indexOfLastExpr+1
             && (*(CS->body_begin() + indexOfLastExpr + 1))
             && isa<NullStmt>(*(CS->body_begin() + indexOfLastExpr + 1))) {
           // If next is NullStmt disable VP is disabled - exit. Signal this in
           // the CO of the transaction.
-          CO.ValuePrinting = CompilationOptions::VPDisabled;
+          getCompilationOpts().ValuePrinting = CompilationOptions::VPDisabled;
         }
-        if (CO.ValuePrinting == CompilationOptions::VPDisabled)
+        if (getCompilationOpts().ValuePrinting
+            == CompilationOptions::VPDisabled)
           return true;
       }
         break;
@@ -121,8 +116,7 @@ namespace cling {
       }
     }
     else // if nothing to attach to set the CO's ValuePrinting to disabled.
-      getTransaction()->getCompilationOpts().ValuePrinting
-        = CompilationOptions::VPDisabled;
+      getCompilationOpts().ValuePrinting = CompilationOptions::VPDisabled;
     return true;
   }
 
@@ -135,27 +129,19 @@ namespace cling {
       return 0;
 
     // Find cling_PrintValue
-    SourceLocation NoSLoc = SourceLocation();
-    DeclarationName PVName = &m_Context->Idents.get("cling_PrintValue");
-    LookupResult R(*m_Sema, PVName, E->getLocStart(), Sema::LookupOrdinaryName,
-                   Sema::ForRedeclaration);
-
-    Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
-    m_Sema->LookupName(R, S);
-    assert(!R.empty() && "Cannot find cling_PrintValue(...)");
-
-    CXXScopeSpec CSS;
-    Expr* UnresolvedLookup
-      = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).get();
+    if (!m_LookupResult)
+      FindAndCacheRuntimeLookupResult(E->getLocStart());
 
 
     Expr* VoidEArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema,
                                                           m_Context->VoidPtrTy,
-                                                          (uint64_t)E);
+                                                          (uintptr_t)E);
     Expr* VoidCArg = utils::Synthesize::CStyleCastPtrExpr(m_Sema,
                                                           m_Context->VoidPtrTy,
-                                                          (uint64_t)m_Context);
+                                                          (uintptr_t)m_Context);
 
+    SourceLocation NoSLoc = SourceLocation();
+    Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
     if (!QT->isPointerType()) {
       while(ImplicitCastExpr* ICE = dyn_cast<ImplicitCastExpr>(E))
         E = ICE->getSubExpr();
@@ -167,7 +153,12 @@ namespace cling {
     CallArgs.push_back(VoidCArg);
     CallArgs.push_back(E);
 
-    Expr* Result = m_Sema->ActOnCallExpr(S, UnresolvedLookup, E->getLocStart(),
+    CXXScopeSpec CSS;
+    Expr* unresolvedLookup
+      = m_Sema->BuildDeclarationNameExpr(CSS, *m_LookupResult,
+                                         /*ADL*/ false).get();
+
+    Expr* Result = m_Sema->ActOnCallExpr(S, unresolvedLookup, E->getLocStart(),
                                          CallArgs, E->getLocEnd()).get();
     assert(Result && "Cannot create value printer!");
 
@@ -177,12 +168,26 @@ namespace cling {
 
   unsigned ValuePrinterSynthesizer::ClearNullStmts(CompoundStmt* CS) {
     llvm::SmallVector<Stmt*, 8> FBody;
-    for (StmtRange range = CS->children(); range; ++range)
-      if (!isa<NullStmt>(*range))
-        FBody.push_back(*range);
+    for (auto&& child: CS->children())
+      if (!isa<NullStmt>(child))
+        FBody.push_back(child);
 
-    CS->setStmts(*m_Context, FBody.data(), FBody.size());
+    CS->setStmts(*m_Context, FBody);
     return FBody.size();
+  }
+
+  void ValuePrinterSynthesizer::FindAndCacheRuntimeLookupResult(
+                                                  SourceLocation sourceLoc) {
+    assert(!m_LookupResult && "Called multiple times!?");
+
+    DeclarationName PVName = &m_Context->Idents.get("cling_PrintValue");
+    m_LookupResult = new LookupResult(*m_Sema, PVName, sourceLoc,
+                                      Sema::LookupOrdinaryName,
+                                      Sema::ForRedeclaration);
+
+    Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
+    m_Sema->LookupName(*m_LookupResult, S);
+    assert(!m_LookupResult->empty() && "Cannot find cling_PrintValue(...)");
   }
 
 } // namespace cling

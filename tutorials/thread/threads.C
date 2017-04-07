@@ -1,10 +1,19 @@
-//+ Example of a simple script creating 3 threads.
-// This script can only be executed via ACliC: .x threads.C++.
-// Before executing the script, load the Thread library with:
-//   gSystem->Load("libThread");
-// This is not needed anymore due to the rootmap facility which
-// automatically loads the needed libraries.
-//Author: Victor Perevovchikov
+/// \file
+/// \ingroup tutorial_thread
+/// Example of a simple script creating 3 threads.
+/// This script can only be executed via ACliC: .x threads.C++.
+/// Before executing the script, load the Thread library with:
+///
+/// ~~~{.cpp}
+///   gSystem->Load("libThread");
+/// ~~~
+///
+/// This is not needed anymore due to the rootmap facility which
+/// automatically loads the needed libraries.
+///
+/// \macro_code
+///
+/// \author Victor Perevovchikov
 
 #include "TThread.h"
 #include <Riostream.h>
@@ -26,10 +35,6 @@ void *handle(void *ptr)
 
 void threads()
 {
-#ifdef __CINT__
-   printf("This script can only be executed via ACliC: .x threads.C++\n");
-   return;
-#endif
 
    gDebug = 1;
 

@@ -20,6 +20,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Option/OptSpecifier.h"
+#include <utility>
 
 namespace llvm {
 class raw_fd_ostream;
@@ -45,6 +46,7 @@ class HeaderSearch;
 class HeaderSearchOptions;
 class IdentifierTable;
 class LangOptions;
+class PCHContainerReader;
 class Preprocessor;
 class PreprocessorOptions;
 class PreprocessorOutputOptions;
@@ -61,8 +63,8 @@ void ApplyHeaderSearchOptions(HeaderSearch &HS,
 
 /// InitializePreprocessor - Initialize the preprocessor getting it and the
 /// environment ready to process a single file.
-void InitializePreprocessor(Preprocessor &PP,
-                            const PreprocessorOptions &PPOpts,
+void InitializePreprocessor(Preprocessor &PP, const PreprocessorOptions &PPOpts,
+                            const PCHContainerReader &PCHContainerRdr,
                             const FrontendOptions &FEOpts);
 
 /// DoPrintPreprocessedInput - Implement -E mode.
@@ -72,12 +74,12 @@ void DoPrintPreprocessedInput(Preprocessor &PP, raw_ostream* OS,
 /// An interface for collecting the dependencies of a compilation. Users should
 /// use \c attachToPreprocessor and \c attachToASTReader to get all of the
 /// dependencies.
-// FIXME: Migrate DependencyFileGen, DependencyGraphGen, ModuleDepCollectory to
-// use this interface.
+/// FIXME: Migrate DependencyFileGen and DependencyGraphGen to use this
+/// interface.
 class DependencyCollector {
 public:
-  void attachToPreprocessor(Preprocessor &PP);
-  void attachToASTReader(ASTReader &R);
+  virtual void attachToPreprocessor(Preprocessor &PP);
+  virtual void attachToASTReader(ASTReader &R);
   llvm::ArrayRef<std::string> getDependencies() const { return Dependencies; }
 
   /// Called when a new file is seen. Return true if \p Filename should be added
@@ -117,36 +119,43 @@ public:
 
 /// Collects the dependencies for imported modules into a directory.  Users
 /// should attach to the AST reader whenever a module is loaded.
-class ModuleDependencyCollector {
+class ModuleDependencyCollector : public DependencyCollector {
   std::string DestDir;
-  bool HasErrors;
+  bool HasErrors = false;
   llvm::StringSet<> Seen;
   vfs::YAMLVFSWriter VFSWriter;
 
+  llvm::StringMap<std::string> SymLinkMap;
+
+  bool getRealPath(StringRef SrcPath, SmallVectorImpl<char> &Result);
+  std::error_code copyToRoot(StringRef Src);
 public:
   StringRef getDest() { return DestDir; }
   bool insertSeen(StringRef Filename) { return Seen.insert(Filename).second; }
-  void setHasErrors() { HasErrors = true; }
+  void addFile(StringRef Filename);
   void addFileMapping(StringRef VPath, StringRef RPath) {
     VFSWriter.addFileMapping(VPath, RPath);
   }
 
-  void attachToASTReader(ASTReader &R);
+  void attachToPreprocessor(Preprocessor &PP) override;
+  void attachToASTReader(ASTReader &R) override;
+
   void writeFileMap();
   bool hasErrors() { return HasErrors; }
   ModuleDependencyCollector(std::string DestDir)
-      : DestDir(DestDir), HasErrors(false) {}
+      : DestDir(std::move(DestDir)) {}
   ~ModuleDependencyCollector() { writeFileMap(); }
 };
 
 /// AttachDependencyGraphGen - Create a dependency graph generator, and attach
 /// it to the given preprocessor.
-  void AttachDependencyGraphGen(Preprocessor &PP, StringRef OutputFile,
-                                StringRef SysRoot);
+void AttachDependencyGraphGen(Preprocessor &PP, StringRef OutputFile,
+                              StringRef SysRoot);
 
 /// AttachHeaderIncludeGen - Create a header include list generator, and attach
 /// it to the given preprocessor.
 ///
+/// \param DepOpts - Options controlling the output.
 /// \param ShowAllHeaders - If true, show all header information instead of just
 /// headers following the predefines buffer. This is useful for making sure
 /// includes mentioned on the command line are also reported, but differs from
@@ -155,13 +164,14 @@ public:
 /// information to, instead of writing to stderr.
 /// \param ShowDepth - Whether to indent to show the nesting of the includes.
 /// \param MSStyle - Whether to print in cl.exe /showIncludes style.
-void AttachHeaderIncludeGen(Preprocessor &PP, bool ShowAllHeaders = false,
+void AttachHeaderIncludeGen(Preprocessor &PP,
+                            const DependencyOutputOptions &DepOpts,
+                            bool ShowAllHeaders = false,
                             StringRef OutputPath = "",
                             bool ShowDepth = true, bool MSStyle = false);
 
-/// CacheTokens - Cache tokens for use with PCH. Note that this requires
-/// a seekable stream.
-void CacheTokens(Preprocessor &PP, llvm::raw_fd_ostream* OS);
+/// Cache tokens for use with PCH. Note that this requires a seekable stream.
+void CacheTokens(Preprocessor &PP, raw_pwrite_stream *OS);
 
 /// The ChainedIncludesSource class converts headers to chained PCHs in
 /// memory, mainly for testing.

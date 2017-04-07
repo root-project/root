@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 
 enum EDataType {
@@ -75,7 +73,7 @@ public:
 
    static const char *GetTypeName(EDataType type);
    static TDataType  *GetDataType(EDataType type);
-   static EDataType GetType(const type_info &typeinfo);
+   static EDataType GetType(const std::type_info &typeinfo);
    static void AddBuiltins(TCollection* types);
 
    ClassDef(TDataType,2)  //Basic data type descriptor

@@ -12,15 +12,12 @@
 #ifndef ROOT_TFriendProxyDescriptor
 #define ROOT_TFriendProxyDescriptor
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 
 namespace ROOT {
+namespace Internal {
 
    class TFriendProxyDescriptor : public TNamed {
 
@@ -48,6 +45,7 @@ namespace ROOT {
 
       ClassDef(TFriendProxyDescriptor,0); // Describe a branch from a TTreeFriend.
    };
+}
 }
 
 #endif

@@ -1,20 +1,34 @@
-// Illustrates how to find peaks in histograms.
-// This script generates a random number of gaussian peaks
-// on top of a linear background.
-// The position of the peaks is found via TSpectrum and injected
-// as initial values of parameters to make a global fit.
-// The background is computed and drawn on top of the original histogram.
-//
-// To execute this example, do
-//  root > .x peaks.C  (generate 10 peaks by default)
-//  root > .x peaks.C++ (use the compiler)
-//  root > .x peaks.C++(30) (generates 30 peaks)
-//
-// To execute only the first part of the script (without fitting)
-// specify a negative value for the number of peaks, eg
-//  root > .x peaks.C(-20)
-//
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_spectrum
+/// \notebook
+/// Getting Contours From TH2D.
+/// Illustrates how to find peaks in histograms.
+///
+/// This script generates a random number of gaussian peaks
+/// on top of a linear background.
+/// The position of the peaks is found via TSpectrum and injected
+/// as initial values of parameters to make a global fit.
+/// The background is computed and drawn on top of the original histogram.
+///
+/// To execute this example, do:
+///
+/// ~~~{.cpp}
+///  root > .x peaks.C  (generate 10 peaks by default)
+///  root > .x peaks.C++ (use the compiler)
+///  root > .x peaks.C++(30) (generates 30 peaks)
+/// ~~~
+///
+/// To execute only the first part of the script (without fitting)
+/// specify a negative value for the number of peaks, eg
+///
+/// ~~~{.cpp}
+///  root > .x peaks.C(-20)
+/// ~~~
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TCanvas.h"
 #include "TMath.h"

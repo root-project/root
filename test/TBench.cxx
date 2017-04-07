@@ -10,7 +10,7 @@
 #include "TBench.h"
 #include "Riostream.h"
 
-THit hit;
+THit s_hit;
 #ifdef R__HPUX
 namespace std {
    using ::make_pair;
@@ -48,7 +48,8 @@ namespace {
 
 Counter hitCount("THit");
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(THit)
 //-------------------------------------------------------------
 THit::THit() {
@@ -126,7 +127,8 @@ TBuffer &operator<<(TBuffer &buf, const THit *obj)
    return buf;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TObjHit)
 //-------------------------------------------------------------
 
@@ -134,7 +136,8 @@ TObjHit::TObjHit() :THit() {}
 TObjHit::TObjHit(int t) :THit(t) {}
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhit)
 //-------------------------------------------------------------
 TSTLhit::TSTLhit()
@@ -161,8 +164,8 @@ void TSTLhit::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -208,7 +211,8 @@ Int_t TSTLhit::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitList)
 //-------------------------------------------------------------
 TSTLhitList::TSTLhitList()
@@ -234,8 +238,8 @@ void TSTLhitList::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -280,7 +284,8 @@ Int_t TSTLhitList::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitDeque)
 //-------------------------------------------------------------
 TSTLhitDeque::TSTLhitDeque()
@@ -306,8 +311,8 @@ void TSTLhitDeque::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.push_back(hit);
+      s_hit.Set(j);
+      fList1.push_back(s_hit);
    }
 }
 
@@ -353,7 +358,8 @@ Int_t TSTLhitDeque::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitSet)
 //-------------------------------------------------------------
 TSTLhitSet::TSTLhitSet()
@@ -379,8 +385,8 @@ void TSTLhitSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -426,7 +432,8 @@ Int_t TSTLhitSet::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitMultiset)
 //-------------------------------------------------------------
 TSTLhitMultiset::TSTLhitMultiset()
@@ -452,8 +459,8 @@ void TSTLhitMultiset::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -499,7 +506,8 @@ Int_t TSTLhitMultiset::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitMap)
 //-------------------------------------------------------------
 TSTLhitMap::TSTLhitMap()
@@ -525,8 +533,8 @@ void TSTLhitMap::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(std::pair<const Int_t ,THit> (j,hit));
+      s_hit.Set(j);
+      fList1.insert(std::pair<const Int_t ,THit> (j,s_hit));
    }
 }
 
@@ -572,7 +580,8 @@ Int_t TSTLhitMap::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitMultiMap)
 //-------------------------------------------------------------
 TSTLhitMultiMap::TSTLhitMultiMap()
@@ -598,8 +607,8 @@ void TSTLhitMultiMap::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      std::pair <const int, THit> temp(j,hit);
+      s_hit.Set(j);
+      std::pair <const int, THit> temp(j,s_hit);
       fList1.insert(temp);
    }
 }
@@ -646,7 +655,8 @@ Int_t TSTLhitMultiMap::ReadTree()
 }
 
 #if 0
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitHashSet)
 //-------------------------------------------------------------
 TSTLhitHashSet::TSTLhitHashSet()
@@ -672,8 +682,8 @@ void TSTLhitHashSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -719,7 +729,8 @@ Int_t TSTLhitHashSet::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitHashMultiSet)
 //-------------------------------------------------------------
 TSTLhitHashMultiSet::TSTLhitHashMultiSet()
@@ -745,8 +756,8 @@ void TSTLhitHashMultiSet::MakeEvent(int /*ievent*/)
 {
    Clear();
    for (Int_t j=0; j<fNhits; j++) {
-      hit.Set(j);
-      fList1.insert(hit);
+      s_hit.Set(j);
+      fList1.insert(s_hit);
    }
 }
 
@@ -792,7 +803,8 @@ Int_t TSTLhitHashMultiSet::ReadTree()
 }
 #endif
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStar)
 //-------------------------------------------------------------
 TSTLhitStar::TSTLhitStar()
@@ -868,7 +880,8 @@ Int_t TSTLhitStar::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarList)
 //-------------------------------------------------------------
 TSTLhitStarList::TSTLhitStarList()
@@ -942,7 +955,8 @@ Int_t TSTLhitStarList::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarDeque)
 //-------------------------------------------------------------
 TSTLhitStarDeque::TSTLhitStarDeque()
@@ -1016,7 +1030,8 @@ Int_t TSTLhitStarDeque::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarSet)
 //-------------------------------------------------------------
 TSTLhitStarSet::TSTLhitStarSet()
@@ -1091,7 +1106,8 @@ Int_t TSTLhitStarSet::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarMultiSet)
 //-------------------------------------------------------------
 TSTLhitStarMultiSet::TSTLhitStarMultiSet()
@@ -1166,7 +1182,8 @@ Int_t TSTLhitStarMultiSet::ReadTree()
 }
 
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarMap)
 //-------------------------------------------------------------
 TSTLhitStarMap::TSTLhitStarMap()
@@ -1240,7 +1257,8 @@ Int_t TSTLhitStarMap::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TSTLhitStarMultiMap)
 //-------------------------------------------------------------
 TSTLhitStarMultiMap::TSTLhitStarMultiMap()
@@ -1315,7 +1333,8 @@ Int_t TSTLhitStarMultiMap::ReadTree()
    return nbytes;
 }
 
-//-------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(TCloneshit)
 //-------------------------------------------------------------
 TCloneshit::TCloneshit()

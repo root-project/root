@@ -23,8 +23,6 @@
 
 #ifdef __cplusplus
 
-#include "cling/Interpreter/RuntimeException.h"
-
 #include <new>
 
 namespace cling {
@@ -56,7 +54,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpSVR, void* vpQT, void* vpT);
+      void setValueNoAlloc(void* vpI, void* vpSVR, void* vpQT, char vpOn);
 
       ///\brief Set the value of the GenericValue for the expression
       /// evaluated at the prompt.
@@ -67,7 +65,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, void* vpT,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            float value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -79,7 +77,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, void* vpT,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            double value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -92,7 +90,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, void* vpT,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            long double value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -106,7 +104,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, void* vpT,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            unsigned long long value);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -118,7 +116,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpV - The Value that is created.
       ///
-      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, void* vpT,
+      void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            const void* value);
 
       ///\brief Set the value of the Generic value and return the address
@@ -130,7 +128,7 @@ namespace cling {
       ///
       ///\returns the address where the value should be put.
       ///
-      void* setValueWithAlloc(void* vpI, void* vpV, void* vpQT, void* vpT);
+      void* setValueWithAlloc(void* vpI, void* vpV, void* vpQT, char vpOn);
 
       ///\brief Placement new doesn't work for arrays. It needs to be called on
       /// each element. For non-PODs we also need to call the *structors. This
@@ -162,7 +160,7 @@ namespace cling {
       ///\param[in] size - size of the array.
       ///
       template <typename T>
-      void copyArray(T* src, void* placement, int size) {
+      void copyArray(T* src, void* placement, std::size_t size) {
         for (int i = 0; i < size; ++i)
           new ((void*)(((T*)placement) + i)) T(src[i]);
       }
@@ -173,13 +171,14 @@ namespace cling {
 using namespace cling::runtime;
 
 extern "C" {
-  ///\brief a function that throws NullDerefException. This allows to 'hide' the
-  /// definition of the exceptions from the RuntimeUniverse and allows us to
+  ///\brief a function that throws InvalidDerefException. This allows to 'hide'
+  /// the definition of the exceptions from the RuntimeUniverse and allows us to
   /// run cling in -no-rtti mode.
   ///
-  void cling__runtime__internal__throwNullDerefException(void* Sema,
-                                                         void* Expr);
 
+  void* cling_runtime_internal_throwIfInvalidPointer(void* Sema,
+                                                    void* Expr,
+                                                    const void* Arg);
 }
 #endif // __cplusplus
 

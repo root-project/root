@@ -21,11 +21,11 @@
 
 ClassImp(TComplex)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Standard constructor
+
 TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
 {
-   // Standard constructor
-
    if (polar) {
       if(re<0) {
          ::Warning("TComplex::ctor","Modulo of a complex number should be >=0, taking the abs");
@@ -36,14 +36,16 @@ TComplex::TComplex(Double_t re, Double_t im, Bool_t polar) : fRe(re), fIm(im)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::ostream& operator<<(std::ostream& out, const TComplex& c)
 {
    out << "(" << c.fRe << "," << c.fIm << "i)";
    return out;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 std::istream& operator>>(std::istream& in, TComplex& c)
 {
    in >> c.fRe >> c.fIm;

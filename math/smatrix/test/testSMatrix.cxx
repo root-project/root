@@ -1036,8 +1036,15 @@ int test18() {
   SMatrix<double,7,7,MatRepSym<double,7> > Sinv = S.Inverse(ifail);
   iret |= compare(ifail,0,"sym7x7 inversion");
   SMatrix<double,7> Id = S*Sinv;
-  for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),1.,"inv result");
+  for (int i = 0; i < 7; ++i) {
+     int iiret = compare(Id(i,i),1.,"inv result",10);
+     if (iiret) {
+        std::cout << "Comparison failed for Id(" << i << "," << i << ") == " << Id(i,i) << " != 1."
+                  << " with delta == " << std::abs(Id(i,i) - 1)
+                  << " > " << 10 * 8.*std::numeric_limits<double>::epsilon() << std::endl;
+     }
+     iret |= iiret;
+  }
 
   double sum = 0;
   for (int i = 0; i < 7; ++i)
@@ -1061,7 +1068,7 @@ int test18() {
   iret |= compare(ifail,0,"7x7 inversion");
   Id = M*Minv;
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),1.,"inv result");
+     iret |= compare(Id(i,i),1.,"inv result",10);
 
   sum = 0;
   for (int i = 0; i < 7; ++i)
@@ -1095,14 +1102,14 @@ int test19() {
   //std::cout << S << "\n" << Sinv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),float(1.),"inv sym result");
+     iret |= compare(Id(i,i),float(1.),"inv sym result",1000);
 
   double sum = 0;
   for (int i = 0; i < 7; ++i)
     for (int j = 0; j <i; ++j)
       sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
 
-  iret |= compare(sum < 1.E-5, true,"inv sym off diag");
+  iret |= compare(sum < 1.E-4, true,"inv sym off diag");
 
   // now test inversion of general
   SMatrix<float,7> M;
@@ -1122,14 +1129,14 @@ int test19() {
   //std::cout << M << "\n" << Minv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-    iret |= compare(Id(i,i),float(1.),"inv result");
+     iret |= compare(Id(i,i),float(1.),"inv result",1000);
 
   sum = 0;
   for (int i = 0; i < 7; ++i)
     for (int j = 0; j <i; ++j)
       sum+= std::fabs(Id(i,j) );  // sum of off diagonal elements
 
-  iret |= compare(sum < 1.E-5, true,"inv off diag");
+  iret |= compare(sum < 1.E-3, true,"inv off diag");
 
 
   return iret;

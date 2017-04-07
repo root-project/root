@@ -39,6 +39,7 @@ namespace llvm {
 
 namespace cling {
   class IncrementalExecutor;
+  class TransactionPool;
 
   ///\brief Contains information about the consumed input at once.
   ///
@@ -184,15 +185,12 @@ namespace cling {
     ///
     clang::FileID m_BufferFID;
 
-  public:
-
-    Transaction(clang::Sema& S);
-    Transaction(const CompilationOptions& Opts, clang::Sema& S);
+    /// TransactionPool needs direct access to m_State as setState asserts
+    friend class TransactionPool;
 
     void Initialize(clang::Sema& S);
 
-    ~Transaction();
-
+  public:
     enum State {
       kCollecting,
       kCompleted,
@@ -207,6 +205,10 @@ namespace cling {
       kWarnings,
       kNone
     };
+
+    Transaction(clang::Sema& S);
+    Transaction(const CompilationOptions& Opts, clang::Sema& S);
+    ~Transaction();
 
     /// \{
     /// \name Iteration
@@ -310,9 +312,11 @@ namespace cling {
     }
 
     IssuedDiags getIssuedDiags() const {
-      return static_cast<IssuedDiags>(m_IssuedDiags);
+      return static_cast<IssuedDiags>(getTopmostParent()->m_IssuedDiags);
     }
-    void setIssuedDiags(IssuedDiags val) { m_IssuedDiags = val; }
+    void setIssuedDiags(IssuedDiags val) {
+      getTopmostParent()->m_IssuedDiags = val;
+    }
 
     const CompilationOptions& getCompilationOpts() const { return m_Opts; }
     CompilationOptions& getCompilationOpts() { return m_Opts; }
@@ -366,6 +370,24 @@ namespace cling {
     /// the parent.
     ///
     const Transaction* getParent() const { return m_Parent; }
+
+    ///\brief If the transaction was nested into another transaction returns
+    /// the topmost transaction, else this.
+    ///
+    Transaction* getTopmostParent() {
+      const Transaction* ConstThis = const_cast<const Transaction*>(this);
+      return const_cast<Transaction*>(ConstThis->getTopmostParent());
+    }
+
+    ///\brief If the transaction was nested into another transaction returns
+    /// the topmost transaction, else this.
+    ///
+    const Transaction* getTopmostParent() const {
+      const Transaction* ret = this;
+      while (ret->getParent())
+        ret = ret->getParent();
+      return ret;
+    }
 
     ///\brief Sets the nesting transaction of a nested transaction.
     ///
@@ -458,6 +480,7 @@ namespace cling {
 
     void setBufferFID(clang::FileID FID) { m_BufferFID = FID; }
     clang::FileID getBufferFID() const { return m_BufferFID; }
+    clang::SourceLocation getSourceStart(const clang::SourceManager& SM) const;
 
     ///\brief The transactions could be reused and the pointer couldn't serve
     /// as a unique handle to a transaction. Unique handles are used by clients
@@ -470,10 +493,6 @@ namespace cling {
     ///\brief Erases an element at given position.
     ///
     void erase(iterator pos);
-
-    ///\brief Resets empty transaction so that it could be reused.
-    ///
-    void reset();
 
     ///\brief Prints out all the declarations in the transaction.
     ///
@@ -495,7 +514,6 @@ namespace cling {
 
     void printStructureBrief(size_t nindent = 0) const;
 
-    friend class TransactionPool;
   private:
     bool comesFromASTReader(clang::DeclGroupRef DGR) const;
   };

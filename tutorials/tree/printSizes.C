@@ -1,3 +1,44 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook -nodraw
+/// This macro can be used to get aggregate information on the size
+/// take on disk or in memory by the various branches in a TTree.
+///
+/// For example:
+/// ~~~{.cpp}
+/// root [] printTreeSummary(tree);
+/// The TTree "T" takes 3764343 bytes on disk
+///   Its branch "event" takes 3760313 bytes on disk
+/// ~~~
+/// ~~~{.cpp}
+/// root [] printBranchSummary(tree->GetBranch("event"));
+/// The branch "event" takes 3760313 bytes on disk
+///   Its sub-branch "TObject" takes 581 bytes on disk
+///   Its sub-branch "fType[20]" takes 640 bytes on disk
+///   Its sub-branch "fEventName" takes 855 bytes on disk
+///   Its sub-branch "fNtrack" takes 506 bytes on disk
+///   Its sub-branch "fNseg" takes 554 bytes on disk
+///   Its sub-branch "fNvertex" takes 507 bytes on disk
+///   Its sub-branch "fFlag" takes 420 bytes on disk
+///   Its sub-branch "fTemperature" takes 738 bytes on disk
+///   Its sub-branch "fMeasures[10]" takes 1856 bytes on disk
+///   Its sub-branch "fMatrix[4][4]" takes 4563 bytes on disk
+///   Its sub-branch "fClosestDistance" takes 2881 bytes on disk
+///   Its sub-branch "fEvtHdr" takes 847 bytes on disk
+///   Its sub-branch "fTracks" takes 3673982 bytes on disk
+///   Its sub-branch "fHighPt" takes 59640 bytes on disk
+///   Its sub-branch "fMuons" takes 1656 bytes on disk
+///   Its sub-branch "fLastTrack" takes 785 bytes on disk
+///   Its sub-branch "fWebHistogram" takes 596 bytes on disk
+///   Its sub-branch "fH" takes 10076 bytes on disk
+///   Its sub-branch "fTriggerBits" takes 1699 bytes on disk
+///   Its sub-branch "fIsValid" takes 366 bytes on disk
+/// ~~~
+///
+/// \macro_code
+///
+/// \author
+
 #include "TTree.h"
 #include "TBranch.h"
 #include "Riostream.h"
@@ -5,43 +46,11 @@
 #include "TKey.h"
 #include "TBranchRef.h"
 
-//
-// This macro can be used to get aggregate information on the size
-// take on disk or in memory by the various branches in a TTree.
-// For example:
-/*
-
-root [] printTreeSummary(tree);
-The TTree "T" takes 3764343 bytes on disk
-  It's branch "event" takes 3760313 bytes on disk
-
-root [] printBranchSummary(tree->GetBranch("event"));
-The branch "event" takes 3760313 bytes on disk
-  It's sub-branch "TObject" takes 581 bytes on disk
-  It's sub-branch "fType[20]" takes 640 bytes on disk
-  It's sub-branch "fEventName" takes 855 bytes on disk
-  It's sub-branch "fNtrack" takes 506 bytes on disk
-  It's sub-branch "fNseg" takes 554 bytes on disk
-  It's sub-branch "fNvertex" takes 507 bytes on disk
-  It's sub-branch "fFlag" takes 420 bytes on disk
-  It's sub-branch "fTemperature" takes 738 bytes on disk
-  It's sub-branch "fMeasures[10]" takes 1856 bytes on disk
-  It's sub-branch "fMatrix[4][4]" takes 4563 bytes on disk
-  It's sub-branch "fClosestDistance" takes 2881 bytes on disk
-  It's sub-branch "fEvtHdr" takes 847 bytes on disk
-  It's sub-branch "fTracks" takes 3673982 bytes on disk
-  It's sub-branch "fHighPt" takes 59640 bytes on disk
-  It's sub-branch "fMuons" takes 1656 bytes on disk
-  It's sub-branch "fLastTrack" takes 785 bytes on disk
-  It's sub-branch "fWebHistogram" takes 596 bytes on disk
-  It's sub-branch "fH" takes 10076 bytes on disk
-  It's sub-branch "fTriggerBits" takes 1699 bytes on disk
-  It's sub-branch "fIsValid" takes 366 bytes on disk
-
- */
-
 Long64_t GetTotalSize(TBranch * b, bool ondisk, bool inclusive);
 Long64_t GetBasketSize(TBranch * b, bool ondisk, bool inclusive);
+
+void printSizes() {
+}
 
 Long64_t GetBasketSize(TObjArray * branches, bool ondisk, bool inclusive) {
    Long64_t result = 0;
@@ -148,7 +157,7 @@ void printBranchSummary(TBranch *br)
    size_t n = br->GetListOfBranches()->GetEntries();
    for( size_t i = 0; i < n; ++ i ) {
       TBranch *subbr = dynamic_cast<TBranch*>(br->GetListOfBranches()->At(i));
-      cout << "  It's sub-branch \"" << subbr->GetName() << "\" takes " << sizeOnDisk(subbr,true) << " bytes on disk\n";
+      cout << "  Its sub-branch \"" << subbr->GetName() << "\" takes " << sizeOnDisk(subbr,true) << " bytes on disk\n";
    }
 }
 
@@ -158,8 +167,7 @@ void printTreeSummary(TTree *t)
    size_t n = t->GetListOfBranches()->GetEntries();
    for( size_t i = 0; i < n; ++ i ) {
       TBranch *br =dynamic_cast<TBranch*>(t->GetListOfBranches()->At(i));
-      cout << "  It's branch \"" << br->GetName() << "\" takes " << sizeOnDisk(br,true) << " bytes on disk\n";
+      cout << "  Its branch \"" << br->GetName() << "\" takes " << sizeOnDisk(br,true) << " bytes on disk\n";
    }
 }
 
-void printSizes() {}

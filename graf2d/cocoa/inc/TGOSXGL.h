@@ -3,17 +3,13 @@
 
 #include <map>
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
 
 //
 //TGLManager is a legacy interface (gl-context/window management):
 //at some point we had to use OpenGL in our TCanvas/TPad classes which do not
 //have direct access to low-level APIs + on Windows we had quite tricky
 //mt-problems to deal with.
-//TODO: in principle, we can get rid of gl-managers and work with TGLWidget,
-//as it was demonstrated in glpad dev-branch 5 years ago.
 //
 
 class TGOSXGLManager : public TGLManager {

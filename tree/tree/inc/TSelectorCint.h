@@ -21,13 +21,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#if !defined(ROOT_TSelectorCint_SRC_FILE) && !defined(G__DICTIONARY) && !defined(__ROOTCLING__)
+#warning "TSelectorCint.h is deprecated. It will be removed in ROOT v6.12. Please use #include \"TSelector.h\", instead."
+#endif
 
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 class TSelectorCint : public TSelector {
 
@@ -55,8 +54,8 @@ protected:
    CallFunc_t   *fFuncGetAbort;   //!
    CallFunc_t   *fFuncResetAbort; //!
    CallFunc_t   *fFuncGetStat;    //!
-   TSelector    *fIntSelector;    //Pointer to interpreted selector (if interpreted)
-   Bool_t        fIsOwner;        //True if fIntSelector shoudl be deleted when the this object is deleted.
+   TSelector    *fIntSelector;    ///< Pointer to interpreted selector (if interpreted)
+   Bool_t        fIsOwner;        ///< True if fIntSelector should be deleted when the this object is deleted.
 
 public:
    TSelectorCint();

@@ -168,7 +168,9 @@ enum ETH1Wid{
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of histogram attribute GUI.
+
 TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
                      Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -177,8 +179,6 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
      fBin(0),
      fBinHist(0)
 {
-   // Constructor of histogram attribute GUI.
-
    // TextEntry for changing the title of the histogram
    MakeTitle("Title");
    fTitlePrec = 2;
@@ -358,11 +358,11 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
    gROOT->GetListOfCleanups()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create binning tab.
+
 void TH1Editor::CreateBinTab()
 {
-   // Create binning tab.
-
    fBin = CreateEditorTabSubFrame("Binning");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fBin, 145, 10,
@@ -532,11 +532,11 @@ void TH1Editor::CreateBinTab()
 
 }  // end bin tab
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of TH1 editor.
+
 TH1Editor::~TH1Editor()
 {
-   // Destructor of TH1 editor.
-
    // remove itselef from the list of cleanups
    gROOT->GetListOfCleanups()->Remove(this);
 
@@ -550,11 +550,11 @@ TH1Editor::~TH1Editor()
    fBinHist = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TH1Editor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    //widgets for draw options
    fAddB->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddB(Bool_t)");
    fAddBar->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddBar(Bool_t)");
@@ -606,11 +606,11 @@ void TH1Editor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if object is able to configure with this editor.
+
 Bool_t TH1Editor::AcceptModel(TObject* obj)
 {
-   // Check if object is able to configure with this editor.
-
    if (obj == 0 || !obj->InheritsFrom(TH1::Class()) ||
        ((TH1*)obj)->GetDimension()!=1 ||
        ((TH1*)obj)->GetEntries() == 0
@@ -620,11 +620,11 @@ Bool_t TH1Editor::AcceptModel(TObject* obj)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up current values of histogram attributes.
+
 void TH1Editor::SetModel(TObject* obj)
 {
-   // Pick up current values of histogram attributes.
-
 
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
@@ -910,21 +910,21 @@ void TH1Editor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the histogram title setting.
+
 void TH1Editor::DoTitle(const char *text)
 {
-   // Slot connected to the histogram title setting.
-
    if (fAvoidSignal) return;
    fHist->SetTitle(text);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the show markers check box.
+
 void TH1Editor::DoAddMarker(Bool_t on)
 {
-   // Slot connected to the show markers check box.
-
    if (fAvoidSignal) return;
    TString str = GetDrawOption();
    str.ToUpper();
@@ -966,11 +966,11 @@ void TH1Editor::DoAddMarker(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the bar Add check box.
+
 void TH1Editor::DoAddB(Bool_t on)
 {
-   // Slot connected to the bar Add check box.
-
    if (fAvoidSignal) return;
    TString str = GetDrawOption();
    str.ToUpper();
@@ -1009,11 +1009,11 @@ void TH1Editor::DoAddB(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the bar Add check box.
+
 void TH1Editor::DoAddBar(Bool_t on)
 {
-   // Slot connected to the bar Add check box.
-
    if (fAvoidSignal) return;
    Disconnect(fAddMarker);
    TString str = GetDrawOption();
@@ -1108,13 +1108,13 @@ void TH1Editor::DoAddBar(Bool_t on)
    fAddMarker->Connect("Toggled(Bool_t)", "TH1Editor", this, "DoAddMarker(Bool_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to fAddSimple check box for drawing a simple histogram
+/// without errors (== HIST draw option) in combination with some other
+/// draw options. It draws an additional line on the top of the bins.
+
 void TH1Editor::DoAddSimple(Bool_t on)
 {
-   // Slot connected to fAddSimple check box for drawing a simple histogram
-   // without errors (== HIST draw option) in combination with some other
-   // draw options. It draws an additional line on the top of the bins.
-
    if (fAvoidSignal) return;
    Disconnect(fAddMarker);
    //   Bool_t make=kFALSE;
@@ -1144,11 +1144,11 @@ void TH1Editor::DoAddSimple(Bool_t on)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the 'Plot' button group.
+
 void TH1Editor::DoHistView()
 {
-   // Slot connected to the 'Plot' button group.
-
    if (gPad && gPad->GetVirtCanvas())
       gPad->GetVirtCanvas()->SetCursor(kWatch);
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kWatch));
@@ -1163,11 +1163,11 @@ void TH1Editor::DoHistView()
    gVirtualX->SetCursor(GetId(), gVirtualX->CreateCursor(kPointer));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the 2D radio button.
+
 void TH1Editor::DoHistSimple()
 {
-   // Slot connected to the 2D radio button.
-
    if (fAvoidSignal) return;
    if (fDim->GetState()==kButtonDown){
       TString str ="";
@@ -1253,11 +1253,11 @@ void TH1Editor::DoHistSimple()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the 3D radio button.
+
 void TH1Editor::DoHistComplex()
 {
-   // Slot connected to the 3D radio button.
-
    if (fAvoidSignal) return;
    if (fDim0->GetState()==kButtonDown) {
       TString str ="";
@@ -1300,12 +1300,12 @@ void TH1Editor::DoHistComplex()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the histogram type, the coordinate type, the error type
+/// and the Add combo box.
+
 void TH1Editor::DoHistChanges()
 {
-   // Slot connected to the histogram type, the coordinate type, the error type
-   // and the Add combo box.
-
    if (fAvoidSignal) return;
    fMakeB= kFALSE;
    TGListBox* lb;
@@ -1412,32 +1412,32 @@ void TH1Editor::DoHistChanges()
    fMakeB=kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Bar Width of the Bar Charts.
+
 void TH1Editor::DoBarWidth()
 {
-   // Slot connected to the Bar Width of the Bar Charts.
-
    if (fAvoidSignal) return;
    fHist->SetBarWidth(fBarWidth->GetNumber());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Bar Offset of the Bar Charts.
+
 void TH1Editor::DoBarOffset()
 {
-   // Slot connected to the Bar Offset of the Bar Charts.
-
    if (fAvoidSignal) return;
    Float_t f = fBarOffset->GetNumber();
    fHist->SetBarOffset(f);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the bar percentage settings.
+
 void TH1Editor::DoPercent()
 {
-   // Slot connected to the bar percentage settings.
-
    if (fAvoidSignal) return;
    TString str = GetDrawOption();
    str.ToUpper();
@@ -1473,11 +1473,11 @@ void TH1Editor::DoPercent()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Horizontal Bar check button.
+
 void TH1Editor::DoHBar(Bool_t on)
 {
-   // Slot connected to the Horizontal Bar check button.
-
    if (fAvoidSignal) return;
    TString str = GetDrawOption();
    str.ToUpper();
@@ -1498,12 +1498,12 @@ void TH1Editor::DoHBar(Bool_t on)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-Slider for redrawing of the histogram
+/// according to the new Slider range.
+
 void TH1Editor::DoSliderMoved()
 {
-   // Slot connected to the x-Slider for redrawing of the histogram
-   // according to the new Slider range.
-
    if (fAvoidSignal) return;
    if (fGedEditor->GetPad()->GetCanvas())
       fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
@@ -1597,12 +1597,12 @@ void TH1Editor::DoSliderMoved()
    fClient->NeedRedraw(fSldMax,kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-axis Range slider for initialising the
+/// values of the slider movement.
+
 void TH1Editor::DoSliderPressed()
 {
-   // Slot connected to the x-axis Range slider for initialising the
-   // values of the slider movement.
-
    if (fAvoidSignal) return;
    if (fGedEditor->GetPad()->GetCanvas())
       fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
@@ -1652,12 +1652,12 @@ void TH1Editor::DoSliderPressed()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-axis Range slider for finalizing the
+/// values of the slider movement.
+
 void TH1Editor::DoSliderReleased()
 {
-   // Slot connected to the x-axis Range slider for finalizing the
-   // values of the slider movement.
-
    if (fAvoidSignal) return;
    if (fDelaydraw->GetState()==kButtonDown) {
       fHist->GetXaxis()->SetRange((Int_t)((fSlider->GetMinPosition())+0.5),
@@ -1675,12 +1675,12 @@ void TH1Editor::DoSliderReleased()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the number entry fields containing the Max/Min
+/// value of the x-axis.
+
 void TH1Editor::DoAxisRange()
 {
-   // Slot connected to the number entry fields containing the Max/Min
-   // value of the x-axis.
-
    if (fAvoidSignal) return;
    Int_t nx = fHist->GetXaxis()->GetNbins();
    Double_t width = fHist->GetXaxis()->GetBinWidth(1);
@@ -1699,12 +1699,12 @@ void TH1Editor::DoAxisRange()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the rebin slider in case of a not ntuple histogram
+/// Updates some other widgets which are related to the rebin slider.
+
 void TH1Editor::DoBinReleased()
 {
-   // Slot connected to the rebin slider in case of a not ntuple histogram
-   // Updates some other widgets which are related to the rebin slider.
-
    // draw the rebinned histogram in case of delay draw mode
    if (fAvoidSignal) return;
    if (fDelaydraw->GetState()==kButtonDown){
@@ -1754,12 +1754,12 @@ void TH1Editor::DoBinReleased()
       Refresh(fHist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the rebin slider in case of a not ntuple histogram
+/// (does the Rebinning of the histogram).
+
 void TH1Editor::DoBinMoved(Int_t numx)
 {
-   // Slot connected to the rebin slider in case of a not ntuple histogram
-   // (does the Rebinning of the histogram).
-
    // create a clone in the background, when the slider is moved for
    // the first time
    if (fAvoidSignal) return;
@@ -1816,11 +1816,11 @@ void TH1Editor::DoBinMoved(Int_t numx)
    delete [] divx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the rebin slider in case of a not ntuple histogram.
+
 void TH1Editor::DoBinPressed()
 {
-   // Slot connected to the rebin slider in case of a not ntuple histogram.
-
    if (fAvoidSignal) return;
    Int_t* d = Dividers(fHist->GetXaxis()->GetNbins());
    if (d[0]==2 && !fBinHist) {
@@ -1833,12 +1833,12 @@ void TH1Editor::DoBinPressed()
    // calling the MessageBox again does NOT work!*/
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the BinNumber Slider in case of a ntuple histogram
+/// (does the Rebinning of the histogram).
+
 void TH1Editor::DoBinReleased1()
 {
-   // Slot connected to the BinNumber Slider in case of a ntuple histogram
-   // (does the Rebinning of the histogram).
-
    if (fAvoidSignal) return;
    Double_t oldOffset = fOffsetNumberEntry->GetNumber();
    Int_t number = fBinSlider1->GetPosition();
@@ -1895,12 +1895,12 @@ void TH1Editor::DoBinReleased1()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the rebin slider in case of an ntuple histogram.
+/// It updates the BinNumberEntryField during the BinSlider movement.
+
 void TH1Editor::DoBinMoved1()
 {
-   // Slot connected to the rebin slider in case of an ntuple histogram.
-   // It updates the BinNumberEntryField during the BinSlider movement.
-
    if (fAvoidSignal) return;
    TAxis* xaxis = fHist->GetXaxis();
    Int_t first = xaxis->GetFirst();
@@ -1919,11 +1919,11 @@ void TH1Editor::DoBinMoved1()
 //   Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Bin number entry of the Rebinning tab.
+
 void TH1Editor::DoBinLabel()
 {
-   // Slot connected to the Bin number entry of the Rebinning tab.
-
    if (fAvoidSignal) return;
    Int_t num = (Int_t)(fBinNumberEntry->GetNumber());
    Int_t nx = 0;
@@ -1949,11 +1949,11 @@ void TH1Editor::DoBinLabel()
    delete [] div;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Bin number entry of the Rebinning tab.
+
 void TH1Editor::DoBinLabel1()
 {
-   // Slot connected to the Bin number entry of the Rebinning tab.
-
    if (fAvoidSignal) return;
    Double_t oldOffset = fOffsetNumberEntry->GetNumber();
    Int_t num = (Int_t)fBinNumberEntry1->GetNumber();
@@ -1999,23 +1999,23 @@ void TH1Editor::DoBinLabel1()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the OffSetSlider that saves the OldBinOffset
+/// (nessesary for delay draw mode).
+
 void TH1Editor::DoOffsetPressed()
 {
-   // Slot connected to the OffSetSlider that saves the OldBinOffset
-   // (nessesary for delay draw mode).
-
    if (fAvoidSignal) return;
    fOldOffset = fOffsetNumberEntry->GetNumber();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the OffSetSlider.
+/// It changes the origin of the histogram inbetween a binwidth and
+/// rebin the histogram with the new Offset given by the Slider.
+
 void TH1Editor::DoOffsetReleased()
 {
-   // Slot connected to the OffSetSlider.
-   // It changes the origin of the histogram inbetween a binwidth and
-   // rebin the histogram with the new Offset given by the Slider.
-
    // !!problem: histogram with variable binwidth??
    // computes the new histogram in "delay draw" mode
 
@@ -2057,13 +2057,13 @@ void TH1Editor::DoOffsetReleased()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the OffSetSlider.
+/// It changes the origin of the histogram inbetween a binwidth and
+/// rebin the histogram with the new offset given by the Slider.
+
 void TH1Editor::DoOffsetMoved(Int_t num)
 {
-   // Slot connected to the OffSetSlider.
-   // It changes the origin of the histogram inbetween a binwidth and
-   // rebin the histogram with the new offset given by the Slider.
-
    // !!histogram with variable binwidth??
    // !!only works for histograms with fixed binwidth
 
@@ -2106,12 +2106,12 @@ void TH1Editor::DoOffsetMoved(Int_t num)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the OffSetNumberEntry which is related to the
+/// OffSetSlider changes the origin of the histogram inbetween a binwidth.
+
 void TH1Editor::DoBinOffset()
 {
-   // Slot connected to the OffSetNumberEntry which is related to the
-   // OffSetSlider changes the origin of the histogram inbetween a binwidth.
-
    if (fAvoidSignal) return;
    TAxis* xaxis = fHist->GetXaxis();
    Double_t binWidth = xaxis->GetBinWidth(1);
@@ -2147,11 +2147,11 @@ void TH1Editor::DoBinOffset()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Apply button of the Binning tab.
+
 void TH1Editor::DoApply()
 {
-   // Slot connected to the Apply button of the Binning tab.
-
    Int_t ret = 0;
    new TGMsgBox(fClient->GetDefaultRoot(), this->GetMainFrame(),
                 "TH1 Editor", "Replace origin histogram with rebinned one?",
@@ -2178,11 +2178,11 @@ void TH1Editor::DoApply()
    } else if (ret==2) DoCancel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the Cancel button of the Binning tab.
+
 void TH1Editor::DoCancel()
 {
-   // Slot connected to the Cancel button of the Binning tab.
-
    if (fBinHist) {
       fGedEditor->GetPad()->cd();
       fHist->Reset();
@@ -2207,11 +2207,11 @@ void TH1Editor::DoCancel()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the selected histogram type (HIST, LEGO1-2, SURF1-5).
+
 TString TH1Editor::GetHistTypeLabel()
 {
-   // Returns the selected histogram type (HIST, LEGO1-2, SURF1-5).
-
    TString s="";
    switch (fTypeCombo->GetSelected()){
       case (-1)         : {s = "LEGO"; break;}
@@ -2230,11 +2230,11 @@ TString TH1Editor::GetHistTypeLabel()
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the selected coordinate system of the histogram (POL,CYL,SPH,PSR).
+
 TString TH1Editor::GetHistCoordsLabel()
 {
-   // Return the selected coordinate system of the histogram (POL,CYL,SPH,PSR).
-
    TString s="";
    if (fDim->GetState()!=kButtonDown) {
       switch (fCoordsCombo->GetSelected()){
@@ -2251,11 +2251,11 @@ TString TH1Editor::GetHistCoordsLabel()
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the selected error type (E,E1-5).
+
 TString TH1Editor::GetHistErrorLabel()
 {
-   // Return the selected error type (E,E1-5).
-
    TString s="";
    switch (fErrorCombo->GetSelected()){
       case (-1)             : {s = ""; break;}
@@ -2271,11 +2271,11 @@ TString TH1Editor::GetHistErrorLabel()
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the selected shape of the histogram (C, L, LF2).
+
 TString TH1Editor::GetHistAddLabel()
 {
-   // Return the selected shape of the histogram (C, L, LF2).
-
    TString s="";
    switch (fAddCombo->GetSelected()){
       case (-1)         : {s = "" ; break;}
@@ -2301,11 +2301,11 @@ TString TH1Editor::GetHistAddLabel()
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create histogram type combo box.
+
 TGComboBox* TH1Editor::BuildHistTypeComboBox(TGFrame* parent, Int_t id)
 {
-   // Create histogram type combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry("Lego" , kTYPE_LEGO);
@@ -2321,11 +2321,11 @@ TGComboBox* TH1Editor::BuildHistTypeComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create coordinate system type combo box.
+
 TGComboBox* TH1Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
 {
-   // Create coordinate system type combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry("Cartesian", kCOORDS_CAR);
@@ -2339,11 +2339,11 @@ TGComboBox* TH1Editor::BuildHistCoordsComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create error type combo box.
+
 TGComboBox* TH1Editor::BuildHistErrorComboBox(TGFrame* parent, Int_t id)
 {
-   // Create error type combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry("No Errors", kERRORS_NO);
@@ -2356,11 +2356,11 @@ TGComboBox* TH1Editor::BuildHistErrorComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Line/Bar combo box.
+
 TGComboBox* TH1Editor::BuildHistAddComboBox(TGFrame* parent, Int_t id)
 {
-   // Create Line/Bar combo box.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry("No Line", kADD_NONE);
@@ -2372,11 +2372,11 @@ TGComboBox* TH1Editor::BuildHistAddComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Percentage combo box for bar option.
+
 TGComboBox* TH1Editor::BuildPercentComboBox(TGFrame* parent, Int_t id)
 {
-   // Create Percentage combo box for bar option.
-
    TGComboBox *c = new TGComboBox(parent, id);
 
    c->AddEntry(" 0 %", kPER_0);
@@ -2390,11 +2390,11 @@ TGComboBox* TH1Editor::BuildPercentComboBox(TGFrame* parent, Int_t id)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the error combo box entry.
+
 void TH1Editor::ChangeErrorCombo(Int_t i)
 {
-   // Change the error combo box entry.
-
    switch (i){
       case 0: {
          if (((TGLBContainer*)((TGListBox*)fErrorCombo->GetListBox())->GetContainer())->GetPos(kERRORS_EDGES)!=-1)
@@ -2419,11 +2419,11 @@ void TH1Editor::ChangeErrorCombo(Int_t i)
    }
 }
 
- //______________________________________________________________________________
+ ///////////////////////////////////////////////////////////////////////////////
+ /// Paint a 3D box.
+
 void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
 {
-   // Paint a 3D box.
-
    if (fGedEditor->GetPad()->GetCanvas())
       fGedEditor->GetPad()->GetCanvas()->FeedbackMode(kTRUE);
    fGedEditor->GetPad()->SetLineWidth(1);
@@ -2435,12 +2435,12 @@ void TH1Editor::PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4)
    fGedEditor->GetPad()->PaintLine3D(p4, p1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of dividers of n (without the trivial divider n).
+/// The number of dividers is saved in the first entry.
+
 Int_t* TH1Editor::Dividers(Int_t n)
 {
-   // Return an array of dividers of n (without the trivial divider n).
-   // The number of dividers is saved in the first entry.
-
    Int_t* div;
    if (n <= 0) {
       div = new Int_t[1];
@@ -2468,11 +2468,11 @@ Int_t* TH1Editor::Dividers(Int_t n)
    return div;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the contained histogram obj is deleted we must set its pointer to zero
+
 void TH1Editor::RecursiveRemove(TObject* obj)
 {
-   // If the contained histogram obj is deleted we must set its pointer to zero
-
    if (obj == fHist) {
       fHist = 0;
    }

@@ -2,7 +2,7 @@
 // Author: Philippe Canal   23/2/02
 
 /*************************************************************************
- * Copyright (C) 1995-2002, Rene Brun, Fons Rademakers and al.           *
+ * Copyright (C) 1995-2015, Rene Brun, Fons Rademakers and al.           *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,34 +12,7 @@
 #ifndef ROOT_Rtypeinfo
 #define ROOT_Rtypeinfo
 
-#ifndef ROOT_RConfig
-#include "RConfig.h"
-#endif
-
-#if defined(R__SOLARIS)
-
-// <typeinfo> includes <exception> which clashes with <math.h>
-//#include <typeinfo.h>
-namespace std { class type_info; }
-using std::type_info;
-
-#elif defined(R__GLOBALSTL)
+#warning "Rtypeinfo.h is deprecated. It will be removed in ROOT v6.12. Please use #include <typeinfo>, instead."
 
 #include <typeinfo>
-
-#elif defined(R__WIN32)
-
-// only has ::type_info without _HAS_EXCEPTIONS!
-#include <typeinfo>
-#if ! _HAS_EXCEPTIONS
-namespace std { using ::type_info; }
-#endif
-
-#else
-
-#include <typeinfo>
-using std::type_info;
-
-#endif
-
 #endif

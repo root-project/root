@@ -1,44 +1,39 @@
 // @(#)root/spectrum:$Id$
 // Author: Miroslav Morhac   25/09/06
 
-//__________________________________________________________________________
-//   THIS CLASS CONTAINS ADVANCED SPECTRA FITTING FUNCTIONS.               //
-//                                                                         //
-//                                                                         //
-//   These functions were written by:                                      //
-//   Miroslav Morhac                                                       //
-//   Institute of Physics                                                  //
-//   Slovak Academy of Sciences                                            //
-//   Dubravska cesta 9, 842 28 BRATISLAVA                                  //
-//   SLOVAKIA                                                              //
-//                                                                         //
-//   email:fyzimiro@savba.sk,    fax:+421 7 54772479                       //
-//                                                                         //
-//  The original code in C has been repackaged as a C++ class by R.Brun    //
-//                                                                         //
-//  The algorithms in this class have been published in the following      //
-//  references:                                                            //
-//   [1] M. Morhac et al.: Efficient fitting algorithms applied to         //
-//   analysis of coincidence gamma-ray spectra. Computer Physics           //
-//   Communications, Vol 172/1 (2005) pp. 19-41.                           //
-//                                                                         //
-//   [2]  M. Morhac et al.: Study of fitting algorithms applied to         //
-//   simultaneous analysis of large number of peaks in gamma-ray spectra.  //
-//   Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003.              //
-//                                                                         //
-//                                                                         //
-//____________________________________________________________________________
+/** \class TSpectrumFit
+    \ingroup Spectrum
+    \brief Advanced 1-dimensional spectra fitting functions
+    \author Miroslav Morhac
+
+ Class for fitting 1D spectra using AWMI (algorithm without matrix
+ inversion) and conjugate gradient algorithms for symmetrical
+ matrices (Stiefel-Hestens method). AWMI method allows to fit
+ simultaneously 100s up to 1000s peaks. Stiefel method is very stable,
+ it converges faster, but is more time consuming
+
+ The algorithms in this class have been published in the following
+ references:
+ 1. M. Morhac et al.: Efficient fitting algorithms applied to
+    analysis of coincidence gamma-ray spectra. Computer Physics
+    Communications, Vol 172/1 (2005) pp. 19-41.
+
+ 2.  M. Morhac et al.: Study of fitting algorithms applied to
+    simultaneous analysis of large number of peaks in gamma-ray spectra.
+    Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003.
+
+*/
 
 #include "TSpectrumFit.h"
 #include "TMath.h"
 
 ClassImp(TSpectrumFit)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
-   //default constructor
-
    fNPeaks = 0;
    fNumberIterations = 1;
    fXmin = 0;
@@ -89,60 +84,22 @@ TSpectrumFit::TSpectrumFit() :TNamed("SpectrumFit", "Miroslav Morhac peak fitter
    fFixA2 = true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// numberPeaks: number of fitted peaks (must be greater than zero)
+///
+/// the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
+/// variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
+///
+/// Shape function of the fitted peaks is
+///
+/// \image html spectrumfit_constructor_image001.gif
+///
+/// where a represents vector of
+/// fitted parameters (positions p(j), amplitudes A(j), sigma, relative amplitudes
+/// T, S and slope B).
+
 TSpectrumFit::TSpectrumFit(Int_t numberPeaks) :TNamed("SpectrumFit", "Miroslav Morhac peak fitter")
 {
-   //numberPeaks: number of fitted peaks (must be greater than zero)
-   //the constructor allocates arrays for all fitted parameters (peak positions, amplitudes etc) and sets the member
-   //variables to their default values. One can change these variables by member functions (setters) of TSpectrumFit class.
-//Begin_Html <!--
-/* -->
-<div class=Section1>
-
-<p class=MsoNormal style='text-align:justify'>Shape function of the fitted
-peaks is </p>
-
-<p class=MsoNormal style='text-align:justify'>
-
-<table cellpadding=0 cellspacing=0 align=left>
- <tr>
-  <td width=68 height=6></td>
- </tr>
- <tr>
-  <td></td>
-  <td><img width=388 height=132 src="gif/spectrumfit_constructor_image001.gif"></td>
- </tr>
-</table>
-
-<span style='font-family:Arial'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<p class=MsoNormal><i>&nbsp;</i></p>
-
-<br clear=ALL>
-
-<p class=MsoNormal style='text-align:justify'>where a represents vector of
-fitted parameters (positions p(j), amplitudes A(j), sigma, relative amplitudes
-T, S and slope B).</p>
-
-<p class=MsoNormal><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    if (numberPeaks <= 0){
       Error ("TSpectrumFit","Invalid number of peaks, must be > than 0");
       return;
@@ -197,12 +154,11 @@ T, S and slope B).</p>
    fFixA2 = true;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
 
-
-//______________________________________________________________________________
 TSpectrumFit::~TSpectrumFit()
 {
-   //destructor
    delete [] fPositionInit;
    delete [] fPositionCalc;
    delete [] fPositionErr;
@@ -215,16 +171,11 @@ TSpectrumFit::~TSpectrumFit()
    delete [] fAreaErr;
 }
 
-//_____________________________________________________________________________
-/////////////////BEGINNING OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTION Fit1//////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+// This function calculates error function of x.
+
 Double_t TSpectrumFit::Erfc(Double_t x)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates error function of x.                           //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t da1 = 0.1740121, da2 = -0.0479399, da3 = 0.3739278, dap = 0.47047;
    Double_t a, t, c, w;
    a = TMath::Abs(x);
@@ -243,15 +194,11 @@ Double_t TSpectrumFit::Erfc(Double_t x)
    return (c);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function calculates derivative of error function of x.
+
 Double_t TSpectrumFit::Derfc(Double_t x)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of error function of x.             //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t a, t, c, w;
    Double_t da1 = 0.1740121, da2 = -0.0479399, da3 = 0.3739278, dap = 0.47047;
    a = TMath::Abs(x);
@@ -269,23 +216,19 @@ Double_t TSpectrumFit::Derfc(Double_t x)
    return (c);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peak shape function (see manual)
+///   according to amplitude of peak.
+///      Function parameters:
+///              - i-channel
+///              - i0-position of peak
+///              - sigma-sigma of peak
+///              - t, s-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t t,
                            Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of peak shape function (see manual) //
-//   according to amplitude of peak.                                        //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -i0-position of peak                                        //
-//              -sigma-sigma of peak                                        //
-//              -t, s-relative amplitudes                                   //
-//              -b-slope                                                    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, q, r, a;
    p = (i - i0) / sigma;
    if ((p * p) < 700)
@@ -309,24 +252,20 @@ Double_t TSpectrumFit::Deramp(Double_t i, Double_t i0, Double_t sigma, Double_t 
    return (q);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peak shape function (see manual)
+///   according to peak position.
+///      Function parameters:
+///              - i-channel
+///              - amp-amplitude of peak
+///              - i0-position of peak
+///              - sigma-sigma of peak
+///              - t, s-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sigma,
                           Double_t t, Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates derivative of peak shape function (see manual) //
-//   according to peak position.                                            //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -amp-amplitude of peak                                      //
-//              -i0-position of peak                                        //
-//              -sigma-sigma of peak                                        //
-//              -t, s-relative amplitudes                                   //
-//              -b-slope                                                    //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, r1, r2, r3, r4, c, d, e;
    p = (i - i0) / sigma;
    d = 2. * sigma;
@@ -352,22 +291,18 @@ Double_t TSpectrumFit::Deri0(Double_t i, Double_t amp, Double_t i0, Double_t sig
    return (r1);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates second derivative of peak shape function
+///   (see manual) according to peak position.
+///      Function parameters:
+///              - i-channel
+///              - amp-amplitude of peak
+///              - i0-position of peak
+///              - sigma-width of peak
+
 Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
                              Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                      //
-//                                                                          //
-//   This function calculates second derivative of peak shape function       //
-//   (see manual) according to peak position.                               //
-//      Function parameters:                                                //
-//              -i-channel                                                  //
-//              -amp-amplitude of peak                                      //
-//              -i0-position of peak                                        //
-//              -sigma-width of peak                                        //
-//                                                                          //
-//////////////////////////////////////////////////////////////////////////////
    Double_t p, r1, r2, r3, r4;
    p = (i - i0) / sigma;
    if ((p * p) < 700)
@@ -382,25 +317,21 @@ Double_t TSpectrumFit::Derderi0(Double_t i, Double_t amp, Double_t i0,
    return (r1);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peaks shape function (see manual)
+///   according to sigma of peaks.
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+///              - t, s-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
                              const Double_t *parameter, Double_t sigma,
                              Double_t t, Double_t s, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to sigma of peaks.                                               //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t, s-relative amplitudes                                       //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, r4, c, d, e;
    r = 0;
@@ -433,22 +364,18 @@ Double_t TSpectrumFit::Dersigma(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates second derivative of peaks shape function
+///   (see manual) according to sigma of peaks.
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+
 Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
                                const Double_t *parameter, Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates second derivative of peaks shape function          //
-//   (see manual) according to sigma of peaks.                                  //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, r4;
    r = 0;
@@ -469,23 +396,19 @@ Double_t TSpectrumFit::Derdersigma(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peaks shape function (see manual)
+///   according to relative amplitude t.
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+///              - b-slope
+
 Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude t.                                         //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, c, e;
    r = 0;
@@ -502,22 +425,18 @@ Double_t TSpectrumFit::Dert(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peaks shape function (see manual)
+///   according to relative amplitude s.
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+
 Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to relative amplitude s.                                               //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1;
    r = 0;
@@ -530,25 +449,21 @@ Double_t TSpectrumFit::Ders(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of peaks shape function (see manual)
+///   according to slope b.
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+///              - t-relative amplitude
+///              - b-slope
+
 Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
                         const Double_t *parameter, Double_t sigma, Double_t t,
                         Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of peaks shape function (see manual)    //
-//   according to slope b.                                                      //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitude                                           //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, c, e;
    r = 0;
@@ -571,40 +486,38 @@ Double_t TSpectrumFit::Derb(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Derivative of background according to a1
+
 Double_t TSpectrumFit::Dera1(Double_t i)
 {
-   //derivative of background according to a1
    return (i);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Derivative of background according to a2
+
 Double_t TSpectrumFit::Dera2(Double_t i)
 {
-   //derivative of background according to a2
    return (i * i);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates peaks shape function (see manual)
+///      Function parameters:
+///              - num_of_fitted_peaks-number of fitted peaks
+///              - i-channel
+///              - parameter-array of peaks parameters (amplitudes and positions)
+///              - sigma-sigma of peak
+///              - t, s-relative amplitudes
+///              - b-slope
+///              - a0, a1, a2- background coefficients
+
 Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
                          const Double_t *parameter, Double_t sigma, Double_t t,
                          Double_t s, Double_t b, Double_t a0, Double_t a1,
                          Double_t a2)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates peaks shape function (see manual)                  //
-//      Function parameters:                                                    //
-//              -num_of_fitted_peaks-number of fitted peaks                     //
-//              -i-channel                                                      //
-//              -parameter-array of peaks parameters (amplitudes and positions) //
-//              -sigma-sigma of peak                                            //
-//              -t, s-relative amplitudes                                       //
-//              -b-slope                                                        //
-//              -a0, a1, a2- background coefficients                            //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t j;
    Double_t r, p, r1, r2, r3, c, e;
    r = 0;
@@ -645,20 +558,16 @@ Double_t TSpectrumFit::Shape(Int_t num_of_fitted_peaks, Double_t i,
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates area of a peak
+///      Function parameters:
+///              - a-amplitude of the peak
+///              - sigma-sigma of peak
+///              - t-relative amplitude
+///              - b-slope
+
 Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates area of a peak                                     //
-//      Function parameters:                                                    //
-//              -a-amplitude of the peak                                        //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitude                                           //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t odm_pi = 1.7724538, r = 0;
    if (b != 0)
       r = 0.5 / b;
@@ -672,20 +581,16 @@ Double_t TSpectrumFit::Area(Double_t a, Double_t sigma, Double_t t, Double_t b)
    return (r);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of the area of peak
+///   according to its amplitude.
+///      Function parameters:
+///              - sigma-sigma of peak
+///              - t-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to its amplitude.                                                //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t odm_pi = 1.7724538, r;
    r = 0.5 / b;
    r = (-1.) * r * r;
@@ -697,19 +602,17 @@ Double_t TSpectrumFit::Derpa(Double_t sigma, Double_t t, Double_t b)
    }
    return (r);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of the area of peak
+///   according to sigma of peaks.
+///      Function parameters:
+///              - a-amplitude of peak
+///              - t-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to sigma of peaks.                                               //
-//      Function parameters:                                                    //
-//              -a-amplitude of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t odm_pi = 1.7724538, r;
    r = 0.5 / b;
    r = (-1.) * r * r;
@@ -722,20 +625,16 @@ Double_t TSpectrumFit::Derpsigma(Double_t a, Double_t t, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of the area of peak
+///   according to t parameter.
+///      Function parameters:
+///              - sigma-sigma of peak
+///              - t-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to t parameter.                                                  //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t r;
    r = 0.5 / b;
    r = (-1.) * r * r;
@@ -748,20 +647,16 @@ Double_t TSpectrumFit::Derpt(Double_t a, Double_t sigma, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates derivative of the area of peak
+///   according to b parameter.
+///      Function parameters:
+///              - sigma-sigma of peak
+///              - t-relative amplitudes
+///              - b-slope
+
 Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates derivative of the area of peak                     //
-//   according to b parameter.                                                  //
-//      Function parameters:                                                    //
-//              -sigma-sigma of peak                                            //
-//              -t-relative amplitudes                                          //
-//              -b-slope                                                        //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Double_t r;
    r = (-1) * 0.25 / (b * b);
    if (TMath::Abs(r) < 700)
@@ -773,10 +668,11 @@ Double_t TSpectrumFit::Derpb(Double_t a, Double_t sigma, Double_t t, Double_t b)
    return (r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Power function
+
 Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
 {
-   //power function
    Double_t c;
    Double_t a2 = a*a;
    c = 1;
@@ -790,521 +686,139 @@ Double_t TSpectrumFit::Ourpowl(Double_t a, Int_t pw)
    return (c);
 }
 
-/////////////////END OF AUXILIARY FUNCTIONS USED BY FITTING FUNCTIONS FitAWMI, FitStiefel//////////////////////////
-/////////////////FITTING FUNCTION WITHOUT MATRIX INVERSION///////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/// This function fits the source spectrum. The calling program should
+/// fill in input parameters of the TSpectrumFit class
+/// The fitted parameters are written into
+/// TSpectrumFit class output parameters and fitted data are written into
+/// source spectrum.
+///
+/// Function parameters:
+///  - source-pointer to the vector of source spectrum
+///
+/// ### Fitting
+///
+/// Goal: to estimate simultaneously peak shape parameters in spectra with large
+/// number of peaks
+///
+///  - peaks can be fitted separately, each peak (or multiplets) in a region or
+///    together all peaks in a spectrum. To fit separately each peak one needs to
+///    determine the fitted region. However it can happen that the regions of
+///    neighbouring peaks are overlapping. Then the results of fitting are very poor.
+///    On the other hand, when fitting together all peaks found in a spectrum, one
+///    needs to have a method that is stable (converges) and fast enough to carry out
+///    fitting in reasonable time
+///
+///  - we have implemented the non-symmetrical semi-empirical peak shape function [1]
+///
+///  - it contains the symmetrical Gaussian as well as non-symmetrical terms.
+///
+/// \image html spectrumfit_awmi_image001.gif
+///
+/// where T and S are relative amplitudes and B is slope.
+///
+///  - algorithm without matrix inversion (AWMI) allows fitting tens, hundreds
+///    of peaks simultaneously that represent sometimes thousands of parameters [2], [5].
+///
+/// #### References:
+///
+/// [1] Phillps G.W., Marlow K.W., NIM 137 (1976) 525.
+///
+/// [2] I. A. Slavic: Nonlinear least-squares fitting without matrix inversion
+/// applied to complex Gaussian spectra analysis. NIM 134 (1976) 285-289.
+///
+/// [3] T. Awaya: A new method for curve fitting to the data with low statistics
+/// not using chi-square method. NIM 165 (1979) 317-323.
+///
+/// [4] T. Hauschild, M. Jentschel: Comparison of maximum likelihood estimation
+/// and chi-square statistics applied to counting experiments. NIM A 457 (2001)
+/// 384-401.
+///
+/// [5] M. Morhac, J. Kliman, M. Jandel, L. Krupa, V. Matouoek: Study of fitting
+/// algorithms applied to simultaneous analysis of large number of peaks in -ray
+/// spectra. Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003
+///
+/// ### Example - script FitAwmi.c:
+///
+/// \image html spectrumfit_awmi_image002.jpg Fig. 1 Original spectrum (black line) and fitted spectrum using AWMI algorithm (red line) and number of iteration steps = 1000. Positions of fitted peaks are denoted by markers
+///
+/// #### Script:
+///
+/// Example to illustrate fitting function using AWMI algorithm.
+/// To execute this example, do:
+///
+/// `root > .x FitAwmi.C`
+///
+/// ~~~ {.cpp}
+///   void FitAwmi() {
+///      Double_t a;
+///      Int_t i,nfound=0,bin;
+///      Int_t nbins = 256;
+///      Int_t xmin = 0;
+///      Int_t xmax = nbins;
+///      Double_t * source = new Double_t[nbins];
+///      Double_t * dest = new Double_t[nbins];
+///      TH1F *h = new TH1F("h","Fitting using AWMI algorithm",nbins,xmin,xmax);
+///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
+///      TFile *f = new TFile("TSpectrum.root");
+///      h=(TH1F*) f->Get("fit;1");
+///      for (i = 0; i < nbins; i++) source[i]=h->GetBinContent(i + 1);
+///      TCanvas *Fit1 = gROOT->GetListOfCanvases()->FindObject("Fit1");
+///      if (!Fit1) Fit1 = new TCanvas("Fit1","Fit1",10,10,1000,700);
+///      h->Draw("L");
+///      TSpectrum *s = new TSpectrum();
+///      //searching for candidate peaks positions
+///      nfound = s->SearchHighRes(source, dest, nbins, 2, 0.1, kFALSE, 10000, kFALSE, 0);
+///      Bool_t *FixPos =new Bool_t[nfound];
+///      Bool_t *FixAmp = new Bool_t[nfound];
+///      for(i = 0; i< nfound ; i++){
+///         FixPos[i] = kFALSE;
+///         FixAmp[i] = kFALSE;
+///      }
+///      //filling in the
+///      initial estimates of the input parameters
+///      Double_t *PosX = new Double_t[nfound];
+///      Double_t *PosY = new Double_t[nfound];
+///      PosX = s->GetPositionX();
+///      for (i = 0; i < nfound; i++) {
+///         a=PosX[i];
+///         bin = 1 + Int_t(a + 0.5);
+///         PosY[i] = h->GetBinContent(bin);
+///      }
+///      TSpectrumFit *pfit=new TSpectrumFit(nfound);
+///      pfit->SetFitParameters(xmin, xmax-1, 1000, 0.1, pfit->kFitOptimChiCounts,
+///      pfit->kFitAlphaHalving, pfit->kFitPower2,
+///      pfit->kFitTaylorOrderFirst);
+///      pfit->SetPeakParameters(2, kFALSE, PosX, (Bool_t *) FixPos, PosY, (Bool_t *) FixAmp);
+///      pfit->FitAwmi(source);
+///      Double_t *CalcPositions = new Double_t[nfound];
+///      Double_t *CalcAmplitudes = new Double_t[nfound];
+///      CalcPositions=pfit->GetPositions();
+///      CalcAmplitudes=pfit->GetAmplitudes();
+///      for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
+///      d->SetLineColor(kRed);
+///      d->Draw("SAME L");
+///      for (i = 0; i < nfound; i++) {
+///         a=CalcPositions[i];
+///         bin = 1 + Int_t(a + 0.5);
+///         PosX[i] = d->GetBinCenter(bin);
+///         PosY[i] = d->GetBinContent(bin);
+///      }
+///      TPolyMarker * pm = (TPolyMarker*)h->GetListOfFunctions()->FindObject("TPolyMarker");
+///      if (pm) {
+///         h->GetListOfFunctions()->Remove(pm);
+///         delete pm;
+///      }
+///      pm = new TPolyMarker(nfound, PosX, PosY);
+///      h->GetListOfFunctions()->Add(pm);
+///      pm->SetMarkerStyle(23);
+///      pm->SetMarkerColor(kRed);
+///      pm->SetMarkerSize(1);
+///   }
+/// ~~~
 
-//____________________________________________________________________________
 void TSpectrumFit::FitAwmi(Double_t *source)
 {
-/////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION
-//        ALGORITHM WITHOUT MATRIX INVERSION
-//        This function fits the source spectrum. The calling program should
-//        fill in input parameters of the TSpectrumFit class
-//        The fitted parameters are written into
-//        TSpectrumFit class output parameters and fitted data are written into
-//        source spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum
-//
-/////////////////////////////////////////////////////////////////////////////
-//
-//Begin_Html <!--
-/* -->
-<div class=Section2>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Fitting</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i>Goal: to estimate
-simultaneously peak shape parameters in spectra with large number of peaks</i></p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>peaks can be fitted separately, each peak (or multiplets) in a region or
-together all peaks in a spectrum. To fit separately each peak one needs to
-determine the fitted region. However it can happen that the regions of
-neighboring peaks are overlapping. Then the results of fitting are very poor.
-On the other hand, when fitting together all peaks found in a  spectrum, one
-needs to have a method that is  stable (converges) and fast enough to carry out
-fitting in reasonable time </p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>we have implemented the nonsymmetrical semiempirical peak shape function
-[1]</p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>it contains the symmetrical Gaussian as well as nonsymmetrical terms.</p>
-
-<p class=MsoNormal style='text-align:justify'>
-
-<table cellpadding=0 cellspacing=0 align=left>
- <tr>
-  <td width=84 height=18></td>
- </tr>
- <tr>
-  <td></td>
-  <td><img width=372 height=127 src="gif/spectrumfit_awni_image001.gif"></td>
- </tr>
-</table>
-
-<span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:16.0pt'>&nbsp;</span></p>
-
-<br clear=ALL>
-
-<p class=MsoNormal style='text-indent:34.2pt'>where T and S are relative amplitudes
-and B is slope.</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal style='margin-left:36.0pt;text-align:justify;text-indent:
--18.0pt'>•<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span>algorithm without matrix inversion (AWMI) allows fitting tens, hundreds
-of peaks simultaneously that represent sometimes thousands of parameters [2],
-[5]. </p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal style='text-align:justify'>void <a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit::FitAwmi</b></a>(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double"><b>double</b></a> *fSource)
-</p>
-
-<p class=MsoNormal style='text-align:justify'>This function fits the source
-spectrum using AWMI algorithm. The calling program should fill in input fitting
-parameters of the TSpectrumFit class using a set of TSpectrumFit setters. The
-fitted parameters are written into the class and the fitted data are written
-into source spectrum. </p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='color:red'>Parameter:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'>        <b>fSource</b>-pointer to
-the vector of source spectrum                  </p>
-
-<p class=MsoNormal style='text-align:justify'>        </p>
-
-<p class=MsoNormal><i><span style='color:red'>Member variables of the
-TSpectrumFit class:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fNPeaks;                    //number of peaks present in fit, input
-parameter, it should be &gt; 0</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fNumberIterations;          //number of iterations in fitting
-procedure, input parameter, it should be &gt; 0</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fXmin;                      //first fitted channel</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fXmax;                      //last fitted channel</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fStatisticType;             //type of statistics, possible values
-kFitOptimChiCounts (chi square statistics with counts as weighting
-coefficients), kFitOptimChiFuncValues (chi square statistics with function
-values as weighting coefficients),kFitOptimMaxLikelihood</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fAlphaOptim;                //optimization of convergence algorithm, possible
-values kFitAlphaHalving, kFitAlphaOptimal</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fPower;                     //possible values kFitPower2,4,6,8,10,12,
-for details see references. It applies only for Awmi fitting function.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Int_t     fFitTaylor;                 //order of Taylor expansion, possible
-values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi
-fitting function.</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fAlpha;                     //convergence coefficient, input
-parameter, it should be positive number and &lt;=1, for details see references</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fChi;                       //here the fitting functions return
-resulting chi square   </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fPositionInit;              //[fNPeaks] array of initial values of
-peaks positions, input parameters</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fPositionCalc;              //[fNPeaks] array of calculated values of
-fitted positions, output parameters</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fPositionErr;               //[fNPeaks] array of position errors</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fAmpInit;                   //[fNPeaks] array of initial values of
-peaks amplitudes, input parameters</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fAmpCalc;                   //[fNPeaks] array of calculated values of
-fitted amplitudes, output parameters</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fAmpErr;                    //[fNPeaks] array of amplitude errors</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fArea;                      //[fNPeaks] array of calculated areas of
-peaks</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t *fAreaErr;                   //[fNPeaks] array of errors of peak areas</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSigmaInit;                 //initial value of sigma parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSigmaCalc;                 //calculated value of sigma parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSigmaErr;                  //error value of sigma parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fTInit;                     //initial value of t parameter (relative
-amplitude of tail), for details see html manual and references</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fTCalc;                     //calculated value of t parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fTErr;                      //error value of t parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fBInit;                     //initial value of b parameter (slope),
-for details see html manual and references</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fBCalc;                     //calculated value of b parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fBErr;                      //error value of b parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSInit;                     //initial value of s parameter (relative
-amplitude of step), for details see html manual and references</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSCalc;                     //calculated value of s parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fSErr;                      //error value of s parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA0Init;                    //initial value of background a0
-parameter(backgroud is estimated as a0+a1*x+a2*x*x)</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA0Calc;                    //calculated value of background a0
-parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA0Err;                     //error value of background a0 parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA1Init;                    //initial value of background a1
-parameter(backgroud is estimated as a0+a1*x+a2*x*x)</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA1Calc;                    //calculated value of background a1
-parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA1Err;                     //error value of background a1 parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA2Init;                    //initial value of background a2
-parameter(backgroud is estimated as a0+a1*x+a2*x*x)</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA2Calc;                    //calculated value of background a2
-parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Double_t  fA2Err;                     //error value of background a2 parameter</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t   *fFixPosition;               //[fNPeaks] array of logical values which
-allow to fix appropriate positions (not fit). However they are present in the
-estimated functional   </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t   *fFixAmp;                    //[fNPeaks] array of logical values which
-allow to fix appropriate amplitudes (not fit). However they are present in the
-estimated functional      </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixSigma;                  //logical value of sigma parameter, which
-allows to fix the parameter (not to fit).   </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixT;                      //logical value of t parameter, which
-allows to fix the parameter (not to fit).      </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixB;                      //logical value of b parameter, which
-allows to fix the parameter (not to fit).   </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixS;                      //logical value of s parameter, which
-allows to fix the parameter (not to fit).      </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixA0;                     //logical value of a0 parameter, which
-allows to fix the parameter (not to fit).</span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixA1;                     //logical value of a1 parameter, which
-allows to fix the parameter (not to fit).   </span></p>
-
-<p class=MsoNormal style='text-align:justify'><span style='font-size:10.0pt'>  
-Bool_t    fFixA2;                     //logical value of a2 parameter, which
-allows to fix the parameter (not to fit).</span></p>
-
-<p class=MsoNormal style='text-align:justify'><b><i>&nbsp;</i></b></p>
-
-<p class=MsoNormal style='text-align:justify'><b><i>References:</i></b></p>
-
-<p class=MsoNormal style='text-align:justify'>[1] Phillps G.W., Marlow K.W.,
-NIM 137 (1976) 525.</p>
-
-<p class=MsoNormal style='text-align:justify'>[2] I. A. Slavic: Nonlinear
-least-squares fitting without matrix inversion applied to complex Gaussian
-spectra analysis. NIM 134 (1976) 285-289.</p>
-
-<p class=MsoNormal style='text-align:justify'>[3] T. Awaya: A new method for
-curve fitting to the data with low statistics not using chi-square method. NIM
-165 (1979) 317-323.</p>
-
-<p class=MsoNormal style='text-align:justify'>[4] T. Hauschild, M. Jentschel:
-Comparison of maximum likelihood estimation and chi-square statistics applied
-to counting experiments. NIM A 457 (2001) 384-401.</p>
-
-<p class=MsoNormal style='text-align:justify'> [5]  M. Morhá&#269;,  J.
-Kliman,  M. Jandel,  &#317;. Krupa, V. Matoušek: Study of fitting algorithms
-applied to simultaneous analysis of large number of peaks in -ray spectra. <span
-lang=EN-GB>Applied Spectroscopy, Vol. 57, No. 7, pp. 753-760, 2003</span></p>
-
-<p class=MsoNormal style='text-align:justify'> </p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example  – script FitAwmi.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
-border=0 width=601 height=402 src="gif/spectrumfit_awni_image002.jpg"></span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 1 Original spectrum
-(black line) and fitted spectrum using AWMI algorithm (red line) and number of
-iteration steps = 1000. Positions of fitted peaks are denoted by markers</b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-fitting function using AWMI algorithm.</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example,
-do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x FitAwmi.C</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>void FitAwmi() {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t a;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t
-i,nfound=0,bin;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t nbins = 256;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
-nbins;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t * source =
-new Double_t[nbins];</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t * dest =
-new Double_t[nbins];   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TH1F *h = new
-TH1F(&quot;h&quot;,&quot;Fitting using AWMI algorithm&quot;,nbins,xmin,xmax);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;TSpectrum.root&quot;);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   h=(TH1F*)
-f-&gt;Get(&quot;fit;1&quot;);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   for (i = 0; i &lt;
-nbins; i++) source[i]=h-&gt;GetBinContent(i + 1);      </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TCanvas *Fit1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Fit1&quot;);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   if (!Fit1) Fit1 =
-new TCanvas(&quot;Fit1&quot;,&quot;Fit1&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-h-&gt;Draw(&quot;L&quot;);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TSpectrum *s = new
-TSpectrum();</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   //searching for
-candidate peaks positions</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   nfound =
-s-&gt;SearchHighRes(source, dest, nbins, 2, 0.1, kFALSE, 10000, kFALSE, 0);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Bool_t *FixPos =
-new Bool_t[nfound];</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Bool_t *FixAmp =
-new Bool_t[nfound];      </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   for(i = 0; i&lt;
-nfound ; i++){</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>      FixPos[i] =
-kFALSE;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>      FixAmp[i] =
-kFALSE;    </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   //filling in the
-initial estimates of the input parameters</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t *PosX =
-new Double_t[nfound];         </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t *PosY =
-new Double_t[nfound];</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   PosX =
-s-&gt;GetPositionX();</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   for (i = 0; i &lt;
-nfound; i++) {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                                                a=PosX[i];</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>        bin = 1 +
-Int_t(a + 0.5);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>        PosY[i] =
-h-&gt;GetBinContent(bin);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TSpectrumFit
-*pfit=new TSpectrumFit(nfound);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-pfit-&gt;SetFitParameters(xmin, xmax-1, 1000, 0.1, pfit-&gt;kFitOptimChiCounts,
-pfit-&gt;kFitAlphaHalving, pfit-&gt;kFitPower2,
-pfit-&gt;kFitTaylorOrderFirst);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   pfit-&gt;SetPeakParameters(2,
-kFALSE, PosX, (Bool_t *) FixPos, PosY, (Bool_t *) FixAmp);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-pfit-&gt;FitAwmi(source);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t
-*CalcPositions = new Double_t[nfound];      </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Double_t
-*CalcAmplitudes = new Double_t[nfound];         </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-CalcPositions=pfit-&gt;GetPositions();</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-CalcAmplitudes=pfit-&gt;GetAmplitudes();   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   for (i = 0; i &lt;
-nbins; i++) d-&gt;SetBinContent(i + 1,source[i]);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-d-&gt;SetLineColor(kRed);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-d-&gt;Draw(&quot;SAME L&quot;);  </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   for (i = 0; i &lt;
-nfound; i++) {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>                                                a=CalcPositions[i];</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>        bin = 1 +
-Int_t(a + 0.5);                </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>        PosX[i] =
-d-&gt;GetBinCenter(bin);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>        PosY[i] =
-d-&gt;GetBinContent(bin);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   TPolyMarker * pm =
-(TPolyMarker*)h-&gt;GetListOfFunctions()-&gt;FindObject(&quot;TPolyMarker&quot;);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   if (pm) {</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>     
-h-&gt;GetListOfFunctions()-&gt;Remove(pm);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>      delete pm;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   pm = new
-TPolyMarker(nfound, PosX, PosY);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-h-&gt;GetListOfFunctions()-&gt;Add(pm);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-pm-&gt;SetMarkerStyle(23);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-pm-&gt;SetMarkerColor(kRed);</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>  
-pm-&gt;SetMarkerSize(1);   </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    Int_t i, j, k, shift =
        2 * fNPeaks + 7, peak_vel, rozmer, iter, pw, regul_cycle,
        flag;
@@ -2192,25 +1706,20 @@ pm-&gt;SetMarkerSize(1);   </span></p>
    return;
 }
 
-/////////////////FITTING FUNCTION WITH MATRIX INVERSION///////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates solution of the system of linear equations.
+///   The matrix a should have a dimension size*(size+4)
+///   The calling function should fill in the matrix, the column size should
+///   contain vector y (right side of the system of equations). The result is
+///   placed into size+1 column of the matrix.
+///   according to sigma of peaks.
+///
+///      Function parameters:
+///              - a-matrix with dimension size*(size+4)
+///              - size-number of rows of the matrix
 
-//_______________________________________________________________________________
 void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
 {
-//////////////////////////////////////////////////////////////////////////////////
-//   AUXILIARY FUNCTION                                                          //
-//                                                                              //
-//   This function calculates solution of the system of linear equations.        //
-//   The matrix a should have a dimension size*(size+4)                         //
-//   The calling function should fill in the matrix, the column size should     //
-//   contain vector y (right side of the system of equations). The result is    //
-//   placed into size+1 column of the matrix.                                   //
-//   according to sigma of peaks.                                               //
-//      Function parameters:                                                    //
-//              -a-matrix with dimension size*(size+4)                          //                                            //
-//              -size-number of rows of the matrix                              //
-//                                                                              //
-//////////////////////////////////////////////////////////////////////////////////
    Int_t i, j, k = 0;
    Double_t sk = 0, b, lambdak, normk, normk_old = 0;
 
@@ -2257,255 +1766,96 @@ void TSpectrumFit::StiefelInversion(Double_t **a, Int_t size)
    return;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function fits the source spectrum. The calling program should
+/// fill in input parameters
+/// The fitted parameters are written into
+/// output parameters and fitted data are written into
+/// source spectrum.
+///
+///   Function parameters:
+///     - source-pointer to the vector of source spectrum
+///
+/// ### Example - script FitStiefel.c:
+///
+/// \image html spectrumfit_stiefel_image001.jpg Fig. 2 Original spectrum (black line) and fitted spectrum using Stiefel-Hestens method (red line) and number of iteration steps = 100. Positions of fitted peaks are denoted by markers
+///
+/// #### Script:
+///
+/// Example to illustrate fitting function using Stiefel-Hestens method.
+/// To execute this example, do:
+///
+/// root > .x FitStiefel.C
+///
+/// ~~~ {.cpp}
+///   void FitStiefel() {
+///      Double_t a;
+///      Int_t i,nfound=0,bin;
+///      Int_t nbins = 256;
+///      Int_t xmin = 0;
+///      Int_t xmax = nbins;
+///      Double_t * source = new Double_t[nbins];
+///      Double_t * dest = new Double_t[nbins];
+///      TH1F *h = new TH1F("h","Fitting using AWMI algorithm",nbins,xmin,xmax);
+///      TH1F *d = new TH1F("d","",nbins,xmin,xmax);
+///      TFile *f = new TFile("TSpectrum.root");
+///      h=(TH1F*) f->Get("fit;1");
+///      for (i = 0; i < nbins;i++) source[i]=h->GetBinContent(i + 1);
+///         TCanvas *Fit1 = gROOT->GetListOfCanvases()->FindObject("Fit1");
+///      if (!Fit1) Fit1 = new TCanvas("Fit1","Fit1",10,10,1000,700);
+///      h->Draw("L");
+///      TSpectrum *s = new TSpectrum();
+///      //searching for candidate peaks positions
+///      nfound = s->SearchHighRes(source, dest, nbins, 2, 0.1, kFALSE, 10000, kFALSE, 0);
+///      Bool_t *FixPos = new Bool_t[nfound];
+///      Bool_t *FixAmp = new Bool_t[nfound];
+///      for(i = 0; i< nfound ; i++){
+///         FixPos[i] = kFALSE;
+///         FixAmp[i] = kFALSE;
+///      }
+///      //filling in the initial estimates of the input parameters
+///      Double_t *PosX = new Double_t[nfound];
+///      Double_t *PosY = new Double_t[nfound];
+///      PosX = s->GetPositionX();
+///      for (i = 0; i < nfound; i++) {
+///         a=PosX[i];
+///         bin = 1 + Int_t(a + 0.5);
+///         PosY[i] = h->GetBinContent(bin);
+///      }
+///      TSpectrumFit *pfit = new TSpectrumFit(nfound);
+///      pfit->SetFitParameters(xmin, xmax-1, 1000, 0.1, pfit->kFitOptimChiCounts,
+///      pfit->kFitAlphaHalving, pfit->kFitPower2,
+///      pfit->kFitTaylorOrderFirst);
+///      pfit->SetPeakParameters(2, kFALSE, PosX, (Bool_t *) FixPos, PosY, (Bool_t *) FixAmp);
+///      pfit->FitStiefel(source);
+///      Double_t *CalcPositions = new Double_t[nfound];
+///      Double_t *CalcAmplitudes = new Double_t[nfound];
+///      CalcPositions=pfit->GetPositions();
+///      CalcAmplitudes=pfit->GetAmplitudes();
+///      for (i = 0; i < nbins; i++) d->SetBinContent(i + 1,source[i]);
+///      d->SetLineColor(kRed);
+///      d->Draw("SAMEL");
+///      for (i = 0; i < nfound; i++) {
+///         a=CalcPositions[i];
+///         bin = 1 + Int_t(a + 0.5);
+///         PosX[i] = d->GetBinCenter(bin);
+///         PosY[i] = d->GetBinContent(bin);
+///      }
+///      TPolyMarker * pm = (TPolyMarker*)h->GetListOfFunctions()->FindObject("TPolyMarker");
+///      if (pm) {
+///         h->GetListOfFunctions()->Remove(pm);
+///         delete pm;
+///      }
+///      pm = new TPolyMarker(nfound, PosX, PosY);
+///      h->GetListOfFunctions()->Add(pm);
+///      pm->SetMarkerStyle(23);
+///      pm->SetMarkerColor(kRed);
+///      pm->SetMarkerSize(1);
+///   }
+/// ~~~
+
 void TSpectrumFit::FitStiefel(Double_t *source)
 {
-/////////////////////////////////////////////////////////////////////////////
-//        ONE-DIMENSIONAL FIT FUNCTION
-//        ALGORITHM WITH MATRIX INVERSION (STIEFEL-HESTENS METHOD)
-//        This function fits the source spectrum. The calling program should
-//        fill in input parameters
-//        The fitted parameters are written into
-//        output parameters and fitted data are written into
-//        source spectrum.
-//
-//        Function parameters:
-//        source-pointer to the vector of source spectrum
-//
-/////////////////////////////////////////////////////////////////////////////
-//Begin_Html <!--
-/* -->
-<div class=Section3>
-
-<p class=MsoNormal><b><span style='font-size:14.0pt'>Stiefel fitting algorithm</span></b></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:18.0pt'>&nbsp;</span></i></p>
-
-<p class=MsoNormal><i>Function:</i></p>
-
-<p class=MsoNormal style='text-align:justify'>void <a
-href="http://root.cern.ch/root/html/TSpectrum.html#TSpectrum:Fit1Awmi"><b>TSpectrumFit::</b></a>FitStiefel(<a
-href="http://root.cern.ch/root/html/ListOfTypes.html#double"><b>double</b></a> *fSource)
-</p>
-
-<p class=MsoNormal style='text-align:justify'>&nbsp;</p>
-
-<p class=MsoNormal style='text-align:justify'>This function fits the source
-spectrum using Stiefel-Hestens method [1] (see Awmi function).  The calling
-program should fill in input fitting parameters of the TSpectrumFit class using
-a set of TSpectrumFit setters. The fitted parameters are written into the class
-and the fitted data are written into source spectrum. It converges faster than
-Awmi method.</p>
-
-<p class=MsoNormal>&nbsp;</p>
-
-<p class=MsoNormal><i><span style='color:red'>Parameter:</span></i></p>
-
-<p class=MsoNormal style='text-align:justify'>        <b>fSource</b>-pointer to
-the vector of source spectrum                  </p>
-
-<p class=MsoNormal style='text-align:justify'>        </p>
-
-<p class=MsoNormal style='text-align:justify'><i>Example – script FitStiefel.c:</i></p>
-
-<p class=MsoNormal style='text-align:justify'><i><span style='font-size:16.0pt'><img
-border=0 width=601 height=402 src="gif/spectrumfit_stiefel_image001.jpg"></span></i></p>
-
-<p class=MsoNormal style='text-align:justify'><b>Fig. 2 Original spectrum
-(black line) and fitted spectrum using Stiefel-Hestens method (red line) and
-number of iteration steps = 100. Positions of fitted peaks are denoted by
-markers</b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>&nbsp;</span></b></p>
-
-<p class=MsoNormal><b><span style='color:#339966'>Script:</span></b></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// Example to illustrate
-fitting function using Stiefel-Hestens method.</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// To execute this example, do</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>// root &gt; .x FitStiefel.C</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>&nbsp;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>void FitStiefel() {</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t a;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t i,nfound=0,bin;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Int_t nbins = 256;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>Int_t xmin  = 0;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   Int_t xmax  =
-nbins;</span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>Double_t * source = new Double_t[nbins];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t * dest = new
-Double_t[nbins];   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *h = new TH1F(&quot;h&quot;,&quot;Fitting
-using AWMI algorithm&quot;,nbins,xmin,xmax);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TH1F *d = new
-TH1F(&quot;d&quot;,&quot;&quot;,nbins,xmin,xmax);      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TFile *f = new
-TFile(&quot;TSpectrum.root&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h=(TH1F*)
-f-&gt;Get(&quot;fit;1&quot;);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) source[i]=h-&gt;GetBinContent(i + 1);      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TCanvas *Fit1 =
-gROOT-&gt;GetListOfCanvases()-&gt;FindObject(&quot;Fit1&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   if (!Fit1) Fit1 = new
-TCanvas(&quot;Fit1&quot;,&quot;Fit1&quot;,10,10,1000,700);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   h-&gt;Draw(&quot;L&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrum *s = new
-TSpectrum();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   //searching for candidate
-peaks positions</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   nfound =
-s-&gt;SearchHighRes(source, dest, nbins, 2, 0.1, kFALSE, 10000, kFALSE, 0);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixPos = new
-Bool_t[nfound];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Bool_t *FixAmp = new
-Bool_t[nfound];      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for(i = 0; i&lt; nfound ;
-i++){</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>      FixPos[i] = kFALSE;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>      FixAmp[i] = kFALSE;    </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   //filling in the initial
-estimates of the input parameters</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosX = new
-Double_t[nfound];         </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *PosY = new
-Double_t[nfound];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   PosX =
-s-&gt;GetPositionX();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nfound;
-i++) {</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                a=PosX[i];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>        bin = 1 + Int_t(a +
-0.5);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>        PosY[i] =
-h-&gt;GetBinContent(bin);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   }   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TSpectrumFit *pfit=new
-TSpectrumFit(nfound);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-pfit-&gt;SetFitParameters(xmin, xmax-1, 1000, 0.1, pfit-&gt;kFitOptimChiCounts,
-pfit-&gt;kFitAlphaHalving, pfit-&gt;kFitPower2,
-pfit-&gt;kFitTaylorOrderFirst);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   pfit-&gt;SetPeakParameters(2,
-kFALSE, PosX, (Bool_t *) FixPos, PosY, (Bool_t *) FixAmp);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-pfit-&gt;FitStiefel(source);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   Double_t *CalcPositions =
-new Double_t[nfound];      </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   </span><span lang=FR
-style='font-size:10.0pt'>Double_t *CalcAmplitudes = new
-Double_t[nfound];         </span></p>
-
-<p class=MsoNormal><span lang=FR style='font-size:10.0pt'>   </span><span
-style='font-size:10.0pt'>CalcPositions=pfit-&gt;GetPositions();</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-CalcAmplitudes=pfit-&gt;GetAmplitudes();   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nbins;
-i++) d-&gt;SetBinContent(i + 1,source[i]);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-d-&gt;SetLineColor(kRed);   </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   d-&gt;Draw(&quot;SAME
-L&quot;);  </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   for (i = 0; i &lt; nfound;
-i++) {</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>                                                a=CalcPositions[i];</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>        bin = 1 + Int_t(a +
-0.5);                </span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>        PosX[i] =
-d-&gt;GetBinCenter(bin);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>        PosY[i] =
-d-&gt;GetBinContent(bin);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   TPolyMarker * pm =
-(TPolyMarker*)h-&gt;GetListOfFunctions()-&gt;FindObject(&quot;TPolyMarker&quot;);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   if (pm) {</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>     
-h-&gt;GetListOfFunctions()-&gt;Remove(pm);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>      delete pm;</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   }</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   pm = new
-TPolyMarker(nfound, PosX, PosY);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-h-&gt;GetListOfFunctions()-&gt;Add(pm);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   pm-&gt;SetMarkerStyle(23);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>  
-pm-&gt;SetMarkerColor(kRed);</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>   pm-&gt;SetMarkerSize(1);  
-</span></p>
-
-<p class=MsoNormal><span style='font-size:10.0pt'>}</span></p>
-
-</div>
-
-<!-- */
-// --> End_Html
-
    Int_t i, j, k, shift =
        2 * fNPeaks + 7, peak_vel, rozmer, iter, regul_cycle,
        flag;
@@ -3245,21 +2595,18 @@ pm-&gt;SetMarkerColor(kRed);</span></p>
    return;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function sets the following fitting parameters:
+///         - xmin, xmax - fitting region
+///         - numberIterations - # of desired iterations in the fit
+///         - alpha - convergence coefficient, it should be positive number and <=1, for details see references
+///         - statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
+///         - alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
+///         - power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
+///         - fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
+
 void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIterations, Double_t alpha, Int_t statisticType, Int_t alphaOptim, Int_t power, Int_t fitTaylor)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters:
-//         -xmin, xmax - fitting region
-//         -numberIterations - # of desired iterations in the fit
-//         -alpha - convergence coefficient, it should be positive number and <=1, for details see references
-//         -statisticType - type of statistics, possible values kFitOptimChiCounts (chi square statistics with counts as weighting coefficients), kFitOptimChiFuncValues (chi square statistics with function values as weighting coefficients),kFitOptimMaxLikelihood
-//         -alphaOptim - optimization of convergence algorithm, possible values kFitAlphaHalving, kFitAlphaOptimal
-//         -power - possible values kFitPower2,4,6,8,10,12, for details see references. It applies only for Awmi fitting function.
-//         -fitTaylor - order of Taylor expansion, possible values kFitTaylorOrderFirst, kFitTaylorOrderSecond. It applies only for Awmi fitting function.
-//////////////////////////////////////////////////////////////////////////////
    if(xmin<0 || xmax <= xmin){
       Error("SetFitParameters", "Wrong range");
       return;
@@ -3297,21 +2644,17 @@ void TSpectrumFit::SetFitParameters(Int_t xmin,Int_t xmax, Int_t numberIteration
    fXmin=xmin,fXmax=xmax,fNumberIterations=numberIterations,fAlpha=alpha,fStatisticType=statisticType,fAlphaOptim=alphaOptim,fPower=power,fFitTaylor=fitTaylor;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function sets the following fitting parameters of peaks:
+///         - sigma - initial value of sigma parameter
+///         - fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
+///         - positionInit - array of initial values of peaks positions
+///         - fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
+///         - ampInit - array of initial values of peaks amplitudes
+///         - fixAmp - array of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
+
 void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of peaks:
-//         -sigma - initial value of sigma parameter
-//         -fixSigma - logical value of sigma parameter, which allows to fix the parameter (not to fit)
-//         -positionInit - aray of initial values of peaks positions
-//         -fixPosition - array of logical values which allow to fix appropriate positions (not fit). However they are present in the estimated functional.
-//         -ampInit - aray of initial values of peaks amplitudes
-//         -fixAmp - aray of logical values which allow to fix appropriate amplitudes (not fit). However they are present in the estimated functional
-//////////////////////////////////////////////////////////////////////////////
-
    Int_t i;
    if (sigma <= 0){
       Error ("SetPeakParameters","Invalid sigma, must be > than 0");
@@ -3336,21 +2679,17 @@ void TSpectrumFit::SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Doub
    }
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function sets the following fitting parameters of background:
+///         - a0Init - initial value of a0 parameter (background is estimated as a0+a1*x+a2*x*x)
+///         - fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
+///         - a1Init - initial value of a1 parameter
+///         - fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
+///         - a2Init - initial value of a2 parameter
+///         - fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)
+
 void TSpectrumFit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double_t a1Init, Bool_t fixA1, Double_t a2Init, Bool_t fixA2)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of background:
-//         -a0Init - initial value of a0 parameter (backgroud is estimated as a0+a1*x+a2*x*x)
-//         -fixA0 - logical value of a0 parameter, which allows to fix the parameter (not to fit)
-//         -a1Init - initial value of a1 parameter
-//         -fixA1 - logical value of a1 parameter, which allows to fix the parameter (not to fit)
-//         -a2Init - initial value of a2 parameter
-//         -fixA2 - logical value of a2 parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
-
    fA0Init = a0Init;
    fFixA0 = fixA0;
    fA1Init = a1Init;
@@ -3359,21 +2698,17 @@ void TSpectrumFit::SetBackgroundParameters(Double_t a0Init, Bool_t fixA0, Double
    fFixA2 = fixA2;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function sets the following fitting parameters of tails of peaks
+///         - tInit - initial value of t parameter
+///         - fixT - logical value of t parameter, which allows to fix the parameter (not to fit)
+///         - bInit - initial value of b parameter
+///         - fixB - logical value of b parameter, which allows to fix the parameter (not to fit)
+///         - sInit - initial value of s parameter
+///         - fixS - logical value of s parameter, which allows to fix the parameter (not to fit)
+
 void TSpectrumFit::SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   SETTER FUNCTION
-//
-//   This function sets the following fitting parameters of tails of peaks
-//         -tInit - initial value of t parameter
-//         -fixT - logical value of t parameter, which allows to fix the parameter (not to fit)
-//         -bInit - initial value of b parameter
-//         -fixB - logical value of b parameter, which allows to fix the parameter (not to fit)
-//         -sInit - initial value of s parameter
-//         -fixS - logical value of s parameter, which allows to fix the parameter (not to fit)
-//////////////////////////////////////////////////////////////////////////////
-
    fTInit = tInit;
    fFixT = fixT;
    fBInit = bInit;
@@ -3382,34 +2717,28 @@ void TSpectrumFit::SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit
    fFixS = fixS;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function gets the sigma parameter and its error
+///         - sigma - gets the fitted value of sigma parameter
+///         - sigmaErr - gets error value of sigma parameter
+
 void TSpectrumFit::GetSigma(Double_t &sigma, Double_t &sigmaErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the sigma parameter and its error
-//         -sigma - gets the fitted value of sigma parameter
-//         -sigmaErr - gets error value of sigma parameter
-//////////////////////////////////////////////////////////////////////////////
    sigma=fSigmaCalc;
    sigmaErr=fSigmaErr;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function gets the background parameters and their errors
+///         - a0 - gets the fitted value of a0 parameter
+///         - a0Err - gets error value of a0 parameter
+///         - a1 - gets the fitted value of a1 parameter
+///         - a1Err - gets error value of a1 parameter
+///         - a2 - gets the fitted value of a2 parameter
+///         - a2Err - gets error value of a2 parameter
+
 void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double_t &a1, Double_t &a1Err, Double_t &a2, Double_t &a2Err)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the background parameters and their errors
-//         -a0 - gets the fitted value of a0 parameter
-//         -a0Err - gets error value of a0 parameter
-//         -a1 - gets the fitted value of a1 parameter
-//         -a1Err - gets error value of a1 parameter
-//         -a2 - gets the fitted value of a2 parameter
-//         -a2Err - gets error value of a2 parameter
-//////////////////////////////////////////////////////////////////////////////
    a0 = fA0Calc;
    a0Err = fA0Err;
    a1 = fA1Calc;
@@ -3418,20 +2747,18 @@ void TSpectrumFit::GetBackgroundParameters(Double_t &a0, Double_t &a0Err, Double
    a2Err = fA2Err;
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function gets the tail parameters and their errors
+///         - t - gets the fitted value of t parameter
+///         - tErr - gets error value of t parameter
+///         - b - gets the fitted value of b parameter
+///         - bErr - gets error value of b parameter
+///         - s - gets the fitted value of s parameter
+///         - sErr - gets error value of s parameter
+///////////////////////////////////////////////////////////////////////////////
+
 void TSpectrumFit::GetTailParameters(Double_t &t, Double_t &tErr, Double_t &b, Double_t &bErr, Double_t &s, Double_t &sErr)
 {
-//////////////////////////////////////////////////////////////////////////////
-//   GETTER FUNCTION
-//
-//   This function gets the tail parameters and their errors
-//         -t - gets the fitted value of t parameter
-//         -tErr - gets error value of t parameter
-//         -b - gets the fitted value of b parameter
-//         -bErr - gets error value of b parameter
-//         -s - gets the fitted value of s parameter
-//         -sErr - gets error value of s parameter
-//////////////////////////////////////////////////////////////////////////////
    t = fTCalc;
    tErr = fTErr;
    b = fBCalc;

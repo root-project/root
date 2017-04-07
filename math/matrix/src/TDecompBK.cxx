@@ -15,69 +15,74 @@
 
 ClassImp(TDecompBK)
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// The Bunch-Kaufman diagonal pivoting method decomposes a real          //
-// symmetric matrix A using                                              //
-//                                                                       //
-//     A = U*D*U^T                                                       //
-//                                                                       //
-//  where U is a product of permutation and unit upper triangular        //
-//  matrices, U^T is the transpose of U, and D is symmetric and block    //
-//  diagonal with 1-by-1 and 2-by-2 diagonal blocks.                     //
-//                                                                       //
-//     U = P(n-1)*U(n-1)* ... *P(k)U(k)* ...,                            //
-//  i.e., U is a product of terms P(k)*U(k), where k decreases from n-1  //
-//  to 0 in steps of 1 or 2, and D is a block diagonal matrix with 1-by-1//
-//  and 2-by-2 diagonal blocks D(k).  P(k) is a permutation matrix as    //
-//  defined by IPIV(k), and U(k) is a unit upper triangular matrix, such //
-//  that if the diagonal block D(k) is of order s (s = 1 or 2), then     //
-//                                                                       //
-//             (   I    v    0   )   k-s                                 //
-//     U(k) =  (   0    I    0   )   s                                   //
-//             (   0    0    I   )   n-k                                 //
-//                k-s   s   n-k                                          //
-//                                                                       //
-//  If s = 1, D(k) overwrites A(k,k), and v overwrites A(0:k-1,k).       //
-//  If s = 2, the upper triangle of D(k) overwrites A(k-1,k-1), A(k-1,k),//
-//  and A(k,k), and v overwrites A(0:k-2,k-1:k).                         //
-//                                                                       //
-// fU contains on entry the symmetric matrix A of which only the upper   //
-// triangular part is referenced . On exit fU contains the block diagonal//
-// matrix D and the multipliers used to obtain the factor U, see above . //
-//                                                                       //
-// fIpiv if dimension n contains details of the interchanges and the     //
-// the block structure of D . If (fIPiv(k) > 0, then rows and columns k  //
-// and fIPiv(k) were interchanged and D(k,k) is a 1-by-1 diagonal block. //
-// If IPiv(k) = fIPiv(k-1) < 0, rows and columns k-1 and -IPiv(k) were   //
-// interchanged and D(k-1:k,k-1:k) is a 2-by-2 diagonal block.           //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+/** \class TDecompBK
+    \ingroup Matrix
 
-//______________________________________________________________________________
+ The Bunch-Kaufman diagonal pivoting method decomposes a real
+ symmetric matrix A using
+
+~~~
+     A = U*D*U^T
+~~~
+
+  where U is a product of permutation and unit upper triangular
+  matrices, U^T is the transpose of U, and D is symmetric and block
+  diagonal with 1-by-1 and 2-by-2 diagonal blocks.
+
+     U = P(n-1)*U(n-1)* ... *P(k)U(k)* ...,
+  i.e., U is a product of terms P(k)*U(k), where k decreases from n-1
+  to 0 in steps of 1 or 2, and D is a block diagonal matrix with 1-by-1
+  and 2-by-2 diagonal blocks D(k).  P(k) is a permutation matrix as
+  defined by IPIV(k), and U(k) is a unit upper triangular matrix, such
+  that if the diagonal block D(k) is of order s (s = 1 or 2), then
+
+~~~
+             (   I    v    0   )   k-s
+     U(k) =  (   0    I    0   )   s
+             (   0    0    I   )   n-k
+                k-s   s   n-k
+~~~
+
+  If s = 1, D(k) overwrites A(k,k), and v overwrites A(0:k-1,k).
+  If s = 2, the upper triangle of D(k) overwrites A(k-1,k-1), A(k-1,k),
+  and A(k,k), and v overwrites A(0:k-2,k-1:k).
+
+ fU contains on entry the symmetric matrix A of which only the upper
+ triangular part is referenced . On exit fU contains the block diagonal
+ matrix D and the multipliers used to obtain the factor U, see above .
+
+ fIpiv if dimension n contains details of the interchanges and the
+ the block structure of D . If (fIPiv(k) > 0, then rows and columns k
+ and fIPiv(k) were interchanged and D(k,k) is a 1-by-1 diagonal block.
+ If IPiv(k) = fIPiv(k-1) < 0, rows and columns k-1 and -IPiv(k) were
+ interchanged and D(k-1:k,k-1:k) is a 2-by-2 diagonal block.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TDecompBK::TDecompBK()
 {
-// Default constructor
    fNIpiv = 0;
    fIpiv  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for (nrows x nrows) symmetric matrix
+
 TDecompBK::TDecompBK(Int_t nrows)
 {
-// Constructor for (nrows x nrows) symmetric matrix
-
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
    memset(fIpiv,0,fNIpiv*sizeof(Int_t));
    fU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) symmetric matrix
+
 TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
 {
-// Constructor for ([row_lwb..row_upb] x [row_lwb..row_upb]) symmetric matrix
-
    const Int_t nrows = row_upb-row_lwb+1;
    fNIpiv = nrows;
    fIpiv = new Int_t[fNIpiv];
@@ -86,11 +91,11 @@ TDecompBK::TDecompBK(Int_t row_lwb,Int_t row_upb)
    fU.ResizeTo(nrows,nrows);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for symmetric matrix A
+
 TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 {
-// Constructor for symmetric matrix A
-
    R__ASSERT(a.IsValid());
 
    SetBit(kMatrixSet);
@@ -109,22 +114,22 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
    memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TDecompBK::TDecompBK(const TDecompBK &another) : TDecompBase(another)
 {
-// Copy constructor
-
    fNIpiv = 0;
    fIpiv  = 0;
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Matrix A is decomposed in components U and D so that A = U*D*U^T
+/// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
+
 Bool_t TDecompBK::Decompose()
 {
-// Matrix A is decomposed in components U and D so that A = U*D*U^T
-// If the decomposition succeeds, bit kDecomposed is set , otherwise kSingular
-
    if (TestBit(kDecomposed)) return kTRUE;
 
    if ( !TestBit(kMatrixSet) ) {
@@ -303,11 +308,11 @@ Bool_t TDecompBK::Decompose()
    return ok;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the matrix to be decomposed, decomposition status is reset.
+
 void TDecompBK::SetMatrix(const TMatrixDSym &a)
 {
-// Set the matrix to be decomposed, decomposition status is reset.
-
    R__ASSERT(a.IsValid());
 
    ResetStatus();
@@ -328,11 +333,11 @@ void TDecompBK::SetMatrix(const TMatrixDSym &a)
    memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRows*nRows*sizeof(Double_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+
 Bool_t TDecompBK::Solve(TVectorD &b)
 {
-// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
-
    R__ASSERT(b.IsValid());
    if (TestBit(kSingular)) {
       Error("Solve()","Matrix is singular");
@@ -462,11 +467,11 @@ Bool_t TDecompBK::Solve(TVectorD &b)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
+
 Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
 {
-// Solve Ax=b assuming the BK form of A is stored in fU . Solution returned in b.
-
    TMatrixDBase *b = const_cast<TMatrixDBase *>(cb.GetMatrix());
    R__ASSERT(b->IsValid());
    if (TestBit(kSingular)) {
@@ -599,11 +604,11 @@ Bool_t TDecompBK::Solve(TMatrixDColumn &cb)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 Bool_t TDecompBK::Invert(TMatrixDSym &inv)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    if (inv.GetNrows() != GetNrows() || inv.GetRowLwb() != GetRowLwb()) {
       Error("Invert(TMatrixDSym &","Input matrix has wrong shape");
       return kFALSE;
@@ -622,11 +627,11 @@ Bool_t TDecompBK::Invert(TMatrixDSym &inv)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
+
 TMatrixDSym TDecompBK::Invert(Bool_t &status)
 {
-// For a symmetric matrix A(m,m), its inverse A_inv(m,m) is returned .
-
    const Int_t rowLwb = GetRowLwb();
    const Int_t rowUpb = rowLwb+GetNrows()-1;
 
@@ -637,11 +642,11 @@ TMatrixDSym TDecompBK::Invert(Bool_t &status)
    return inv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class members
+
 void TDecompBK::Print(Option_t *opt) const
 {
-// Print the class members
-
    TDecompBase::Print(opt);
    printf("fIpiv:\n");
    for (Int_t i = 0; i < fNIpiv; i++)
@@ -649,11 +654,11 @@ void TDecompBK::Print(Option_t *opt) const
    fU.Print("fU");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TDecompBK &TDecompBK::operator=(const TDecompBK &source)
 {
-// Assigment operator
-
    if (this != &source) {
       TDecompBase::operator=(source);
       fU.ResizeTo(source.fU);

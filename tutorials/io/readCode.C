@@ -1,7 +1,12 @@
-   //example of script showing how to navigate in a ROOT file
-   //with sub-directories and read the objects in each sub-directory.
-   //This example uses the file produced by the tutorial importCode.C
-   //Author: Rene Brun
+/// \file
+/// \ingroup tutorial_io
+/// \notebook -nodraw
+/// Example of script showing how to navigate in a ROOT file
+/// with sub-directories and read the objects in each sub-directory.
+/// This example uses the file produced by the tutorial importCode.C
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TFile.h"
 #include "TKey.h"

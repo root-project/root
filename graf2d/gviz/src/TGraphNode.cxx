@@ -17,18 +17,17 @@
 
 ClassImp(TGraphNode)
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Graph Node class</h2></center>
-TGraphNode is a graph node object which can be added in a TGraphStruct.
-End_Html */
+/** \class TGraphNode
+\ingroup gviz
 
+A graph node object which can be added in a TGraphStruct.
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Graph node default constructor.
+
 TGraphNode::TGraphNode(): TNamed(), TAttText()
 {
-   // Graph node default constructor.
-
    fGVNode = 0;
    fX      = 0;
    fY      = 0;
@@ -36,13 +35,12 @@ TGraphNode::TGraphNode(): TNamed(), TAttText()
    fH      = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph node normal constructor.
 
-//______________________________________________________________________________
 TGraphNode::TGraphNode(const char *name,const char *title)
            :TNamed(name,title), TAttText()
 {
-   // Graph node normal constructor.
-
    fGVNode = 0;
    fX      = 0;
    fY      = 0;
@@ -50,20 +48,18 @@ TGraphNode::TGraphNode(const char *name,const char *title)
    fH      = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Graph Node default destructor.
 
-//______________________________________________________________________________
 TGraphNode::~TGraphNode()
 {
-   // Graph Node default destructor.
-
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create the GraphViz node into the GraphViz data structure gv.
 
-//______________________________________________________________________________
 void TGraphNode::CreateGVNode(GVizAgraph_t *gv)
 {
-   // Create the GraphViz node into the GraphViz data structure gv.
-
    if (gv) {
 #ifdef WITH_CGRAPH
       fGVNode = (GVizAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName(), 1);
@@ -75,12 +71,11 @@ void TGraphNode::CreateGVNode(GVizAgraph_t *gv)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a node.
 
-//______________________________________________________________________________
 Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a node.
-
    Int_t dist;
 
    // The node is drawn as an ellipse
@@ -91,12 +86,11 @@ Int_t TGraphNode::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
 
-//______________________________________________________________________________
 void TGraphNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-
    TEllipse ellipse(fX, fY, fW, fH, 0., 360., 0.);
    ellipse.ExecuteEvent(event,px, py);
    fX = ellipse.GetX1();
@@ -105,13 +99,12 @@ void TGraphNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    fH = ellipse.GetR2();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Layout this node in the GraphViz space. This is done after gvLayout
+/// has been performed.
 
-//______________________________________________________________________________
 void TGraphNode::Layout()
 {
-   // Layout this node in the GraphViz space. This is done after gvLayout
-   // has been performed.
-
 #ifdef ND_coord
    fX = ND_coord((Agnode_t*)fGVNode).x;
    fY = ND_coord((Agnode_t*)fGVNode).y;
@@ -124,12 +117,11 @@ void TGraphNode::Layout()
    fH = ND_height((Agnode_t*)fGVNode)*36;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this node with its current attributes.
 
-//______________________________________________________________________________
 void TGraphNode::Paint(Option_t *)
 {
-   // Paint this node with its current attributes.
-
    TEllipse ellipse;
    TLatex text;
    text.SetTextAlign(22);
@@ -149,26 +141,26 @@ void TGraphNode::Paint(Option_t *)
    text.PaintLatex(fX, fY, 0., GetTextSize(), (char*)GetTitle());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TGraphNode::SavePrimitive(std::ostream &, Option_t *)
 {
-   // Save primitive as a C++ statement(s) on output stream out
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save attributes as a C++ statement(s) on output stream out
+/// called by TGraphStruct::SavePrimitive.
 
-//______________________________________________________________________________
 void TGraphNode::SaveAttributes(std::ostream &out)
 {
-   // Save attributes as a C++ statement(s) on output stream out
-   // called by TGraphStruct::SavePrimitive.
-
    SaveFillAttributes(out,GetName(),0,1001);
    SaveLineAttributes(out,GetName(),1,1,1);
    SaveTextAttributes(out,GetName(),0,0,0,0,0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGraphNode::Streamer(TBuffer &/*b*/)
 {
 }

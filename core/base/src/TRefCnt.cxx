@@ -9,24 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TRefCnt                                                             //
-//                                                                      //
-//  Definitions for TRefCnt, base class for reference counted objects.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRefCnt
+\ingroup Base
 
+Definitions for TRefCnt, base class for reference counted objects.
+*/
 
 #include "TRefCnt.h"
-
 
 // This definition is compiled in case nothing else is,
 // in order to quiet down some fussy librarians
 int gDummy_ref_cpp;
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Leave fRefs alone
+
 TRefCnt::TRefCnt(EReferenceFlag)
 {
-  // Leave fRefs alone
 }

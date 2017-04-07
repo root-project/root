@@ -5,9 +5,6 @@
 
 set(libname TreeViewer)
 
-ROOT_USE_PACKAGE(tree/treeplayer)
-ROOT_USE_PACKAGE(gui/ged)
-
 if(${ROOT_ARCHITECTURE} MATCHES win32old)
   set(headers TTreeViewerOld.h TPaveVar.h)
   set(sources TTreeViewerOld.cxx TPaveVar.cxx)

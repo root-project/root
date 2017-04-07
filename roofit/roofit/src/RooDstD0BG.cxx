@@ -16,13 +16,12 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Special p.d.f shape that can be used to model the background of
-// D*-D0 mass difference distributions
-// END_HTML
-//
+/** \class RooDstD0BG
+    \ingroup Roofit
+
+Special p.d.f shape that can be used to model the background of
+D*-D0 mass difference distributions
+**/
 
 #include "RooFit.h"
 
@@ -39,13 +38,13 @@
 
 using namespace std;
 
-ClassImp(RooDstD0BG) 
+ClassImp(RooDstD0BG)
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,
-		       RooAbsReal& _dm, RooAbsReal& _dm0,
-		       RooAbsReal& _c, RooAbsReal& _a, RooAbsReal& _b) :
+             RooAbsReal& _dm, RooAbsReal& _dm0,
+             RooAbsReal& _c, RooAbsReal& _a, RooAbsReal& _b) :
   RooAbsPdf(name,title),
   dm("dm","Dstar-D0 Mass Diff",this, _dm),
   dm0("dm0","Threshold",this, _dm0),
@@ -55,16 +54,16 @@ RooDstD0BG::RooDstD0BG(const char *name, const char *title,
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 RooDstD0BG::RooDstD0BG(const RooDstD0BG& other, const char *name) :
   RooAbsPdf(other,name), dm("dm",this,other.dm), dm0("dm0",this,other.dm0),
   C("C",this,other.C), A("A",this,other.A), B("B",this,other.B)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 Double_t RooDstD0BG::evaluate() const
 {
   Double_t arg= dm- dm0;
@@ -76,19 +75,20 @@ Double_t RooDstD0BG::evaluate() const
 }
 
 
-//_____________________________________________________________________________
-Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const 
+////////////////////////////////////////////////////////////////////////////////
+/// if (matchArgs(allVars,analVars,dm)) return 1 ;
+
+Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*analVars*/, const char* /*rangeName*/) const
 {
-  // if (matchArgs(allVars,analVars,dm)) return 1 ;
   return 0 ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
-Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   switch(code) {
-  case 1: 
+  case 1:
     {
       Double_t min= dm.min(rangeName);
       Double_t max= dm.max(rangeName);
@@ -98,30 +98,30 @@ Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
       Bool_t doNumerical= kFALSE;
       if ( A != 0 ) doNumerical= kTRUE;
       else if (B < 0) {
-	// If b<0, pdf can be negative at large dm, the integral should
-	// only up to where pdf hits zero. Better solution should be
-	// solve the zero and use it as max. 
-	// Here we check this whether pdf(max) < 0. If true, let numerical
-	// integral take care of. ( kind of ugly!)
-	if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= kTRUE;
+   // If b<0, pdf can be negative at large dm, the integral should
+   // only up to where pdf hits zero. Better solution should be
+   // solve the zero and use it as max.
+   // Here we check this whether pdf(max) < 0. If true, let numerical
+   // integral take care of. ( kind of ugly!)
+   if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= kTRUE;
       }
       if ( ! doNumerical ) {
-	return (max-min)+ C* exp(dm0/C)* (exp(-max/C)- exp(-min/C)) +
-	  B * (0.5* (max*max - min*min)/dm0 - (max- min));
+   return (max-min)+ C* exp(dm0/C)* (exp(-max/C)- exp(-min/C)) +
+     B * (0.5* (max*max - min*min)/dm0 - (max- min));
       } else {
-	// In principle the integral for a!=0  can be done analytically. 
-	// It involves incomplete Gamma function, TMath::Gamma(a+1,m/c), 
-	// which is not defined for a < -1. And the whole expression is 
-	// not stable for m/c >> 1.
-	// Do numerical integral
-	RooArgSet vset(dm.arg(),"vset");
-	RooAbsFunc *func= bindVars(vset);
-	RooIntegrator1D integrator(*func,min,max);
-	return integrator.integral();
+   // In principle the integral for a!=0  can be done analytically.
+   // It involves incomplete Gamma function, TMath::Gamma(a+1,m/c),
+   // which is not defined for a < -1. And the whole expression is
+   // not stable for m/c >> 1.
+   // Do numerical integral
+   RooArgSet vset(dm.arg(),"vset");
+   RooAbsFunc *func= bindVars(vset);
+   RooIntegrator1D integrator(*func,min,max);
+   return integrator.integral();
       }
     }
   }
-  
+
   assert(0) ;
   return 0 ;
 }

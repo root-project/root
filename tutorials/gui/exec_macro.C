@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_gui
+/// This utility macro executes the macro "macro" given as first argument and save a capture in a png file.
+/// This macro is used by stressGUI to execute and compare the output of the GUI tutorials.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
+
 #include "TSystem.h"
 #include "TString.h"
 #include "TGClient.h"
@@ -13,9 +22,6 @@
 //______________________________________________________________________________
 Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
 {
-   // Execute the macro and save a capture in a png file.
-   // This macro is used by stressGUI to execute and compare
-   // the output of the GUI tutorials.
 
    enum EErrorCodes {
       kSuccess,

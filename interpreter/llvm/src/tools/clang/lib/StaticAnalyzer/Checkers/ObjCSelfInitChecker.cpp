@@ -145,23 +145,22 @@ void ObjCSelfInitChecker::checkForInvalidSelf(const Expr *E, CheckerContext &C,
                                               const char *errorStr) const {
   if (!E)
     return;
-  
+
   if (!C.getState()->get<CalledInit>())
     return;
-  
+
   if (!isInvalidSelf(E, C))
     return;
-  
+
   // Generate an error node.
-  ExplodedNode *N = C.generateSink();
+  ExplodedNode *N = C.generateErrorNode();
   if (!N)
     return;
 
   if (!BT)
     BT.reset(new BugType(this, "Missing \"self = [(super or self) init...]\"",
                          categories::CoreFoundationObjectiveC));
-  BugReport *report = new BugReport(*BT, errorStr, N);
-  C.emitReport(report);
+  C.emitReport(llvm::make_unique<BugReport>(*BT, errorStr, N));
 }
 
 void ObjCSelfInitChecker::checkPostObjCMessage(const ObjCMethodCall &Msg,
@@ -178,12 +177,12 @@ void ObjCSelfInitChecker::checkPostObjCMessage(const ObjCMethodCall &Msg,
   if (isInitMessage(Msg)) {
     // Tag the return value as the result of an initializer.
     ProgramStateRef state = C.getState();
-    
+
     // FIXME this really should be context sensitive, where we record
     // the current stack frame (for IPA).  Also, we need to clean this
     // value out when we return from this method.
     state = state->set<CalledInit>(true);
-    
+
     SVal V = state->getSVal(Msg.getOriginExpr(), C.getLocationContext());
     addSelfFlag(state, V, SelfFlag_InitRes, C);
     return;
@@ -319,7 +318,7 @@ void ObjCSelfInitChecker::checkBind(SVal loc, SVal val, const Stmt *S,
                                     CheckerContext &C) const {
   // Allow assignment of anything to self. Self is a local variable in the
   // initializer, so it is legal to assign anything to it, like results of
-  // static functions/method calls. After self is assigned something we cannot 
+  // static functions/method calls. After self is assigned something we cannot
   // reason about, stop enforcing the rules.
   // (Only continue checking if the assigned value should be treated as self.)
   if ((isSelfVar(loc, C)) &&
@@ -405,15 +404,12 @@ static bool shouldRunOnFunctionOrMethod(const NamedDecl *ND) {
     if (II == NSObjectII)
       break;
   }
-  if (!ID)
-    return false;
-
-  return true;
+  return ID != nullptr;
 }
 
 /// \brief Returns true if the location is 'self'.
 static bool isSelfVar(SVal location, CheckerContext &C) {
-  AnalysisDeclContext *analCtx = C.getCurrentAnalysisDeclContext(); 
+  AnalysisDeclContext *analCtx = C.getCurrentAnalysisDeclContext();
   if (!analCtx->getSelfDecl())
     return false;
   if (!location.getAs<loc::MemRegionVal>())

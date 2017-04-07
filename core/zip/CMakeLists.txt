@@ -14,42 +14,28 @@ Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
 )
 
-Set(ZipNewHeaders
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
-)
-
-Set(ZipNewSource
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/adler32.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/compress.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/crc32.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/deflate.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzclose.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzlib.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzread.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/gzwrite.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/infback.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/inffast.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/inflate.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/inftrees.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/trees.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/uncompr.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/zutil.c
-)
-
 # Depending on the system either the old and the new
 # or only the old compression is build
-if(builtin_zlib)
-  set(ZLIB_HEADERS ${ZipNewHeaders} ${ZipOldHeaders})
-  set(ZLIB_SRCS ${ZipNewSource} ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
-else()
-  set(ZLIB_HEADERS ${ZipOldHeaders})
-  set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
-endif()
+set(ZLIB_HEADERS ${ZipOldHeaders})
+set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 
 # Define all the header files which should be installed when
 # doing a "make install"
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
+string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
+set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
+set(dst_list)
+foreach(include_file ${ZLIB_HEADERS})
+  get_filename_component(incname ${include_file} NAME)
+  set(dst ${CMAKE_BINARY_DIR}/include/${incname})
+  add_custom_command(
+    OUTPUT ${dst}
+    COMMAND ${CMAKE_COMMAND} -E copy ${include_file} ${dst}
+    DEPENDS ${include_file})
+    list(APPEND dst_list ${dst})  
+endforeach()
+add_custom_target(${tgt} DEPENDS ${dst_list})
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
 ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})

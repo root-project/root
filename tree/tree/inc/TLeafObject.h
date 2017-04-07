@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
 class TClass;
 class TMethodCall;
@@ -35,9 +31,9 @@ class TMethodCall;
 class TLeafObject : public TLeaf {
 
 protected:
-   TClassRef    fClass;          //! pointer to class
-   void       **fObjAddress;     //! Address of Pointer to object
-   Bool_t       fVirtual;        //  Support for polymorphism, when set classname is written with object.
+   TClassRef    fClass;          ///<! pointer to class
+   void       **fObjAddress;     ///<! Address of Pointer to object
+   Bool_t       fVirtual;        ///<  Support for polymorphism, when set classname is written with object.
 
 public:
    enum { kWarn = BIT(12) };

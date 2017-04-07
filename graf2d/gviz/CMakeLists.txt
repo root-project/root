@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-
-ROOT_USE_PACKAGE(hist/hist)
-ROOT_USE_PACKAGE(graf2d/graf)
-
 include_directories(${GRAPHVIZ_INCLUDE_DIR}/graphviz)
 
 ROOT_GENERATE_DICTIONARY(G__Gviz *.h MODULE Gviz LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")

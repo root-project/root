@@ -1,21 +1,25 @@
-# To see the output of this macro, click begin_html <a href="gif/multifit.gif" >here</a> end_html
-#      Example showing how to fit in a sub-range of an histogram
-#  An histogram is created and filled with the bin contents and errors
-#  defined in the table below.
-#  3 gaussians are fitted in sub-ranges of this histogram.
-#  A new function (a sum of 3 gaussians) is fitted on another subrange
-#  Note that when fitting simple functions, such as gaussians, the initial
-#  values of parameters are automatically computed by ROOT.
-#  In the more complicated case of the sum of 3 gaussians, the initial values
-#  of parameters must be given. In this particular case, the initial values
-#  are taken from the result of the individual fits.
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+## Example showing how to fit in a sub-range of an histogram
+## An histogram is created and filled with the bin contents and errors
+## defined in the table below.
+## 3 gaussians are fitted in sub-ranges of this histogram.
+## A new function (a sum of 3 gaussians) is fitted on another subrange
+## Note that when fitting simple functions, such as gaussians, the initial
+## values of parameters are automatically computed by ROOT.
+## In the more complicated case of the sum of 3 gaussians, the initial values
+## of parameters must be given. In this particular case, the initial values
+## are taken from the result of the individual fits.
+##
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TH1F, TF1
 from ROOT import gROOT
 from array import array
-
-
-gROOT.Reset()
 
 x = ( 1.913521, 1.953769, 2.347435, 2.883654, 3.493567,
       4.047560, 4.337210, 4.364347, 4.563004, 5.054247,
@@ -32,7 +36,7 @@ np = len(x)
 h = TH1F( 'h', 'Example of several fits in subranges', np, 85, 134 )
 h.SetMaximum( 7 )
 
-for i in xrange(np):
+for i in range(np):
    h.SetBinContent( i+1, x[i] )
 
 par = array( 'd', 9*[0.] )

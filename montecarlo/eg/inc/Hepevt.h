@@ -11,16 +11,13 @@
 #ifndef ROOT_Hepevt
 #define ROOT_Hepevt
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
+
+#include "cfortran.h"
 
 extern "C" {
 
-#ifndef __CFORTRAN_LOADED
-#include "cfortran.h"
-#endif
-
+/// HEPEVT common block
 typedef struct {
    Int_t    nevhep;
    Int_t    nhep;

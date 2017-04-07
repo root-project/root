@@ -10,9 +10,7 @@
 #ifndef CLING_META_LEXER_H
 #define CLING_META_LEXER_H
 
-namespace llvm {
-  class StringRef;
-}
+#include "llvm/ADT/StringRef.h"
 
 namespace cling {
 
@@ -24,8 +22,8 @@ namespace cling {
       r_paren,    // ")"
       l_brace,    // "{"
       r_brace,    // "}"
-      quote,      // """
-      apostrophe, // "'"
+      stringlit,  // ""...""
+      charlit,    // "'.'"
       comma,      // ","
       dot,        // "."
       excl_mark,  // "!"
@@ -41,6 +39,8 @@ namespace cling {
       space,      // (' ' | '\t')*
       constant,   // {0-9}
       at,         // @
+      asterik,    // *
+      semicolon,  // ;
       eof,
       unknown
     };
@@ -57,6 +57,7 @@ namespace cling {
       kind = tok::unknown;
       bufStart = Pos;
       value = ~0U;
+      length = 0;
     }
     tok::TokenKind getKind() const { return kind; }
     void setKind(tok::TokenKind K) { kind = K; }
@@ -69,6 +70,11 @@ namespace cling {
     bool is(tok::TokenKind K) const { return kind == K; }
 
     llvm::StringRef getIdent() const;
+    llvm::StringRef getIdentNoQuotes() const {
+      if (getKind() >= tok::stringlit && getKind() <= tok::charlit)
+        return getIdent().drop_back().drop_front();
+      return getIdent();
+    }
     bool getConstantAsBool() const;
     unsigned getConstant() const;
   };
@@ -76,30 +82,24 @@ namespace cling {
   class MetaLexer {
   protected:
     const char* bufferStart;
-    const char* bufferEnd;
     const char* curPos;
   public:
-    MetaLexer(const char* bufStart)
-      : bufferStart(bufStart), curPos(bufStart)
-    { }
-    MetaLexer(llvm::StringRef input);
+    MetaLexer(llvm::StringRef input, bool skipWhiteSpace = false);
+    void reset(llvm::StringRef Line);
 
     void Lex(Token& Tok);
     void LexAnyString(Token& Tok);
 
-    static void LexPunctuator(char C, Token& Tok);
+    static void LexPunctuator(const char* C, Token& Tok);
     // TODO: Revise. We might not need that.
-    static void LexPunctuatorAndAdvance(const char*& curPos, Token& Tok,
-                                        bool skipComments = false);
+    static bool LexPunctuatorAndAdvance(const char*& curPos, Token& Tok);
     static void LexQuotedStringAndAdvance(const char*& curPos, Token& Tok);
     void LexConstant(char C, Token& Tok);
     void LexIdentifier(char C, Token& Tok);
     void LexEndOfFile(char C, Token& Tok);
     void LexWhitespace(char C, Token& Tok);
     void SkipWhitespace();
-    inline char getAndAdvanceChar(const char *&Ptr) {
-      return *Ptr++;
-    }
+    const char* getLocation() const { return curPos; }
   };
 } //end namespace cling
 

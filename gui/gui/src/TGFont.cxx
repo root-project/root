@@ -258,21 +258,21 @@ static char gMapChars[] = {
 static int GetControlCharSubst(int c, char buf[4]);
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete font.
+
 TGFont::~TGFont()
 {
-   // Delete font.
-
    if (fFontStruct) {
       gVirtualX->DeleteFont(fFontStruct);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get font metrics.
+
 void TGFont::GetFontMetrics(FontMetrics_t *m) const
 {
-   // Get font metrics.
-
    if (!m) {
       Error("GetFontMetrics", "argument may not be 0");
       return;
@@ -282,19 +282,19 @@ void TGFont::GetFontMetrics(FontMetrics_t *m) const
    m->fLinespace = fFM.fAscent + fFM.fDescent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0)
+
 FontStruct_t TGFont::operator()() const
 {
-   // Not inline due to a bug in g++ 2.96 20000731 (Red Hat Linux 7.0)
-
    return fFontStruct;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print font info.
+
 void TGFont::Print(Option_t *option) const
 {
-   // Print font info.
-
    TString opt = option;
 
    if ((opt == "full") && fNamedHash) {
@@ -307,29 +307,29 @@ void TGFont::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the corresponding Postscript font for this TGFont.
+///
+/// The return value is the pointsize of the TGFont. The name of the
+/// Postscript font is appended to ds.
+///
+/// If the font does not exist on the printer, the print job will fail at
+/// print time. Given a "reasonable" Postscript printer, the following
+/// TGFont font families should print correctly:
+///
+///     Avant Garde, Arial, Bookman, Courier, Courier New, Geneva,
+///     Helvetica, Monaco, New Century Schoolbook, New York,
+///     Palatino, Symbol, Times, Times New Roman, Zapf Chancery,
+///     and Zapf Dingbats.
+///
+/// Any other TGFont font families may not print correctly because the
+/// computed Postscript font name may be incorrect.
+///
+/// dst -- Pointer to an initialized TString object to which the name of the
+///        Postscript font that corresponds to the font will be appended.
+
 Int_t TGFont::PostscriptFontName(TString *dst) const
 {
-   // Return the name of the corresponding Postscript font for this TGFont.
-   //
-   // The return value is the pointsize of the TGFont. The name of the
-   // Postscript font is appended to ds.
-   //
-   // If the font does not exist on the printer, the print job will fail at
-   // print time. Given a "reasonable" Postscript printer, the following
-   // TGFont font families should print correctly:
-   //
-   //     Avant Garde, Arial, Bookman, Courier, Courier New, Geneva,
-   //     Helvetica, Monaco, New Century Schoolbook, New York,
-   //     Palatino, Symbol, Times, Times New Roman, Zapf Chancery,
-   //     and Zapf Dingbats.
-   //
-   // Any other TGFont font families may not print correctly because the
-   // computed Postscript font name may be incorrect.
-   //
-   // dst -- Pointer to an initialized TString object to which the name of the
-   //        Postscript font that corresponds to the font will be appended.
-
    const char *family;
    TString weightString;
    TString slantString;
@@ -450,32 +450,32 @@ Int_t TGFont::PostscriptFontName(TString *dst) const
    return fFA.fPointsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determine the number of characters from the string that will fit in the
+/// given horizontal span. The measurement is done under the assumption that
+/// DrawChars() will be used to actually display the characters.
+///
+/// The return value is the number of characters from source that fit into
+/// the span that extends from 0 to maxLength. *length is filled with the
+/// x-coordinate of the right edge of the last character that did fit.
+///
+/// source    -- Characters to be displayed. Need not be '\0' terminated.
+/// numChars  -- Maximum number of characters to consider from source string.
+/// maxLength -- If > 0, maxLength specifies the longest permissible line
+///              length; don't consider any character that would cross this
+///              x-position. If <= 0, then line length is unbounded and the
+///              flags argument is ignored.
+/// flags     -- Various flag bits OR-ed together:
+///              TEXT_PARTIAL_OK means include the last char which only
+///              partially fit on this line.
+///              TEXT_WHOLE_WORDS means stop on a word boundary, if possible.
+///              TEXT_AT_LEAST_ONE means return at least one character even
+///              if no characters fit.
+/// *length   -- Filled with x-location just after the terminating character.
+
 Int_t TGFont::MeasureChars(const char *source, Int_t numChars, Int_t maxLength,
                           Int_t flags, Int_t *length) const
 {
-   // Determine the number of characters from the string that will fit in the
-   // given horizontal span. The measurement is done under the assumption that
-   // DrawChars() will be used to actually display the characters.
-   //
-   // The return value is the number of characters from source that fit into
-   // the span that extends from 0 to maxLength. *length is filled with the
-   // x-coordinate of the right edge of the last character that did fit.
-   //
-   // source    -- Characters to be displayed. Need not be '\0' terminated.
-   // numChars  -- Maximum number of characters to consider from source string.
-   // maxLength -- If > 0, maxLength specifies the longest permissible line
-   //              length; don't consider any character that would cross this
-   //              x-position. If <= 0, then line length is unbounded and the
-   //              flags argument is ignored.
-   // flags     -- Various flag bits OR-ed together:
-   //              TEXT_PARTIAL_OK means include the last char which only
-   //              partially fit on this line.
-   //              TEXT_WHOLE_WORDS means stop on a word boundary, if possible.
-   //              TEXT_AT_LEAST_ONE means return at least one character even
-   //              if no characters fit.
-   // *length   -- Filled with x-location just after the terminating character.
-
    const char *p;    // Current character.
    const char *term; // Pointer to most recent character that may legally be a terminating character.
    Int_t termX;      // X-position just after term.
@@ -550,18 +550,18 @@ Int_t TGFont::MeasureChars(const char *source, Int_t numChars, Int_t maxLength,
    return term - source;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A wrapper function for the more complicated interface of MeasureChars.
+/// Computes how much space the given simple string needs.
+///
+/// The return value is the width (in pixels) of the given string.
+///
+/// string   -- String whose width will be computed.
+/// numChars -- Number of characters to consider from string, or < 0 for
+///             strlen().
+
 Int_t TGFont::TextWidth(const char *string, Int_t numChars) const
 {
-   // A wrapper function for the more complicated interface of MeasureChars.
-   // Computes how much space the given simple string needs.
-   //
-   // The return value is the width (in pixels) of the given string.
-   //
-   // string   -- String whose width will be computed.
-   // numChars -- Number of characters to consider from string, or < 0 for
-   //             strlen().
-
    Int_t width;
 
    if (numChars < 0) {
@@ -572,11 +572,11 @@ Int_t TGFont::TextWidth(const char *string, Int_t numChars) const
    return width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return text widht in pixels
+
 Int_t TGFont::XTextWidth(const char *string, Int_t numChars) const
 {
-   // Return text widht in pixels
-
    int width;
 
    if (numChars < 0) {
@@ -587,25 +587,25 @@ Int_t TGFont::XTextWidth(const char *string, Int_t numChars) const
    return width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This procedure draws an underline for a given range of characters in a
+/// given string. It doesn't draw the characters (which are assumed to have
+/// been displayed previously); it just draws the underline. This procedure
+/// would mainly be used to quickly underline a few characters without having
+/// to construct an underlined font. To produce properly underlined text, the
+/// appropriate underlined font should be constructed and used.
+///
+/// dst       -- Window or pixmap in which to draw.
+/// gc        -- Graphics context for actually drawing line.
+/// string    -- String containing characters to be underlined or overstruck.
+/// x, y      -- Coordinates at which first character of string is drawn.
+/// firstChar -- Index of first character.
+/// lastChar  -- Index of one after the last character.
+
 void TGFont::UnderlineChars(Drawable_t dst, GContext_t gc,
                             const char *string, Int_t x, Int_t y,
                             Int_t firstChar, Int_t lastChar) const
 {
-   // This procedure draws an underline for a given range of characters in a
-   // given string. It doesn't draw the characters (which are assumed to have
-   // been displayed previously); it just draws the underline. This procedure
-   // would mainly be used to quickly underline a few characters without having
-   // to construct an underlined font. To produce properly underlined text, the
-   // appropriate underlined font should be constructed and used.
-   //
-   // dst       -- Window or pixmap in which to draw.
-   // gc        -- Graphics context for actually drawing line.
-   // string    -- String containing characters to be underlined or overstruck.
-   // x, y      -- Coordinates at which first character of string is drawn.
-   // firstChar -- Index of first character.
-   // lastChar  -- Index of one after the last character.
-
    Int_t startX, endX;
 
    MeasureChars(string, firstChar, 0, 0, &startX);
@@ -616,40 +616,40 @@ void TGFont::UnderlineChars(Drawable_t dst, GContext_t gc,
                             (UInt_t) fUnderlineHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the amount of screen space needed to display a multi-line,
+/// justified string of text. Records all the measurements that were done
+/// to determine to size and positioning of the individual lines of text;
+/// this information can be used by the TGTextLayout::DrawText() procedure
+/// to display the text quickly (without remeasuring it).
+///
+/// This procedure is useful for simple widgets that want to display
+/// single-font, multi-line text and want TGFont to handle the details.
+///
+/// The return value is a TGTextLayout token that holds the measurement
+/// information for the given string. The token is only valid for the given
+/// string. If the string is freed, the token is no longer valid and must
+/// also be deleted.
+///
+/// The dimensions of the screen area needed to display the text are stored
+/// in *width and *height.
+///
+/// string     -- String whose dimensions are to be computed.
+/// numChars   -- Number of characters to consider from string, or < 0 for
+///               strlen().
+/// wrapLength -- Longest permissible line length, in pixels. <= 0 means no
+///               automatic wrapping: just let lines get as long as needed.
+/// justify    -- How to justify lines.
+/// flags      -- Flag bits OR-ed together. kTextIgnoreTabs means that tab
+///               characters should not be expanded. kTextIgnoreNewlines
+///               means that newline characters should not cause a line break.
+/// width      -- Filled with width of string.
+/// height     -- Filled with height of string.
+
 TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
                                         Int_t wrapLength, Int_t justify, Int_t flags,
                                         UInt_t *width, UInt_t *height) const
 {
-   // Computes the amount of screen space needed to display a multi-line,
-   // justified string of text. Records all the measurements that were done
-   // to determine to size and positioning of the individual lines of text;
-   // this information can be used by the TGTextLayout::DrawText() procedure
-   // to display the text quickly (without remeasuring it).
-   //
-   // This procedure is useful for simple widgets that want to display
-   // single-font, multi-line text and want TGFont to handle the details.
-   //
-   // The return value is a TGTextLayout token that holds the measurement
-   // information for the given string. The token is only valid for the given
-   // string. If the string is freed, the token is no longer valid and must
-   // also be deleted.
-   //
-   // The dimensions of the screen area needed to display the text are stored
-   // in *width and *height.
-   //
-   // string     -- String whose dimensions are to be computed.
-   // numChars   -- Number of characters to consider from string, or < 0 for
-   //               strlen().
-   // wrapLength -- Longest permissible line length, in pixels. <= 0 means no
-   //               automatic wrapping: just let lines get as long as needed.
-   // justify    -- How to justify lines.
-   // flags      -- Flag bits OR-ed together. kTextIgnoreTabs means that tab
-   //               characters should not be expanded. kTextIgnoreNewlines
-   //               means that newline characters should not cause a line break.
-   // width      -- Filled with width of string.
-   // height     -- Filled with height of string.
-
    const char *start, *end, *special;
    Int_t n, y=0, charsThisChunk, maxChunks;
    Int_t baseline, h, curX, newX, maxWidth;
@@ -727,14 +727,15 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
          }
       }
       if ((start == special) && (special < end)) {
-
          // Handle the special character.
+         LayoutChunk_t *newchunk = 0;
 
          chunk = 0;
          if (*special == '\t') {
             newX = curX + fTabWidth;
             newX -= newX % fTabWidth;
-            NewChunk(layout, &maxChunks, start, 1, curX, newX, baseline)->fNumDisplayChars = -1;
+            newchunk = NewChunk(layout, &maxChunks, start, 1, curX, newX, baseline);
+            if (newchunk) newchunk->fNumDisplayChars = -1;
             start++;
             if ((start < end) && ((wrapLength <= 0) || (newX <= wrapLength))) {
 
@@ -745,7 +746,8 @@ TGTextLayout *TGFont::ComputeTextLayout(const char *string, Int_t numChars,
                continue;
             }
          } else {
-            NewChunk(layout, &maxChunks, start, 1, curX, 1000000000, baseline)->fNumDisplayChars = -1;
+            newchunk = NewChunk(layout, &maxChunks, start, 1, curX, 1000000000, baseline);
+            if (newchunk) newchunk->fNumDisplayChars = -1;
             start++;
             goto wrapLine;
          }
@@ -877,35 +879,35 @@ wrapLine:
    return layout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGTextLayout::~TGTextLayout()
 {
-   // destructor
-
    if (fChunks) {
       delete[] fChunks;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the information in the TGTextLayout object to display a multi-line,
+/// justified string of text.
+///
+/// This procedure is useful for simple widgets that need to display
+/// single-font, multi-line text and want TGFont to handle the details.
+///
+/// dst       -- Window or pixmap in which to draw.
+/// gc        -- Graphics context to use for drawing text.
+/// x, y      -- Upper-left hand corner of rectangle in which to draw
+///              (pixels).
+/// firstChar -- The index of the first character to draw from the given
+///              text item. 0 specfies the beginning.
+/// lastChar  -- The index just after the last character to draw from the
+///              given text item. A number < 0 means to draw all characters.
+
 void TGTextLayout::DrawText(Drawable_t dst, GContext_t gc,
                             Int_t x, Int_t y, Int_t firstChar, Int_t lastChar) const
 {
-   // Use the information in the TGTextLayout object to display a multi-line,
-   // justified string of text.
-   //
-   // This procedure is useful for simple widgets that need to display
-   // single-font, multi-line text and want TGFont to handle the details.
-   //
-   // dst       -- Window or pixmap in which to draw.
-   // gc        -- Graphics context to use for drawing text.
-   // x, y      -- Upper-left hand corner of rectangle in which to draw
-   //              (pixels).
-   // firstChar -- The index of the first character to draw from the given
-   //              text item. 0 specfies the beginning.
-   // lastChar  -- The index just after the last character to draw from the
-   //              given text item. A number < 0 means to draw all characters.
-
    Int_t i, numDisplayChars, drawX;
    LayoutChunk_t *chunk;
 
@@ -933,26 +935,26 @@ void TGTextLayout::DrawText(Drawable_t dst, GContext_t gc,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the information in the TGTextLayout object to display an underline
+/// below an individual character. This procedure does not draw the text,
+/// just the underline.
+///
+/// This procedure is useful for simple widgets that need to display
+/// single-font, multi-line text with an individual character underlined
+/// and want TGFont to handle the details. To display larger amounts of
+/// underlined text, construct and use an underlined font.
+///
+/// dst       -- Window or pixmap in which to draw.
+/// gc        -- Graphics context to use for drawing text.
+/// x, y      -- Upper-left hand corner of rectangle in which to draw
+///              (pixels).
+/// underline -- Index of the single character to underline, or -1 for
+///              no underline.
+
 void TGTextLayout::UnderlineChar(Drawable_t dst, GContext_t gc,
                                 Int_t x, Int_t y, Int_t underline) const
 {
-   // Use the information in the TGTextLayout object to display an underline
-   // below an individual character. This procedure does not draw the text,
-   // just the underline.
-   //
-   // This procedure is useful for simple widgets that need to display
-   // single-font, multi-line text with an individual character underlined
-   // and want TGFont to handle the details. To display larger amounts of
-   // underlined text, construct and use an underlined font.
-   //
-   // dst       -- Window or pixmap in which to draw.
-   // gc        -- Graphics context to use for drawing text.
-   // x, y      -- Upper-left hand corner of rectangle in which to draw
-   //              (pixels).
-   // underline -- Index of the single character to underline, or -1 for
-   //              no underline.
-
    int xx, yy, width, height;
 
    if ((CharBbox(underline, &xx, &yy, &width, &height) != 0)
@@ -963,28 +965,28 @@ void TGTextLayout::UnderlineChar(Drawable_t dst, GContext_t gc,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the information in the TGTextLayout token to determine the character
+/// closest to the given point. The point must be specified with respect to
+/// the upper-left hand corner of the text layout, which is considered to be
+/// located at (0, 0).
+///
+/// Any point whose y-value is less that 0 will be considered closest to the
+/// first character in the text layout; any point whose y-value is greater
+/// than the height of the text layout will be considered closest to the last
+/// character in the text layout.
+///
+/// Any point whose x-value is less than 0 will be considered closest to the
+/// first character on that line; any point whose x-value is greater than the
+/// width of the text layout will be considered closest to the last character
+/// on that line.
+///
+/// The return value is the index of the character that was closest to the
+/// point. Given a text layout with no characters, the value 0 will always
+/// be returned, referring to a hypothetical zero-width placeholder character.
+
 Int_t TGTextLayout::PointToChar(Int_t x, Int_t y) const
 {
-   // Use the information in the TGTextLayout token to determine the character
-   // closest to the given point. The point must be specified with respect to
-   // the upper-left hand corner of the text layout, which is considered to be
-   // located at (0, 0).
-   //
-   // Any point whose y-value is less that 0 will be considered closest to the
-   // first character in the text layout; any point whose y-value is greater
-   // than the height of the text layout will be considered closest to the last
-   // character in the text layout.
-   //
-   // Any point whose x-value is less than 0 will be considered closest to the
-   // first character on that line; any point whose x-value is greater than the
-   // width of the text layout will be considered closest to the last character
-   // on that line.
-   //
-   // The return value is the index of the character that was closest to the
-   // point. Given a text layout with no characters, the value 0 will always
-   // be returned, referring to a hypothetical zero-width placeholder character.
-
    LayoutChunk_t *chunk, *last;
    Int_t i, n, dummy, baseline, pos;
 
@@ -1060,37 +1062,37 @@ Int_t TGTextLayout::PointToChar(Int_t x, Int_t y) const
    return ((last->fStart + last->fNumChars) - fString);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use the information in the TGTextLayout token to return the bounding box
+/// for the character specified by index.
+///
+/// The width of the bounding box is the advance width of the character, and
+/// does not include and left- or right-bearing. Any character that extends
+/// partially outside of the text layout is considered to be truncated at the
+/// edge. Any character which is located completely outside of the text
+/// layout is considered to be zero-width and pegged against the edge.
+///
+/// The height of the bounding box is the line height for this font,
+/// extending from the top of the ascent to the bottom of the descent.
+/// Information about the actual height of the individual letter is not
+/// available.
+///
+/// A text layout that contains no characters is considered to contain a
+/// single zero-width placeholder character.
+///
+/// The return value is 0 if the index did not specify a character in the
+/// text layout, or non-zero otherwise. In that case, *bbox is filled with
+/// the bounding box of the character.
+///
+/// layout -- Layout information, from a previous call to ComputeTextLayout().
+/// index  -- The index of the character whose bbox is desired.
+/// x, y   -- Filled with the upper-left hand corner, in pixels, of the
+///           bounding box for the character specified by index, if non-NULL.
+/// w, h   -- Filled with the width and height of the bounding box for the
+///           character specified by index, if non-NULL.
+
 Int_t TGTextLayout::CharBbox(Int_t index, Int_t *x, Int_t *y, Int_t *w, Int_t *h) const
 {
-   // Use the information in the TGTextLayout token to return the bounding box
-   // for the character specified by index.
-   //
-   // The width of the bounding box is the advance width of the character, and
-   // does not include and left- or right-bearing. Any character that extends
-   // partially outside of the text layout is considered to be truncated at the
-   // edge. Any character which is located completely outside of the text
-   // layout is considered to be zero-width and pegged against the edge.
-   //
-   // The height of the bounding box is the line height for this font,
-   // extending from the top of the ascent to the bottom of the descent.
-   // Information about the actual height of the individual letter is not
-   // available.
-   //
-   // A text layout that contains no characters is considered to contain a
-   // single zero-width placeholder character.
-   //
-   // The return value is 0 if the index did not specify a character in the
-   // text layout, or non-zero otherwise. In that case, *bbox is filled with
-   // the bounding box of the character.
-   //
-   // layout -- Layout information, from a previous call to ComputeTextLayout().
-   // index  -- The index of the character whose bbox is desired.
-   // x, y   -- Filled with the upper-left hand corner, in pixels, of the
-   //           bounding box for the character specified by index, if non-NULL.
-   // w, h   -- Filled with the width and height of the bounding box for the
-   //           character specified by index, if non-NULL.
-
    LayoutChunk_t *chunk;
    Int_t i, xx = 0, ww = 0;
 
@@ -1158,21 +1160,21 @@ check:
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the distance in pixels from the given point to the given
+/// text layout. Non-displaying space characters that occur at the end of
+/// individual lines in the text layout are ignored for hit detection
+/// purposes.
+///
+/// The return value is 0 if the point (x, y) is inside the text layout.
+/// If the point isn't inside the text layout then the return value is the
+/// distance in pixels from the point to the text item.
+///
+/// x, y -- Coordinates of point to check, with respect to the upper-left
+///         corner of the text layout (in pixels).
+
 Int_t TGTextLayout::DistanceToText(Int_t x, Int_t y) const
 {
-   // Computes the distance in pixels from the given point to the given
-   // text layout. Non-displaying space characters that occur at the end of
-   // individual lines in the text layout are ignored for hit detection
-   // purposes.
-   //
-   // The return value is 0 if the point (x, y) is inside the text layout.
-   // If the point isn't inside the text layout then the return value is the
-   // distance in pixels from the point to the text item.
-   //
-   // x, y -- Coordinates of point to check, with respect to the upper-left
-   //         corner of the text layout (in pixels).
-
    Int_t i, x1, x2, y1, y2, xDiff, yDiff, dist, minDist, ascent, descent;
    LayoutChunk_t *chunk;
 
@@ -1222,23 +1224,23 @@ Int_t TGTextLayout::DistanceToText(Int_t x, Int_t y) const
    return minDist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Determines whether a text layout lies entirely inside, entirely outside,
+/// or overlaps a given rectangle. Non-displaying space characters that occur
+/// at the end of individual lines in the text layout are ignored for
+/// intersection calculations.
+///
+/// The return value is -1 if the text layout is entirely outside of the
+/// rectangle, 0 if it overlaps, and 1 if it is entirely inside of the
+/// rectangle.
+///
+/// x, y -- Upper-left hand corner, in pixels, of rectangular area to compare
+///         with text layout. Coordinates are with respect to the upper-left
+///         hand corner of the text layout itself.
+/// w, h -- The width and height of the above rectangular area, in pixels.
+
 Int_t TGTextLayout::IntersectText(Int_t x, Int_t y, Int_t w, Int_t h) const
 {
-   // Determines whether a text layout lies entirely inside, entirely outside,
-   // or overlaps a given rectangle. Non-displaying space characters that occur
-   // at the end of individual lines in the text layout are ignored for
-   // intersection calculations.
-   //
-   // The return value is -1 if the text layout is entirely outside of the
-   // rectangle, 0 if it overlaps, and 1 if it is entirely inside of the
-   // rectangle.
-   //
-   // x, y -- Upper-left hand corner, in pixels, of rectangular area to compare
-   //         with text layout. Coordinates are with respect to the upper-left
-   //         hand corner of the text layout itself.
-   // w, h -- The width and height of the above rectangular area, in pixels.
-
    Int_t result, i, x1, y1, x2, y2;
    LayoutChunk_t *chunk;
    Int_t left, top, right, bottom;
@@ -1287,35 +1289,35 @@ Int_t TGTextLayout::IntersectText(Int_t x, Int_t y, Int_t w, Int_t h) const
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Outputs the contents of a text layout in Postscript format. The set of
+/// lines in the text layout will be rendered by the user supplied Postscript
+/// function. The function should be of the form:
+///
+///     justify x y string  function  --
+///
+/// Justify is -1, 0, or 1, depending on whether the following string should
+/// be left, center, or right justified, x and y is the location for the
+/// origin of the string, string is the sequence of characters to be printed,
+/// and function is the name of the caller-provided function; the function
+/// should leave nothing on the stack.
+///
+/// The meaning of the origin of the string (x and y) depends on the
+/// justification. For left justification, x is where the left edge of the
+/// string should appear. For center justification, x is where the center of
+/// the string should appear. And for right justification, x is where the
+/// right edge of the string should appear. This behavior is necessary
+/// because, for example, right justified text on the screen is justified
+/// with screen metrics. The same string needs to be justified with printer
+/// metrics on the printer to appear in the correct place with respect to
+/// other similarly justified strings. In all circumstances, y is the
+/// location of the baseline for the string.
+///
+/// result is modified to hold the Postscript code that will render the text
+/// layout.
+
 void TGTextLayout::ToPostscript(TString *result) const
 {
-   // Outputs the contents of a text layout in Postscript format. The set of
-   // lines in the text layout will be rendered by the user supplied Postscript
-   // function. The function should be of the form:
-   //
-   //     justify x y string  function  --
-   //
-   // Justify is -1, 0, or 1, depending on whether the following string should
-   // be left, center, or right justified, x and y is the location for the
-   // origin of the string, string is the sequence of characters to be printed,
-   // and function is the name of the caller-provided function; the function
-   // should leave nothing on the stack.
-   //
-   // The meaning of the origin of the string (x and y) depends on the
-   // justification. For left justification, x is where the left edge of the
-   // string should appear. For center justification, x is where the center of
-   // the string should appear. And for right justification, x is where the
-   // right edge of the string should appear. This behavior is necessary
-   // because, for example, right justified text on the screen is justified
-   // with screen metrics. The same string needs to be justified with printer
-   // metrics on the printer to appear in the correct place with respect to
-   // other similarly justified strings. In all circumstances, y is the
-   // location of the baseline for the string.
-   //
-   // result is modified to hold the Postscript code that will render the text
-   // layout.
-
 #define MAXUSE 128
    char buf[MAXUSE + 10];
    LayoutChunk_t *chunk;
@@ -1379,21 +1381,21 @@ void TGTextLayout::ToPostscript(TString *result) const
    result->Append(buf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function for ComputeTextLayout(). Encapsulates a measured set of
+/// characters in a chunk that can be quickly drawn.
+///
+/// Returns a pointer to the new chunk in the text layout. The text layout is
+/// reallocated to hold more chunks as necessary.
+///
+/// Currently, ComputeTextLayout() stores contiguous ranges of "normal"
+/// characters in a chunk, along with individual tab and newline chars in
+/// their own chunks. All characters in the text layout are accounted for.
+
 LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
                                 const char *start, Int_t numChars,
                                 Int_t curX, Int_t newX, Int_t y) const
 {
-   // Helper function for ComputeTextLayout(). Encapsulates a measured set of
-   // characters in a chunk that can be quickly drawn.
-   //
-   // Returns a pointer to the new chunk in the text layout. The text layout is
-   // reallocated to hold more chunks as necessary.
-   //
-   // Currently, ComputeTextLayout() stores contiguous ranges of "normal"
-   // characters in a chunk, along with individual tab and newline chars in
-   // their own chunks. All characters in the text layout are accounted for.
-
    LayoutChunk_t *chunk;
    Int_t i, maxChunks;
 
@@ -1427,26 +1429,26 @@ LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
    return chunk;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a string of characters on the screen. DrawCharsExp() expands
+/// control characters that occur in the string to \X or \xXX sequences.
+/// DrawChars() just draws the strings.
+///
+/// dst      -- Window or pixmap in which to draw.
+/// gc       -- Graphics context for drawing characters.
+/// source   -- Characters to be displayed. Need not be'\0' terminated.
+///             For DrawChars(), all meta-characters (tabs, control
+///             characters, and newlines) should be stripped out of the
+///             string that is passed to this function. If they are not
+///             stripped out, they will be displayed as regular printing
+///             characters.
+/// numChars -- Number of characters in string.
+/// x, y     -- Coordinates at which to place origin of string when drawing.
+
 void TGFont::DrawCharsExp(Drawable_t dst, GContext_t gc,
                           const char *source, Int_t numChars,
                           Int_t x, Int_t y) const
 {
-   // Draw a string of characters on the screen. DrawCharsExp() expands
-   // control characters that occur in the string to \X or \xXX sequences.
-   // DrawChars() just draws the strings.
-   //
-   // dst      -- Window or pixmap in which to draw.
-   // gc       -- Graphics context for drawing characters.
-   // source   -- Characters to be displayed. Need not be'\0' terminated.
-   //             For DrawChars(), all meta-characters (tabs, control
-   //             characters, and newlines) should be stripped out of the
-   //             string that is passed to this function. If they are not
-   //             stripped out, they will be displayed as regular printing
-   //             characters.
-   // numChars -- Number of characters in string.
-   // x, y     -- Coordinates at which to place origin of string when drawing.
-
    const char *p;
    Int_t i, type;
    char buf[4];
@@ -1469,14 +1471,14 @@ void TGFont::DrawCharsExp(Drawable_t dst, GContext_t gc,
    DrawChars(dst, gc, source, p - source, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a quick sanity check to ensure we won't overflow the X
+/// coordinate space.
+
 void TGFont::DrawChars(Drawable_t dst, GContext_t gc,
                        const char *source, Int_t numChars,
                        Int_t x, Int_t y) const
 {
-   // Perform a quick sanity check to ensure we won't overflow the X
-   // coordinate space.
-
    Int_t max_width =  gVirtualX->TextWidth(fFontStruct, "@", 1);
 
    if ((x + (max_width * numChars) > 0x7fff)) {
@@ -1505,11 +1507,11 @@ void TGFont::DrawChars(Drawable_t dst, GContext_t gc,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a font pool.
+
 TGFontPool::TGFontPool(TGClient *client)
 {
-   // Create a font pool.
-
    fClient = client;
    fList   = new THashTable(50);
    fList->SetOwner();
@@ -1521,25 +1523,25 @@ TGFontPool::TGFontPool(TGClient *client)
    fUidTable->SetOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup font pool.
+
 TGFontPool::~TGFontPool()
 {
-   // Cleanup font pool.
-
    delete fList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the specified font.
+/// The font can be one of the following forms:
+///        XLFD (see X documentation)
+///        "Family [size [style] [style ...]]"
+/// Returns 0 if error or no font can be found.
+/// If fixedDefault is false the "fixed" font will not be substituted
+/// as fallback when the asked for font does not exist.
+
 TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
 {
-   // Get the specified font.
-   // The font can be one of the following forms:
-   //        XLFD (see X documentation)
-   //        "Family [size [style] [style ...]]"
-   // Returns 0 if error or no font can be found.
-   // If fixedDefault is false the "fixed" font will not be substituted
-   // as fallback when the asked for font does not exist.
-
    if (!font || !*font) {
       Error("GetFont", "argument may not be 0 or empty");
       return 0;
@@ -1631,12 +1633,12 @@ TGFont *TGFontPool::GetFont(const char *font, Bool_t fixedDefault)
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use font, i.e. increases ref count of specified font. Returns 0
+/// if font is not found.
+
 TGFont *TGFontPool::GetFont(const TGFont *font)
 {
-   // Use font, i.e. increases ref count of specified font. Returns 0
-   // if font is not found.
-
    TGFont *f = (TGFont*)fList->FindObject(font);
 
    if (f) {
@@ -1647,11 +1649,11 @@ TGFont *TGFontPool::GetFont(const TGFont *font)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use font, i.e. increases ref count of specified font.
+
 TGFont *TGFontPool::GetFont(FontStruct_t fs)
 {
-   // Use font, i.e. increases ref count of specified font.
-
    TGFont *f = FindFont(fs);
 
    if (f) {
@@ -1667,17 +1669,17 @@ TGFont *TGFontPool::GetFont(FontStruct_t fs)
    return f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns font specified bay family, pixel/point size, weight and slant
+///  negative value of ptsize means size in pixels
+///  positive value of ptsize means size in points
+///
+///  For example:
+///    TGFont *font = fpool->GetFont("helvetica", -9, kFontWeightNormal, kFontSlantRoman);
+///    font->Print();
+
 TGFont *TGFontPool::GetFont(const char *family, Int_t ptsize, Int_t weight, Int_t slant)
 {
-   // Returns font specified bay family, pixel/point size, weight and slant
-   //  negative value of ptsize means size in pixels
-   //  positive value of ptsize means size in points
-   //
-   //  For example:
-   //    TGFont *font = fpool->GetFont("helvetica", -9, kFontWeightNormal, kFontSlantRoman);
-   //    font->Print();
-
    const char *s;
    TString tmp;
 
@@ -1695,11 +1697,11 @@ TGFont *TGFontPool::GetFont(const char *family, Int_t ptsize, Int_t weight, Int_
    return GetFont(tmp.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free font. If ref count is 0 delete font.
+
 void TGFontPool::FreeFont(const TGFont *font)
 {
-   // Free font. If ref count is 0 delete font.
-
    TGFont *f = (TGFont*) fList->FindObject(font);
    if (f) {
       if (f->RemoveReference() == 0) {
@@ -1721,11 +1723,11 @@ void TGFontPool::FreeFont(const TGFont *font)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find font based on its font struct. Returns 0 if font is not found.
+
 TGFont *TGFontPool::FindFont(FontStruct_t font) const
 {
-   // Find font based on its font struct. Returns 0 if font is not found.
-
    TIter next(fList);
    TGFont *f = 0;
 
@@ -1738,11 +1740,11 @@ TGFont *TGFontPool::FindFont(FontStruct_t font) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find font based on its font handle. Returns 0 if font is not found.
+
 TGFont *TGFontPool::FindFontByHandle(FontH_t font) const
 {
-   // Find font based on its font handle. Returns 0 if font is not found.
-
    TIter next(fList);
    TGFont *f = 0;
 
@@ -1755,18 +1757,18 @@ TGFont *TGFontPool::FindFontByHandle(FontH_t font) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a string, this procedure returns a unique identifier for the string.
+///
+/// This procedure returns a pointer to a new char string corresponding to
+/// the "string" argument. The new string has a value identical to string
+/// (strcmp will return 0), but it's guaranteed that any other calls to this
+/// procedure with a string equal to "string" will return exactly the same
+/// result (i.e. can compare pointer *values* directly, without having to
+/// call strcmp on what they point to).
+
 const char *TGFontPool::GetUid(const char *string)
 {
-   // Given a string, this procedure returns a unique identifier for the string.
-   //
-   // This procedure returns a pointer to a new char string corresponding to
-   // the "string" argument. The new string has a value identical to string
-   // (strcmp will return 0), but it's guaranteed that any other calls to this
-   // procedure with a string equal to "string" will return exactly the same
-   // result (i.e. can compare pointer *values* directly, without having to
-   // call strcmp on what they point to).
-
    TObjString *obj = 0;
    obj = (TObjString*)fUidTable->FindObject(string);
 
@@ -1778,15 +1780,15 @@ const char *TGFontPool::GetUid(const char *string)
    return (const char *)obj->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return information about the font attributes as an array of strings.
+///
+/// An array of FONT_NUMFIELDS strings is returned holding the value of the
+/// font attributes in the following order:
+/// family size weight slant underline overstrike
+
 char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
 {
-   // Return information about the font attributes as an array of strings.
-   //
-   // An array of FONT_NUMFIELDS strings is returned holding the value of the
-   // font attributes in the following order:
-   // family size weight slant underline overstrike
-
    Int_t i, num;
    const char *str = 0;
 
@@ -1836,11 +1838,11 @@ char **TGFontPool::GetAttributeInfo(const FontAttributes_t *fa)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free attributes info.
+
 void TGFontPool::FreeAttributeInfo(char **info)
 {
-   // Free attributes info.
-
    Int_t i;
 
    if (info) {
@@ -1853,19 +1855,19 @@ void TGFontPool::FreeAttributeInfo(char **info)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List all fonts in the pool.
+
 void TGFontPool::Print(Option_t *opt) const
 {
-   // List all fonts in the pool.
-
    fList->Print(opt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the used font as a C++ statement(s) on output stream out.
+
 void TGFont::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-    // Save the used font as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    if (gROOT->ClassSaved(TGFont::Class())) {
@@ -1878,7 +1880,8 @@ void TGFont::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out << "   ufont = gClient->GetFont(" << quote << GetName() << quote << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *GetToken(char *str)
 {
    static char *p = 0;
@@ -1928,21 +1931,21 @@ static char *GetToken(char *str)
    return retp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts a string into a set of font attributes that can be used to
+/// construct a font.
+///
+/// The string can be one of the following forms:
+///        XLFD (see X documentation)
+///        "Family [size [style] [style ...]]"
+///
+/// The return value is kFALSE if the object was syntactically
+/// invalid. Otherwise, fills the font attribute buffer with the values
+/// parsed from the string and returns kTRUE. The structure must already be
+/// properly initialized.
+
 Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
 {
-   // Converts a string into a set of font attributes that can be used to
-   // construct a font.
-   //
-   // The string can be one of the following forms:
-   //        XLFD (see X documentation)
-   //        "Family [size [style] [style ...]]"
-   //
-   // The return value is kFALSE if the object was syntactically
-   // invalid. Otherwise, fills the font attribute buffer with the values
-   // parsed from the string and returns kTRUE. The structure must already be
-   // properly initialized.
-
    char *s;
    int n, result;
 
@@ -2021,19 +2024,19 @@ Bool_t TGFontPool::ParseFontName(const char *string, FontAttributes_t *fa)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Break up a fully specified XLFD into a set of font attributes.
+///
+/// Return value is kFALSE if string was not a fully specified XLFD.
+/// Otherwise, fills font attribute buffer with the values parsed from
+/// the XLFD and returns kTRUE.
+///
+/// string -- Parseable font description string.
+/// xa     -- XLFD attributes structure whose fields are to be modified.
+///           Structure must already be properly initialized.
+
 Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
 {
-   // Break up a fully specified XLFD into a set of font attributes.
-   //
-   // Return value is kFALSE if string was not a fully specified XLFD.
-   // Otherwise, fills font attribute buffer with the values parsed from
-   // the XLFD and returns kTRUE.
-   //
-   // string -- Parseable font description string.
-   // xa     -- XLFD attributes structure whose fields are to be modified.
-   //           Structure must already be properly initialized.
-
    char *src;
    const char *str;
    int i, j;
@@ -2175,16 +2178,16 @@ Bool_t TGFontPool::ParseXLFD(const char *string, XLFDAttributes_t *xa)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a lookup table, map a string to a number in the table.
+///
+/// If strKey was equal to the string keys of one of the elements in the
+/// table, returns the numeric key of that element. Returns the numKey
+/// associated with the last element (the NULL string one) in the table
+/// if strKey was not equal to any of the string keys in the table.
+
 Int_t TGFontPool::FindStateNum(const FontStateMap_t *map, const char *strKey)
 {
-   // Given a lookup table, map a string to a number in the table.
-   //
-   // If strKey was equal to the string keys of one of the elements in the
-   // table, returns the numeric key of that element. Returns the numKey
-   // associated with the last element (the NULL string one) in the table
-   // if strKey was not equal to any of the string keys in the table.
-
    const FontStateMap_t *m;
 
    if (!map->fStrKey) {
@@ -2199,34 +2202,34 @@ Int_t TGFontPool::FindStateNum(const FontStateMap_t *map, const char *strKey)
    return m->fNumKey;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a lookup table, map a number to a string in the table.
+///
+/// If numKey was equal to the numeric key of one of the elements in the
+/// table, returns the string key of that element. Returns NULL if numKey
+/// was not equal to any of the numeric keys in the table
+
 const char *TGFontPool::FindStateString(const FontStateMap_t *map, Int_t numKey)
 {
-   // Given a lookup table, map a number to a string in the table.
-   //
-   // If numKey was equal to the numeric key of one of the elements in the
-   // table, returns the string key of that element. Returns NULL if numKey
-   // was not equal to any of the numeric keys in the table
-
    for ( ; map->fStrKey != 0; map++) {
       if (numKey == map->fNumKey) return map->fStrKey;
    }
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function for ParseXLFD(). Determines if a field in the XLFD was
+/// set to a non-null, non-don't-care value.
+///
+/// The return value is kFALSE if the field in the XLFD was not set and
+/// should be ignored, kTRUE otherwise.
+///
+/// field -- The field of the XLFD to check. Strictly speaking, only when
+///          the string is "*" does it mean don't-care. However, an
+///          unspecified or question mark is also interpreted as don't-care.
+
 Bool_t TGFontPool::FieldSpecified(const char *field)
 {
-   // Helper function for ParseXLFD(). Determines if a field in the XLFD was
-   // set to a non-null, non-don't-care value.
-   //
-   // The return value is kFALSE if the field in the XLFD was not set and
-   // should be ignored, kTRUE otherwise.
-   //
-   // field -- The field of the XLFD to check. Strictly speaking, only when
-   //          the string is "*" does it mean don't-care. However, an
-   //          unspecified or question mark is also interpreted as don't-care.
-
    char ch;
 
    if (!field) {
@@ -2237,23 +2240,23 @@ Bool_t TGFontPool::FieldSpecified(const char *field)
    return (ch != '*' && ch != '?');
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a font, return a textual string identifying it.
+
 const char *TGFontPool::NameOfFont(TGFont *font)
 {
-   // Given a font, return a textual string identifying it.
-
    return font->GetName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return information about the font families that are available on the
+/// current display.
+///
+/// An array of strings is returned holding a list of all the available font
+/// families. The array is terminated with a NULL pointer.
+
 char **TGFontPool::GetFontFamilies()
 {
-   // Return information about the font families that are available on the
-   // current display.
-   //
-   // An array of strings is returned holding a list of all the available font
-   // families. The array is terminated with a NULL pointer.
-
    Int_t i, numNames;
    char *family, *end, *p;
 
@@ -2308,11 +2311,11 @@ char **TGFontPool::GetFontFamilies()
    return dst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete an array of families allocated GetFontFamilies() method
+
 void TGFontPool::FreeFontFamilies(char **f)
 {
-   // Delete an array of families allocated GetFontFamilies() method
-
    Int_t i;
 
    if (!f) return;
@@ -2323,19 +2326,19 @@ void TGFontPool::FreeFontFamilies(char **f)
    delete[] f;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a desired set of attributes for a font, find a font with the
+/// closest matching attributes and create a new TGFont object.
+/// The return value is a pointer to a TGFont object that represents the
+/// font with the desired attributes. If a font with the desired attributes
+/// could not be constructed, some other font will be substituted
+/// automatically.
+///
+/// Every call to this procedure returns a new TGFont object, even if the
+/// specified attributes have already been seen before.
+
 TGFont *TGFontPool::GetFontFromAttributes(FontAttributes_t *fa, TGFont *fontPtr)
 {
-   // Given a desired set of attributes for a font, find a font with the
-   // closest matching attributes and create a new TGFont object.
-   // The return value is a pointer to a TGFont object that represents the
-   // font with the desired attributes. If a font with the desired attributes
-   // could not be constructed, some other font will be substituted
-   // automatically.
-   //
-   // Every call to this procedure returns a new TGFont object, even if the
-   // specified attributes have already been seen before.
-
    Int_t numNames, score, i, scaleable, pixelsize, xaPixelsize;
    Int_t bestIdx, bestScore, bestScaleableIdx, bestScaleableScore;
    XLFDAttributes_t xa;
@@ -2536,17 +2539,17 @@ end:
    return font;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The return value is a pointer to an TGFont object that represents the
+/// native font. If a native font by the given name could not be found,
+/// the return value is NULL.
+///
+/// Every call to this procedure returns a new TGFont object, even if the
+/// name has already been seen before. The caller should call FreeFont
+/// when the font is no longer needed.
+
 TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
 {
-   // The return value is a pointer to an TGFont object that represents the
-   // native font. If a native font by the given name could not be found,
-   // the return value is NULL.
-   //
-   // Every call to this procedure returns a new TGFont object, even if the
-   // name has already been seen before. The caller should call FreeFont
-   // when the font is no longer needed.
-
    FontStruct_t fontStruct;
    fixedDefault = fixedDefault && ((*name == '-') || (*name == '*'));
    fontStruct = fClient->GetFontByName(name, fixedDefault);
@@ -2558,21 +2561,21 @@ TGFont *TGFontPool::GetNativeFont(const char *name, Bool_t fixedDefault)
    return MakeFont(0, fontStruct, name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper for GetNativeFont() and GetFontFromAttributes(). Creates and
+/// intializes a new TGFont object.
+///
+/// font       -- If non-NULL, store the information in this existing TGFont
+///               object, rather than creating a new one; the existing
+///               contents of the font will be released. If NULL, a new
+///               TGFont object is created.
+/// fontStruct -- information about font.
+/// fontName   -- The string passed to TVirtualX::LoadQueryFont() to construct the
+///               fontStruct.
+
 TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
                              const char *fontName)
 {
-   // Helper for GetNativeFont() and GetFontFromAttributes(). Creates and
-   // intializes a new TGFont object.
-   //
-   // font       -- If non-NULL, store the information in this existing TGFont
-   //               object, rather than creating a new one; the existing
-   //               contents of the font will be released. If NULL, a new
-   //               TGFont object is created.
-   // fontStruct -- information about font.
-   // fontName   -- The string passed to TVirtualX::LoadQueryFont() to construct the
-   //               fontStruct.
-
    TGFont *newFont;
 
    Int_t i, width, firstChar, lastChar, n, replaceOK;
@@ -2703,21 +2706,21 @@ TGFont *TGFontPool::MakeFont(TGFont *font, FontStruct_t fontStruct,
    return newFont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When displaying text in a widget, a backslashed escape sequence is
+/// substituted for control characters that occur in the text. Given a
+/// control character, fill in a buffer with the replacement string that
+/// should be displayed.
+///
+/// The return value is the length of the substitute string, buf is
+/// filled with the substitute string; it is not '\0' terminated.
+///
+/// c   -- The control character to be replaced.
+/// buf -- Buffer that gets replacement string. It only needs to be
+///        4 characters long.
+
 static Int_t GetControlCharSubst(Int_t c, char buf[4])
 {
-   // When displaying text in a widget, a backslashed escape sequence is
-   // substituted for control characters that occur in the text. Given a
-   // control character, fill in a buffer with the replacement string that
-   // should be displayed.
-   //
-   // The return value is the length of the substitute string, buf is
-   // filled with the substitute string; it is not '\0' terminated.
-   //
-   // c   -- The control character to be replaced.
-   // buf -- Buffer that gets replacement string. It only needs to be
-   //        4 characters long.
-
    buf[0] = '\\';
 
    if (((UInt_t)c < sizeof(gMapChars)) && (gMapChars[c] != 0)) {

@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(proof/proof)
-ROOT_USE_PACKAGE(tree/treeplayer)
-
 ROOT_GLOB_HEADERS(headers inc/*.h)
 list(REMOVE_ITEM headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/TProofDraw.h
                          ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h

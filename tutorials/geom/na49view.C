@@ -1,10 +1,13 @@
-void na49view() {
-   //
-   // This macro generates
-   // a begin_html <a href="gif/na49canvas.gif">Canvas</a> end_html
-   // with 2 views of the NA49 detector using the old obsolete geometry package.
-   //Author: Rene Brun
+/// \file
+/// \ingroup tutorial_geom
+/// This macro generates
+/// with 2 views of the NA49 detector using the old obsolete geometry package.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
+void na49view() {
    TCanvas *c1 = new TCanvas("c1","The NA49 canvas",200,10,700,780);
 
    gBenchmark->Start("na49view");

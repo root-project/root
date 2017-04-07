@@ -24,12 +24,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 namespace ROOT {
 namespace MacOSX {

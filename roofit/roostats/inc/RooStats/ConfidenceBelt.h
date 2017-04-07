@@ -11,15 +11,9 @@
 #ifndef RooStats_ConfidenceBelt
 #define RooStats_ConfidenceBelt
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_TREE_DATA
 #include "RooAbsData.h"
-#endif
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
 #include "RooStats/SamplingDistribution.h"
 
@@ -31,7 +25,8 @@
 
 namespace RooStats {
 
-  ///////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
   class SamplingSummaryLookup : public TObject {
 
      typedef std::pair<Double_t, Double_t> AcceptanceCriteria; // defined by Confidence level, leftside tail probability
@@ -49,7 +44,7 @@ namespace RooStats {
       if(GetLookupIndex(cl,leftside) >=0 ){
          std::cout<< "SamplingSummaryLookup::Add, already in lookup table" << std::endl;
       } else
-	fLookupTable[fLookupTable.size()]= tmp;
+   fLookupTable[fLookupTable.size()]= tmp;
     }
 
     Int_t GetLookupIndex(Double_t cl, Double_t leftside){
@@ -60,15 +55,15 @@ namespace RooStats {
       LookupTable::iterator it = fLookupTable.begin();
       Int_t index = -1;
       for(; it!= fLookupTable.end(); ++it) {
-	index++;
-	if( TMath::Abs( (*it).second.first - cl ) < tolerance &&
-	    TMath::Abs( (*it).second.second - leftside ) < tolerance )
-	  break; // exit loop, found 
+   index++;
+   if( TMath::Abs( (*it).second.first - cl ) < tolerance &&
+       TMath::Abs( (*it).second.second - leftside ) < tolerance )
+     break; // exit loop, found
       }
 
       // check that it was found
       if(index == (Int_t)fLookupTable.size())
-	index = -1;
+   index = -1;
 
       return index;
     }
@@ -122,8 +117,8 @@ namespace RooStats {
 
   };
 
+////////////////////////////////////////////////////////////////////////////////
 
-  ///////////////////////////
   class SamplingSummary : public TObject {
   public:
      SamplingSummary() : fParameterPointIndex(0) {}
@@ -140,12 +135,12 @@ namespace RooStats {
     void AddAcceptanceRegion(AcceptanceRegion& ar){
       Int_t index =  ar.GetLookupIndex();
       if( fAcceptanceRegions.count(index) !=0) {
-	std::cout << "SamplingSummary::AddAcceptanceRegion, need to implement merging protocol" << std::endl;
+   std::cout << "SamplingSummary::AddAcceptanceRegion, need to implement merging protocol" << std::endl;
       } else {
-	fAcceptanceRegions[index]=ar;
+   fAcceptanceRegions[index]=ar;
       }
     }
-    
+
   private:
      Int_t fParameterPointIndex; // want a small footprint reference to the RooArgSet for particular parameter point
      TRef fSamplingDistribution; // persistent pointer to a SamplingDistribution
@@ -156,7 +151,8 @@ namespace RooStats {
 
   };
 
-  /////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
  class ConfidenceBelt : public TNamed {
 
   private:
@@ -173,7 +169,7 @@ namespace RooStats {
     ConfidenceBelt(const char* name, RooAbsData&);
     ConfidenceBelt(const char* name, const char* title, RooAbsData&);
     virtual ~ConfidenceBelt();
-        
+
     // add after creating a region
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, Double_t cl=-1., Double_t leftside=-1.);
 
@@ -184,20 +180,20 @@ namespace RooStats {
     Double_t GetAcceptanceRegionMin(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     Double_t GetAcceptanceRegionMax(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     std::vector<Double_t> ConfidenceLevels() const ;
- 
-    // Method to return lower limit on a given parameter 
+
+    // Method to return lower limit on a given parameter
     //  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
     //      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
-    
+
     // do we want it to return list of parameters
     virtual RooArgSet* GetParameters() const;
 
     // check if parameters are correct. (dummy implementation to start)
     Bool_t CheckParameters(RooArgSet&) const ;
-    
+
   protected:
     ClassDef(ConfidenceBelt,1)  // A confidence belt for the Neyman Construction
-      
+
   };
 }
 

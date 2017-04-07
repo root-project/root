@@ -13,43 +13,30 @@
 #define ROOT_TAttFill
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttFill                                                             //
-//                                                                      //
-// Fill area attributes.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 class TAttFill {
 
 protected:
-   Color_t    fFillColor;           //fill area color
-   Style_t    fFillStyle;           //fill area style
+   Color_t    fFillColor;           ///< Fill area color
+   Style_t    fFillStyle;           ///< Fill area style
 
 public:
    TAttFill();
    TAttFill(Color_t fcolor,Style_t fstyle);
    virtual ~TAttFill();
    void             Copy(TAttFill &attfill) const;
-   virtual Color_t  GetFillColor() const { return fFillColor; }
-   virtual Style_t  GetFillStyle() const { return fFillStyle; }
+   virtual Color_t  GetFillColor() const { return fFillColor; } ///< Return the fill area color
+   virtual Style_t  GetFillStyle() const { return fFillStyle; } ///< Return the fill area style
    virtual Bool_t   IsTransparent() const;
    virtual void     Modify();
    virtual void     ResetAttFill(Option_t *option="");
    virtual void     SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
    virtual void     SetFillAttributes(); // *MENU*
-   virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
+   virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; } ///< Set the fill area color
    virtual void     SetFillColorAlpha(Color_t fcolor, Float_t falpha);
-   virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }
+   virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; } ///< Set the fill area style
 
    ClassDef(TAttFill,2)  //Fill area attributes
 };

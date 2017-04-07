@@ -18,19 +18,40 @@ TREEPLAYERDS := $(call stripsrc,$(MODDIRS)/G__TreePlayer.cxx)
 TREEPLAYERDO := $(TREEPLAYERDS:.cxx=.o)
 TREEPLAYERDH := $(TREEPLAYERDS:.cxx=.h)
 
+TREEPLAYER2L  := $(MODDIRI)/DataFrameLinkDef.h
+TREEPLAYER2DS := $(call stripsrc,$(MODDIRS)/G__DataFrame.cxx)
+TREEPLAYER2DO := $(TREEPLAYER2DS:.cxx=.o)
+TREEPLAYER2DH := $(TREEPLAYER2DS:.cxx=.h)
+
 TREEPLAYERH  := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+TREEPLAYERH  := $(filter-out $(MODDIRI)/DataFrameLinkDef.h,$(TREEPLAYERH))
+TREEPLAYERH  := $(filter-out $(MODDIRI)/TBranchProxyTemplate.h,$(TREEPLAYERH))
 TREEPLAYERS  := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
+TREEPLAYERS  := $(filter-out $(MODDIRS)/TTreeProcessor%.cxx,$(TREEPLAYERS))
 TREEPLAYERO  := $(call stripsrc,$(TREEPLAYERS:.cxx=.o))
+
+TREEPLAYER2H := $(wildcard $(MODDIRI)/ROOT/*.hxx)
+TREEPLAYER2H := $(filter-out $(MODDIRI)/TTreeProcessorMT.h,$(TREEPLAYER2H))
 
 TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
 TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
+TREEPLAYER2MAP := $(TREEPLAYERLIB:libTreePlayer.$(SOEXT)=libDataFrame.rootmap.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEPLAYERH))
+TREEPLAYERH_REL := $(MODDIRI)/TBranchProxyTemplate.h $(TREEPLAYERH)
+ALLHDRS       += $(patsubst $(MODDIRI)/%,include/%,$(TREEPLAYERH_REL) $(TREEPLAYER2H))
 ALLLIBS       += $(TREEPLAYERLIB)
-ALLMAPS       += $(TREEPLAYERMAP)
+ALLMAPS       += $(TREEPLAYERMAP) $(TREEPLAYER2MAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TREEPLAYERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Tree_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(TREEPLAYERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(TREEPLAYERDEP)
@@ -41,11 +62,15 @@ INCLUDEFILES += $(TREEPLAYERDEP)
 include/%.h:    $(TREEPLAYERDIRI)/%.h
 		cp $< $@
 
-$(TREEPLAYERLIB): $(TREEPLAYERO) $(TREEPLAYERDO) $(ORDER_) $(MAINLIBS) \
+include/%.hxx:  $(TREEPLAYERDIRI)/%.hxx
+		mkdir -p include/ROOT;
+		cp $< $@
+
+$(TREEPLAYERLIB): $(TREEPLAYERO) $(TREEPLAYERDO) $(TREEPLAYER2DO) $(ORDER_) $(MAINLIBS) \
                   $(TREEPLAYERLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libTreePlayer.$(SOEXT) $@ \
-		   "$(TREEPLAYERO) $(TREEPLAYERDO)" \
+		   "$(TREEPLAYERO) $(TREEPLAYERDO) $(TREEPLAYER2DO)" \
 		   "$(TREEPLAYERLIBEXTRA)"
 
 $(call pcmrule,TREEPLAYER)
@@ -55,6 +80,12 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TRE
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEPLAYER) -c -writeEmptyRootPCM $(TREEPLAYERH) $(TREEPLAYERL)
+
+$(TREEPLAYER2DS): $(TREEPLAYER2H) $(TREEPLAYER2L) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCLINGSTAGE2) -f $@  -s lib/libTreePlayer.$(SOEXT) -rml libTreePlayer.$(SOEXT) -rmf lib/libDataFrame.rootmap -multiDict -writeEmptyRootPCM $(TREEPLAYER2H) $(TREEPLAYER2L)
+
 
 $(TREEPLAYERMAP): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
 		$(MAKEDIR)

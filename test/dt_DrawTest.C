@@ -1,6 +1,7 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TList.h"
+#include "TH1.h"
 #include "TROOT.h"
 #include <TBenchmark.h>
 

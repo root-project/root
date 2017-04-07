@@ -14,19 +14,19 @@ CLINGS       := $(wildcard $(MODDIR)/lib/Interpreter/*.cpp) \
                 $(wildcard $(MODDIR)/lib/TagsExtension/*.cpp) \
                 $(wildcard $(MODDIR)/lib/Utils/*.cpp)
 CLINGO       := $(call stripsrc,$(CLINGS:.cpp=.o))
-CLINGEXCEPO  := $(call stripsrc,$(MODDIR)/lib/Interpreter/RuntimeException.o)
+CLINGEXCEPO  := $(call stripsrc,$(MODDIR)/lib/Interpreter/Exception.o)
 CLINGCOMPDH  := $(call stripsrc,$(MODDIR)/lib/Interpreter/cling-compiledata.h)
 
 CLINGDEP     := $(CLINGO:.o=.d)
 
 CLINGETC_CLING := DynamicExprInfo.h DynamicLookupRuntimeUniverse.h \
         DynamicLookupLifetimeHandler.h Interpreter.h InvocationOptions.h \
-        RuntimeUniverse.h Value.h RuntimeException.h
+        Exception.h RuntimePrintValue.h RuntimeUniverse.h Value.h
 
 CLINGETC_LLVM := llvm/ADT/IntrusiveRefCntPtr.h \
         llvm/ADT/StringRef.h \
         llvm/ADT/SmallVector.h \
-	llvm/ADT/iterator_range.h \
+        llvm/ADT/iterator_range.h \
         llvm/Config/llvm-config.h \
         llvm/Support/AlignOf.h \
         llvm/Support/Allocator.h \
@@ -59,8 +59,21 @@ INCLUDEFILES += $(CLINGDEP)
 # include dir for picking up RuntimeUniverse.h etc - need to
 # 1) copy relevant headers to include/
 # 2) rely on TCling to addIncludePath instead of using CLING_..._INCL below
-CLINGLLVMCXXFLAGS = $(patsubst -O%,,$(shell $(LLVMCONFIG) --cxxflags))
+# -fvisibility=hidden renders libCore unusable.
+# Filter out warning flags.
+CLINGLLVMCXXFLAGSRAW = $(shell $(LLVMCONFIG) --cxxflags)
+CLINGLLVMCXXFLAGS = $(filter-out -pedantic,$(filter-out -fvisibility-inlines-hidden,$(filter-out -fvisibility=hidden,\
+                    $(filter-out -W%,\
+                    $(patsubst -O%,,$(CLINGLLVMCXXFLAGSRAW)))))) \
+                    $(filter -Wno-%,$(CLINGLLVMCXXFLAGSRAW))
 # -ffunction-sections breaks the debugger on some platforms ... and does not help libCling at all.
+
+# FIXME: This is temporary until I update my compiler on mac and add -fmodules-local-submodule-visibility.
+# -gmodules comes from configuring LLVM with modules. We need to filter it out too.
+ifeq ($(CXXMODULES),yes)
+CLINGLLVMCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS) -gmodules,$(CLINGLLVMCXXFLAGS))
+endif
+
 CLINGCXXFLAGS += -I$(CLINGDIR)/include $(filter-out -ffunction-sections,$(CLINGLLVMCXXFLAGS)) -fno-strict-aliasing
 
 ifeq ($(CTORSINITARRAY),yes)
@@ -82,12 +95,10 @@ ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 CLINGLDFLAGSEXTRA += -Wl,--exclude-libs,ALL 
 endif
 
-# used in $(subst -fno-exceptions,$(CLINGEXCCXXFLAGS),$(CLINGCXXFLAGS)) for not CLINGEXEO
-CLINGEXCCXXFLAGS := -fno-exceptions
 CLINGLIBEXTRA = $(CLINGLDFLAGSEXTRA) -L$(shell $(LLVMCONFIG) --libdir) \
 	$(addprefix -lclang,\
 		Frontend Serialization Driver CodeGen Parse Sema Analysis AST Edit Lex Basic) \
-	$(shell $(LLVMCONFIG) --libs bitwriter orcjit mcjit native option ipo instrumentation objcarcopts profiledata)\
+	$(shell $(LLVMCONFIG) --libs bitwriter coverage orcjit mcjit native option ipo instrumentation objcarcopts profiledata)\
 	$(shell $(LLVMCONFIG) --ldflags) $(shell $(LLVMCONFIG) --system-libs)
 
 ifneq (,$(filter $(ARCH),win32gcc win64gcc))
@@ -127,17 +138,17 @@ etc/cling/%.h: $(CLINGDIR)/include/cling/%.h
 	cp $< $@
 
 $(CLINGDIR)/%.o: $(CLINGDIR)/%.cpp $(LLVMDEP)
-	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(subst -fno-exceptions,$(CLINGEXCCXXFLAGS),$(CLINGCXXFLAGS)) -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXMKDEPFLAGS) $(subst -fno-exceptions,$(CLINGEXCCXXFLAGS),$(CLINGCXXFLAGS)) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(CLINGCXXFLAGS) $(CLINGRTTI) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXMKDEPFLAGS) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
 $(call stripsrc,$(CLINGDIR)/%.o): $(CLINGDIR)/%.cpp $(LLVMDEP)
 	$(MAKEDIR)
-	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(subst -fno-exceptions,$(CLINGEXCCXXFLAGS),$(CLINGCXXFLAGS))  -D__cplusplus -- $<
-	$(CXX) $(OPT) $(CXXMKDEPFLAGS) $(subst -fno-exceptions,$(CLINGEXCCXXFLAGS),$(CLINGCXXFLAGS)) $(CXXOUT)$@ -c $<
+	$(MAKEDEP) -R -f$(@:.o=.d) -Y -w 1000 -- $(CXXFLAGS) $(CLINGCXXFLAGS) $(CLINGRTTI) -D__cplusplus -- $<
+	$(CXX) $(OPT) $(CXXMKDEPFLAGS) $(CLINGCXXFLAGS) $(CXXOUT)$@ -c $<
 
 $(CLINGCOMPDH): FORCE $(LLVMDEP)
 	@mkdir -p $(dir $@)
-	@echo '#define LLVM_CXX "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
+	@echo '#define CLING_CXX_PATH "$(CXX) $(OPT) $(CLINGCXXFLAGSNOI)"' > $@_tmp
 	@diff -q $@_tmp $@ > /dev/null 2>&1 || mv $@_tmp $@
 	@rm -f $@_tmp
 
@@ -149,7 +160,7 @@ CLINGLDEXPSYM := -Wl,-E
 endif
 $(CLINGEXE): $(CLINGO) $(CLINGEXEO) $(LTEXTINPUTO)
 	$(RSYNC) --exclude '.svn' $(CLINGDIR) $(LLVMDIRO)/tools
-	@cd $(LLVMDIRS)/tools && ln -sf ../../../cling # yikes
+	#@cd $(LLVMDIRS)/tools && ln -sf ../../../cling # yikes
 	@mkdir -p $(dir $@)
 	$(LD) $(CLINGLDEXPSYM) -o $@ $(CLINGO) $(CLINGEXEO) $(LTEXTINPUTO) $(CLINGLIBEXTRA) 
 endif
@@ -157,18 +168,17 @@ endif
 ##### extra rules ######
 ifneq ($(LLVMDEV),)
 $(CLINGO)   : CLINGCXXFLAGS += '-DCLING_INCLUDE_PATHS="$(CLINGDIR)/include:$(shell pwd)/$(LLVMDIRO)/include:$(shell pwd)/$(LLVMDIRO)/tools/clang/include:$(LLVMDIRS)/include:$(LLVMDIRS)/tools/clang/include"'
-$(CLINGEXEO): CLINGCXXFLAGS += -I$(TEXTINPUTDIRS)
-$(CLINGEXEO): CLINGEXCCXXFLAGS := -fexceptions
+$(CLINGEXEO): CLINGCXXFLAGS += -fexceptions -I$(TEXTINPUTDIRS) -I$(LLVMDIRO)/include
 else
 endif
 
 CLING_VERSION=ROOT_$(shell cat "$(CLINGDIR)/VERSION")
 
-$(CLINGEXCEPO): CLINGEXCCXXFLAGS := -fexceptions
+$(CLINGEXCEPO): CLINGCXXFLAGS += -frtti -fexceptions
 $(CLINGETC) : $(LLVMLIB)
 $(CLINGO)   : $(CLINGETC)
 $(call stripsrc,$(MODDIR)/lib/Interpreter/CIFactory.o): $(CLINGCOMPDH)
-$(call stripsrc,$(MODDIR)/lib/Interpreter/CIFactory.o): CLINGCXXFLAGS += -I$(dir $(CLINGCOMPDH))
+$(call stripsrc,$(MODDIR)/lib/Interpreter/CIFactory.o): CLINGCXXFLAGS += -I$(dir $(CLINGCOMPDH)) -pthread
 $(call stripsrc,$(MODDIR)/lib/Interpreter/Interpreter.o): $(CLINGCOMPDH)
 $(call stripsrc,$(MODDIR)/lib/Interpreter/Interpreter.o): CLINGCXXFLAGS += -I$(dir $(CLINGCOMPDH))
 $(call stripsrc,$(MODDIR)/lib/Interpreter/Interpreter.o): CLINGCXXFLAGS += -DCLING_VERSION=$(CLING_VERSION)

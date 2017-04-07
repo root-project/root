@@ -2,10 +2,12 @@
 # CMakeLists.txt file for building ROOT math/cmaes package
 ############################################################################
 
-ROOT_USE_PACKAGE(math/mathcore)
-ROOT_USE_PACKAGE(hist/hist)
+#ROOT_USE_PACKAGE(math/mathcore)
+#ROOT_USE_PACKAGE(hist/hist)
 
 add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+
+ROOT_GLOB_HEADERS(headers RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 include_directories(${LIBCMAES_INCLUDE_DIR})
 link_directories(${LIBCMAES_LIBRARIES})

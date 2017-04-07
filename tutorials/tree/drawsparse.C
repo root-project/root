@@ -1,15 +1,23 @@
-//*********************************************************************
-// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
-//   and draw a THnSparse using TParallelCoord.
-//  The plot will contain one line for each filled bin,
-//  with the bin's coordinates on each axis, and the bin's content on
-//  the rightmost axis.
-//
-//  Run as
-//    .L $ROOTSYS/tutorials/tree/drawsparse.C+
-//
-//  Axel.Naumann@cern.ch (2007-09-14)
-// ********************************************************************
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Convert a THnSparse to a TTree using efficient iteration through the THnSparse
+/// and draw a THnSparse using TParallelCoord.
+/// The plot will contain one line for each filled bin,
+/// with the bin's coordinates on each axis, and the bin's content on
+/// the rightmost axis.
+///
+///  Run as
+/// ~~~
+///    .L $ROOTSYS/tutorials/tree/drawsparse.C+
+/// ~~~
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Axel Naumann
+
+
 
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"
@@ -23,7 +31,6 @@
 #include "TFile.h"
 #include "TH3.h"
 
-//______________________________________________________________________________
 TTree* toTree(THnSparse* h)
 {
    // Creates a TTree and fills it with the coordinates of all
@@ -65,7 +72,6 @@ TTree* toTree(THnSparse* h)
 }
 
 
-//______________________________________________________________________________
 void drawsparse_draw(THnSparse* h)
 {
    // Draw a THnSparse using TParallelCoord, creating a temporary TTree.
@@ -94,14 +100,9 @@ void drawsparse_draw(THnSparse* h)
    var->SetTitle("bin content");
 }
 
-//______________________________________________________________________________
 void drawsparse()
 {
    // create a THnSparse and draw it.
-
-#ifdef __CINT__
-   printf("For performance reasons we advise to run \".x drawsparse.C+\"\n");
-#endif
 
    const Int_t ndims = 8;
    Int_t bins[ndims] = {10, 10, 5, 30, 10, 4, 18, 12};

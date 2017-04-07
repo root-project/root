@@ -28,9 +28,18 @@ GUIHTMLLIB   := $(LPATH)/libGuiHtml.$(SOEXT)
 GUIHTMLMAP   := $(GUIHTMLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIHTMLH))
+GUIHTMLH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GUIHTMLH))
+ALLHDRS     += $(GUIHTMLH_REL)
 ALLLIBS     += $(GUIHTMLLIB)
 ALLMAPS     += $(GUIHTMLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GUIHTMLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GUIHTMLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GUIHTMLDEP)

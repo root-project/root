@@ -26,17 +26,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPacketizer
 #include "TVirtualPacketizer.h"
-#endif
 
 
 class TMessage;
 class TTimer;
 class TTree;
 class TMap;
+class TProofProgressStatus;
 class TProofStats;
-
 
 class TPacketizer : public TVirtualPacketizer {
 

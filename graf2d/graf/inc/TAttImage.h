@@ -12,57 +12,9 @@
 #ifndef ROOT_TAttImage
 #define ROOT_TAttImage
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttImage                                                           //
-//                                                                      //
-//  Image attributes are:                                               //
-//    Image Quality (see EImageQuality for the list of qualities)       //
-//    Compression defines the compression rate of the color data in the //
-//                internal image structure. Speed and memory depends    //
-//                on this rate, but not the image display itself        //
-//                0: no compression;  100: max compression              //
-//    Radio Flag: kTRUE  the x/y radio of the displayed image is always //
-//                       identical to the original image                //
-//                kFALSE the x and y size of the displayed image depends//
-//                       on the size of the pad                         //
-//    Palette:    Defines the conversion from a pixel value to the      //
-//                screen color                                          //
-//                                                                      //
-//  This class is used (in general by secondary inheritance)            //
-//  by some other classes (image display).                              //
-//                                                                      //
-//                                                                      //
-//  TImagePalette                                                       //
-//                                                                      //
-//  A class to define a conversion from pixel values to pixel color.    //
-//  A Palette is defined by some anchor points. Each anchor point has   //
-//  a value between 0 and 1 and a color. An image has to be normalized  //
-//  and the values between the anchor points are interpolated.          //
-//  All member variables are public and can be directly manipulated.    //
-//  In most cases the default operator will be used to create a         //
-//  TImagePalette. In this case the member arrays have to be allocated  //
-//  by an application and will be deleted in the destructor of this     //
-//  class.                                                              //
-//                                                                      //
-//                                                                      //
-//  TPaletteEditor                                                      //
-//                                                                      //
-//  This class provides a way to edit the palette via a GUI.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 class TAttImage;
-
 
 class TPaletteEditor {
 
@@ -78,17 +30,15 @@ public:
    ClassDef(TPaletteEditor, 0)  // Base class for palette editor
 };
 
-
-
 class TImagePalette : public TObject {
 
 public:
-   UInt_t      fNumPoints;   // number of anchor points
-   Double_t   *fPoints;      // [fNumPoints] value of each anchor point [0..1]
-   UShort_t   *fColorRed;    // [fNumPoints] red color at each anchor point
-   UShort_t   *fColorGreen;  // [fNumPoints] green color at each anchor point
-   UShort_t   *fColorBlue;   // [fNumPoints] blue color at each anchor point
-   UShort_t   *fColorAlpha;  // [fNumPoints] alpha at each anchor point
+   UInt_t      fNumPoints;   ///< number of anchor points
+   Double_t   *fPoints;      ///< [fNumPoints] value of each anchor point [0..1]
+   UShort_t   *fColorRed;    ///< [fNumPoints] red color at each anchor point
+   UShort_t   *fColorGreen;  ///< [fNumPoints] green color at each anchor point
+   UShort_t   *fColorBlue;   ///< [fNumPoints] blue color at each anchor point
+   UShort_t   *fColorAlpha;  ///< [fNumPoints] alpha at each anchor point
 
    TImagePalette();
    TImagePalette(const TImagePalette &palette);
@@ -100,10 +50,11 @@ public:
 
    TImagePalette &operator=(const TImagePalette &palette);
 
-   ClassDef(TImagePalette,1)  // Color Palette for value -> color conversion
+   static TImagePalette* Create(Option_t* opts);
+   static TImagePalette* CreateCOLPalette(Int_t nContours);
+
+   ClassDef(TImagePalette,2)  // Color Palette for value -> color conversion
 };
-
-
 
 class TAttImage {
 
@@ -118,12 +69,12 @@ public:
    };
 
 protected:
-   EImageQuality    fImageQuality;       // *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
-   UInt_t           fImageCompression;   // compression [0 .. 100] 0: no compression
-   Bool_t           fConstRatio;         // keep aspect ratio of image on the screen
-   TImagePalette    fPalette;            // color palette for value -> color conversion
-   TPaletteEditor  *fPaletteEditor;      //! GUI to edit the color palette
-   Bool_t           fPaletteEnabled;     //! kTRUE - palette is drawn on the image
+   EImageQuality    fImageQuality;       ///< *OPTION={GetMethod="GetImageQuality";SetMethod="SetImageQuality";Items=(kImgDefault="Default",kImgPoor="Poor",kImgFast="Fast",kImgGood="Good",kImgBest="Best")}*
+   UInt_t           fImageCompression;   ///< compression [0 .. 100] 0: no compression
+   Bool_t           fConstRatio;         ///< keep aspect ratio of image on the screen
+   TImagePalette    fPalette;            ///< color palette for value -> color conversion
+   TPaletteEditor  *fPaletteEditor;      ///<! GUI to edit the color palette
+   Bool_t           fPaletteEnabled;     ///<! kTRUE - palette is drawn on the image
 
 public:
    TAttImage();
@@ -155,10 +106,7 @@ public:
    ClassDef(TAttImage,1)  //Image attributes
 };
 
-
 R__EXTERN TImagePalette  *gHistImagePalette;    // palette used in TH2::Draw("col")
 R__EXTERN TImagePalette  *gWebImagePalette;     // 6x6x6 colors web palette
-
-
 
 #endif

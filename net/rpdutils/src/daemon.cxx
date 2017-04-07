@@ -38,9 +38,7 @@
 #include <sys/wait.h>
 #endif
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
 
 #ifndef NOFILE
 #   define NOFILE 0
@@ -72,7 +70,8 @@ namespace ROOT {
 extern ErrorHandler_t gErrSys;
 
 #if defined(USE_SIGCHLD)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void SigChild(int)
 {
    int         pid;
@@ -88,11 +87,11 @@ static void SigChild(int)
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detach a daemon process from login session context.
+
 void DaemonStart(int ignsigcld, int fdkeep, EService service)
 {
-   // Detach a daemon process from login session context.
-
    // If we were started by init (process 1) from the /etc/inittab file
    // there's no need to detach.
    // This test is unreliable due to an unavoidable ambiguity

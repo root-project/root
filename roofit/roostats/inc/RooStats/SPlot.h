@@ -19,9 +19,7 @@ class RooRealVar;
 class RooSimultaneous;
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif 
 
 #include "RooFitResult.h"
 #include "RooRealVar.h"
@@ -30,7 +28,7 @@ class RooSimultaneous;
 #include "RooDataSet.h"
 
 namespace RooStats{
-  
+
   class SPlot: public TNamed {
 
   public:
@@ -40,45 +38,45 @@ namespace RooStats{
     SPlot(const SPlot &other);
     SPlot(const char* name, const char* title);
     SPlot(const char* name, const char* title, const RooDataSet &data);
-    SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf, 
-	  const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(), 
-	  bool includeWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "");
-    
+    SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf,
+     const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(),
+     bool includeWeights=kTRUE, bool copyDataSet = kFALSE, const char* newName = "");
+
     RooDataSet* SetSData(RooDataSet* data);
 
-    RooDataSet* GetSDataSet() const;    
+    RooDataSet* GetSDataSet() const;
 
     RooArgList GetSWeightVars() const;
-    
+
     Int_t GetNumSWeightVars() const;
-    
+
     void AddSWeight(RooAbsPdf* pdf, const RooArgList &yieldsTmp,
-		    const RooArgSet &projDeps=RooArgSet(), bool includeWeights=kTRUE);
-    
+          const RooArgSet &projDeps=RooArgSet(), bool includeWeights=kTRUE);
+
     Double_t GetSumOfEventSWeight(Int_t numEvent) const;
-    
+
     Double_t GetYieldFromSWeight(const char* sVariable) const;
 
     Double_t GetSWeight(Int_t numEvent, const char* sVariable) const;
 
 
-    
+
   protected:
 
-     enum { 
+     enum {
         kOwnData = BIT(20)
      };
-     
+
     RooArgList fSWeightVars;
 
     //  RooListProxy fSWeightVars;
-    
+
     RooDataSet* fSData;
 
     ClassDef(SPlot,1)   // Class used for making sPlots
-      
-      
+
+
       };
-  
+
 }
 #endif

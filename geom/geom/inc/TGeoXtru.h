@@ -12,21 +12,11 @@
 #ifndef ROOT_TGeoXtru
 #define ROOT_TGeoXtru
 
-#ifndef ROOT_TGeoBBox
+#include <mutex>
+
 #include "TGeoBBox.h"
-#endif
 
 class TGeoPolygon;
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoXtru - An extrusion with fixed outline shape in x-y and a sequence //
-//   of z extents (segments).  The overall scale of the outline scales    //
-//   linearly between z points and the center can have an x-y offset.     //
-//                                                                        //
-//   Based on the initial implementation of R. Hatcher                    //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoXtru : public TGeoBBox
 {
@@ -60,6 +50,8 @@ protected:
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! size of thread-specific array
+   mutable std::mutex                 fMutex;      //! mutex for thread data
+
    TGeoXtru(const TGeoXtru&);
    TGeoXtru& operator=(const TGeoXtru&);
 

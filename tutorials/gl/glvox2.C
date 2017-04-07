@@ -1,47 +1,35 @@
-// This macro demonstrates how to use "glcol" option for TH3
-// and how to create user defined TRANSFER FUNCTION:
-// transfer function maps bin value to voxel's opacity.
-// codomain is [0, 1] (1. - non-transparent, 0.5 is semitransparent, etc.)
-// To pass transparency function into painting algorithm, you have to:
-// 1) Create TF1 object (with symbolic expression like "0.5 * (sin(x) + 1)":
-// ...
-// TF1 * tf = new TF1("TransferFunction", "0.5 * (sin(x) + 1)", -10., 10.);
-// ...
-// IMPORTANT, the name of TF1 object MUST be "TransferFunction".
-// 2) Add this function into a hist's list of functions:
-// ...
-// TList * lof = hist->GetListOfFunctions();
-// if (lof) lof->Add(tf);
-// ...
-// It's also possible to use your own function and pass it into TF1, please read
-// TF1 documentation to learn how.
-//
-// This macro is to be compiled: TF1 is extremely slow with CINT's function
-// as an argument.
-//
-//
-// Author: Timur Pocheptsov
-//
+/// \file
+/// \ingroup tutorial_gl
+/// This macro demonstrates how to use "glcol" option for TH3
+/// and how to create user defined TRANSFER FUNCTION:
+/// transfer function maps bin value to voxel's opacity.
+/// codomain is [0, 1] (1. - non-transparent, 0.5 is semitransparent, etc.)
+/// To pass transparency function into painting algorithm, you have to:
+/// 1. Create TF1 object (with symbolic expression like "0.5 * (sin(x) + 1)":
+/// ~~~{.cpp}
+/// ...
+/// TF1 * tf = new TF1("TransferFunction", "0.5 * (sin(x) + 1)", -10., 10.);
+/// ...
+/// ~~~
+/// IMPORTANT, the name of TF1 object MUST be "TransferFunction".
+/// 2. Add this function into a hist's list of functions:
+/// ~~~{.cpp}
+/// ...
+/// TList * lof = hist->GetListOfFunctions();
+/// if (lof) lof->Add(tf);
+/// ...
+/// ~~~
+/// It's also possible to use your own function and pass it into TF1, please read
+/// TF1 documentation to learn how.
+///
+/// This macro is to be compiled: TF1 is extremely slow with CINT's function
+/// as an argument.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-
-{
-  //gSystem->AddIncludePath("-I$ROOTSYS/include");
-   TString macroName;
-   const char *rootSysPath = gSystem->Getenv("ROOTSYS");
-   if (rootSysPath) {
-      macroName = rootSysPath;
-      if (!macroName.EndsWith("/") && !macroName.EndsWith("\\"))
-         macroName += "/";
-      macroName += "tutorials/gl/";
-   }
-
-   macroName += "glvox2.C++";
-   gROOT->LoadMacro(macroName.Data());
-   glvox2();
-}
-
-#else
 
 #include "TStyle.h"
 #include "TList.h"
@@ -112,9 +100,7 @@ void glvox2()
    }
 
    gStyle->SetCanvasPreferGL(1);
-   gStyle->SetPalette(1);
 
    hist->Draw("glcol");
 }
 
-#endif

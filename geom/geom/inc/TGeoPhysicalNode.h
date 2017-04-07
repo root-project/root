@@ -12,17 +12,11 @@
 #ifndef ROOT_TGeoPhysicalNode
 #define ROOT_TGeoPhysicalNode
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 // forward declarations
 class TGeoHMatrix;
@@ -102,7 +96,7 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 //                                                                           //
-// TGeoPNEntry - class representing phisical node entry having a unique name //
+// TGeoPNEntry - class representing physical node entry having a unique name //
 //   associated to a path.                                                   //
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////

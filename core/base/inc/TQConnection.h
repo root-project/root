@@ -27,67 +27,76 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
-#include "TList.h"
-#endif
-#ifndef ROOT_TQObject
-#include "TQObject.h"
-#endif
-#ifndef ROOT_Varargs
-#include "Varargs.h"
-#endif
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
+#include "TQObject.h"
+#include "TVirtualQConnection.h"
 
 class TQSlot;
 
 
-class TQConnection : public TList, public TQObject {
-
+class TQConnection : public TVirtualQConnection, public TQObject {
 protected:
-   TQSlot  *fSlot;       // slot-method calling interface
-   void    *fReceiver;   // ptr to object to which slot is applied
+   TQSlot  *fSlot = 0;       // slot-method calling interface
+   void    *fReceiver = 0;   // ptr to object to which slot is applied
    TString  fClassName;  // class name of the receiver
 
-   virtual void PrintCollectionHeader(Option_t* option) const;
+   virtual void PrintCollectionHeader(Option_t* option) const override;
 
    Bool_t      CheckSlot(Int_t nargs) const;
    void       *GetSlotAddress() const;
    CallFunc_t *LockSlot() const;
    void        UnLockSlot(TQSlot *) const;
+   virtual CallFunc_t *GetSlotCallFunc() const override;
 
    TQConnection &operator=(const TQConnection &) = delete;
 
+   virtual void SetArg(Long_t param) override { SetArgImpl(param); }
+   virtual void SetArg(ULong_t param) override { SetArgImpl(param); }
+   virtual void SetArg(Float_t param) override { SetArgImpl(param); }
+   virtual void SetArg(Double_t param) override { SetArgImpl(param); }
+   virtual void SetArg(Long64_t param) override { SetArgImpl(param); }
+   virtual void SetArg(ULong64_t param) override { SetArgImpl(param); }
+   virtual void SetArg(const char * param) override { SetArgImpl(param); }
+
+   virtual void SetArg(const Long_t *params, Int_t nparam = -1) override;
+
+   template <typename T> void SetArgImpl(T arg)
+   {
+      CallFunc_t *func = GetSlotCallFunc();
+      gInterpreter->CallFunc_SetArg(func, arg);
+   }
+
+   virtual void SendSignal() override
+   {
+      CallFunc_t *func = LockSlot();
+
+      void *address = GetSlotAddress();
+      TQSlot *s = fSlot;
+
+      gInterpreter->CallFunc_Exec(func, address);
+
+      UnLockSlot(s);
+   };
+
 public:
-   TQConnection();
+   TQConnection() {}
    TQConnection(TClass* cl, void *receiver, const char *method_name);
    TQConnection(const char *class_name, void *receiver,
                 const char *method_name);
    TQConnection(const TQConnection &con);
    virtual ~TQConnection();
 
-   const char *GetName() const;
+   const char *GetName() const override;
    void *GetReceiver() const { return fReceiver; }
    const char *GetClassName() const { return fClassName; }
-   void Destroyed();         // *SIGNAL*
-   void ExecuteMethod();
+   void Destroyed() override;         // *SIGNAL*
 
    void ExecuteMethod(Int_t nargs, va_list va) = delete;
-
    template <typename... T> inline void ExecuteMethod(const T&... params)
    {
       if (!CheckSlot(sizeof...(params))) return;
-
-      CallFunc_t *func = LockSlot();
-
-      void *address = GetSlotAddress();
-      TQSlot *s = fSlot;
-
-      gInterpreter->CallFunc_SetArguments(func,params...);
-      gInterpreter->CallFunc_Exec(func, address);
-
-      UnLockSlot(s);
+      SetArgs(params...);
+      SendSignal();
    }
 
    template <typename... T> inline void ExecuteMethod(Int_t /* nargs */, const T&... params)
@@ -95,21 +104,19 @@ public:
       ExecuteMethod(params...);
    }
 
-   //void ExecuteMethod(Int_t nargs, va_list va);
+   // FIXME: Remove and fallback to the variadic template.
+   // FIXME: Remove duplication of code in SendSignal and ExecuteMethod overloads.
+   void ExecuteMethod();
    void ExecuteMethod(Long_t param);
    void ExecuteMethod(Long64_t param);
    void ExecuteMethod(Double_t param);
    void ExecuteMethod(Long_t *params, Int_t nparam = -1);
    void ExecuteMethod(const char *params);
-   void ls(Option_t *option="") const;
+   void ls(Option_t *option="") const override;
 
-   ClassDef(TQConnection,0) // Internal class used in the object communication mechanism
+   ClassDefOverride(TQConnection,0) // Internal class used in the object communication mechanism
 };
 
 R__EXTERN char *gTQSlotParams; // used to pass string parameters
-
-#ifndef ROOT_TQObjectEmitVA
-#include "TQObjectEmitVA.h"
-#endif
 
 #endif

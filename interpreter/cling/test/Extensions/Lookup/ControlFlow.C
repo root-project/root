@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %cling -I%p | FileCheck %s
+// RUN: cat %s | %built_cling -I%p | FileCheck %s
 
 // The tests shows the basic control flow structures that contain dynamic
 // expressions. There are several cases that could be distinguished.
@@ -40,6 +40,7 @@ if (h->PrintArray(a, 5)) { // runtime result type bool
   printf("\n%s\n", "Array Printed Successfully!");
 }
 // CHECK: 12345
+// CHECK: Replaced in then.
 // CHECK: Array Printed Successfully!
 
 int b, c = 1;

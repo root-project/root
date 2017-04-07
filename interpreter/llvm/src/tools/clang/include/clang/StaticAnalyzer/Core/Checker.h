@@ -25,10 +25,6 @@ namespace ento {
 
 namespace check {
 
-struct _VoidCheck {
-  static void _register(void *checker, CheckerManager &mgr) { }
-};
-
 template <typename DECL>
 class ASTDecl {
   template <typename CHECKER>
@@ -135,6 +131,21 @@ public:
   }
 };
 
+class ObjCMessageNil {
+  template <typename CHECKER>
+  static void _checkObjCMessage(void *checker, const ObjCMethodCall &msg,
+                                CheckerContext &C) {
+    ((const CHECKER *)checker)->checkObjCMessageNil(msg, C);
+  }
+
+public:
+  template <typename CHECKER>
+  static void _register(CHECKER *checker, CheckerManager &mgr) {
+    mgr._registerForObjCMessageNil(
+     CheckerManager::CheckObjCMessageFunc(checker, _checkObjCMessage<CHECKER>));
+  }
+};
+
 class PostObjCMessage {
   template <typename CHECKER>
   static void _checkObjCMessage(void *checker, const ObjCMethodCall &msg,
@@ -224,6 +235,20 @@ public:
   static void _register(CHECKER *checker, CheckerManager &mgr) {
     mgr._registerForEndAnalysis(
      CheckerManager::CheckEndAnalysisFunc(checker, _checkEndAnalysis<CHECKER>));
+  }
+};
+
+class BeginFunction {
+  template <typename CHECKER>
+  static void _checkBeginFunction(void *checker, CheckerContext &C) {
+    ((const CHECKER *)checker)->checkBeginFunction(C);
+  }
+
+public:
+  template <typename CHECKER>
+  static void _register(CHECKER *checker, CheckerManager &mgr) {
+    mgr._registerForBeginFunction(CheckerManager::CheckBeginFunctionFunc(
+        checker, _checkBeginFunction<CHECKER>));
   }
 };
 
@@ -476,49 +501,22 @@ public:
   CheckerProgramPointTag(const CheckerBase *Checker, StringRef Msg);
 };
 
-template <typename CHECK1, typename CHECK2=check::_VoidCheck,
-          typename CHECK3=check::_VoidCheck, typename CHECK4=check::_VoidCheck,
-          typename CHECK5=check::_VoidCheck, typename CHECK6=check::_VoidCheck,
-          typename CHECK7=check::_VoidCheck, typename CHECK8=check::_VoidCheck,
-          typename CHECK9=check::_VoidCheck, typename CHECK10=check::_VoidCheck,
-          typename CHECK11=check::_VoidCheck,typename CHECK12=check::_VoidCheck,
-          typename CHECK13=check::_VoidCheck,typename CHECK14=check::_VoidCheck,
-          typename CHECK15=check::_VoidCheck,typename CHECK16=check::_VoidCheck,
-          typename CHECK17=check::_VoidCheck,typename CHECK18=check::_VoidCheck,
-          typename CHECK19=check::_VoidCheck,typename CHECK20=check::_VoidCheck,
-          typename CHECK21=check::_VoidCheck,typename CHECK22=check::_VoidCheck,
-          typename CHECK23=check::_VoidCheck,typename CHECK24=check::_VoidCheck>
-class Checker;
-
-template <>
-class Checker<check::_VoidCheck>
-  : public CheckerBase 
-{
-  virtual void anchor();
-public:
-  static void _register(void *checker, CheckerManager &mgr) { }
-};
-
-template <typename CHECK1, typename CHECK2, typename CHECK3, typename CHECK4,
-          typename CHECK5, typename CHECK6, typename CHECK7, typename CHECK8,
-          typename CHECK9, typename CHECK10,typename CHECK11,typename CHECK12,
-          typename CHECK13,typename CHECK14,typename CHECK15,typename CHECK16,
-          typename CHECK17,typename CHECK18,typename CHECK19,typename CHECK20,
-          typename CHECK21,typename CHECK22,typename CHECK23,typename CHECK24>
-class Checker
-    : public CHECK1,
-      public Checker<CHECK2, CHECK3, CHECK4, CHECK5, CHECK6, CHECK7,
-                     CHECK8, CHECK9, CHECK10,CHECK11,CHECK12,CHECK13,
-                     CHECK14,CHECK15,CHECK16,CHECK17,CHECK18,CHECK19,
-                     CHECK20,CHECK21,CHECK22,CHECK23,CHECK24> {
+template <typename CHECK1, typename... CHECKs>
+class Checker : public CHECK1, public CHECKs..., public CheckerBase {
 public:
   template <typename CHECKER>
   static void _register(CHECKER *checker, CheckerManager &mgr) {
     CHECK1::_register(checker, mgr);
-    Checker<CHECK2, CHECK3, CHECK4, CHECK5, CHECK6, CHECK7,
-            CHECK8, CHECK9, CHECK10,CHECK11,CHECK12,CHECK13,
-            CHECK14,CHECK15,CHECK16,CHECK17,CHECK18,CHECK19,
-            CHECK20,CHECK21,CHECK22,CHECK23,CHECK24>::_register(checker, mgr);
+    Checker<CHECKs...>::_register(checker, mgr);
+  }
+};
+
+template <typename CHECK1>
+class Checker<CHECK1> : public CHECK1, public CheckerBase {
+public:
+  template <typename CHECKER>
+  static void _register(CHECKER *checker, CheckerManager &mgr) {
+    CHECK1::_register(checker, mgr);
   }
 };
 
@@ -545,6 +543,10 @@ struct ImplicitNullDerefEvent {
   bool IsLoad;
   ExplodedNode *SinkNode;
   BugReporter *BR;
+  // When true, the dereference is in the source code directly. When false, the
+  // dereference might happen later (for example pointer passed to a parameter
+  // that is marked with nonnull attribute.)
+  bool IsDirectDereference;
 };
 
 /// \brief A helper class which wraps a boolean value set to false by default.

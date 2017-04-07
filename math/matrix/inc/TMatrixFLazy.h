@@ -25,15 +25,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTLazy
 #include "TMatrixTLazy.h"
-#endif
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
-#ifndef ROOT_TMatrixFSymfwd
 #include "TMatrixFSymfwd.h"
-#endif
 
 typedef TMatrixTLazy      <Float_t> TMatrixFLazy;
 typedef TMatrixTSymLazy   <Float_t> TMatrixFSymLazy;

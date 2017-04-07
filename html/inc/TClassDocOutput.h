@@ -12,12 +12,12 @@
 #ifndef ROOT_TClassDocOutput
 #define ROOT_TClassDocOutput
 
-#ifndef ROOT_TDocOutput
+#include "Rtypes.h"
 #include "TDocOutput.h"
-#endif
 
 class TDocParser;
 class TDocMethodWrapper;
+class TList;
 
 class TClassDocOutput: public TDocOutput {
 protected:

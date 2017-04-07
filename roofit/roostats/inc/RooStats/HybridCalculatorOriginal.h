@@ -16,35 +16,29 @@
 #ifndef ROOSTATS_HybridCalculatorOriginal
 #define ROOSTATS_HybridCalculatorOriginal
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
 #include <vector>
 
 
-#ifndef ROOSTATS_HybridResult
 #include "RooStats/HybridResult.h"
-#endif
 
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
 
-class TH1; 
+class TH1;
 
 namespace RooStats {
 
-   class HybridResult; 
+   class HybridResult;
 
    class HybridCalculatorOriginal : public HypoTestCalculator , public TNamed {
 
    public:
 
 
-      /// Dummy Constructor with only name 
+      /// Dummy Constructor with only name
       explicit HybridCalculatorOriginal(const char *name = 0);
-      
+
       /// Constructor for HybridCalculator from pdf instances but without a data-set
       HybridCalculatorOriginal(RooAbsPdf& sb_model,
                        RooAbsPdf& b_model,
@@ -64,12 +58,12 @@ namespace RooStats {
 
       /// Constructor passing a ModelConfig for the SBmodel and a ModelConfig for the B Model
       HybridCalculatorOriginal(RooAbsData& data,
-                       const ModelConfig& sb_model, 
+                       const ModelConfig& sb_model,
                        const ModelConfig& b_model,
                        bool GenerateBinned = false, int testStatistics = 1, int ntoys = 1000 );
 
 
-   public: 
+   public:
 
       /// Destructor of HybridCalculator
       virtual ~HybridCalculatorOriginal();
@@ -102,12 +96,12 @@ namespace RooStats {
       virtual void SetAlternateParameters(const RooArgSet&) {}  // not needed
 
       // additional methods specific for HybridCalculator
-      // set a  prior pdf for the nuisance parameters 
-      void SetNuisancePdf(RooAbsPdf & prior_pdf) {          
-         fPriorPdf = &prior_pdf; 
+      // set a  prior pdf for the nuisance parameters
+      void SetNuisancePdf(RooAbsPdf & prior_pdf) {
+         fPriorPdf = &prior_pdf;
          fUsePriorPdf = true; // if set by default turn it on
-      } 
-      
+      }
+
       // set the nuisance parameters to be marginalized
       void SetNuisanceParameters(const RooArgSet & params) { fNuisanceParameters = &params; }
 
@@ -120,7 +114,7 @@ namespace RooStats {
       // control use of the pdf for the nuisance parameter and marginalize them
       void UseNuisance(bool on = true) { fUsePriorPdf = on; }
 
-      // control to use bin data generation 
+      // control to use bin data generation
       void SetGenerateBinned(bool on = true) { fGenerateBinned = on; }
 
       /// set the desired test statistics:
@@ -142,7 +136,7 @@ namespace RooStats {
       void RunToys(std::vector<double>& bVals, std::vector<double>& sbVals, unsigned int nToys, bool usePriors) const;
 
       // check input parameters before performing the calculation
-      bool DoCheckInputs() const; 
+      bool DoCheckInputs() const;
 
       unsigned int fTestStatisticsIdx; // Index of the test statistics to use
       unsigned int fNToys;            // number of Toys MC
@@ -151,9 +145,9 @@ namespace RooStats {
       mutable RooArgList* fObservables; // Collection of the observables of the model
       const RooArgSet* fNuisanceParameters;   // Collection of the nuisance parameters in the model
       RooAbsPdf* fPriorPdf;   // Prior PDF of the nuisance parameters
-      RooAbsData * fData;     // pointer to the data sets 
+      RooAbsData * fData;     // pointer to the data sets
       bool fGenerateBinned;   //Flag to control binned generation
-      bool  fUsePriorPdf;               // use a prior for nuisance parameters  
+      bool  fUsePriorPdf;               // use a prior for nuisance parameters
       bool fTmpDoExtended;
 
 //       TString fSbModelName;   // name of pdf of the signal+background model

@@ -24,9 +24,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTUBS
 #include "TTUBS.h"
-#endif
 
 class TCTUB : public TTUBS {
 

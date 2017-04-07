@@ -37,13 +37,13 @@
 
 ClassImp(TAttLineEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of line attributes GUI.
+
 TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of line attributes GUI.
-
    enum ELineWid {
       kCOLOR,
       kLINE_WIDTH,
@@ -94,17 +94,18 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of line editor.
+
 TAttLineEditor::~TAttLineEditor()
 {
-   // Destructor of line editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TAttLineEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
    fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttLineEditor", this, "DoLineAlphaColor(ULong_t)");
    fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)");
@@ -117,11 +118,11 @@ void TAttLineEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used line attributes.
+
 void TAttLineEditor::SetModel(TObject* obj)
 {
-   // Pick up the used line attributes.
-
    TAttLine *attline = dynamic_cast<TAttLine*>(obj);
    if (!attline) return;
 
@@ -150,11 +151,11 @@ void TAttLineEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the line color.
+
 void TAttLineEditor::DoLineColor(Pixel_t color)
 {
-   // Slot connected to the line color.
-
    if (fAvoidSignal) return;
    fAttLine->SetLineColor(TColor::GetColor(color));
 
@@ -167,11 +168,11 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the color with alpha.
+
 void TAttLineEditor::DoLineAlphaColor(ULong_t p)
 {
-   // Slot connected to the color with alpha.
-
    TColor *color = (TColor *)p;
 
    if (fAvoidSignal) return;
@@ -182,22 +183,22 @@ void TAttLineEditor::DoLineAlphaColor(ULong_t p)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the line style.
+
 void TAttLineEditor::DoLineStyle(Int_t style)
 {
-   // Slot connected to the line style.
-
    if (fAvoidSignal) return;
    fAttLine->SetLineStyle(style);
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the line width.
+
 void TAttLineEditor::DoLineWidth(Int_t width)
 {
-   // Slot connected to the line width.
-
    if (fAvoidSignal) return;
    if (dynamic_cast<TGraph*>(fAttLine)) {
       Int_t graphLineWidth = 100*Int_t(fAttLine->GetLineWidth()/100);
@@ -212,11 +213,11 @@ void TAttLineEditor::DoLineWidth(Int_t width)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value from the entry field.
+
 void TAttLineEditor::DoAlphaField()
 {
-   // Slot to set the alpha value from the entry field.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
@@ -226,11 +227,11 @@ void TAttLineEditor::DoAlphaField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value
+
 void TAttLineEditor::DoAlpha()
 {
-   // Slot to set the alpha value
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
@@ -240,11 +241,11 @@ void TAttLineEditor::DoAlpha()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set alpha value online.
+
 void TAttLineEditor::DoLiveAlpha(Int_t a)
 {
-   // Slot to set alpha value online.
-
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
@@ -259,11 +260,11 @@ void TAttLineEditor::DoLiveAlpha(Int_t a)
    Update();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update alpha value on click on Slider
+
 void TAttLineEditor::GetCurAlpha()
 {
-   // Slot to update alpha value on click on Slider
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {

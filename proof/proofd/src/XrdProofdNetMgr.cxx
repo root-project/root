@@ -49,11 +49,11 @@
 #include <limits>
 #include <math.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send up a message from the server
+
 int MessageSender(const char *msg, int len, void *arg)
 {
-   // Send up a message from the server
-
    XrdProofdResponse *r = (XrdProofdResponse *) arg;
    if (r) {
       return r->Send(kXR_attn, kXPD_srvmsg, 2, (char *) msg, len);
@@ -61,12 +61,13 @@ int MessageSender(const char *msg, int len, void *arg)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
                                  XrdProtocol_Config *pi, XrdSysError *e)
    : XrdProofdConfig(pi->ConfigFN, e)
 {
-   // Constructor
    fMgr = mgr;
    fResourceType = kRTNone;
    fPROOFcfg.fName = "";
@@ -81,23 +82,16 @@ XrdProofdNetMgr::XrdProofdNetMgr(XrdProofdManager *mgr,
    fWorkerUsrCfg = 0;
    fRequestTO = 30;
    fBonjourEnabled = false;
-#if defined(BUILD_BONJOUR)
-   char *host = XrdSysDNS::getHostName();
-   fBonjourName = host ? host : "";
-   SafeFree(host);
-   fBonjourCores = XrdProofdAux::GetNumCPUs();
-   fBonjourRequestedSrvType = kBonjourSrvDisabled;
-#endif
 
    // Configuration directives
    RegisterDirectives();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register config directives
+
 void XrdProofdNetMgr::RegisterDirectives()
 {
-   // Register config directives
-
    Register("adminreqto", new XrdProofdDirective("adminreqto", this, &DoDirectiveClass));
    Register("resource", new XrdProofdDirective("resource", this, &DoDirectiveClass));
    Register("worker", new XrdProofdDirective("worker", this, &DoDirectiveClass));
@@ -105,11 +99,11 @@ void XrdProofdNetMgr::RegisterDirectives()
    Register("localwrks", new XrdProofdDirective("localwrks", (void *)&fNumLocalWrks, &DoDirectiveInt));
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofdNetMgr::~XrdProofdNetMgr()
 {
-   // Destructor
-
    // Cleanup the worker lists
    // (the nodes list points to the same object, no cleanup is needed)
    std::list<XrdProofWorker *>::iterator w = fRegWorkers.begin();
@@ -125,11 +119,12 @@ XrdProofdNetMgr::~XrdProofdNetMgr()
    fWorkers.clear();
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run configuration and parse the entered config directives.
+/// Return 0 on success, -1 on error
+
 int XrdProofdNetMgr::Config(bool rcf)
 {
-   // Run configuration and parse the entered config directives.
-   // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::Config")
 
    // Lock the method to protect the lists.
@@ -208,11 +203,12 @@ int XrdProofdNetMgr::Config(bool rcf)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the priorities of the active sessions.
+
 int XrdProofdNetMgr::DoDirective(XrdProofdDirective *d,
                                  char *val, XrdOucStream *cfg, bool rcf)
 {
-   // Update the priorities of the active sessions.
    XPDLOC(NMGR, "NetMgr::DoDirective")
 
    if (!d)
@@ -234,7 +230,8 @@ int XrdProofdNetMgr::DoDirective(XrdProofdDirective *d,
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int XrdProofdNetMgr::DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool)
 {
    XPDLOC(NMGR, "NetMgr::DoDirectiveBonjour");
@@ -246,84 +243,15 @@ int XrdProofdNetMgr::DoDirectiveBonjour(char *val, XrdOucStream *cfg, bool)
       // undefined inputs
       return -1;
 
-#if defined(BUILD_BONJOUR)
-   const char * cp = NULL;
-
-   // The first directive must be the 'bonjour role'.
-   if (!strcmp("register", val) || !strcmp("publish", val)) {
-      // register and publish are synonyms.
-      fBonjourRequestedSrvType = kBonjourSrvRegister;
-   } else if (!strcmp("discover", val) || !strcmp("browse", val)) {
-      fBonjourRequestedSrvType = kBonjourSrvBrowse;
-   } else if (!strcmp("both", val) || !strcmp("all", val)) {
-      fBonjourRequestedSrvType = kBonjourSrvBoth;
-   } else {
-      TRACE(XERR, "Bonjour directive unknown");
-      return -1;
-   }
-
-   // Continue reading words until the end of the logical line. This a descending
-   // recursive parser (LR). Doing this in that way allows users to use a custom
-   // order of directives and improves xrootd's if/else/fi compatibility.
-   while ((val = cfg->GetWord()) != NULL) {
-      // Construct an XrdString for a more confortable analysis.
-      XrdOucString s(val);
-      // If we have line, parse the directive according to the personal rules of
-      // each one. Note that this method allows. It would be more elegant with
-      // switch statment, but we need to check only the beginning of the words.
-      if (s.beginswith("servicetype=")) {
-         cp = index(val, '=');
-         cp++;
-         fBonjourServiceType.assign(cp, 0);
-         TRACE(DBG, "custom service type is " << cp);
-      } else if (s.beginswith("name=")) {
-         cp = index(val, '=');
-         cp++;
-         fBonjourName.assign(cp, 0);
-         TRACE(DBG, "custom Bonjour name is " << cp);
-      } else if (s.beginswith("domain=")) {
-         cp = index(val, '=');
-         cp++;
-         fBonjourDomain.assign(cp, 0);
-         TRACE(DBG, "custom Bonjour domain is " << cp);
-      } else if (s.beginswith("cores=")) {
-         cp = index(val, '=');
-         cp++;
-         fBonjourCores = strtol(cp, NULL, 10); // atoi() is not thread-safe.
-         if (fBonjourCores <= 0) {
-            TRACE(XERR, "number of cores not valid: " << fBonjourCores);
-            TRACE(XERR, "Bonjour module not loaded!");
-            return -1;
-         }
-         TRACE(DBG, "custom number of cores is " << cp);
-      } else {
-         TRACE(XERR, "Bonjour directive unknown");
-         cfg->RetToken();
-         return -1;
-      }
-   }
-   TRACE(DBG, "custom Bonjour name is '" << fBonjourName <<"'");
-
-   // Check the compatibility of the roles and give a warning to the user.
-   if (!XrdProofdNetMgr::CheckBonjourRoleCoherence(fMgr->SrvType(), GetBonjourRequestedServiceType())) {
-      TRACE(XERR, "Warning: xpd.role directive and xpd.bonjour service selection are not compatible");
-   }
-
-   // Register the service on bonjour.
-   return LoadBonjourModule(fBonjourRequestedSrvType);
-
-#else
-
    TRACE(XERR, "Bonjour support is disabled");
    return -1;
-
-#endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Indices (this will be used twice).
+
 void XrdProofdNetMgr::BalanceNodesOrder()
 {
-   // Indices (this will be used twice).
    list<XrdProofWorker *>::const_iterator iter, iter2;
    list<XrdProofWorker *>::iterator iter3; // Not const, less efficient.
    // Map to store information of the balancer.
@@ -432,235 +360,11 @@ void XrdProofdNetMgr::BalanceNodesOrder()
    fWorkers = tempNodes;
 }
 
-//______________________________________________________________________________
-#if defined(BUILD_BONJOUR)
-void * XrdProofdNetMgr::ProcessBonjourUpdate(void * context)
-{
-   XrdProofdNetMgr * mgr;
-   std::list<XrdOucBonjourNode *> nodes;
-   std::list<XrdOucBonjourNode *>::const_iterator idx;
-   std::list<XrdProofWorker *>::iterator w, w2;
-   const XrdOucBonjourNode * i;
-   XrdProofWorker * worker;
-   bool haveit;
-   int cores = -1;
-   int recordLength;
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'adminreqto' directive
 
-   XPDLOC(NMGR, "NetMgr::ProcessBonjourUpdate");
-   TRACE(DBG, "Updating the network topology");
-
-   mgr = static_cast<XrdProofdNetMgr *>(context);
-
-   // Lock the method to protect the lists.
-   XrdSysMutexHelper mhp(mgr->fMutex);
-
-   // If there are no workers registered on the fRegWorkers list, this is the
-   // first time we run this updater, so we must create the default node. If not
-   // we can mark all the nodes as inactive and then look for the Bonjour updates.
-   if (mgr->fRegWorkers.size() < 1) {
-      XrdOucString mm("master ", 128);
-      mm += mgr->fMgr->Host();
-      mm += " port=";
-      mm += mgr->fMgr->Port();
-      mgr->fRegWorkers.push_back(new XrdProofWorker(mm.c_str()));
-   } else {
-      // Deactivate all current active workers
-      w = mgr->fRegWorkers.begin();
-      // Skip the master line
-      w++;
-      for (; w != mgr->fRegWorkers.end(); w++) {
-         (*w)->fActive = false;
-      }
-   }
-
-   // Update the list with the new nodes.
-   // Get the list, and get it locked.
-   mgr->fBonjourManager->LockNodeList();
-   nodes = mgr->fBonjourManager->GetCurrentNodeList();
-
-   for (idx = nodes.begin(); idx != nodes.end(); idx++) {
-      // Get the current node.
-      i = *idx;
-      (*i).Print();
-      // Must be not empty
-      if (!i->GetHostName() || (i->GetHostName() && strlen(i->GetHostName()) <= 0)) {
-         TRACE(ALL,"bonjour list node: empty!");
-         continue;
-      }
-      TRACE(DBG, "parsing info for node: " << i->GetHostName() << ", port: " << i->GetPort());
-      // Filter by service type getting rid of the trailing '.'.
-      if (i->GetBonjourRecord().MatchesRegisteredType(mgr->GetBonjourServiceType())) {
-         // Check if we have already it
-         w = mgr->fRegWorkers.begin();
-         w++;
-         haveit = 0;
-         while (w != mgr->fRegWorkers.end()) {
-            TRACE(HDBG,"registered node: "<< (*w)->fHost <<", port: "<<(*w)->fPort);
-            if ((*w)->fHost == i->GetHostName() && (*w)->fPort == i->GetPort()) {
-               (*w)->fActive = true;
-               haveit = 1;
-
-               // Check if the node is on the fWorkers list.
-               if (std::find(mgr->fWorkers.begin(), mgr->fWorkers.end(), *w) == mgr->fWorkers.end()) {
-                  // Check for the cores of the node.
-                  if (i->GetBonjourRecord().GetTXTValue("cores", recordLength) != NULL) {
-                     XrdOucString trimmed(i->GetBonjourRecord().GetTXTValue("cores", recordLength), recordLength);
-                     cores = strtol(trimmed.c_str(), NULL, 10);
-                  } else {
-                     cores = 1;
-                  }
-                  // The node is returning from being not available, maybe with
-                  // a different number of cores, so re-check the number of it.
-                  TRACE(HDBG, " adding "<<cores<<" for worker '"<<(*w)->fHost<<"'");
-                  for (int c = 0; c < cores; c++) {
-                     // If we don't have the node on the fRegWorkers list, it will not
-                     // be also on the de fWorkers list.
-                     mgr->fWorkers.push_back(*w);
-                  }
-               } else {
-                  TRACE(DBG, " worker(s) '"<<(*w)->fHost<<"' already in the list");
-               }
-
-               break;
-            }
-            // Go to next
-            w++;
-         }
-         // If we do not have it, build a new worker object
-         if (!haveit) {
-            // Create the new node.
-            worker = new XrdProofWorker();
-            worker->fHost = i->GetHostName();
-            worker->fPort = i->GetPort();
-            worker->fActive = true;
-            if (i->GetBonjourRecord().GetTXTValue("nodetype", recordLength) != NULL) {
-               worker->fType = i->GetBonjourRecord().GetTXTValue("nodetype", recordLength)[0];
-            }
-            // Check for the cores of the node.
-            const char *pbr = i->GetBonjourRecord().GetTXTValue("cores", recordLength);
-            if (recordLength > 0) {
-               char *pc = new char[recordLength + 1];
-               memcpy(pc, pbr, recordLength);
-               pc[recordLength] = 0;
-               cores = strtol(pbr, NULL, 10);
-               delete [] pc;
-            } else {
-               TRACE(ALL, "no information about the cores available ... skip");
-               continue;
-            }
-            // Add the node to the list the times needed.
-            mgr->fRegWorkers.push_back(worker);
-            for (int c = 0; c < cores; c++) {
-               // If we don't have the node on the fRegWorkers list, it will not
-               // be also on the de fWorkers list.
-               mgr->fWorkers.push_back(worker);
-            }
-         }
-      }
-   }
-
-   // Remove the lock on the Bonjour list.
-   mgr->fBonjourManager->UnLockNodeList();
-
-   // Remove nodes not active from fWorkers list.
-   w = mgr->fRegWorkers.begin();
-   w++;
-   while (w != mgr->fRegWorkers.end()) {
-      if (!((*w)->fActive)) {
-         mgr->fWorkers.remove(*w);
-      }
-      w++;
-   }
-
-   // Process list.
-   mgr->FindUniqueNodes();
-
-   // Balance order.
-   mgr->BalanceNodesOrder();
-
-   return NULL;
-}
-#endif
-
-//______________________________________________________________________________
-#if defined(BUILD_BONJOUR)
-int XrdProofdNetMgr::LoadBonjourModule(int srvtype)
-{
-   XPDLOC(NMGR, "NetMgr::LoadBonjourModule");
-
-   // Get the reference to the bonjour manager. Store it to optimze the
-   // getInstance() usage.
-   fBonjourManager = &(XrdOucBonjourFactory::FactoryByPlatform()->GetBonjourManager());
-
-   // Register the service if needed.
-   if (srvtype == kBonjourSrvRegister || srvtype == kBonjourSrvBoth) {
-      // Default service name or a user customized
-      XrdOucBonjourRecord record(GetBonjourName(), GetBonjourServiceType(), GetBonjourDomain());
-
-      // Put the extra information on the record.
-      if (XrdProofdProtocol::Mgr())
-         switch (XrdProofdProtocol::Mgr()->SrvType()) {
-            case kXPD_TopMaster:
-            case kXPD_Master:
-               record.AddTXTRecord("nodetype", "S");
-               break;
-            case kXPD_AnyServer: // Altough we can be master, publish as worker.
-            case kXPD_Worker:
-               record.AddTXTRecord("nodetype", "W");
-               break;
-            default:
-               TRACE(XERR, "TXT node type is not known '" << XrdProofdProtocol::Mgr()->SrvType() << "'");
-         }
-
-      // Put the number of workers desired
-      record.AddTXTRecord("cores", fBonjourCores);
-
-      // Register the service.
-      if (fBonjourManager->RegisterService(record, fMgr->Port()) == 0) {
-         TRACE(ALL, "Bonjour service was published OK");
-      } else {
-         TRACE(XERR, "Bonjour service could not be published");
-         return -1;
-      }
-   }
-
-   // Subscribe to the discoverage thread.
-   if (srvtype == kBonjourSrvBrowse || srvtype == kBonjourSrvBoth) {
-      fBonjourEnabled = true;
-      fBonjourManager->SubscribeForUpdates(GetBonjourServiceType(), ProcessBonjourUpdate, this);
-   }
-
-   return 0;
-}
-#endif
-
-//______________________________________________________________________________
-#if defined(BUILD_BONJOUR)
-bool XrdProofdNetMgr::CheckBonjourRoleCoherence(int xrdRole, int bonjourSrvType)
-{
-   // Bonjour services:       Discover-Publish-Both   ALLOWED COMBINATIONS
-   const bool allowed[4][3] = {{true,  true,  true }, // -1: AnyServer
-                               {false, true,  false}, //  0: Worker
-                               {true,  true,  true }, //  1: Submaster
-                               {true,  false, false}};//  2: Master & Supermaster
-
-   if (xrdRole < -1 || xrdRole > 2 || bonjourSrvType < -1 || bonjourSrvType > 2)
-      return false;
-
-   if (bonjourSrvType == kBonjourSrvDisabled)
-      return true; // Avoids warnings when Bonjour is not enabled.
-
-   // Add 1 to role since the constants defined in XProofProtocol.h are between
-   // -1 and 2.
-   return allowed[xrdRole + 1][bonjourSrvType];
-}
-#endif
-
-//______________________________________________________________________________
 int XrdProofdNetMgr::DoDirectiveAdminReqTO(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'adminreqto' directive
-
    if (!val)
       // undefined inputs
       return -1;
@@ -677,10 +381,11 @@ int XrdProofdNetMgr::DoDirectiveAdminReqTO(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'resource' directive
+
 int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'resource' directive
    XPDLOC(NMGR, "NetMgr::DoDirectiveResource")
 
    if (!val || !cfg)
@@ -724,10 +429,11 @@ int XrdProofdNetMgr::DoDirectiveResource(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process 'worker' directive
+
 int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
 {
-   // Process 'worker' directive
    XPDLOC(NMGR, "NetMgr::DoDirectiveWorker")
 
    if (!val || !cfg)
@@ -794,11 +500,12 @@ int XrdProofdNetMgr::DoDirectiveWorker(char *val, XrdOucStream *cfg, bool)
    return 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast a ctrlc interrupt
+/// Return 0 on success, -1 on error
+
 int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
 {
-   // Broadcast a ctrlc interrupt
-   // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::BroadcastCtrlC")
 
    int rc = 0;
@@ -859,12 +566,13 @@ int XrdProofdNetMgr::BroadcastCtrlC(const char *usr)
    return rc;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast request to known potential sub-nodes.
+/// Return 0 on success, -1 on error
+
 int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
                                XrdProofdResponse *r, bool notify, int subtype)
 {
-   // Broadcast request to known potential sub-nodes.
-   // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::Broadcast")
 
    unsigned int nok = 0;
@@ -916,11 +624,11 @@ int XrdProofdNetMgr::Broadcast(int type, const char *msg, const char *usr,
    return (nok == fNodes.size()) ? 0 : -1;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a XrdProofConn for url; create a new one if not available
+
 XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
 {
-   // Get a XrdProofConn for url; create a new one if not available
-
    XrdProofConn *p = 0;
 
    // If not found create a new one
@@ -939,14 +647,15 @@ XrdProofConn *XrdProofdNetMgr::GetProofConn(const char *url)
    return p;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast request to known potential sub-nodes.
+/// Return 0 on success, -1 on error
+
 XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
                                         const char *msg, int srvtype,
                                         XrdProofdResponse *r, bool notify,
                                         int subtype)
 {
-   // Broadcast request to known potential sub-nodes.
-   // Return 0 on success, -1 on error
    XPDLOC(NMGR, "NetMgr::Send")
 
    XrdClientMessage *xrsp = 0;
@@ -1042,12 +751,13 @@ XrdClientMessage *XrdProofdNetMgr::Send(const char *url, int type,
    return xrsp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 'host' is this local host. If checkport is true,
+/// matching of the local port with the one implied by host is also checked.
+/// Return 1 if 'local', 0 otherwise
+
 bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
 {
-   // Check if 'host' is this local host. If checkport is true,
-   // matching of the local port with the one implied by host is also checked.
-   // Return 1 if 'local', 0 otherwise
    XPDLOC(NMGR, "NetMgr::IsLocal")
 
    int rc = 0;
@@ -1076,10 +786,11 @@ bool XrdProofdNetMgr::IsLocal(const char *host, bool checkport)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a readbuf request
+
 int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
 {
-   // Process a readbuf request
    XPDLOC(NMGR, "NetMgr::ReadBuffer")
 
    int rc = 0;
@@ -1162,6 +873,7 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
       buf = ReadBufferRemote(u.GetUrl().c_str(), file, ofs, lout, grep);
    }
 
+   bool sent = 0;
    if (!buf) {
       if (lout > 0) {
          if (grep > 0) {
@@ -1170,17 +882,13 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
                TRACEP(p, DBG, emsg);
             }
             response->Send();
-            SafeDelArray(pattern);
-            SafeFree(filen);
-            return 0;
+            sent = 1;
          } else {
             XPDFORM(emsg, "could not read buffer from %s %s",
                     (local) ? "local file " : "remote file ", file);
             TRACEP(p, XERR, emsg);
             response->Send(kXR_InvalidRequest, emsg.c_str());
-            SafeDelArray(pattern);
-            SafeFree(filen);
-            return 0;
+            sent = 1;
          }
       } else {
          // Just got an empty buffer
@@ -1193,7 +901,8 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
    }
 
    // Send back to user
-   response->Send(buf, lout);
+   if (!sent)
+      response->Send(buf, lout);
 
    // Cleanup
    SafeFree(buf);
@@ -1205,13 +914,13 @@ int XrdProofdNetMgr::ReadBuffer(XrdProofdProtocol *p)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locate the exact file path allowing for wildcards '*' in the file name.
+/// In case of success, returns 0 and fills file wity the first matching instance.
+/// Return -1 if no matching pat is found.
+
 int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
 {
-   // Locate the exact file path allowing for wildcards '*' in the file name.
-   // In case of success, returns 0 and fills file wity the first matching instance.
-   // Return -1 if no matching pat is found.
-
    XPDLOC(NMGR, "NetMgr::LocateLocalFile")
 
    // If no wild cards or empty, nothing to do
@@ -1258,14 +967,15 @@ int XrdProofdNetMgr::LocateLocalFile(XrdOucString &file)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a buffer of length 'len' at offset 'ofs' of local file 'path'; the
+/// returned buffer must be freed by the caller.
+/// Wild cards '*' are allowed in the file name of 'path'; the first matching
+/// instance is taken.
+/// Returns 0 in case of error.
+
 char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len)
 {
-   // Read a buffer of length 'len' at offset 'ofs' of local file 'path'; the
-   // returned buffer must be freed by the caller.
-   // Wild cards '*' are allowed in the file name of 'path'; the first matching
-   // instance is taken.
-   // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
@@ -1360,15 +1070,16 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path, kXR_int64 ofs, int &len
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Grep lines matching 'pat' form 'path'; the returned buffer (length in 'len')
+/// must be freed by the caller.
+/// Wild cards '*' are allowed in the file name of 'path'; the first matching
+/// instance is taken.
+/// Returns 0 in case of error.
+
 char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
                                        const char *pat, int &len, int opt)
 {
-   // Grep lines matching 'pat' form 'path'; the returned buffer (length in 'len')
-   // must be freed by the caller.
-   // Wild cards '*' are allowed in the file name of 'path'; the first matching
-   // instance is taken.
-   // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferLocal")
 
    XrdOucString emsg;
@@ -1482,13 +1193,14 @@ char *XrdProofdNetMgr::ReadBufferLocal(const char *path,
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a read buffer request of length 'len' at offset 'ofs' for remote file
+/// defined by 'url'; the returned buffer must be freed by the caller.
+/// Returns 0 in case of error.
+
 char *XrdProofdNetMgr::ReadBufferRemote(const char *url, const char *file,
                                         kXR_int64 ofs, int &len, int grep)
 {
-   // Send a read buffer request of length 'len' at offset 'ofs' for remote file
-   // defined by 'url'; the returned buffer must be freed by the caller.
-   // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadBufferRemote")
 
    TRACE(REQ, "url: " << (url ? url : "undef") <<
@@ -1548,11 +1260,12 @@ char *XrdProofdNetMgr::ReadBufferRemote(const char *url, const char *file,
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get log paths from next tier; used in multi-master setups
+/// Returns 0 in case of error.
+
 char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
 {
-   // Get log paths from next tier; used in multi-master setups
-   // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadLogPaths")
 
    TRACE(REQ, "url: " << (url ? url : "undef") <<
@@ -1605,11 +1318,12 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *url, const char *msg, int isess)
    return buf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get log paths from next tier; used in multi-master setups
+/// Returns 0 in case of error.
+
 char *XrdProofdNetMgr::ReadLogPaths(const char *msg, int isess)
 {
-   // Get log paths from next tier; used in multi-master setups
-   // Returns 0 in case of error.
    XPDLOC(NMGR, "NetMgr::ReadLogPaths")
 
    TRACE(REQ, "msg: " << (msg ? msg : "undef") << ", isess: " << isess);
@@ -1657,11 +1371,12 @@ char *XrdProofdNetMgr::ReadLogPaths(const char *msg, int isess)
    return buf;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill-in fWorkers for a localhost based on the number of
+/// workers fNumLocalWrks.
+
 void XrdProofdNetMgr::CreateDefaultPROOFcfg()
 {
-   // Fill-in fWorkers for a localhost based on the number of
-   // workers fNumLocalWrks.
    XPDLOC(NMGR, "NetMgr::CreateDefaultPROOFcfg")
 
    TRACE(DBG, "enter: local workers: " << fNumLocalWrks);
@@ -1705,11 +1420,12 @@ void XrdProofdNetMgr::CreateDefaultPROOFcfg()
    return;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of workers after having made sure that the info is
+/// up-to-date
+
 std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
 {
-   // Return the list of workers after having made sure that the info is
-   // up-to-date
    XPDLOC(NMGR, "NetMgr::GetActiveWorkers")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -1734,10 +1450,11 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetActiveWorkers()
    return &fWorkers;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump status
+
 void XrdProofdNetMgr::Dump()
 {
-   // Dump status
    const char *xpdloc = "NetMgr::Dump";
 
    XrdSysMutexHelper mhp(fMutex);
@@ -1756,11 +1473,12 @@ void XrdProofdNetMgr::Dump()
    XPDPRT("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the list of unique nodes after having made sure that the info is
+/// up-to-date
+
 std::list<XrdProofWorker *> *XrdProofdNetMgr::GetNodes()
 {
-   // Return the list of unique nodes after having made sure that the info is
-   // up-to-date
    XPDLOC(NMGR, "NetMgr::GetNodes")
 
    XrdSysMutexHelper mhp(fMutex);
@@ -1783,12 +1501,13 @@ std::list<XrdProofWorker *> *XrdProofdNetMgr::GetNodes()
    return &fNodes;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read PROOF config file and load the information in fWorkers.
+/// NB: 'master' information here is ignored, because it is passed
+///     via the 'xpd.workdir' and 'xpd.image' config directives
+
 int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
 {
-   // Read PROOF config file and load the information in fWorkers.
-   // NB: 'master' information here is ignored, because it is passed
-   //     via the 'xpd.workdir' and 'xpd.image' config directives
    XPDLOC(NMGR, "NetMgr::ReadPROOFcfg")
 
    TRACE(REQ, "saved time of last modification: " << fPROOFcfg.fMtime);
@@ -1941,13 +1660,14 @@ int XrdProofdNetMgr::ReadPROOFcfg(bool reset)
    return ((nw == 0) ? -1 : 0);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan fWorkers for unique nodes (stored in fNodes).
+/// Return the number of unque nodes.
+/// NB: 'master' information here is ignored, because it is passed
+///     via the 'xpd.workdir' and 'xpd.image' config directives
+
 int XrdProofdNetMgr::FindUniqueNodes()
 {
-   // Scan fWorkers for unique nodes (stored in fNodes).
-   // Return the number of unque nodes.
-   // NB: 'master' information here is ignored, because it is passed
-   //     via the 'xpd.workdir' and 'xpd.image' config directives
    XPDLOC(NMGR, "NetMgr::FindUniqueNodes")
 
    TRACE(REQ, "# workers: " << fWorkers.size());

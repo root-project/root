@@ -18,18 +18,19 @@
 
 ClassImp(TGraphTime)
 
-//______________________________________________________________________________
-//
-// TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
-// each time step has a new list of objects. This list can be identical to
-// the list of objects in the previous steps, but with different attributes.
-//   see example of use in $ROOTSYS/tutorials/graphs/gtime.C
+/** \class TGraphTime
+    \ingroup Hist
+TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
+Each time step has a new list of objects. This list can be identical to
+the list of objects in the previous steps, but with different attributes.
+see example of use in $ROOTSYS/tutorials/graphs/gtime.C
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor.
+
 TGraphTime::TGraphTime(): TNamed()
 {
-   // default constructor.
-
    fSleepTime = 0;
    fNsteps    = 0;
    fXmin      = 0;
@@ -41,12 +42,12 @@ TGraphTime::TGraphTime(): TNamed()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TGraphTime with nsteps in range [xmin,xmax][ymin,ymax]
+
 TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax)
       :TNamed()
 {
-   // Create a TGraphTime with nsteps in range [xmin,xmax][ymin,ymax]
-
    if (nsteps <= 0) {
       Warning("TGraphTime", "Number of steps %d changed to 100",nsteps);
       nsteps = 100;
@@ -65,22 +66,22 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GraphTime default destructor.
+
 TGraphTime::~TGraphTime()
 {
-   // GraphTime default destructor.
-
    if (!fSteps) return;
    fSteps->Delete();
    delete fSteps; fSteps=0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor.
+
 TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
 {
-   // copy constructor.
-
    fSleepTime = gtime.fSleepTime;
    fNsteps    = gtime.fNsteps;
    fXmin      = gtime.fXmin;
@@ -94,13 +95,13 @@ TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
    fFrame->SetStats(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add one object to a time slot.
+/// TGraphTime becomes the owner of this object.
+/// object will be drawn with option
+
 Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
 {
-   // Add one object to a time slot.
-   // TGraphTime becomes the owner of this object.
-   // object will be drawn with option
-
    if (!fSteps) {
       fNsteps = 100;
       fSteps = new TObjArray(fNsteps+1);
@@ -116,12 +117,12 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this TGraphTime.
+/// for each time step the list of objects added to this step are drawn.
+
 void TGraphTime::Draw(Option_t *option)
 {
-   // Draw this TGraphTime.
-   // for each time step the list of objects added to this step are drawn.
-
    if (!gPad) {
       gROOT->MakeDefCanvas();
       gPad->SetFillColor(41);
@@ -136,11 +137,11 @@ void TGraphTime::Draw(Option_t *option)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint all objects added to each time step
+
 void TGraphTime::Paint(Option_t *option)
 {
-   // Paint all objects added to each time step
-
    TString opt = option;
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
@@ -165,13 +166,13 @@ void TGraphTime::Paint(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save this object to filename as an animated gif file
+/// if filename is specified it must be of the form xxx.gif
+/// otherwise a file yyy.gif is produced where yyy is the object name
+
 void TGraphTime::SaveAnimatedGif(const char *filename) const
 {
-   // Save this object to filename as an animated gif file
-   // if filename is specified it must be of the form xxx.gif
-   // otherwise a file yyy.gif is produced where yyy is the object name
-
    TObject *frame = gPad->GetPrimitive("frame");
    TList *list = 0;
    TObjLink *lnk;

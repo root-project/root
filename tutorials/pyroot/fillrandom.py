@@ -1,12 +1,18 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/fillrandom.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+## FillRandom example
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TPad, TFormula, TF1, TPaveLabel, TH1F, TFile
 from ROOT import gROOT, gBenchmark
 
 
-gROOT.Reset()
 
 c1 = TCanvas( 'c1', 'The FillRandom example', 200, 10, 700, 900 )
 c1.SetFillColor( 18 )
@@ -54,7 +60,7 @@ c1.Update()
 #
 # Open a ROOT file and save the formula, function and histogram
 #
-myfile = TFile( 'fillrandom.root', 'RECREATE' )
+myfile = TFile( 'py-fillrandom.root', 'RECREATE' )
 form1.Write()
 sqroot.Write()
 h1f.Write()

@@ -337,8 +337,7 @@ something like:
 root[] my_objptr.Solve();
 ```
 
-Although this is a permitted by the Cling shortcuts, it is one that you
-are *strongly* advised not to follow! As we have seen, heap objects
+As we have seen, heap objects
 have to be accessed via pointers, whereas stack objects can be
 accessed directly. They can also be accessed via pointers:
 

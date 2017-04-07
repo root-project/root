@@ -13,33 +13,31 @@
 #ifndef ROOT_TGCocoa
 #define ROOT_TGCocoa
 
-#include <utility>
-#include <vector>
+#include "CocoaGuiTypes.h"
+#include "TVirtualX.h"
+#include "X11Atoms.h"
+
+#include <map>
 #include <memory>
 #include <string>
-#include <map>
+#include <utility>
+#include <vector>
 
-#ifndef ROOT_CocoaGuiTypes
-#include "CocoaGuiTypes.h"
-#endif
-#ifndef ROOT_TVirtualX
-#include "TVirtualX.h"
-#endif
-#ifndef ROOT_X11Atoms
-#include "X11Atoms.h"
-#endif
+/// \defgroup cocoa Cocoa backend
+/// \brief Interface to MacOS native graphics system.
+/// \ingroup GraphicsBackends
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class implements TVirtualX interface                            //
-// for MacOS X, using Cocoa and Quartz 2D.                              //
-// TVirtualX is a typical fat interface, it's a "C++ wrapper" for       //
-// X11 library. It's a union of several orthogonal interfaces like:     //
-// color management, window management, pixmap management, cursors,     //
-// events, images, drag and drop, font management, gui-rendering,       //
-// non-gui graphics, etc. etc.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGCocoa
+\ingroup cocoa
+
+This class implements TVirtualX interface for MacOS X, using Cocoa and Quartz 2D.
+
+TVirtualX is a typical fat interface, it's a "C++ wrapper" for
+X11 library. It's a union of several orthogonal interfaces like:
+color management, window management, pixmap management, cursors,
+events, images, drag and drop, font management, gui-rendering,
+non-gui graphics, etc. etc.
+*/
 
 namespace ROOT {
 namespace MacOSX {
@@ -373,7 +371,7 @@ public:
    //"Drag and drop" and "Copy and paste".
    /////////////////////////////
 
-   //The remaining bunch of functions is not sorted yet (and not imlemented at the moment).
+   //The remaining bunch of functions is not sorted yet (and not implemented at the moment).
 
    virtual UInt_t    ExecCommand(TGWin32Command *code);
    virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
@@ -443,7 +441,7 @@ protected:
 
    Drawable_t fSelectedDrawable;
 
-   std::auto_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
+   std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; //!
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;

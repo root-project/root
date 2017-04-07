@@ -30,7 +30,9 @@ ClassImp(TGHSplitter)
 ClassImp(TGVFileSplitter)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a splitter.
+
 TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                        UInt_t options, ULong_t back) :
    TGFrame(p, w, h, options, back),
@@ -38,34 +40,32 @@ TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    fExternalHandler (kFALSE),
    fSplitterPic     (0)
 {
-   // Create a splitter.
-
    fSplitCursor = kNone;
    fEditDisabled = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DragStarted signal.
+
 void TGSplitter::DragStarted()
 {
-   // Emit DragStarted signal.
-
    Emit("DragStarted()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Moved signal.
+
 void TGSplitter::Moved(Int_t delta)
 {
-   // Emit Moved signal.
-
    Emit("Moved(Int_t)", delta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical splitter.
+
 TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
 {
-   // Create a vertical splitter.
-
    fSplitCursor = kNone;
    fSplitterPic = fClient->GetPicture("splitterv.xpm");
    fFrameHeight = h;
@@ -73,6 +73,7 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    fLeft = kTRUE;
    fMax = fMin = 0;
    fStartX = 0;
+   fFrame = 0;
 
    if (!fSplitterPic)
       Error("TGVSplitter", "splitterv.xpm not found");
@@ -87,7 +88,6 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    }
 
    fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
-   fFrame = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -96,12 +96,12 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical splitter.
+
 TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external) :
    TGSplitter(p, w, h, kChildFrame, GetDefaultFrameBackground())
 {
-   // Create a vertical splitter.
-
    fExternalHandler = external;
 
    fSplitCursor = kNone;
@@ -125,20 +125,20 @@ TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete vertical splitter widget.
+
 TGVSplitter::~TGVSplitter()
 {
-   // Delete vertical splitter widget.
-
    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set frame to be resized. If frame is on the left of the splitter
+/// set left to true.
+
 void TGVSplitter::SetFrame(TGFrame *frame, Bool_t left)
 {
-   // Set frame to be resized. If frame is on the left of the splitter
-   // set left to true.
-
    fFrame = frame;
    fLeft  = left;
 
@@ -146,11 +146,11 @@ void TGVSplitter::SetFrame(TGFrame *frame, Bool_t left)
       Error("SetFrame", "resize frame must have kFixedWidth option set");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical splitter.
+
 Bool_t TGVSplitter::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical splitter.
-
    if (fSplitCursor == kNone) return kTRUE;
 
    if (!fExternalHandler && !fFrame) {
@@ -193,11 +193,11 @@ Bool_t TGVSplitter::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical splitter.
+
 Bool_t TGVSplitter::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in vertical splitter.
-
    if (fDragging) {
       Int_t xr = event->fXRoot;
       if (xr > fMax) xr = fMax;
@@ -229,11 +229,11 @@ Bool_t TGVSplitter::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical splitter.
+
 Bool_t TGVSplitter::HandleCrossing(Event_t *event)
 {
-   // Handle mouse motion event in vertical splitter.
-
    if (event->fType == kEnterNotify)
       gVirtualX->SetCursor(fId, fSplitCursor);
    else
@@ -242,11 +242,11 @@ Bool_t TGVSplitter::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw vertical splitter.
+
 void TGVSplitter::DrawBorder()
 {
-   // Draw vertical splitter.
-
    if (fSplitterPic) {
       Int_t posx = (fWidth/2)-(fSplitterPic->GetWidth()/2);
       Int_t posy = (fHeight/2)-(fSplitterPic->GetHeight()/2);
@@ -255,18 +255,21 @@ void TGVSplitter::DrawBorder()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a horizontal splitter.
+
 TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
 {
-   // Create a horizontal splitter.
-
    fSplitCursor = kNone;
-
-   fSplitterPic = fClient->GetPicture("splitterh.xpm");
-
-   if (!fSplitterPic)
-      Error("TGHSplitter", "splitterh.xpm not found");
+   fSplitterPic = 0;
+   fSplitCursor = 0;
+   fFrame = 0;
+   fFrameHeight = h;
+   fFrameWidth = w;
+   fAbove = kTRUE;
+   fMax = fMin = 0;
+   fStartY = 0;
 
    if (p && !p->InheritsFrom(TGCompositeFrame::Class())) {
       Error("TGHSplitter", "parent must inherit from a TGCompositeFrame");
@@ -277,13 +280,12 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
       return;
    }
 
+   fSplitterPic = fClient->GetPicture("splitterh.xpm");
+
+   if (!fSplitterPic)
+      Error("TGHSplitter", "splitterh.xpm not found");
+
    fSplitCursor = gVirtualX->CreateCursor(kArrowVer);
-   fFrame = 0;
-   fFrameHeight = h;
-   fFrameWidth = w;
-   fAbove = kTRUE;
-   fMax = fMin = 0;
-   fStartY = 0;
 
    gVirtualX->GrabButton(fId, kAnyButton, kAnyModifier,
                          kButtonPressMask | kButtonReleaseMask |
@@ -292,12 +294,12 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a horizontal splitter.
+
 TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external) :
    TGSplitter(p, w, h, kChildFrame, GetDefaultFrameBackground())
 {
-   // Create a horizontal splitter.
-
    fExternalHandler = external;
 
    fSplitCursor = kNone;
@@ -322,20 +324,20 @@ TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external)
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete horizontal splitter widget.
+
 TGHSplitter::~TGHSplitter()
 {
-   // Delete horizontal splitter widget.
-
    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set frame to be resized. If frame is above the splitter
+/// set above to true.
+
 void TGHSplitter::SetFrame(TGFrame *frame, Bool_t above)
 {
-   // Set frame to be resized. If frame is above the splitter
-   // set above to true.
-
    fFrame = frame;
    fAbove = above;
 
@@ -343,11 +345,11 @@ void TGHSplitter::SetFrame(TGFrame *frame, Bool_t above)
       Error("SetFrame", "resize frame must have kFixedHeight option set");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in horizontal splitter.
+
 Bool_t TGHSplitter::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in horizontal splitter.
-
    if (fSplitCursor == kNone) return kTRUE;
 
    if (!fExternalHandler && !fFrame) {
@@ -390,11 +392,11 @@ Bool_t TGHSplitter::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in horizontal splitter.
+
 Bool_t TGHSplitter::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in horizontal splitter.
-
    if (fDragging) {
       Int_t yr = event->fYRoot;
       if (yr > fMax) yr = fMax;
@@ -426,11 +428,11 @@ Bool_t TGHSplitter::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in horizontal splitter.
+
 Bool_t TGHSplitter::HandleCrossing(Event_t *event)
 {
-   // Handle mouse motion event in horizontal splitter.
-
    if (event->fType == kEnterNotify)
       gVirtualX->SetCursor(fId, fSplitCursor);
    else
@@ -439,11 +441,11 @@ Bool_t TGHSplitter::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw horizontal splitter.
+
 void TGHSplitter::DrawBorder()
 {
-   // Draw horizontal splitter.
-
    if (fSplitterPic) {
       Int_t posx = (fWidth/2)-(fSplitterPic->GetWidth()/2);
       Int_t posy = (fHeight/2)-(fSplitterPic->GetHeight()/2);
@@ -451,28 +453,29 @@ void TGHSplitter::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///    fSplitterPic = fClient->GetPicture("filesplitterv.xpm");
+
 TGVFileSplitter::TGVFileSplitter(const TGWindow *p, UInt_t w, UInt_t h,
                                  UInt_t options, Pixel_t back):
   TGVSplitter(p, w, h, options, back)
 {
-//    fSplitterPic = fClient->GetPicture("filesplitterv.xpm");
-
 //    if (!fSplitterPic)
 //       Error("TGVFileSplitter", "filesplitterv.xpm not found");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
+
 TGVFileSplitter::~TGVFileSplitter()
 {
-//    if (fSplitterPic) fClient->FreePicture(fSplitterPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in vertical splitter.
+
 Bool_t TGVFileSplitter::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in vertical splitter.
-
    fMin = 30;
 
    if (fDragging) {
@@ -505,11 +508,11 @@ Bool_t TGVFileSplitter::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical splitter.
+
 Bool_t TGVFileSplitter::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical splitter.
-
    if ( event->fType == kButtonPress) {
       ButtonPressed();
    } else if ( event->fType == kButtonRelease) {
@@ -522,60 +525,60 @@ Bool_t TGVFileSplitter::HandleButton(Event_t *event)
    return TGVSplitter::HandleButton(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit LayoutFeader() signal.
+
 void TGVFileSplitter::LayoutHeader(TGFrame *f)
 {
-   // Emit LayoutFeader() signal.
-
    Emit("LayoutHeader(TGFrame*)", (Long_t)f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit LayoutListView() signal.
+
 void TGVFileSplitter::LayoutListView()
 {
-   // Emit LayoutListView() signal.
-
    Emit("LayoutListView()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ButtonPressed() signal.
+
 void TGVFileSplitter::ButtonPressed()
 {
-   // Emit ButtonPressed() signal.
-
    Emit("ButtonPressed()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ButtonReleased() signal.
+
 void TGVFileSplitter::ButtonReleased()
 {
-   // Emit ButtonReleased() signal.
-
    Emit("ButtonReleased()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGVFileSplitter::DoubleClicked(TGVFileSplitter* splitter)
 {
-   // Emit DoubleClicked() signal.
-
    Emit("DoubleClicked(TGVFileSplitter*)", (Long_t) splitter);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click mouse event in splitter.
+
 Bool_t TGVFileSplitter::HandleDoubleClick(Event_t *)
 {
-   // Handle double click mouse event in splitter.
-
    DoubleClicked(this);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a splitter widget as a C++ statement(s) on output stream out.
+
 void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a splitter widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGVSplitter *";
@@ -604,11 +607,11 @@ void TGVSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a splitter widget as a C++ statement(s) on output stream out.
+
 void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a splitter widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGHSplitter *";
@@ -637,11 +640,11 @@ void TGHSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a splitter widget as a C++ statement(s) on output stream out.
+
 void TGVFileSplitter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a splitter widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGVFileSplitter *";

@@ -1,7 +1,12 @@
-//
-// This tutorials demonstrate how to store and restore simple vectors
-// in a TTree
-//
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Write and read STL vectors in a tree.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author The ROOT Team
 
 #include <vector>
 
@@ -13,10 +18,6 @@
 #include "TBenchmark.h"
 #include "TRandom.h"
 #include "TSystem.h"
-
-#ifdef __MAKECINT__
-#pragma link C++ class vector<float>+;
-#endif
 
 void write()
 {
@@ -41,13 +42,8 @@ void write()
    t->Branch("vpz",&vpz);
    t->Branch("vrand",&vrand);
 
-
-  // Create a new canvas.
+   // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
-   c1->SetFillColor(42);
-   c1->GetFrame()->SetFillColor(21);
-   c1->GetFrame()->SetBorderSize(6);
-   c1->GetFrame()->SetBorderMode(-1);
 
    gRandom->SetSeed();
    const Int_t kUPDATE = 1000;
@@ -68,10 +64,10 @@ void write()
 
          hpx->Fill(px);
 
-         vpx.push_back(px);
-         vpy.push_back(py);
-         vpz.push_back(pz);
-         vrand.push_back(random);
+         vpx.emplace_back(px);
+         vpy.emplace_back(py);
+         vpz.emplace_back(pz);
+         vrand.emplace_back(random);
 
       }
       if (i && (i%kUPDATE) == 0) {
@@ -102,10 +98,6 @@ void read()
 
   // Create a new canvas.
    TCanvas *c1 = new TCanvas("c1","Dynamic Filling Example",200,10,700,500);
-   c1->SetFillColor(42);
-   c1->GetFrame()->SetFillColor(21);
-   c1->GetFrame()->SetBorderSize(6);
-   c1->GetFrame()->SetBorderMode(-1);
 
    const Int_t kUPDATE = 1000;
 

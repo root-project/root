@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooInt is a minimal implementation of a TObject holding a Int_t
-// value.
-// END_HTML
-//
+/**
+\file RooInt.cxx
+\class RooInt
+\ingroup Roofitcore
+
+RooInt is a minimal implementation of a TObject holding a Int_t
+value.
+**/
 
 #include "RooFit.h"
 
@@ -34,14 +35,14 @@ ClassImp(RooInt)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Facilitate sorting of RooInts in ROOT container classes
+/// Return -1 or +1 if 'other' is a RooInt with value
+/// greater or lesser than self. Return zero if other
+/// object is not a RooInt
+
 Int_t RooInt::Compare(const TObject* other) const 
 {
-  // Facilitate sorting of RooInts in ROOT container classes
-  // Return -1 or +1 if 'other' is a RooInt with value
-  // greater or lesser than self. Return zero if other
-  // object is not a RooInt
-
   const RooInt* otherD = dynamic_cast<const RooInt*>(other) ;
   if (!otherD) return 0 ;
   return (_value>otherD->_value) ? 1 : -1 ;

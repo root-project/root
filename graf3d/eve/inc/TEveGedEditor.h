@@ -47,7 +47,6 @@ public:
    virtual ~TEveGedEditor();
 
    virtual void CloseWindow();
-   virtual void DeleteWindow();
 
    TEveElement* GetEveElement() const;
 

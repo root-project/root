@@ -31,30 +31,30 @@
 
 #include "TGLFontManager.h"
 
-//______________________________________________________________________________
-//
-// This class encapsulates window-system specific information about a
-// GL-context and alows their proper management in ROOT.
+/** \class TGLContext
+\ingroup opengl
+This class encapsulates window-system specific information about a
+GL-context and alows their proper management in ROOT.
+*/
 
 ClassImp(TGLContext);
 
 Bool_t TGLContext::fgGlewInitDone = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGLContext ctor "from" TGLWidget.
+/// Is shareDefault is true, the shareList is set from default
+/// context-identity. Otherwise the given shareList is used (can be
+/// null).
+/// Makes thread switching.
+
 TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
                        const TGLContext *shareList)
    : fDevice(wid),
-     fPimpl(0),
      fFromCtor(kTRUE),
      fValid(kFALSE),
      fIdentity(0)
 {
-   // TGLContext ctor "from" TGLWidget.
-   // Is shareDefault is true, the shareList is set from default
-   // context-identity. Otherwise the given shareList is used (can be
-   // null).
-   // Makes thread switching.
-
    if (shareDefault)
       shareList = TGLContextIdentity::GetDefaultContextAny();
 
@@ -78,12 +78,12 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
    fFromCtor = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize GLEW - static private function.
+/// Called immediately after creation of the first GL context.
+
 void TGLContext::GlewInit()
 {
-   // Initialize GLEW - static private function.
-   // Called immediately after creation of the first GL context.
-
    if (!fgGlewInitDone)
    {
       GLenum status = glewInit();
@@ -115,18 +115,19 @@ namespace {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///WIN32 gl-context creation. Defined as a member-function (this code removed from ctor)
+///to make WIN32/X11 separation cleaner.
+///This function is public only for calls via gROOT and called from ctor.
+
 void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
-   //WIN32 gl-context creation. Defined as a member-function (this code removed from ctor)
-   //to make WIN32/X11 separation cleaner.
-   //This function is public only for calls via gROOT and called from ctor.
    if (!fFromCtor) {
       Error("TGLContext::SetContext", "SetContext must be called only from ctor");
       return;
    }
 
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+   fPimpl.reset(new TGLContextPrivate);
    LayoutCompatible_t *trick =
       reinterpret_cast<LayoutCompatible_t *>(widget->GetId());
    HWND hWND = *trick->fPHwnd;
@@ -158,14 +159,14 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    TGLContextPrivate::RegisterContext(this);
 
    dcGuard.Stop();
-   safe_ptr.release();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///make it current.
+
 Bool_t TGLContext::MakeCurrent()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //make it current.
    if (!fValid) {
       Error("TGLContext::MakeCurrent", "This context is invalid.");
       return kFALSE;
@@ -187,18 +188,20 @@ Bool_t TGLContext::MakeCurrent()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Reset current context.
+
 Bool_t TGLContext::ClearCurrent()
 {
-   //Reset current context.
    return wglMakeCurrent(0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///swap buffers (in case of P-buffer call glFinish()).
+
 void TGLContext::SwapBuffers()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //swap buffers (in case of P-buffer call glFinish()).
    if (!fValid) {
       Error("TGLContext::SwapBuffers", "This context is invalid.");
       return;
@@ -217,11 +220,12 @@ void TGLContext::SwapBuffers()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Make the context invalid and (do thread switch, if needed)
+///free resources.
+
 void TGLContext::Release()
 {
-   //Make the context invalid and (do thread switch, if needed)
-   //free resources.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->Release()", this));
       return;
@@ -239,16 +243,17 @@ void TGLContext::Release()
 
 #elif defined(R__HAS_COCOA)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///This function is public only for calls via gROOT and called from ctor.
+
 void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
-   //This function is public only for calls via gROOT and called from ctor.
    if (!fFromCtor) {
       Error("TGLContext::SetContext", "SetContext must be called only from ctor");
       return;
    }
 
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+   fPimpl.reset(new TGLContextPrivate);
 
    fPimpl->fGLContext = gVirtualX->CreateOpenGLContext(widget->GetId(), shareList ? shareList->fPimpl->fGLContext : 0);
    fPimpl->fWindowID = widget->GetId();
@@ -256,16 +261,14 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   safe_ptr.release();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///make it current.
+
 Bool_t TGLContext::MakeCurrent()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //make it current.
-
    if (!fValid) {
       Error("TGLContext::MakeCurrent", "This context is invalid.");
       return kFALSE;
@@ -282,18 +285,20 @@ Bool_t TGLContext::MakeCurrent()
    return rez;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Reset current context.
+
 Bool_t TGLContext::ClearCurrent()
 {
-   //Reset current context.
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///swap buffers (in case of P-buffer call glFinish()).
+
 void TGLContext::SwapBuffers()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //swap buffers (in case of P-buffer call glFinish()).
    if (!fValid) {
       Error("TGLContext::SwapBuffers", "This context is invalid.");
       return;
@@ -302,11 +307,11 @@ void TGLContext::SwapBuffers()
    gVirtualX->FlushOpenGLBuffer(fPimpl->fGLContext);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Make the context invalid and free resources.
+
 void TGLContext::Release()
 {
-   //Make the context invalid and free resources.
-
    TGLContextPrivate::RemoveContext(this);
    gVirtualX->DeleteOpenGLContext(fPimpl->fGLContext);
    fValid = kFALSE;
@@ -316,19 +321,19 @@ void TGLContext::Release()
 #else // X11
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///X11 gl-context creation. Defined as a member-function (this code removed from ctor)
+///to make WIN32/X11 separation cleaner.
+///This function is public only for calls via gROOT and called from ctor.
+
 void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
 {
-   //X11 gl-context creation. Defined as a member-function (this code removed from ctor)
-   //to make WIN32/X11 separation cleaner.
-   //This function is public only for calls via gROOT and called from ctor.
-
    if (!fFromCtor) {
       Error("TGLContext::SetContext", "SetContext must be called only from ctor");
       return;
    }
 
-   std::auto_ptr<TGLContextPrivate> safe_ptr(fPimpl = new TGLContextPrivate);
+   fPimpl.reset(new TGLContextPrivate);
    Display *dpy = static_cast<Display *>(widget->GetInnerData().first);
    XVisualInfo *visInfo = static_cast<XVisualInfo *>(widget->GetInnerData().second);
 
@@ -348,16 +353,14 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
    fValid = kTRUE;
    fDevice->AddContext(this);
    TGLContextPrivate::RegisterContext(this);
-
-   safe_ptr.release();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///make it current.
+
 Bool_t TGLContext::MakeCurrent()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //make it current.
-
    if (!fValid) {
       Error("TGLContext::MakeCurrent", "This context is invalid.");
       return kFALSE;
@@ -377,19 +380,20 @@ Bool_t TGLContext::MakeCurrent()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Reset current context.
+
 Bool_t TGLContext::ClearCurrent()
 {
-   //Reset current context.
    return glXMakeCurrent(fPimpl->fDpy, None, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///If context is valid (TGLPaintDevice, for which context was created still exists),
+///swap buffers (in case of P-buffer call glFinish()).
+
 void TGLContext::SwapBuffers()
 {
-   //If context is valid (TGLPaintDevice, for which context was created still exists),
-   //swap buffers (in case of P-buffer call glFinish()).
-
    if (!fValid) {
       Error("TGLContext::SwapCurrent", "This context is invalid.");
       return;
@@ -401,11 +405,12 @@ void TGLContext::SwapBuffers()
       glFinish();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Make the context invalid and (do thread switch, if needed)
+///free resources.
+
 void TGLContext::Release()
 {
-   //Make the context invalid and (do thread switch, if needed)
-   //free resources.
    TGLContextPrivate::RemoveContext(this);
    glXDestroyContext(fPimpl->fDpy, fPimpl->fGLContext);
    fValid = kFALSE;
@@ -415,77 +420,81 @@ void TGLContext::Release()
 #endif
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TGLContext dtor. If it's called before TGLPaintDevice's dtor
+///(context is valid) resource will be freed and context
+///un-registered.
+
 TGLContext::~TGLContext()
 {
-   //TGLContext dtor. If it's called before TGLPaintDevice's dtor
-   //(context is valid) resource will be freed and context
-   //un-registered.
    if (fValid) {
       Release();
       fDevice->RemoveContext(this);
    }
 
    fIdentity->Release(this);
-
-   delete fPimpl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///We can have several shared contexts,
+///and gl-scene wants to know, if some context
+///(defined by its identity) can be used.
+
 TGLContextIdentity *TGLContext::GetIdentity()const
 {
-   //We can have several shared contexts,
-   //and gl-scene wants to know, if some context
-   //(defined by its identity) can be used.
    return fIdentity;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ask TGLContextPrivate to lookup context in its internal map.
+
 TGLContext *TGLContext::GetCurrent()
 {
-   //Ask TGLContextPrivate to lookup context in its internal map.
    return TGLContextPrivate::GetCurrentContext();
 }
 
 
-//______________________________________________________________________________
-//
-// Identifier of a shared GL-context.
-// Objects shared among GL-contexts include:
-// display-list definitions, texture objects and shader programs.
+/** \class TGLContextIdentity
+\ingroup opengl
+Identifier of a shared GL-context.
+Objects shared among GL-contexts include:
+display-list definitions, texture objects and shader programs.
+*/
 
 ClassImp(TGLContextIdentity)
 
 TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdentity;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLContextIdentity::TGLContextIdentity():
 fFontManager(0), fCnt(0), fClientCnt(0)
 {
-   // Constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGLContextIdentity::~TGLContextIdentity()
 {
-   // Destructor.
-
    if (fFontManager) delete fFontManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Add context ctx to the list of references.
+
 void TGLContextIdentity::AddRef(TGLContext* ctx)
 {
-   //Add context ctx to the list of references.
    ++fCnt;
    fCtxs.push_back(ctx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove context ctx from the list of references.
+
 void TGLContextIdentity::Release(TGLContext* ctx)
 {
-   //Remove context ctx from the list of references.
    CtxList_t::iterator i = std::find(fCtxs.begin(), fCtxs.end(), ctx);
    if (i != fCtxs.end())
    {
@@ -499,18 +508,19 @@ void TGLContextIdentity::Release(TGLContext* ctx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remember dl range for deletion in next MakeCurrent or dtor execution.
+
 void TGLContextIdentity::RegisterDLNameRangeToWipe(UInt_t base, Int_t size)
 {
-   //Remember dl range for deletion in next MakeCurrent or dtor execution.
    fDLTrash.push_back(DLRange_t(base, size));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delete GL resources registered for destruction.
+
 void TGLContextIdentity::DeleteGLResources()
 {
-   //Delete GL resources registered for destruction.
-
    if (!fDLTrash.empty())
    {
       for (DLTrashIt_t it = fDLTrash.begin(), e = fDLTrash.end(); it != e; ++it)
@@ -522,45 +532,50 @@ void TGLContextIdentity::DeleteGLResources()
       fFontManager->ClearFontTrash();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Find identitfy of current context. Static.
+
 TGLContextIdentity* TGLContextIdentity::GetCurrent()
 {
-   //Find identitfy of current context. Static.
    TGLContext* ctx = TGLContext::GetCurrent();
    return ctx ? ctx->GetIdentity() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get identity of a default Gl context. Static.
+
 TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
 {
-   //Get identity of a default Gl context. Static.
    if (fgDefaultIdentity == 0)
       fgDefaultIdentity = new TGLContextIdentity;
    return fgDefaultIdentity;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the first GL context with the default identity.
+///Can return zero, but that's OK, too. Static.
+
 TGLContext* TGLContextIdentity::GetDefaultContextAny()
 {
-   //Get the first GL context with the default identity.
-   //Can return zero, but that's OK, too. Static.
    if (fgDefaultIdentity == 0 || fgDefaultIdentity->fCtxs.empty())
       return 0;
    return fgDefaultIdentity->fCtxs.front();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get the free-type font-manager associated with this context-identity.
+
 TGLFontManager* TGLContextIdentity::GetFontManager()
 {
-   //Get the free-type font-manager associated with this context-identity.
    if(!fFontManager) fFontManager = new TGLFontManager();
    return fFontManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Private function called when reference count is reduced.
+
 void TGLContextIdentity::CheckDestroy()
 {
-   //Private function called when reference count is reduced.
    if (fCnt <= 0 && fClientCnt <= 0)
    {
       if (this == fgDefaultIdentity)

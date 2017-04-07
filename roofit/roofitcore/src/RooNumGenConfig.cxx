@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNumGenConfig holds the configuration parameters of the various
-// numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
-// use this class in the (normalization) integral configuration interface
-// END_HTML
-//
+/**
+\file RooNumGenConfig.cxx
+\class RooNumGenConfig
+\ingroup Roofitcore
+
+RooNumGenConfig holds the configuration parameters of the various
+numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
+use this class in the (normalization) integral configuration interface
+**/
 
 #include "RooFit.h"
 #include "Riostream.h"
@@ -44,11 +45,12 @@ ClassImp(RooNumGenConfig)
 RooNumGenConfig* RooNumGenConfig::_default = 0 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by atexit() handler installed by RooSentinel to
+/// cleanup global objects at end of job
+
 void RooNumGenConfig::cleanup()
 {
-  // Function called by atexit() handler installed by RooSentinel to
-  // cleanup global objects at end of job
   if (_default) {
     delete _default ;
     _default = 0 ;
@@ -57,11 +59,11 @@ void RooNumGenConfig::cleanup()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return reference to instance of default numeric integrator configuration object
+
 RooNumGenConfig& RooNumGenConfig::defaultConfig() 
 {
-  // Return reference to instance of default numeric integrator configuration object
-  
   // Instantiate object if it doesn't exist yet
   if (_default==0) {
     _default = new RooNumGenConfig ;    
@@ -72,7 +74,9 @@ RooNumGenConfig& RooNumGenConfig::defaultConfig()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor 
+
 RooNumGenConfig::RooNumGenConfig() : 
   _method1D("method1D","1D sampling method"),
   _method1DCat("method1DCat","1D sampling method for pdfs with categories"),
@@ -87,8 +91,6 @@ RooNumGenConfig::RooNumGenConfig() :
   _methodNDCond("methodNDCond","ND sampling method for conditional pfs"),
   _methodNDCondCat("methodNDCond","ND sampling method for conditional pfs with categories")
 {
-  // Constructor 
-
   // Set all methods to undefined
   // Defined methods will be registered by static initialization routines
   // of the various numeric integrator engines
@@ -109,17 +111,19 @@ RooNumGenConfig::RooNumGenConfig() :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNumGenConfig::~RooNumGenConfig()
 {
-  // Destructor
-
   // Delete all configuration data
   _configSets.Delete() ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNumGenConfig::RooNumGenConfig(const RooNumGenConfig& other) :
   TObject(other), RooPrintable(other),
   _method1D(other._method1D),
@@ -135,8 +139,6 @@ RooNumGenConfig::RooNumGenConfig(const RooNumGenConfig& other) :
   _methodNDCond(other._methodNDCond),
   _methodNDCondCat(other._methodNDCondCat)
 {
-  // Copy constructor
-  
   // Clone all configuration dat
   TIterator* iter = other._configSets.MakeIterator() ;
   RooArgSet* set ;
@@ -149,11 +151,11 @@ RooNumGenConfig::RooNumGenConfig(const RooNumGenConfig& other) :
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator from other RooNumGenConfig
+
 RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other) 
 {
-  // Assignment operator from other RooNumGenConfig
-
   // Prevent self-assignment 
   if (&other==this) {
     return *this ;
@@ -194,7 +196,8 @@ RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) 
 {
   if (cond && cat) return _method1DCondCat ;
@@ -205,7 +208,8 @@ RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) 
 {
   if (cond && cat) return _method2DCondCat ;
@@ -216,7 +220,8 @@ RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) 
 {
   if (cond && cat) return _methodNDCondCat ;
@@ -227,7 +232,8 @@ RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const 
 {
   return const_cast<RooNumGenConfig*>(this)->method1D(cond,cat) ;
@@ -235,7 +241,8 @@ const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const 
 {
   return const_cast<RooNumGenConfig*>(this)->method2D(cond,cat) ;
@@ -243,7 +250,8 @@ const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const 
 {
   return const_cast<RooNumGenConfig*>(this)->methodND(cond,cat) ;
@@ -251,13 +259,13 @@ const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a configuration section for a particular integrator. Integrator name and capabilities are
+/// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
+/// as the default configuration for the integrator. 
+
 Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
 {
-  // Add a configuration section for a particular integrator. Integrator name and capabilities are
-  // automatically determined from instance passed as 'proto'. The defaultConfig object is associated
-  // as the default configuration for the integrator. 
-
   TString name = proto->IsA()->GetName() ;
 
   // Register integrator for appropriate dimensionalities
@@ -293,20 +301,20 @@ Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return section with configuration parameters for integrator with given (class) name
+
 RooArgSet& RooNumGenConfig::getConfigSection(const char* name)  
 {
-  // Return section with configuration parameters for integrator with given (class) name
-
   return const_cast<RooArgSet&>((const_cast<const RooNumGenConfig*>(this)->getConfigSection(name))) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve configuration information specific to integrator with given name
+
 const RooArgSet& RooNumGenConfig::getConfigSection(const char* name) const
 {
-  // Retrieve configuration information specific to integrator with given name
-
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
@@ -317,7 +325,8 @@ const RooArgSet& RooNumGenConfig::getConfigSection(const char* name) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) const
 { 
   if (!opt) {
@@ -335,10 +344,11 @@ RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
 void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
 {
-  // Detailed printing interface
   os << endl ;
   os << indent << "1-D sampling method: " << _method1D.getLabel() << endl ;
   if (_method1DCat.getIndex()!=_method1D.getIndex()) {

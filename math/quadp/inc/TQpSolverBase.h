@@ -43,29 +43,16 @@
 #ifndef ROOT_TQpSolverBase
 #define ROOT_TQpSolverBase
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
-#ifndef ROOT_TQpVar
+#include "TObject.h"
 #include "TQpVar.h"
-#endif
-#ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"
-#endif
-#ifndef ROOT_TQpResidual
 #include "TQpResidual.h"
-#endif
-#ifndef ROOT_TQpProbBase
 #include "TQpProbBase.h"
-#endif
-#ifndef ROOT_TQpLinSolverBase
 #include "TQpLinSolverBase.h"
-#endif
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //

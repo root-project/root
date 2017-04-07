@@ -189,7 +189,6 @@ type DIFunction struct {
 	ScopeLine    int
 	Flags        int
 	Optimized    bool
-	Function     Value
 }
 
 // CreateCompileUnit creates function debug metadata.
@@ -211,14 +210,39 @@ func (d *DIBuilder) CreateFunction(diScope Metadata, f DIFunction) Metadata {
 		C.unsigned(f.ScopeLine),
 		C.unsigned(f.Flags),
 		boolToCInt(f.Optimized),
-		f.Function.C,
 	)
 	return Metadata{C: result}
 }
 
-// DILocalVariable holds the values for creating local variable debug metadata.
-type DILocalVariable struct {
-	Tag            dwarf.Tag
+// DIAutoVariable holds the values for creating auto variable debug metadata.
+type DIAutoVariable struct {
+	Name           string
+	File           Metadata
+	Line           int
+	Type           Metadata
+	AlwaysPreserve bool
+	Flags          int
+}
+
+// CreateAutoVariable creates local variable debug metadata.
+func (d *DIBuilder) CreateAutoVariable(scope Metadata, v DIAutoVariable) Metadata {
+	name := C.CString(v.Name)
+	defer C.free(unsafe.Pointer(name))
+	result := C.LLVMDIBuilderCreateAutoVariable(
+		d.ref,
+		scope.C,
+		name,
+		v.File.C,
+		C.unsigned(v.Line),
+		v.Type.C,
+		boolToCInt(v.AlwaysPreserve),
+		C.unsigned(v.Flags),
+	)
+	return Metadata{C: result}
+}
+
+// DIParameterVariable holds the values for creating parameter variable debug metadata.
+type DIParameterVariable struct {
 	Name           string
 	File           Metadata
 	Line           int
@@ -227,25 +251,24 @@ type DILocalVariable struct {
 	Flags          int
 
 	// ArgNo is the 1-based index of the argument in the function's
-	// parameter list if it is an argument, or 0 otherwise.
+	// parameter list.
 	ArgNo int
 }
 
-// CreateLocalVariable creates local variable debug metadata.
-func (d *DIBuilder) CreateLocalVariable(scope Metadata, v DILocalVariable) Metadata {
+// CreateParameterVariable creates parameter variable debug metadata.
+func (d *DIBuilder) CreateParameterVariable(scope Metadata, v DIParameterVariable) Metadata {
 	name := C.CString(v.Name)
 	defer C.free(unsafe.Pointer(name))
-	result := C.LLVMDIBuilderCreateLocalVariable(
+	result := C.LLVMDIBuilderCreateParameterVariable(
 		d.ref,
-		C.unsigned(v.Tag),
 		scope.C,
 		name,
+		C.unsigned(v.ArgNo),
 		v.File.C,
 		C.unsigned(v.Line),
 		v.Type.C,
 		boolToCInt(v.AlwaysPreserve),
 		C.unsigned(v.Flags),
-		C.unsigned(v.ArgNo),
 	)
 	return Metadata{C: result}
 }
@@ -339,6 +362,38 @@ func (d *DIBuilder) CreateStructType(scope Metadata, t DIStructType) Metadata {
 		C.unsigned(t.Flags),
 		t.DerivedFrom.C,
 		elements.C,
+	)
+	return Metadata{C: result}
+}
+
+// DIReplaceableCompositeType holds the values for creating replaceable
+// composite type debug metadata.
+type DIReplaceableCompositeType struct {
+	Tag         dwarf.Tag
+	Name        string
+	File        Metadata
+	Line        int
+	RuntimeLang int
+	SizeInBits  uint64
+	AlignInBits uint64
+	Flags       int
+}
+
+// CreateReplaceableCompositeType creates replaceable composite type debug metadata.
+func (d *DIBuilder) CreateReplaceableCompositeType(scope Metadata, t DIReplaceableCompositeType) Metadata {
+	name := C.CString(t.Name)
+	defer C.free(unsafe.Pointer(name))
+	result := C.LLVMDIBuilderCreateReplaceableCompositeType(
+		d.ref,
+		C.unsigned(t.Tag),
+		name,
+		scope.C,
+		t.File.C,
+		C.unsigned(t.Line),
+		C.unsigned(t.RuntimeLang),
+		C.uint64_t(t.SizeInBits),
+		C.uint64_t(t.AlignInBits),
+		C.unsigned(t.Flags),
 	)
 	return Metadata{C: result}
 }

@@ -36,15 +36,15 @@ public:
 static SRPAuthInit srpauth_init;
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Authenticate to remote rootd/proofd server using the SRP (secure remote
+/// password) protocol. Returns 0 if authentication failed, 1 if
+/// authentication succeeded and 2 if SRP is not available and standard
+/// authentication should be tried. Called via TAuthenticate class.
+
 Int_t SRPAuthenticate(TAuthenticate *auth, const char *user, const char *passwd,
                       const char *remote, TString &det, Int_t version)
 {
-   // Authenticate to remote rootd/proofd server using the SRP (secure remote
-   // password) protocol. Returns 0 if authentication failed, 1 if
-   // authentication succeeded and 2 if SRP is not available and standard
-   // authentication should be tried. Called via TAuthenticate class.
-
    Int_t  result = 0;
    char  *usr = 0;
    char  *psswd = 0;
@@ -308,14 +308,14 @@ out:
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SRP version of CheckSecCtx to be passed to TAuthenticate::AuthExists
+/// Check if User is matches the one in Ctx
+/// Returns: 1 if ok, 0 if not
+/// Deactivates Ctx is not valid
+
 Int_t SRPCheckSecCtx(const char *User, TSecContext *Ctx)
 {
-   // SRP version of CheckSecCtx to be passed to TAuthenticate::AuthExists
-   // Check if User is matches the one in Ctx
-   // Returns: 1 if ok, 0 if not
-   // Deactivates Ctx is not valid
-
    Int_t rc = 0;
 
    if (Ctx->IsActive()) {

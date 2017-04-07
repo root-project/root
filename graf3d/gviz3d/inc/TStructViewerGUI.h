@@ -118,7 +118,7 @@ public:
    void           Update(Bool_t resetCamera = false);
    void           UpdateButtonSlot();
 
-   ClassDef(TStructViewerGUI, 1); // A GUI fo 3D struct viewer
+   ClassDef(TStructViewerGUI, 0); // A GUI fo 3D struct viewer
 };
 
 #endif

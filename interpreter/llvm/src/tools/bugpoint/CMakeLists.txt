@@ -3,7 +3,6 @@ set(LLVM_LINK_COMPONENTS
   BitWriter
   CodeGen
   Core
-  IPA
   IPO
   IRReader
   InstCombine
@@ -31,7 +30,7 @@ add_llvm_tool(bugpoint
   ToolRunner.cpp
   bugpoint.cpp
   )
-set_target_properties(bugpoint PROPERTIES ENABLE_EXPORTS 1)
+export_executable_symbols(bugpoint)
 
 if(WITH_POLLY AND LINK_POLLY_INTO_TOOLS)
   target_link_libraries(bugpoint Polly)

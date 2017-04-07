@@ -8,13 +8,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/CrashRecoveryContext.h"
-#include "llvm/ADT/SmallString.h"
 #include "llvm/Config/config.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Mutex.h"
 #include "llvm/Support/ThreadLocal.h"
-#include <cstdio>
 #include <setjmp.h>
 using namespace llvm;
 
@@ -26,8 +24,13 @@ static ManagedStatic<
     sys::ThreadLocal<const CrashRecoveryContextImpl> > CurrentContext;
 
 struct CrashRecoveryContextImpl {
+  // When threads are disabled, this links up all active
+  // CrashRecoveryContextImpls.  When threads are enabled there's one thread
+  // per CrashRecoveryContext and CurrentContext is a thread-local, so only one
+  // CrashRecoveryContextImpl is active per thread and this is always null.
+  const CrashRecoveryContextImpl *Next;
+
   CrashRecoveryContext *CRC;
-  std::string Backtrace;
   ::jmp_buf JumpBuffer;
   volatile unsigned Failed : 1;
   unsigned SwitchedThread : 1;
@@ -36,21 +39,26 @@ public:
   CrashRecoveryContextImpl(CrashRecoveryContext *CRC) : CRC(CRC),
                                                         Failed(false),
                                                         SwitchedThread(false) {
+    Next = CurrentContext->get();
     CurrentContext->set(this);
   }
   ~CrashRecoveryContextImpl() {
     if (!SwitchedThread)
-      CurrentContext->erase();
+      CurrentContext->set(Next);
   }
 
   /// \brief Called when the separate crash-recovery thread was finished, to
   /// indicate that we don't need to clear the thread-local CurrentContext.
-  void setSwitchedThread() { SwitchedThread = true; }
+  void setSwitchedThread() { 
+#if defined(LLVM_ENABLE_THREADS) && LLVM_ENABLE_THREADS != 0
+    SwitchedThread = true;
+#endif
+  }
 
   void HandleCrash() {
     // Eliminate the current context entry, to avoid re-entering in case the
     // cleanup code crashes.
-    CurrentContext->erase();
+    CurrentContext->set(Next);
 
     assert(!Failed && "Crash recovery context already failed!");
     Failed = true;
@@ -67,7 +75,7 @@ public:
 static ManagedStatic<sys::Mutex> gCrashRecoveryContextMutex;
 static bool gCrashRecoveryEnabled = false;
 
-static ManagedStatic<sys::ThreadLocal<const CrashRecoveryContextCleanup> >
+static ManagedStatic<sys::ThreadLocal<const CrashRecoveryContext>>
        tlIsRecoveringFromCrash;
 
 CrashRecoveryContextCleanup::~CrashRecoveryContextCleanup() {}
@@ -75,7 +83,8 @@ CrashRecoveryContextCleanup::~CrashRecoveryContextCleanup() {}
 CrashRecoveryContext::~CrashRecoveryContext() {
   // Reclaim registered resources.
   CrashRecoveryContextCleanup *i = head;
-  tlIsRecoveringFromCrash->set(head);
+  const CrashRecoveryContext *PC = tlIsRecoveringFromCrash->get();
+  tlIsRecoveringFromCrash->set(this);
   while (i) {
     CrashRecoveryContextCleanup *tmp = i;
     i = tmp->next;
@@ -83,7 +92,7 @@ CrashRecoveryContext::~CrashRecoveryContext() {
     tmp->recoverResources();
     delete tmp;
   }
-  tlIsRecoveringFromCrash->erase();
+  tlIsRecoveringFromCrash->set(PC);
   
   CrashRecoveryContextImpl *CRCI = (CrashRecoveryContextImpl *) Impl;
   delete CRCI;
@@ -234,7 +243,7 @@ void CrashRecoveryContext::Disable() {
 
 static const int Signals[] =
     { SIGABRT, SIGBUS, SIGFPE, SIGILL, SIGSEGV, SIGTRAP };
-static const unsigned NumSignals = sizeof(Signals) / sizeof(Signals[0]);
+static const unsigned NumSignals = array_lengthof(Signals);
 static struct sigaction PrevActions[NumSignals];
 
 static void CrashRecoverySignalHandler(int Signal) {
@@ -323,13 +332,6 @@ void CrashRecoveryContext::HandleCrash() {
   CrashRecoveryContextImpl *CRCI = (CrashRecoveryContextImpl *) Impl;
   assert(CRCI && "Crash recovery context never initialized!");
   CRCI->HandleCrash();
-}
-
-const std::string &CrashRecoveryContext::getBacktrace() const {
-  CrashRecoveryContextImpl *CRC = (CrashRecoveryContextImpl *) Impl;
-  assert(CRC && "Crash recovery context never initialized!");
-  assert(CRC->Failed && "No crash was detected!");
-  return CRC->Backtrace;
 }
 
 // FIXME: Portability.

@@ -18,9 +18,8 @@
 //
 //======================================================
 
-#ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
-#endif
+#include "Math/Expression.h"
 
 namespace ROOT {
 

@@ -9,24 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for a 64 bit Integer data type.                              //
-//////////////////////////////////////////////////////////////////////////
+/** \class TLeafL
+\ingroup tree
+
+A TLeaf for a 64 bit Integer data type.
+*/
 
 #include "TLeafL.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 
 ClassImp(TLeafL)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for LeafL.
+
 TLeafL::TLeafL(): TLeaf()
 {
-//*-*-*-*-*-*Default constructor for LeafI*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ============================
-
    fLenType = sizeof(Long64_t);
    fMinimum = 0;
    fMaximum = 0;
@@ -34,14 +35,12 @@ TLeafL::TLeafL(): TLeaf()
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a LeafL.
+
 TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafL*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============
-//*-*
-
    fLenType = sizeof(Long64_t);
    fMinimum = 0;
    fMaximum = 0;
@@ -49,22 +48,19 @@ TLeafL::TLeafL(TBranch *parent, const char *name, const char *type)
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor for a LeafL.
+
 TLeafL::~TLeafL()
 {
-//*-*-*-*-*-*Default destructor for a LeafL*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ===============================
-
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Export element from local leaf buffer to ClonesArray.
 
-//______________________________________________________________________________
 void TLeafL::Export(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-//*-*        ======================================================
-
    Long64_t *value = fValue;
    for (Int_t i=0;i<n;i++) {
       char *first = (char*)list->UncheckedAt(i);
@@ -76,12 +72,11 @@ void TLeafL::Export(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pack leaf elements in Basket output buffer.
+
 void TLeafL::FillBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-//*-*                  =========================================
-
    Int_t i;
    Int_t len = GetLen();
    if (fPointer) fValue = *fPointer;
@@ -95,48 +90,42 @@ void TLeafL::FillBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of leaf type.
+
 const char *TLeafL::GetTypeName() const
 {
-//*-*-*-*-*-*-*-*Returns name of leaf type*-*-*-*-*-*-*-*-*-*-*-*
-//*-*            =========================
-
    if (fIsUnsigned) return "ULong64_t";
    return "Long64_t";
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current value of leaf.
+/// - if leaf is a simple type, i must be set to 0
+/// - if leaf is an array, i is the array element number to be returned
 
-//______________________________________________________________________________
 Double_t TLeafL::GetValue(Int_t i) const
 {
-// Returns current value of leaf
-// if leaf is a simple type, i must be set to 0
-// if leaf is an array, i is the array element number to be returned
-
    if (fIsUnsigned) return (Double_t)((ULong64_t)fValue[i]);
    return fValue[i];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns current value of leaf
+/// - if leaf is a simple type, i must be set to 0
+/// - if leaf is an array, i is the array element number to be returned
 
-//______________________________________________________________________________
 LongDouble_t TLeafL::GetValueLongDouble(Int_t i) const
 {
-// Returns current value of leaf
-// if leaf is a simple type, i must be set to 0
-// if leaf is an array, i is the array element number to be returned
-
    if (fIsUnsigned) return (LongDouble_t)((ULong64_t)fValue[i]);
    return fValue[i];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Import element from ClonesArray into local leaf buffer.
 
-
-//______________________________________________________________________________
 void TLeafL::Import(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-//*-*        ======================================================
-
    const Int_t kIntUndefined = -9999;
    Int_t j = 0;
    char *clone;
@@ -148,11 +137,11 @@ void TLeafL::Import(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints leaf value.
+
 void TLeafL::PrintValue(Int_t l) const
 {
-// Prints leaf value
-
    if (fIsUnsigned) {
       ULong64_t *uvalue = (ULong64_t*)GetValuePointer();
       printf("%llu",uvalue[l]);
@@ -162,12 +151,11 @@ void TLeafL::PrintValue(Int_t l) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaf elements from Basket input buffer.
+
 void TLeafL::ReadBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//*-*                  ===========================================
-
    if (!fLeafCount && fNdata == 1) {
       b.ReadLong64(fValue[0]);
    } else {
@@ -189,12 +177,12 @@ void TLeafL::ReadBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
+
 void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//  and export buffer to TClonesArray objects
-
    if (n*fLen == 1) {
       b >> fValue[0];
    } else {
@@ -211,10 +199,11 @@ void TLeafL::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a long integer from std::istream s and store it into the branch buffer.
+
 void TLeafL::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-// read a long integer from std::istream s and store it into the branch buffer
 #if defined(_MSC_VER) && (_MSC_VER<1300)
    printf("Due to a bug in VC++6, the function TLeafL::ReadValue is dummy\n");
 #else
@@ -228,12 +217,11 @@ void TLeafL::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set leaf buffer data address.
+
 void TLeafL::SetAddress(void *add)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-//*-*                  ============================
-
    if (ResetAddress(add) && (add!=fValue)) {
       delete [] fValue;
    }

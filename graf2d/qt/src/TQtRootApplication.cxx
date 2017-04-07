@@ -27,12 +27,12 @@
 
 // ClassImp(TQtRootApplication)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// An implementation of the TApplicationImp for Qt-based GUI.
+
 TQtRootApplication::TQtRootApplication(const char *appClassName,
                                    Int_t *argc, char **argv)
 {
-   // An implementation of the TApplicationImp for Qt-based GUI.
-
    fApplicationName = appClassName;
    fDisplay         = 0;
 
@@ -43,20 +43,20 @@ TQtRootApplication::TQtRootApplication(const char *appClassName,
       gSystem->SetDisplay();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete ROOT application environment.
+
 TQtRootApplication::~TQtRootApplication()
 {
-   // Delete ROOT application environment.
-
    delete fDisplay;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle command line arguments. Arguments handled are removed from the
+/// argument array. Currently only option "-display xserver" is considered.
+
 void TQtRootApplication::GetOptions(Int_t *argc, char **argv)
 {
-   // Handle command line arguments. Arguments handled are removed from the
-   // argument array. Currently only option "-display xserver" is considered.
-
    if (!argc) return;
 
    int i, j;

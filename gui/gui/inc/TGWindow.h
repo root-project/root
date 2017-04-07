@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGObject
 #include "TGObject.h"
-#endif
-#ifndef ROOT_TGClient
 #include "TGClient.h"
-#endif
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
 class TGClient;
 class TGIdleHandler;
@@ -131,7 +125,7 @@ public:
 
    static Int_t        GetCounter();
 
-   ClassDef(TGWindow,1)  // GUI Window base class
+   ClassDef(TGWindow, 0);  // GUI Window base class
 };
 
 

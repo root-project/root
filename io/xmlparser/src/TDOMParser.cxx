@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDomParser                                                           //
-//                                                                      //
-// DOM stands for the Document Object Model; this is an API for         //
-// accessing XML or HTML structured documents.                          //
-// The Document Object Model is a platform and language-neutral         //
-// interface that will allow programs and scripts to dynamically        //
-// access and update the content, structure and style of documents.     //
-//                                                                      //
-// The parser returns a tree built during the document analysis.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TDomParser
+\ingroup IO
+
+DOM stands for the Document Object Model; this is an API for
+accessing XML or HTML structured documents.
+The Document Object Model is a platform and language-neutral
+interface that will allow programs and scripts to dynamically
+access and update the content, structure and style of documents.
+
+The parser returns a tree built during the document analysis.
+*/
 
 #include "TDOMParser.h"
 #include "TXMLDocument.h"
@@ -32,25 +31,26 @@
 
 ClassImp(TDOMParser);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TDOMParser constructor.
+
 TDOMParser::TDOMParser() : fTXMLDoc(0)
 {
-   // TDOMParser constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TDOMParser destructor, it calls ReleaseUnderlying().
+
 TDOMParser::~TDOMParser()
 {
-   // TDOMParser destructor, it calls ReleaseUnderlying().
-
    ReleaseUnderlying();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release any existing document.
+
 void TDOMParser::ReleaseUnderlying()
 {
-   // Release any existing document.
-
    if (fTXMLDoc) {
       delete fTXMLDoc;
       fTXMLDoc = 0;
@@ -61,14 +61,14 @@ void TDOMParser::ReleaseUnderlying()
    TXMLParser::ReleaseUnderlying();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse the XML file where filename is the XML file name.
+/// It will create a TXMLDocument if the file is parsed without
+/// any error. It returns parse code error in case of parse error,
+/// see TXMLParser.
+
 Int_t TDOMParser::ParseFile(const char *filename)
 {
-   // Parse the XML file where filename is the XML file name.
-   // It will create a TXMLDocument if the file is parsed without
-   // any error. It returns parse code error in case of parse error,
-   // see TXMLParser.
-
    ReleaseUnderlying();
 
    fContext = xmlCreateFileParserCtxt(filename);
@@ -88,11 +88,11 @@ Int_t TDOMParser::ParseFile(const char *filename)
    return ParseContext();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// It parses a buffer, much like ParseFile().
+
 Int_t TDOMParser::ParseBuffer(const char *buffer, Int_t len)
 {
-   // It parses a buffer, much like ParseFile().
-
    ReleaseUnderlying();
 
    fContext = xmlCreateMemoryParserCtxt(buffer, len);
@@ -107,15 +107,15 @@ Int_t TDOMParser::ParseBuffer(const char *buffer, Int_t len)
    return ParseContext();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a XML document for the parser.
+/// It returns 0 on success, and
+///   - \b -1 if no XML document was created,
+///   - \b -5 if the document is not well formated,
+///   - \b -6 if document is not valid.
+
 Int_t TDOMParser::ParseContext()
 {
-   // Creates a XML document for the parser.
-   // It returns 0 on success, and
-   // -1 if no XML document was created,
-   // -5 if the document is not well formated,
-   // -6 if document is not valid.
-
    xmlParseDocument(fContext);
 
    if (!fContext->myDoc) {
@@ -138,10 +138,10 @@ Int_t TDOMParser::ParseContext()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the TXMLDocument.
+
 TXMLDocument *TDOMParser::GetXMLDocument() const
 {
-   // Returns the TXMLDocument.
-
    return fTXMLDoc;
 }

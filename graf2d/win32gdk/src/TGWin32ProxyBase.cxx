@@ -9,76 +9,77 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//
-// Proxy classes provide thread-safe interface to global objects.
-//
-// For example: TGWin32VirtualXProxy (to gVirtualX),  
-//              TGWin32InterpreterProxy (to gInterpreter).
-//
-// Proxy object creates callback object and posts a windows message to 
-// "processing thread". When windows message is received callback 
-// ("real method") is executed.
-// 
-// For example: 
-//    gVirtualX->ClearWindow()
-//
-//    - callback object created containing pointer to function
-//      corresponding TGWin32::ClearWindow() method
-//    - message to "processing thread" (main thread) is posted
-//    - TGWin32::ClearWindow() method is executed inside main thread
-//    - thread containing gVirtualX proxy object waits for reply
-//      from main thread that TGWin32::ClearWindow() is completed. 
-//
-// Howto create proxy class:
-//
-//  1. Naming. 
-//       name of proxy = TGWin32 + the name of "virtual base class" + Proxy
-//
-//       e.g. TGWin32VirtualXProxy = TGWin32 + VirtualX + Proxy
-//
-//  2. Definition of global object
-//       As example check definition and implementation of 
-//       gVirtualX, gInterpreter global objects
-//
-//  3. Class definition.
-//       proxy class must be inherited from "virtual base class" and
-//       TGWin32ProxyBase class. For example:
-//
-//       class TGWin32VirtualX : public TVirtualX , public  TGWin32ProxyBase
-//
-//  4. Constructors, destructor, extra methods.
-//     - constructors and destructor of proxy class do nothing
-//     - proxy class must contain two extra static methods 
-//       RealObject(), ProxyObject(). Each of them return pointer to object
-//       of virtual base class.
-//
-//     For example:
-//       static TInterpreter *RealObject();
-//       static TInterpreter *ProxyObject();
-//
-//  5. Implementation
-//       TGWin32ProxyDefs.h file contains a set of macros which very
-//       simplify implementation.
-//     - RETURN_PROXY_OBJECT macro implements ProxyObject() method, e.g.
-//       RETURN_PROXY_OBJECT(Interpreter)         
-//     - the names of other macros say about itself.
-//
-//       For example:
-//          VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
-//             void TGWin32InterpreterProxy::ClearFileBusy()
-//  
-//          RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
-//             Visual_t TGWin32VirtualXProxy::GetVisual() const
-//
-//          RETURN_METHOD_ARG2(VirtualX,Int_t,OpenPixmap,UInt_t,w,UInt_t,h)
-//             Int_t TGWin32VirtualXProxy::OpenPixmap,UInt_t w,UInt_t h)
-//
-//     - few methods has _LOCK part in the name
-//          VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfMethods,TClass*,cl)
-//   
-//
-///////////////////////////////////////////////////////////////////////////////
+/** \class TGWin32ProxyBase
+\ingroup win32
+
+Proxy classes provide thread-safe interface to global objects.
+
+For example: TGWin32VirtualXProxy (to gVirtualX),
+             TGWin32InterpreterProxy (to gInterpreter).
+
+Proxy object creates callback object and posts a windows message to
+"processing thread". When windows message is received callback
+("real method") is executed.
+
+For example:
+   gVirtualX->ClearWindow()
+
+   - callback object created containing pointer to function
+     corresponding TGWin32::ClearWindow() method
+   - message to "processing thread" (main thread) is posted
+   - TGWin32::ClearWindow() method is executed inside main thread
+   - thread containing gVirtualX proxy object waits for reply
+     from main thread that TGWin32::ClearWindow() is completed.
+
+Howto create proxy class:
+
+ 1. Naming.
+      name of proxy = TGWin32 + the name of "virtual base class" + Proxy
+
+      e.g. TGWin32VirtualXProxy = TGWin32 + VirtualX + Proxy
+
+ 2. Definition of global object
+      As example check definition and implementation of
+      gVirtualX, gInterpreter global objects
+
+ 3. Class definition.
+      proxy class must be inherited from "virtual base class" and
+      TGWin32ProxyBase class. For example:
+
+      class TGWin32VirtualX : public TVirtualX , public  TGWin32ProxyBase
+
+ 4. Constructors, destructor, extra methods.
+    - constructors and destructor of proxy class do nothing
+    - proxy class must contain two extra static methods
+      RealObject(), ProxyObject(). Each of them return pointer to object
+      of virtual base class.
+
+    For example:
+      static TInterpreter *RealObject();
+      static TInterpreter *ProxyObject();
+
+ 5. Implementation
+      TGWin32ProxyDefs.h file contains a set of macros which very
+      simplify implementation.
+    - RETURN_PROXY_OBJECT macro implements ProxyObject() method, e.g.
+      RETURN_PROXY_OBJECT(Interpreter)
+    - the names of other macros say about itself.
+
+      For example:
+         VOID_METHOD_ARG0(Interpreter,ClearFileBusy,1)
+            void TGWin32InterpreterProxy::ClearFileBusy()
+
+         RETURN_METHOD_ARG0_CONST(VirtualX,Visual_t,GetVisual)
+            Visual_t TGWin32VirtualXProxy::GetVisual() const
+
+         RETURN_METHOD_ARG2(VirtualX,Int_t,OpenPixmap,UInt_t,w,UInt_t,h)
+            Int_t TGWin32VirtualXProxy::OpenPixmap,UInt_t w,UInt_t h)
+
+    - few methods has _LOCK part in the name
+         VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfMethods,TClass*,cl)
+
+*/
+
 
 #include "Windows4Root.h"
 #include <windows.h>
@@ -107,19 +108,19 @@ public:
    ~TGWin32ProxyBasePrivate();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor
+
 TGWin32ProxyBasePrivate::TGWin32ProxyBasePrivate()
 {
-   // ctor
-
    fEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TGWin32ProxyBasePrivate::~TGWin32ProxyBasePrivate()
 {
-   // dtor
-
    if (fEvent) ::CloseHandle(fEvent);
    fEvent = 0;
 }
@@ -133,11 +134,11 @@ Long_t  TGWin32ProxyBase::fgLock = 0;
 UInt_t  TGWin32ProxyBase::fMaxResponseTime = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor
+
 TGWin32ProxyBase::TGWin32ProxyBase()
 {
-   // ctor
-
    fIsVirtualX = kFALSE;
    fCallBack = 0;
    fParam = 0;
@@ -150,11 +151,11 @@ TGWin32ProxyBase::TGWin32ProxyBase()
    if (!fgPingMessageId) fgPingMessageId = ::RegisterWindowMessage("TGWin32ProxyBase::Ping");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dtor
+
 TGWin32ProxyBase::~TGWin32ProxyBase()
 {
-   // dtor
-
    fListOfCallBacks->Delete();
    delete fListOfCallBacks;
    fListOfCallBacks = 0;
@@ -162,53 +163,53 @@ TGWin32ProxyBase::~TGWin32ProxyBase()
    delete fPimpl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// enter critical section
+
 void TGWin32ProxyBase::Lock()
 {
-   // enter critical section
-
    TGWin32::Lock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// leave critical section
+
 void TGWin32ProxyBase::Unlock()
 {
-   // leave critical section
-
    TGWin32::Unlock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// lock any proxy (client thread)
+
 void TGWin32ProxyBase::GlobalLock()
 {
-   // lock any proxy (client thread)
-
    if (IsGloballyLocked()) return;
    ::InterlockedIncrement(&fgLock);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  unlock any proxy (client thread)
+
 void TGWin32ProxyBase::GlobalUnlock()
 {
-   //  unlock any proxy (client thread)
-
    if (!IsGloballyLocked()) return;
    ::InterlockedDecrement(&fgLock);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// send ping messsage to server thread
+
 Bool_t TGWin32ProxyBase::Ping()
 {
-   // send ping messsage to server thread
-
    return ::PostThreadMessage(fgMainThreadId, fgPingMessageId, (WPARAM)0, 0L);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns elapsed time in milliseconds with microseconds precision
+
 Double_t TGWin32ProxyBase::GetMilliSeconds()
 {
-   // returns elapsed time in milliseconds with microseconds precision
-
    static LARGE_INTEGER freq;
    static Bool_t first = kTRUE;
    LARGE_INTEGER count;
@@ -231,12 +232,12 @@ Double_t TGWin32ProxyBase::GetMilliSeconds()
    return ((Double_t)count.QuadPart - overhead)*1000./((Double_t)freq.QuadPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executes all batched callbacks and the latest callback
+/// This method is executed by server thread
+
 void TGWin32ProxyBase::ExecuteCallBack(Bool_t sync)
 {
-   // Executes all batched callbacks and the latest callback
-   // This method is executed by server thread
-
    // process batched callbacks
    if (fListOfCallBacks && fListOfCallBacks->GetSize()) {
       TIter next(fListOfCallBacks);
@@ -252,18 +253,18 @@ void TGWin32ProxyBase::ExecuteCallBack(Bool_t sync)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// if sync is kTRUE:
+///    - post message to main thread.
+///    - execute callbacks from fListOfCallBacks
+///    - wait for response
+/// else
+///    -  add callback to fListOfCallBacks
+///
+/// returns kTRUE if callback execution is delayed (batched)
+
 Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 {
-   // if sync is kTRUE:
-   //    - post message to main thread.
-   //    - execute callbacks from fListOfCallBacks
-   //    - wait for response
-   // else
-   //    -  add callback to fListOfCallBacks
-   //
-   // returns kTRUE if callback execution is delayed (batched)
-
    Int_t wait = 0;
 
    if (!fgMainThreadId) return kFALSE;
@@ -275,14 +276,14 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
          break;
 #endif
       ::SleepEx(10, 1); // take a rest
-      if (!fgMainThreadId) return kFALSE; // server thread terminated 
+      if (!fgMainThreadId) return kFALSE; // server thread terminated
    }
 
    Bool_t batch = !sync && (fListOfCallBacks->GetSize() < fBatchLimit);
 
-   // if it is a call to gVirtualX and comes from a secondary thread, 
+   // if it is a call to gVirtualX and comes from a secondary thread,
    // delay it and process it via the main thread (to avoid deadlocks).
-   if (!fgUserThreadId && fIsVirtualX && 
+   if (!fgUserThreadId && fIsVirtualX &&
        (GetCurrentThreadId() != fgMainThreadId) &&
        (fListOfCallBacks->GetSize() < fBatchLimit))
       batch = kTRUE;
@@ -306,7 +307,7 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
    while (res ==  WAIT_TIMEOUT) {
       res = ::WaitForSingleObject(fPimpl->fEvent, 100);
 #ifdef OLD_THREAD_IMPLEMENTATION
-      if ((GetCurrentThreadId() == fgMainThreadId) || 
+      if ((GetCurrentThreadId() == fgMainThreadId) ||
          (!gROOT->IsLineProcessing() && IsGloballyLocked())) {
          break;
       }
@@ -317,26 +318,26 @@ Bool_t TGWin32ProxyBase::ForwardCallBack(Bool_t sync)
 
    if (res == WAIT_TIMEOUT) { // server thread is blocked
       GlobalLock();
-      return kTRUE;    
+      return kTRUE;
    }
 
    fListOfCallBacks->Delete();
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the status of the lock.
+
 Bool_t TGWin32ProxyBase::IsGloballyLocked()
 {
-   // Check the status of the lock. 
-
    return fgLock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// send exit message to server thread
+
 void TGWin32ProxyBase::SendExitMessage()
 {
-   // send exit message to server thread
-
    ::PostThreadMessage(fgMainThreadId, WM_QUIT, 0, 0L);
 }
 

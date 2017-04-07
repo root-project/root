@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -46,12 +46,13 @@ enum ETGeoEltuWid {
    kELTU_APPLY, kELTU_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for para editor
+
 TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for para editor
    fShape   = 0;
    fAi = fBi = fDzi = 0.0;
    fNamei = "";
@@ -79,7 +80,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEA->Associate(this);
    f1->AddFrame(fEA, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for B
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "B"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -91,7 +92,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEB->Associate(this);
    f1->AddFrame(fEB, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for dz
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Dz"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -103,12 +104,12 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
- 
+
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -118,27 +119,29 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoEltuEditor::~TGeoEltuEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoEltuEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoEltuEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoEltuEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoEltuEditor", this, "DoModified()");
@@ -151,14 +154,15 @@ void TGeoEltuEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoEltuEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoEltu::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoEltu*)obj;
    fAi = fShape->GetA();
    fBi = fShape->GetB();
@@ -168,40 +172,43 @@ void TGeoEltuEditor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fEA->SetNumber(fAi);
    fEB->SetNumber(fBi);
    fEDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoEltuEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoEltuEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoEltuEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t a = fEA->GetNumber();
-   Double_t b = fEB->GetNumber(); 
-   Double_t z = fEDz->GetNumber();  
+   Double_t b = fEB->GetNumber();
+   Double_t z = fEDz->GetNumber();
    Double_t param[3];
    param[0] = a;
    param[1] = b;
@@ -220,22 +227,24 @@ void TGeoEltuEditor::DoApply()
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoEltuEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoEltuEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fEA->SetNumber(fAi);
    fEB->SetNumber(fBi);
    fEDz->SetNumber(fDzi);
@@ -243,42 +252,45 @@ void TGeoEltuEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for A.
+
 void TGeoEltuEditor::DoA()
 {
-// Slot for A.
    Double_t a = fEA->GetNumber();
    if (a <= 0) {
       a = 0.1;
       fEA->SetNumber(a);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for B.
+
 void TGeoEltuEditor::DoB()
 {
-// Slot for B.
    Double_t b = fEB->GetNumber();
    if (b <= 0) {
       b = 0.1;
       fEB->SetNumber(b);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoEltuEditor::DoDz()
 {
-// Slot for Z.
    Double_t z = fEDz->GetNumber();
    if (z <= 0) {
       z = 0.1;
       fEDz->SetNumber(z);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }

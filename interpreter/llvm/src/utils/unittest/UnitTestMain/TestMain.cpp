@@ -7,13 +7,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Config/config.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Signals.h"
 #include "gtest/gtest.h"
 
 
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
 # include <windows.h>
 # if defined(_MSC_VER)
 #   include <crtdbg.h>
@@ -23,14 +22,15 @@
 const char *TestMainArgv0;
 
 int main(int argc, char **argv) {
-  llvm::sys::PrintStackTraceOnErrorSignal();
+  llvm::sys::PrintStackTraceOnErrorSignal(argv[0],
+                                          true /* Disable crash reporting */);
   testing::InitGoogleTest(&argc, argv);
   llvm::cl::ParseCommandLineOptions(argc, argv);
 
   // Make it easy for a test to re-execute itself by saving argv[0].
   TestMainArgv0 = argv[0];
 
-# if defined(LLVM_ON_WIN32)
+# if defined(_WIN32)
   // Disable all of the possible ways Windows conspires to make automated
   // testing impossible.
   ::SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);

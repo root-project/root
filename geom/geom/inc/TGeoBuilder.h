@@ -12,17 +12,7 @@
 #ifndef ROOT_TGeoBuilder
 #define ROOT_TGeoBuilder
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-//  TGeoBuilder                                                          //
-//                                                                       //
-// Geometry construction class                                           //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 class TGeoMaterial;
 class TGeoMatrix;

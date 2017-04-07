@@ -18,15 +18,10 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDecompBase
+#include "Rtypes.h"
 #include "TDecompBase.h"
-#endif
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
 
 class TDecompBK : public TDecompBase
 {

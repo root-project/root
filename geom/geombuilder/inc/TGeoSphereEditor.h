@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoSphere;
 class TGeoTabManager;
@@ -44,9 +40,9 @@ protected:
    Double_t        fRmini;             // Initial inner radius
    Double_t        fRmaxi;             // Initial outer radius
    Double_t        fTheta1i;           // Initial lower theta limit
-   Double_t        fTheta2i;           // Initial higher theta limit   
+   Double_t        fTheta2i;           // Initial higher theta limit
    Double_t        fPhi1i;             // Initial lower phi limit
-   Double_t        fPhi2i;             // Initial higher phi limit   
+   Double_t        fPhi2i;             // Initial higher phi limit
    TString         fNamei;             // Initial name
    TGeoSphere     *fShape;             // Shape object
    Bool_t          fIsModified;        // Flag that volume was modified
@@ -61,13 +57,13 @@ protected:
    TGNumberEntry  *fEPhi1;             // Number entry for phi1
    TGNumberEntry  *fEPhi2;             // Number entry for phi2
    TGDoubleVSlider  *fSPhi;            // Phi slider
-   TGDoubleVSlider  *fSTheta;          // Theta slider  
+   TGDoubleVSlider  *fSTheta;          // Theta slider
    TGTextButton   *fApply;             // Apply-Button to accept changes
    TGTextButton   *fUndo;              // Undo-Button
    TGCheckButton  *fDelayed;           // Check button for delayed draw
 
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
-   Bool_t       IsDelayed() const;   
+   Bool_t       IsDelayed() const;
 
 public:
    TGeoSphereEditor(const TGWindow *p = 0,
@@ -89,8 +85,8 @@ public:
    void           DoName();
    virtual void   DoApply();
    virtual void   DoUndo();
-   
-   ClassDef(TGeoSphereEditor,0)   // TGeoSphere editor
-};   
 
-#endif                    
+   ClassDef(TGeoSphereEditor,0)   // TGeoSphere editor
+};
+
+#endif

@@ -1,5 +1,14 @@
-// Illustrate how to fit excluding points in a given range
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+/// Illustrates how to fit excluding points in a given range.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TH1.h"
 #include "TF1.h"
 #include "TList.h"

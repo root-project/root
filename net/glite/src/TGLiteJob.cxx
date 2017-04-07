@@ -43,29 +43,29 @@ using namespace std;
 using namespace glite_api_wrapper;
 using namespace MiscCommon;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The GetJobStatus() method queries the job for its status.
+/// RETURN:
+///      a TGridJobStatus object.
+
 TGridJobStatus* TGLiteJob::GetJobStatus() const
 {
-   // The GetJobStatus() method queries the job for its status.
-   // RETURN:
-   //      a TGridJobStatus object.
-
    // Returns 0 in case of failure.
    return dynamic_cast<TGridJobStatus*>(new TGLiteJobStatus(fJobID));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieving the output sandbox files.
+/// INPUT:
+///      _localpath  [in] - a local destination path for output sandbox.
+/// NOTE:
+///      The other parameter is unsupported.
+/// RETURN:
+///      The method returns -1 in case of errors and 0 otherwise.
+
 Int_t TGLiteJob::GetOutputSandbox(const char* _localpath, Option_t* /*opt*/)
 {
-   // Retrieving the output sandbox files.
-   // INPUT:
-   //      _localpath  [in] - a local destination path for output sandbox.
-   // NOTE:
-   //      The other parameter is unsupported.
-   // RETURN:
-   //      The method returns -1 in case of errors and 0 otherwise.
-
    // TODO: Add Info message;
    // TODO: Add option "nopurge" to TGLiteJob::GetOutputSandbox, since it's supported now by glite-api-wrapper
    try {
@@ -89,23 +89,23 @@ Int_t TGLiteJob::GetOutputSandbox(const char* _localpath, Option_t* /*opt*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Not implemented for RGLite.
+
 Bool_t TGLiteJob::Resubmit()
 {
-   // Not implemented for RGLite.
-
    MayNotUse("Resubmit");
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Cancel() method cancels a gLite job, which was assigned to the class.
+/// RETURN:
+///      kTRUE if succeeded and kFALSE otherwise.
+
 Bool_t TGLiteJob::Cancel()
 {
-   // The Cancel() method cancels a gLite job, which was assigned to the class.
-   // RETURN:
-   //      kTRUE if succeeded and kFALSE otherwise.
-
    try {
       CGLiteAPIWrapper::Instance().GetJobManager().JobCancel(string(fJobID));
    } catch (const exception &_e) {

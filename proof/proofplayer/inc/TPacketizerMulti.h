@@ -26,9 +26,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPacketizer
 #include "TVirtualPacketizer.h"
-#endif
 
 
 class TIter;

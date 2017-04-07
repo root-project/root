@@ -18,126 +18,141 @@
 namespace ROOT {
 namespace iOS {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TGIOS::TGIOS()
 {
-   // Default ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ctor.
+
 TGIOS::TGIOS(const char *name, const char *title)
          : TVirtualX(name, title)
 {
-   // Ctor.
 }
 
 //TAttLine.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets color index "cindex" for drawing lines.
+
 void TGIOS::SetLineColor(Color_t cindex)
 {
-   // Sets color index "cindex" for drawing lines.
    TAttLine::SetLineColor(cindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the line style.
+///
+/// linestyle <= 1 solid
+/// linestyle  = 2 dashed
+/// linestyle  = 3 dotted
+/// linestyle  = 4 dashed-dotted
+
 void TGIOS::SetLineStyle(Style_t linestyle)
 {
-   // Sets the line style.
-   //
-   // linestyle <= 1 solid
-   // linestyle  = 2 dashed
-   // linestyle  = 3 dotted
-   // linestyle  = 4 dashed-dotted
    TAttLine::SetLineStyle(linestyle);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the line width.
+///
+/// width - the line width in pixels
+
 void TGIOS::SetLineWidth(Width_t width)
 {
-   // Sets the line width.
-   //
-   // width - the line width in pixels
    TAttLine::SetLineWidth(width);
 }
 
 //TAttFill.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets color index "cindex" for fill areas.
+
 void TGIOS::SetFillColor(Color_t cindex)
 {
-   // Sets color index "cindex" for fill areas.
    TAttFill::SetFillColor(cindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets fill area style.
+///
+/// style - compound fill area interior style
+///         style = 1000 * interiorstyle + styleindex
+
 void TGIOS::SetFillStyle(Style_t style)
 {
-   // Sets fill area style.
-   //
-   // style - compound fill area interior style
-   //         style = 1000 * interiorstyle + styleindex
    TAttFill::SetFillStyle(style);
 }
 
 //TAttMarker.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets color index "cindex" for markers.
+
 void TGIOS::SetMarkerColor(Color_t cindex)
 {
-   // Sets color index "cindex" for markers.
    TAttMarker::SetMarkerColor(cindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets marker size index.
+///
+/// markersize - the marker scale factor
+
 void TGIOS::SetMarkerSize(Float_t markersize)
 {
-   // Sets marker size index.
-   //
-   // markersize - the marker scale factor
    TAttMarker::SetMarkerSize(markersize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets marker style.
+
 void TGIOS::SetMarkerStyle(Style_t markerstyle)
 {
-   // Sets marker style.
    TAttMarker::SetMarkerStyle(markerstyle);
 }
 
 //TAttText.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the text alignment.
+///
+/// talign = txalh horizontal text alignment
+/// talign = txalv vertical text alignment
+
 void TGIOS::SetTextAlign(Short_t talign)
 {
-   // Sets the text alignment.
-   //
-   // talign = txalh horizontal text alignment
-   // talign = txalv vertical text alignment
    TAttText::SetTextAlign(talign);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the color index "cindex" for text.
+
 void TGIOS::SetTextColor(Color_t cindex)
 {
-   // Sets the color index "cindex" for text.
    TAttText::SetTextColor(cindex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the current text font number.
+
 void TGIOS::SetTextFont(Font_t fontnumber)
 {
-   // Sets the current text font number.
    TAttText::SetTextFont(fontnumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the current text size to "textsize"
+
 void TGIOS::SetTextSize(Float_t textsize)
 {
-   // Sets the current text size to "textsize"
    TAttText::SetTextSize(textsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///With all these global variables like gVirtualX and gPad, I have to use this trick.
+
 void TGIOS::GetTextExtent(UInt_t &w, UInt_t &h, char *textLine)
 {
-   //With all these global variables like gVirtualX and gPad, I have to use this trick.
    Pad *p = static_cast<Pad *>(gPad);
    p->GetTextExtent(w, h, textLine);
 }

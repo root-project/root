@@ -9,27 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeRow                                                             //
-//                                                                      //
-// Class defining interface to a row of a TTree query result.           //
-// Objects of this class are created by TTreeResult methods.            //
-//                                                                      //
-// Related classes are TTreeResult.                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeRow
+\ingroup tree
+
+Class defining interface to a row of a TTree query result.
+Objects of this class are created by TTreeResult methods.
+
+Related classes are TTreeResult.
+*/
 
 #include "TTreeRow.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 
 ClassImp(TTreeRow)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of a query result.
+
 TTreeRow::TTreeRow()
 {
-   // Single row of a query result.
-
    fColumnCount = 0;
    fFields      = 0;
    fOriginal    = 0;
@@ -37,11 +36,11 @@ TTreeRow::TTreeRow()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of a query result.
+
 TTreeRow::TTreeRow(Int_t nfields)
 {
-   // Single row of a query result.
-
    fColumnCount = nfields;
    fFields      = 0;
    fOriginal    = 0;
@@ -49,11 +48,11 @@ TTreeRow::TTreeRow(Int_t nfields)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Single row of a query result.
+
 TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
 {
-   // Single row of a query result.
-
    fColumnCount = nfields;
    fFields      = 0;
    fOriginal    = 0;
@@ -61,12 +60,12 @@ TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
    SetRow(fields,row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is a shallow copy of a real row, i.e. it only contains
+/// a pointer to the original.
+
 TTreeRow::TTreeRow(TSQLRow *original)
 {
-   // This is a shallow copy of a real row, i.e. it only contains
-   // a pointer to the original.
-
    fFields      = 0;
    fOriginal    = 0;
    fColumnCount = 0;
@@ -85,31 +84,31 @@ TTreeRow::TTreeRow(TSQLRow *original)
    fColumnCount = fOriginal->fColumnCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy row object.
+
 TTreeRow::~TTreeRow()
 {
-   // Destroy row object.
-
    if (fFields)
       Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close row.
+
 void TTreeRow::Close(Option_t *)
 {
-   // Close row.
-
    if (fRow)    delete [] fRow;
    if (fFields) delete [] fFields;
    fColumnCount = 0;
    fOriginal = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if row is open and field index within range.
+
 Bool_t TTreeRow::IsValid(Int_t field)
 {
-   // Check if row is open and field index within range.
-
    if (!fFields && !fOriginal) {
       Error("IsValid", "row closed");
       return kFALSE;
@@ -121,11 +120,11 @@ Bool_t TTreeRow::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get length in bytes of specified field.
+
 ULong_t TTreeRow::GetFieldLength(Int_t field)
 {
-   // Get length in bytes of specified field.
-
    if (!IsValid(field))
       return 0;
 
@@ -136,11 +135,11 @@ ULong_t TTreeRow::GetFieldLength(Int_t field)
    else           return fFields[0] -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get specified field from row (0 <= field < GetFieldCount()).
+
 const char *TTreeRow::GetField(Int_t field)
 {
-   // Get specified field from row (0 <= field < GetFieldCount()).
-
    if (!IsValid(field))
       return 0;
 
@@ -151,11 +150,11 @@ const char *TTreeRow::GetField(Int_t field)
    else           return fRow;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The field and row information.
+
 void TTreeRow::SetRow(const Int_t *fields, const char *row)
 {
-   // The field and row information.
-
    if (!fColumnCount) return;
    if (fFields) delete [] fFields;
    Int_t nch    = fields[fColumnCount-1];
@@ -166,10 +165,11 @@ void TTreeRow::SetRow(const Int_t *fields, const char *row)
    memcpy(fRow,row,nch);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TTreeRow.
+
 void TTreeRow::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TTreeRow.
    UInt_t R__s, R__c;
    if (R__b.IsReading()) {
       R__b.ReadVersion(&R__s, &R__c);
@@ -187,7 +187,7 @@ void TTreeRow::Streamer(TBuffer &R__b)
       TSQLRow::Streamer(R__b);
       R__b << fColumnCount;
       R__b.WriteFastArray(fFields,fColumnCount);
-      Int_t nch = fFields[fColumnCount-1];
+      Int_t nch = fFields ? fFields[fColumnCount-1] : 0;
       R__b << nch;
       R__b.WriteFastArray(fRow,nch);
       R__b.SetByteCount(R__c,kTRUE);

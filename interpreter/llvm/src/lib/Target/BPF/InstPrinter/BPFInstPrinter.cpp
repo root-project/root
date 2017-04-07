@@ -27,12 +27,13 @@ using namespace llvm;
 #include "BPFGenAsmWriter.inc"
 
 void BPFInstPrinter::printInst(const MCInst *MI, raw_ostream &O,
-                               StringRef Annot) {
+                               StringRef Annot, const MCSubtargetInfo &STI) {
   printInstruction(MI, O);
   printAnnotation(O, Annot);
 }
 
 static void printExpr(const MCExpr *Expr, raw_ostream &O) {
+#ifndef NDEBUG
   const MCSymbolRefExpr *SRE;
 
   if (const MCBinaryExpr *BE = dyn_cast<MCBinaryExpr>(Expr))
@@ -44,6 +45,7 @@ static void printExpr(const MCExpr *Expr, raw_ostream &O) {
   MCSymbolRefExpr::VariantKind Kind = SRE->getKind();
 
   assert(Kind == MCSymbolRefExpr::VK_None);
+#endif
   O << *Expr;
 }
 

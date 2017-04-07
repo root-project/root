@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <vector>
 
@@ -35,12 +33,13 @@ namespace std {
 
 class TBranch;
 class TTree;
+class TFileCacheRead;
 
 class TTreeCloner {
-   TString    fWarningMsg;       //Text of the error message lead to an 'invalid' state
+   TString    fWarningMsg;       ///< Text of the error message lead to an 'invalid' state
 
    Bool_t     fIsValid;
-   Bool_t     fNeedConversion;   //True if the fast merge is not possible but a slow merge might possible.
+   Bool_t     fNeedConversion;   ///< True if the fast merge is not possible but a slow merge might possible.
    UInt_t     fOptions;
    TTree     *fFromTree;
    TTree     *fToTree;
@@ -49,17 +48,21 @@ class TTreeCloner {
    TObjArray  fToBranches;
 
    UInt_t     fMaxBaskets;
-   UInt_t    *fBasketBranchNum;  //[fMaxBaskets] Index of the branch(es) of the basket.
-   UInt_t    *fBasketNum;        //[fMaxBaskets] index of the basket within the branch.
+   UInt_t    *fBasketBranchNum;  ///<[fMaxBaskets] Index of the branch(es) of the basket.
+   UInt_t    *fBasketNum;        ///<[fMaxBaskets] index of the basket within the branch.
 
-   Long64_t  *fBasketSeek;       //[fMaxBaskets] list of basket position to be read.
-   Long64_t  *fBasketEntry;      //[fMaxBaskets] list of basket start entries.
-   UInt_t    *fBasketIndex;      //[fMaxBaskets] ordered list of basket indices to be written.
+   Long64_t  *fBasketSeek;       ///<[fMaxBaskets] list of basket position to be read.
+   Long64_t  *fBasketEntry;      ///<[fMaxBaskets] list of basket start entries.
+   UInt_t    *fBasketIndex;      ///<[fMaxBaskets] ordered list of basket indices to be written.
 
-   UShort_t   fPidOffset;        //Offset to be added to the copied key/basket.
+   UShort_t   fPidOffset;        ///< Offset to be added to the copied key/basket.
 
-   UInt_t     fCloneMethod;      //Indicates which cloning method was selected.
-   Long64_t   fToStartEntries;   //Number of entries in the target tree before any addition.
+   UInt_t     fCloneMethod;      ///< Indicates which cloning method was selected.
+   Long64_t   fToStartEntries;   ///< Number of entries in the target tree before any addition.
+
+   Int_t           fCacheSize;   ///< Requested size of the file cache
+   TFileCacheRead *fFileCache;   ///< File Cache used to reduce the number of individual reads
+   TFileCacheRead *fPrevCache;   ///< Cache that set before the TTreeCloner ctor for the 'from' TTree if any.
 
    enum ECloneMethod {
       kDefault             = 0,
@@ -86,16 +89,20 @@ class TTreeCloner {
    friend class CompareEntry;
 
    void ImportClusterRanges();
+   void CreateCache();
+   UInt_t FillCache(UInt_t from);
+   void RestoreCache();
 
 private:
-   TTreeCloner(const TTreeCloner&);            // Not implemented.
-   TTreeCloner &operator=(const TTreeCloner&); // Not implemented.
+   TTreeCloner(const TTreeCloner&) = delete;
+   TTreeCloner &operator=(const TTreeCloner&) = delete;
 
 public:
    enum EClonerOptions {
       kNone       = 0,
       kNoWarnings = BIT(1),
-      kIgnoreMissingTopLevel = BIT(2)
+      kIgnoreMissingTopLevel = BIT(2),
+      kNoFileCache = BIT(3)
    };
 
    TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options = kNone);
@@ -113,6 +120,7 @@ public:
    Bool_t Exec();
    Bool_t IsValid() { return fIsValid; }
    Bool_t NeedConversion() { return fNeedConversion; }
+   void   SetCacheSize(Int_t size);
    void   SortBaskets();
    void   WriteBaskets();
 

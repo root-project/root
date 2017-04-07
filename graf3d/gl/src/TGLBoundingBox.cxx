@@ -16,66 +16,70 @@
 
 using namespace std;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLBoundingBox                                                       //
-//                                                                      //
-// Concrete class describing an orientated (free) or axis aligned box   //
-// of 8 verticies. Supports methods for setting aligned or orientated   //
-// boxes, find volume, axes, extents, centers, face planes etc.         //
-// Also tests for overlap testing of planes and other bounding boxes,   //
-// with fast sphere approximation.                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLBoundingBox
+\ingroup opengl
+Concrete class describing an orientated (free) or axis aligned box
+of 8 vertices. Supports methods for setting aligned or orientated
+boxes, find volume, axes, extents, centers, face planes etc.
+Also tests for overlap testing of planes and other bounding boxes,
+with fast sphere approximation.
+*/
 
 ClassImp(TGLBoundingBox)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an empty bounding box
+
 TGLBoundingBox::TGLBoundingBox()
 {
-   // Construct an empty bounding box
    SetEmpty();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a bounding box from provided 8 vertices
+
 TGLBoundingBox::TGLBoundingBox(const TGLVertex3 vertex[8])
 {
-   // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a bounding box from provided 8 vertices
+
 TGLBoundingBox::TGLBoundingBox(const Double_t vertex[8][3])
 {
-   // Construct a bounding box from provided 8 vertices
    Set(vertex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an global axis ALIGNED bounding box from provided low/high vertex pair
+
 TGLBoundingBox::TGLBoundingBox(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
 {
-   // Construct an global axis ALIGNED bounding box from provided low/high vertex pair
    SetAligned(lowVertex, highVertex);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a bounding box as copy of existing one
+
 TGLBoundingBox::TGLBoundingBox(const TGLBoundingBox & other)
 {
-   // Construct a bounding box as copy of existing one
    Set(other);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy bounding box
+
 TGLBoundingBox::~TGLBoundingBox()
 {
-  // Destroy bounding box
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the internally cached volume and axes vectors - these are retained
+/// for efficiency - many more reads than modifications
+
 void TGLBoundingBox::UpdateCache()
 {
-   // Update the internally cached volume and axes vectors - these are retained
-   // for efficiency - many more reads than modifications
-
    //    y
    //    |
    //    |
@@ -124,10 +128,11 @@ void TGLBoundingBox::UpdateCache()
    fDiagonal = extents.Mag();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a bounding box from provided 8 vertices
+
 void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
 {
-   // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = vertex[v];
    }
@@ -135,10 +140,11 @@ void TGLBoundingBox::Set(const TGLVertex3 vertex[8])
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a bounding box from provided 8 vertices
+
 void TGLBoundingBox::Set(const Double_t vertex[8][3])
 {
-   // Set a bounding box from provided 8 vertices
    for (UInt_t v = 0; v < 8; v++) {
       for (UInt_t a = 0; a < 3; a++) {
          fVertex[v][a] = vertex[v][a];
@@ -148,10 +154,11 @@ void TGLBoundingBox::Set(const Double_t vertex[8][3])
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a bounding box from vertices of other
+
 void TGLBoundingBox::Set(const TGLBoundingBox & other)
 {
-   // Set a bounding box from vertices of other
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Set(other.fVertex[v]);
    }
@@ -159,10 +166,11 @@ void TGLBoundingBox::Set(const TGLBoundingBox & other)
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box empty - all vertices at (0,0,0)
+
 void TGLBoundingBox::SetEmpty()
 {
-   // Set bounding box empty - all vertices at (0,0,0)
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v].Fill(0.0);
    }
@@ -170,12 +178,12 @@ void TGLBoundingBox::SetEmpty()
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ALIGNED box from two low/high vertices. Box axes are aligned with
+/// global frame axes that vertices are specified in.
+
 void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
 {
-   // Set ALIGNED box from two low/high vertices. Box axes are aligned with
-   // global frame axes that vertices are specified in.
-
    // lowVertex = vertex[0]
    // highVertex = vertex[6]
    //
@@ -207,11 +215,12 @@ void TGLBoundingBox::SetAligned(const TGLVertex3 & lowVertex, const TGLVertex3 &
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set ALIGNED box from one or more points. Box axes are aligned with
+/// global frame axes that points are specified in.
+
 void TGLBoundingBox::SetAligned(UInt_t nbPnts, const Double_t * pnts)
 {
-   // Set ALIGNED box from one or more points. Box axes are aligned with
-   // global frame axes that points are specified in.
    if (nbPnts < 1 || !pnts) {
       assert(false);
       return;
@@ -235,12 +244,12 @@ void TGLBoundingBox::SetAligned(UInt_t nbPnts, const Double_t * pnts)
    SetAligned(low, high);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand current bbox so that it includes other's bbox.
+/// This make the bbox axis-aligned.
+
 void TGLBoundingBox::MergeAligned(const TGLBoundingBox & other)
 {
-   // Expand current bbox so that it includes other's bbox.
-   // This make the bbox axis-aligned.
-
    if (other.IsEmpty()) return;
    if (IsEmpty())
    {
@@ -257,12 +266,12 @@ void TGLBoundingBox::MergeAligned(const TGLBoundingBox & other)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Expand current bbox so that it includes the point.
+/// This make the bbox axis-aligned.
+
 void TGLBoundingBox::ExpandAligned(const TGLVertex3 & point)
 {
-   // Expand current bbox so that it includes the point.
-   // This make the bbox axis-aligned.
-
    TGLVertex3 low (MinAAVertex());
    TGLVertex3 high(MaxAAVertex());
 
@@ -272,20 +281,21 @@ void TGLBoundingBox::ExpandAligned(const TGLVertex3 & point)
    SetAligned(low, high);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Isotropically scale bounding box along it's LOCAL axes, preserving center
+
 void TGLBoundingBox::Scale(Double_t factor)
 {
-   // Isotropically scale bounding box along it's LOCAL axes, preserving center
    Scale(factor, factor, factor);
    // Could change cached volume/axes
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Asymmetrically scale box along it's LOCAL x,y,z axes, preserving center
+
 void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
 {
-   // Asymetrically scale box along it's LOCAL x,y,z axes, preserving center
-
    // Get x,y,z edges (non-normalised axis) and scale
    // them by factors
    const TGLVector3 xOffset = Axis(0, kFALSE)*(xFactor - 1.0) / 2.0;
@@ -317,10 +327,11 @@ void TGLBoundingBox::Scale(Double_t xFactor, Double_t yFactor, Double_t zFactor)
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate all vertices by offset
+
 void TGLBoundingBox::Translate(const TGLVector3 & offset)
 {
-   // Translate all vertices by offset
    for (UInt_t v = 0; v < 8; v++) {
       fVertex[v] = fVertex[v] + offset;
    }
@@ -328,11 +339,11 @@ void TGLBoundingBox::Translate(const TGLVector3 & offset)
    // No cache change - volume and axes vectors remain same
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform all vertices with matrix.
+
 void TGLBoundingBox::Transform(const TGLMatrix & matrix)
 {
-   // Transform all vertices with matrix.
-
    for (UInt_t v = 0; v < 8; v++) {
       matrix.TransformVertex(fVertex[v]);
    }
@@ -341,21 +352,22 @@ void TGLBoundingBox::Transform(const TGLMatrix & matrix)
    UpdateCache();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return a vector of face vertices
+///    y
+///    |
+///    |
+///    |________x
+///   /  3-------2
+///  /  /|      /|
+/// z  7-------6 |
+///    | 0-----|-1
+///    |/      |/
+///    4-------5
+///
+
 const std::vector<UInt_t> & TGLBoundingBox::FaceVertices(EFace face) const
 {
-   //return a vector of face vertices
-   //    y
-   //    |
-   //    |
-   //    |________x
-   //   /  3-------2
-   //  /  /|      /|
-   // z  7-------6 |
-   //    | 0-----|-1
-   //    |/      |/
-   //    4-------5
-   //
    static Bool_t init = kFALSE;
    static std::vector<UInt_t> faceIndexes[kFaceCount];
    if (!init) {
@@ -394,11 +406,12 @@ const std::vector<UInt_t> & TGLBoundingBox::FaceVertices(EFace face) const
    return faceIndexes[face];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill out supplied plane set vector with TGLPlane objects
+/// representing six faces of box
+
 void TGLBoundingBox::PlaneSet(TGLPlaneSet_t & planeSet) const
 {
-   // Fill out supplied plane set vector with TGLPlane objects
-   // representing six faces of box
    assert(planeSet.empty());
 
    //    y
@@ -421,22 +434,22 @@ void TGLBoundingBox::PlaneSet(TGLPlaneSet_t & planeSet) const
    planeSet.push_back(TGLPlane( fAxesNorm[1], fVertex[3])); // Top
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the near-plane.
+
 TGLPlane TGLBoundingBox::GetNearPlane() const
 {
-   // Return the near-plane.
-
    return TGLPlane(fAxesNorm[2], fVertex[4]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find overlap (Inside, Outside, Partial) of plane c.f. bounding box.
+
 Rgl::EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
 {
-   // Find overlap (Inside, Outside, Partial) of plane c.f. bounding box.
-
    using namespace Rgl;
 
-   // First : cheap square approxiamtion test. If distance of our
+   // First : cheap square approximation test. If distance of our
    // center to plane > our half extent length we are outside plane
    if (plane.DistanceTo(Center()) + (Extents().Mag()/2.0) < 0.0) {
       return kOutside;
@@ -459,11 +472,11 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLPlane & plane) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find overlap (Inside, Outside, Partial) of other bounding box c.f. us.
+
 Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
 {
-   // Find overlap (Inside, Outside, Partial) of other bounding box c.f. us.
-
    using namespace Rgl;
 
    // Simplify code with refs
@@ -488,7 +501,7 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
    if (aHL[2] < aSphereRadius) {
       aSphereRadius = aHL[2];
    }
-   // and the outer sphere for containee (box b) - radius = box diagonal
+   // and the outer sphere for container (box b) - radius = box diagonal
    Double_t bSphereRadius = bHL.Mag();
 
    // If b sphere radius + translation mag is smaller than b sphere radius
@@ -497,7 +510,7 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
       return kInside;
    }
 
-   // Second: Perform more expensive 15 seperating axes test
+   // Second: Perform more expensive 15 separating axes test
 
    // Find translation in A's frame
    TGLVector3 aT(Dot(parentT, a.Axis(0)), Dot(parentT, a.Axis(1)), Dot(parentT, a.Axis(2)));
@@ -632,12 +645,12 @@ Rgl::EOverlap TGLBoundingBox::Overlap(const TGLBoundingBox & other) const
    return kInside;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the bounding box as either wireframe (default) of solid
+/// using current GL color.
+
 void TGLBoundingBox::Draw(Bool_t solid) const
 {
-   // Draw the bounding box as either wireframe (default) of solid
-   // using current GL color.
-
    if (!solid) {
       glBegin(GL_LINE_LOOP);
       glVertex3dv(fVertex[0].CArr());
@@ -714,10 +727,11 @@ void TGLBoundingBox::Draw(Bool_t solid) const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find minimum vertex value for axis of index X(0), Y(1), Z(2)
+
 Double_t TGLBoundingBox::Min(UInt_t index) const
 {
-   // Find minimum vertex value for axis of index X(0), Y(1), Z(2)
    Double_t min = fVertex[0][index];
    for (UInt_t v = 1; v < 8; v++) {
       if (fVertex[v][index] < min) {
@@ -727,10 +741,11 @@ Double_t TGLBoundingBox::Min(UInt_t index) const
    return min;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find maximum vertex value for axis of index X(0), Y(1), Z(2)
+
 Double_t TGLBoundingBox::Max(UInt_t index) const
 {
-   // Find maximum vertex value for axis of index X(0), Y(1), Z(2)
    Double_t max = fVertex[0][index];
    for (UInt_t v = 1; v < 8; v++) {
       if (fVertex[v][index] > max) {
@@ -740,26 +755,27 @@ Double_t TGLBoundingBox::Max(UInt_t index) const
    return max;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find minimum vertex values.
+
 TGLVertex3 TGLBoundingBox::MinAAVertex() const
 {
-   // Find minimum vertex values.
-
    return TGLVertex3(Min(0), Min(1), Min(2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find maximum vertex values.
+
 TGLVertex3 TGLBoundingBox::MaxAAVertex() const
 {
-   // Find maximum vertex values.
-
    return TGLVertex3(Max(0), Max(1), Max(2));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Output to std::cout the vertices, center and volume of box
+
 void TGLBoundingBox::Dump() const
 {
-   // Output to std::cout the vertices, center and volume of box
    for (UInt_t i = 0; i<8; i++) {
       std::cout << "[" << i << "] (" << fVertex[i].X() << "," << fVertex[i].Y() << "," << fVertex[i].Z() << ")" << std::endl;
    }

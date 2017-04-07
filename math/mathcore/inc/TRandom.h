@@ -12,7 +12,7 @@
 #ifndef ROOT_TRandom
 #define ROOT_TRandom
 
-
+#include "Math/TRandomEngine.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -22,11 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-class TRandom : public TNamed {
+class TRandom : public TNamed, public ROOT::Math::TRandomEngine {
 
 protected:
    UInt_t   fSeed;  //Random number generator seed
@@ -47,16 +45,18 @@ public:
    virtual  void     Rannor(Float_t &a, Float_t &b);
    virtual  void     Rannor(Double_t &a, Double_t &b);
    virtual  void     ReadRandom(const char *filename);
-   virtual  void     SetSeed(UInt_t seed=0);
-   virtual  Double_t Rndm(Int_t i=0);
+   virtual  void     SetSeed(ULong_t seed=0);
+   virtual  Double_t Rndm();
+   // keep for backward compatibility
+   virtual  Double_t Rndm(Int_t ) { return Rndm(); }
    virtual  void     RndmArray(Int_t n, Float_t *array);
    virtual  void     RndmArray(Int_t n, Double_t *array);
    virtual  void     Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r);
    virtual  Double_t Uniform(Double_t x1=1);
    virtual  Double_t Uniform(Double_t x1, Double_t x2);
-   virtual  void     WriteRandom(const char *filename);
+   virtual  void     WriteRandom(const char *filename) const;
 
-   ClassDef(TRandom,1)  //Simple Random number generator (periodicity = 10**9)
+   ClassDef(TRandom,3)  //Simple Random number generator (periodicity = 10**9)
 };
 
 R__EXTERN TRandom *gRandom;

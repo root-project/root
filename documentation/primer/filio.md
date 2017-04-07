@@ -2,78 +2,46 @@
 
 ## Storing ROOT Objects ##
 
-ROOT offers the possibility to write the instances of all the classes
-inheriting from the class `TObject` (basically all classes in ROOT) on
-disk, into what is referred to as *ROOT-file*, a file created by the
-`TFile` class. One says that the object is made "persistent" by storing
-it on disk. When reading the file back, the object can be restored to
-memory.
+ROOT offers the possibility to write instances of classes on
+disk, into a *ROOT-file* (see the `TFile` class for more details).
+One says that the object is made "persistent" by storing
+it on disk. When reading the file back, the object is reconstructed
+in memory. The requirement to be satisfied to perform I/O of instances
+of a certain class is that the ROOT type system is aware of the layout
+in memory of that class.
+This topic is beyond the scope of this document: it is worth to mention
+that I/O can be performed out of the box for the almost complete set
+of ROOT classes.
 
 We can explore this functionality with histograms and two simple macros.
 
 ``` {.cpp}
-void write_to_file(){
-
-    // Instance of our histogram
-    TH1F h("my_histogram","My Title;X;# of entries",100,-5,5);
-
-    // Let's fill it randomly
-    h.FillRandom("gaus");
-
-    // Let's open a TFile
-    TFile out_file("my_rootfile.root","RECREATE");
-
-    // Write the histogram in the file
-    h.Write();
-
-    // Close the file
-    out_file.Close();
-}
+@ROOT_INCLUDE_FILE macros/write_to_file.C
 ```
 
 Not bad, eh ? Especially for a language that does not foresees
 persistency natively like C++. The *RECREATE* option forces ROOT to
 create a new file even if a file with the same name exists on disk.
 
-Now, you may use the Cint command line to access information in the file
+Now, you may use the Cling command line to access information in the file
 and draw the previously written histogram:
 
 ``` {.cpp}
->>>  root my_rootfile.root
+>  root my_rootfile.root
 root [0]
 Attaching file my_rootfile.root as _file0...
-root [1] _file0.ls()
-TFile**         my_rootfile.root
- TFile*         my_rootfile.root
-  KEY: TH1F     my_histogram;1  My Title
-root [2] my_histogram.Draw()
+root [1] _file0->ls()
+TFile**     my_rootfile.root
+ TFile*     my_rootfile.root
+  KEY: TH1F	my_histogram;1 My Title
+root [2] my_histogram->Draw()
 ```
-
+\newpage
 Alternatively, you can use a simple macro to carry out the job:
 
 ``` {.cpp}
-void read_from_file(){
-
-    // Let's open the TFile
-    TFile* in_file= new TFile("my_rootfile.root");
-
-    // Get the Histogram out
-    TH1F* h = (TH1F*) in_file.GetObjectChecked("my_histogram",
-                                               "TH1F");
-
-    // Draw it
-    h->Draw();
-}
+@ROOT_INCLUDE_FILE macros/read_from_file.C
 ```
-
-Please note that the order of opening files for write access and
-creating objects determines whether the objects are stored or not. You
-can avoid this behaviour by using the `Write()` function as shown in the
-previous example.
-
-Although you could be tempted to access an object within a file also
-with the `Get` function and a C++ type cast, it is advisable to always
-use `GetObjectChecked`.
 
 ## N-tuples in ROOT ##
 
@@ -100,38 +68,7 @@ store rows of float entries. Let's tackle the problem according to the
 usual strategy commenting a minimal example
 
 ``` {.cpp}
-// Fill an n-tuple and write it to a file simulating measurement of
-// conductivity of a material in different conditions of pressure
-// and temperature.
-
-void write_ntuple_to_file(){
-
-    // Initialise the TNtuple
-    TNtuple cond_data("cond_data",
-                      "Example N-Tuple",
-                      "Potential:Current:Temperature:Pressure");
-
-    // Fill it randomly to fake the acquired data
-    float pot,cur,temp,pres;
-    for (int i=0;i<10000;++i){
-        pot=gRandom->Uniform(0.,10.);      // get voltage
-        temp=gRandom->Uniform(250.,350.);  // get temperature
-        pres=gRandom->Uniform(0.5,1.5);    // get pressure
-        cur=pot/(10.+0.05*(temp-300.)-0.2*(pres-1.)); // current
-// add some random smearing (measurement errors)
-        pot*=gRandom->Gaus(1.,0.01); // 1% error on voltage
-        temp+=gRandom->Gaus(0.,0.3); // 0.3 abs. error on temp.
-        pres*=gRandom->Gaus(1.,0.02);// 1% error on pressure
-        cur*=gRandom->Gaus(1.,0.01); // 1% error on current
-// write to ntuple
-        cond_data.Fill(pot,cur,temp,pres);
-        }
-
-    // Open a file, save the ntuple and close the file
-    TFile ofile("conductivity_experiment.root","RECREATE");
-    cond_data.Write();
-    ofile.Close();
-}
+@ROOT_INCLUDE_FILE macros/write_ntuple_to_file.C
 ```
 
 This data written to this example n-tuple represents, in the statistical
@@ -149,7 +86,7 @@ written by the macro above in an interactive session and use a
 `TBrowser` to interactively inspect it:
 
 ``` {.cpp}
-root[0] new TBrowser()
+root[0] TBrowser b
 ```
 You find the columns of your n-tuple written as *leafs*. Simply clicking
 on them you can obtain histograms of the variables!
@@ -160,7 +97,7 @@ interactive ROOT shell, respectively:
 ``` {.cpp}
 > root conductivity_experiment.root
 Attaching file conductivity_experiment.root as _file0...
-root [0] cond_data.Draw("Current:Potential")
+root [0] cond_data->Draw("Current:Potential")
 ```
 
 You just produced a correlation plot with one single line of code!
@@ -168,7 +105,7 @@ You just produced a correlation plot with one single line of code!
 Try to extend the syntax typing for example
 
 ``` {.cpp}
-root [1] cond_data.Draw("Current:Potential","Temperature<270")
+root [1] cond_data->Draw("Current:Potential","Temperature<270")
 ```
 
 What do you obtain ?
@@ -176,7 +113,7 @@ What do you obtain ?
 Now try
 
 ``` {.cpp}
-root [2] cond_data.Draw("Current/Potential:Temperature")
+root [2] cond_data->Draw("Current/Potential:Temperature")
 ```
 
 It should have become clear from these examples how to navigate in such
@@ -189,31 +126,7 @@ For completeness, you find here a small macro to read the data back from
 a ROOT n-tuple
 
 ``` {.cpp}
-// Read the previously produced N-Tuple and print on screen
-// its content
-
-void read_ntuple_from_file(){
-
-    // Open a file, save the ntuple and close the file
-    TFile in_file("conductivity_experiment.root");
-    TNtuple* my_tuple = (TNtuple*) in_file.GetObjectChecked(
-                                   "cond_data",
-                                   "TNtuple");
-    float pot,cur,temp,pres; float* row_content;
-
-    cout << "Potential\tCurrent\tTemperature\tPressure\n";
-    for (int irow=0;irow<my_tuple->GetEntries();++irow){
-        my_tuple->GetEntry(irow);
-        row_content = my_tuple->GetArgs();
-        pot = row_content[0];
-        cur = row_content[1];
-        temp = row_content[2];
-        pres = row_content[3];
-        cout << pot << "\t" << cur << "\t" << temp
-             << "\t" << pres << endl;
-    }
-
-}
+@ROOT_INCLUDE_FILE macros/read_ntuple_from_file.C
 ```
 
 The macro shows the easiest way of accessing the content of a n-tuple:
@@ -231,38 +144,7 @@ before but the branches are booked directly. The `Fill()` function then
 fills the current values of the connected variables to the tree.
 
 ``` {.cpp}
-// Fill an n-tuple and write it to a file simulating measurement of
-// conductivity of a material in different conditions of pressure
-// and temperature using branches.
-
-void write_ntuple_to_file_advanced(
-   const std::string& outputFileName="conductivity_experiment.root"
-   ,unsigned int numDataPoints=1000000){
-   // Initialise the TNtuple
-   TTree cond_data("cond_data", "Example N-Tuple");
-
-   // define the variables and book them for the ntuple
-   float pot,cur,temp,pres;
-   cond_data.Branch("Potential", &pot, "Potential/F");
-   cond_data.Branch("Current", &cur, "Current/F");
-   cond_data.Branch("Temperature", &temp, "Temperature/F");
-   cond_data.Branch("Pressure", &pres, "Pressure/F");
-
-   for (int i=0;i<numDataPoints;++i){
-      // Fill it randomly to fake the acquired data
-      pot=gRandom->Uniform(0.,10.)*gRandom->Gaus(1.,0.01);
-      temp=gRandom->Uniform(250.,350.)+gRandom->Gaus(0.,0.3);
-      pres=gRandom->Uniform(0.5,1.5)*gRandom->Gaus(1.,0.02);
-      cur=pot/(10.+0.05*(temp-300.)-0.2*(pres-1.))*
-                    gRandom->Gaus(1.,0.01);
-      // write to ntuple
-      cond_data.Fill();}
-
-   // Open a file, save the ntuple and close the file
-   TFile ofile(outputFileName.c_str(),"RECREATE");
-   cond_data.Write();
-   ofile.Close();
-}
+@ROOT_INCLUDE_FILE macros/write_ntuple_to_file_advanced.C
 ```
 
 The `Branch()` function requires a pointer to a variable and a
@@ -297,38 +179,7 @@ are added with the function `Add(fileName)`, where one can also use
 wild-cards as shown in the example.
 
 ``` {.cpp}
-// Read several previously produced N-Tuples and print on screen its
-// content.
-//
-// you can easily create some files with the following statement:
-//
-// for i in 0 1 2 3 4 5; \\
-// do root -l -x -b -q \\
-// "write_ntuple_to_file.cxx \\
-// (\"conductivity_experiment_${i}.root\", 100)"; \\
-//  done
-
-void read_ntuple_with_chain(){
-   // initiate a TChain with the name of the TTree to be processed
-   TChain in_chain("cond_data");
-   in_chain.Add("conductivity_experiment*.root"); // add files,
-                                                  // wildcards work
-
-   // define variables and assign them to the corresponding branches
-   float pot, cur, temp, pres;
-   my_tuple->SetBranchAddress("Potential", &pot);
-   my_tuple->SetBranchAddress("Current", &cur);
-   my_tuple->SetBranchAddress("Temperature", &temp);
-   my_tuple->SetBranchAddress("Pressure", &pres);
-
-   cout << "Potential\tCurrent\tTemperature\tPressure\n";
-   for (size_t irow=0; irow<in_chain.GetEntries(); ++irow){
-      in_chain.GetEntry(irow); // loads all variables that have
-                                    // been connected to branches
-      cout << pot << "\t" << cur << "\t" << temp <<
-                          "\t" << pres << endl;
-   }
-}
+@ROOT_INCLUDE_FILE macros/read_ntuple_with_chain.C
 ```
 
 ### *For the advanced user:* Processing trees with a selector script ###
@@ -345,19 +196,10 @@ by the method `TTree::MakeSelector`, as is shown in the little macro
 It opens the n-tuple `conductivity_experiment.root` from the example
 above and creates from it the header file `MySelector.h` and a template
 to insert your own analysis code, `MySelector.C`.
+\newpage
 
 ``` {.cpp}
-{
-// create template class for Selector to run on a tree
-//////////////////////////////////////////////////////
-//
-// open root file containing the Tree
-   TFile *f = TFile::Open("conductivity_experiment.root");
-   // create TTree object from it
-   TTree *t = (TTree *) f->Get("cond_data");
-   // this generates the files MySelector.h and MySelector.C
-   t->MakeSelector("MySelector");
-}
+@ROOT_INCLUDE_FILE macros/makeMySelector.C
 ```
 
 The template contains the entry points `Begin()` and `SlaveBegin()`
@@ -390,7 +232,7 @@ in order to improve performance.
 
 The code in `MySelector.C`, shown in the listing below, books some
 histograms in `SlaveBegin()` and adds them to the instance `fOutput`,
-which is of the class `TList` [^5]. The final processing in
+which is of the class `TList` [^6]. The final processing in
 `Terminate()` allows to access histograms and store, display or save
 them as pictures. This is shown in the example via the `TList`
 `fOutput`. See the commented listing below for more details; most of the
@@ -398,152 +240,7 @@ text is actually comments generated automatically by
 `TTree::MakeSelector`.
 
 ``` {.cpp}
-#define MySelector_cxx
-// The class definition in MySelector.h has been generated
-// automatically by the ROOT utility TTree::MakeSelector().
-// This class is derived from the ROOT class TSelector. For
-// more information on the TSelectorframework see
-// $ROOTSYS/README/README.SELECTOR or the ROOT User Manual.
-
-// The following methods are defined in this file:
-//    Begin():        called every time a loop on the tree starts,
-//                    a convenient place to create your histograms.
-//    SlaveBegin():   called after Begin(), when on PROOF called
-//                    only on the slave servers.
-//    Process():      called for each event, in this function you
-//                    decide what to read and fill your histograms.
-//    SlaveTerminate: called at the end of the loop on the tree,
-//                    when on PROOF called only on the slave
-//                    servers.
-//    Terminate():    called at the end of the loop on the tree, a
-//                    convenient place to draw/fit your histograms.
-//
-// To use this file, try the following session on your Tree T:
-//
-// root> T->Process("MySelector.C")
-// root> T->Process("MySelector.C","some options")
-// root> T->Process("MySelector.C+")
-//
-
-#include "MySelector.h"
-#include <TH2.h>
-#include <TStyle.h>
-#include <TCanvas.h>
-
-// user defined variables may come here:
-UInt_t fNumberOfEvents; TDatime tBegin, tNow;
-
-TH1F *h_pot,*h_cur,*h_temp,*h_pres,*h_resistance;
-
-void MySelector::Begin(TTree * /*tree*/)
-{
-   // The Begin() function is called at the start of the query.
-   // When running with PROOF Begin() is only called on the client.
-   // The tree argument is deprecated (on PROOF 0 is passed).
-
-   TString option = GetOption();
-
-   // some time measurement
-   tBegin.Set(); printf("*==* ---------- Begin of Job ----------");
-   tBegin.Print();
-}
-
-void MySelector::SlaveBegin(TTree * /*tree*/)
-{
-   // The SlaveBegin() function is called after the Begin()
-   // function. When running with PROOF SlaveBegin() is called on
-   // each slave server. The tree argument is deprecated
-   // (on PROOF 0 is passed).
-
-   TString option = GetOption();
-
-   //book some histograms
-   h_pot=new TH1F("pot","potential",100,-0.5,10.5);
-   h_cur=new TH1F("cur","current",100,-0.1,1.5);
-   h_temp=new TH1F("temp","temperature",100,200.,400.);
-   h_pres=new TH1F("pres","pressure",100,-0.,2.);
-   h_resistance=new TH1F("resistance","resistance",100,5.,15.);
-
-   // add all booked histograms to output list
-   // (only really needed for PROOF)
-   fOutput->AddAll(gDirectory->GetList());
-}
-
-Bool_t MySelector::Process(Long64_t entry)
-{
-   // The Process() function is called for each entry in the tree
-   // (or possibly keyed object in the case of PROOF) to be
-   // processed. The entry argument specifies which entry in the
-   // currently loaded tree is to be processed. It can be passed to
-   // either MySelector::GetEntry() or TBranch::GetEntry()
-   // to read either all or the required parts of the data. When
-   // processing // keyed objects with PROOF, the object is already
-   // loaded and is available via the fObject pointer.
-   //
-   // This function should contain the "body" of the analysis. It
-   // can contain simple or elaborate selection criteria, run
-   // algorithms on the data // of the event and typically fill
-   // histograms.
-   //
-   // The processing can be stopped by calling Abort().
-   //
-   // Use fStatus to set the return value of TTree::Process().
-   //
-   // The return value is currently not used.
-
-// - - - - - - - - - begin processing
-   GetEntry(entry);
-
- // count number of entries (=events) ...
-   ++fNumberOfEvents;
-
- // analsiys code comes here - fill histograms
-   h_pot->Fill(Potential);
-   h_cur->Fill(Current);
-   h_temp->Fill(Temperature);
-   h_pres->Fill(Pressure);
-   h_resistance->Fill(Potential/Current);
-
-   return kTRUE;  //kFALSE would abort processing
-}
-
-void MySelector::SlaveTerminate()
-{
-   // The SlaveTerminate() function is called after all entries or
-   // objects have been processed. When running with PROOF
-   // SlaveTerminate() is called on each slave server.
-
-  // some statistics at end of job
-  printf("\n *==* ---------- End of Slave Job ----------   ");
-  tNow.Set(); tNow.Print();
-  printf(
-  "Number of Events: %i, elapsed time: %i sec, rate: %g evts/sec\n"
-  ,fNumberOfEvents,
-  tNow.Convert()-tBegin.Convert(),
-   float(fNumberOfEvents)/(tNow.Convert()-tBegin.Convert()) );
-}
-
-void MySelector::Terminate()
-{
-   // The Terminate() function is the last function to be called
-   // during a query. It always runs on the client, it can be used
-   // to present the results graphically or save the results to
-   // file.
-
-   // finally, store all output
-   TFile hfile("MySelector_Result.root","RECREATE","MuonResults");
-   fOutput->Write();
-
-   //Example to retrieve output from output list
-   h_resistance=
-      dynamic_cast<TH1F *>(fOutput->FindObject("resistance"));
-   TCanvas c_result("cresult","Resistance",100,100,300,300);
-   h_resistance->Draw();
-   c_result.SaveAs("ResistanceDistribution.png");
-
-   tNow.Set(); printf("*==* ---------- End of Job ---------- ");
-   tNow.Print();
-}
+@ROOT_INCLUDE_FILE macros/MySelector.C
 ```
 
 ### *For power-users:* Multi-core processing with `PROOF lite` ###
@@ -555,7 +252,7 @@ section, offers an additional advantage in particular for very large
 data sets: on distributed systems or multi-core architectures, portions
 of data can be processed in parallel, thus significantly reducing the
 execution time. On modern computers with multi-core CPUs or
-hyper-threading enabled, this allows a much faster turnaround of
+hardware-threading enabled, this allows a much faster turnaround of
 analyses, since all the available CPU power is used.
 
 On distributed systems, a PROOF server and worker nodes have to be set
@@ -641,8 +338,8 @@ toolkit.
 ### Optimisation Regarding N-tuples ###
 
 ROOT automatically applies compression algorithms on n-tuples to reduce
-the memory consumption. A value that is in most cases only zero will
-consume only small space on your disk (but it has to be deflated on
+the memory consumption. A value that is in most cases the same will
+consume only small space on your disk (but it has to be decompressed on
 reading). Nevertheless, you should think about the design of your
 n-tuples and your analyses as soon as the processing time exceeds some
 minutes.
@@ -674,4 +371,4 @@ minutes.
     write the meta data tree in a bulk to a file at the end of your job
     instead of writing both trees interleaved.
 
-[^5]: The usage of `fOutput` is not really needed for this simple example, but it allows re-usage of the exact code in parallel processing with `PROOF` (see next section).
+[^6]: The usage of `fOutput` is not really needed for this simple example, but it allows re-usage of the exact code in parallel processing with `PROOF` (see next section).

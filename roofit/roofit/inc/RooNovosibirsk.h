@@ -30,12 +30,12 @@ public:
   // own local versions.
   RooNovosibirsk() {} ;
   RooNovosibirsk(const char *name, const char *title,
-		 RooAbsReal& _x,     RooAbsReal& _peak,
-		 RooAbsReal& _width, RooAbsReal& _tail);
+       RooAbsReal& _x,     RooAbsReal& _peak,
+       RooAbsReal& _width, RooAbsReal& _tail);
 
-  RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;	
+  RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;
 
-  virtual TObject* clone(const char* newname) const { return new RooNovosibirsk(*this,newname);	}
+  virtual TObject* clone(const char* newname) const { return new RooNovosibirsk(*this,newname);   }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;

@@ -25,11 +25,11 @@
 #include "Xrd/XrdScheduler.hh"
 #include "XrdOuc/XrdOucTrace.hh"
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop up a protocol object
+
 XrdProofdProtocol *XpdObjectQ::Pop()
 {
-   // Pop up a protocol object
-
    XpdObject *node;
    fQMutex.Lock();
    if ((node = fFirst)) {
@@ -41,11 +41,11 @@ XrdProofdProtocol *XpdObjectQ::Pop()
    return (XrdProofdProtocol *)0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Push back a protocol
+
 void XpdObjectQ::Push(XpdObject *node)
 {
-   // Push back a protocol
-
    node->fQTime = fCurage;
    fQMutex.Lock();
    if (fCount >= fMaxinQ) {
@@ -58,11 +58,11 @@ void XpdObjectQ::Push(XpdObject *node)
    fQMutex.UnLock();
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Lock the data area and set the values
+
 void XpdObjectQ::Set(int inQMax, time_t agemax)
 {
-   // Lock the data area and set the values
-
    fQMutex.Lock();
    fMaxinQ = inQMax; fMaxage = agemax;
    if (!(fMininQ = inQMax/2)) fMininQ = 1;
@@ -73,11 +73,11 @@ void XpdObjectQ::Set(int inQMax, time_t agemax)
       fSched->Schedule((XrdJob *)this, agemax + time(0));
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process method
+
 void XpdObjectQ::DoIt()
 {
-   // Process method
-
    XpdObject *pp, *p;
    int oldcnt, agemax;
 

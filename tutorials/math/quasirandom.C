@@ -1,7 +1,13 @@
-//+______________________________________________________________________________
-// Example of generating quasi-random numbers
-
-
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -js
+/// Example of generating quasi-random numbers
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "Math/QuasiRandom.h"
 #include "Math/Random.h"
@@ -15,7 +21,6 @@ using namespace ROOT::Math;
 
 int quasirandom(int n = 10000, int skip = 0) {
 
-
    TH2D * h0 = new TH2D("h0","Pseudo-random Sequence",200,0,1,200,0,1);
    TH2D * h1 = new TH2D("h1","Sobol Sequence",200,0,1,200,0,1);
    TH2D * h2 = new TH2D("h2","Niederrer Sequence",200,0,1,200,0,1);
@@ -26,7 +31,6 @@ int quasirandom(int n = 10000, int skip = 0) {
 
    QuasiRandomSobol r1(2);
    QuasiRandomNiederreiter r2(2);
-
 
    // generate n random points
 
@@ -48,7 +52,6 @@ int quasirandom(int n = 10000, int skip = 0) {
    std::cout << "Time for Sobol ";
    w.Print();
 
-
    w.Start();
    if( skip>0) r2.Skip(skip);
    for (int i = 0; i < n; ++i)  {
@@ -58,26 +61,17 @@ int quasirandom(int n = 10000, int skip = 0) {
    std::cout << "Time for Niederreiter ";
    w.Print();
 
-
    TCanvas * c1 = new TCanvas("c1","Random sequence",600,1200);
    c1->Divide(1,3);
-
    c1->cd(1);
-
    h0->Draw("COLZ");
-
    c1->cd(2);
-
 
    // check uniformity
    h1->Draw("COLZ");
-
    c1->cd(3);
-
    h2->Draw("COLZ");
-
    gPad->Update();
-
 
    // test number of empty bins
 
@@ -102,8 +96,3 @@ int quasirandom(int n = 10000, int skip = 0) {
    return iret;
 
 }
-
-
-
-
-

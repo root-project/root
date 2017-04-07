@@ -27,41 +27,43 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//______________________________________________________________________________
-// OpenGL renderer class for TH3.
-//
+/** \class TH3GL
+\ingroup opengl
+OpenGL renderer class for TH3.
+*/
 
 ClassImp(TH3GL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH3GL::TH3GL() :
    TGLPlot3D(), fM(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH3GL::TH3GL(TH3 *th3, TPolyMarker3D *pm) :
    TGLPlot3D(), fM(th3)
 {
-   // Constructor.
    SetPainter(new TGLBoxPainter(th3, pm, 0, &fCoord));
    fPlotPainter->InitGeometry();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH3GL::~TH3GL()
 {
-   // Destructor.
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
 {
-   // Set model object.
-
    TString option(opt);
    option.ToLower();
 
@@ -98,20 +100,19 @@ Bool_t TH3GL::SetModel(TObject* obj, const Option_t* opt)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TH3GL::SetBBox()
 {
-   // Set bounding box.
-
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
 
-//______________________________________________________________________________
 void TH3GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render with OpenGL.
    if (fFirstPhysical)
       fPlotPainter->SetPhysicalShapeColor(fFirstPhysical->Color());
 

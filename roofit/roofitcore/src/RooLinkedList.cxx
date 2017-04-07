@@ -14,28 +14,31 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooLinkedList is an collection class for internal use, storing
-// a collection of RooAbsArg pointers in a doubly linked list.
-// It can optionally add a hash table to speed up random access
-// in large collections
-// Use RooAbsCollection derived objects for public use
-// (e.g. RooArgSet or RooArgList) 
-// END_HTML
-//
+/**
+\file RooLinkedList.cxx
+\class RooLinkedList
+\ingroup Roofitcore
 
-#include <algorithm>
-
-#include "RooFit.h"
-#include "Riostream.h"
+RooLinkedList is an collection class for internal use, storing
+a collection of RooAbsArg pointers in a doubly linked list.
+It can optionally add a hash table to speed up random access
+in large collections
+Use RooAbsCollection derived objects for public use
+(e.g. RooArgSet or RooArgList) 
+**/
 
 #include "RooLinkedList.h"
+
+#include "RooFit.h"
 #include "RooLinkedListIter.h"
 #include "RooHashTable.h"
 #include "RooAbsArg.h"
 #include "RooMsgService.h"
+
+#include "Riostream.h"
+#include "TBuffer.h"
+
+#include <algorithm>
 
 using namespace std;
 
@@ -50,6 +53,7 @@ namespace RooLinkedListImplDetails {
 	_sz(sz), _free(capacity()),
 	_chunk(new RooLinkedListElem[_free]), _freelist(_chunk)
       {
+	//cout << "RLLID::Chunk ctor(" << this << ") of size " << _free << " list elements" << endl ;
 	// initialise free list
 	for (Int_t i = 0; i < _free; ++i)
 	  _chunk[i]._next = (i + 1 < _free) ? &_chunk[i + 1] : 0;
@@ -108,7 +112,7 @@ namespace RooLinkedListImplDetails {
     private:
       enum {
 	minsz = 7, ///< minimum chunk size (just below 1 << minsz bytes)
-	maxsz = 20, ///< maximum chunk size (just below 1 << maxsz bytes)
+	maxsz = 18, ///< maximum chunk size (just below 1 << maxsz bytes)
 	szincr = 1 ///< size class increment (sz = 1 << (minsz + k * szincr))
       };
       /// a chunk of memory in the pool
@@ -251,20 +255,23 @@ namespace RooLinkedListImplDetails {
 
 RooLinkedList::Pool* RooLinkedList::_pool = 0;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kFALSE)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), _useNptr(kTRUE)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooLinkedList::RooLinkedList(const RooLinkedList& other) :
   TObject(other), _hashThresh(other._hashThresh), _size(0), _first(0), _last(0), _htableName(0), _htableLink(0), 
-  _name(other._name), _useNptr(other._useNptr)
+  _name(other._name), 
+  _useNptr(other._useNptr)
 {
-  // Copy constructor
   if (!_pool) _pool = new Pool;
   _pool->acquire();
   if (other._htableName) _htableName = new RooHashTable(other._htableName->size()) ;
@@ -274,16 +281,18 @@ RooLinkedList::RooLinkedList(const RooLinkedList& other) :
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << endl ;
+
 RooLinkedListElem* RooLinkedList::createElement(TObject* obj, RooLinkedListElem* elem) 
 {
-//   cout << "RooLinkedList::createElem(" << this << ") obj = " << obj << " elem = " << elem << endl ;
   RooLinkedListElem* ret = _pool->pop_free_elem();
   ret->init(obj, elem);
   return ret ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooLinkedList::deleteElement(RooLinkedListElem* elem) 
 {  
   elem->release() ;
@@ -291,11 +300,11 @@ void RooLinkedList::deleteElement(RooLinkedListElem* elem)
   //delete elem ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator, copy contents from 'other'
+
 RooLinkedList& RooLinkedList::operator=(const RooLinkedList& other) 
 {
-  // Assignment operator, copy contents from 'other'
-  
   // Prevent self-assignment
   if (&other==this) return *this ;
   
@@ -309,12 +318,12 @@ RooLinkedList& RooLinkedList::operator=(const RooLinkedList& other)
   return *this ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the threshold for hash-table use to given size.
+/// If a hash table exists when this method is called, it is regenerated.
+
 void RooLinkedList::setHashTableSize(Int_t size) 
 {        
-  // Change the threshold for hash-table use to given size.
-  // If a hash table exists when this method is called, it is regenerated.
-
   if (size<0) {
     coutE(InputArguments) << "RooLinkedList::setHashTable() ERROR size must be positive" << endl ;
     return ;
@@ -349,11 +358,11 @@ void RooLinkedList::setHashTableSize(Int_t size)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooLinkedList::~RooLinkedList() 
 {
-  // Destructor
-
   if (_htableName) {
     delete _htableName ;
     _htableName=0 ;
@@ -370,11 +379,11 @@ RooLinkedList::~RooLinkedList()
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the element link containing the given object
+
 RooLinkedListElem* RooLinkedList::findLink(const TObject* arg) const 
 {    
-  // Find the element link containing the given object
-
   if (_htableLink) {
     return _htableLink->findLinkTo(arg) ;  
   }
@@ -390,12 +399,15 @@ RooLinkedListElem* RooLinkedList::findLink(const TObject* arg) const
   
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert object into collection with given reference count value
+
 void RooLinkedList::Add(TObject* arg, Int_t refCount)
 {
-  // Insert object into collection with given reference count value
-
   if (!arg) return ;
+
+  // Only use RooAbsArg::namePtr() in lookup-by-name if all elements have it
+  if (!dynamic_cast<RooAbsArg*>(arg)) _useNptr = kFALSE;
   
   // Add to hash table 
   if (_htableName) {
@@ -430,11 +442,11 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from collection
+
 Bool_t RooLinkedList::Remove(TObject* arg) 
 {
-  // Remove object from collection
-
   // Find link element
   RooLinkedListElem* elem = findLink(arg) ;
   if (!elem) return kFALSE ;
@@ -457,12 +469,12 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   return kTRUE ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return object stored in sequential position given by index.
+/// If index is out of range, a null pointer is returned.
+
 TObject* RooLinkedList::At(Int_t index) const 
 {
-  // Return object stored in sequential position given by index.
-  // If index is out of range, a null pointer is returned.
-
   // Check range
   if (index<0 || index>=_size) return 0 ;
 
@@ -475,12 +487,12 @@ TObject* RooLinkedList::At(Int_t index) const
   return ptr->_arg ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace object 'oldArg' in collection with new object 'newArg'.
+/// If 'oldArg' is not found in collection kFALSE is returned
+
 Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg) 
 {
-  // Replace object 'oldArg' in collection with new object 'newArg'.
-  // If 'oldArg' is not found in collection kFALSE is returned
-
   // Find existing element and replace arg
   RooLinkedListElem* elem = findLink(oldArg) ;
   if (!elem) return kFALSE ;
@@ -498,30 +510,30 @@ Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   return kTRUE ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to obejct with given name. If no such object
+/// is found return a null pointer
+
 TObject* RooLinkedList::FindObject(const char* name) const 
 {
-  // Return pointer to obejct with given name. If no such object
-  // is found return a null pointer
-
   return find(name) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find object in list. If list contains object return 
+/// (same) pointer to object, otherwise return null pointer
+
 TObject* RooLinkedList::FindObject(const TObject* obj) const 
 {
-  // Find object in list. If list contains object return 
-  // (same) pointer to object, otherwise return null pointer
-
   RooLinkedListElem *elem = findLink((TObject*)obj) ;
   return elem ? elem->_arg : 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all elements from collection
+
 void RooLinkedList::Clear(Option_t *) 
 {
-  // Remove all elements from collection
-
   for (RooLinkedListElem *elem = _first, *next; elem; elem = next) {
     next = elem->_next ;
     deleteElement(elem) ;
@@ -542,13 +554,13 @@ void RooLinkedList::Clear(Option_t *)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all elements in collection and delete all elements
+/// NB: Collection does not own elements, this function should
+/// be used judiciously by caller. 
+
 void RooLinkedList::Delete(Option_t *) 
 {
-  // Remove all elements in collection and delete all elements
-  // NB: Collection does not own elements, this function should
-  // be used judiciously by caller. 
-
   RooLinkedListElem* elem = _first;
   while(elem) {
     RooLinkedListElem* next = elem->_next ;
@@ -572,19 +584,43 @@ void RooLinkedList::Delete(Option_t *)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to object with given name in collection.
+/// If no such object is found, return null pointer.
+
 TObject* RooLinkedList::find(const char* name) const 
 {
-  // Return pointer to object with given name in collection.
-  // If no such object is found, return null pointer.
-
   
-  if (_htableName) return _htableName->find(name) ;
+  if (_htableName) {
+    RooAbsArg* a = (RooAbsArg*) _htableName->find(name) ;
+    // RooHashTable::find could return false negative if element was renamed to 'name'.
+    // The list search means it won't return false positive, so can return here.
+    if (a) return a;
+    if (_useNptr) {
+      // See if it might have been renamed
+      const TNamed* nptr= RooNameReg::known(name);
+      //cout << "RooLinkedList::find: possibly renamed '" << name << "', kRenamedArg=" << (nptr&&nptr->TestBit(RooNameReg::kRenamedArg)) << endl;
+      if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
+        RooLinkedListElem* ptr = _first ;
+        while(ptr) {
+          if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+            return ptr->_arg ;
+          }
+          ptr = ptr->_next ;
+        }
+      }
+      return 0 ;
+    }
+    //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << endl;
+  }
 
   RooLinkedListElem* ptr = _first ;
 
-  if (_useNptr) {
-    const TNamed* nptr = RooNameReg::instance().constPtr(name) ;
+  // The penalty for RooNameReg lookup seems to be outweighted by the faster search
+  // when the size list is longer than ~7, but let's be a bit conservative.
+  if (_useNptr && _size>9) {
+    const TNamed* nptr= RooNameReg::known(name);
+    if (!nptr) return 0;
     
     while(ptr) {
       if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
@@ -604,20 +640,24 @@ TObject* RooLinkedList::find(const char* name) const
   return 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to object with given name in collection.
+/// If no such object is found, return null pointer.
+
 RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const 
 {
-  // Return pointer to object with given name in collection.
-  // If no such object is found, return null pointer.
-  
-  // WVE this will find the wrong entry if the name changed!
-  // if (_htableLink) {
-  //   return (RooAbsArg*) _htableLink->find(arg) ;
-  // }
+  if (_htableName) {
+    RooAbsArg* a = (RooAbsArg*) _htableName->findArg(arg) ;
+    if (a) return a;
+    //cout << "RooLinkedList::findArg: possibly renamed '" << arg->GetName() << "', kRenamedArg=" << arg->namePtr()->TestBit(RooNameReg::kRenamedArg) << endl;
+    // See if it might have been renamed
+    if (!arg->namePtr()->TestBit(RooNameReg::kRenamedArg)) return 0;
+  }
   
   RooLinkedListElem* ptr = _first ;
+  const TNamed* nptr = arg->namePtr();
   while(ptr) {
-    if (((RooAbsArg*)(ptr->_arg))->namePtr() == arg->namePtr()) {
+    if (((RooAbsArg*)(ptr->_arg))->namePtr() == nptr) {
       return (RooAbsArg*) ptr->_arg ;
     }
     ptr = ptr->_next ;
@@ -625,12 +665,12 @@ RooAbsArg* RooLinkedList::findArg(const RooAbsArg* arg) const
   return 0 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of given object in list. If object
+/// is not contained in list, return -1
+
 Int_t RooLinkedList::IndexOf(const TObject* arg) const 
 {
-  // Return position of given object in list. If object
-  // is not contained in list, return -1
-
   RooLinkedListElem* ptr = _first;
   Int_t idx(0) ;
   while(ptr) {
@@ -641,12 +681,12 @@ Int_t RooLinkedList::IndexOf(const TObject* arg) const
   return -1 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return position of given object in list. If object
+/// is not contained in list, return -1
+
 Int_t RooLinkedList::IndexOf(const char* name) const 
 {
-  // Return position of given object in list. If object
-  // is not contained in list, return -1
-
   RooLinkedListElem* ptr = _first;
   Int_t idx(0) ;
   while(ptr) {
@@ -657,11 +697,12 @@ Int_t RooLinkedList::IndexOf(const char* name) const
   return -1 ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of list, defers to Print() function
+/// of contained objects
+
 void RooLinkedList::Print(const char* opt) const 
 {
-  // Print contents of list, defers to Print() function
-  // of contained objects
   RooLinkedListElem* elem = _first ;
   while(elem) {
     cout << elem->_arg << " : " ; 
@@ -670,38 +711,43 @@ void RooLinkedList::Print(const char* opt) const
   }    
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooLinkedListIter RooLinkedList::iterator(Bool_t dir) const 
 {
   return RooLinkedListIter(this,dir) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFIter RooLinkedList::fwdIterator() const 
 { 
   return RooFIter(this) ; 
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an iterator over this list
+
 TIterator* RooLinkedList::MakeIterator(Bool_t dir) const 
 {
-  // Return an iterator over this list
   return new RooLinkedListIter(this,dir) ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooLinkedList::Sort(Bool_t ascend) 
 {
   if (ascend) _first = mergesort_impl<true>(_first, _size, &_last);
   else _first = mergesort_impl<false>(_first, _size, &_last);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// length 0, 1 lists are sorted
+
 template <bool ascending>
 RooLinkedListElem* RooLinkedList::mergesort_impl(
     RooLinkedListElem* l1, const unsigned sz, RooLinkedListElem** tail)
 {
-  // length 0, 1 lists are sorted
   if (!l1 || sz < 2) {
     // if desired, update the tail of the (newly merged sorted) list
     if (tail) *tail = l1;
@@ -811,11 +857,11 @@ RooLinkedListElem* RooLinkedList::mergesort_impl(
 //    }
 // }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom streaming handling schema evolution w.r.t past implementations
+
 void RooLinkedList::Streamer(TBuffer &R__b)
 {
-  // Custom streaming handling schema evolution w.r.t past implementations
-
   if (R__b.IsReading()) {
 
     Version_t v = R__b.ReadVersion();
@@ -831,10 +877,10 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       Add(arg) ;      
     }
 
-    if (v>1) {
+    if (v>1 ) {
       R__b >> _name ;
     }
-
+    
   } else {
     R__b.WriteVersion(RooLinkedList::IsA());
     TObject::Streamer(R__b);
@@ -845,7 +891,7 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       R__b << ptr->_arg ;
       ptr = ptr->_next ;
     } 
-
+    
     R__b << _name ;
   }
 }

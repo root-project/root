@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 class TTreeRow : public TSQLRow {
 
@@ -34,10 +32,10 @@ friend class TTreeResult;
 friend class TTreePlayer;
 
 private:
-   Int_t        fColumnCount;  // number of columns in row
-   Int_t       *fFields;       //[fColumnCount] index in fRow of the end of each field
-   char        *fRow;          // string with all the fColumnCount fields
-   TTreeRow    *fOriginal;     //! pointer to original row
+   Int_t        fColumnCount;  ///< number of columns in row
+   Int_t       *fFields;       ///<[fColumnCount] index in fRow of the end of each field
+   char        *fRow;          ///< string with all the fColumnCount fields
+   TTreeRow    *fOriginal;     ///<! pointer to original row
 
    TTreeRow(TSQLRow *original);
    Bool_t  IsValid(Int_t field);

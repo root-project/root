@@ -108,6 +108,7 @@ IOSSDK         := @iossdk@
 
 CXX11          := @c++11@
 CXX14          := @c++14@
+CXXMODULES     := @cxxmodules@
 LIBCXX         := @libc++@
 
 EXPLICITLINK   := @explicitlink@
@@ -120,6 +121,11 @@ OSTHREADLIB    := @threadlib@
 BUILTINFREETYPE:= @builtinfreetype@
 
 BUILTINPCRE    := @builtinpcre@
+
+BUILTINUNURAN  := @builtinunuran@
+UNURANLIBDIR   := @unuranlibdir@
+UNURANLIB      := @unuranlib@
+UNURANINCDIR   := $(filter-out /usr/include, @unuranincdir@)
 
 BUILTINZLIB    := @builtinzlib@
 ZLIBLIBDIR     := @zliblibdir@
@@ -136,6 +142,11 @@ OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@
 OPENGLLIB      := @opengllib@
 OPENGLINCDIR   := $(filter-out /usr/include, @openglincdir@)
+
+BUILTINGL2PS   := @builtingl2ps@
+GL2PSLIBDIR    := @gl2pslibdir@
+GL2PSLIB       := @gl2pslib@
+GL2PSINCDIR    := $(filter-out /usr/include, @gl2psincdir@)
 
 BUILDLDAP      := @buildldap@
 LDAPLIBDIR     := @ldaplibdir@
@@ -241,7 +252,6 @@ BUILDBONJOUR   := @buildbonjour@
 DNSSDLIBDIR    := @dnssdlibdir@
 DNSSDLIB       := @dnssdlib@
 DNSSDINCDIR    := $(filter-out /usr/include, @dnssdincdir@)
-BONJOURCPPFLAGS := @bonjourcppflags@
 
 BUILDCHIRP     := @buildchirp@
 CHIRPLIBDIR    := @chirplibdir@
@@ -303,6 +313,7 @@ PYTHONLIBDIR   := @pythonlibdir@
 PYTHONLIB      := @pythonlib@
 PYTHONINCDIR   := $(filter-out /usr/include, @pythonincdir@)
 PYTHONLIBFLAGS := @pythonlibflags@
+PYTHONEXE      := @pythonexe@
 
 BUILDRUBY      := @buildruby@
 RUBYLIBDIR     := @rubylibdir@
@@ -366,6 +377,11 @@ BUILDMONALISA  := @buildmonalisa@
 MONALISALIBDIR := @monalisalibdir@
 MONALISACLILIB := @monalisalib@
 MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
+
+BUILDTBB       := @buildtbb@
+TBBLIBDIR      := @tbblibdir@
+TBBLIB         := @tbblib@
+TBBINCDIR      := $(filter-out /usr/include, @tbbincdir@)
 
 SSLLIB         := @ssllib@
 SSLLIBDIR      := @ssllibdir@
@@ -432,5 +448,9 @@ INSTALL        := cp -dpR
 INSTALLDATA    := cp -dpR
 INSTALLDIR     := mkdir -p
 RSYNC          := rsync -au
+
+BUILDR         := @buildr@
+RLIBS          := @rlibs@
+RFLAGS         := @rflags@
 
 ROOTDRPMREL    := 1

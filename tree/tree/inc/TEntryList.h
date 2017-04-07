@@ -12,9 +12,7 @@
 #ifndef ROOT_TEntryList
 #define ROOT_TEntryList
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TTree;
 class TDirectory;
@@ -30,25 +28,25 @@ class TEntryList: public TNamed
    TEntryList& operator=(const TEntryList&); // Not implemented
 
  protected:
-   TList      *fLists;   //a list of underlying entry lists for each tree of a chain
-   TEntryList *fCurrent; //! currently filled entry list
+   TList      *fLists;                  ///<  a list of underlying entry lists for each tree of a chain
+   TEntryList *fCurrent;                ///<! currently filled entry list
 
-   Int_t            fNBlocks;   //number of TEntryListBlocks
-   TObjArray       *fBlocks;    //blocks with indices of passing events (TEntryListBlocks)
-   Long64_t         fN;         //number of entries in the list
-   Long64_t         fEntriesToProcess; //used on proof to set the number of entries to process in a packet
-   TString          fTreeName;  //name of the tree
-   TString          fFileName;  //name of the file, where the tree is
-   ULong_t          fStringHash;//! Hash value of a string of treename and filename
-   Int_t            fTreeNumber;//! the index of the tree in the chain (used when the entry
-                                //list is used as input (TTree::SetEntryList())
+   Int_t            fNBlocks;           ///<  number of TEntryListBlocks
+   TObjArray       *fBlocks;            ///<  blocks with indices of passing events (TEntryListBlocks)
+   Long64_t         fN;                 ///<  number of entries in the list
+   Long64_t         fEntriesToProcess;  ///<  used on proof to set the number of entries to process in a packet
+   TString          fTreeName;          ///<  name of the tree
+   TString          fFileName;          ///<  name of the file, where the tree is
+   ULong_t          fStringHash;        ///<! Hash value of a string of treename and filename
+   Int_t            fTreeNumber;        ///<! the index of the tree in the chain (used when the entry
+                                        ///<  list is used as input (TTree::SetEntryList())
 
-   Long64_t         fLastIndexQueried; //! used to optimize GetEntry() function from a loop
-   Long64_t         fLastIndexReturned; //! used to optimize GetEntry() function from a loop
-   Bool_t           fShift;            //! true when some sub-lists don't correspond to trees
-                                       //(when the entry list is used as input in TChain)
-   TDirectory      *fDirectory;   //! Pointer to directory holding this tree
-   Bool_t           fReapply;     //  If true, TTree::Draw will 'reapply' the original cut
+   Long64_t         fLastIndexQueried;  ///<! used to optimize GetEntry() function from a loop
+   Long64_t         fLastIndexReturned; ///<! used to optimize GetEntry() function from a loop
+   Bool_t           fShift;             ///<! true when some sub-lists don't correspond to trees
+                                        ///<  (when the entry list is used as input in TChain)
+   TDirectory      *fDirectory;         ///<! Pointer to directory holding this tree
+   Bool_t           fReapply;           ///<  If true, TTree::Draw will 'reapply' the original cut
 
    void             GetFileName(const char *filename, TString &fn, Bool_t * = 0);
 

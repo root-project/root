@@ -1,18 +1,25 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Example of a Tree where branches are variable length arrays
+/// A second Tree is created and filled in parallel.
+/// Run this script with
+/// ~~~
+///   .x tree3.C
+/// ~~~
+/// In the function treer, the first Tree is open.
+/// The second Tree is declared friend of the first tree.
+/// TTree::Draw is called with variables from both Trees.
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 
 void tree3w() {
-// Example of a Tree where branches are variable length arrays
-// A second Tree is created and filled in parallel.
-// Run this script with
-//   .x tree3.C
-// In the function treer, the first Tree is open.
-// The second Tree is declared friend of the first tree.
-// TTree::Draw is called with variables from both Trees.
-//
-//  Author: Rene Brun
 
    const Int_t kMaxTrack = 500;
    Int_t ntrack;

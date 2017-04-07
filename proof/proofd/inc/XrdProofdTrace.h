@@ -51,15 +51,18 @@
 
 #ifndef NODEBUG
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 #include "XrdOuc/XrdOucTrace.hh"
 
 R__EXTERN XrdOucTrace *XrdProofdTrace;
+
+#if 0
+// silence warning from gcc6
+//    include/XrdProofdTrace.h:106:10: warning: nonnull argument "this" compared to NULL [-Wnonnull-compare]
+#if defined(__GNUC__) && (__GNUC__ >= 5) && !defined(__INTEL_COMPILER)
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+#endif
+#endif
 
 //
 // Auxilliary macros
@@ -96,19 +99,19 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
       } \
    }
 
-#define TRACEP(p, act, x) \
+#define TRACET(tid, act, x) \
    if (TRACING(act)) { \
-      if (TRACINGERR(act)) { \
-         if (p) {\
-            XrdProofdTrace->Beg("-E", 0, p->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
-         } else {XPDERR(x);}\
-      } else { \
-         if (p) {\
-            XrdProofdTrace->Beg("-I", 0, p->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
-         } else {XPDPRT(x);}\
-      } \
+      const char *typ = (TRACINGERR(act)) ? "-E" : "-I"; \
+      XrdProofdTrace->Beg(typ, 0, tid); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
    }
 
+#define TRACEP(p, act, x) \
+   if (TRACING(act)) { \
+      const char *typ = (TRACINGERR(act)) ? "-E" : "-I"; \
+      if (p) {\
+         XrdProofdTrace->Beg(typ, 0, p->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
+      } else {XPDERR(x);}\
+   }
 #define TRACEI(id, act, x) \
    if (TRACING(act)) { \
       if (TRACINGERR(act)) { \
@@ -118,19 +121,6 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
       } else { \
          if (id) {\
             XrdProofdTrace->Beg("-I", 0, id); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
-         } else { XPDPRT(x); }\
-      } \
-   }
-
-#define TRACER(r, act, x) \
-   if (TRACING(act)) { \
-      if (TRACINGERR(act)) { \
-         if (r) {\
-            XrdProofdTrace->Beg("-E", 0, r->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
-         } else { XPDERR(x); }\
-      } else { \
-         if (r) {\
-            XrdProofdTrace->Beg("-I", 0, r->TraceID()); std::cerr << xpdloc <<": "<< x; XrdProofdTrace->End(); \
          } else { XPDPRT(x); }\
       } \
    }
@@ -146,9 +136,9 @@ R__EXTERN XrdOucTrace *XrdProofdTrace;
 #define XPDPRT(x)
 #define XPDERR(x)
 #define TRACE(act, x)
+#define TRACEID(tid, act, x)
 #define TRACEP(p, act, x)
 #define TRACEI(id, act, x)
-#define TRACER(r, act, x)
 
 #endif
 

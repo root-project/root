@@ -1,13 +1,20 @@
-TCanvas *earth(){
-  //this tutorial illustrate the special contour options
-  //    "AITOFF"     : Draw a contour via an AITOFF projection
-  //    "MERCATOR"   : Draw a contour via an Mercator projection
-  //    "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
-  //    "PARABOLIC"  : Draw a contour via an Parabolic projection
-  //
-  //Author: Olivier Couet (from an original macro sent by Ernst-Jan Buis)
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// This tutorial illustrates the special contour options.
+///
+///   - "AITOFF"     : Draw a contour via an AITOFF projection
+///   - "MERCATOR"   : Draw a contour via an Mercator projection
+///   - "SINUSOIDAL" : Draw a contour via an Sinusoidal projection
+///   - "PARABOLIC"  : Draw a contour via an Parabolic projection
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet (from an original macro sent by Ernst-Jan Buis)
 
-   gStyle->SetPalette(1);
+TCanvas *earth(){
+
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 
@@ -19,8 +26,8 @@ TCanvas *earth(){
    TH2F *hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
    TH2F *hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
 
-   TString dat = gSystem->UnixPathName(__FILE__);
-   dat.ReplaceAll("C","dat");
+   TString dat = gROOT->GetTutorialDir();
+   dat.Append("/graphics/earth.dat");
    dat.ReplaceAll("/./","/");
 
    ifstream in;

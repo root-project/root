@@ -11,16 +11,7 @@
 #ifndef ROOT_TVirtualMagField
 #define ROOT_TVirtualMagField
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TVirtualMagField - ABC for magnetic field. Derived classes must        //
-// implement the method: Field(const Double_t *x, Double_t *B)            //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TVirtualMagField : public TNamed
 {
@@ -37,7 +28,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TGeoUniformMagField - Uniform magnetic field class.                       //
+// TGeoUniformMagField - Uniform magnetic field class.                    //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 

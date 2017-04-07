@@ -19,13 +19,9 @@
 //        The intention is to seraparte them into a few .cpp files instead,
 //        so that users needing one form need not incorporate code for them all.
 
-#include <cmath>
-#include <limits>
-
+#include "Math/GenVector/3DConversions.h"
 
 #include "Math/Math.h"
-
-#include "Math/GenVector/3DConversions.h"
 
 #include "Math/GenVector/Rotation3D.h"
 #include "Math/GenVector/AxisAngle.h"
@@ -36,6 +32,8 @@
 #include "Math/GenVector/RotationY.h"
 #include "Math/GenVector/RotationZ.h"
 
+#include <cmath>
+#include <limits>
 
 namespace ROOT {
 namespace Math {
@@ -196,11 +194,11 @@ void convert( Rotation3D const & from, EulerAngles & to)
 
 } // convert to EulerAngles
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// conversion from Rotation3D to Quaternion
+
 void convert( Rotation3D const & from, Quaternion  & to)
 {
-   // conversion from Rotation3D to Quaternion
-
    double m[9];
    from.GetComponents(m, m+9);
 
@@ -251,14 +249,14 @@ void convert( Rotation3D const & from, Quaternion  & to)
    }
 }  // convert to Quaternion
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// conversion from Rotation3D to RotationZYX
+/// same Math used as for EulerAngles apart from some different meaning of angles and
+/// matrix elements. But the basic algoprithms principles are the same described in
+/// http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
+
 void convert( Rotation3D const & from, RotationZYX  & to)
 {
-   // conversion from Rotation3D to RotationZYX
-   // same Math used as for EulerAngles apart from some different meaning of angles and
-   // matrix elements. But the basic algoprithms principles are the same described in
-   // http://www.cern.ch/mathlibs/documents/eulerAngleComputation.pdf
-
    // theta is assumed to be in range [-PI/2,PI/2].
    // this is guranteed by the Rectify function
 

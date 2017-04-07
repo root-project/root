@@ -1,9 +1,7 @@
 #ifndef ROOT_TKDTree
 #define ROOT_TKDTree
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #include "TMath.h"
 #include <vector>

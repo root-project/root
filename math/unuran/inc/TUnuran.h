@@ -15,9 +15,7 @@
 
 #include <string>
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
 
 class TUnuranContDist;
@@ -27,8 +25,12 @@ class TUnuranEmpDist;
 
 #include <memory>
 
-//______________________________________________________________________
+
 /**
+
+   \class TUnuran
+   \ingroup Unuran
+
    TUnuran class.
    Interface to the UNU.RAN package for generating non uniform random
    numbers. This class wraps the UNU.RAN calls in C++ methods.
@@ -54,7 +56,7 @@ class TUnuranEmpDist;
    In addition is possible to set the random number generator in the constructor of the class, its seed
    via the TUnuran::SetSeed() method.
 */
-///////////////////////////////////////////////////////////////////////
+
 
 
 //class TUnuranGenerator;
@@ -259,7 +261,7 @@ protected:
    UNUR_GEN * fGen;                      //pointer to the UnuRan C generator struct
    UNUR_DISTR * fUdistr;                 //pointer to the UnuRan C distribution struct
    UNUR_URNG  * fUrng;                   // pointer to Unuran C random generator struct
-   std::auto_ptr<TUnuranBaseDist>         fDist;       // pointer for distribution wrapper
+   std::unique_ptr<TUnuranBaseDist> fDist; // pointer for distribution wrapper
    TRandom * fRng;                       //pointer to ROOT random number generator
    std::string fMethod;                  //string representing the method
 

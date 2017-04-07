@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTime
 #include "TTime.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TGTransientFrame;
 class TGProgressBar;
@@ -99,7 +95,6 @@ private:
    Float_t             fProcTime;
    Double_t            fAvgRate;
    Double_t            fAvgMBRate;
-   Int_t               fSVNRev;
    Int_t               fRightInfo;
 
    TString             fSessionUrl;

@@ -10,14 +10,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEventIter                                                           //
-//                                                                      //
-// Special iterator class used in TProofPlayer to iterate over events   //
-// or objects in the packets.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TEventIter
+\ingroup proofkernel
+
+Special iterator class used in TProofPlayer to iterate over events
+or objects in the packets.
+
+*/
 
 #include "TEnv.h"
 #include "TEventIter.h"
@@ -40,6 +39,7 @@
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TProofServ.h"
+#include "TSystem.h"
 
 #include "TError.h"
 
@@ -49,11 +49,11 @@
 
 ClassImp(TEventIter)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TEventIter::TEventIter()
 {
-   // Default constructor
-
    fDSet  = 0;
    fElem  = 0;
    fFile  = 0;
@@ -83,12 +83,12 @@ TEventIter::TEventIter()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : fDSet(dset), fSel(sel)
 {
-   // Constructor
-
    fElem  = 0;
    fFile  = 0;
    fDir   = 0;
@@ -116,11 +116,11 @@ TEventIter::TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TEventIter::~TEventIter()
 {
-   // Destructor
-
    if (fPackets) {
       fPackets->SetOwner(kTRUE);
       SafeDelete(fPackets);
@@ -128,27 +128,27 @@ TEventIter::~TEventIter()
    delete fFile;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalidated the current packet (if any) by setting the TDSetElement::kCorrupted bit
+
 void TEventIter::InvalidatePacket()
 {
-   // Invalidated the current packet (if any) by setting the TDSetElement::kCorrupted bit
-
    if (fElem) fElem->SetBit(TDSetElement::kCorrupted);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set flag to stop the process
+
 void TEventIter::StopProcess(Bool_t /*abort*/)
 {
-   // Set flag to stop the process
-
    fStop = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create and instance of the appropriate iterator
+
 TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
 {
-   // Create and instance of the appropriate iterator
-
    if (dset->TestBit(TDSet::kEmpty)) {
       return new TEventIterUnit(dset, sel, num);
    }  else if (dset->IsTree()) {
@@ -158,11 +158,11 @@ TEventIter *TEventIter::Create(TDSet *dset, TSelector *sel, Long64_t first, Long
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load directory
+
 Int_t TEventIter::LoadDir()
 {
-   // Load directory
-
    Int_t ret = 0;
 
    // Check Filename
@@ -226,16 +226,36 @@ Int_t TEventIter::LoadDir()
    return ret;
 }
 
+//______________________________________________________________________________
+Long64_t TEventIter::GetEntryNumber(Long64_t next)
+{
+   // Get the entry number, taking into account event/entry lists
+
+   Long64_t entry = next;
+   // Set entry number; if data iteration we may need to test the entry or event lists
+   if (TestBit(TEventIter::kData)) {
+      if (fEntryList){
+         entry = fEntryList->GetEntry(next);
+      } else if (fEventList) {
+         entry = fEventList->GetEntry(next);
+      }
+   }
+   // Pre-event processing
+   PreProcessEvent(entry);
+   // Done
+   return entry;
+}
+
 //------------------------------------------------------------------------
 
 
 ClassImp(TEventIterUnit)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TEventIterUnit::TEventIterUnit()
 {
-   // Default constructor
-
    fDSet = 0;
    fElem = 0;
    fSel = 0;
@@ -245,11 +265,11 @@ TEventIterUnit::TEventIterUnit()
    fOldBytesRead = 0; // Measures the bytes written
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
 {
-   // Main constructor
-
    fDSet = dset;
    fElem = 0;
    fSel = sel;
@@ -259,12 +279,11 @@ TEventIterUnit::TEventIterUnit(TDSet* dset, TSelector *sel, Long64_t num)
    fOldBytesRead = 0; // Measures the bytes written
 }
 
-//______________________________________________________________________________
-Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
-                                   TEntryList **, TEventList **)
-{
-   // Get loop range
+////////////////////////////////////////////////////////////////////////////////
+/// Get loop range
 
+Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num)
+{
    if (gPerfStats) {
       Long64_t totBytesWritten = TFile::GetFileBytesWritten();
       Long64_t bytesWritten = totBytesWritten - fOldBytesRead;
@@ -316,11 +335,11 @@ Int_t TEventIterUnit::GetNextPacket(Long64_t &fst, Long64_t &num,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next event
+
 Long64_t TEventIterUnit::GetNextEvent()
 {
-   // Get next event
-
    if (fStop || fNum == 0)
       return -1;
 
@@ -387,22 +406,22 @@ Long64_t TEventIterUnit::GetNextEvent()
 
 ClassImp(TEventIterObj)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TEventIterObj::TEventIterObj()
 {
-   // Default ctor.
-
    fKeys     = 0;
    fNextKey  = 0;
    fObj      = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TEventIterObj::TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : TEventIter(dset,sel,first,num)
 {
-   // Constructor
-
    fClassName = dset->GetType();
    fKeys     = 0;
    fNextKey  = 0;
@@ -410,22 +429,21 @@ TEventIterObj::TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TEventIterObj::~TEventIterObj()
 {
-   // Destructor
-
    // delete fKeys ?
    delete fNextKey;
    delete fObj;
 }
 
-//______________________________________________________________________________
-Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
-                                  TEntryList **, TEventList **)
-{
-   // Get loop range
+////////////////////////////////////////////////////////////////////////////////
+/// Get loop range
 
+Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num)
+{
    SafeDelete(fElem);
 
    if (fStop || fNum == 0) return -1;
@@ -521,11 +539,11 @@ Int_t TEventIterObj::GetNextPacket(Long64_t &first, Long64_t &num,
    // Done
    return 0;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To be executed before by TProofPlayer calling TSelector::Process
+
 void TEventIterObj::PreProcessEvent(Long64_t)
 {
-   // To be executed before by TProofPlayer calling TSelector::Process
-
    --fNum;
    ++fCur;
    TKey *key = (TKey*) fNextKey->Next();
@@ -536,11 +554,11 @@ void TEventIterObj::PreProcessEvent(Long64_t)
    fSel->SetObject(fObj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next event
+
 Long64_t TEventIterObj::GetNextEvent()
 {
-   // Get next event
-
    if (fStop || fNum == 0) return -1;
 
    if (fElem) fElem->ResetBit(TDSetElement::kNewPacket);
@@ -641,20 +659,20 @@ Long64_t TEventIterObj::GetNextEvent()
 
 //------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TEventIterTree::TFileTree::TFileTree(const char *name, TFile *f, Bool_t islocal)
                : TNamed(name, ""), fUsed(kFALSE), fIsLocal(islocal), fFile(f)
 {
-   // Default ctor.
-
    fTrees = new TList;
    fTrees->SetOwner();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default dtor.
+
 TEventIterTree::TFileTree::~TFileTree()
 {
-   // Default dtor.
-
    // Avoid destroying the cache; must be placed before deleting the trees
    TTree *tree = (TTree *)fTrees->First();
    while (tree) {
@@ -667,11 +685,11 @@ TEventIterTree::TFileTree::~TFileTree()
 
 ClassImp(TEventIterTree)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TEventIterTree::TEventIterTree()
 {
-   // Default ctor.
-
    fTree = 0;
    fTreeCache = 0;
    fUseTreeCache = 1;
@@ -683,12 +701,12 @@ TEventIterTree::TEventIterTree()
    SetBit(TEventIter::kData);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num)
    : TEventIter(dset,sel,first,num)
 {
-   // Constructor
-
    fTreeName = dset->GetObjName();
    fTree = 0;
    fTreeCache = 0;
@@ -707,41 +725,41 @@ TEventIterTree::TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long
    SetBit(TEventIter::kData);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TEventIterTree::~TEventIterTree()
 {
-   // Destructor
-
    // Delete the tree cache ...
    SafeDelete(fTreeCache);
    // ... and the remaining open files
    SafeDelete(fFileTrees);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size in bytes of the cache, if any
+/// Return -1 if not used
+
 Long64_t TEventIterTree::GetCacheSize()
 {
-   // Return the size in bytes of the cache, if any
-   // Return -1 if not used
-
    if (fUseTreeCache) return fCacheSize;
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of entries in the learning phase
+
 Int_t TEventIterTree::GetLearnEntries()
 {
-   // Return the number of entries in the learning phase
-
    return TTreeCache::GetLearnEntries();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Tree for the main TDSetElement and for all the friends.
+/// Returns the main tree or 0 in case of an error.
+
 TTree* TEventIterTree::GetTrees(TDSetElement *elem)
 {
-   // Create a Tree for the main TDSetElement and for all the friends.
-   // Returns the main tree or 0 in case of an error.
-
    // Reset used flags
    TIter nxft(fFileTrees);
    TFileTree *ft = 0;
@@ -761,6 +779,7 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
                fTreeCache = (TTreeCache *)curfile->GetCacheRead(main);
                if (fCacheSize < 0) fCacheSize = main->GetCacheSize();
             } else {
+               fTreeCache->ResetCache();
                curfile->SetCacheRead(fTreeCache, main);
                fTreeCache->UpdateBranches(main);
             }
@@ -837,11 +856,11 @@ TTree* TEventIterTree::GetTrees(TDSetElement *elem)
    return main;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a tree from s TDSetElement
+
 TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objname)
 {
-   // Load a tree from s TDSetElement
-
    if (!e) {
       Error("Load", "undefined element");
       return (TTree *)0;
@@ -959,7 +978,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
    }
 
    // Point to the key
-   TKey *key = dd->GetKey(on);
+   TKey *key = dd->GetKey(gSystem->BaseName(on));
    if (key == 0) {
       Error("Load", "Cannot find tree \"%s\" in %s", tn, fn);
       return (TTree*)0;
@@ -985,12 +1004,11 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
    return tree;
 }
 
-//______________________________________________________________________________
-Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
-                                   TEntryList **enl, TEventList **evl)
-{
-   // Get loop range
+////////////////////////////////////////////////////////////////////////////////
+/// Get loop range
 
+Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num)
+{
    if (first > -1) fEntryListPos = first;
 
    if (fStop || fNum == 0) return -1;
@@ -1131,10 +1149,8 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
    num = fElemNum;
    if (fEntryList) {
       first = fEntryListPos;
-      if (enl) *enl = fEntryList;
    } else if (fEventList){
       first = fEventListPos;
-      if (evl) *evl = fEventList;
    } else {
       first = fElemFirst;
    }
@@ -1143,12 +1159,12 @@ Int_t TEventIterTree::GetNextPacket(Long64_t &first, Long64_t &num,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actions to be done just before processing entry 'entry'.
+/// Called by TProofPlayer.
+
 void TEventIterTree::PreProcessEvent(Long64_t entry)
 {
-   // Actions to be done just before processing entry 'entry'.
-   // Called by TProofPlayer.
-
    if (!(fEntryList || fEventList)) {
       --fNum;
       ++fCur;
@@ -1168,11 +1184,11 @@ void TEventIterTree::PreProcessEvent(Long64_t entry)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next event
+
 Long64_t TEventIterTree::GetNextEvent()
 {
-   // Get next event
-
    if (fStop || fNum == 0) return -1;
 
    Bool_t attach = kFALSE;

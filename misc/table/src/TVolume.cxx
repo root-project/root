@@ -47,52 +47,45 @@ static TRotMatrix *gIdentity = 0;
 
 ClassImp(TVolume)
 
-//______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-* T V O L U M E  description *-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                     ==========================
-//*-*
-//*-*    A TVolume object is used to build the geometry hierarchy.
-//*-*    Since TVolume is derived from TDataSet class it may contain other volumes.
-//*-*
-//*-*    A geometry volume has attributes:
-//*-*      - name and title
-//*-*      - pointer to the referenced shape (see TShape).
-//*-*      - list of TVolumePosition object defining the position of the nested volumes
-//*-*        with respect to the mother node.
-//*-*
-//*-*
-//*-*    A volume can be drawn.
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+////////////////////////////////////////////////////////////////////////////////
+/// TVolume  description
+///
+///    A TVolume object is used to build the geometry hierarchy.
+///    Since TVolume is derived from TDataSet class it may contain other volumes.
+///
+///    A geometry volume has attributes:
+///      - name and title
+///      - pointer to the referenced shape (see TShape).
+///      - list of TVolumePosition object defining the position of the nested volumes
+///        with respect to the mother node.
+///
+///
+///    A volume can be drawn.
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Volume default constructor
+
 TVolume::TVolume()
 {
-//*-*-*-*-*-*-*-*-*-*-*Volume default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ========================
-
    fShape        = 0;
    fListOfShapes = 0;
    fVisibility   = kBothVisible;
    if (!gGeometry) new TGeometry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Volume normal constructor
+////
+////    name    is the name of the node
+////    title   is title
+////    shapename is the name of the referenced shape
+
 TVolume::TVolume(const char *name, const char *title, const char *shapename, Option_t *option)
        :TObjectSet(name),TAttLine(), TAttFill(),fShape(0),fListOfShapes(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Volume normal constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//*-*
-//*-*    name    is the name of the node
-//*-*    title   is title
-//*-*    shapename is the name of the referenced shape
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 #ifdef WIN32
-//*-* The color "1" - default produces a very bad 3D image with OpenGL
+/// The color "1" - default produces a very bad 3D image with OpenGL
    Color_t lcolor = 16;
    SetLineColor(lcolor);
 #endif
@@ -109,21 +102,18 @@ TVolume::TVolume(const char *name, const char *title, const char *shapename, Opt
    if(fShape) ImportShapeAttributes();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Volume normal constructor
+////
+////    name    is the name of the node
+////    title   is title
+////    shape   is the pointer to the shape definition
 
-//______________________________________________________________________________
 TVolume::TVolume(const char *name, const char *title, TShape *shape, Option_t *option)
                 :TObjectSet(name),TAttLine(),TAttFill(),fShape(0),fListOfShapes(0)
 {
-//*-*-*-*-*-*-*-*-*-*-*Volume normal constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ================================
-//*-*
-//*-*    name    is the name of the node
-//*-*    title   is title
-//*-*    shape   is the pointer to the shape definition
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 #ifdef WIN32
-//*-* The color "1" - default produces a very bad 3D image with OpenGL
+/// The color "1" - default produces a very bad 3D image with OpenGL
    Color_t lcolor = 16;
    SetLineColor(lcolor);
 #endif
@@ -136,23 +126,25 @@ TVolume::TVolume(const char *name, const char *title, TShape *shape, Option_t *o
    if(shape) ImportShapeAttributes();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ENodeSEEN Visibility flag  00 - everything visible,
+///                            10 - this invisible, but sons are visible
+///                            01 - this visible but sons
+///                            11 - neither this nor its sons are visible
+/// Maps the value of the visibility flag to <a href="https://cern-tex.web.cern.ch/cern-tex/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>
+
 Int_t TVolume::MapStNode2GEANTVis(ENodeSEEN  vis)
 {
-// ENodeSEEN Visibility flag  00 - everything visible,
-//                            10 - this unvisible, but sons are visible
-//                            01 - this visible but sons
-//                            11 - neither this nor its sons are visible
-// Maps the value of the visibility flag to begin_html <a href="http://wwwinfo.cern.ch/asdoc/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>end_html
    const Int_t mapVis[4] = {1, -2, 0, -1 };
    return mapVis[vis];
 }
 
-//______________________________________________________________________________
-//ENodeSEEN TVolume::MapGEANT2StNodeVis(Int_t vis)
+////////////////////////////////////////////////////////////////////////////////
+/// ENodeSEEN TVolume::MapGEANT2StNodeVis(Int_t vis)
+/// Maps the value of <a href="https://cern-tex.web.cern.ch/cern-tex/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a> to the visibility flag
+
 Int_t TVolume::MapGEANT2StNodeVis(Int_t vis)
 {
-// Maps the value of begin_html <a href="http://wwwinfo.cern.ch/asdoc/geant_html3/node128.html#SECTION056000000000000000000000">GEANT 3.21 "volume attributes"</a>end_html to the visibility flag
    const Int_t mapVis[4] = {1, -2, 0, -1 };
    Int_t i;
 //  for (i =0; i<3;i++) if (mapVis[i] == vis) return (ENodeSEEN)i;
@@ -160,11 +152,11 @@ Int_t TVolume::MapGEANT2StNodeVis(Int_t vis)
    return kBothVisible;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a TNode object into a TVolume
+
 TVolume::TVolume(TNode &rootNode):fShape(0),fListOfShapes(0)
 {
-  // Convert a TNode object into a TVolume
-
    SetName(rootNode.GetName());
    SetTitle(rootNode.GetTitle());
    fVisibility = ENodeSEEN(MapGEANT2StNodeVis(rootNode.GetVisibility()));
@@ -188,21 +180,22 @@ TVolume::TVolume(TNode &rootNode):fShape(0),fListOfShapes(0)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 void TVolume::Add(TShape *shape, Bool_t IsMaster)
 {
-   //to be documented
    if (!shape) return;
    if (!fListOfShapes) fListOfShapes = new TList;
    fListOfShapes->Add(shape);
    if (IsMaster) fShape = shape;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert a TVolume object into a TNode
+
 TNode *TVolume::CreateTNode(const TVolumePosition *position)
 {
-   // Convert a TVolume object into a TNode
-
    Double_t x=0;
    Double_t y=0;
    Double_t z=0;
@@ -240,12 +233,11 @@ TNode *TVolume::CreateTNode(const TVolumePosition *position)
    return newNode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Volume default destructor
+
 TVolume::~TVolume()
 {
-//*-*-*-*-*-*-*-*-*-*-*Volume default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ======================
-
    // Hmm, here we are in the troubles, in theory we have to find all
    // place where this node is sitting but we don't (yet :-()
 
@@ -256,19 +248,21 @@ TVolume::~TVolume()
    SafeDelete(fListOfShapes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be documented
+
 void TVolume::Add(TVolumePosition *position)
 {
-   //to be documented
    if (!GetListOfPositions()) SetPositionsList(new TList);
    if ( GetListOfPositions()) GetListOfPositions()->Add(position);
    else Error("Add","Can not create list of positions for the current node <%s>:<%s>",GetName(),GetTitle());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be documented
+
 TVolumePosition *TVolume::Add(TVolume *node, TVolumePosition *nodePosition)
 {
-   //to be documented
    TVolumePosition *position = nodePosition;
    if (!node) return 0;
    if (!position) position = new TVolumePosition(node);  // Create default position
@@ -278,16 +272,16 @@ TVolumePosition *TVolume::Add(TVolume *node, TVolumePosition *nodePosition)
    return position;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////
+////    volume  the pointer to the volume to be placed
+////    x,y,z   are the offsets of the volume with respect to his mother
+////    matrix  is the pointer to the rotation matrix
+////     id     is a unique position id
+
 TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t z,
                               TRotMatrix *matrix,  UInt_t id, Option_t *)
 {
-//*-*
-//*-*    volume  the pointer to the volume to be placed
-//*-*    x,y,z   are the offsets of the volume with respect to his mother
-//*-*    matrix  is the pointer to the rotation matrix
-//*-*     id     is a unique position id
-//*-*
    if (!volume) return 0;
    TRotMatrix *rotation = matrix;
    if(!rotation) rotation = GetIdentity();
@@ -296,16 +290,16 @@ TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t 
    return Add(volume,position);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////
+////    volume      the pointer to the volume to be placed
+////    x,y,z       are the offsets of the volume with respect to his mother
+////    matrixname  is the name of the rotation matrix
+////     id         is a unique position id
+
 TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t z,
                               const char *matrixname,  UInt_t id, Option_t *)
 {
-//*-*
-//*-*    volume      the pointer to the volume to be placed
-//*-*    x,y,z       are the offsets of the volume with respect to his mother
-//*-*    matrixname  is the name of the rotation matrix
-//*-*     id         is a unique position id
-//*-*
    if (!volume) return 0;
    TRotMatrix *rotation = 0;
    if (matrixname && strlen(matrixname)) rotation = gGeometry->GetRotMatrix(matrixname);
@@ -315,10 +309,11 @@ TVolumePosition *TVolume::Add(TVolume *volume, Double_t x, Double_t y, Double_t 
    return Add(volume,position);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be documented
+
 void TVolume::Browse(TBrowser *b)
 {
-   //to be documented
    if (GetListOfPositions()){
       TVolumePosition *nodePosition = 0;
       TIter next(GetListOfPositions());
@@ -335,26 +330,25 @@ void TVolume::Browse(TBrowser *b)
       }
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be documented
+
 Int_t TVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   //to be documented
    return DistancetoNodePrimitive(px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Compute distance from point px,py to a TVolumeView
+///
+////  Compute the closest distance of approach from point px,py to the position of
+////  this volume.
+////  The distance is computed in pixels units.
+////
+////  It is restricted by 2 levels of TVolumes
+
 Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
 {
-//*-*-*-*-*-*-*-*-*Compute distance from point px,py to a TVolumeView*-*-*-*-*-*
-//*-*                  ===========================================
-//*-*  Compute the closest distance of approach from point px,py to the position of
-//*-*  this volume.
-//*-*  The distance is computed in pixels units.
-//*-*
-//*-*  It is restricted by 2 levels of TVolumes
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    const Int_t big = 9999;
    if ( GetVisibility() == kNoneVisible )  return big;
 
@@ -366,7 +360,7 @@ Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
    Int_t puxmax = gPad->XtoAbsPixel(gPad->GetUxmax());
    Int_t puymax = gPad->YtoAbsPixel(gPad->GetUymax());
 
-//*-*- return if point is not in the user area
+///- return if point is not in the user area
    if (px < puxmin - inaxis) return big;
    if (py > puymin + inaxis) return big;
    if (px > puxmax + inaxis) return big;
@@ -384,7 +378,7 @@ Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
       TShape  *shape = 0;
       TIter nextShape(fListOfShapes);
       while ((shape = (TShape *)nextShape())) {
-         //*-*- Distnance to the next referenced shape  if visible
+         ///- Distance to the next referenced shape  if visible
          if (shape->GetVisibility()) {
             Int_t dshape = shape->DistancetoPrimitive(px,py);
             if (dshape < maxdist) {
@@ -398,7 +392,7 @@ Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
 
    if ( (GetVisibility() & kSonUnvisible) ) return dist;
 
-//*-*- Loop on all sons
+///- Loop on all sons
    TList *posList = GetListOfPositions();
    Int_t dnode = dist;
    if (posList && posList->GetSize()) {
@@ -424,15 +418,14 @@ Int_t TVolume::DistancetoNodePrimitive(Int_t px, Int_t py,TVolumePosition *pos)
       return dnode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Draw Referenced node with current parameters
+
 void TVolume::Draw(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Draw Referenced node with current parameters*-*-*-*
-//*-*                   =============================================
-
    TString opt = option;
    opt.ToLower();
-//*-*- Clear pad if option "same" not given
+///- Clear pad if option "same" not given
    if (!gPad) {
       gROOT->MakeDefCanvas();
    }
@@ -474,26 +467,24 @@ void TVolume::Draw(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Draw only Sons of this node
+
 void TVolume::DrawOnly(Option_t *option)
 {
-//*-*-*-*-*-*-*-*-*-*Draw only Sons of this node*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                ===========================
-
    SetVisibility(kThisUnvisible);
    Draw(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Execute action corresponding to one event
+////
+////  This member function must be implemented to realize the action
+////  corresponding to the mouse click on the object in the window
+
 void TVolume::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-//*-*  This member function must be implemented to realize the action
-//*-*  corresponding to the mouse click on the object in the window
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 //   if (gPad->GetView())
 //             gPad->GetView()->ExecuteRotateView(event, px, py);
 
@@ -501,10 +492,11 @@ void TVolume::ExecuteEvent(Int_t, Int_t, Int_t)
    gPad->SetCursor(kHand);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer the "identity" matrix
+
 TRotMatrix *TVolume::GetIdentity()
 {
-   // Return a pointer the "identity" matrix
    Double_t *identityMatrix = 0;
    if (!gIdentity) {
       gIdentity = gGeometry->GetRotMatrix("Identity");
@@ -524,10 +516,11 @@ TRotMatrix *TVolume::GetIdentity()
    return gIdentity;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to be documented
+
 char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
-   //to be documented
    if (!gPad) return 0;
    static char info[512];
    snprintf(info,512,"%s/%s",GetName(),GetTitle());
@@ -546,12 +539,11 @@ char *TVolume::GetObjectInfo(Int_t px, Int_t py) const
    return info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Copy shape attributes as node attributes
+
 void TVolume::ImportShapeAttributes()
 {
-//*-*-*-*-*-*-*Copy shape attributes as node attributes*-*-*-*-*--*-*-*-*-*-*
-//*-*          ========================================
-
    if (fShape) {
       SetLineColor(fShape->GetLineColor());
       SetLineStyle(fShape->GetLineStyle());
@@ -567,28 +559,28 @@ void TVolume::ImportShapeAttributes()
       volume->ImportShapeAttributes();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////- Draw Referenced node
+
 void TVolume::Paint(Option_t *opt)
 {
-//*-*- Draw Referenced node
    gGeometry->SetGeomLevel();
    gGeometry->UpdateTempMatrix();
    PaintNodePosition(opt);
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Paint Referenced volume with current parameters
+////
+////
+////  vis = 1  (default) shape is drawn
+////  vis = 0  shape is not drawn but its sons may be not drawn
+////  vis = -1 shape is not drawn. Its sons are not drawn
+////  vis = -2 shape is drawn. Its sons are not drawn
+
 void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*Paint Referenced volume with current parameters*-*-*-*
-//*-*                   ==============================================
-//*-*
-//*-*  vis = 1  (default) shape is drawn
-//*-*  vis = 0  shape is not drawn but its sons may be not drawn
-//*-*  vis = -1 shape is not drawn. Its sons are not drawn
-//*-*  vis = -2 shape is drawn. Its sons are not drawn
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    if ( GetVisibility() == kNoneVisible )  return;
 
    static TVolumePosition nullPosition;
@@ -607,7 +599,7 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
    TVolumePosition *position = pos;
    if (!position)   position   = &nullPosition;
 
-   // PaintPosition does change the current matrix and it MUST be callled FIRST !!!
+   // PaintPosition does change the current matrix and it MUST be called FIRST !!!
 
    position->UpdatePosition(option);
 
@@ -615,7 +607,7 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
 
    if (GetVisibility() & kSonUnvisible) return;
 
-//*-*- Paint all sons
+///- Paint all sons
    TList *posList = GetListOfPositions();
    if (posList && posList->GetSize()) {
       gGeometry->PushLevel();
@@ -633,11 +625,12 @@ void TVolume::PaintNodePosition(Option_t *option,TVolumePosition *pos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint shape of the volume
+/// To be called from the TObject::Paint method only
+
 void TVolume::PaintShape(Option_t *option)
 {
-   // Paint shape of the volume
-   // To be called from the TObject::Paint method only
    Bool_t rangeView = option && option[0]=='r';
    if (!rangeView) {
       TAttLine::Modify();
@@ -690,12 +683,12 @@ void TVolume::PaintShape(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DeletePosition deletes the position of the TVolume *node from this TVolume
+/// and removes that volume from the list of the nodes of this TVolume
+
 void TVolume::DeletePosition(TVolumePosition *position)
 {
-  // DeletePosition deletes the position of the TVolume *node from this TVolume
-  // and removes that volume from the list of the nodes of this TVolume
-
    if (!position) return;
 
    if (GetListOfPositions()) {
@@ -714,21 +707,20 @@ void TVolume::DeletePosition(TVolumePosition *position)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  GetRange
+///
+///  Calculates the size of 3 box the volume occupies,
+///  Return:
+///    two floating point arrays with the bound of box
+///     surrounding all shapes of this TVolumeView
+
 void TVolume::GetLocalRange(Float_t *min, Float_t *max)
 {
-  //  GetRange
-  //
-  //  Calculates the size of 3 box the volume occupies,
-  //  Return:
-  //    two floating point arrays with the bound of box
-  //     surroundind all shapes of this TVolumeView
-  //
-
    TVirtualPad *savePad = gPad;
    //  Create a dummy TPad;
    TCanvas dummyPad("--Dumm--","dum",1,1);
-   // Assing 3D TView
+   // Asking 3D TView
    TView *view = TView::CreateView(1,0,0);
 
    gGeometry->SetGeomLevel();
@@ -741,26 +733,24 @@ void TVolume::GetLocalRange(Float_t *min, Float_t *max)
    if (savePad) savePad->cd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// Set visibility for this volume and its sons
+///
+/// ENodeSEEN Visibility flag  00 - everything visible,
+///                            10 - this invisible, but sons are visible
+///                            01 - this visible but sons
+///                            11 - neither this nor its sons are visible
+
 void TVolume::SetVisibility(ENodeSEEN vis)
 {
-//*-*-*-*-*-*-*Set visibility for this volume and its sons*-*-*-*-*--*-*-*-*-*-*
-//*-*          =========================================
-// ENodeSEEN Visibility flag  00 - everything visible,
-//                            10 - this unvisible, but sons are visible
-//                            01 - this visible but sons
-//                            11 - neither this nor its sons are visible
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    fVisibility = vis;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+//// *Return total size of this 3-D volume with its attributes
+
 void TVolume::Sizeof3D() const
 {
-//*-*-*-*-*-*-*Return total size of this 3-D volume with its attributes*-*-*
-//*-*          ==========================================================
-
    if (!(GetVisibility() & kThisUnvisible) ) {
       TIter nextShape(fListOfShapes);
       TShape *shape = 0;

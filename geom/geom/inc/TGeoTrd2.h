@@ -12,18 +12,7 @@
 #ifndef ROOT_TGeoTrd2
 #define ROOT_TGeoTrd2
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoTrd2 - a trapezoid with both x and y lengths varying with z. It    //
-//   has 5 parameters, the half lengths in x at -dz and +dz, the half     //
-//  lengths in y at -dz and +dz, and the half length in z (dz).           //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoTrd2 : public TGeoBBox
 {

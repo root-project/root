@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
 
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
 class TH2D;
 class TProfile2D;
@@ -113,14 +109,13 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
-   virtual Long64_t Merge(TCollection *list);
-         TH1D      *ProjectionX(const char *name="_px", Int_t iymin=0, Int_t iymax=-1, Int_t izmin=0,
+   virtual TH1D    *ProjectionX(const char *name="_px", Int_t iymin=0, Int_t iymax=-1, Int_t izmin=0,
                                 Int_t izmax=-1, Option_t *option="") const; // *MENU*
-         TH1D      *ProjectionY(const char *name="_py", Int_t ixmin=0, Int_t ixmax=-1, Int_t izmin=0,
+   virtual TH1D    *ProjectionY(const char *name="_py", Int_t ixmin=0, Int_t ixmax=-1, Int_t izmin=0,
                                 Int_t izmax=-1, Option_t *option="") const; // *MENU*
-         TH1D      *ProjectionZ(const char *name="_pz", Int_t ixmin=0, Int_t ixmax=-1, Int_t iymin=0,
+   virtual TH1D    *ProjectionZ(const char *name="_pz", Int_t ixmin=0, Int_t ixmax=-1, Int_t iymin=0,
                                 Int_t iymax=-1, Option_t *option="") const; // *MENU*
-         TH1       *Project3D(Option_t *option="x") const; // *MENU*
+   virtual TH1     *Project3D(Option_t *option="x") const; // *MENU*
    virtual TProfile2D  *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual TH3     *RebinX(Int_t ngroup = 2, const char *newname = "");

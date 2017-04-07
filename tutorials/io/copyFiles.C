@@ -1,19 +1,26 @@
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_io
+/// \notebook -nodraw
+/// Example of script showing how to copy all objects (including directories)
+/// from a source file.
+/// For each input file, a new directory is created in the current directory
+/// with the name of the source file.
+/// After the execution of:
+/// ~~~{.bash}
+/// root [0] .x copyFiles.C
+/// ~~~
+/// the file result.root will contain 4 subdirectories:
+/// "tot100.root", "hsimple.root", "hs1.root","hs2.root"
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TROOT.h"
 #include "TKey.h"
 #include "TFile.h"
 #include "TSystem.h"
 #include "TTree.h"
-
-  //Example of script showing how to copy all objects (including directories)
-  //from a source file.
-  //For each input file, a new directory is created in the current directory
-  //with the name of the source file.
-  //After execution of:
-  // root > .x copyFiles.C
-  //the file result.root will contain 4 subdirectories:
-  // "tot100.root", "hsimple.root", "hs1.root","hs2.root"
 
 void CopyDir(TDirectory *source) {
    //copy all objects and subdirs of directory source as a subdir of the current directory
@@ -23,7 +30,9 @@ void CopyDir(TDirectory *source) {
    adir->cd();
    //loop on all entries of this directory
    TKey *key;
-   TIter nextkey(source->GetListOfKeys());
+   //Loop in reverse order to make sure that the order of cycles is
+   //preserved.
+   TIter nextkey(source->GetListOfKeys(),kIterBackward);
    while ((key = (TKey*)nextkey())) {
       const char *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
@@ -36,9 +45,14 @@ void CopyDir(TDirectory *source) {
          adir->cd();
       } else if (cl->InheritsFrom(TTree::Class())) {
          TTree *T = (TTree*)source->Get(key->GetName());
-         adir->cd();
-         TTree *newT = T->CloneTree(-1,"fast");
-         newT->Write();
+         // Avoid writing the data of a TTree more than once.
+         // Note this assume that older cycles are (as expected) older
+         // snapshots of the TTree meta data.
+         if (!adir->FindObject(key->GetName())) {
+            adir->cd();
+            TTree *newT = T->CloneTree(-1,"fast");
+            newT->Write();
+         }
       } else {
          source->cd();
          TObject *obj = key->ReadObj();

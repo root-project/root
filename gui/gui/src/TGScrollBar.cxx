@@ -58,7 +58,8 @@ ClassImp(TGHScrollBar)
 ClassImp(TGVScrollBar)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TSBRepeatTimer : public TTimer {
 private:
    TGScrollBar   *fScrollBar;   // scroll bar
@@ -71,23 +72,23 @@ public:
    Int_t  GetSmallInc() const { return fSmallInc; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify when timer times out and reset the timer.
+
 Bool_t TSBRepeatTimer::Notify()
 {
-   // Notify when timer times out and reset the timer.
-
    fScrollBar->HandleTimer(this);
    Reset();
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
                                        UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :
                                        TGFrame(p, w, h, options | kOwnBackground, back)
 {
-   // Constructor.
-
    fPic = fPicN = pic;
    fState = kButtonUp;
    fPicD = 0;
@@ -100,21 +101,21 @@ TGScrollBarElement::TGScrollBarElement(const TGWindow *p, const TGPicture *pic,
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TGScrollBarElement::~TGScrollBarElement()
 {
-   // destructor
-
    if (fPicD) {
       fClient->FreePicture(fPicD);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change state of scrollbar element (either up or down).
+
 void TGScrollBarElement::SetState(Int_t state)
 {
-   // Change state of scrollbar element (either up or down).
-
    if (state != fState) {
       switch (state) {
          case kButtonDown:
@@ -132,11 +133,11 @@ void TGScrollBarElement::SetState(Int_t state)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/Disable scroll bar button chaging the state.
+
 void TGScrollBarElement::SetEnabled(Bool_t on)
 {
-   // Enable/Disable scroll bar button chaging the state.
-
    if (on) {
       if (fState == kButtonUp) {
          return;
@@ -175,11 +176,11 @@ void TGScrollBarElement::SetEnabled(Bool_t on)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw border around scollbar element.
+
 void TGScrollBarElement::DrawBorder()
 {
-   // Draw border around scollbar element.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame)) {
       case kSunkenFrame: // pressed
          gVirtualX->DrawLine(fId, GetBlackGC()(), 0, 0, fWidth-2, 0);
@@ -253,11 +254,11 @@ void TGScrollBarElement::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (fStyle > 0) {
       TGScrollBarElement *el = 0;
       TGScrollBar *bar = 0;
@@ -291,7 +292,9 @@ Bool_t TGScrollBarElement::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                          UInt_t options, Pixel_t back) :
    TGFrame(p, w, h, options | kOwnBackground, back),
@@ -300,8 +303,6 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fSmallInc(1), fHead(0), fTail(0), fSlider(0), fHeadPic(0),
    fTailPic(0), fRepeat(0), fSubw()
 {
-   // Constructor.
-
    fAccelerated = kFALSE;
 
    fBgndColor = fBackground;
@@ -314,11 +315,11 @@ TGScrollBar::TGScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    AddInput(kEnterWindowMask | kLeaveWindowMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a scrollbar (either horizontal or vertical).
+
 TGScrollBar::~TGScrollBar()
 {
-   // Delete a scrollbar (either horizontal or vertical).
-
    delete fHead;
    delete fTail;
    delete fSlider;
@@ -327,11 +328,11 @@ TGScrollBar::~TGScrollBar()
    if (fRepeat) { delete fRepeat; fRepeat = 0; }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGScrollBar::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (gClient->GetStyle() > 0) {
       if (event->fType == kEnterNotify) {
          fBgndColor = fHighColor;
@@ -351,12 +352,12 @@ Bool_t TGScrollBar::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle repeat timer for horizontal or vertical scrollbar. Every time
+/// timer times out we move slider.
+
 Bool_t TGScrollBar::HandleTimer(TTimer *t)
 {
-   // Handle repeat timer for horizontal or vertical scrollbar. Every time
-   // timer times out we move slider.
-
    // shorten time out time to 50 milli seconds
    t->SetTime(50);
 
@@ -380,11 +381,11 @@ Bool_t TGScrollBar::HandleTimer(TTimer *t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning scrollbar background pixmap.
+
 Pixmap_t TGScrollBar::GetBckgndPixmap()
 {
-   // Static method returning scrollbar background pixmap.
-
    static Bool_t init = kFALSE;
    if (!init) {
       fgBckgndPixmap = gClient->GetResourcePool()->GetCheckeredPixmap();
@@ -393,32 +394,32 @@ Pixmap_t TGScrollBar::GetBckgndPixmap()
    return fgBckgndPixmap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method returning the scrollbar width.
+
 Int_t TGScrollBar::GetScrollBarWidth()
 {
-   // Static method returning the scrollbar width.
-
    return fgScrollBarWidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change background color
+
 void TGScrollBar::ChangeBackground(Pixel_t back)
 {
-   // Change background color
-
    TGFrame::ChangeBackground(back);
    fHead->ChangeBackground(back);
    fTail->ChangeBackground(back);
    fSlider->ChangeBackground(back);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a horizontal scrollbar widget.
+
 TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
     TGScrollBar(p, w, h, options, back)
 {
-   // Create a horizontal scrollbar widget.
-
    fHeadPic = fClient->GetPicture("arrow_left.xpm");
    fTailPic = fClient->GetPicture("arrow_right.xpm");
 
@@ -452,11 +453,11 @@ TGHScrollBar::TGHScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisableLayout | kEditDisableHeight | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout and move horizontal scrollbar components.
+
 void TGHScrollBar::Layout()
 {
-   // Layout and move horizontal scrollbar components.
-
    // Should also recalculate the slider size and range, etc.
    fHead->Move(0, 0);
    fHead->Resize(fgScrollBarWidth, fgScrollBarWidth);
@@ -470,11 +471,11 @@ void TGHScrollBar::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a mouse button event in a horizontal scrolbar.
+
 Bool_t TGHScrollBar::HandleButton(Event_t *event)
 {
-   // Handle a mouse button event in a horizontal scrolbar.
-
    Int_t newpos;
 
    if (event->fCode == kButton4) {
@@ -591,11 +592,11 @@ Bool_t TGHScrollBar::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in a horizontal scrollbar.
+
 Bool_t TGHScrollBar::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in a horizontal scrollbar.
-
    if (fDragging) {
       fX0 = event->fX - fXp;
       fY0 = event->fY - fYp;
@@ -615,11 +616,11 @@ Bool_t TGHScrollBar::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set range of horizontal scrollbar.
+
 void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
 {
-   // Set range of horizontal scrollbar.
-
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
    fPos = TMath::Max(fPos, 0);
@@ -648,11 +649,11 @@ void TGHScrollBar::SetRange(Int_t range, Int_t page_size)
    PageSizeChanged(fPsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set logical slider position of horizontal scrollbar.
+
 void TGHScrollBar::SetPosition(Int_t pos)
 {
-   // Set logical slider position of horizontal scrollbar.
-
    fPos = TMath::Max(pos, 0);
    fPos = TMath::Min(pos, fRange-fPsize);
 
@@ -669,13 +670,13 @@ void TGHScrollBar::SetPosition(Int_t pos)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a vertical scrollbar.
+
 TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
                            UInt_t options, ULong_t back) :
     TGScrollBar(p, w, h, options, back)
 {
-   // Create a vertical scrollbar.
-
    fHeadPic = fClient->GetPicture("arrow_up.xpm");
    fTailPic = fClient->GetPicture("arrow_down.xpm");
 
@@ -709,11 +710,11 @@ TGVScrollBar::TGVScrollBar(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisableLayout | kEditDisableWidth | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout and move vertical scrollbar components.
+
 void TGVScrollBar::Layout()
 {
-   // Layout and move vertical scrollbar components.
-
    // Should recalculate fSliderSize, fSliderRange, fX0, fY0, etc. too...
    fHead->Move(0, 0);
    fHead->Resize(fgScrollBarWidth, fgScrollBarWidth);
@@ -727,11 +728,11 @@ void TGVScrollBar::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in vertical scrollbar.
+
 Bool_t TGVScrollBar::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in vertical scrollbar.
-
    Int_t newpos;
 
    if (event->fCode == kButton4) {
@@ -851,11 +852,11 @@ Bool_t TGVScrollBar::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion in a vertical scrollbar.
+
 Bool_t TGVScrollBar::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion in a vertical scrollbar.
-
    if (fDragging) {
       fX0 = event->fX - fXp;
       fY0 = event->fY - fYp;
@@ -875,11 +876,11 @@ Bool_t TGVScrollBar::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set range of vertical scrollbar.
+
 void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
 {
-   // Set range of vertical scrollbar.
-
    fRange = TMath::Max(range, 1);
    fPsize = TMath::Max(page_size, 0);
    fPos = TMath::Max(fPos, 0);
@@ -910,11 +911,11 @@ void TGVScrollBar::SetRange(Int_t range, Int_t page_size)
    PageSizeChanged(fPsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set logical slider position of vertical scrollbar.
+
 void TGVScrollBar::SetPosition(Int_t pos)
 {
-   // Set logical slider position of vertical scrollbar.
-
    fPos = TMath::Max(pos, 0);
    fPos = TMath::Min(pos, fRange-fPsize);
 
@@ -931,11 +932,11 @@ void TGVScrollBar::SetPosition(Int_t pos)
    PositionChanged(fPos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an horizontal scrollbar as a C++ statement(s) on output stream out.
+
 void TGHScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an horizontal scrollbar as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out <<"   TGHScrollBar *";
@@ -958,11 +959,11 @@ void TGHScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   " << GetName() <<"->SetPosition(" << GetPosition() << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save an vertical scrollbar as a C++ statement(s) on output stream out.
+
 void TGVScrollBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save an vertical scrollbar as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out<<"   TGVScrollBar *";

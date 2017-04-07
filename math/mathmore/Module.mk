@@ -40,7 +40,8 @@ MATHMOREDH1  := $(MODDIRI)/Math/DistFuncMathMore.h \
                 $(MODDIRI)/Math/MCParameters.h \
                 $(MODDIRI)/Math/GSLMinimizer1D.h \
                 $(MODDIRI)/Math/ChebyshevApprox.h  \
-                $(MODDIRI)/Math/Random.h \
+                $(MODDIRI)/Math/GSLRandom.h \
+                $(MODDIRI)/Math/GSLRandomFunctions.h \
                 $(MODDIRI)/Math/GSLRndmEngines.h \
                 $(MODDIRI)/Math/QuasiRandom.h \
                 $(MODDIRI)/Math/GSLQuasiRandom.h \
@@ -68,9 +69,18 @@ MATHMORELIB  := $(LPATH)/libMathMore.$(SOEXT)
 MATHMOREMAP  := $(MATHMORELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
+MATHMOREH_REL := $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(MATHMOREH))
+ALLHDRS      += $(MATHMOREH_REL)
 ALLLIBS      += $(MATHMORELIB)
 ALLMAPS      += $(MATHMOREMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MATHMOREH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_More { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MATHMORELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MATHMOREDEP)
@@ -118,8 +128,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(MATHMOREO): CXXFLAGS += $(GSLFLAGS) -DGSL_VERSION_NUM=$(GSLVERSION) -DUSE_ROOT_ERROR
-$(MATHMOREDO): CXXFLAGS += $(ROOT_SRCDIR:%=-I%) $(GSLFLAGS) -DGSL_VERSION_NUM=$(GSLVERSION) -DUSE_ROOT_ERROR
+$(MATHMOREO): CXXFLAGS += $(GSLFLAGS)  -DUSE_ROOT_ERROR
+$(MATHMOREDO): CXXFLAGS += $(ROOT_SRCDIR:%=-I%) $(GSLFLAGS) -DUSE_ROOT_ERROR
 
 # Optimize dictionary with stl containers.
 $(MATHMOREDO): NOOPT = $(OPT)

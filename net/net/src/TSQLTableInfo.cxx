@@ -30,7 +30,9 @@
 
 ClassImp(TSQLTableInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TSQLTableInfo::TSQLTableInfo() :
    TNamed(),
    fColumns(0),
@@ -38,10 +40,11 @@ TSQLTableInfo::TSQLTableInfo() :
    fCreateTime(),
    fUpdateTime()
 {
-   // default constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 TSQLTableInfo::TSQLTableInfo(const char* tablename,
                              TList* columns,
                              const char* comment,
@@ -54,15 +57,13 @@ TSQLTableInfo::TSQLTableInfo(const char* tablename,
    fCreateTime(create_time),
    fUpdateTime(update_time)
 {
-   // normal constructor
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 TSQLTableInfo::~TSQLTableInfo()
 {
-   // destructor
-
    if (fColumns!=0) {
       fColumns->Delete();
       delete fColumns;
@@ -70,11 +71,11 @@ TSQLTableInfo::~TSQLTableInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints table and table columns info
+
 void TSQLTableInfo::Print(Option_t*) const
 {
-   // Prints table and table columns info
-
    TROOT::IndentLevel();
    std::cout << "Table:" << GetName();
 
@@ -98,11 +99,11 @@ void TSQLTableInfo::Print(Option_t*) const
    TROOT::DecreaseDirLevel();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return column info object of given name
+
 TSQLColumnInfo* TSQLTableInfo::FindColumn(const char* columnname)
 {
-   // Return column info object of given name
-
    if ((columnname==0) || (fColumns==0)) return 0;
 
    return dynamic_cast<TSQLColumnInfo*> (fColumns->FindObject(columnname));

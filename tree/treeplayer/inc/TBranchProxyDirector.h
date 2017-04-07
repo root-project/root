@@ -12,9 +12,7 @@
 #ifndef ROOT_TBranchProxyDirector
 #define ROOT_TBranchProxyDirector
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <list>
 
@@ -28,7 +26,11 @@ class TH1F;
 class TTree;
 
 namespace ROOT {
+namespace Detail {
    class TBranchProxy;
+}
+
+namespace Internal{
    class TFriendProxy;
 
    class TBranchProxyDirector {
@@ -37,7 +39,7 @@ namespace ROOT {
       TTree   *fTree;  // TTree we are currently looking at.
       Long64_t fEntry; // Entry currently being read.
 
-      std::list<TBranchProxy*> fDirected;
+      std::list<Detail::TBranchProxy*> fDirected;
       std::list<TFriendProxy*> fFriends;
 
       TBranchProxyDirector(const TBranchProxyDirector &) : fTree(0), fEntry(-1) {;}
@@ -48,7 +50,7 @@ namespace ROOT {
       TBranchProxyDirector(TTree* tree, Long64_t i);
       TBranchProxyDirector(TTree* tree, Int_t i);     // cint has (had?) a problem casting int to long long
 
-      void     Attach(TBranchProxy* p);
+      void     Attach(Detail::TBranchProxy* p);
       void     Attach(TFriendProxy* f);
       TH1F*    CreateHistogram(const char *options);
       Long64_t GetReadEntry() const { return fEntry; }
@@ -59,6 +61,7 @@ namespace ROOT {
 
    };
 
-} /* namespace ROOT */
+} // namespace Internal
+} // namespace ROOT
 
 #endif

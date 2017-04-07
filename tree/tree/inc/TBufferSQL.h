@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TSQLResult;
@@ -68,7 +64,9 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string &s);
+   virtual   void     ReadStdString(std::string *s);
+   using              TBuffer::ReadStdString;
+   virtual   void     ReadCharStar(char* &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -85,8 +83,9 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString  &s);
-   virtual   void     WriteStdString(const std::string &s);
-
+   virtual   void     WriteStdString(const std::string *s);
+   using              TBuffer::WriteStdString;
+   virtual   void     WriteCharStar(char *s);
 
    virtual   void     WriteFastArray(const Bool_t    *b, Int_t n);
    virtual   void     WriteFastArray(const Char_t    *c, Int_t n);
@@ -128,7 +127,7 @@ public:
    virtual   void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=0, const TClass *onFileClass=0);
    virtual   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0, const TClass *onFileClass=0);
 
-   ClassDef(TBufferSQL, 1); // Implementation of TBuffer to load and write to a SQL database
+   ClassDef(TBufferSQL, 0); // Implementation of TBuffer to load and write to a SQL database
 
 };
 

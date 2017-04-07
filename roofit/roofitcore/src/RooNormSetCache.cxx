@@ -14,22 +14,23 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooNormSet cache manage the bookkeeping of multiple instances
-// of sets of integration and normalization observables that effectively
-// have the same definition. In complex function expression many
-// RooArgSets with the same contents may be passed to an object that
-// caches intermediate results dependent on the normalization/integration set
-// To avoid unnecessary cache faulting, This class tracks all instances
-// with the same contents and reports to the owner if the present nset/iset
-// is truely different from the current reference. Class RooNormSet only
-// evaluates each RooArgSet pointer once, it therefore assumes that
-// RooArgSets with normalization and/or integration sets are not changes
-// during their lifetime. 
-// END_HTML
-//
+/**
+\file RooNormSetCache.cxx
+\class RooNormSetCache
+\ingroup Roofitcore
+
+Class RooNormSet cache manage the bookkeeping of multiple instances
+of sets of integration and normalization observables that effectively
+have the same definition. In complex function expression many
+RooArgSets with the same contents may be passed to an object that
+caches intermediate results dependent on the normalization/integration set
+To avoid unnecessary cache faulting, This class tracks all instances
+with the same contents and reports to the owner if the present nset/iset
+is truely different from the current reference. Class RooNormSet only
+evaluates each RooArgSet pointer once, it therefore assumes that
+RooArgSets with normalization and/or integration sets are not changes
+during their lifetime. 
+**/
 #include "RooFit.h"
 
 #include "RooNormSetCache.h"
@@ -42,22 +43,25 @@ ClassImp(RooNormSetCache)
 #include <iostream>
 using namespace std ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooNormSetCache::RooNormSetCache(ULong_t max) :
   _max(max), _next(0), _set2RangeName(0)
 {
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNormSetCache::~RooNormSetCache() 
 {
-  // Destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear contents 
+
 void RooNormSetCache::clear()
 {
-  // Clear contents 
   {
     PairIdxMapType tmpmap;
     tmpmap.swap(_pairToIdx);
@@ -69,11 +73,11 @@ void RooNormSetCache::clear()
   _next = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add given pair of RooArgSet pointers to our store
+
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
-  // Add given pair of RooArgSet pointers to our store
-
   const Pair pair(set1, set2);
   PairIdxMapType::iterator it = _pairToIdx.lower_bound(pair);
   if (_pairToIdx.end() != it && !PairCmp()(it->first, pair) &&
@@ -100,15 +104,15 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If RooArgSets set1 and set2 or sets with similar contents have
+/// been seen by this cache manager before return kFALSE If not,
+/// return kTRUE. If sets have not been seen and doRefill is true,
+/// update cache reference to current input sets.
+
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
 	const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
-  // If RooArgSets set1 and set2 or sets with similar contents have
-  // been seen by this cache manager before return kFALSE If not,
-  // return kTRUE. If sets have not been seen and doRefill is true,
-  // update cache reference to current input sets.
-  
 
   // Automated cache management function - Returns kTRUE if cache is invalidated
   

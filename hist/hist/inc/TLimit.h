@@ -4,9 +4,7 @@
 #ifndef ROOT_TLimit
 #define ROOT_TLimit
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #include "TVectorDfwd.h"
 
@@ -16,17 +14,6 @@ class TLimitDataSource;
 class TArrayD;
 class TOrdCollection;
 class TH1;
-
-//____________________________________________________________________
-//
-// TLimit
-//
-// This class computes 95% Confidence Levels.
-//
-// Implemented by C. Delaere from the mclimit code written by Tom Junk.
-// reference: HEP-EX/9902006
-// See http://cern.ch/thomasj/searchlimits/ecl.html for more details.
-//____________________________________________________________________
 
 class TLimit {
  protected:

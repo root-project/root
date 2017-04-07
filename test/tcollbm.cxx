@@ -142,7 +142,7 @@ Double_t Tester::TestByIndex() {      // benchmark access by index
     TClonesArray *o = (TClonesArray*)fColl;
     timer.Start();
     for (Int_t j=0;j<fNtimes;j++) {
-      i=Int_t(fNobj*gRandom->Rndm(1));
+      i=Int_t(fNobj*gRandom->Rndm());
       if(!((*o)[i])) Printf("Object %d not found !!!",i);
     }
     timer.Stop();
@@ -150,7 +150,7 @@ Double_t Tester::TestByIndex() {      // benchmark access by index
     TObjArray    *o = (TObjArray*)fColl;
     timer.Start();
     for (Int_t j=0;j<fNtimes;j++) {
-      i=Int_t(fNobj*gRandom->Rndm(1));
+      i=Int_t(fNobj*gRandom->Rndm());
       if(!((*o)[i])) Printf("Object %d not found !!!",i);
     }
     timer.Stop();
@@ -158,7 +158,7 @@ Double_t Tester::TestByIndex() {      // benchmark access by index
     TBtree       *o = (TBtree*)fColl;
     timer.Start();
     for (Int_t j=0;j<fNtimes;j++) {
-      i=Int_t(fNobj*gRandom->Rndm(1));
+      i=Int_t(fNobj*gRandom->Rndm());
       if(!((*o)[i])) Printf("Object %d not found !!!",i);
     }
     timer.Stop();
@@ -176,7 +176,7 @@ Double_t Tester::TestByName() {           // benchmark access by name
   Int_t i;
   timer.Start();
   for (Int_t j=0;j<fNtimes;j++) {
-    i=Int_t(fNobj*gRandom->Rndm(1));
+    i=Int_t(fNobj*gRandom->Rndm());
     if(!((*fColl)(names[i]))) Printf("Object %5s not found !!!",names[i]);
   }
   timer.Stop();
@@ -200,7 +200,8 @@ Double_t Tester::DoTest() {
   Printf(" CpuTime=%7.2f seconds", v);
   return 1000*v/fNtimes;
 };
-//_______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const int ntests = 8;     // Number of classes to be tested
 Double_t deltas[ntests];  // benchmark results
 

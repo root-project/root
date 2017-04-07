@@ -47,6 +47,7 @@ struct Foption_t {
    int NoErrX;      // "EX0" or "T" When fitting a TGraphErrors do not consider error in coordinates
    int Robust;      // "ROB" or "H":  For a TGraph use robust fitting
    int StoreResult; // "S": Stores the result in a TFitResult structure
+   int BinVolume;   // "WIDTH": scale content by the bin width/volume
    double hRobust;  //  value of h parameter used in robust fitting
 
   Foption_t() :
@@ -71,6 +72,7 @@ struct Foption_t {
       NoErrX       (0),
       Robust       (0),
       StoreResult  (0),
+      BinVolume    (0),
       hRobust      (0)
    {}
 };

@@ -56,30 +56,22 @@
 //  http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html  //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TWebFile
 #include "TWebFile.h"
-#endif
 
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TS3HTTPRequest
 #include "TS3HTTPRequest.h"
-#endif
 
 
 class TS3WebFile: public TWebFile {
 
 private:
    TS3WebFile();
-   Bool_t ParseOptions(Option_t* options, TString& accessKey, TString& secretKey);
-   Bool_t GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv,
-                                TString& outAccessKey, TString& outSecretKey);
+   Bool_t ParseOptions(Option_t* options, TString& accessKey, TString& secretKey, TString& token);
+   Bool_t GetCredentialsFromEnv(const char* accessKeyEnv, const char* secretKeyEnv, const char* tokenEnv,
+                                TString& outAccessKey, TString& outSecretKey, TString& outToken);
 
 protected:
    // Super-class methods extended by this class

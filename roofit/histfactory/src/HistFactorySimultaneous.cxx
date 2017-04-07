@@ -44,46 +44,52 @@ ClassImp(RooStats::HistFactory::HistFactorySimultaneous)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::HistFactorySimultaneous::HistFactorySimultaneous(const char *name, const char *title, 
 						 RooAbsCategoryLValue& inIndexCat) : 
   RooSimultaneous(name, title, inIndexCat ) {}
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::HistFactorySimultaneous::HistFactorySimultaneous(const char *name, const char *title, 
 				 const RooArgList& inPdfList, RooAbsCategoryLValue& inIndexCat) :
   RooSimultaneous(name, title, inPdfList, inIndexCat) {}
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::HistFactorySimultaneous::HistFactorySimultaneous(const char *name, const char *title, 
 				 map<string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) :
   RooSimultaneous(name, title, pdfMap, inIndexCat) {}
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::HistFactorySimultaneous::HistFactorySimultaneous(const HistFactorySimultaneous& other, const char* name) : 
   RooSimultaneous(other, name) {}
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooStats::HistFactory::HistFactorySimultaneous::HistFactorySimultaneous(const RooSimultaneous& other, const char* name) : 
   RooSimultaneous(other, name) {}
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooStats::HistFactory::HistFactorySimultaneous::~HistFactorySimultaneous() 
 {
-  // Destructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsReal* RooStats::HistFactory::HistFactorySimultaneous::createNLL(RooAbsData& data, 
 					       const RooCmdArg& arg1, const RooCmdArg& arg2, 
 					       const RooCmdArg& arg3, const RooCmdArg& arg4, 
 					       const RooCmdArg& arg5, const RooCmdArg& arg6, 
 					       const RooCmdArg& arg7, const RooCmdArg& arg8) {
-  
   // Probably not necessary because createNLL is virtual...
 
   RooLinkedList l ;

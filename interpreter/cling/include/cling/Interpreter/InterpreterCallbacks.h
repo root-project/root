@@ -11,6 +11,7 @@
 #define CLING_INTERPRETER_CALLBACKS_H
 
 #include "clang/AST/DeclarationName.h"
+#include "clang/Basic/SourceLocation.h"
 
 #include "llvm/ADT/ArrayRef.h"
 
@@ -132,11 +133,17 @@ namespace cling {
     virtual void TransactionCommitted(const Transaction&) {}
 
     ///\brief This callback is invoked whenever interpreter has reverted a
-    /// portion of declarations.
+    /// transaction that has been fully committed.
     ///
     ///\param[in] - The transaction that was reverted.
     ///
     virtual void TransactionUnloaded(const Transaction&) {}
+
+    ///\brief This callback is invoked whenever a transaction is rolled back.
+    ///
+    ///\param[in] - The transaction that was reverted.
+    ///
+    virtual void TransactionRollback(const Transaction&) {}
 
     /// \brief Used to inform client about a new decl read by the ASTReader.
     ///
@@ -150,6 +157,10 @@ namespace cling {
 
     virtual void LibraryLoaded(const void*, llvm::StringRef) {}
     virtual void LibraryUnloaded(const void*, llvm::StringRef) {}
+
+    ///\brief Cling calls this is printing a stack trace can be beneficial,
+    /// for instance when throwing interpreter exceptions.
+    virtual void PrintStackTrace() {}
 
     ///\brief DynamicScopes only! Set to true if it is currently evaluating a
     /// dynamic expr.
@@ -182,9 +193,10 @@ namespace cling {
 
     class SymbolResolverCallback: public cling::InterpreterCallbacks {
     private:
+      bool m_Resolve;
       clang::NamedDecl* m_TesterDecl;
     public:
-      SymbolResolverCallback(Interpreter* interp);
+      SymbolResolverCallback(Interpreter* interp, bool resolve = true);
       ~SymbolResolverCallback();
 
       bool LookupObject(clang::LookupResult& R, clang::Scope* S);

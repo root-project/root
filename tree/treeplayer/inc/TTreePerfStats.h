@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualPerfStats
 #include "TVirtualPerfStats.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TBrowser;
@@ -121,7 +117,7 @@ public:
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
    virtual void     SetUnzipTime(Double_t uztime) {fUnzipTime = uztime;}
 
-   ClassDef(TTreePerfStats,1)  // TTree I/O performance measurement
+   ClassDef(TTreePerfStats,6)  // TTree I/O performance measurement
 };
 
 #endif

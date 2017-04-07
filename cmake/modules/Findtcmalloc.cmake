@@ -36,4 +36,4 @@ elseif(TCMALLOC_profiler_LIBRARY)
   get_filename_component(TCMALLOC_LIBRARY_DIRS ${TCMALLOC_profiler_LIBRARY} PATH)
 endif()
 
-get_filename_component(TCMALLOC_LIBRARY_PATH ${TCMALLOC_tcmalloc_LIBRARY} DIRECTORY)
+get_filename_component(TCMALLOC_LIBRARY_PATH ${TCMALLOC_tcmalloc_LIBRARY} PATH)

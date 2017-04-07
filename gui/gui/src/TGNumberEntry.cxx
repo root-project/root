@@ -108,7 +108,8 @@ enum ERealStyle {         // Style of real
    kRSFracExpo = 3        // Fraction and Exponent
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 struct RealInfo_t {
    ERealStyle fStyle;     // Style of real
    Int_t fFracDigits;     // Number of fractional digits
@@ -119,14 +120,17 @@ struct RealInfo_t {
    Int_t fSign;           // Sign
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const Double_t kEpsilon = 1E-12;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const Int_t kDays[13] =
     { 0, 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Long_t Round(Double_t x)
 {
    if (x > 0) {
@@ -138,7 +142,8 @@ static Long_t Round(Double_t x)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Long_t Truncate(Double_t x)
 {
    if (x > 0) {
@@ -150,13 +155,15 @@ static Long_t Truncate(Double_t x)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Bool_t IsLeapYear(Int_t year)
 {
    return ((year % 4 == 0) && ((year % 100 != 0) || (year % 400 == 0)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
                          TGNumberFormat::EAttribute attr)
 {
@@ -218,7 +225,8 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *EliminateGarbage(char *text,
                               TGNumberFormat::EStyle style,
                               TGNumberFormat::EAttribute attr)
@@ -234,7 +242,8 @@ static char *EliminateGarbage(char *text,
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Long_t IntStr(const char *text)
 {
    Long_t l = 0;
@@ -249,7 +258,8 @@ static Long_t IntStr(const char *text)
    return sign * l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *StrInt(char *text, Long_t i, Int_t digits)
 {
    snprintf(text, 250, "%li", TMath::Abs(i));
@@ -264,7 +274,8 @@ static char *StrInt(char *text, Long_t i, Int_t digits)
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static TString StringInt(Long_t i, Int_t digits)
 {
    char text[256];
@@ -272,7 +283,8 @@ static TString StringInt(Long_t i, Int_t digits)
    return TString(text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *RealToStr(char *text, const RealInfo_t & ri)
 {
    char *p = text;
@@ -301,7 +313,8 @@ static char *RealToStr(char *text, const RealInfo_t & ri)
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Double_t StrToReal(const char *text, RealInfo_t & ri)
 {
    char *s;
@@ -400,7 +413,8 @@ static Double_t StrToReal(const char *text, RealInfo_t & ri)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static ULong_t HexStrToInt(const char *s)
 {
    ULong_t w = 0;
@@ -414,7 +428,8 @@ static ULong_t HexStrToInt(const char *s)
    return w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *IntToHexStr(char *text, ULong_t l)
 {
    const char *const digits = "0123456789ABCDEF";
@@ -436,7 +451,8 @@ static char *IntToHexStr(char *text, ULong_t l)
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *MIntToStr(char *text, Long_t l, Int_t digits)
 {
    TString s;
@@ -468,7 +484,8 @@ static char *MIntToStr(char *text, Long_t l, Int_t digits)
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
 {
    TString s;
@@ -487,7 +504,8 @@ static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
    return text;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void GetNumbers(const char *s, Int_t & Sign,
                        Long_t & n1, Int_t maxd1,
                        Long_t & n2, Int_t maxd2,
@@ -522,7 +540,8 @@ static void GetNumbers(const char *s, Int_t & Sign,
    GetNumbers(s + 1, dummy, n2, maxd2, n3, maxd3, n, d, Delimiters);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static Long_t GetSignificant(Long_t l, Int_t Max)
 {
    while (TMath::Abs(l) >= Max) {
@@ -531,7 +550,8 @@ static Long_t GetSignificant(Long_t l, Int_t Max)
    return l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 static void AppendFracZero(char *text, Int_t digits)
 {
    char *p;
@@ -556,12 +576,12 @@ static void AppendFracZero(char *text, Int_t digits)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a number entry with year/month/day information.
+
 static Long_t MakeDateNumber(const char * /*text*/, Long_t Day,
                              Long_t Month, Long_t Year)
 {
-   // Create a number entry with year/month/day information.
-
    Day = TMath::Abs(Day);
    Month = TMath::Abs(Month);
    Year = TMath::Abs(Year);
@@ -583,12 +603,12 @@ static Long_t MakeDateNumber(const char * /*text*/, Long_t Day,
    return 10000 * Year + 100 * Month + Day;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate a string to a number value.
+
 static Long_t TranslateToNum(const char *text,
                              TGNumberFormat::EStyle style, RealInfo_t & ri)
 {
-   // Translate a string to a number value.
-
    Long_t n1;
    Long_t n2;
    Long_t n3;
@@ -652,12 +672,12 @@ static Long_t TranslateToNum(const char *text,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate a number value to a string.
+
 static char *TranslateToStr(char *text, Long_t l,
                             TGNumberFormat::EStyle style, const RealInfo_t & ri)
 {
-   // Translate a number value to a string.
-
    switch (style) {
    case TGNumberFormat::kNESInteger:
       return StrInt(text, l, 0);
@@ -703,11 +723,11 @@ static char *TranslateToStr(char *text, Long_t l,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert to double format.
+
 static Double_t RealToDouble(const RealInfo_t ri)
 {
-   // Convert to double format.
-
    switch (ri.fStyle) {
       // Integer type real
    case kRSInt:
@@ -730,13 +750,13 @@ static Double_t RealToDouble(const RealInfo_t ri)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check min/max limits for the set value.
+
 static void CheckMinMax(Long_t & l, TGNumberFormat::EStyle style,
                         TGNumberFormat::ELimit limits,
                         Double_t min, Double_t max)
 {
-   // Check min/max limits for the set value.
-
    if ((limits == TGNumberFormat::kNELNoLimits) ||
        (style == TGNumberFormat::kNESReal)) {
       return;
@@ -811,14 +831,14 @@ static void CheckMinMax(Long_t & l, TGNumberFormat::EStyle style,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert to double format.
+
 static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
                          TGNumberFormat::ELimit limits =
                          TGNumberFormat::kNELNoLimits, Double_t min = 0,
                          Double_t max = 1)
 {
-   // Convert to double format.
-
    Double_t x = RealToDouble(ri);
 
    // apply step
@@ -980,11 +1000,11 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change year/month/day format.
+
 static void IncreaseDate(Long_t & l, TGNumberFormat::EStepSize step, Int_t sign)
 {
-   // Change year/month/day format.
-
    Long_t year;
    Long_t month;
    Long_t day;
@@ -1055,7 +1075,9 @@ static void IncreaseDate(Long_t & l, TGNumberFormat::EStepSize step, Int_t sign)
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructs a number entry field.
+
 TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
                                        Double_t val, GContext_t norm,
                                        FontStruct_t font, UInt_t option,
@@ -1064,15 +1086,15 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
      fNeedsVerification(kFALSE), fNumStyle(kNESReal), fNumAttr(kNEAAnyNumber),
      fNumLimits(kNELNoLimits), fNumMin(0.0), fNumMax(1.0)
 {
-   // Constructs a number entry field.
-
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
    fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructs a number entry field.
+
 TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
                                        Int_t id, Double_t val,
                                        EStyle style, EAttribute attr,
@@ -1081,19 +1103,17 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
    : TGTextEntry(parent, "", id), fNeedsVerification(kFALSE), fNumStyle(style),
      fNumAttr(attr), fNumLimits(limits), fNumMin(min), fNumMax(max)
 {
-   // Constructs a number entry field.
-
    fStepLog = kFALSE;
    SetAlignment(kTextRight);
    SetNumber(val);
    fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric value (floating point representation).
+
 void TGNumberEntryField::SetNumber(Double_t val)
 {
-   // Set the numeric value (floating point representation).
-
    switch (fNumStyle) {
    case kNESInteger:
       SetIntNumber(Round(val));
@@ -1142,11 +1162,11 @@ void TGNumberEntryField::SetNumber(Double_t val)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric value (integer representation).
+
 void TGNumberEntryField::SetIntNumber(Long_t val)
 {
-   // Set the numeric value (integer representation).
-
    char text[256];
    RealInfo_t ri;
    if (fNumStyle == kNESReal) {
@@ -1157,11 +1177,11 @@ void TGNumberEntryField::SetIntNumber(Long_t val)
    SetText(text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric value (time format).
+
 void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
 {
-   // Set the numeric value (time format).
-
    switch (fNumStyle) {
    case kNESHourMinSec:
       SetIntNumber(3600 * TMath::Abs(hour) + 60 * TMath::Abs(min) +
@@ -1180,11 +1200,11 @@ void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric value (date format).
+
 void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
 {
-   // Set the numeric value (date format).
-
    switch (fNumStyle) {
    case kNESDayMYear:
    case kNESMDayYear:
@@ -1199,19 +1219,19 @@ void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numeric value (hex format).
+
 void TGNumberEntryField::SetHexNumber(ULong_t val)
 {
-   // Set the numeric value (hex format).
-
    SetIntNumber((Long_t) val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value (text format).
+
 void TGNumberEntryField::SetText(const char *text, Bool_t emit)
 {
-   // Set the value (text format).
-
    char buf[256];
    strlcpy(buf, text, sizeof(buf));
    EliminateGarbage(buf, fNumStyle, fNumAttr);
@@ -1219,11 +1239,11 @@ void TGNumberEntryField::SetText(const char *text, Bool_t emit)
    fNeedsVerification = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the numeric value (floating point representation).
+
 Double_t TGNumberEntryField::GetNumber() const
 {
-   // Get the numeric value (floating point representation).
-
    switch (fNumStyle) {
    case kNESInteger:
       return (Double_t) GetIntNumber();
@@ -1260,20 +1280,20 @@ Double_t TGNumberEntryField::GetNumber() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the numeric value (integer representation).
+
 Long_t TGNumberEntryField::GetIntNumber() const
 {
-   // Get the numeric value (integer representation).
-
    RealInfo_t ri;
    return TranslateToNum(GetText(), fNumStyle, ri);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the numeric value (time format).
+
 void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
 {
-   // Get the numeric value (time format).
-
    switch (fNumStyle) {
    case kNESHourMinSec:
       {
@@ -1313,11 +1333,11 @@ void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the numeric value (date format).
+
 void TGNumberEntryField::GetDate(Int_t & year, Int_t & month, Int_t & day) const
 {
-   // Get the numeric value (date format).
-
    switch (fNumStyle) {
    case kNESDayMYear:
    case kNESMDayYear:
@@ -1338,28 +1358,28 @@ void TGNumberEntryField::GetDate(Int_t & year, Int_t & month, Int_t & day) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the numeric value (hex format).
+
 ULong_t TGNumberEntryField::GetHexNumber() const
 {
-   // Get the numeric value (hex format).
-
    return (ULong_t) GetIntNumber();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the text width in pixels.
+
 Int_t TGNumberEntryField::GetCharWidth(const char *text) const
 {
-   // Get the text width in pixels.
-
    return gVirtualX->TextWidth(fFontStruct, text, strlen(text));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the number value.
+
 void TGNumberEntryField::IncreaseNumber(EStepSize step,
                                         Int_t stepsign, Bool_t logstep)
 {
-   // Increase the number value.
-
    Long_t l = 0;
    RealInfo_t ri;
    Long_t mag = 0;
@@ -1407,7 +1427,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
          rmag = (!logstep) ? 1. : (odd ? 3. : 10. / 3.);
          break;
       case kNSSMedium:
-         rmag = (!logstep) ? 10. : 10.;
+         rmag = 10.;
          break;
       case kNSSLarge:
          rmag = (!logstep) ? 100. : (odd ? 30. : 100. / 3.);
@@ -1544,11 +1564,11 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numerical format.
+
 void TGNumberEntryField::SetFormat(EStyle style, EAttribute attr)
 {
-   // Set the numerical format.
-
    Double_t val = GetNumber();
    fNumStyle = style;
    fNumAttr = attr;
@@ -1559,12 +1579,12 @@ void TGNumberEntryField::SetFormat(EStyle style, EAttribute attr)
    IncreaseNumber(kNSSSmall, 0, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the numerical limits.
+
 void TGNumberEntryField::SetLimits(ELimit limits,
                                    Double_t min, Double_t max)
 {
-   // Set the numerical limits.
-
    Double_t val = GetNumber();
    fNumLimits = limits;
    fNumMin = min;
@@ -1574,11 +1594,11 @@ void TGNumberEntryField::SetLimits(ELimit limits,
    IncreaseNumber(kNSSSmall, 0, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the active state.
+
 void TGNumberEntryField::SetState(Bool_t state)
 {
-   // Set the active state.
-
    if (!state && fNeedsVerification) {
       // make sure we have a valid number by increasaing it by 0
       IncreaseNumber(kNSSSmall, 0, kFALSE);
@@ -1586,11 +1606,11 @@ void TGNumberEntryField::SetState(Bool_t state)
    TGTextEntry::SetState(state);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keys.
+
 Bool_t TGNumberEntryField::HandleKey(Event_t * event)
 {
-   // Handle keys.
-
    if (!IsEnabled()) {
       return TGTextEntry::HandleKey(event);
    }
@@ -1670,11 +1690,11 @@ Bool_t TGNumberEntryField::HandleKey(Event_t * event)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle focus change.
+
 Bool_t TGNumberEntryField::HandleFocusChange(Event_t * event)
 {
-   // Handle focus change.
-
    if (IsEnabled() && fNeedsVerification &&
        (event->fCode == kNotifyNormal) &&
        (event->fState != kNotifyPointer) && (event->fType == kFocusOut)) {
@@ -1685,20 +1705,20 @@ Bool_t TGNumberEntryField::HandleFocusChange(Event_t * event)
    return TGTextEntry::HandleFocusChange(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Text has changed message.
+
 void TGNumberEntryField::TextChanged(const char *text)
 {
-   // Text has changed message.
-
    TGTextEntry::TextChanged(text);
    fNeedsVerification = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return was pressed.
+
 void TGNumberEntryField::ReturnPressed()
 {
-   // Return was pressed.
-
    TString instr, outstr;
    instr = TGTextEntry::GetBuffer()->GetString();
 
@@ -1714,11 +1734,11 @@ void TGNumberEntryField::ReturnPressed()
    TGTextEntry::ReturnPressed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout.
+
 void TGNumberEntryField::Layout()
 {
-   // Layout.
-
    if (GetAlignment() == kTextRight) {
       End(kFALSE);
    } else {
@@ -1735,11 +1755,11 @@ void TGNumberEntryField::Layout()
 //////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the internal GUI elements in use.
+
 void TGNumberEntryLayout::Layout()
 {
-   // Layout the internal GUI elements in use.
-
    if (fBox == 0) {
       return;
    }
@@ -1763,11 +1783,11 @@ void TGNumberEntryLayout::Layout()
       fBox->GetButtonDown()->MoveResize(downx, downy, downw, downh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default size of the numeric control box.
+
 TGDimension TGNumberEntryLayout::GetDefaultSize() const
 {
-   // Return the default size of the numeric control box.
-
    return fBox->GetSize();
 }
 
@@ -1783,7 +1803,8 @@ TGDimension TGNumberEntryLayout::GetDefaultSize() const
 
 class TGRepeatFireButton;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TRepeatTimer : public TTimer {
 private:
    TGRepeatFireButton *fButton;  // Fire button
@@ -1804,7 +1825,8 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TGRepeatFireButton : public TGPictureButton {
 protected:
    TRepeatTimer             *fTimer;           // the timer
@@ -1828,11 +1850,11 @@ public:
    virtual  void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if one of the parents is in edit mode.
+
 Bool_t TGRepeatFireButton::IsEditableParent()
 {
-   // Return kTRUE if one of the parents is in edit mode.
-
    TGWindow *parent = (TGWindow*)GetParent();
 
    while (parent && (parent != fClient->GetDefaultRoot())) {
@@ -1844,11 +1866,11 @@ Bool_t TGRepeatFireButton::IsEditableParent()
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle messages for number entry widget according to the user input.
+
 Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
 {
-   // Handle messages for number entry widget according to the user input.
-
    const Int_t t0 = 200;
    if (fTip)
       fTip->Hide();
@@ -1897,11 +1919,11 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for fire button.
+
 void TGRepeatFireButton::FireButton()
 {
-   // Process messages for fire button.
-
    if (fIgnoreNextFire <= 0) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON),
                   fWidgetId, (Long_t) fStep + (fDoLogStep ? 100 : 0));
@@ -1910,18 +1932,20 @@ void TGRepeatFireButton::FireButton()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notify when timer times out and reset the timer.
+
 Bool_t TRepeatTimer::Notify()
 {
-   // Notify when timer times out and reset the timer.
-
    fButton->FireButton();
    Reset();
    if ((Long64_t)fTime > 20) fTime -= 10;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructs a numeric entry widget.
+
 TGNumberEntry::TGNumberEntry(const TGWindow *parent,
                              Double_t val, Int_t wdigits, Int_t id,
                              EStyle style,
@@ -1929,8 +1953,6 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
                              ELimit limits, Double_t min, Double_t max)
  : TGCompositeFrame(parent, 10 * wdigits, 25), fButtonToNum(kTRUE)
 {
-   // Constructs a numeric entry widget.
-
    fWidgetId  = id;
    fMsgWindow = parent;
    fPicUp = fClient->GetPicture("arrow_up.xpm");
@@ -1966,41 +1988,41 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
    fEditDisabled = kEditDisableLayout | kEditDisableHeight;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructs a numeric entry widget.
+
 TGNumberEntry::~TGNumberEntry()
 {
-   // Destructs a numeric entry widget.
-
    gClient->FreePicture(fPicUp);
    gClient->FreePicture(fPicDown);
 
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make w the window that will receive the generated messages.
+
 void TGNumberEntry::Associate(const TGWindow *w)
 {
-   // Make w the window that will receive the generated messages.
-
    TGWidget::Associate(w);
    fNumericEntry->Associate(w);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set log steps.
+
 void TGNumberEntry::SetLogStep(Bool_t on)
 {
-   // Set log steps.
-
    fNumericEntry->SetLogStep(on);
    ((TGRepeatFireButton *) fButtonUp)->SetLogStep(fNumericEntry->IsLogStep());
    ((TGRepeatFireButton *) fButtonDown)->SetLogStep(fNumericEntry->IsLogStep());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the active state.
+
 void TGNumberEntry::SetState(Bool_t enable)
 {
-   // Set the active state.
-
    if (enable) {
       fButtonUp->SetState(kButtonUp);
       fButtonDown->SetState(kButtonUp);
@@ -2012,27 +2034,27 @@ void TGNumberEntry::SetState(Bool_t enable)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send button messages to the number field (true) or parent widget (false).
+/// When the message is sent to the parent widget, it is responsible to change
+/// the numerical value accordingly. This can be useful to implement cursors
+/// which move from data point to data point. For the message being sent
+/// see ProcessMessage().
+
 void TGNumberEntry::SetButtonToNum(Bool_t state)
 {
-   // Send button messages to the number field (true) or parent widget (false).
-   // When the message is sent to the parent widget, it is responsible to change
-   // the numerical value accordingly. This can be useful to implement cursors
-   // which move from data point to data point. For the message being sent
-   // see ProcessMessage().
-
    fButtonToNum = state;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process the up/down button messages. If fButtonToNum is false the
+/// following message is sent: kC_COMMAND, kCM_BUTTON, widget id, param
+/// param % 100 is the step size
+/// param % 10000 / 100 != 0 indicates log step
+/// param / 10000 != 0 indicates button down
+
 Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process the up/down button messages. If fButtonToNum is false the
-   // following message is sent: kC_COMMAND, kCM_BUTTON, widget id, param
-   // param % 100 is the step size
-   // param % 10000 / 100 != 0 indicates log step
-   // param / 10000 != 0 indicates button down
-
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
       {
@@ -2058,11 +2080,11 @@ Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return layout manager.
+
 TGLayoutManager *TGNumberEntry::GetLayoutManager() const
 {
-   // Return layout manager.
-
    TGNumberEntry *entry = (TGNumberEntry*)this;
 
    if (entry->fLayoutManager->IsA() != TGNumberEntryLayout::Class()) {
@@ -2072,35 +2094,35 @@ TGLayoutManager *TGNumberEntry::GetLayoutManager() const
    return entry->fLayoutManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ValueChanged(Long_t) signal. This signal is emitted when
+/// fButtonToNum is false. The val has the following meaning:
+/// val % 100 is the step size
+/// val % 10000 / 100 != 0 indicates log step
+/// val / 10000 != 0 indicates button down
+
 void TGNumberEntry::ValueChanged(Long_t val)
 {
-   // Emit ValueChanged(Long_t) signal. This signal is emitted when
-   // fButtonToNum is false. The val has the following meaning:
-   // val % 100 is the step size
-   // val % 10000 / 100 != 0 indicates log step
-   // val / 10000 != 0 indicates button down
-
    Emit("ValueChanged(Long_t)", val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ValueSet(Long_t) signal. This signal is emitted when the
+/// number entry value is changed. The val has the following meaning:
+/// val % 100 is the step size
+/// val % 10000 / 100 != 0 indicates log step
+/// val / 10000 != 0 indicates button down
+
 void TGNumberEntry::ValueSet(Long_t val)
 {
-   // Emit ValueSet(Long_t) signal. This signal is emitted when the
-   // number entry value is changed. The val has the following meaning:
-   // val % 100 is the step size
-   // val % 10000 / 100 != 0 indicates log step
-   // val / 10000 != 0 indicates button down
-
    Emit("ValueSet(Long_t)", val);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a number entry widget as a C++ statement(s) on output stream out.
+
 void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a number entry widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // to calculate the digits parameter
@@ -2216,11 +2238,11 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a number entry widget as a C++ statement(s) on output stream out.
+
 void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a number entry widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // for time format

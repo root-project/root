@@ -10,7 +10,7 @@
 #ifndef CLING_DYNAMIC_LOOKUP_H
 #define CLING_DYNAMIC_LOOKUP_H
 
-#include "TransactionTransformer.h"
+#include "ASTTransformer.h"
 
 #include "clang/AST/StmtVisitor.h"
 #include "clang/Sema/Ownership.h"
@@ -19,6 +19,7 @@
 
 
 namespace clang {
+  class Decl;
   class Sema;
 }
 
@@ -114,7 +115,7 @@ namespace cling {
   /// which does the delayed evaluation. It uses a callback function, which
   /// should be reimplemented in the subsystem that provides the runtime types
   /// and addresses of the expressions.
-  class EvaluateTSynthesizer : public TransactionTransformer,
+  class EvaluateTSynthesizer : public ASTTransformer,
                                public clang::StmtVisitor<EvaluateTSynthesizer,
                                                          ASTNodeInfo> {
 
@@ -178,7 +179,7 @@ namespace cling {
 
     ~EvaluateTSynthesizer();
 
-    virtual void Transform();
+    Result Transform(clang::Decl* D) override;
 
     MapTy& getSubstSymbolMap() { return m_SubstSymbolMap; }
 
@@ -215,6 +216,11 @@ namespace cling {
     ///
     ASTNodeInfo VisitCXXDeleteExpr(clang::CXXDeleteExpr* Node);
 
+    ///\brief Surrounds member accesses into dependent types; remove on
+    /// subsitution of its child expression.
+    ///
+    ASTNodeInfo VisitCXXDependentScopeMemberExpr(
+                                      clang::CXXDependentScopeMemberExpr* Node);
     ASTNodeInfo VisitExpr(clang::Expr* Node);
     ASTNodeInfo VisitBinaryOperator(clang::BinaryOperator* Node);
     ASTNodeInfo VisitCallExpr(clang::CallExpr* E);
@@ -261,18 +267,15 @@ namespace cling {
                                       bool ValuePrinterReq = false);
 
     ///\brief Creates const char* expression from given value.
-    clang::Expr* ConstructConstCharPtrExpr(const char* Val);
+    clang::Expr* ConstructConstCharPtrExpr(llvm::StringRef Val);
 
     ///\brief Checks if the given node is marked as dependent by us.
     ///
     bool IsArtificiallyDependent(clang::Expr* Node);
 
-    ///\brief Checks if the given declaration should be examined. It checks
-    /// whether a declaration context marked as dependent contains the
-    /// declaration or the declaration type is not one of those we are looking
-    /// for.
+    ///\brief Checks if the function might contain dynamically scoped Decls.
     ///
-    bool ShouldVisit(clang::Decl* D);
+    bool ShouldVisit(clang::FunctionDecl* D);
 
     /// \brief Gets all children of a given node.
     ///
@@ -281,7 +284,7 @@ namespace cling {
     /// \brief Creates unique name (eg. of a variable). Used internally for
     /// AST node synthesis.
     ///
-    void createUniqueName(std::string& out);
+    std::string createUniqueName();
     /// @}
   };
 } // end namespace cling

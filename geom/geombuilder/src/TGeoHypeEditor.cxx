@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -47,12 +47,13 @@ enum ETGeoHypeWid {
    kHYPE_STOUT, kHYPE_APPLY, kHYPE_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for Hype editor
+
 TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for Hype editor
    fShape   = 0;
    fRini = fRouti = fStIni = fStOuti = 0.0;
    fNamei = "";
@@ -80,7 +81,7 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fERin->Associate(this);
    f1->AddFrame(fERin, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for Rout
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Rout"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -92,7 +93,7 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fERout->Associate(this);
    f1->AddFrame(fERout, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for Dz
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Dz"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -104,7 +105,7 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
- 
+
    // Number entry for StIn.
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "StIn"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -132,8 +133,8 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
-   
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    fApply = new TGTextButton(f1, "Apply");
@@ -142,27 +143,29 @@ TGeoHypeEditor::TGeoHypeEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoHypeEditor::~TGeoHypeEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoHypeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoHypeEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoHypeEditor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoHypeEditor", this, "DoModified()");
@@ -180,14 +183,15 @@ void TGeoHypeEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoHypeEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoHype::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoHype*)obj;
    fRini = fShape->GetRmin();
    fRouti = fShape->GetRmax();
@@ -199,7 +203,7 @@ void TGeoHypeEditor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fERin->SetNumber(fRini);
    fERout->SetNumber(fRouti);
    fEDz->SetNumber(fDzi);
@@ -207,44 +211,47 @@ void TGeoHypeEditor::SetModel(TObject* obj)
    fEStOut->SetNumber(fStOuti);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoHypeEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoHypeEditor::DoName()
 {
-// Slot for name.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying current settings.
+
 void TGeoHypeEditor::DoApply()
 {
-// Slot for applying current settings.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
-   Double_t stout = fEStOut->GetNumber(); 
+   Double_t stout = fEStOut->GetNumber();
    Double_t tin = TMath::Tan(stin*TMath::DegToRad());
    Double_t tout = TMath::Tan(stout*TMath::DegToRad());
-   if ((dz<=0) || (rin<0) || (rin>rout) || 
+   if ((dz<=0) || (rin<0) || (rin>rout) ||
        (rin*rin+tin*tin*dz*dz > rout*rout+tout*tout*dz*dz)) {
       fUndo->SetEnabled();
       fApply->SetEnabled(kFALSE);
       return;
-   }         
+   }
    Double_t param[5];
    param[0] = dz;
    param[1] = rin;
@@ -265,22 +272,24 @@ void TGeoHypeEditor::DoApply()
             view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
                            fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying modifications.
+
 void TGeoHypeEditor::DoModified()
 {
-// Slot for notifying modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoHypeEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fERin->SetNumber(fRini);
    fERout->SetNumber(fRouti);
    fEDz->SetNumber(fDzi);
@@ -290,13 +299,14 @@ void TGeoHypeEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rin.
+
 void TGeoHypeEditor::DoRin()
 {
-// Slot for Rin.
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
    Double_t stout = fEStOut->GetNumber();
@@ -305,23 +315,24 @@ void TGeoHypeEditor::DoRin()
    if (rin<0) {
       rin = 0;
       fERin->SetNumber(rin);
-   } 
+   }
    Double_t rinmax = TMath::Sqrt((rout*rout+tout*tout*dz*dz)/(tin*tin*dz*dz));
    rinmax = TMath::Min(rinmax, rout);
-   if (rin > rinmax) { 
+   if (rin > rinmax) {
       rin = rinmax-1.e-6;
       fERin->SetNumber(rin);
-   } 
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Rout.
+
 void TGeoHypeEditor::DoRout()
 {
-// Slot for Rout.
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
    Double_t stout = fEStOut->GetNumber();
@@ -332,52 +343,54 @@ void TGeoHypeEditor::DoRout()
    if (rout < routmin) {
       rout = routmin+1.e-6;
       fERout->SetNumber(rout);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoHypeEditor::DoDz()
 {
-// Slot for Z.
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
    Double_t stout = fEStOut->GetNumber();
    if (TMath::Abs(stin-stout)<1.e-6) {
       stin = stout+1.;
       fEStIn->SetNumber(stin);
-   }   
+   }
    Double_t tin = TMath::Tan(stin*TMath::DegToRad());
    Double_t tout = TMath::Tan(stout*TMath::DegToRad());
    if (dz<=0) {
       dz = 0.1;
       fEDz->SetNumber(dz);
-   } 
+   }
    Double_t dzmax = TMath::Sqrt((rout*rout-rin*rin)/(tin*tin-tout*tout));
    if (dz>dzmax) {
       dz = dzmax;
       fEDz->SetNumber(dz);
-   }     
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for StIn.
+
 void TGeoHypeEditor::DoStIn()
 {
-// Slot for StIn.
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
    Double_t stout = fEStOut->GetNumber();
    if (stin >= 90) {
       stin = 89.;
       fEStIn->SetNumber(stin);
-   }   
+   }
    Double_t tin = TMath::Tan(stin*TMath::DegToRad());
    Double_t tout = TMath::Tan(stout*TMath::DegToRad());
    Double_t tinmax = TMath::Sqrt(tout*tout+(rout*rout-rin*rin)/(dz*dz));
@@ -385,24 +398,25 @@ void TGeoHypeEditor::DoStIn()
       tin = tinmax-1.e-6;
       stin = TMath::RadToDeg()*TMath::ATan(tin);
       fEStIn->SetNumber(stin);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for StOut.
+
 void TGeoHypeEditor::DoStOut()
 {
-// Slot for StOut.
    Double_t rin = fERin->GetNumber();
-   Double_t rout = fERout->GetNumber(); 
+   Double_t rout = fERout->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t stin = fEStIn->GetNumber();
    Double_t stout = fEStOut->GetNumber();
    if (stout > 90) {
       stout = 89;
       fEStOut->SetNumber(stout);
-   }   
+   }
    Double_t tin = TMath::Tan(stin*TMath::DegToRad());
    Double_t tout = TMath::Tan(stout*TMath::DegToRad());
    Double_t tinmin = TMath::Sqrt((rout*rout-rin*rin)/(dz*dz));
@@ -416,7 +430,7 @@ void TGeoHypeEditor::DoStOut()
       tout = toutmin+1.e-6;
       stout = TMath::RadToDeg()*TMath::ATan(tout);
       fEStOut->SetNumber(stout);
-   }     
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }

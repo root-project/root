@@ -1,3 +1,14 @@
+/// \file
+/// \ingroup tutorial_geom
+/// This file has been generated automatically via the root
+/// utility toroot from an interactive version of GEANT
+/// (see ROOT class TGeometry header for an example of use)
+/// This shows an example of the old geometry package (now obsolete)
+///
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TMaterial.h"
 #include "TMixture.h"
 #include "TNode.h"
@@ -9,13 +20,6 @@
 #include "TTUBE.h"
 
 void na49() {
-//
-//  This file has been generated automatically via the root
-//  utility toroot from an interactive version of GEANT
-//   (see ROOT class TGeometry header for an example of use)
-//This shows an example of the old geometry package (now obsolete)
-//Author: Rene Brun
-
 gBenchmark->Start("na49");
 
 TMaterial *mat;
@@ -19288,7 +19292,7 @@ CAVE1->cd();
    TF3A->SetLineColor(3);
    OGB3->SetLineColor(3);
 
-   //   Copy shape attributes (colors,etc) in nodes referencing the shapse
+   //   Copy shape attributes (colors,etc) in nodes referencing the shapes
    CAVE1->ImportShapeAttributes();
 
    //  Set Node attributes

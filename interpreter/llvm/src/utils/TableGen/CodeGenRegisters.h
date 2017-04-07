@@ -18,22 +18,22 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SparseBitVector.h"
 #include "llvm/CodeGen/MachineValueType.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/TableGen/Record.h"
 #include "llvm/TableGen/SetTheory.h"
 #include <cstdlib>
+#include <deque>
 #include <list>
 #include <map>
-#include <set>
 #include <string>
 #include <vector>
-#include <deque>
 
 namespace llvm {
   class CodeGenRegBank;
+  template <typename T, typename Vector, typename Set> class SetVector;
 
   /// Used to encode a step in a register lane mask transformation.
   /// Mask the bits specified in Mask, then rotate them Rol bits to the left
@@ -41,10 +41,10 @@ namespace llvm {
   struct MaskRolPair {
     unsigned Mask;
     uint8_t RotateLeft;
-    bool operator==(const MaskRolPair Other) {
+    bool operator==(const MaskRolPair Other) const {
       return Mask == Other.Mask && RotateLeft == Other.RotateLeft;
     }
-    bool operator!=(const MaskRolPair Other) {
+    bool operator!=(const MaskRolPair Other) const {
       return Mask != Other.Mask || RotateLeft != Other.RotateLeft;
     }
   };
@@ -73,17 +73,9 @@ namespace llvm {
     const std::string &getNamespace() const { return Namespace; }
     std::string getQualifiedName() const;
 
-    // Order CodeGenSubRegIndex pointers by EnumValue.
-    struct Less {
-      bool operator()(const CodeGenSubRegIndex *A,
-                      const CodeGenSubRegIndex *B) const {
-        assert(A && B);
-        return A->EnumValue < B->EnumValue;
-      }
-    };
-
     // Map of composite subreg indices.
-    typedef std::map<CodeGenSubRegIndex*, CodeGenSubRegIndex*, Less> CompMap;
+    typedef std::map<CodeGenSubRegIndex *, CodeGenSubRegIndex *,
+                     deref<llvm::less>> CompMap;
 
     // Returns the subreg index that results from composing this with Idx.
     // Returns NULL if this and Idx don't compose.
@@ -125,16 +117,22 @@ namespace llvm {
     CompMap Composed;
   };
 
+  inline bool operator<(const CodeGenSubRegIndex &A,
+                        const CodeGenSubRegIndex &B) {
+    return A.EnumValue < B.EnumValue;
+  }
+
   /// CodeGenRegister - Represents a register definition.
   struct CodeGenRegister {
     Record *TheDef;
     unsigned EnumValue;
     unsigned CostPerUse;
     bool CoveredBySubRegs;
+    bool HasDisjunctSubRegs;
 
     // Map SubRegIndex -> Register.
-    typedef std::map<CodeGenSubRegIndex*, CodeGenRegister*,
-                     CodeGenSubRegIndex::Less> SubRegMap;
+    typedef std::map<CodeGenSubRegIndex *, CodeGenRegister *, deref<llvm::less>>
+        SubRegMap;
 
     CodeGenRegister(Record *R, unsigned Enum);
 
@@ -232,23 +230,6 @@ namespace llvm {
     // Get the sum of this register's register unit weights.
     unsigned getWeight(const CodeGenRegBank &RegBank) const;
 
-    // Order CodeGenRegister pointers by EnumValue.
-    struct Less {
-      bool operator()(const CodeGenRegister *A,
-                      const CodeGenRegister *B) const {
-        assert(A && B);
-        return A->EnumValue < B->EnumValue;
-      }
-    };
-
-    struct Equal {
-      bool operator()(const CodeGenRegister *A,
-                      const CodeGenRegister *B) const {
-        assert(A && B);
-        return A->EnumValue == B->EnumValue;
-      }
-    };
-
     // Canonically ordered set.
     typedef std::vector<const CodeGenRegister*> Vec;
 
@@ -274,6 +255,13 @@ namespace llvm {
     RegUnitLaneMaskList RegUnitLaneMasks;
   };
 
+  inline bool operator<(const CodeGenRegister &A, const CodeGenRegister &B) {
+    return A.EnumValue < B.EnumValue;
+  }
+
+  inline bool operator==(const CodeGenRegister &A, const CodeGenRegister &B) {
+    return A.EnumValue == B.EnumValue;
+  }
 
   class CodeGenRegisterClass {
     CodeGenRegister::Vec Members;
@@ -317,8 +305,12 @@ namespace llvm {
     int CopyCost;
     bool Allocatable;
     std::string AltOrderSelect;
+    uint8_t AllocationPriority;
     /// Contains the combination of the lane masks of all subregisters.
     unsigned LaneMask;
+    /// True if there are at least 2 subregisters which do not interfere.
+    bool HasDisjunctSubRegs;
+    bool CoveredBySubRegs;
 
     // Return the Record that defined this class, or NULL if the class was
     // created by TableGen.

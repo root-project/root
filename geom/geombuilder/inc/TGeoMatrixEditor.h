@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoTranslation;
 class TGeoRotation;
@@ -76,10 +72,10 @@ public:
    void           DoApply();
    void           DoCancel();
    void           DoUndo();
-   
+
    ClassDef(TGeoTranslationEditor,0)   // TGeoTranslation editor
-};   
-  
+};
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TGeoRotationEditor                                                  //
@@ -134,9 +130,9 @@ public:
    void           DoApply();
    void           DoCancel();
    void           DoUndo();
-   
+
    ClassDef(TGeoRotationEditor,0)   // TGeoRotation editor
-};   
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -201,8 +197,8 @@ public:
    void           DoApply();
    void           DoCancel();
    void           DoUndo();
-   
-   ClassDef(TGeoCombiTransEditor,0)   // TGeoCombiTrans editor
-};   
 
-#endif                    
+   ClassDef(TGeoCombiTransEditor,0)   // TGeoCombiTrans editor
+};
+
+#endif

@@ -14,9 +14,7 @@
 
 
 // ROOT
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Python
 struct _object;
@@ -46,6 +44,8 @@ public:
    static void CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::vector<TPyArg>& args );
    static void CallConstructor( PyObject*& pyself, PyObject* pyclass );   // default ctor
    static PyObject* CallMethod( PyObject* pymeth, const std::vector<TPyArg>& args );
+   static void CallDestructor( PyObject*& pyself, PyObject* pymeth, const std::vector<TPyArg>& args );
+   static void CallDestructor( PyObject*& pyself );
 
    ClassDef(TPyArg,1)   //Python morphing argument type
 

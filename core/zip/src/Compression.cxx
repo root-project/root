@@ -13,7 +13,8 @@
 
 namespace ROOT {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
   int CompressionSettings(ECompressionAlgorithm algorithm,
                           int compressionLevel)
   {

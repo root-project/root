@@ -43,7 +43,7 @@ public:
    void DoRnrMarkers();
    void DoRnrLines();
 
-   ClassDef(TEveStraightLineSetEditor, 1); // Editor for TEveStraightLineSet class.
+   ClassDef(TEveStraightLineSetEditor, 0); // Editor for TEveStraightLineSet class.
 };
 
 #endif

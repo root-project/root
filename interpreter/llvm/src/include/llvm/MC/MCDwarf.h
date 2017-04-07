@@ -15,57 +15,50 @@
 #ifndef LLVM_MC_MCDWARF_H
 #define LLVM_MC_MCDWARF_H
 
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Compiler.h"
+#include "llvm/MC/MCSection.h"
 #include "llvm/Support/Dwarf.h"
-#include "llvm/Support/raw_ostream.h"
-#include <map>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace llvm {
+template <typename T> class ArrayRef;
+class raw_ostream;
 class MCAsmBackend;
 class MCContext;
 class MCObjectStreamer;
-class MCSection;
 class MCStreamer;
 class MCSymbol;
 class SourceMgr;
 class SMLoc;
 
-/// MCDwarfFile - Instances of this class represent the name of the dwarf
+/// \brief Instances of this class represent the name of the dwarf
 /// .file directive and its associated dwarf file number in the MC file,
-/// and MCDwarfFile's are created and unique'd by the MCContext class where
+/// and MCDwarfFile's are created and uniqued by the MCContext class where
 /// the file number for each is its index into the vector of DwarfFiles (note
 /// index 0 is not used and not a valid dwarf file number).
 struct MCDwarfFile {
-  // Name - the base name of the file without its directory path.
+  // \brief The base name of the file without its directory path.
   // The StringRef references memory allocated in the MCContext.
   std::string Name;
 
-  // DirIndex - the index into the list of directory names for this file name.
+  // \brief The index into the list of directory names for this file name.
   unsigned DirIndex;
 };
 
-/// MCDwarfLoc - Instances of this class represent the information from a
+/// \brief Instances of this class represent the information from a
 /// dwarf .loc directive.
 class MCDwarfLoc {
-  // FileNum - the file number.
-  unsigned FileNum;
-  // Line - the line number.
-  unsigned Line;
-  // Column - the column position.
-  unsigned Column;
+  uint32_t FileNum;
+  uint32_t Line;
+  uint16_t Column;
   // Flags (see #define's below)
-  unsigned Flags;
-  // Isa
-  unsigned Isa;
-  // Discriminator
-  unsigned Discriminator;
+  uint8_t Flags;
+  uint8_t Isa;
+  uint32_t Discriminator;
 
 // Flag that indicates the initial value of the is_stmt_start flag.
 #define DWARF2_LINE_DEFAULT_IS_STMT 1
@@ -77,7 +70,7 @@ class MCDwarfLoc {
 
 private: // MCContext manages these
   friend class MCContext;
-  friend class MCLineEntry;
+  friend class MCDwarfLineEntry;
   MCDwarfLoc(unsigned fileNum, unsigned line, unsigned column, unsigned flags,
              unsigned isa, unsigned discriminator)
       : FileNum(fileNum), Line(line), Column(column), Flags(flags), Isa(isa),
@@ -87,60 +80,69 @@ private: // MCContext manages these
   // for an MCDwarfLoc object.
 
 public:
-  /// getFileNum - Get the FileNum of this MCDwarfLoc.
+  /// \brief Get the FileNum of this MCDwarfLoc.
   unsigned getFileNum() const { return FileNum; }
 
-  /// getLine - Get the Line of this MCDwarfLoc.
+  /// \brief Get the Line of this MCDwarfLoc.
   unsigned getLine() const { return Line; }
 
-  /// getColumn - Get the Column of this MCDwarfLoc.
+  /// \brief Get the Column of this MCDwarfLoc.
   unsigned getColumn() const { return Column; }
 
-  /// getFlags - Get the Flags of this MCDwarfLoc.
+  /// \brief Get the Flags of this MCDwarfLoc.
   unsigned getFlags() const { return Flags; }
 
-  /// getIsa - Get the Isa of this MCDwarfLoc.
+  /// \brief Get the Isa of this MCDwarfLoc.
   unsigned getIsa() const { return Isa; }
 
-  /// getDiscriminator - Get the Discriminator of this MCDwarfLoc.
+  /// \brief Get the Discriminator of this MCDwarfLoc.
   unsigned getDiscriminator() const { return Discriminator; }
 
-  /// setFileNum - Set the FileNum of this MCDwarfLoc.
+  /// \brief Set the FileNum of this MCDwarfLoc.
   void setFileNum(unsigned fileNum) { FileNum = fileNum; }
 
-  /// setLine - Set the Line of this MCDwarfLoc.
+  /// \brief Set the Line of this MCDwarfLoc.
   void setLine(unsigned line) { Line = line; }
 
-  /// setColumn - Set the Column of this MCDwarfLoc.
-  void setColumn(unsigned column) { Column = column; }
+  /// \brief Set the Column of this MCDwarfLoc.
+  void setColumn(unsigned column) {
+    assert(column <= UINT16_MAX);
+    Column = column;
+  }
 
-  /// setFlags - Set the Flags of this MCDwarfLoc.
-  void setFlags(unsigned flags) { Flags = flags; }
+  /// \brief Set the Flags of this MCDwarfLoc.
+  void setFlags(unsigned flags) {
+    assert(flags <= UINT8_MAX);
+    Flags = flags;
+  }
 
-  /// setIsa - Set the Isa of this MCDwarfLoc.
-  void setIsa(unsigned isa) { Isa = isa; }
+  /// \brief Set the Isa of this MCDwarfLoc.
+  void setIsa(unsigned isa) {
+    assert(isa <= UINT8_MAX);
+    Isa = isa;
+  }
 
-  /// setDiscriminator - Set the Discriminator of this MCDwarfLoc.
+  /// \brief Set the Discriminator of this MCDwarfLoc.
   void setDiscriminator(unsigned discriminator) {
     Discriminator = discriminator;
   }
 };
 
-/// MCLineEntry - Instances of this class represent the line information for
+/// \brief Instances of this class represent the line information for
 /// the dwarf line table entries.  Which is created after a machine
 /// instruction is assembled and uses an address from a temporary label
 /// created at the current address in the current section and the info from
 /// the last .loc directive seen as stored in the context.
-class MCLineEntry : public MCDwarfLoc {
+class MCDwarfLineEntry : public MCDwarfLoc {
   MCSymbol *Label;
 
 private:
   // Allow the default copy constructor and assignment operator to be used
-  // for an MCLineEntry object.
+  // for an MCDwarfLineEntry object.
 
 public:
-  // Constructor to create an MCLineEntry given a symbol and the dwarf loc.
-  MCLineEntry(MCSymbol *label, const MCDwarfLoc loc)
+  // Constructor to create an MCDwarfLineEntry given a symbol and the dwarf loc.
+  MCDwarfLineEntry(MCSymbol *label, const MCDwarfLoc loc)
       : MCDwarfLoc(loc), Label(label) {}
 
   MCSymbol *getLabel() const { return Label; }
@@ -148,34 +150,47 @@ public:
   // This is called when an instruction is assembled into the specified
   // section and if there is information from the last .loc directive that
   // has yet to have a line entry made for it is made.
-  static void Make(MCObjectStreamer *MCOS, const MCSection *Section);
+  static void Make(MCObjectStreamer *MCOS, MCSection *Section);
 };
 
-/// MCLineSection - Instances of this class represent the line information
-/// for a compile unit where machine instructions have been assembled after seeing
-/// .loc directives.  This is the information used to build the dwarf line
+/// \brief Instances of this class represent the line information for a compile
+/// unit where machine instructions have been assembled after seeing .loc
+/// directives.  This is the information used to build the dwarf line
 /// table for a section.
 class MCLineSection {
 public:
-  // addLineEntry - adds an entry to this MCLineSection's line entries
-  void addLineEntry(const MCLineEntry &LineEntry, const MCSection *Sec) {
+  // \brief Add an entry to this MCLineSection's line entries.
+  void addLineEntry(const MCDwarfLineEntry &LineEntry, MCSection *Sec) {
     MCLineDivisions[Sec].push_back(LineEntry);
   }
 
-  typedef std::vector<MCLineEntry> MCLineEntryCollection;
-  typedef MCLineEntryCollection::iterator iterator;
-  typedef MCLineEntryCollection::const_iterator const_iterator;
-  typedef MapVector<const MCSection *, MCLineEntryCollection> MCLineDivisionMap;
+  typedef std::vector<MCDwarfLineEntry> MCDwarfLineEntryCollection;
+  typedef MCDwarfLineEntryCollection::iterator iterator;
+  typedef MCDwarfLineEntryCollection::const_iterator const_iterator;
+  typedef MapVector<MCSection *, MCDwarfLineEntryCollection> MCLineDivisionMap;
 
 private:
-  // A collection of MCLineEntry for each section.
+  // A collection of MCDwarfLineEntry for each section.
   MCLineDivisionMap MCLineDivisions;
 
 public:
-  // Returns the collection of MCLineEntry for a given Compile Unit ID.
+  // Returns the collection of MCDwarfLineEntry for a given Compile Unit ID.
   const MCLineDivisionMap &getMCLineEntries() const {
     return MCLineDivisions;
   }
+};
+
+struct MCDwarfLineTableParams {
+  /// First special line opcode - leave room for the standard opcodes.
+  /// Note: If you want to change this, you'll have to update the
+  /// "StandardOpcodeLengths" table that is emitted in
+  /// \c Emit().
+  uint8_t DWARF2LineOpcodeBase = 13;
+  /// Minimum line offset in a special line info. opcode.  The value
+  /// -5 was chosen to give a reasonable range of values.
+  int8_t DWARF2LineBase = -5;
+  /// Range of line offsets in a special line info. opcode.
+  uint8_t DWARF2LineRange = 14;
 };
 
 struct MCDwarfLineTableHeader {
@@ -188,9 +203,11 @@ struct MCDwarfLineTableHeader {
   MCDwarfLineTableHeader() : Label(nullptr) {}
   unsigned getFile(StringRef &Directory, StringRef &FileName,
                    unsigned FileNumber = 0);
-  std::pair<MCSymbol *, MCSymbol *> Emit(MCStreamer *MCOS) const;
+  std::pair<MCSymbol *, MCSymbol *> Emit(MCStreamer *MCOS,
+                                         MCDwarfLineTableParams Params) const;
   std::pair<MCSymbol *, MCSymbol *>
-  Emit(MCStreamer *MCOS, ArrayRef<char> SpecialOpcodeLengths) const;
+  Emit(MCStreamer *MCOS, MCDwarfLineTableParams Params,
+       ArrayRef<char> SpecialOpcodeLengths) const;
 };
 
 class MCDwarfDwoLineTable {
@@ -202,7 +219,7 @@ public:
   unsigned getFile(StringRef Directory, StringRef FileName) {
     return Header.getFile(Directory, FileName);
   }
-  void Emit(MCStreamer &MCOS) const;
+  void Emit(MCStreamer &MCOS, MCDwarfLineTableParams Params) const;
 };
 
 class MCDwarfLineTable {
@@ -211,10 +228,10 @@ class MCDwarfLineTable {
 
 public:
   // This emits the Dwarf file and the line tables for all Compile Units.
-  static void Emit(MCObjectStreamer *MCOS);
+  static void Emit(MCObjectStreamer *MCOS, MCDwarfLineTableParams Params);
 
   // This emits the Dwarf file and the line tables for a given Compile Unit.
-  void EmitCU(MCObjectStreamer *MCOS) const;
+  void EmitCU(MCObjectStreamer *MCOS, MCDwarfLineTableParams Params) const;
 
   unsigned getFile(StringRef &Directory, StringRef &FileName,
                    unsigned FileNumber = 0);
@@ -258,11 +275,12 @@ public:
 class MCDwarfLineAddr {
 public:
   /// Utility function to encode a Dwarf pair of LineDelta and AddrDeltas.
-  static void Encode(MCContext &Context, int64_t LineDelta, uint64_t AddrDelta,
-                     raw_ostream &OS);
+  static void Encode(MCContext &Context, MCDwarfLineTableParams Params,
+                     int64_t LineDelta, uint64_t AddrDelta, raw_ostream &OS);
 
   /// Utility function to emit the encoding to a streamer.
-  static void Emit(MCStreamer *MCOS, int64_t LineDelta, uint64_t AddrDelta);
+  static void Emit(MCStreamer *MCOS, MCDwarfLineTableParams Params,
+                   int64_t LineDelta, uint64_t AddrDelta);
 };
 
 class MCGenDwarfInfo {
@@ -320,7 +338,8 @@ public:
     OpRestore,
     OpUndefined,
     OpRegister,
-    OpWindowSave
+    OpWindowSave,
+    OpGnuArgsSize
   };
 
 private:
@@ -434,6 +453,11 @@ public:
     return MCCFIInstruction(OpEscape, L, 0, 0, Vals);
   }
 
+  /// \brief A special wrapper for .cfi_escape that indicates GNU_ARGS_SIZE
+  static MCCFIInstruction createGnuArgsSize(MCSymbol *L, int Size) {
+    return MCCFIInstruction(OpGnuArgsSize, L, 0, Size, "");
+  }
+
   OpType getOperation() const { return Operation; }
   MCSymbol *getLabel() const { return Label; }
 
@@ -453,7 +477,7 @@ public:
   int getOffset() const {
     assert(Operation == OpDefCfa || Operation == OpOffset ||
            Operation == OpRelOffset || Operation == OpDefCfaOffset ||
-           Operation == OpAdjustCfaOffset);
+           Operation == OpAdjustCfaOffset || Operation == OpGnuArgsSize);
     return Offset;
   }
 

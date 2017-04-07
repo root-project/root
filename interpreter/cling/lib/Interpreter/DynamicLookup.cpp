@@ -15,6 +15,7 @@
 #include "cling/Interpreter/Value.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/RecursiveASTVisitor.h"
@@ -60,7 +61,7 @@ namespace {
             Qualifier->print(OS, m_Policy);
           m_Addresses.push_back(Node);
 
-          OS << '(';
+          OS << "((";
           QualType T = Node->getType();
           if (!T->isArrayType())
             OS << '*';
@@ -91,7 +92,7 @@ namespace {
 
           // end
 
-          OS <<")@";
+          OS << ")@)";
 
           if (Node->hasExplicitTemplateArgs())
             TemplateSpecializationType::PrintTemplateArgumentList(OS,
@@ -109,14 +110,51 @@ namespace {
 
       return false;
     }
-   };
+  };
+
+  class DynScopeDeclVisitor:
+    public DeclVisitor<DynScopeDeclVisitor, bool> {
+  private:
+    cling::EvaluateTSynthesizer& m_EvalTSynth;
+
+  public:
+    DynScopeDeclVisitor(cling::EvaluateTSynthesizer& evalTSynth):
+      m_EvalTSynth(evalTSynth) {}
+
+    bool VisitFunctionDecl(FunctionDecl* FD) {
+      if (Stmt* Body = FD->getBody()) {
+        cling::ASTNodeInfo Replacement = m_EvalTSynth.Visit(Body);
+        if (Replacement.hasErrorOccurred()) {
+          FD->setBody(nullptr);
+          return true;
+        }
+
+        if (Replacement.isForReplacement()) {
+          // FIXME: support multiple Stmt Replacement!
+          FD->setBody(Replacement.getAsSingleNode());
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    bool VisitDecl(Decl* D) {
+      bool Replaced = false;
+      if (auto DC = dyn_cast<DeclContext>(D)) {
+        for (auto C: DC->decls())
+          Replaced |= Visit(C);
+      }
+      return Replaced;
+    }
+  };
 } // end anonymous namespace
 
 namespace cling {
 
   // Constructors
   EvaluateTSynthesizer::EvaluateTSynthesizer(Sema* S)
-    : TransactionTransformer(S), m_EvalDecl(0), m_LifetimeHandlerDecl(0),
+    : ASTTransformer(S), m_EvalDecl(0), m_LifetimeHandlerDecl(0),
       m_LHgetMemoryDecl(0), m_DynamicExprInfoDecl(0), m_DeclContextDecl(0),
       m_gCling(0), m_CurDeclContext(0), m_Context(&S->getASTContext()),
       m_UniqueNameCounter(0), m_NestedCompoundStmts(0)
@@ -204,44 +242,40 @@ namespace cling {
     m_NoELoc = m_NoRange.getEnd();
   }
 
-  void EvaluateTSynthesizer::Transform() {
-    if (!getTransaction()->getCompilationOpts().DynamicScoping)
-      return;
+  ASTTransformer::Result EvaluateTSynthesizer::Transform(Decl* D) {
+    if (!getCompilationOpts().DynamicScoping)
+      return Result(D, true);
 
     // Find DynamicLookup specific builtins
     if (!m_EvalDecl) {
       Initialize();
     }
 
-    const Transaction* T = getTransaction();
-    for (Transaction::const_iterator I = T->decls_begin(), E = T->decls_end();
-         I != E; ++I) {
-      // Copy DCI; it might get relocated below.
-      Transaction::DelayCallInfo DCI = *I;
-      for (DeclGroupRef::const_iterator J = DCI.m_DGR.begin(),
-             JE = DCI.m_DGR.end(); J != JE; ++J)
-        if (ShouldVisit(*J) && (*J)->hasBody()) {
-          if (FunctionDecl* FD = dyn_cast<FunctionDecl>(*J)) {
-            // Set the decl context, which is needed by Evaluate.
-            m_CurDeclContext = FD;
-            ASTNodeInfo NewBody = Visit((*J)->getBody());
-            if (NewBody.hasErrorOccurred()) {
-              // Report unsupported feature.
-              DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
-              unsigned diagID
-                = Diags.getCustomDiagID(DiagnosticsEngine::Error,
-                                        "Feature not supported yet");
-              Diags.Report(NewBody.getAsSingleNode()->getLocStart(), diagID);
-              return; // Signal a fatal error.
-            }
-            FD->setBody(NewBody.getAsSingleNode());
-          }
-          assert ((!isa<BlockDecl>(*J) || !isa<ObjCMethodDecl>(*J))
-                  && "Not implemented yet!");
+    if (FunctionDecl* FD = dyn_cast<FunctionDecl>(D)) {
+      if (FD->hasBody() && ShouldVisit(FD)) {
+        // Set the decl context, which is needed by Evaluate.
+        m_CurDeclContext = FD;
+        ASTNodeInfo NewBody = Visit(D->getBody());
+        if (NewBody.hasErrorOccurred()) {
+          // Report unsupported feature.
+          DiagnosticsEngine& Diags = m_Sema->getDiagnostics();
+          unsigned diagID
+          = Diags.getCustomDiagID(DiagnosticsEngine::Error,
+                                  "Syntax error");
+          Diags.Report(NewBody.getAsSingleNode()->getLocStart(), diagID);
+          D->dump();
+          if (NewBody.hasSingleNode())
+            NewBody.getAs<Expr>()->dump();
+          return Result(0, false); // Signal a fatal error.
         }
+        FD->setBody(NewBody.getAsSingleNode());
+      }
+      assert ((!isa<BlockDecl>(D) || !isa<ObjCMethodDecl>(D))
+              && "Not implemented yet!");
     }
 
     //TODO: Check for error before returning.
+    return Result(D, true);
   }
 
   // StmtVisitor
@@ -323,7 +357,7 @@ namespace cling {
           for(unsigned i = 0; i < NewStmts.size(); ++i)
             NewChildren.push_back(NewStmts[i]);
 
-          Node->setStmts(*m_Context, NewChildren.data(), NewChildren.size());
+          Node->setStmts(*m_Context, NewChildren);
           // Resolve all 1:n replacements
           Visit(Node);
         }
@@ -352,7 +386,7 @@ namespace cling {
       }
     }
 
-    Node->setStmts(*m_Context, NewChildren.data(), NewChildren.size());
+    Node->setStmts(*m_Context, NewChildren);
 
     --m_NestedCompoundStmts;
     return ASTNodeInfo(Node, 0);
@@ -360,16 +394,15 @@ namespace cling {
 
   ASTNodeInfo EvaluateTSynthesizer::VisitDeclStmt(DeclStmt* Node) {
     // Visit all the children, which are the contents of the DeclGroupRef
-    for (Stmt::child_iterator
-           I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
-      if (*I) {
-        Expr* E = cast_or_null<Expr>(*I);
-        if (!E || !IsArtificiallyDependent(E))
+    if (VarDecl* CuredDecl = dyn_cast<VarDecl>(Node->getSingleDecl())) {
+      //FIXME: don't assume there is only one decl.
+      assert(Node->isSingleDecl() && "There is more that one decl in stmt");
+      for (Stmt::child_iterator
+             I = Node->child_begin(), E = Node->child_end(); I != E; ++I) {
+        Expr* InitExpr = cast_or_null<Expr>(*I);
+        if (!InitExpr || !IsArtificiallyDependent(InitExpr))
           continue;
-        //FIXME: don't assume there is only one decl.
-        assert(Node->isSingleDecl() && "There is more that one decl in stmt");
-        VarDecl* CuredDecl = cast_or_null<VarDecl>(Node->getSingleDecl());
-        assert(CuredDecl && "Not a variable declaration!");
+
         QualType CuredDeclTy = CuredDecl->getType();
         if (isa<AutoType>(CuredDeclTy)) {
           ASTNodeInfo result(Node, false);
@@ -399,8 +432,7 @@ namespace cling {
         ASTNodeInfo NewNode;
         // 2.1 Get unique name for the LifetimeHandler instance and
         // initialize it
-        std::string UniqueName;
-        createUniqueName(UniqueName);
+        std::string UniqueName = createUniqueName();
         IdentifierInfo& II = m_Context->Idents.get(UniqueName);
 
         // Prepare the initialization Exprs.
@@ -414,11 +446,11 @@ namespace cling {
         //                                       "MyClass"
         //                                       Interpreter* Interp)
         // Build Arg0 DynamicExprInfo
-        Inits.push_back(BuildDynamicExprInfo(E));
+        Inits.push_back(BuildDynamicExprInfo(InitExpr));
         // Build Arg1 DeclContext* DC
         QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
         Inits.push_back(utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
-                                                     (uint64_t)m_CurDeclContext)
+                                                     (uintptr_t)m_CurDeclContext)
                         );
         // Build Arg2 llvm::StringRef
         // Get the type of the type without specifiers
@@ -484,16 +516,17 @@ namespace cling {
         // TODO: Check whether this is the most appropriate variant
         MemberLookup.addDecl(m_LHgetMemoryDecl, AS_public);
         MemberLookup.resolveKind();
-        Expr* MemberExpr = m_Sema->BuildMemberReferenceExpr(MemberExprBase,
-                                                            HandlerTy,
-                                                            m_NoSLoc,
-                                                            /*IsArrow=*/false,
-                                                            SS,
-                                                            m_NoSLoc,
-                                                     /*FirstQualifierInScope=*/0,
-                                                            MemberLookup,
-                                                            /*TemplateArgs=*/0
-                                                            ).get();
+        Expr* MemberExpr
+           = m_Sema->BuildMemberReferenceExpr(MemberExprBase,
+                                              HandlerTy,
+                                              m_NoSLoc,
+                                              /*IsArrow=*/false,
+                                              SS,
+                                              m_NoSLoc,
+                                              /*FirstQualifierInScope=*/0,
+                                              MemberLookup,
+                                              /*TemplateArgs=*/0,
+                                              /*Scope*/nullptr).get();
         // 3.3 Build the actual call
         Scope* S = m_Sema->getScopeForContext(m_Sema->CurContext);
         Expr* theCall = m_Sema->ActOnCallExpr(S,
@@ -515,15 +548,39 @@ namespace cling {
 
         // Restore Sema's original DeclContext
         m_Sema->CurContext = OldDC;
+        // FIXME: this only works if this is the only Decl in the DeclGroup...
         return NewNode;
       }
     }
-    return ASTNodeInfo(Node, 0);
+
+    // Recurse over Decls; they might need transformations, too; e.g. in
+    // void wrapper() { struct X {  void f() { ++dynScope; } }; }
+    bool HaveReplacement = false;
+    DynScopeDeclVisitor DSDV(*this);
+    // DynScopeDeclVisitor always changes the Decls in-place, no need to pick up
+    // new ones.
+    for (auto DGI: Node->getDeclGroup())
+      HaveReplacement |= DSDV.Visit(DGI);
+    return ASTNodeInfo(Node, HaveReplacement);
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitCXXDeleteExpr(CXXDeleteExpr* Node) {
     ASTNodeInfo deleteArg = Visit(Node->getArgument());
     return ASTNodeInfo(Node, /*needs eval*/deleteArg.isForReplacement());
+  }
+
+  ASTNodeInfo EvaluateTSynthesizer::VisitCXXDependentScopeMemberExpr(
+                                            CXXDependentScopeMemberExpr* Node) {
+    ASTNodeInfo ContentTransform = Visit(Node->getBase());
+    // Simply skip the CXXDependentScopeMemberExpr and only use its content.
+    assert(ContentTransform.hasSingleNode() &&
+           "Cannot substitute multiple nodes for CXXDependentScopeMemberExpr.");
+    if (ContentTransform.isForReplacement()) {
+      Expr* Replacement = ContentTransform.getAs<Expr>();
+      return ASTNodeInfo(Replacement, ContentTransform.isForReplacement());
+    }
+    ContentTransform.setErrorOccurred();
+    return ContentTransform;
   }
 
   ASTNodeInfo EvaluateTSynthesizer::VisitExpr(Expr* Node) {
@@ -607,7 +664,7 @@ namespace cling {
     // Build Arg1
     QualType DCTy = m_Context->getTypeDeclType(m_DeclContextDecl);
     Expr* Arg1 = utils::Synthesize::CStyleCastPtrExpr(m_Sema, DCTy,
-                                                    (uint64_t)m_CurDeclContext);
+                                                    (uintptr_t)m_CurDeclContext);
     CallArgs.push_back(Arg1);
 
     // Build the call
@@ -628,9 +685,8 @@ namespace cling {
     Sema::ContextRAII pushedDC(*m_Sema, m_CurDeclContext);
 
     // 1. Get the expression containing @-s and get the variable addresses
-    std::string Template;
     llvm::SmallVector<DeclRefExpr*, 4> Addresses;
-    llvm::raw_string_ostream OS(Template);
+    ostrstream OS;
     const PrintingPolicy& Policy = m_Context->getPrintingPolicy();
 
     StmtPrinterHelper helper(Policy, Addresses, m_Sema);
@@ -644,10 +700,8 @@ namespace cling {
     if (!isa<ParenListExpr>(SubTree))
       OS << ')';
 
-    OS.flush();
-
     // 2. Build the template
-    Expr* ExprTemplate = ConstructConstCharPtrExpr(Template.c_str());
+    Expr* ExprTemplate = ConstructConstCharPtrExpr(OS.str());
 
     // 3. Build the array of addresses
     QualType VarAddrTy = m_Sema->BuildArrayType(m_Context->VoidPtrTy,
@@ -666,12 +720,12 @@ namespace cling {
                                Addresses[i]).get();
       if (!UnOp) {
         // Not good, return what we had.
-        llvm::errs() << "Error while creating dynamic expression for:\n  ";
-        SubTree->printPretty(llvm::errs(), 0 /*PrinterHelper*/,
+        cling::errs() << "Error while creating dynamic expression for:\n  ";
+        SubTree->printPretty(cling::errs(), 0 /*PrinterHelper*/,
                              m_Context->getPrintingPolicy(), 2);
-        llvm::errs() <<
+        cling::errs() <<
           "\nwith internal representation (look for <dependent type>):\n";
-        SubTree->dump(llvm::errs(), m_Sema->getSourceManager());
+        SubTree->dump(cling::errs(), m_Sema->getSourceManager());
         return SubTree;
       }
       m_Sema->ImpCastExprToType(UnOp,
@@ -735,9 +789,8 @@ namespace cling {
     return Result;
   }
 
-  Expr* EvaluateTSynthesizer::ConstructConstCharPtrExpr(const char* Val) {
+  Expr* EvaluateTSynthesizer::ConstructConstCharPtrExpr(llvm::StringRef Value) {
     const QualType CChar = m_Context->CharTy.withConst();
-    llvm::StringRef Value(Val);
 
     unsigned bitSize = m_Context->getTypeSize(m_Context->VoidPtrTy);
     llvm::APInt ArraySize(bitSize, Value.size() + 1);
@@ -776,7 +829,7 @@ namespace cling {
     Sema::InstantiatingTemplate Inst(*m_Sema, m_NoSLoc, m_EvalDecl);
     // Before instantiation we need the canonical type
     TemplateArgument Arg(InstTy.getCanonicalType());
-    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, &Arg, 1U);
+    TemplateArgumentList TemplateArgs(TemplateArgumentList::OnStack, Arg);
 
     // Substitute the declaration of the templated function, with the
     // specified template argument
@@ -786,10 +839,14 @@ namespace cling {
 
     FunctionDecl* Fn = dyn_cast<FunctionDecl>(D);
 
+    // IncrementalParser is opening a Transaction for the transformations which
+    // will happily capture these decls.
+#if 0
     // We expect incoming declarations (instantiations) and we
     // need to open the transaction to collect them.
     Transaction::State oldState = getTransaction()->getState();
     getTransaction()->setState(Transaction::kCollecting);
+#endif
 
     // Creates new body of the substituted declaration
     m_Sema->InstantiateFunctionDefinition(Fn->getLocation(), Fn, true, true);
@@ -808,8 +865,9 @@ namespace cling {
                                                 VK_RValue,
                                                 m_NoSLoc
                                                 ).getAs<DeclRefExpr>();
-
+#if 0
     getTransaction()->setState(oldState);
+#endif
 
     // TODO: Figure out a way to avoid passing in wrong source locations
     // of the symbol being replaced. This is important when we calculate the
@@ -829,53 +887,12 @@ namespace cling {
 
   // end EvalBuilder
 
-  // Helpers
-
-
-  // Class extracting recursively every decl defined somewhere.
-  class DeclVisitor : public RecursiveASTVisitor<DeclVisitor> {
-  private:
-    bool m_ShouldVisitSubTree;
-  public:
-    DeclVisitor() : m_ShouldVisitSubTree(false) {}
-
-    bool getShouldVisitSubTree() const { return m_ShouldVisitSubTree; }
-
-    bool isCandidate(Decl* D) {
-      // FIXME: Here we should have our custom attribute.
-      if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
-        if (A->getAnnotation().equals("__ResolveAtRuntime"))
-          return true;
-
-      return false;
-    }
-
-    bool VisitDeclStmt(DeclStmt* DS) {
-      DeclGroupRef DGR = DS->getDeclGroup();
-      for (DeclGroupRef::const_iterator I = DGR.begin(),
-             E = DGR.end(); I != E; ++I) {
-        if (isCandidate(*I)) {
-          m_ShouldVisitSubTree = true;
-          return false; // returning false will abort the in-depth traversal.
-        }
-      }
-      return true;
-    }
-
-    // In cases when there is no decl stmt, like dep->Call();
-    bool VisitDeclRefExpr(DeclRefExpr* DRE) {
-      if (isCandidate(DRE->getDecl())) {
-        m_ShouldVisitSubTree = true;
-        return false; // returning false will abort the in-depth traversal.
-      }
-      return true;
-    }
-  };
-
-  bool EvaluateTSynthesizer::ShouldVisit(Decl* D) {
-    DeclVisitor Visitor;
-    Visitor.TraverseStmt(D->getBody());
-    return Visitor.getShouldVisitSubTree();
+  bool EvaluateTSynthesizer::ShouldVisit(FunctionDecl* D) {
+    // FIXME: Here we should have our custom attribute.
+    if (AnnotateAttr* A = D->getAttr<AnnotateAttr>())
+      if (A->getAnnotation().equals("__ResolveAtRuntime"))
+        return true;
+    return false;
   }
 
   bool EvaluateTSynthesizer::IsArtificiallyDependent(Expr* Node) {
@@ -901,11 +918,13 @@ namespace cling {
     return true;
   }
 
-  void EvaluateTSynthesizer::createUniqueName(std::string& out) {
-    out = "__dynamic";
-    out += utils::Synthesize::UniquePrefix;
-    llvm::raw_string_ostream(out) << m_UniqueNameCounter++;
+  std::string EvaluateTSynthesizer::createUniqueName() {
+    stdstrstream Strm;
+    Strm << "__dynamic" << utils::Synthesize::UniquePrefix
+         << m_UniqueNameCounter++;
+    return Strm.str();
   }
+  
 
   // end Helpers
 
@@ -927,11 +946,9 @@ namespace cling {
     }
 
     LifetimeHandler::~LifetimeHandler() {
-      std::string str;
-      llvm::raw_string_ostream stream(str);
+      ostrstream stream;
       stream << "delete (" << m_Type << "*) " << m_Memory << ";";
-      stream.flush();
-      m_Interpreter->execute(str);
+      m_Interpreter->execute(stream.str());
     }
   } // end namespace internal
   } // end namespace runtime

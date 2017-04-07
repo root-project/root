@@ -51,16 +51,16 @@ ClassImp(TGGotoDialog)
 static TString gLastSearchString;
 TGSearchDialog *TGSearchDialog::fgSearchDialog = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a search dialog box. Used to get from the user the required
+/// search instructions. Ret_code is kTRUE when sstruct has been set,
+/// kFALSE otherwise (like when dialog was canceled).
+
 TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
                                UInt_t w, UInt_t h, TGSearchType *sstruct,
                                Int_t *ret_code, UInt_t options) :
      TGTransientFrame(p, main, w, h, options)
 {
-   // Create a search dialog box. Used to get from the user the required
-   // search instructions. Ret_code is kTRUE when sstruct has been set,
-   // kFALSE otherwise (like when dialog was canceled).
-
    if (!p && !main) {
       MakeZombie();
       // coverity [uninit_ctor]
@@ -170,11 +170,11 @@ TGSearchDialog::TGSearchDialog(const TGWindow *p, const TGWindow *main,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up search dialog.
+
 TGSearchDialog::~TGSearchDialog()
 {
-   // Clean up search dialog.
-
    if (IsZombie()) return;
    delete fSearchButton;
    delete fCancelButton;
@@ -188,12 +188,12 @@ TGSearchDialog::~TGSearchDialog()
    delete fL21;delete fL9; delete fL10;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the dialog. On close the dialog will be deleted and cannot be
+/// re-used.
+
 void TGSearchDialog::CloseWindow()
 {
-   // Close the dialog. On close the dialog will be deleted and cannot be
-   // re-used.
-
    if (fType->fClose) {
       DeleteWindow();
    } else {
@@ -201,19 +201,19 @@ void TGSearchDialog::CloseWindow()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// emit signal when search text entered
+
 void TGSearchDialog::TextEntered(const char *text)
 {
-   // emit signal when search text entered
-
    Emit("TextEntered(const char *)", text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process search dialog widget messages.
+
 Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process search dialog widget messages.
-
    const char *string;
 
    switch (GET_MSG(msg)) {
@@ -293,26 +293,26 @@ Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return global search dialog.
+
 TGSearchDialog *&TGSearchDialog::SearchDialog()
 {
-   // Return global search dialog.
-
    return fgSearchDialog;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the printer dialog box. Returns kTRUE in ret_code when
+/// printerName and printProg have been set and cancel was not pressed,
+/// kFALSE otherwise.
+
 TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
                              UInt_t w, UInt_t h, char **printerName,
                              char **printProg, Int_t *ret_code,
                              UInt_t options) :
    TGTransientFrame(p, main, w, h, options)
 {
-   // Create the printer dialog box. Returns kTRUE in ret_code when
-   // printerName and printProg have been set and cancel was not pressed,
-   // kFALSE otherwise.
-
    if (!p && !main) {
       MakeZombie();
       // coverity [uninit_ctor]
@@ -404,11 +404,11 @@ TGPrintDialog::TGPrintDialog(const TGWindow *p, const TGWindow *main,
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up print dialog.
+
 TGPrintDialog::~TGPrintDialog()
 {
-   // Clean up print dialog.
-
    if (IsZombie()) return;
    delete fPrinterIcon;
    delete fPrintButton;
@@ -421,21 +421,21 @@ TGPrintDialog::~TGPrintDialog()
    delete fL21;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the dialog. On close the dialog will be deleted and cannot be
+/// re-used.
+
 void TGPrintDialog::CloseWindow()
 {
-   // Close the dialog. On close the dialog will be deleted and cannot be
-   // re-used.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ask the system fo the list of available printers and populate the combo
+/// box. If there is a default printer, select it in the list.
+
 void TGPrintDialog::GetPrinters()
 {
-   // Ask the system fo the list of available printers and populate the combo
-   // box. If there is a default printer, select it in the list.
-
    TObject *obj;
    Int_t idx = 1, dflt =1;
 
@@ -483,11 +483,11 @@ void TGPrintDialog::GetPrinters()
    fPrinterEntry->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process print dialog widget messages.
+
 Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process print dialog widget messages.
-
    const char *string, *txt;
 
    switch (GET_MSG(msg)) {
@@ -537,17 +537,17 @@ Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dialog to GoTo a specific line number. Returns -1 in
+/// ret_code in case no valid line number was given or in case
+/// cancel was pressed. If on input *ret_code is > 0 then this value
+/// will be used as default value.
+
 TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
                            UInt_t w, UInt_t h, Long_t *ret_code,
                            UInt_t options) :
    TGTransientFrame(p, main, w, h, options)
 {
-   // Create a dialog to GoTo a specific line number. Returns -1 in
-   // ret_code in case no valid line number was given or in case
-   // cancel was pressed. If on input *ret_code is > 0 then this value
-   // will be used as default value.
-
    if (!p && !main) {
       MakeZombie();
       // coverity [uninit_ctor]
@@ -613,11 +613,11 @@ TGGotoDialog::TGGotoDialog(const TGWindow *p, const TGWindow *main,
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean up goto dialog
+
 TGGotoDialog::~TGGotoDialog()
 {
-   // Clean up goto dialog
-
    if (IsZombie()) return;
    delete fGotoButton;
    delete fCancelButton;
@@ -627,20 +627,20 @@ TGGotoDialog::~TGGotoDialog()
    delete fL1; delete fL5; delete fL6; delete fL21;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the dialog. On close the dialog will be deleted and cannot be
+/// re-used.
+
 void TGGotoDialog::CloseWindow()
 {
-   // Close the dialog. On close the dialog will be deleted and cannot be
-   // re-used.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process goto dialog widget messages.
+
 Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process goto dialog widget messages.
-
    const char *string;
 
    switch (GET_MSG(msg)) {

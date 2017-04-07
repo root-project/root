@@ -1,5 +1,13 @@
-// Open a FITS file whose primary array represents
-// a spectrum (flux vs wavelength)
+/// \file
+/// \ingroup tutorial_FITS
+/// Open a FITS file whose primary array represents
+/// a spectrum (flux vs wavelength)
+///
+/// \macro_code
+///
+/// \author Claudi Martinez
+
+
 void FITS_tutorial5()
 {
    TVectorD *v;
@@ -66,5 +74,3 @@ void FITS_tutorial5()
    delete vectorCollection;
    delete hdu;
 }
-
-

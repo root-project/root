@@ -27,15 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMemFile
 #include "TMemFile.h"
-#endif
-#ifndef ROOT_TMessage
 #include "TMessage.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
 
 class TSocket;
@@ -61,7 +55,7 @@ public:
    virtual Int_t  Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
    virtual void   WriteStreamerInfo();
 
-   ClassDef(TParallelMergingFile,2);  // TFile specialization that will semi-automatically upload its content to a merging server.
+   ClassDef(TParallelMergingFile, 0);  // TFile specialization that will semi-automatically upload its content to a merging server.
 };
 
 #endif // ROOT_TParallelMergingFile

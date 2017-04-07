@@ -13,14 +13,9 @@
 #ifndef ROOT_Fit_FitUtil
 #define ROOT_Fit_FitUtil
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
-
-#ifndef ROOT_Fit_DataVectorfwd
-#include "Fit/DataVectorfwd.h"
-#endif
-
+#include "Fit/BinData.h"
+#include "Fit/UnBinData.h"
 
 namespace ROOT {
 

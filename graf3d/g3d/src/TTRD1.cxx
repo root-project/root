@@ -14,51 +14,52 @@
 
 ClassImp(TTRD1)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/trd1.gif"> </P> End_Html
-// TRD1 is a trapezoid with the x dimension varying along z.
-// It has 7 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx1        half-length along x at the z surface positioned at -DZ
-//     - dx2        half-length along x at the z surface positioned at +DZ
-//     - dy         half-length along the y-axis
-//     - dz         half-length along the z-axis
+/** \class TTRD1
+\ingroup g3d
+A trapezoid with the x dimension varying along z.
 
+\image html g3d_trd1.png
 
-//______________________________________________________________________________
+It has 7 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx1:        half-length along x at the z surface positioned at -DZ
+  - dx2:        half-length along x at the z surface positioned at +DZ
+  - dy:         half-length along the y-axis
+  - dz:         half-length along the z-axis
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape default constructor
+
 TTRD1::TTRD1()
 {
-   // TRD1 shape default constructor
-
    fDx2 = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape normal constructor
 
-//______________________________________________________________________________
 TTRD1::TTRD1(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2, Float_t dy, Float_t dz)
       : TBRIK(name, title,material,dx1,dy,dz)
 {
-   // TRD1 shape normal constructor
-
    fDx2 = dx2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TRD1 shape default destructor
 
-//______________________________________________________________________________
 TTRD1::~TTRD1()
 {
-   // TRD1 shape default destructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create TRD1 points
 
-//______________________________________________________________________________
 void TTRD1::SetPoints(Double_t *points) const
 {
-   // Create TRD1 points
-
    Float_t dx1, dx2, dy, dz;
 
    dx1 = TBRIK::fDx;

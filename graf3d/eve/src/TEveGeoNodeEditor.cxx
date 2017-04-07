@@ -24,14 +24,16 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveGeoNodeEditor
-//
-// Editor for TEveGeoNode class.
+/** \class TEveGeoNodeEditor
+\ingroup TEve
+Editor for TEveGeoNode class.
+*/
 
 ClassImp(TEveGeoNodeEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
@@ -44,8 +46,6 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
    fVizVolume(0),
    fVizVolumeDaughters(0)
 {
-   // Constructor.
-
    MakeTitle("GeoNode");
 
    // --- Visibility control
@@ -75,13 +75,11 @@ TEveGeoNodeEditor::TEveGeoNodeEditor(const TGWindow *p,
        "TEveGeoNodeEditor", this, "DoVizVolumeDaughters()");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveGeoNodeEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fNodeRE = dynamic_cast<TEveGeoNode*>(obj);
    TGeoNode*  node = fNodeRE->fNode;
    TGeoVolume* vol = node->GetVolume();
@@ -92,53 +90,52 @@ void TEveGeoNodeEditor::SetModel(TObject* obj)
    fVizVolumeDaughters->SetState(vol->IsVisDaughters() ? kButtonDown : kButtonUp);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VizNode.
 
-//______________________________________________________________________________
 void TEveGeoNodeEditor::DoVizNode()
 {
-   // Slot for VizNode.
-
    fNodeRE->SetRnrSelf(fVizNode->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VizNodeDaughters.
+
 void TEveGeoNodeEditor::DoVizNodeDaughters()
 {
-   // Slot for VizNodeDaughters.
-
    fNodeRE->SetRnrChildren(fVizNodeDaughters->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VizVolume.
+
 void TEveGeoNodeEditor::DoVizVolume()
 {
-   // Slot for VizVolume.
-
    fNodeRE->fNode->GetVolume()->SetVisibility(fVizVolume->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VizVolumeDaughters.
+
 void TEveGeoNodeEditor::DoVizVolumeDaughters()
 {
-   // Slot for VizVolumeDaughters.
-
    fNodeRE->fNode->GetVolume()->VisibleDaughters(fVizVolumeDaughters->IsOn());
    Update();
 }
 
-
-//______________________________________________________________________________
-// TEveGeoTopNodeEditor
-//
-// Editor for TEveGeoTopNode class.
+/** \class TEveGeoTopNodeEditor
+\ingroup TEve
+Editor for TEveGeoTopNode class.
+*/
 
 ClassImp(TEveGeoTopNodeEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
                                            Int_t width, Int_t height,
                                            UInt_t options, Pixel_t back) :
@@ -149,8 +146,6 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    fVisLevel    (0),
    fMaxVisNodes (0)
 {
-   // Constructor.
-
    MakeTitle("GeoTopNode");
 
    Int_t labelW = 64;
@@ -186,13 +181,11 @@ TEveGeoTopNodeEditor::TEveGeoTopNodeEditor(const TGWindow *p,
    AddFrame(fMaxVisNodes, new TGLayoutHints(kLHintsTop, 1, 1, 1, 1));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveGeoTopNodeEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fTopNodeRE = dynamic_cast<TEveGeoTopNode*>(obj);
 
    fVisOption  ->SetValue(fTopNodeRE->GetVisOption());
@@ -204,31 +197,29 @@ void TEveGeoTopNodeEditor::SetModel(TObject* obj)
       fMaxVisNodes->MapWindow();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VisOption.
 
-//______________________________________________________________________________
 void TEveGeoTopNodeEditor::DoVisOption()
 {
-   // Slot for VisOption.
-
    fTopNodeRE->SetVisOption(Int_t(fVisOption->GetValue()));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for VisLevel.
+
 void TEveGeoTopNodeEditor::DoVisLevel()
 {
-   // Slot for VisLevel.
-
    fTopNodeRE->SetVisLevel(Int_t(fVisLevel->GetValue()));
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MaxVisNodes.
+
 void TEveGeoTopNodeEditor::DoMaxVisNodes()
 {
-   // Slot for MaxVisNodes.
-
    fTopNodeRE->SetMaxVisNodes(Int_t(fMaxVisNodes->GetValue()));
    Update();
 }

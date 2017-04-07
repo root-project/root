@@ -13,147 +13,126 @@
 #define ROOT_TStyle
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStyle                                                               //
-//                                                                      //
-// A collection of all graphics attributes.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttAxis
 #include "TAttAxis.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
+#include "TColor.h"
 
 class TBrowser;
 
 class TStyle : public TNamed, public TAttLine, public TAttFill, public TAttMarker, public TAttText {
 
 private:
-   TAttAxis      fXaxis;             //X axis attributes
-   TAttAxis      fYaxis;             //Y axis attributes
-   TAttAxis      fZaxis;             //Z axis attributes
-   Float_t       fBarWidth;          //width of bar for graphs
-   Float_t       fBarOffset;         //offset of bar for graphs
-   Int_t         fColorModelPS;      //PostScript color model: 0 = RGB, 1 = CMYK
-   Int_t         fDrawBorder;        //flag to draw border(=1) or not (0)
-   Int_t         fOptLogx;           //=1 if log scale in X
-   Int_t         fOptLogy;           //=1 if log scale in y
-   Int_t         fOptLogz;           //=1 if log scale in z
-   Int_t         fOptDate;           //=1 if date option is selected
-   Int_t         fOptStat;           //=1 if option Stat is selected
-   Int_t         fOptTitle;          //=1 if option Title is selected
-   Int_t         fOptFile;           //=1 if option File is selected
-   Int_t         fOptFit;            //=1 if option Fit is selected
-   Int_t         fShowEventStatus;   //Show event status panel
-   Int_t         fShowEditor;        //Show pad editor
-   Int_t         fShowToolBar;       //Show toolbar
+   TAttAxis      fXaxis;             ///< X axis attributes
+   TAttAxis      fYaxis;             ///< Y axis attributes
+   TAttAxis      fZaxis;             ///< Z axis attributes
+   Float_t       fBarWidth;          ///< Width of bar for graphs
+   Float_t       fBarOffset;         ///< Offset of bar for graphs
+   Int_t         fColorModelPS;      ///< PostScript color model: 0 = RGB, 1 = CMYK
+   Int_t         fDrawBorder;        ///< Flag to draw border(=1) or not (0)
+   Int_t         fOptLogx;           ///< True if log scale in X
+   Int_t         fOptLogy;           ///< True if log scale in y
+   Int_t         fOptLogz;           ///< True if log scale in z
+   Int_t         fOptDate;           ///< True if date option is selected
+   Int_t         fOptStat;           ///< True if option Stat is selected
+   Int_t         fOptTitle;          ///< True if option Title is selected
+   Int_t         fOptFile;           ///< True if option File is selected
+   Int_t         fOptFit;            ///< True if option Fit is selected
+   Int_t         fShowEventStatus;   ///< Show event status panel
+   Int_t         fShowEditor;        ///< Show pad editor
+   Int_t         fShowToolBar;       ///< Show toolbar
 
-   Int_t         fNumberContours;    //default number of contours for 2-d plots
-   TAttText      fAttDate;           //canvas date attribute
-   Float_t       fDateX;             //X position of the date in the canvas (in NDC)
-   Float_t       fDateY;             //Y position of the date in the canvas (in NDC)
-   Float_t       fEndErrorSize;      //Size of lines at the end of error bars
-   Float_t       fErrorX;            //per cent of bin width for errors along X
-   Color_t       fFuncColor;         //function color
-   Style_t       fFuncStyle;         //function style
-   Width_t       fFuncWidth;         //function line width
-   Color_t       fGridColor;         //grid line color (if 0 use axis line color)
-   Style_t       fGridStyle;         //grid line style
-   Width_t       fGridWidth;         //grid line width
-   Width_t       fLegendBorderSize;  //legend box border size
-   Color_t       fLegendFillColor;   //legend fill color
-   Style_t       fLegendFont;        //legend font style
-   Double_t      fLegendTextSize;    //legend text size. If 0 the size is computed automatically
-   Int_t         fHatchesLineWidth;  //hatches line width for hatch styles > 3100
-   Double_t      fHatchesSpacing;    //hatches spacing for hatch styles > 3100
-   Color_t       fFrameFillColor;    //pad frame fill color
-   Color_t       fFrameLineColor;    //pad frame line color
-   Style_t       fFrameFillStyle;    //pad frame fill style
-   Style_t       fFrameLineStyle;    //pad frame line style
-   Width_t       fFrameLineWidth;    //pad frame line width
-   Width_t       fFrameBorderSize;   //pad frame border size
-   Int_t         fFrameBorderMode;   //pad frame border mode
-   Color_t       fHistFillColor;     //histogram fill color
-   Color_t       fHistLineColor;     //histogram line color
-   Style_t       fHistFillStyle;     //histogram fill style
-   Style_t       fHistLineStyle;     //histogram line style
-   Width_t       fHistLineWidth;     //histogram line width
-   Bool_t        fHistMinimumZero;   //true if default minimum is 0, false if minimum is automatic
-   Double_t      fHistTopMargin;     //margin between histogram's top and pad's top
-   Bool_t        fCanvasPreferGL;    //if true, rendering in canvas is with GL
-   Color_t       fCanvasColor;       //canvas color
-   Width_t       fCanvasBorderSize;  //canvas border size
-   Int_t         fCanvasBorderMode;  //canvas border mode
-   Int_t         fCanvasDefH;        //default canvas height
-   Int_t         fCanvasDefW;        //default canvas width
-   Int_t         fCanvasDefX;        //default canvas top X position
-   Int_t         fCanvasDefY;        //default canvas top Y position
-   Color_t       fPadColor;          //pad color
-   Width_t       fPadBorderSize;     //pad border size
-   Int_t         fPadBorderMode;     //pad border mode
-   Float_t       fPadBottomMargin;   //pad bottom margin
-   Float_t       fPadTopMargin;      //pad top margin
-   Float_t       fPadLeftMargin;     //pad left margin
-   Float_t       fPadRightMargin;    //pad right margin
-   Bool_t        fPadGridX;          //true to get the grid along X
-   Bool_t        fPadGridY;          //true to get the grid along Y
-   Int_t         fPadTickX;          //=1 to set special pad ticks along X
-   Int_t         fPadTickY;          //=1 to set special pad ticks along Y
-   Float_t       fPaperSizeX;        //PostScript paper size along X
-   Float_t       fPaperSizeY;        //PostScript paper size along Y
-   Float_t       fScreenFactor;      //Multiplication factor for canvas size and position
-   Color_t       fStatColor;         //stat fill area color
-   Color_t       fStatTextColor;     //stat text color
-   Width_t       fStatBorderSize;    //border size of Stats PaveLabel
-   Style_t       fStatFont;          //font style of Stats PaveLabel
-   Float_t       fStatFontSize;      //font size in pixels for fonts with precision type 3
-   Style_t       fStatStyle;         //fill area style of Stats PaveLabel
-   TString       fStatFormat;        //Printing format for stats
-   Float_t       fStatX;             //X position of top right corner of stat box
-   Float_t       fStatY;             //Y position of top right corner of stat box
-   Float_t       fStatW;             //width of stat box
-   Float_t       fStatH;             //height of stat box
-   Bool_t        fStripDecimals;     //Strip decimals in axis labels
-   Int_t         fTitleAlign;        //title box alignment
-   Color_t       fTitleColor;        //title fill area color
-   Color_t       fTitleTextColor;    //title text color
-   Width_t       fTitleBorderSize;   //border size of Title PavelLabel
-   Style_t       fTitleFont;         //font style of Title PaveLabel
-   Float_t       fTitleFontSize;     //font size in pixels for fonts with precision type 3
-   Style_t       fTitleStyle;        //fill area style of title PaveLabel
-   Float_t       fTitleX;            //X position of top left corner of title box
-   Float_t       fTitleY;            //Y position of top left corner of title box
-   Float_t       fTitleW;            //width of title box
-   Float_t       fTitleH;            //height of title box
-   Float_t       fLegoInnerR;        //Inner radius for cylindrical legos
-   TString       fLineStyle[30];     //String describing line style i (for postScript)
-   TString       fHeaderPS;          //User defined additional Postscript header
-   TString       fTitlePS;           //User defined Postscript file title
-   TString       fFitFormat;         //Printing format for fit parameters
-   TString       fPaintTextFormat;   //Printing format for TH2::PaintText
-   Float_t       fLineScalePS;       //Line scale factor when drawing lines on Postscript
-   Double_t      fTimeOffset;        //Time offset to the beginning of an axis
-   Bool_t        fIsReading;         //!Set to FALSE when userclass::UseCurrentStyle is called by the style manager
+   Int_t         fNumberContours;    ///< Default number of contours for 2-d plots
+   TAttText      fAttDate;           ///< Canvas date attribute
+   Float_t       fDateX;             ///< X position of the date in the canvas (in NDC)
+   Float_t       fDateY;             ///< Y position of the date in the canvas (in NDC)
+   Float_t       fEndErrorSize;      ///< Size of lines at the end of error bars
+   Float_t       fErrorX;            ///< Per cent of bin width for errors along X
+   Color_t       fFuncColor;         ///< Function color
+   Style_t       fFuncStyle;         ///< Function style
+   Width_t       fFuncWidth;         ///< Function line width
+   Color_t       fGridColor;         ///< Grid line color (if 0 use axis line color)
+   Style_t       fGridStyle;         ///< Grid line style
+   Width_t       fGridWidth;         ///< Grid line width
+   Width_t       fLegendBorderSize;  ///< Legend box border size
+   Color_t       fLegendFillColor;   ///< Legend fill color
+   Style_t       fLegendFont;        ///< Legend font style
+   Double_t      fLegendTextSize;    ///< Legend text size. If 0 the size is computed automatically
+   Int_t         fHatchesLineWidth;  ///< Hatches line width for hatch styles > 3100
+   Double_t      fHatchesSpacing;    ///< Hatches spacing for hatch styles > 3100
+   Color_t       fFrameFillColor;    ///< Pad frame fill color
+   Color_t       fFrameLineColor;    ///< Pad frame line color
+   Style_t       fFrameFillStyle;    ///< Pad frame fill style
+   Style_t       fFrameLineStyle;    ///< Pad frame line style
+   Width_t       fFrameLineWidth;    ///< Pad frame line width
+   Width_t       fFrameBorderSize;   ///< Pad frame border size
+   Int_t         fFrameBorderMode;   ///< Pad frame border mode
+   Color_t       fHistFillColor;     ///< Histogram fill color
+   Color_t       fHistLineColor;     ///< Histogram line color
+   Style_t       fHistFillStyle;     ///< Histogram fill style
+   Style_t       fHistLineStyle;     ///< Histogram line style
+   Width_t       fHistLineWidth;     ///< Histogram line width
+   Bool_t        fHistMinimumZero;   ///< True if default minimum is 0, false if minimum is automatic
+   Double_t      fHistTopMargin;     ///< Margin between histogram's top and pad's top
+   Bool_t        fCanvasPreferGL;    ///< If true, rendering in canvas is with GL
+   Color_t       fCanvasColor;       ///< Canvas color
+   Width_t       fCanvasBorderSize;  ///< Canvas border size
+   Int_t         fCanvasBorderMode;  ///< Canvas border mode
+   Int_t         fCanvasDefH;        ///< Default canvas height
+   Int_t         fCanvasDefW;        ///< Default canvas width
+   Int_t         fCanvasDefX;        ///< Default canvas top X position
+   Int_t         fCanvasDefY;        ///< Default canvas top Y position
+   Color_t       fPadColor;          ///< Pad color
+   Width_t       fPadBorderSize;     ///< Pad border size
+   Int_t         fPadBorderMode;     ///< Pad border mode
+   Float_t       fPadBottomMargin;   ///< Pad bottom margin
+   Float_t       fPadTopMargin;      ///< Pad top margin
+   Float_t       fPadLeftMargin;     ///< Pad left margin
+   Float_t       fPadRightMargin;    ///< Pad right margin
+   Bool_t        fPadGridX;          ///< True to get the grid along X
+   Bool_t        fPadGridY;          ///< True to get the grid along Y
+   Int_t         fPadTickX;          ///< True to set special pad ticks along X
+   Int_t         fPadTickY;          ///< True to set special pad ticks along Y
+   Float_t       fPaperSizeX;        ///< PostScript paper size along X
+   Float_t       fPaperSizeY;        ///< PostScript paper size along Y
+   Float_t       fScreenFactor;      ///< Multiplication factor for canvas size and position
+   Color_t       fStatColor;         ///< Stat fill area color
+   Color_t       fStatTextColor;     ///< Stat text color
+   Width_t       fStatBorderSize;    ///< Border size of Stats PaveLabel
+   Style_t       fStatFont;          ///< Font style of Stats PaveLabel
+   Float_t       fStatFontSize;      ///< Font size in pixels for fonts with precision type 3
+   Style_t       fStatStyle;         ///< Fill area style of Stats PaveLabel
+   TString       fStatFormat;        ///< Printing format for stats
+   Float_t       fStatX;             ///< X position of top right corner of stat box
+   Float_t       fStatY;             ///< Y position of top right corner of stat box
+   Float_t       fStatW;             ///< Width of stat box
+   Float_t       fStatH;             ///< Height of stat box
+   Bool_t        fStripDecimals;     ///< Strip decimals in axis labels
+   Int_t         fTitleAlign;        ///< Title box alignment
+   Color_t       fTitleColor;        ///< Title fill area color
+   Color_t       fTitleTextColor;    ///< Title text color
+   Width_t       fTitleBorderSize;   ///< Border size of Title PavelLabel
+   Style_t       fTitleFont;         ///< Font style of Title PaveLabel
+   Float_t       fTitleFontSize;     ///< Font size in pixels for fonts with precision type 3
+   Style_t       fTitleStyle;        ///< Fill area style of title PaveLabel
+   Float_t       fTitleX;            ///< X position of top left corner of title box
+   Float_t       fTitleY;            ///< Y position of top left corner of title box
+   Float_t       fTitleW;            ///< Width of title box
+   Float_t       fTitleH;            ///< Height of title box
+   Float_t       fLegoInnerR;        ///< Inner radius for cylindrical legos
+   TString       fLineStyle[30];     ///< String describing line style i (for postScript)
+   TString       fHeaderPS;          ///< User defined additional Postscript header
+   TString       fTitlePS;           ///< User defined Postscript file title
+   TString       fFitFormat;         ///< Printing format for fit parameters
+   TString       fPaintTextFormat;   ///< Printing format for TH2::PaintText
+   Float_t       fLineScalePS;       ///< Line scale factor when drawing lines on Postscript
+   Int_t         fJoinLinePS;        ///< Determines the appearance of joining lines on PostScript
+   Double_t      fTimeOffset;        ///< Time offset to the beginning of an axis
+   Bool_t        fIsReading;         ///<! Set to FALSE when userclass::UseCurrentStyle is called by the style manager
 public:
    enum EPaperSize { kA4, kUSLetter };
 
@@ -289,7 +268,9 @@ public:
    const char      *GetHeaderPS() const {return fHeaderPS.Data();}
    const char      *GetTitlePS()  const {return fTitlePS.Data();}
    const char      *GetLineStyleString(Int_t i=1) const;
+   Int_t            GetJoinLinePS() const {return fJoinLinePS;}
    Float_t          GetLineScalePS() const {return fLineScalePS;}
+
    Bool_t           IsReading() const {return fIsReading;}
    virtual void     Paint(Option_t *option="");
    virtual void     Reset(Option_t *option="");
@@ -300,6 +281,7 @@ public:
    void             SetHatchesLineWidth(Int_t l) {fHatchesLineWidth = l;}
    void             SetHatchesSpacing(Double_t h) {fHatchesSpacing = TMath::Max(0.1,h);}
    void             SetTitlePS(const char *pstitle);
+   void             SetJoinLinePS(Int_t joinline=0) {fJoinLinePS=joinline;}
    void             SetLineScalePS(Float_t scale=3) {fLineScalePS=scale;}
    void             SetLineStyleString(Int_t i, const char *text);
    void             SetNdivisions(Int_t n=510, Option_t *axis="X");
@@ -409,11 +391,11 @@ public:
    void             ToggleEditor() { fShowEditor = fShowEditor ? 0 : 1; }
    void             ToggleToolBar() { fShowToolBar = fShowToolBar ? 0 : 1; }
    void             SetIsReading(Bool_t reading=kTRUE);
-   void             SetPalette(Int_t ncolors=0, Int_t *colors=0, Float_t alpha=1.);
+   void             SetPalette(Int_t ncolors=kBird, Int_t *colors=0, Float_t alpha=1.);
    void             SavePrimitive(std::ostream &out, Option_t * = "");
    void             SaveSource(const char *filename, Option_t *option=0);
 
-   ClassDef(TStyle, 16);  //A collection of all graphics attributes
+   ClassDef(TStyle, 17);  //A collection of all graphics attributes
 };
 
 

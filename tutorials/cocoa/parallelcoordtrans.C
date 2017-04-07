@@ -1,10 +1,13 @@
-// Script illustrating the use of transparency with ||-Coord.
-// It displays the same data set twice. The first time without transparency and
-// the second time with transparency. On the second plot, several clusters
-// appear.
-
-//Authors: Olivier Couet (original macro), adapted for TGCocoa by Timur Pocheptsov (26/09/2012).
-
+/// \file
+/// \ingroup tutorial_cocoa
+/// Script illustrating the use of transparency with ||-Coord.
+/// It displays the same data set twice. The first time without transparency and
+/// the second time with transparency. On the second plot, several clusters
+/// appear.
+///
+/// \macro_code
+///
+/// \authors Timur Pocheptsov, Olivier Couet
 
 //All these includes are (only) to make the macro
 //ACLiCable.
@@ -59,7 +62,7 @@ void parallelcoordtrans()
    Double_t s2x = 0., s2y = 0., s2z = 0.;
    Double_t s3x = 0., s3y = 0., s3z = 0.;
 
-   TCanvas *c1 = new TCanvas("parallel coors", "parallel coords", 0, 0, 900, 1000);
+   TCanvas *c1 = new TCanvas("parallel coords", "parallel coords", 0, 0, 900, 1000);
 
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("generate_random", "This macro works only on OS X with --enable-cocoa");

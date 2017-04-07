@@ -1,0 +1,149 @@
+\vspace{-1cm}
+\begin{flushright}
+{\sf\em arXiv:physics/0703039 [Data Analysis, Statistics and Probability]} \\
+{\sf\em CERN-OPEN-2007-007} \\
+{\sf\em TMVA version \TMVAVersion} \\
+{\sf\em \today} \\
+\def\UrlFont{\sf\em}
+\url{http://tmva.sourceforge.net} 
+\end{flushright}
+\def\UrlFont{\rm}
+
+\def\miniPageOffset{0.2cm}
+\def\miniPageWidth{13.5cm}
+\vspace*{\stretch{20}}
+\HRule
+\begin{flushleft}
+\hspace{\miniPageOffset}\begin{minipage}{\miniPageWidth}
+{\sf\Huge\bfseries\boldmath TMVA 4} \\[0.2cm]
+{\sf\Large\bfseries\boldmath Toolkit for Multivariate Data Analysis with ROOT} \\[1cm]
+{\sf\Huge\bfseries\boldmath Users Guide} 
+\end{minipage}
+\end{flushleft}
+\HRule
+\vspace{2.0cm}
+%\begin{flushleft}
+\begin{flushright}
+% \hspace{\miniPageOffset}\begin{minipage}{\miniPageWidth}
+{\sf\Large  A.~Hoecker,~P.~Speckmayer,~J.~Stelzer,~J.~Therhaag,~E.~von Toerne,~H.~Voss} 
+% \end{minipage}
+
+\vspace{1.2cm}
+% \hspace{\miniPageOffset}\begin{minipage}{\miniPageWidth}
+{\sf\em\large Contributed to TMVA have:} \\[0.4cm]
+{\sf\large 
+M.~Backes,
+T.~Carli,
+O.~Cohen,
+A.~Christov, 
+D.~Dannheim,
+K.~Danielowski,\\[0.1cm]
+S.~Henrot-Versill\'e, 
+M.~Jachowski, 
+K.~Kraszewski,
+A.~Krasznahorkay Jr.,  \\[0.1cm]    
+M.~Kruk,
+Y.~Mahalalel, 
+R.~Ospanov, 
+X.~Prudent, 
+A.~Robert,
+C.~Rosemann, \\[0.1cm]  
+D.~Schouten, 
+F.~Tegenfeldt,
+A.~Voigt,
+K.~Voss,
+M.~Wolter, 
+A.~Zemla,
+J.~Zhong,
+A.~Moudgil
+}
+
+% \end{minipage}
+\vspace*{\stretch{1}}
+\end{flushright}
+%\end{flushleft}
+
+\vfill
+
+\thispagestyle{empty}
+\newpage
+
+% authors
+
+
+\def\UrlFont{\sf}
+{\small\sf
+{\sf\bfseries Abstract} --- 
+In high-energy physics, with the search for ever smaller signals in
+ever larger data sets, it has become essential to extract a maximum of
+the available information from the data.  Multivariate classification
+methods based on machine learning techniques have become a fundamental
+ingredient to most analyses.  Also the multivariate classifiers
+themselves have significantly evolved in recent years. Statisticians
+have found new ways to tune and to combine classifiers to further gain
+in performance. Integrated into the analysis framework ROOT, TMVA is
+a toolkit which hosts a large variety of multivariate classification
+algorithms. Training, testing, performance evaluation and application of 
+all available classifiers is carried out simultaneously via user-friendly 
+interfaces. With version 4, TMVA has been extended to multivariate 
+regression of a real-valued target vector. Regression is invoked through 
+the same user interfaces as classification. TMVA 4 also features 
+more flexible data handling allowing one to arbitrarily form 
+combined MVA methods. A generalised boosting method is the first 
+realisation benefiting from the new framework.
+}
+\vspace{0.5cm}
+\begin{center}
+{\small\sf
+{\sf\bfseries TMVA \TMVAVersion\ -- Toolkit for Multivariate Data Analysis with ROOT}  \\
+Copyright\index{Copyright} 
+\copyright\  2005-2009, Regents of 
+CERN (Switzerland),  
+DESY (Germany),
+MPI-Kernphysik Heidelberg (Germany),
+University of Bonn (Germany),
+and University of Victoria (Canada). \\
+BSD license: \url{http://tmva.sourceforge.net/LICENSE}. 
+
+{\sf\bfseries Authors:} \\
+Andreas Hoecker (CERN, Switzerland) \emailsf{<andreas.hoecker@cern.ch>}, \\
+Peter Speckmayer (CERN, Switzerland) \emailsf{<peter.speckmayer@cern.ch>}, \\
+J\"org Stelzer (CERN, Switzerland) \emailsf{<joerg.stelzer@cern.ch>},\\
+Jan Therhaag (Universit\"at Bonn, Germany) \emailsf{<therhaag@physik.uni-bonn.de>}, \\
+Eckhard von Toerne (Universit\"at Bonn, Germany) \emailsf{<evt@physik.uni-bonn.de>},\\
+Helge Voss (MPI f\"ur Kernphysik Heidelberg, Germany) \emailsf{<helge.voss@cern.ch>},\\
+Moritz Backes,% (Geneva University, Switzerland) \emailsf{moritz.backes@cern.ch},\\
+Tancredi Carli,% (CERN, Switzerland) \emailsf{<tancredi.carli@cern.ch>}, \\
+Or Cohen,% (CERN, Switzerland and Technion, Israel) \emailsf{<or.cohen@cern.ch>}, \\
+Asen Christov,% (Universit\"at Freiburg, Germany) \emailsf{<christov@physik.uni-freiburg.de>}, \\
+Krzysztof Danielowski,% (IFJ and AGH/UJ, Krakow, Poland) \emailsf{<Krzysztof.Danielowski@cern.ch>}, \\
+Dominik Dannheim,% (CERN, Switzerland) \emailsf{<Dominik.Dannheim@cern.ch>}, \\
+Sophie Henrot-Versill\'e,% (LAL Orsay, France) \emailsf{<versille@lal.in2p3.fr>}, \\
+Matthew Jachowski,% (Stanford University, USA) \emailsf{<jachowski@stanford.edu>}, \\
+Kamil Kraszewski,% (IFJ and AGH/UJ, Krakow, Poland) \emailsf{<kamil.bartlomiej.kraszewski@cern.ch>}, \\
+Attila Krasznahorkay Jr.,% (CERN, CH, and Manchester U., UK)  \emailsf{<Attila.Krasznahorkay@cern.ch>}, \\
+Maciej Kruk,% (IFJ and AGH/UJ, Krakow, Poland) \emailsf{<maciej.mateusz.kruk@cern.ch>}, \\
+Yair Mahalale,%l (Tel Aviv University, Israel) \emailsf{<yair@mahalalel.com>}, \\
+Rustem Ospanov,% (University of Texas, USA) \emailsf{<rustem@fnal.gov>}, \\
+Xavier Prudent,% (LAPP Annecy, France) \emailsf{<prudent@lapp.in2p3.fr>}, \\
+Doug Schouten,% (S. Fraser U., Canada) \emailsf{<dschoute@sfu.ca>}, \\
+Fredrik Tegenfeldt,% (Iowa University, USA) \emailsf{<fredrik.tegenfeldt@cern.ch>}, \\
+Arnaud Robert,% (LPNHE Paris, France) \emailsf{<arobert@lpnhe.in2p3.fr>}, \\
+Christoph Rosemann,% (DESY, Germany) \emailsf{<christoph.rosemann@desy.de>}, \\
+Alexander Voigt,% (CERN, Switzerland) \emailsf{<alexander.voigt@cern.ch>}, \\
+Kai Voss,% (University of Victoria, Canada) \emailsf{<kai.voss@cern.ch>}, \\
+Marcin Wolter,% (IFJ PAN Krakow, Poland) \emailsf{<marcin.wolter@ifj.edu.pl>}, \\
+Andrzej Zemla,% (IFJ PAN Krakow, Poland) \emailsf{<zemla@corcoran.if.uj.edu.pl>}, \\
+Jiahang Zhong,% (Academia Sinica, Taipei, Taiwan) \emailsf{<Jiahang.Zhong@cern.ch>}, \\
+Abhinav Moudgil % (IIIT Hyderabad, India) \emailsf{<abhinav.moudgil@research.iiit.ac.in>}, \\
+and valuable contributions from many users, please see acknowledgements.
+}
+\end{center}
+
+\thispagestyle{empty}
+\newpage
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "TMVAUsersGuide"
+%%% End: 

@@ -100,14 +100,10 @@ static const StaticDiagInfoRec *GetDiagInfo(unsigned DiagID) {
 #ifndef NDEBUG
   static bool IsFirst = true; // So the check is only performed on first call.
   if (IsFirst) {
-    for (unsigned i = 1; i != StaticDiagInfoSize; ++i) {
-      assert(StaticDiagInfo[i-1].DiagID != StaticDiagInfo[i].DiagID &&
-             "Diag ID conflict, the enums at the start of clang::diag (in "
-             "DiagnosticIDs.h) probably need to be increased");
-
-      assert(StaticDiagInfo[i-1] < StaticDiagInfo[i] &&
-             "Improperly sorted diag info");
-    }
+    assert(std::is_sorted(std::begin(StaticDiagInfo),
+                          std::end(StaticDiagInfo)) &&
+           "Diag ID conflict, the enums at the start of clang::diag (in "
+           "DiagnosticIDs.h) probably need to be increased");
     IsFirst = false;
   }
 #endif
@@ -466,6 +462,12 @@ DiagnosticIDs::getDiagnosticSeverity(unsigned DiagID, SourceLocation Loc,
       Result = diag::Severity::Fatal;
   }
 
+  // If explicitly requested, map fatal errors to errors.
+  if (Result == diag::Severity::Fatal) {
+      if (Diag.FatalsAsError)
+        Result = diag::Severity::Error;
+  }
+
   // Custom diagnostics always are emitted in system headers.
   bool ShowInSystemHeader =
       !GetDiagInfo(DiagID) || GetDiagInfo(DiagID)->WarnShowInSystemHeader;
@@ -505,11 +507,6 @@ static const WarningOption OptionTable[] = {
 #include "clang/Basic/DiagnosticGroups.inc"
 #undef GET_DIAG_TABLE
 };
-static const size_t OptionTableSize = llvm::array_lengthof(OptionTable);
-
-static bool WarningOptionCompare(const WarningOption &LHS, StringRef RHS) {
-  return LHS.getName() < RHS;
-}
 
 /// getWarningOptionForDiag - Return the lowest-level warning option that
 /// enables the specified diagnostic.  If there is no -Wfoo flag that controls
@@ -528,7 +525,7 @@ static bool getDiagnosticsInGroup(diag::Flavor Flavor,
   // An empty group is considered to be a warning group: we have empty groups
   // for GCC compatibility, and GCC does not have remarks.
   if (!Group->Members && !Group->SubGroups)
-    return Flavor == diag::Flavor::Remark ? true : false;
+    return Flavor == diag::Flavor::Remark;
 
   bool NotFound = true;
 
@@ -553,10 +550,12 @@ static bool getDiagnosticsInGroup(diag::Flavor Flavor,
 bool
 DiagnosticIDs::getDiagnosticsInGroup(diag::Flavor Flavor, StringRef Group,
                                      SmallVectorImpl<diag::kind> &Diags) const {
-  const WarningOption *Found = std::lower_bound(
-      OptionTable, OptionTable + OptionTableSize, Group, WarningOptionCompare);
-  if (Found == OptionTable + OptionTableSize ||
-      Found->getName() != Group)
+  auto Found = std::lower_bound(std::begin(OptionTable), std::end(OptionTable),
+                                Group,
+                                [](const WarningOption &LHS, StringRef RHS) {
+                                  return LHS.getName() < RHS;
+                                });
+  if (Found == std::end(OptionTable) || Found->getName() != Group)
     return true; // Option not found.
 
   return ::getDiagnosticsInGroup(Flavor, Found, Diags);
@@ -573,19 +572,18 @@ StringRef DiagnosticIDs::getNearestOption(diag::Flavor Flavor,
                                           StringRef Group) {
   StringRef Best;
   unsigned BestDistance = Group.size() + 1; // Sanity threshold.
-  for (const WarningOption *i = OptionTable, *e = OptionTable + OptionTableSize;
-       i != e; ++i) {
+  for (const WarningOption &O : OptionTable) {
     // Don't suggest ignored warning flags.
-    if (!i->Members && !i->SubGroups)
+    if (!O.Members && !O.SubGroups)
       continue;
 
-    unsigned Distance = i->getName().edit_distance(Group, true, BestDistance);
+    unsigned Distance = O.getName().edit_distance(Group, true, BestDistance);
     if (Distance > BestDistance)
       continue;
 
     // Don't suggest groups that are not of this kind.
     llvm::SmallVector<diag::kind, 8> Diags;
-    if (::getDiagnosticsInGroup(Flavor, i, Diags) || Diags.empty())
+    if (::getDiagnosticsInGroup(Flavor, &O, Diags) || Diags.empty())
       continue;
 
     if (Distance == BestDistance) {
@@ -593,7 +591,7 @@ StringRef DiagnosticIDs::getNearestOption(diag::Flavor Flavor,
       Best = "";
     } else if (Distance < BestDistance) {
       // This is a better match.
-      Best = i->getName();
+      Best = O.getName();
       BestDistance = Distance;
     }
   }

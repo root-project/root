@@ -3,10 +3,16 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(graf2d/quartz)
-ROOT_USE_PACKAGE(gui/gui)
-
 add_definitions("-ObjC++")
+
+if (cxxmodules)
+  # FIXME: Disable modules for ObjC/ObjC++. Modules for cocoa and quarts have to
+  # be treated in a special way. Eg. it seems that they cannot be nested in the
+  # ROOT top-most module, because an implicit build of this module in ObjC TU
+  # causes issues in TBonjourBrowser (when incluing dns_sd.h) on OSX.
+  string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+endif(cxxmodules)
 
 include_directories(${FREETYPE_INCLUDE_DIRS})
 

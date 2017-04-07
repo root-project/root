@@ -1,23 +1,33 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook
+/// Fitting a 2-D histogram (a variant)
+/// This tutorial illustrates :
+///  - how to create a 2-d function
+///  - fill a 2-d histogram randomly from this function
+///  - fit the histogram
+///  - display the fitted function on top of the histogram (lego-plot)
+///    using a surface plot in a sub-range of the histogram.
+///
+/// This example can be executed via the interpreter or/and the compiler
+///
+/// ~~~{.cpp}
+///   root > .x fit2a.C
+///   root > .x fit2a.C++
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TF2.h"
 #include "TH2.h"
 #include "TCutG.h"
 #include "TMath.h"
 #include "TCanvas.h"
 #include "TStyle.h"
-
-
-//+ Fitting a 2-D histogram (a variant)
-// This tutorial illustrates :
-//  - how to create a 2-d function
-//  - fill a 2-d histogram randomly from this function
-//  - fit the histogram
-//  - display the fitted function on top of the histogram (lego-plot)
-//    using a surface plot in a sub-range of the histogram.
-//
-// This example can be executed via the interpreter or/and the compiler
-//   root > .x fit2a.C
-//   root > .x fit2a.C++
-//Author: Rene Brun
 
 Double_t g2(Double_t *x, Double_t *par) {
    Double_t r1 = Double_t((x[0]-par[1])/par[2]);
@@ -35,7 +45,7 @@ Double_t fun2(Double_t *x, Double_t *par) {
 TCanvas *fit2a() {
    TCanvas *c = new TCanvas();
    gStyle->SetOptStat(kTRUE);
-   gStyle->SetPalette(1);
+   gStyle->SetPalette(57);
    const Int_t npar = 15;
    Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
    TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);

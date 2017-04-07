@@ -12,20 +12,7 @@
 #ifndef ROOT_TGeoPara
 #define ROOT_TGeoPara
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoPara - parallelipeped class. It has 6 parameters :                 //
-//         dx, dy, dz - half lengths in X, Y, Z                           //
-//         alpha - angle w.r.t the Y axis from center of low Y edge to    //
-//                 center of high Y edge [deg]                            //
-//         theta, phi - polar and azimuthal angles of the segment between //
-//                 low and high Z surfaces [deg]                          //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoPara : public TGeoBBox
 {
@@ -34,7 +21,7 @@ protected :
    Double_t              fX;        // X half-length
    Double_t              fY;        // Y half-length
    Double_t              fZ;        // Z half-length
-   Double_t              fAlpha;     // angle w.r.t Y from the center of low Y to the hihg Y
+   Double_t              fAlpha;     // angle w.r.t Y from the center of low Y to the high Y
    Double_t              fTheta;     // polar angle of segment between low and hi Z surfaces
    Double_t              fPhi;       // azimuthal angle of segment between low and hi Z surfaces
    Double_t              fTxy;       // tangent of XY section angle

@@ -1,5 +1,12 @@
-//Importing an image and manipulating it
-//Author: Valeriy Onuchin
+/// \file
+/// \ingroup tutorial_image
+/// \notebook
+/// Importing an image and manipulating it.
+///
+/// \image html image_galaxy_image.png
+/// \macro_code
+///
+/// \author Valeriy Onuchin
 
 void galaxy_image()
 {

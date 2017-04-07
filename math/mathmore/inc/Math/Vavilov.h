@@ -38,7 +38,6 @@
  */
 
 
-#include <iostream>
 
 namespace ROOT {
 namespace Math {
@@ -92,14 +91,14 @@ namespace Math {
    A. Rotondi and P. Montagna, Fast calculation of Vavilov distribution,
    <A HREF="http://dx.doi.org/10.1016/0168-583X(90)90749-K">Nucl. Instr. and Meth. B47 (1990) 215-224</A>,
    which has been implemented in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g115/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g115/top.html">
    CERNLIB (G115)</A>.
 
    - VavilovAccurate uses the algorithm by
    B. Schorr, Programs for the Landau and the Vavilov distributions and the corresponding random numbers,
    <A HREF="http://dx.doi.org/10.1016/0010-4655(74)90091-5">Computer Phys. Comm. 7 (1974) 215-224</A>,
    which has been implemented in
-   <A HREF="http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/g116/top.html">
+   <A HREF="https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/g116/top.html">
    CERNLIB (G116)</A>.
 
    Both subclasses store coefficients needed to calculate \f$p(\lambda; \kappa, \beta^2)\f$
@@ -154,14 +153,14 @@ public:
    virtual double Pdf (double x, double kappa, double beta2) = 0;
 
    /**
-       Evaluate the Vavilov cummulative probability density function
+       Evaluate the Vavilov cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
    virtual double Cdf (double x) const = 0;
 
    /**
-       Evaluate the Vavilov cummulative probability density function,
+       Evaluate the Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param x The Landau parameter \f$x = \lambda_L\f$
@@ -171,14 +170,14 @@ public:
    virtual double Cdf (double x, double kappa, double beta2) = 0;
 
    /**
-       Evaluate the Vavilov complementary cummulative probability density function
+       Evaluate the Vavilov complementary cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
    virtual double Cdf_c (double x) const = 0;
 
    /**
-       Evaluate the Vavilov complementary cummulative probability density function,
+       Evaluate the Vavilov complementary cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param x The Landau parameter \f$x = \lambda_L\f$
@@ -188,14 +187,14 @@ public:
    virtual double Cdf_c (double x, double kappa, double beta2) = 0;
 
    /**
-       Evaluate the inverse of the Vavilov cummulative probability density function
+       Evaluate the inverse of the Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    virtual double Quantile (double z) const = 0;
 
    /**
-       Evaluate the inverse of the Vavilov cummulative probability density function,
+       Evaluate the inverse of the Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
@@ -205,14 +204,14 @@ public:
    virtual double Quantile (double z, double kappa, double beta2) = 0;
 
    /**
-       Evaluate the inverse of the complementary Vavilov cummulative probability density function
+       Evaluate the inverse of the complementary Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
    virtual double Quantile_c (double z) const = 0;
 
    /**
-       Evaluate the inverse of the complementary Vavilov cummulative probability density function,
+       Evaluate the inverse of the complementary Vavilov cumulative probability density function,
        and set kappa and beta2, if necessary
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$

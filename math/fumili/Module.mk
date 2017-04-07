@@ -28,9 +28,18 @@ FUMILILIB    := $(LPATH)/libFumili.$(SOEXT)
 FUMILIMAP    := $(FUMILILIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FUMILIH))
+FUMILIH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(FUMILIH))
+ALLHDRS     += $(FUMILIH_REL)
 ALLLIBS     += $(FUMILILIB)
 ALLMAPS     += $(FUMILIMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(FUMILIH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_Fumili { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(FUMILILIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(FUMILIDEP)

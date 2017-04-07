@@ -33,20 +33,28 @@ namespace {
 // pseudo-None type for masking out objects on the python side
    PyTypeObject PyROOT_NoneType;
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    Py_ssize_t AlwaysNullLength( PyObject* )
    {
       return 0;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    PyMappingMethods PyROOT_NoneType_mapping = {
         AlwaysNullLength,
         (binaryfunc)             0,
         (objobjargproc)          0
    };
 
-//____________________________________________________________________________
+// silence warning about some cast operations
+#if defined(__GNUC__) && (__GNUC__ >= 5 || (__GNUC__ >= 4 && ((__GNUC_MINOR__ == 2 && __GNUC_PATCHLEVEL__ >= 1) || (__GNUC_MINOR__ >= 3)))) && !__INTEL_COMPILER
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
    struct InitPyROOT_NoneType_t {
       InitPyROOT_NoneType_t()
       {
@@ -111,10 +119,11 @@ PyROOT::TMemoryRegulator::TMemoryRegulator()
    fgWeakRefTable = new WeakRefMap_t;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// cleanup weakref cache
+
 PyROOT::TMemoryRegulator::~TMemoryRegulator()
 {
-// cleanup weakref cache
    delete fgWeakRefTable;
    fgWeakRefTable = 0;
 
@@ -185,10 +194,11 @@ void PyROOT::TMemoryRegulator::RecursiveRemove( TObject* object )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// start tracking <object> proxied by <pyobj>
+
 Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
-// start tracking <object> proxied by <pyobj>
    if ( ! ( pyobj && object ) )
       return kFALSE;
 
@@ -204,10 +214,11 @@ Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* ob
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// stop tracking <object>, without notification
+
 Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 {
-// stop tracking <object>, without notification
    ObjectMap_t::iterator ppo = fgObjectTable->find( object );
 
    if ( ppo != fgObjectTable->end() ) {
@@ -219,10 +230,11 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// lookup <object>, return old proxy if tracked
+
 PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, Cppyy::TCppType_t klass )
 {
-// lookup <object>, return old proxy if tracked
    if ( ! object )
       return 0;
 
@@ -249,12 +261,13 @@ PyObject* PyROOT::TMemoryRegulator::ObjectEraseCallback( PyObject*, PyObject* py
 
    if ( ObjectProxy_Check( pyobj ) && pyobj->GetObject() != 0 ) {
    // get TObject pointer to the object
-      // WOKRHERE
-      TObject* object = 0;
-     //(TObject*)pyobj->ObjectIsA()->DynamicCast(
-      //   TObject::Class(), pyobj->GetObject() );
+      static Cppyy::TCppScope_t sTObjectScope = Cppyy::GetScope( "TObject" );
+      Cppyy::TCppType_t klass = pyobj->ObjectIsA();
+      if ( Cppyy::IsSubtype( klass, sTObjectScope) ) {
+         void* address = pyobj->GetObject();
+         TObject* object = (TObject*)((Long_t)address + \
+             Cppyy::GetBaseOffset( klass, sTObjectScope, address, 1 /* up-cast */ ) );
 
-      if ( object != 0 ) {
       // erase if tracked
          ObjectMap_t::iterator ppo = fgObjectTable->find( object );
          if ( ppo != fgObjectTable->end() ) {

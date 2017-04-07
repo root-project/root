@@ -1,5 +1,5 @@
 // @(#):$Id: b94274447e46ae2cf700c562e57c3c38c6612b74 $
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoNodeEditor - Editor class for TGeoNode objects
-//                                                                      
+//
 //______________________________________________________________________________
 
 #include "TGeoNodeEditor.h"
@@ -36,17 +36,17 @@ enum ETGeoNodeWid {
    kNODE_MATRIX, kNODE_EDIT_VOL, kNODE_EDIT_MATRIX
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for node editor
+
 TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for node editor
-   
    fNode   = 0;
    fIsEditable = kTRUE;
    Pixel_t color;
-      
+
    // TextEntry for medium name
    TGTextEntry *nef;
    MakeTitle("Name");
@@ -56,7 +56,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
    fNodeName->SetToolTipText("Enter the node name");
    fNodeName->Associate(this);
    f1->AddFrame(fNodeName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
-   f1->AddFrame(new TGLabel(f1, "ID"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));   
+   f1->AddFrame(new TGLabel(f1, "ID"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fNodeNumber = new TGNumberEntry(f1, 0., 1, kNODE_ID);
    nef = (TGTextEntry*)fNodeNumber->GetNumberEntry();
    nef->SetToolTipText("Enter the node copy number");
@@ -82,7 +82,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fEditMother, new TGLayoutHints(kLHintsRight, 1, 1, 1, 1));
    fEditMother->Associate(this);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 2));
-   
+
 // Volume selection
    MakeTitle("Volume");
    f1 = new TGCompositeFrame(this, 155, 30, kHorizontalFrame | kFixedWidth);
@@ -118,7 +118,7 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fEditMatrix, new TGLayoutHints(kLHintsRight, 1, 1, 1, 1));
    fEditMatrix->Associate(this);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 0, 2));
-  
+
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    fApply = new TGTextButton(f1, "Apply");
@@ -127,27 +127,29 @@ TGeoNodeEditor::TGeoNodeEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoNodeEditor::~TGeoNodeEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoNodeEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fBSelMother->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectMother()");
    fBSelVolume->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectVolume()");
    fBSelMatrix->Connect("Clicked()", "TGeoNodeEditor", this, "DoSelectMatrix()");
@@ -161,14 +163,15 @@ void TGeoNodeEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a editable object.
+
 void TGeoNodeEditor::SetModel(TObject* obj)
 {
-   // Connect to a editable object.
    if (obj == 0 || !obj->InheritsFrom(TGeoNode::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fNode = (TGeoNode*)obj;
    const char *sname = fNode->GetName();
    fNodeName->SetText(sname);
@@ -184,105 +187,114 @@ void TGeoNodeEditor::SetModel(TObject* obj)
 
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the mother volume.
+
 void TGeoNodeEditor::DoSelectMother()
 {
-// Select the mother volume.
    TGeoVolume *vol = fSelectedMother;
-   new TGeoVolumeDialog(fBSelMother, gClient->GetRoot(), 200,300);  
+   new TGeoVolumeDialog(fBSelMother, gClient->GetRoot(), 200,300);
    fSelectedMother = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
    if (fSelectedMother) fLSelMother->SetText(fSelectedMother->GetName());
    else fSelectedMother = vol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the volume.
+
 void TGeoNodeEditor::DoSelectVolume()
 {
-// Select the volume.
    TGeoVolume *vol = fSelectedVolume;
-   new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);  
+   new TGeoVolumeDialog(fBSelVolume, gClient->GetRoot(), 200,300);
    fSelectedVolume = (TGeoVolume*)TGeoVolumeDialog::GetSelected();
    if (fSelectedVolume) fLSelVolume->SetText(fSelectedVolume->GetName());
    else fSelectedVolume = vol;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the matrix.
+
 void TGeoNodeEditor::DoSelectMatrix()
 {
-// Select the matrix.
    TGeoMatrix *matrix = fSelectedMatrix;
-   new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);  
+   new TGeoMatrixDialog(fBSelMatrix, gClient->GetRoot(), 200,300);
    fSelectedMatrix = (TGeoMatrix*)TGeoMatrixDialog::GetSelected();
    if (fSelectedMatrix) fLSelMatrix->SetText(fSelectedMatrix->GetName());
    else fSelectedMatrix = matrix;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit the mother volume.
+
 void TGeoNodeEditor::DoEditMother()
 {
-// Edit the mother volume.
    if (!fSelectedMother) {
       fTabMgr->SetVolTabEnabled(kFALSE);
       return;
-   }   
+   }
    fTabMgr->SetVolTabEnabled();
    fTabMgr->GetVolumeEditor(fSelectedMother);
    fTabMgr->SetTab();
    fSelectedMother->Draw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit selected volume.
+
 void TGeoNodeEditor::DoEditVolume()
 {
-// Edit selected volume.
    if (!fSelectedVolume) {
       fTabMgr->SetVolTabEnabled(kFALSE);
       return;
-   }   
+   }
    fTabMgr->SetVolTabEnabled();
    fTabMgr->GetVolumeEditor(fSelectedVolume);
    fTabMgr->SetTab();
    fSelectedVolume->Draw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit selected material.
+
 void TGeoNodeEditor::DoEditMatrix()
 {
-// Edit selected material.
    if (!fSelectedMatrix) return;
    fTabMgr->GetMatrixEditor(fSelectedMatrix);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change node name.
+
 void TGeoNodeEditor::DoNodeName()
 {
-// Change node name.
    const char *name = fNodeName->GetText();
    if (!name[0] || !strcmp(name, fNode->GetName())) return;
    fNode->SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change node copy number
+
 void TGeoNodeEditor::DoNodeNumber()
 {
-// Change node copy number
-   
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoNodeEditor::DoApply()
 {
-// Slot for applying modifications.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoNodeEditor::DoUndo()
 {
-// Slot for undoing last operation.
 }
-   
+

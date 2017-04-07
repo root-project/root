@@ -1,18 +1,26 @@
-//This tutorial illustrates how to create an histogram with polygonal
-//bins (TH2Poly), fill it and draw it. The initial data are stored
-//in TMultiGraphs. They represent the european countries.
-//The histogram filling is done according to a Mercator projection,
-//therefore the bin contains should be proportional to the real surface
-//of the countries.
-//
-//The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
-//This database was developed in 1991/1992 and national boundaries reflect
-//political reality as of that time.
-//
-//The script is shooting npoints (script argument) randomly over the Europe area.
-//The number of points inside the countries should be proportional to the country surface
-//The estimated surface is compared to the surfaces taken from wikipedia.
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook -js
+/// This tutorial illustrates how to create an histogram with polygonal
+/// bins (TH2Poly), fill it and draw it. The initial data are stored
+/// in TMultiGraphs. They represent the european countries.
+/// The histogram filling is done according to a Mercator projection,
+/// therefore the bin contains should be proportional to the real surface
+/// of the countries.
+///
+/// The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
+/// This database was developed in 1991/1992 and national boundaries reflect
+/// political reality as of that time.
+///
+/// The script is shooting npoints (script argument) randomly over the Europe area.
+/// The number of points inside the countries should be proportional to the country surface
+/// The estimated surface is compared to the surfaces taken from wikipedia.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void th2polyEurope(Int_t npoints=500000)
 {
@@ -24,7 +32,6 @@ void th2polyEurope(Int_t npoints=500000)
    Double_t R = (lat2-lat1)/(lon2-lon1);
    Int_t W    = 800;
    Int_t H    = (Int_t)(R*800);
-   gStyle->SetTitleX(0.2);
    gStyle->SetStatX(0.28);
    gStyle->SetStatY(0.45);
    gStyle->SetStatW(0.15);
@@ -38,22 +45,22 @@ void th2polyEurope(Int_t npoints=500000)
    // Real surfaces taken from Wikipedia.
    const Int_t nx = 36;
    // see http://en.wikipedia.org/wiki/Area_and_population_of_European_countries
-   const char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
+   const char *countries[nx] = {
+      "france",     "spain",  "sweden",  "germany",       "finland",
       "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom",
       "romania",    "belarus","greece",  "czechoslovakia","bulgaria",
       "iceland",    "hungary","portugal","austria",       "ireland",
       "lithuania",  "latvia", "estonia", "denmark",       "netherlands",
       "switzerland","moldova","belgium", "albania",       "cyprus",
-      "luxembourg", "andorra","malta",   "liechtenstein", "san_marino",
-      "monaco" };
-   Float_t surfaces[nx] = { 547030,        505580,   449964,      357021,        338145,
+      "luxembourg", "andorra","malta",   "liechtenstein", "san_marino", "monaco" };
+   Float_t surfaces[nx] = {
+      547030,        505580,   449964,      357021,        338145,
       324220,        312685,   301230,      255438,        244820,
       237500,        207600,   131940,      127711,        110910,
       103000,         93030,    89242,       83870,         70280,
       65200,         64589,    45226,       43094,         41526,
       41290,         33843,    30528,       28748,          9250,
-      2586,           468,      316,         160,            61,
-      2};
+      2586,           468,      316,         160,            61, 2};
 
    TH1F *h = new TH1F("h","Countries surfaces (in km^{2})",3,0,3);
    for (i=0; i<nx; i++) h->Fill(countries[i], surfaces[i]);
@@ -129,7 +136,6 @@ void th2polyEurope(Int_t npoints=500000)
    for (i=0; i<nbins; i++) p->SetBinContent(i+1, scale*p->GetBinContent(i+1));
 
    gStyle->SetOptStat(1111);
-   gStyle->SetPalette(1);
    p->Draw("COLZ");
 
    TCanvas *c1 = new TCanvas("c1", "c1",W+10,0,W-20,H);

@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
-#endif
-#ifndef ROOT_TMatrixDBasefwd
 #include "TMatrixDBasefwd.h"
-#endif
 
 class TProfile;
 
@@ -109,7 +103,6 @@ public:
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
-   virtual Long64_t Merge(TCollection *list);
    virtual TH2     *RebinX(Int_t ngroup=2, const char *newname="");
    virtual TH2     *RebinY(Int_t ngroup=2, const char *newname="");
    virtual TH2     *Rebin2D(Int_t nxgroup=2, Int_t nygroup=2, const char *newname="");

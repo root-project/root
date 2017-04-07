@@ -18,12 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGEventHandler
 #include "TGEventHandler.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 class TGToolTip;
 

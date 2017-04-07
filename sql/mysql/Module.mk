@@ -28,9 +28,18 @@ MYSQLLIB     := $(LPATH)/libRMySQL.$(SOEXT)
 MYSQLMAP     := $(MYSQLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MYSQLH))
+MYSQLH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MYSQLH))
+ALLHDRS     += $(MYSQLH_REL)
 ALLLIBS     += $(MYSQLLIB)
 ALLMAPS     += $(MYSQLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MYSQLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Sql_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MYSQLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MYSQLDEP)

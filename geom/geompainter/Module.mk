@@ -29,9 +29,18 @@ GEOMPAINTERLIB := $(LPATH)/libGeomPainter.$(SOEXT)
 GEOMPAINTERMAP := $(GEOMPAINTERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMPAINTERH))
+GEOMPAINTERH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMPAINTERH))
+ALLHDRS       += $(GEOMPAINTERH_REL)
 ALLLIBS       += $(GEOMPAINTERLIB)
 ALLMAPS       += $(GEOMPAINTERMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GEOMPAINTERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Geom_GeomPainter { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GEOMPAINTERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GEOMPAINTERDEP)

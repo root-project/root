@@ -10,337 +10,372 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//Begin_Html
-/*
-<img src="gif/t_volume.jpg">
-*/
-//End_Html
+/** \class TGeoVolume
+\ingroup Geometry_classes
 
-////////////////////////////////////////////////////////////////////////////////
-//   TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly - the volume classes
-//
-//   Volumes are the basic objects used in building the geometrical hierarchy.
-// They represent unpositioned objects but store all information about the
-// placement of the other volumes they may contain. Therefore a volume can
-// be replicated several times in the geometry. In order to create a volume, one
-// has to put together a shape and a medium which are already defined. Volumes
-// have to be named by users at creation time. Every different name may represent a 
-// an unique volume object, but may also represent more general a family (class)
-// of volume objects having the same shape type and medium, but possibly
-// different shape parameters. It is the user's task to provide different names
-// for different volume families in order to avoid ambiguities at tracking time.
-// A generic family rather than a single volume is created only in two cases :
-// when a generic shape is provided to the volume constructor or when a division
-// operation is applied. Each volume in the geometry stores an unique
-// ID corresponding to its family. In order to ease-up their creation, the manager
-// class is providing an API that allows making a shape and a volume in a single step.
-//
-//   Volumes are objects that can be visualized, therefore having visibility,
-// colour, line and fill attributes that can be defined or modified any time after
-// the volume creation. It is advisable however to define these properties just
-// after the first creation of a volume namespace, since in case of volume families
-// any new member created by the modeler inherits these properties.
-//
-//    In order to provide navigation features, volumes have to be able to find
-// the proper container of any point defined in the local reference frame. This
-// can be the volume itself, one of its positioned daughter volumes or none if
-// the point is actually outside. On the other hand, volumes have to provide also
-// other navigation methods such as finding the distances to its shape boundaries
-// or which daughter will be crossed first. The implementation of these features
-// is done at shape level, but the local mother-daughters management is handled
-// by volumes that builds additional optimisation structures upon geometry closure.
-// In order to have navigation features properly working one has to follow the
-// general rules for building a valid geometry (see TGeoManager class).
-//
-//   Now let's make a simple volume representing a copper wire. We suppose that
-// a medium is already created (see TGeoMedium class on how to create media).
-// We will create a TUBE shape for our wire, having Rmin=0cm, Rmax=0.01cm
-// and a half-length dZ=1cm :
-//
-//   TGeoTube *tube = new TGeoTube("wire_tube", 0, 0.01, 1);
-//
-// One may ommit the name for the shape if no retreiving by name is further needed
-// during geometry building. The same shape can be shared by different volumes
-// having different names and materials. Now let's make the volume for our wire.
-// The prototype for volumes constructor looks like :
-//
-//   TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMedium *med)
-//
-// Since TGeoTube derives from the base shape class, we can provide it to the volume
-// constructor :
-//
-//   TGeoVolume *wire_co = new TGeoVolume("WIRE_CO", tube, ptrCOPPER);
-//
-// Do not bother to delete neither the media, shapes or volumes that you have
-// created since all will be automatically cleaned on exit by the manager class.
-// If we would have taken a look inside TGeoManager::MakeTube() method, we would
-// have been able to create our wire with a single line :
-//
-//   TGeoVolume *wire_co = gGeoManager->MakeTube("WIRE_CO", ptrCOPPER, 0, 0.01, 1);
-//
-// The same applies for all primitive shapes, for which there can be found
-// corresponding MakeSHAPE() methods. Their usage is much more convenient unless
-// a shape has to be shared between more volumes. Let's make now an aluminium wire
-// having the same shape, supposing that we have created the copper wire with the
-// line above :
-//
-//   TGeoVolume *wire_al = new TGeoVolume("WIRE_AL", wire_co->GetShape(), ptrAL);
-//
-// Now that we have learned how to create elementary volumes, let's see how we
-// can create a geometrical hierarchy.
-//
-//
-//   Positioning volumes
-// -----------------------
-//
-//   When creating a volume one does not specify if this will contain or not other
-// volumes. Adding daughters to a volume implies creating those and adding them
-// one by one to the list of daughters. Since the volume has to know the position
-// of all its daughters, we will have to supply at the same time a geometrical
-// transformation with respect to its local reference frame for each of them.
-// The objects referencing a volume and a transformation are called NODES and
-// their creation is fully handled by the modeler. They represent the link
-// elements in the hierarchy of volumes. Nodes are unique and distinct geometrical
-// objects ONLY from their container point of view. Since volumes can be replicated
-// in the geometry, the same node may be found on different branches.
-//
-//Begin_Html
-/*
-<img src="gif/t_example.jpg">
+TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly are the volume classes
+
+  Volumes are the basic objects used in building the geometrical hierarchy.
+They represent unpositioned objects but store all information about the
+placement of the other volumes they may contain. Therefore a volume can
+be replicated several times in the geometry. In order to create a volume, one
+has to put together a shape and a medium which are already defined. Volumes
+have to be named by users at creation time. Every different name may represent a
+an unique volume object, but may also represent more general a family (class)
+of volume objects having the same shape type and medium, but possibly
+different shape parameters. It is the user's task to provide different names
+for different volume families in order to avoid ambiguities at tracking time.
+A generic family rather than a single volume is created only in two cases :
+when a generic shape is provided to the volume constructor or when a division
+operation is applied. Each volume in the geometry stores an unique
+ID corresponding to its family. In order to ease-up their creation, the manager
+class is providing an API that allows making a shape and a volume in a single step.
+
+  Volumes are objects that can be visualized, therefore having visibility,
+colour, line and fill attributes that can be defined or modified any time after
+the volume creation. It is advisable however to define these properties just
+after the first creation of a volume namespace, since in case of volume families
+any new member created by the modeler inherits these properties.
+
+   In order to provide navigation features, volumes have to be able to find
+the proper container of any point defined in the local reference frame. This
+can be the volume itself, one of its positioned daughter volumes or none if
+the point is actually outside. On the other hand, volumes have to provide also
+other navigation methods such as finding the distances to its shape boundaries
+or which daughter will be crossed first. The implementation of these features
+is done at shape level, but the local mother-daughters management is handled
+by volumes that builds additional optimisation structures upon geometry closure.
+In order to have navigation features properly working one has to follow the
+general rules for building a valid geometry (see TGeoManager class).
+
+  Now let's make a simple volume representing a copper wire. We suppose that
+a medium is already created (see TGeoMedium class on how to create media).
+We will create a TUBE shape for our wire, having Rmin=0cm, Rmax=0.01cm
+and a half-length dZ=1cm :
+
+~~~ {.cpp}
+  TGeoTube *tube = new TGeoTube("wire_tube", 0, 0.01, 1);
+~~~
+
+One may omit the name for the shape if no retrieving by name is further needed
+during geometry building. The same shape can be shared by different volumes
+having different names and materials. Now let's make the volume for our wire.
+The prototype for volumes constructor looks like :
+
+  TGeoVolume::TGeoVolume(const char *name, TGeoShape *shape, TGeoMedium *med)
+
+Since TGeoTube derives from the base shape class, we can provide it to the volume
+constructor :
+
+~~~ {.cpp}
+  TGeoVolume *wire_co = new TGeoVolume("WIRE_CO", tube, ptrCOPPER);
+~~~
+
+Do not bother to delete neither the media, shapes or volumes that you have
+created since all will be automatically cleaned on exit by the manager class.
+If we would have taken a look inside TGeoManager::MakeTube() method, we would
+have been able to create our wire with a single line :
+
+~~~ {.cpp}
+  TGeoVolume *wire_co = gGeoManager->MakeTube("WIRE_CO", ptrCOPPER, 0, 0.01, 1);
+~~~
+
+The same applies for all primitive shapes, for which there can be found
+corresponding MakeSHAPE() methods. Their usage is much more convenient unless
+a shape has to be shared between more volumes. Let's make now an aluminium wire
+having the same shape, supposing that we have created the copper wire with the
+line above :
+
+~~~ {.cpp}
+  TGeoVolume *wire_al = new TGeoVolume("WIRE_AL", wire_co->GetShape(), ptrAL);
+~~~
+
+Now that we have learned how to create elementary volumes, let's see how we
+can create a geometrical hierarchy.
+
+
+### Positioning volumes
+
+  When creating a volume one does not specify if this will contain or not other
+volumes. Adding daughters to a volume implies creating those and adding them
+one by one to the list of daughters. Since the volume has to know the position
+of all its daughters, we will have to supply at the same time a geometrical
+transformation with respect to its local reference frame for each of them.
+The objects referencing a volume and a transformation are called NODES and
+their creation is fully handled by the modeler. They represent the link
+elements in the hierarchy of volumes. Nodes are unique and distinct geometrical
+objects ONLY from their container point of view. Since volumes can be replicated
+in the geometry, the same node may be found on different branches.
+
+\image html geom_t_example.png
+
+  An important observation is that volume objects are owned by the TGeoManager
+class. This stores a list of all volumes in the geometry, that is cleaned
+upon destruction.
+
+  Let's consider positioning now our wire in the middle of a gas chamber. We
+need first to define the gas chamber :
+
+~~~ {.cpp}
+  TGeoVolume *chamber = gGeoManager->MakeTube("CHAMBER", ptrGAS, 0, 1, 1);
+~~~
+
+Now we can put the wire inside :
+
+~~~ {.cpp}
+  chamber->AddNode(wire_co, 1);
+~~~
+
+If we inspect now the chamber volume in a browser, we will notice that it has
+one daughter. Of course the gas has some container also, but let's keep it like
+that for the sake of simplicity. The full prototype of AddNode() is :
+
+~~~ {.cpp}
+  TGeoVolume::AddNode(TGeoVolume *daughter, Int_t usernumber,
+                      TGeoMatrix *matrix=gGeoIdentity)
+~~~
+
+Since we did not supplied the third argument, the wire will be positioned with
+an identity transformation inside the chamber. One will notice that the inner
+radii of the wire and chamber are both zero - therefore, aren't the two volumes
+overlapping ? The answer is no, the modeler is even relaying on the fact that
+any daughter is fully contained by its mother. On the other hand, neither of
+the nodes positioned inside a volume should overlap with each other. We will
+see that there are allowed some exceptions to those rules.
+
+### Overlapping volumes
+
+  Positioning volumes that does not overlap their neighbours nor extrude
+their container is sometimes quite strong constraint. Some parts of the geometry
+might overlap naturally, e.g. two crossing tubes. The modeller supports such
+cases only if the overlapping nodes are declared by the user. In order to do
+that, one should use TGeoVolume::AddNodeOverlap() instead of TGeoVolume::AddNode().
+  When 2 or more positioned volumes are overlapping, not all of them have to
+be declared so, but at least one. A point inside an overlapping region equally
+belongs to all overlapping nodes, but the way these are defined can enforce
+the modeler to give priorities.
+  The general rule is that the deepest node in the hierarchy containing a point
+have the highest priority. For the same geometry level, non-overlapping is
+prioritised over overlapping. In order to illustrate this, we will consider
+few examples. We will designate non-overlapping nodes as ONLY and the others
+MANY as in GEANT3, where this concept was introduced:
+  1. The part of a MANY node B extruding its container A will never be "seen"
+during navigation, as if B was in fact the result of the intersection of A and B.
+  2. If we have two nodes A (ONLY) and B (MANY) inside the same container, all
+points in the overlapping region of A and B will be designated as belonging to A.
+  3. If A an B in the above case were both MANY, points in the overlapping
+part will be designated to the one defined first. Both nodes must have the
+same medium.
+  4. The slices of a divided MANY will be as well MANY.
+
+One needs to know that navigation inside geometry parts MANY nodes is much
+slower. Any overlapping part can be defined based on composite shapes - this
+is always recommended.
+
+### Replicating volumes
+
+  What can we do if our chamber contains two identical wires instead of one ?
+What if then we would need 1000 chambers in our detector ? Should we create
+2000 wires and 1000 chamber volumes ? No, we will just need to replicate the
+ones that we have already created.
+
+~~~ {.cpp}
+  chamber->AddNode(wire_co, 1, new TGeoTranslation(-0.2,0,0));
+  chamber->AddNode(wire_co, 2, new TGeoTranslation(0.2,0,0));
+~~~
+
+  The 2 nodes that we have created inside chamber will both point to a wire_co
+object, but will be completely distinct : WIRE_CO_1 and WIRE_CO_2. We will
+want now to place symmetrically 1000 chambers on a pad, following a pattern
+of 20 rows and 50 columns. One way to do this will be to replicate our chamber
+by positioning it 1000 times in different positions of the pad. Unfortunately,
+this is far from being the optimal way of doing what we want.
+Imagine that we would like to find out which of the 1000 chambers is containing
+a (x,y,z) point defined in the pad reference. You will never have to do that,
+since the modeller will take care of it for you, but let's guess what it has
+to do. The most simple algorithm will just loop over all daughters, convert
+the point from mother to local reference and check if the current chamber
+contains the point or not. This might be efficient for pads with few chambers,
+but definitely not for 1000. Fortunately the modeler is smarter than that and
+create for each volume some optimization structures called voxels (see Voxelization)
+to minimize the penalty having too many daughters, but if you have 100 pads like
+this in your geometry you will anyway loose a lot in your tracking performance.
+
+  The way out when volumes can be arranged according to simple patterns is the
+usage of divisions. We will describe them in detail later on. Let's think now
+at a different situation : instead of 1000 chambers of the same type, we may
+have several types of chambers. Let's say all chambers are cylindrical and have
+a wire inside, but their dimensions are different. However, we would like all
+to be represented by a single volume family, since they have the same properties.
 */
-//End_Html
-//
-//   An important observation is that volume objects are owned by the TGeoManager
-// class. This stores a list of all volumes in the geometry, that is cleaned
-// upon destruction.
-//
-//   Let's consider positioning now our wire in the middle of a gas chamber. We
-// need first to define the gas chamber :
-//
-//   TGeoVolume *chamber = gGeoManager->MakeTube("CHAMBER", ptrGAS, 0, 1, 1);
-//
-// Now we can put the wire inside :
-//
-//   chamber->AddNode(wire_co, 1);
-//
-// If we inspect now the chamber volume in a browser, we will notice that it has
-// one daughter. Of course the gas has some container also, but let's keep it like
-// that for the sake of simplicity. The full prototype of AddNode() is :
-//
-//   TGeoVolume::AddNode(TGeoVolume *daughter, Int_t usernumber,
-//                       TGeoMatrix *matrix=gGeoIdentity)
-//
-// Since we did not supplied the third argument, the wire will be positioned with
-// an identity transformation inside the chamber. One will notice that the inner
-// radii of the wire and chamber are both zero - therefore, aren't the two volumes
-// overlapping ? The answer is no, the modeler is even relaying on the fact that
-// any daughter is fully contained by its mother. On the other hand, neither of
-// the nodes positioned inside a volume should overlap with each other. We will
-// see that there are allowed some exceptions to those rules.
-//
-// Overlapping volumes
-// --------------------
-//
-//   Positioning volumes that does not overlap their neighbours nor extrude
-// their container is sometimes quite strong constraint. Some parts of the geometry
-// might overlap naturally, e.g. two crossing tubes. The modeller supports such
-// cases only if the overlapping nodes are declared by the user. In order to do
-// that, one should use TGeoVolume::AddNodeOverlap() instead of TGeoVolume::AddNode().
-//   When 2 or more positioned volumes are overlapping, not all of them have to
-// be declared so, but at least one. A point inside an overlapping region equally
-// belongs to all overlapping nodes, but the way these are defined can enforce
-// the modeler to give priorities.
-//   The general rule is that the deepest node in the hierarchy containing a point
-// have the highest priority. For the same geometry level, non-overlapping is
-// prioritized over overlapping. In order to illustrate this, we will consider
-// few examples. We will designate non-overlapping nodes as ONLY and the others
-// MANY as in GEANT3, where this concept was introduced:
-//   1. The part of a MANY node B extruding its container A will never be "seen"
-// during navigation, as if B was in fact the result of the intersection of A and B.
-//   2. If we have two nodes A (ONLY) and B (MANY) inside the same container, all
-// points in the overlapping region of A and B will be designated as belonging to A.
-//   3. If A an B in the above case were both MANY, points in the overlapping
-// part will be designated to the one defined first. Both nodes must have the
-// same medium.
-//   4. The slices of a divided MANY will be as well MANY.
-//
-// One needs to know that navigation inside geometry parts MANY nodes is much
-// slower. Any overlapping part can be defined based on composite shapes - this
-// is always recommended.
-//
-//   Replicating volumes
-// -----------------------
-//
-//   What can we do if our chamber contains two identical wires instead of one ?
-// What if then we would need 1000 chambers in our detector ? Should we create
-// 2000 wires and 1000 chamber volumes ? No, we will just need to replicate the
-// ones that we have already created.
-//
-//   chamber->AddNode(wire_co, 1, new TGeoTranslation(-0.2,0,0));
-//   chamber->AddNode(wire_co, 2, new TGeoTranslation(0.2,0,0));
-//
-//   The 2 nodes that we have created inside chamber will both point to a wire_co
-// object, but will be completely distinct : WIRE_CO_1 and WIRE_CO_2. We will
-// want now to place symetrically 1000 chambers on a pad, following a pattern
-// of 20 rows and 50 columns. One way to do this will be to replicate our chamber
-// by positioning it 1000 times in different positions of the pad. Unfortunatelly,
-// this is far from being the optimal way of doing what we want.
-// Imagine that we would like to find out which of the 1000 chambers is containing
-// a (x,y,z) point defined in the pad reference. You will never have to do that,
-// since the modeller will take care of it for you, but let's guess what it has
-// to do. The most simple algorithm will just loop over all daughters, convert
-// the point from mother to local reference and check if the current chamber
-// contains the point or not. This might be efficient for pads with few chambers,
-// but definitely not for 1000. Fortunately the modeler is smarter than that and
-// create for each volume some optimization structures called voxels (see Voxelization)
-// to minimize the penalty having too many daughters, but if you have 100 pads like
-// this in your geometry you will anyway loose a lot in your tracking performance.
-//
-//   The way out when volumes can be arranged according to simple patterns is the
-// usage of divisions. We will describe them in detail later on. Let's think now
-// at a different situation : instead of 1000 chambers of the same type, we may
-// have several types of chambers. Let's say all chambers are cylindrical and have
-// a wire inside, but their dimensions are different. However, we would like all
-// to be represented by a single volume family, since they have the same properties.
-//
-//   Volume families (TGeoVolumeMulti)
-// -----------------------------------
-// A volume family is represented by the class TGeoVolumeMulti. It represents
-// a class of volumes having the same shape type and each member will be
-// identified by the same name and volume ID. Any operation applied to a
-// TGeoVolume equally affects all volumes in that family. The creation of a
-// family is generally not a user task, but can be forced in particular cases:
-//
-//      TGeoManager::Volume(const char *vname, const char *shape, Int_t nmed);
-//
-// where VNAME is the family name, NMED is the medium number and SHAPE is the
-// shape type that can be:
-//   box    - for TGeoBBox
-//   trd1   - for TGeoTrd1
-//   trd2   - for TGeoTrd2
-//   trap   - for TGeoTrap
-//   gtra   - for TGeoGtra
-//   para   - for TGeoPara
-//   tube, tubs - for TGeoTube, TGeoTubeSeg
-//   cone, cons - for TGeoCone, TgeoCons
-//   eltu   - for TGeoEltu
-//   ctub   - for TGeoCtub
-//   pcon   - for TGeoPcon
-//   pgon   - for TGeoPgon
-//
-// Volumes are then added to a given family upon adding the generic name as node
-// inside other volume:
-//   TGeoVolume *box_family = gGeoManager->Volume("BOXES", "box", nmed);
-//   ...
-//   gGeoManager->Node("BOXES", Int_t copy_no, "mother_name",
-//                     Double_t x, Double_t y, Double_t z, Int_t rot_index,
-//                     Bool_t is_only, Double_t *upar, Int_t npar);
-// here:
-//   BOXES   - name of the family of boxes
-//   copy_no - user node number for the created node
-//   mother_name - name of the volume to which we want to add the node
-//   x,y,z   - translation components
-//   rot_index   - indx of a rotation matrix in the list of matrices
-//   upar    - array of actual shape parameters
-//   npar    - number of parameters
-// The parameters order and number are the same as in the corresponding shape
-// constructors.
-//
-//   Another particular case where volume families are used is when we want
-// that a volume positioned inside a container to match one ore more container
-// limits. Suppose we want to position the same box inside 2 different volumes
-// and we want the Z size to match the one of each container:
-//
-//   TGeoVolume *container1 = gGeoManager->MakeBox("C1", imed, 10,10,30);
-//   TGeoVolume *container2 = gGeoManager->MakeBox("C2", imed, 10,10,20);
-//   TGeoVolume *pvol       = gGeoManager->MakeBox("PVOL", jmed, 3,3,-1);
-//   container1->AddNode(pvol, 1);
-//   container2->AddNode(pvol, 1);
-//
-//   Note that the third parameter of PVOL is negative, which does not make sense
-// as half-length on Z. This is interpreted as: when positioned, create a box
-// replacing all invalid parameters with the corresponding dimensions of the
-// container. This is also internally handled by the TGeoVolumeMulti class, which
-// does not need to be instantiated by users.
-//
-//   Dividing volumes
-// ------------------
-//
-//   Volumes can be divided according a pattern. The most simple division can
-// be done along one axis, that can be: X, Y, Z, Phi, Rxy or Rxyz. Let's take
-// the most simple case: we would like to divide a box in N equal slices along X
-// coordinate, representing a new volume family. Supposing we already have created
-// the initial box, this can be done like:
-//
-//      TGeoVolume *slicex = box->Divide("SLICEX", 1, N);
-//
-// where SLICE is the name of the new family representing all slices and 1 is the
-// slicing axis. The meaning of the axis index is the following: for all volumes
-// having shapes like box, trd1, trd2, trap, gtra or para - 1,2,3 means X,Y,Z; for
-// tube, tubs, cone, cons - 1 means Rxy, 2 means phi and 3 means Z; for pcon and
-// pgon - 2 means phi and 3 means Z; for spheres 1 means R and 2 means phi.
-//   In fact, the division operation has the same effect as positioning volumes
-// in a given order inside the divided container - the advantage being that the
-// navigation in such a structure is much faster. When a volume is divided, a
-// volume family corresponding to the slices is created. In case all slices can
-// be represented by a single shape, only one volume is added to the family and
-// positioned N times inside the divided volume, otherwise, each slice will be
-// represented by a distinct volume in the family.
-//   Divisions can be also performed in a given range of one axis. For that, one
-// have to specify also the starting coordinate value and the step:
-//
-//      TGeoVolume *slicex = box->Divide("SLICEX", 1, N, start, step);
-//
-// A check is always done on the resulting division range : if not fitting into
-// the container limits, an error message is posted. If we will browse the divided
-// volume we will notice that it will contain N nodes starting with index 1 upto
-// N. The first one has the lower X limit at START position, while the last one
-// will have the upper X limit at START+N*STEP. The resulting slices cannot
-// be positioned inside an other volume (they are by default positioned inside the
-// divided one) but can be further divided and may contain other volumes:
-//
-//      TGeoVolume *slicey = slicex->Divide("SLICEY", 2, N1);
-//      slicey->AddNode(other_vol, index, some_matrix);
-//
-//   When doing that, we have to remember that SLICEY represents a family, therefore
-// all members of the family will be divided on Y and the other volume will be
-// added as node inside all.
-//   In the example above all the resulting slices had the same shape as the
-// divided volume (box). This is not always the case. For instance, dividing a
-// volume with TUBE shape on PHI axis will create equal slices having TUBESEG
-// shape. Other divisions can alsoo create slices having shapes with different
-// dimensins, e.g. the division of a TRD1 volume on Z.
-//   When positioning volumes inside slices, one can do it using the generic
-// volume family (e.g. slicey). This should be done as if the coordinate system
-// of the generic slice was the same as the one of the divided volume. The generic
-// slice in case of PHI divisioned is centered with respect to X axis. If the
-// family contains slices of different sizes, any volume positioned inside should 
-// fit into the smallest one.
-//    Examples for specific divisions according to shape types can be found inside
-// shape classes.
-//
-//        TGeoVolume::Divide(N, Xmin, Xmax, "X");
-//
-//   The GEANT3 option MANY is supported by TGeoVolumeOverlap class. An overlapping
-// volume is in fact a virtual container that does not represent a physical object.
-// It contains a list of nodes that are not its daughters but that must be checked
-// always before the container itself. This list must be defined by users and it
-// is checked and resolved in a priority order. Note that the feature is non-standard
-// to geometrical modelers and it was introduced just to support conversions of
-// GEANT3 geometries, therefore its extensive usage should be avoided.
-//
-//   Volume assemblies (TGeoVolumeAssembly)
-// ----------------------------------------
-//
-// Assemblies a volumes that have neither a shape or a material/medium. Assemblies
-// behave exactly like normal volumes grouping several daughters together, but
-// the daughters can never extrude the assembly since this has no shape. However,
-// a bounding box and a voxelization structure are built for assemblies as for
-// normal volumes, so that navigation is still optimized. Assemblies are useful
-// for grouping hierarchically volumes which are otherwise defined in a flat
-// manner, but also to avoid clashes between container shapes.
-// To define an assembly one should just input a name, then start adding other
-// volumes (or volume assemblies) as content.
+
+/** \class TGeoVolumeMulti
+\ingroup Geometry_classes
+
+Volume families
+
+A volume family is represented by the class TGeoVolumeMulti. It represents
+a class of volumes having the same shape type and each member will be
+identified by the same name and volume ID. Any operation applied to a
+TGeoVolume equally affects all volumes in that family. The creation of a
+family is generally not a user task, but can be forced in particular cases:
+
+~~~ {.cpp}
+     TGeoManager::Volume(const char *vname, const char *shape, Int_t nmed);
+~~~
+
+where VNAME is the family name, NMED is the medium number and SHAPE is the
+shape type that can be:
+
+~~~ {.cpp}
+  box    - for TGeoBBox
+  trd1   - for TGeoTrd1
+  trd2   - for TGeoTrd2
+  trap   - for TGeoTrap
+  gtra   - for TGeoGtra
+  para   - for TGeoPara
+  tube, tubs - for TGeoTube, TGeoTubeSeg
+  cone, cons - for TGeoCone, TgeoCons
+  eltu   - for TGeoEltu
+  ctub   - for TGeoCtub
+  pcon   - for TGeoPcon
+  pgon   - for TGeoPgon
+~~~
+
+Volumes are then added to a given family upon adding the generic name as node
+inside other volume:
+
+~~~ {.cpp}
+  TGeoVolume *box_family = gGeoManager->Volume("BOXES", "box", nmed);
+  ...
+  gGeoManager->Node("BOXES", Int_t copy_no, "mother_name",
+                    Double_t x, Double_t y, Double_t z, Int_t rot_index,
+                    Bool_t is_only, Double_t *upar, Int_t npar);
+~~~
+
+here:
+
+~~~ {.cpp}
+  BOXES   - name of the family of boxes
+  copy_no - user node number for the created node
+  mother_name - name of the volume to which we want to add the node
+  x,y,z   - translation components
+  rot_index   - indx of a rotation matrix in the list of matrices
+  upar    - array of actual shape parameters
+  npar    - number of parameters
+~~~
+
+The parameters order and number are the same as in the corresponding shape
+constructors.
+
+  Another particular case where volume families are used is when we want
+that a volume positioned inside a container to match one ore more container
+limits. Suppose we want to position the same box inside 2 different volumes
+and we want the Z size to match the one of each container:
+
+~~~ {.cpp}
+  TGeoVolume *container1 = gGeoManager->MakeBox("C1", imed, 10,10,30);
+  TGeoVolume *container2 = gGeoManager->MakeBox("C2", imed, 10,10,20);
+  TGeoVolume *pvol       = gGeoManager->MakeBox("PVOL", jmed, 3,3,-1);
+  container1->AddNode(pvol, 1);
+  container2->AddNode(pvol, 1);
+~~~
+
+  Note that the third parameter of PVOL is negative, which does not make sense
+as half-length on Z. This is interpreted as: when positioned, create a box
+replacing all invalid parameters with the corresponding dimensions of the
+container. This is also internally handled by the TGeoVolumeMulti class, which
+does not need to be instantiated by users.
+
+### Dividing volumes
+
+  Volumes can be divided according a pattern. The most simple division can
+be done along one axis, that can be: X, Y, Z, Phi, Rxy or Rxyz. Let's take
+the most simple case: we would like to divide a box in N equal slices along X
+coordinate, representing a new volume family. Supposing we already have created
+the initial box, this can be done like:
+
+~~~ {.cpp}
+     TGeoVolume *slicex = box->Divide("SLICEX", 1, N);
+~~~
+
+where SLICE is the name of the new family representing all slices and 1 is the
+slicing axis. The meaning of the axis index is the following: for all volumes
+having shapes like box, trd1, trd2, trap, gtra or para - 1,2,3 means X,Y,Z; for
+tube, tubs, cone, cons - 1 means Rxy, 2 means phi and 3 means Z; for pcon and
+pgon - 2 means phi and 3 means Z; for spheres 1 means R and 2 means phi.
+  In fact, the division operation has the same effect as positioning volumes
+in a given order inside the divided container - the advantage being that the
+navigation in such a structure is much faster. When a volume is divided, a
+volume family corresponding to the slices is created. In case all slices can
+be represented by a single shape, only one volume is added to the family and
+positioned N times inside the divided volume, otherwise, each slice will be
+represented by a distinct volume in the family.
+  Divisions can be also performed in a given range of one axis. For that, one
+have to specify also the starting coordinate value and the step:
+
+~~~ {.cpp}
+     TGeoVolume *slicex = box->Divide("SLICEX", 1, N, start, step);
+~~~
+
+A check is always done on the resulting division range : if not fitting into
+the container limits, an error message is posted. If we will browse the divided
+volume we will notice that it will contain N nodes starting with index 1 upto
+N. The first one has the lower X limit at START position, while the last one
+will have the upper X limit at START+N*STEP. The resulting slices cannot
+be positioned inside an other volume (they are by default positioned inside the
+divided one) but can be further divided and may contain other volumes:
+
+~~~ {.cpp}
+     TGeoVolume *slicey = slicex->Divide("SLICEY", 2, N1);
+     slicey->AddNode(other_vol, index, some_matrix);
+~~~
+
+  When doing that, we have to remember that SLICEY represents a family, therefore
+all members of the family will be divided on Y and the other volume will be
+added as node inside all.
+  In the example above all the resulting slices had the same shape as the
+divided volume (box). This is not always the case. For instance, dividing a
+volume with TUBE shape on PHI axis will create equal slices having TUBESEG
+shape. Other divisions can also create slices having shapes with different
+dimensions, e.g. the division of a TRD1 volume on Z.
+  When positioning volumes inside slices, one can do it using the generic
+volume family (e.g. slicey). This should be done as if the coordinate system
+of the generic slice was the same as the one of the divided volume. The generic
+slice in case of PHI division is centered with respect to X axis. If the
+family contains slices of different sizes, any volume positioned inside should
+fit into the smallest one.
+   Examples for specific divisions according to shape types can be found inside
+shape classes.
+
+~~~ {.cpp}
+       TGeoVolume::Divide(N, Xmin, Xmax, "X");
+~~~
+
+  The GEANT3 option MANY is supported by TGeoVolumeOverlap class. An overlapping
+volume is in fact a virtual container that does not represent a physical object.
+It contains a list of nodes that are not its daughters but that must be checked
+always before the container itself. This list must be defined by users and it
+is checked and resolved in a priority order. Note that the feature is non-standard
+to geometrical modelers and it was introduced just to support conversions of
+GEANT3 geometries, therefore its extensive usage should be avoided.
+*/
+
+/** \class TGeoVolumeAssembly
+\ingroup Geometry_classes
+
+Volume assemblies
+
+Assemblies a volumes that have neither a shape or a material/medium. Assemblies
+behave exactly like normal volumes grouping several daughters together, but
+the daughters can never extrude the assembly since this has no shape. However,
+a bounding box and a voxelization structure are built for assemblies as for
+normal volumes, so that navigation is still optimized. Assemblies are useful
+for grouping hierarchically volumes which are otherwise defined in a flat
+manner, but also to avoid clashes between container shapes.
+To define an assembly one should just input a name, then start adding other
+volumes (or volume assemblies) as content.
+*/
 
 #include "Riostream.h"
 #include "TString.h"
@@ -354,7 +389,6 @@
 #include "TMap.h"
 #include "TFile.h"
 #include "TKey.h"
-#include "TThread.h"
 
 #include "TGeoManager.h"
 #include "TGeoNode.h"
@@ -371,10 +405,11 @@ ClassImp(TGeoVolume)
 
 TGeoMedium *TGeoVolume::fgDummyMedium = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dummy medium
+
 void TGeoVolume::CreateDummyMedium()
 {
-// Create a dummy medium
    if (fgDummyMedium) return;
    fgDummyMedium = new TGeoMedium();
    fgDummyMedium->SetName("dummy");
@@ -383,30 +418,34 @@ void TGeoVolume::CreateDummyMedium()
    fgDummyMedium->SetMaterial(dummyMaterial);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolume::ClearThreadData() const
 {
    if (fFinder) fFinder->ClearThreadData();
    if (fShape)  fShape->ClearThreadData();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolume::CreateThreadData(Int_t nthreads)
 {
    if (fFinder) fFinder->CreateThreadData(nthreads);
    if (fShape)  fShape->CreateThreadData(nthreads);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoMedium *TGeoVolume::DummyMedium()
 {
    return fgDummyMedium;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy constructor
+
 TGeoVolume::TGeoVolume()
 {
-// dummy constructor
    fNodes    = 0;
    fShape    = 0;
    fMedium   = 0;
@@ -423,11 +462,12 @@ TGeoVolume::TGeoVolume()
    TObject::ResetBit(kVolumeImportNodes);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMedium *med)
            :TNamed(name, "")
 {
-// default constructor
    fName = fName.Strip();
    fNodes    = 0;
    fShape    = (TGeoShape*)shape;
@@ -455,7 +495,9 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    TObject::ResetBit(kVolumeImportNodes);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
   TNamed(gv),
   TGeoAtt(gv),
@@ -476,13 +518,13 @@ TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
   fUserExtension(gv.fUserExtension->Grab()),
   fFWExtension(gv.fFWExtension->Grab())
 {
-   //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
 {
-   //assignment operator
    if(this!=&gv) {
       TNamed::operator=(gv);
       TGeoAtt::operator=(gv);
@@ -506,11 +548,11 @@ TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoVolume::~TGeoVolume()
 {
-// Destructor
-
    if (fNodes) {
       if (!TObject::TestBit(kVolumeImportNodes)) {
          fNodes->Delete();
@@ -523,10 +565,11 @@ TGeoVolume::~TGeoVolume()
    if (fFWExtension) {fFWExtension->Release(); fFWExtension=0;}
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// How to browse a volume
+
 void TGeoVolume::Browse(TBrowser *b)
 {
-// How to browse a volume
    if (!b) return;
 
 //   if (!GetNdaughters()) b->Add(this, GetName(), IsVisible());
@@ -555,11 +598,12 @@ void TGeoVolume::Browse(TBrowser *b)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the capacity of this [cm^3] as the capacity of its shape.
+/// In case of assemblies, the capacity is computed as the sum of daughter's capacities.
+
 Double_t TGeoVolume::Capacity() const
 {
-// Computes the capacity of this [cm^3] as the capacity of its shape.
-// In case of assemblies, the capacity is computed as the sum of daughter's capacities.
    if (!IsAssembly()) return fShape->Capacity();
    Double_t capacity = 0.0;
    Int_t nd = GetNdaughters();
@@ -568,12 +612,13 @@ Double_t TGeoVolume::Capacity() const
    return capacity;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Shoot nrays with random directions from starting point (startx, starty, startz)
+/// in the reference frame of this volume. Track each ray until exiting geometry, then
+/// shoot backwards from exiting point and compare boundary crossing points.
+
 void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Double_t startz) const
 {
-// Shoot nrays with random directions from starting point (startx, starty, startz)
-// in the reference frame of this volume. Track each ray until exiting geometry, then
-// shoot backwards from exiting point and compare boundary crossing points.
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume((TGeoVolume*)this);
    else old_vol=0;
@@ -582,15 +627,19 @@ void TGeoVolume::CheckGeometry(Int_t nrays, Double_t startx, Double_t starty, Do
    painter->CheckGeometry(nrays, startx, starty, startz);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
+/// Use option="s[number]" to force overlap checking by sampling volume with
+/// [number] points.
+///
+/// Ex:
+/// ~~~ {.cpp}
+///     myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
+///     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
+/// ~~~
+
 void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
 {
-// Overlap checking tool. Check for illegal overlaps within a limit OVLP.
-// Use option="s[number]" to force overlap checking by sampling volume with
-// [number] points.
-// Ex: myVol->CheckOverlaps(0.01, "s10000000"); // shoot 10000000 points
-//     myVol->CheckOverlaps(0.01, "s"); // shoot the default value of 1e6 points
-
    if (!GetNdaughters() || fFinder) return;
    Bool_t sampling = kFALSE;
    TString opt(option);
@@ -620,34 +669,36 @@ void TGeoVolume::CheckOverlaps(Double_t ovlp, Option_t *option) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tests for checking the shape navigation algorithms. See TGeoShape::CheckShape()
+
 void TGeoVolume::CheckShape(Int_t testNo, Int_t nsamples, Option_t *option)
 {
-// Tests for checking the shape navigation algorithms. See TGeoShape::CheckShape()
    fShape->CheckShape(testNo,nsamples,option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clean data of the volume.
+
 void TGeoVolume::CleanAll()
 {
-// Clean data of the volume.
    ClearNodes();
    ClearShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the shape of this volume from the list held by the current manager.
+
 void TGeoVolume::ClearShape()
 {
-// Clear the shape of this volume from the list held by the current manager.
    fGeoManager->ClearShape(fShape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check for negative parameters in shapes.
+
 void TGeoVolume::CheckShapes()
 {
-// check for negative parameters in shapes.
-// THIS METHOD LEAVES SOME GARBAGE NODES -> memory leak, to be fixed
-//   printf("---Checking daughters of volume %s\n", GetName());
    if (fShape->IsRunTimeShape()) {
       Error("CheckShapes", "volume %s has run-time shape", GetName());
       InspectShape();
@@ -693,14 +744,15 @@ void TGeoVolume::CheckShapes()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Count total number of subnodes starting from this volume, nlevels down
+///  - option = 0 (default) - count only once per volume
+///  - option = 1           - count every time
+///  - option = 2           - count volumes on visible branches
+///  - option = 3           - return maximum level counted already with option = 0
+
 Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
 {
-// Count total number of subnodes starting from this volume, nlevels down
-// option = 0 (default) - count only once per volume
-// option = 1           - count every time
-// option = 2           - count volumes on visible branches
-// option = 3           - return maximum level counted already with option = 0
    static Int_t maxlevel = 0;
    static Int_t nlev = 0;
 
@@ -747,20 +799,22 @@ Int_t TGeoVolume::CountNodes(Int_t nlevels, Int_t option)
    return fNtotal;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if volume and all daughters are invisible.
+
 Bool_t TGeoVolume::IsAllInvisible() const
 {
-// Return TRUE if volume and all daughters are invisible.
    if (IsVisible()) return kFALSE;
    Int_t nd = GetNdaughters();
    for (Int_t i=0; i<nd; i++) if (GetNode(i)->GetVolume()->IsVisible()) return kFALSE;
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make volume and each of it daughters (in)visible.
+
 void TGeoVolume::InvisibleAll(Bool_t flag)
 {
-// Make volume and each of it daughters (in)visible.
    SetAttVisibility(!flag);
    Int_t nd = GetNdaughters();
    TObjArray *list = new TObjArray(nd+1);
@@ -784,18 +838,19 @@ void TGeoVolume::InvisibleAll(Bool_t flag)
    fGeoManager->SetVisOption(4);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if volume contains nodes
+
 Bool_t TGeoVolume::IsFolder() const
 {
-// Return TRUE if volume contains nodes
-//   return (GetNdaughters()?kTRUE:kFALSE);
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// check if the visibility and attributes are the default ones
+
 Bool_t TGeoVolume::IsStyleDefault() const
 {
-// check if the visibility and attributes are the default ones
    if (!IsVisible()) return kFALSE;
    if (GetLineColor() != gStyle->GetLineColor()) return kFALSE;
    if (GetLineStyle() != gStyle->GetLineStyle()) return kFALSE;
@@ -803,32 +858,36 @@ Bool_t TGeoVolume::IsStyleDefault() const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if this is the top volume of the geometry
+
 Bool_t TGeoVolume::IsTopVolume() const
 {
-// True if this is the top volume of the geometry
    if (fGeoManager->GetTopVolume() == this) return kTRUE;
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the painter is currently ray-tracing the content of this volume.
+
 Bool_t TGeoVolume::IsRaytracing() const
 {
-// Check if the painter is currently ray-tracing the content of this volume.
    return TGeoAtt::IsVisRaytrace();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inspect the material for this volume.
+
 void TGeoVolume::InspectMaterial() const
 {
-// Inspect the material for this volume.
    GetMaterial()->Print();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import a volume from a file.
+
 TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t * /*option*/)
 {
-// Import a volume from a file.
    if (!gGeoManager) gGeoManager = new TGeoManager("geometry","");
    if (!filename) return 0;
    TGeoVolume *volume = 0;
@@ -836,7 +895,7 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
    // import from a gdml file
    } else {
    // import from a root file
-      TDirectory::TContext ctxt(0);
+      TDirectory::TContext ctxt;
       TFile *f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          printf("Error: TGeoVolume::Import : Cannot open file %s\n", filename);
@@ -860,23 +919,25 @@ TGeoVolume *TGeoVolume::Import(const char *filename, const char *name, Option_t 
    return volume;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Export this volume to a file.
+///
+///  - Case 1: root file or root/xml file
+///    if filename end with ".root". The key will be named name
+///    if filename end with ".xml" a root/xml file is produced.
+///
+///  - Case 2: C++ script
+///    if filename end with ".C"
+///
+///  - Case 3: gdml file
+///    if filename end with ".gdml"
+///
+///  NOTE that to use this option, the PYTHONPATH must be defined like
+///      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
+///
+
 Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *option)
 {
-// Export this volume to a file.
-   //
-   // -Case 1: root file or root/xml file
-   //  if filename end with ".root". The key will be named name
-   //  if filename end with ".xml" a root/xml file is produced.
-   //
-   // -Case 2: C++ script
-   //  if filename end with ".C"
-   //
-   // -Case 3: gdml file
-   //  if filename end with ".gdml"
-   //  NOTE that to use this option, the PYTHONPATH must be defined like
-   //      export PYTHONPATH=$ROOTSYS/lib:$ROOTSYS/gdml
-   //
    TString sfile(filename);
    if (sfile.Contains(".C")) {
       //Save volume as a C++ script
@@ -908,18 +969,20 @@ Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *optio
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actualize matrix of node indexed <inode>
+
 void TGeoVolume::cd(Int_t inode) const
 {
-// Actualize matrix of node indexed <inode>
    if (fFinder) fFinder->cd(inode-fFinder->GetDivIndex());
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a TGeoNode to the list of nodes. This is the usual method for adding
+/// daughters inside the container volume.
+
 void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
 {
-// Add a TGeoNode to the list of nodes. This is the usual method for adding
-// daughters inside the container volume.
    TGeoMatrix *matrix = mat;
    if (matrix==0) matrix = gGeoIdentity;
    else           matrix->RegisterYourself();
@@ -953,11 +1016,12 @@ void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option
    vol->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a division node to the list of nodes. The method is called by
+/// TGeoVolume::Divide() for creating the division nodes.
+
 void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
 {
-// Add a division node to the list of nodes. The method is called by
-// TGeoVolume::Divide() for creating the division nodes.
    if (!vol) {
       Error("AddNodeOffset", "invalid volume");
       return;
@@ -977,11 +1041,12 @@ void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, 
    vol->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a TGeoNode to the list of nodes. This is the usual method for adding
+/// daughters inside the container volume.
+
 void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-// Add a TGeoNode to the list of nodes. This is the usual method for adding
-// daughters inside the container volume.
    if (!vol) {
       Error("AddNodeOverlap", "Volume is NULL");
       return;
@@ -1021,21 +1086,21 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
    vol->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Division a la G3. The volume will be divided along IAXIS (see shape classes), in NDIV
+/// slices, from START with given STEP. The division volumes will have medium number NUMED.
+/// If NUMED=0 they will get the medium number of the divided volume (this). If NDIV<=0,
+/// all range of IAXIS will be divided and the resulting number of divisions will be centered on
+/// IAXIS. If STEP<=0, the real STEP will be computed as the full range of IAXIS divided by NDIV.
+/// Options (case insensitive):
+///  - N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
+///  - NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
+///  - S  - divide all range with given STEP. NDIV is computed and divisions will be centered
+///         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
+///  - SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
+
 TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, Option_t *option)
 {
-// Division a la G3. The volume will be divided along IAXIS (see shape classes), in NDIV
-// slices, from START with given STEP. The division volumes will have medium number NUMED.
-// If NUMED=0 they will get the medium number of the divided volume (this). If NDIV<=0,
-// all range of IAXIS will be divided and the resulting number of divisions will be centered on
-// IAXIS. If STEP<=0, the real STEP will be computed as the full range of IAXIS divided by NDIV.
-// Options (case insensitive):
-//  N  - divide all range in NDIV cells (same effect as STEP<=0) (GSDVN in G3)
-//  NX - divide range starting with START in NDIV cells          (GSDVN2 in G3)
-//  S  - divide all range with given STEP. NDIV is computed and divisions will be centered
-//         in full range (same effect as NDIV<=0)                (GSDVS, GSDVT in G3)
-//  SX - same as DVS, but from START position.                   (GSDVS2, GSDVT2 in G3)
-
    if (fFinder) {
    // volume already divided.
       Fatal("Divide","volume %s already divided", GetName());
@@ -1114,10 +1179,11 @@ TGeoVolume *TGeoVolume::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Dou
    return voldiv;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute the closest distance of approach from point px,py to this volume
+
 Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// compute the closest distance of approach from point px,py to this volume
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    Int_t dist = 9999;
@@ -1126,11 +1192,13 @@ Int_t TGeoVolume::DistancetoPrimitive(Int_t px, Int_t py)
    return dist;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw top volume according to option
+
 void TGeoVolume::Draw(Option_t *option)
 {
-// draw top volume according to option
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
+   fGeoManager->SetUserPaintVolume(this);
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    TGeoAtt::SetVisRaytrace(kFALSE);
    if (!IsVisContainers()) SetVisLeaves();
@@ -1141,10 +1209,11 @@ void TGeoVolume::Draw(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// draw only this volume
+
 void TGeoVolume::DrawOnly(Option_t *option)
 {
-// draw only this volume
    if (IsAssembly()) {
       Info("DrawOnly", "Volume assemblies do not support this option.");
       return;
@@ -1160,29 +1229,32 @@ void TGeoVolume::DrawOnly(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform an extensive sampling to find which type of voxelization is
+/// most efficient.
+
 Bool_t TGeoVolume::OptimizeVoxels()
 {
-// Perform an exensive sampling to find which type of voxelization is
-// most efficient.
    printf("Optimizing volume %s ...\n", GetName());
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    return painter->TestVoxels(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print volume info
+
 void TGeoVolume::Print(Option_t *) const
 {
-// Print volume info
    printf("== Volume: %s type %s positioned %d times\n", GetName(), ClassName(), fRefCount);
    InspectShape();
    InspectMaterial();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// paint volume
+
 void TGeoVolume::Paint(Option_t *option)
 {
-// paint volume
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    painter->SetTopVolume(this);
 //   painter->Paint(option);
@@ -1193,18 +1265,20 @@ void TGeoVolume::Paint(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the voxels for this volume.
+
 void TGeoVolume::PrintVoxels() const
 {
-// Print the voxels for this volume.
    if (fVoxels) fVoxels->Print();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recreate the content of the other volume without pointer copying. Voxels are
+/// ignored and supposed to be created in a later step via Voxelize.
+
 void TGeoVolume::ReplayCreation(const TGeoVolume *other)
 {
-// Recreate the content of the other volume without pointer copying. Voxels are
-// ignored and supposed to be created in a later step via Voxelize.
    Int_t nd = other->GetNdaughters();
    if (!nd) return;
    TGeoPatternFinder *finder = other->GetFinder();
@@ -1225,10 +1299,11 @@ void TGeoVolume::ReplayCreation(const TGeoVolume *other)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// print nodes
+
 void TGeoVolume::PrintNodes() const
 {
-// print nodes
    Int_t nd = GetNdaughters();
    for (Int_t i=0; i<nd; i++) {
       printf("%s\n", GetNode(i)->GetName());
@@ -1236,12 +1311,13 @@ void TGeoVolume::PrintNodes() const
       GetNode(i)->GetMatrix()->Print();
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate a lego plot fot the top volume, according to option.
+
 TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
                             Int_t nphi,   Double_t phimin, Double_t phimax,
                             Double_t rmin, Double_t rmax, Option_t *option)
 {
-// Generate a lego plot fot the top volume, according to option.
    TVirtualGeoPainter *p = fGeoManager->GetGeomPainter();
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
@@ -1251,10 +1327,11 @@ TH2F *TGeoVolume::LegoPlot(Int_t ntheta, Double_t themin, Double_t themax,
    return hist;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the volume and all materials/media/matrices/shapes to the manager.
+
 void TGeoVolume::RegisterYourself(Option_t *option)
 {
-// Register the volume and all materials/media/matrices/shapes to the manager.
    if (fGeoManager->GetListOfVolumes()->FindObject(this)) return;
    // Register volume
    fGeoManager->AddVolume(this);
@@ -1290,10 +1367,11 @@ void TGeoVolume::RegisterYourself(Option_t *option)
    for (i=0; i<nd; i++) GetNode(i)->GetVolume()->RegisterYourself(option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw random points in the bounding box of this volume.
+
 void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
 {
-// Draw random points in the bounding box of this volume.
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
@@ -1302,10 +1380,11 @@ void TGeoVolume::RandomPoints(Int_t npoints, Option_t *option)
    if (old_vol) fGeoManager->SetTopVolume(old_vol);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Random raytracing method.
+
 void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Double_t startz, const char *target_vol, Bool_t check_norm)
 {
-// Random raytracing method.
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TGeoVolume *old_vol = fGeoManager->GetTopVolume();
    if (old_vol!=this) fGeoManager->SetTopVolume(this);
@@ -1314,10 +1393,11 @@ void TGeoVolume::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doubl
    if (old_vol) fGeoManager->SetTopVolume(old_vol);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this volume with current settings and perform raytracing in the pad.
+
 void TGeoVolume::Raytrace(Bool_t flag)
 {
-// Draw this volume with current settings and perform raytracing in the pad.
    TGeoAtt::SetVisRaytrace(kFALSE);
    if (gGeoManager != fGeoManager) gGeoManager = fGeoManager;
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
@@ -1332,10 +1412,11 @@ void TGeoVolume::Raytrace(Bool_t flag)
    painter->ModifiedPad();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Save geometry having this as top volume as a C++ macro.
+
 void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
 {
-//  Save geometry having this as top volume as a C++ macro.
    if (!filename) return;
    std::ofstream out;
    out.open(filename, std::ios::out);
@@ -1354,60 +1435,63 @@ void TGeoVolume::SaveAs(const char *filename, Option_t *option) const
    out << "}" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect user-defined extension to the volume. The volume "grabs" a copy, so
+/// the original object can be released by the producer. Release the previously
+/// connected extension if any.
+///
+/// NOTE: This interface is intended for user extensions and is guaranteed not
+/// to be used by TGeo
+
 void TGeoVolume::SetUserExtension(TGeoExtension *ext)
 {
-// Connect user-defined extension to the volume. The volume "grabs" a copy, so
-// the original object can be released by the producer. Release the previously
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for user extensions and is guaranteed not
-// to be used by TGeo
-//==========================================================================
    if (fUserExtension) fUserExtension->Release();
    fUserExtension = 0;
    if (ext) fUserExtension = ext->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect framework defined extension to the volume. The volume "grabs" a copy,
+/// so the original object can be released by the producer. Release the previously
+/// connected extension if any.
+///
+/// NOTE: This interface is intended for the use by TGeo and the users should
+///       NOT connect extensions using this method
+
 void TGeoVolume::SetFWExtension(TGeoExtension *ext)
 {
-// Connect framework defined extension to the volume. The volume "grabs" a copy,
-// so the original object can be released by the producer. Release the previously
-// connected extension if any.
-//==========================================================================
-// NOTE: This interface is intended for the use by TGeo and the users should
-//       NOT connect extensions using this method
-//==========================================================================
    if (fFWExtension) fFWExtension->Release();
    fFWExtension = 0;
    if (ext) fFWExtension = ext->Grab();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a copy of the user extension pointer. The user must call Release() on
+/// the copy pointer once this pointer is not needed anymore (equivalent to
+/// delete() after calling new())
+
 TGeoExtension *TGeoVolume::GrabUserExtension() const
 {
-// Get a copy of the user extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
    if (fUserExtension) return fUserExtension->Grab();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a copy of the framework extension pointer. The user must call Release() on
+/// the copy pointer once this pointer is not needed anymore (equivalent to
+/// delete() after calling new())
+
 TGeoExtension *TGeoVolume::GrabFWExtension() const
 {
-// Get a copy of the framework extension pointer. The user must call Release() on
-// the copy pointer once this pointer is not needed anymore (equivalent to
-// delete() after calling new())
    if (fFWExtension) return fFWExtension->Grab();
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a primitive as a C++ statement(s) on output stream "out".
    out.precision(6);
    out.setf(std::ios::fixed);
    Int_t i,icopy;
@@ -1554,35 +1638,39 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset SavePrimitive bits.
+
 void TGeoVolume::UnmarkSaved()
 {
-// Reset SavePrimitive bits.
    ResetAttBit(TGeoAtt::kSavePrimitiveAtt);
    ResetAttBit(TGeoAtt::kSaveNodesAtt);
    if (fShape) fShape->ResetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute mouse actions on this volume.
+
 void TGeoVolume::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Execute mouse actions on this volume.
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return;
    painter->ExecuteVolumeEvent(this, event, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// search a daughter inside the list of nodes
+
 TGeoNode *TGeoVolume::FindNode(const char *name) const
 {
-// search a daughter inside the list of nodes
    return ((TGeoNode*)fNodes->FindObject(name));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the index of a daughter within check_list by providing the node pointer.
+
 Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t ncheck) const
 {
-// Get the index of a daugther within check_list by providing the node pointer.
    TGeoNode *current = 0;
    for (Int_t i=0; i<ncheck; i++) {
       current = (TGeoNode*)fNodes->At(check_list[i]);
@@ -1591,10 +1679,11 @@ Int_t TGeoVolume::GetNodeIndex(const TGeoNode *node, Int_t *check_list, Int_t nc
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get index number for a given daughter
+
 Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
 {
-// get index number for a given daughter
    TGeoNode *current = 0;
    Int_t nd = GetNdaughters();
    if (!nd) return -1;
@@ -1605,20 +1694,22 @@ Int_t TGeoVolume::GetIndex(const TGeoNode *node) const
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get volume info for the browser.
+
 char *TGeoVolume::GetObjectInfo(Int_t px, Int_t py) const
 {
-// Get volume info for the browser.
    TGeoVolume *vol = (TGeoVolume*)this;
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (!painter) return 0;
    return (char*)painter->GetVolumeInfo(vol, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if cylindrical voxelization is optimal.
+
 Bool_t TGeoVolume::GetOptimalVoxels() const
 {
-//--- Returns true if cylindrical voxelization is optimal.
    Int_t nd = GetNdaughters();
    if (!nd) return kFALSE;
    Int_t id;
@@ -1632,43 +1723,48 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide a pointer name containing uid.
+
 char *TGeoVolume::GetPointerName() const
 {
-// Provide a pointer name containing uid.
    static TString name;
    name = TString::Format("p%s_%lx", GetName(), (ULong_t)this);
    return (char*)name.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Getter for optimization structure.
+
 TGeoVoxelFinder *TGeoVolume::GetVoxels() const
 {
-// Getter for optimization structure.
    if (fVoxels && !fVoxels->IsInvalid()) return fVoxels;
    return NULL;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move perspective view focus to this volume
+
 void TGeoVolume::GrabFocus()
 {
-// Move perspective view focus to this volume
    TVirtualGeoPainter *painter = fGeoManager->GetPainter();
    if (painter) painter->GrabFocus();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if the volume is an assembly or a scaled assembly.
+
 Bool_t TGeoVolume::IsAssembly() const
 {
-// Returns true if the volume is an assembly or a scaled assembly.
   return fShape->IsAssembly();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone this volume.
+/// build a volume with same name, shape and medium
+
 TGeoVolume *TGeoVolume::CloneVolume() const
 {
-// Clone this volume.
-   // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolume(GetName(), fShape, fMedium);
    Int_t i;
    // copy volume attributes
@@ -1712,10 +1808,11 @@ TGeoVolume *TGeoVolume::CloneVolume() const
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone the array of nodes.
+
 void TGeoVolume::CloneNodesAndConnect(TGeoVolume *newmother) const
 {
-// Clone the array of nodes.
    if (!fNodes) return;
    TGeoNode *node;
    Int_t nd = fNodes->GetEntriesFast();
@@ -1737,10 +1834,11 @@ void TGeoVolume::CloneNodesAndConnect(TGeoVolume *newmother) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make a new list of nodes and copy all nodes of other volume inside
+
 void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
 {
-// make a new list of nodes and copy all nodes of other volume inside
    Int_t nd = other->GetNdaughters();
    if (!nd) return;
    if (fNodes) {
@@ -1752,11 +1850,12 @@ void TGeoVolume::MakeCopyNodes(const TGeoVolume *other)
    TObject::SetBit(kVolumeImportNodes);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// make a copy of this volume
+/// build a volume with same name, shape and medium
+
 TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
 {
-    // make a copy of this volume
-   // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolume(GetName(), newshape, fMedium);
    // copy volume attributes
    vol->SetVisibility(IsVisible());
@@ -1782,10 +1881,11 @@ TGeoVolume *TGeoVolume::MakeCopyVolume(TGeoShape *newshape)
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a copy of this volume which is reflected with respect to XY plane.
+
 TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
 {
-// Make a copy of this volume which is reflected with respect to XY plane.
    static TMap map(100);
    if (!fGeoManager->IsClosed()) {
       Error("MakeReflectedVolume", "Geometry must be closed.");
@@ -1870,24 +1970,27 @@ TGeoVolume *TGeoVolume::MakeReflectedVolume(const char *newname) const
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set this volume as the TOP one (the whole geometry starts from here)
+
 void TGeoVolume::SetAsTopVolume()
 {
-// Set this volume as the TOP one (the whole geometry starts from here)
    fGeoManager->SetTopVolume(this);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the current tracking point.
+
 void TGeoVolume::SetCurrentPoint(Double_t x, Double_t y, Double_t z)
 {
-// Set the current tracking point.
    fGeoManager->SetCurrentPoint(x,y,z);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the shape associated with this volume
+
 void TGeoVolume::SetShape(const TGeoShape *shape)
 {
-// set the shape associated with this volume
    if (!shape) {
       Error("SetShape", "No shape");
       return;
@@ -1895,11 +1998,12 @@ void TGeoVolume::SetShape(const TGeoShape *shape)
    fShape = (TGeoShape*)shape;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// sort nodes by decreasing volume of the bounding box. ONLY nodes comes first,
+/// then overlapping nodes and finally division nodes.
+
 void TGeoVolume::SortNodes()
 {
-// sort nodes by decreasing volume of the bounding box. ONLY nodes comes first,
-// then overlapping nodes and finally division nodes.
    if (!Valid()) {
       Error("SortNodes", "Bounding box not valid");
       return;
@@ -1945,10 +2049,11 @@ void TGeoVolume::SortNodes()
    fNodes = nodes;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TGeoVolume.
+
 void TGeoVolume::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TGeoVolume.
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TGeoVolume::Class(), this);
       if (fVoxels && fVoxels->IsInvalid()) Voxelize("");
@@ -1968,47 +2073,53 @@ void TGeoVolume::Streamer(TBuffer &R__b)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the current options (none implemented)
+
 void TGeoVolume::SetOption(const char *option)
 {
-// Set the current options (none implemented)
    fOption = option;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line color.
+
 void TGeoVolume::SetLineColor(Color_t lcolor)
 {
-// Set the line color.
    TAttLine::SetLineColor(lcolor);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line style.
+
 void TGeoVolume::SetLineStyle(Style_t lstyle)
 {
-// Set the line style.
    TAttLine::SetLineStyle(lstyle);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line width.
+
 void TGeoVolume::SetLineWidth(Style_t lwidth)
 {
-// Set the line width.
    TAttLine::SetLineWidth(lwidth);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the pointer to a daughter node
+
 TGeoNode *TGeoVolume::GetNode(const char *name) const
 {
-// get the pointer to a daughter node
    if (!fNodes) return 0;
    TGeoNode *node = (TGeoNode *)fNodes->FindObject(name);
    return node;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// get the total size in bytes for this volume
+
 Int_t TGeoVolume::GetByteCount() const
 {
-// get the total size in bytes for this volume
    Int_t count = 28+2+6+4+0;    // TNamed+TGeoAtt+TAttLine+TAttFill+TAtt3D
    count += fName.Capacity() + fTitle.Capacity(); // name+title
    count += 7*sizeof(char*); // fShape + fMedium + fFinder + fField + fNodes + 2 extensions
@@ -2024,10 +2135,11 @@ Int_t TGeoVolume::GetByteCount() const
    return count;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// loop all nodes marked as overlaps and find overlapping brothers
+
 void TGeoVolume::FindOverlaps() const
 {
-// loop all nodes marked as overlaps and find overlaping brothers
    if (!Valid()) {
       Error("FindOverlaps","Bounding box not valid");
       return;
@@ -2044,10 +2156,11 @@ void TGeoVolume::FindOverlaps() const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove an existing daughter.
+
 void TGeoVolume::RemoveNode(TGeoNode *node)
 {
-// Remove an existing daughter.
    if (!fNodes || !fNodes->GetEntriesFast()) return;
    if (!fNodes->Remove(node)) return;
    fNodes->Compress();
@@ -2055,12 +2168,13 @@ void TGeoVolume::RemoveNode(TGeoNode *node)
    if (IsAssembly()) fShape->ComputeBBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace an existing daughter with a new volume having the same name but
+/// possibly a new shape, position or medium. Not allowed for positioned assemblies.
+/// For division cells, the new shape/matrix are ignored.
+
 TGeoNode *TGeoVolume::ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape, TGeoMatrix *newpos, TGeoMedium *newmed)
 {
-// Replace an existing daughter with a new volume having the same name but
-// possibly a new shape, position or medium. Not allowed for positioned assemblies.
-// For division cells, the new shape/matrix are ignored.
    Int_t ind = GetIndex(nodeorig);
    if (ind < 0) return NULL;
    TGeoVolume *oldvol = nodeorig->GetVolume();
@@ -2104,13 +2218,14 @@ TGeoNode *TGeoVolume::ReplaceNode(TGeoNode *nodeorig, TGeoShape *newshape, TGeoM
    return newnode;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select this volume as matching an arbitrary criteria. The volume is added to
+/// a static list and the flag TGeoVolume::kVolumeSelected is set. All flags need
+/// to be reset at the end by calling the method with CLEAR=true. This will also clear
+/// the list.
+
 void TGeoVolume::SelectVolume(Bool_t clear)
 {
-// Select this volume as matching an arbitrary criteria. The volume is added to
-// a static list and the flag TGeoVolume::kVolumeSelected is set. All flags need
-// to be reset at the end by calling the method with CLEAR=true. This will also clear
-// the list.
    static TObjArray array(256);
    static Int_t len = 0;
    Int_t i;
@@ -2128,10 +2243,11 @@ void TGeoVolume::SelectVolume(Bool_t clear)
    array.AddAtAndExpand(this, len++);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set visibility of this volume
+
 void TGeoVolume::SetVisibility(Bool_t vis)
 {
-// set visibility of this volume
    TGeoAtt::SetVisibility(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
    fGeoManager->SetVisOption(4);
@@ -2144,10 +2260,11 @@ void TGeoVolume::SetVisibility(Bool_t vis)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for containers.
+
 void TGeoVolume::SetVisContainers(Bool_t flag)
 {
-// Set visibility for containers.
    TGeoAtt::SetVisContainers(flag);
    if (fGeoManager && fGeoManager->IsClosed()) {
       if (flag) fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisDefault);
@@ -2155,10 +2272,11 @@ void TGeoVolume::SetVisContainers(Bool_t flag)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for leaves.
+
 void TGeoVolume::SetVisLeaves(Bool_t flag)
 {
-// Set visibility for leaves.
    TGeoAtt::SetVisLeaves(flag);
    if (fGeoManager && fGeoManager->IsClosed()) {
       if (flag) fGeoManager->SetVisOption(TVirtualGeoPainter::kGeoVisLeaves);
@@ -2166,10 +2284,11 @@ void TGeoVolume::SetVisLeaves(Bool_t flag)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for leaves.
+
 void TGeoVolume::SetVisOnly(Bool_t flag)
 {
-// Set visibility for leaves.
    if (IsAssembly()) return;
    TGeoAtt::SetVisOnly(flag);
    if (fGeoManager && fGeoManager->IsClosed()) {
@@ -2178,18 +2297,20 @@ void TGeoVolume::SetVisOnly(Bool_t flag)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the shape of this volume is valid.
+
 Bool_t TGeoVolume::Valid() const
 {
-// Check if the shape of this volume is valid.
    return fShape->IsValidBox();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a daughter node having VOL as volume and fill TGeoManager::fHMatrix
+/// with its global matrix.
+
 Bool_t TGeoVolume::FindMatrixOfDaughterVolume(TGeoVolume *vol) const
 {
-// Find a daughter node having VOL as volume and fill TGeoManager::fHMatrix
-// with its global matrix.
    if (vol == this) return kTRUE;
    Int_t nd = GetNdaughters();
    if (!nd) return kFALSE;
@@ -2216,19 +2337,21 @@ Bool_t TGeoVolume::FindMatrixOfDaughterVolume(TGeoVolume *vol) const
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set visibility for daughters
+
 void TGeoVolume::VisibleDaughters(Bool_t vis)
 {
-// set visibility for daughters
    SetVisDaughters(vis);
    if (fGeoManager->IsClosed()) SetVisTouched(kTRUE);
    fGeoManager->SetVisOption(4);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// build the voxels for this volume
+
 void TGeoVolume::Voxelize(Option_t *option)
 {
-// build the voxels for this volume
    if (!Valid()) {
       Error("Voxelize", "Bounding box not valid");
       return;
@@ -2256,11 +2379,12 @@ void TGeoVolume::Voxelize(Option_t *option)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Estimate the weight of a volume (in kg) with SIGMA(M)/M better than PRECISION.
+/// Option can contain : v - verbose, a - analytical  (default)
+
 Double_t TGeoVolume::Weight(Double_t precision, Option_t *option)
 {
-// Estimate the weight of a volume (in kg) with SIGMA(M)/M better than PRECISION.
-// Option can contain : v - verbose, a - analytical  (default)
    TGeoVolume *top = fGeoManager->GetTopVolume();
    if (top != this) fGeoManager->SetTopVolume(this);
    else top = 0;
@@ -2269,10 +2393,11 @@ Double_t TGeoVolume::Weight(Double_t precision, Option_t *option)
    return weight;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Analytical computation of the weight.
+
 Double_t TGeoVolume::WeightA() const
 {
-// Analytical computation of the weight.
    Double_t capacity = Capacity();
    Double_t weight = 0.0;
    Int_t i;
@@ -2295,10 +2420,11 @@ Double_t TGeoVolume::WeightA() const
 ClassImp(TGeoVolumeMulti)
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// dummy constructor
+
 TGeoVolumeMulti::TGeoVolumeMulti()
 {
-// dummy constructor
    fVolumes   = 0;
    fDivision = 0;
    fNumed = 0;
@@ -2310,10 +2436,11 @@ TGeoVolumeMulti::TGeoVolumeMulti()
    TObject::SetBit(kVolumeMulti);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default constructor
+
 TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMedium *med)
 {
-// default constructor
    fVolumes = new TObjArray();
    fDivision = 0;
    fNumed = 0;
@@ -2329,7 +2456,9 @@ TGeoVolumeMulti::TGeoVolumeMulti(const char *name, TGeoMedium *med)
 //   printf("--- volume multi %s created\n", name);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
   TGeoVolume(vm),
   fVolumes(vm.fVolumes),
@@ -2341,13 +2470,13 @@ TGeoVolumeMulti::TGeoVolumeMulti(const TGeoVolumeMulti& vm) :
   fStep(vm.fStep),
   fAttSet(vm.fAttSet)
 {
-   //copy constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm)
 {
-   //assignment operator
    if(this!=&vm) {
       TGeoVolume::operator=(vm);
       fVolumes=vm.fVolumes;
@@ -2362,18 +2491,20 @@ TGeoVolumeMulti& TGeoVolumeMulti::operator=(const TGeoVolumeMulti& vm)
    return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoVolumeMulti::~TGeoVolumeMulti()
 {
-// Destructor
    if (fVolumes) delete fVolumes;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a volume with valid shape to the list of volumes. Copy all existing nodes
+/// to this volume
+
 void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 {
-// Add a volume with valid shape to the list of volumes. Copy all existing nodes
-// to this volume
    Int_t idx = fVolumes->GetEntriesFast();
    fVolumes->AddAtAndExpand(vol,idx);
    vol->SetUniqueID(idx+1);
@@ -2403,11 +2534,12 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new node to the list of nodes. This is the usual method for adding
+/// daughters inside the container volume.
+
 void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-// Add a new node to the list of nodes. This is the usual method for adding
-// daughters inside the container volume.
    TGeoVolume::AddNode(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
@@ -2422,11 +2554,12 @@ void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, O
 //   printf("--- vmulti %s : node %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new node to the list of nodes, This node is possibly overlapping with other
+/// daughters of the volume or extruding the volume.
+
 void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-// Add a new node to the list of nodes, This node is possibly overlapping with other
-// daughters of the volume or extruding the volume.
    TGeoVolume::AddNodeOverlap(vol, copy_no, mat, option);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *volume = 0;
@@ -2441,19 +2574,21 @@ void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix 
 //   printf("--- vmulti %s : node ovlp %s added to %i components\n", GetName(), vol->GetName(), nvolumes);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the last shape.
+
 TGeoShape *TGeoVolumeMulti::GetLastShape() const
 {
-// Returns the last shape.
    TGeoVolume *vol = GetVolume(fVolumes->GetEntriesFast()-1);
    if (!vol) return 0;
    return vol->GetShape();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// division of multiple volumes
+
 TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv, Double_t start, Double_t step, Int_t numed, const char *option)
 {
-// division of multiple volumes
    if (fDivision) {
       Error("Divide", "volume %s already divided", GetName());
       return 0;
@@ -2500,11 +2635,12 @@ TGeoVolume *TGeoVolumeMulti::Divide(const char *divname, Int_t iaxis, Int_t ndiv
    return fDivision;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a copy of this volume
+/// build a volume with same name, shape and medium
+
 TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
 {
-   // Make a copy of this volume
-   // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolume(GetName(), newshape, fMedium);
    Int_t i=0;
    // copy volume attributes
@@ -2559,10 +2695,11 @@ TGeoVolume *TGeoVolumeMulti::MakeCopyVolume(TGeoShape *newshape)
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line color for all components.
+
 void TGeoVolumeMulti::SetLineColor(Color_t lcolor)
 {
-// Set the line color for all components.
    TGeoVolume::SetLineColor(lcolor);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
@@ -2572,10 +2709,11 @@ void TGeoVolumeMulti::SetLineColor(Color_t lcolor)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line style for all components.
+
 void TGeoVolumeMulti::SetLineStyle(Style_t lstyle)
 {
-// Set the line style for all components.
    TGeoVolume::SetLineStyle(lstyle);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
@@ -2585,10 +2723,11 @@ void TGeoVolumeMulti::SetLineStyle(Style_t lstyle)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line width for all components.
+
 void TGeoVolumeMulti::SetLineWidth(Width_t lwidth)
 {
-// Set the line width for all components.
    TGeoVolume::SetLineWidth(lwidth);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
@@ -2598,10 +2737,11 @@ void TGeoVolumeMulti::SetLineWidth(Width_t lwidth)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set medium for a multiple volume.
+
 void TGeoVolumeMulti::SetMedium(TGeoMedium *med)
 {
-// Set medium for a multiple volume.
    TGeoVolume::SetMedium(med);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
@@ -2612,10 +2752,11 @@ void TGeoVolumeMulti::SetMedium(TGeoMedium *med)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for all components.
+
 void TGeoVolumeMulti::SetVisibility(Bool_t vis)
 {
-// Set visibility for all components.
    TGeoVolume::SetVisibility(vis);
    Int_t nvolumes = fVolumes->GetEntriesFast();
    TGeoVolume *vol = 0;
@@ -2627,42 +2768,34 @@ void TGeoVolumeMulti::SetVisibility(Bool_t vis)
 
 ClassImp(TGeoVolumeAssembly)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoVolumeAssembly::ThreadData_t::ThreadData_t() :
    fCurrent(-1), fNext(-1)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoVolumeAssembly::ThreadData_t::~ThreadData_t()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGeoVolumeAssembly::ThreadData_t& TGeoVolumeAssembly::GetThreadData() const
 {
    Int_t tid = TGeoManager::ThreadId();
-/*
-   TThread::Lock();
-   if (tid >= fThreadSize)
-   {
-      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
-             tid, fThreadSize);
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
-   }
-   if (fThreadData[tid] == 0) fThreadData[tid] = new ThreadData_t;
-   TThread::UnLock();
-*/
    return *fThreadData[tid];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolumeAssembly::ClearThreadData() const
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    TGeoVolume::ClearThreadData();
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
@@ -2672,13 +2805,13 @@ void TGeoVolumeAssembly::ClearThreadData() const
    }
    fThreadData.clear();
    fThreadSize = 0;
-   TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    // Create assembly thread data here
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
@@ -2688,48 +2821,53 @@ void TGeoVolumeAssembly::CreateThreadData(Int_t nthreads)
       }
    }
    TGeoVolume::CreateThreadData(nthreads);
-   TThread::UnLock();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGeoVolumeAssembly::GetCurrentNodeIndex() const
 {
    return fThreadData[TGeoManager::ThreadId()]->fCurrent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TGeoVolumeAssembly::GetNextNodeIndex() const
 {
    return fThreadData[TGeoManager::ThreadId()]->fNext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolumeAssembly::SetCurrentNodeIndex(Int_t index)
 {
    fThreadData[TGeoManager::ThreadId()]->fCurrent = index;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TGeoVolumeAssembly::SetNextNodeIndex(Int_t index)
 {
    fThreadData[TGeoManager::ThreadId()]->fNext = index;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoVolumeAssembly::TGeoVolumeAssembly()
                    :TGeoVolume()
 {
-// Default constructor
    fThreadSize = 0;
    CreateThreadData(1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Just the name has to be provided. Assemblies does not have their own
+/// shape or medium.
+
 TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
                    :TGeoVolume()
 {
-// Constructor. Just the name has to be provided. Assemblies does not have their own
-// shape or medium.
    fName = name;
    fName = fName.Strip();
    fShape = new TGeoShapeAssembly(this);
@@ -2738,36 +2876,40 @@ TGeoVolumeAssembly::TGeoVolumeAssembly(const char *name)
    CreateThreadData(1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. The assembly is owner of its "shape".
+
 TGeoVolumeAssembly::~TGeoVolumeAssembly()
 {
-// Destructor. The assembly is owner of its "shape".
    ClearThreadData();
    if (fShape) delete fShape;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a component to the assembly.
+
 void TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-// Add a component to the assembly.
    TGeoVolume::AddNode(vol,copy_no,mat,option);
 //   ((TGeoShapeAssembly*)fShape)->RecomputeBoxLast();
    ((TGeoShapeAssembly*)fShape)->NeedsBBoxRecompute();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an overlapping node - not allowed for assemblies.
+
 void TGeoVolumeAssembly::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
-// Add an overlapping node - not allowed for assemblies.
    Warning("AddNodeOverlap", "Declaring assembly %s as possibly overlapping inside %s not allowed. Using AddNode instead !",vol->GetName(),GetName());
    AddNode(vol, copy_no, mat, option);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clone this volume.
+/// build a volume with same name, shape and medium
+
 TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
 {
-// Clone this volume.
-   // build a volume with same name, shape and medium
    TGeoVolume *vol = new TGeoVolumeAssembly(GetName());
    Int_t i;
    // copy other attributes
@@ -2800,20 +2942,22 @@ TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
    return vol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Division makes no sense for assemblies.
+
 TGeoVolume *TGeoVolumeAssembly::Divide(const char *, Int_t, Int_t, Double_t, Double_t, Int_t, Option_t *)
 {
-// Division makes no sense for assemblies.
    Error("Divide","Assemblies cannot be divided");
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign to the assembly a collection of identical volumes positioned according
+/// a predefined pattern. The option can be spaced out or touching depending on the empty
+/// space between volumes.
+
 TGeoVolume *TGeoVolumeAssembly::Divide(TGeoVolume *cell, TGeoPatternFinder *pattern, Option_t *option)
 {
-// Assign to the assembly a collection of identical volumes positioned according
-// a predefined pattern. The option can be spacedout or touching depending on the empty
-// space between volumes.
    if (fNodes) {
       Error("Divide", "Cannot divide assembly %s since it has nodes", GetName());
       return NULL;
@@ -2842,10 +2986,11 @@ TGeoVolume *TGeoVolumeAssembly::Divide(TGeoVolume *cell, TGeoPatternFinder *patt
    return cell;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a clone of volume VOL but which is an assembly.
+
 TGeoVolumeAssembly *TGeoVolumeAssembly::MakeAssemblyFromVolume(TGeoVolume *volorig)
 {
-// Make a clone of volume VOL but which is an assembly.
    if (volorig->IsAssembly() || volorig->IsVolumeMulti()) return 0;
    Int_t nd = volorig->GetNdaughters();
    if (!nd) return 0;

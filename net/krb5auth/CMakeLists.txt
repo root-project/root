@@ -3,10 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(net/net)
-ROOT_USE_PACKAGE(net/auth)
-
 include_directories(${KRB5_INCLUDE_DIRS})
 set_directory_properties(PROPERTIES COMPILE_DEFINITIONS R__KRB5INIT="${KRB5_INIT}")
 

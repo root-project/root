@@ -14,54 +14,54 @@
 
 ClassImp(TTRD2)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/trd2.gif"> </P> End_Html
-// TRD2 is a trapezoid with both x and y dimensions varying along z.
-// It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dx1        half-length along x at the z surface positioned at -DZ
-//     - dx2        half-length along x at the z surface positioned at +DZ
-//     - dy1        half-length along y at the z surface positioned at -DZ
-//     - dy2        half-length along y at the z surface positioned at +DZ
-//     - dz         half-length along the z-axis
+/** \class TTRD2
+\ingroup g3d
+A trapezoid with both x and y dimensions varying along z.
 
+\image html g3d_trd2.png
+It has 8 parameters:
 
-//______________________________________________________________________________
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dx1:        half-length along x at the z surface positioned at -DZ
+  - dx2:        half-length along x at the z surface positioned at +DZ
+  - dy1:        half-length along y at the z surface positioned at -DZ
+  - dy2:        half-length along y at the z surface positioned at +DZ
+  - dz:         half-length along the z-axis
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// TRD2 shape default constructor
+
 TTRD2::TTRD2()
 {
-  // TRD2 shape default constructor
-
    fDx2 = 0.;
    fDy2 = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TRD2 shape normal constructor
 
-//______________________________________________________________________________
 TTRD2::TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2, Float_t dy1,
        Float_t dy2, Float_t dz) : TBRIK(name, title,material,dx1,dy1,dz)
 {
-   // TRD2 shape normal constructor
-
    fDx2 = dx2;
    fDy2 = dy2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TRD2 shape default destructor
 
-//______________________________________________________________________________
 TTRD2::~TTRD2()
 {
-   // TRD2 shape default destructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create TRD2 points
 
-//______________________________________________________________________________
 void TTRD2::SetPoints(Double_t *points) const
 {
-   // Create TRD2 points
-
    Float_t dx1, dx2, dy1, dy2, dz;
 
    dx1 = TBRIK::fDx;

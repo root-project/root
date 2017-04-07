@@ -1,19 +1,25 @@
-// A simple TTreeReader use: read data from hsimple.root (written by hsimple.C)
-// Author: Anders Eie, 2013.
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// TTreeReader simplest example.
+///
+/// Read data from hsimple.root (written by hsimple.C)
+///
+/// \macro_code
+///
+/// \author Anders Eie, 2013
 
 #include "TFile.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-class TVirtualPad;
-
 void hsimpleReader() {
    // Create a histogram for the values we read.
-   TH1F *myHist = new TH1F("h1","ntuple",100,-4,4);
+   auto myHist = new TH1F("h1","ntuple",100,-4,4);
 
    // Open the file containing the tree.
-   TFile *myFile = TFile::Open("hsimple.root");
+   auto myFile = TFile::Open("hsimple.root");
    if (!myFile || myFile->IsZombie()) {
       return;
    }

@@ -34,17 +34,31 @@ HTTPDEP      := $(HTTPO:.o=.d) $(HTTPDO:.o=.d)
 HTTPLIB      := $(LPATH)/libRHTTP.$(SOEXT)
 HTTPMAP      := $(HTTPLIB:.$(SOEXT)=.rootmap)
 
-HTTPCXXFLAGS := $(HTTPINCDIR:%=-I%) $(FASTCGIINCDIR:%=-I%) $(FASTCGIFLAGS)
+HTTPCXXFLAGS := $(HTTPINCDIR:%=-I%) $(FASTCGIINCDIR:%=-I%) $(FASTCGIFLAGS) -DUSE_WEBSOCKET
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))
+HTTPH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))
+ALLHDRS     += $(HTTPH_REL)
 ALLLIBS     += $(HTTPLIB)
 ALLMAPS     += $(HTTPMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HTTPH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HTTPLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HTTPDEP)
 
 HTTPLIBEXTRA += $(ZLIBLIBDIR) $(ZLIBCLILIB)
+
+ifeq ($(PLATFORM),linux)
+HTTPLIBEXTRA += -lrt
+endif
+
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -101,3 +115,5 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(HTTPO) $(HTTPDO) : CXXFLAGS += $(HTTPCXXFLAGS)
+
+$(CIVETWEBO) : CFLAGS += -DUSE_WEBSOCKET

@@ -12,49 +12,51 @@
 #include "TGLPShapeRef.h"
 #include "TGLPhysicalShape.h"
 
-//______________________________________________________________________
-//
-// Base class for references to TGLPysicalShape that need to be notified
-// when the shape is destroyed.
-// Could also deliver 'change' notifications.
+/** \class TGLPShapeRef
+\ingroup opengl
+Base class for references to TGLPysicalShape that need to be notified
+when the shape is destroyed.
+Could also deliver 'change' notifications.
+*/
 
 ClassImp(TGLPShapeRef);
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TGLPShapeRef::TGLPShapeRef() :
    fNextPSRef (0),
    fPShape    (0)
 {
-   // Default contructor.
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with known shape - reference it.
+
 TGLPShapeRef::TGLPShapeRef(TGLPhysicalShape * shape) :
    fNextPSRef (0),
    fPShape    (0)
 {
-   // Constructor with known shape - reference it.
-
    SetPShape(shape);
 }
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor - unreference the shape if set.
+
 TGLPShapeRef::~TGLPShapeRef()
 {
-   // Destructor - unreference the shape if set.
-
    SetPShape(0);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the shape. Unreference the old and reference the new.
+/// This is virtual so that sub-classes can perform other tasks
+/// on change. This function should be called first from there.
+///
+/// This is also called from destructor of the referenced physical
+/// shape with 0 argument.
+
 void TGLPShapeRef::SetPShape(TGLPhysicalShape * shape)
 {
-   // Set the shape. Unreference the old and reference the new.
-   // This is virtual so that sub-classes can perform other tasks
-   // on change. This function should be called first from there.
-   //
-   // This is also called from destructor of the refereced physical
-   // shape with 0 argument.
-
    if (fPShape)
       fPShape->RemoveReference(this);
    fPShape = shape;
@@ -62,9 +64,10 @@ void TGLPShapeRef::SetPShape(TGLPhysicalShape * shape)
       fPShape->AddReference(this);
 }
 
-//______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is called from physical shape when it is modified.
+/// Sub-classes can override and take appropriate action.
+
 void TGLPShapeRef::PShapeModified()
 {
-   // This is called from physical shape when it is modified.
-   // Sub-classes can override and take appropriate action.
 }

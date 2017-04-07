@@ -1,3 +1,19 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Use of transparency with ||-Coord.
+///
+/// It displays the same data set twice. The first time without transparency and
+/// the second time with transparency. On the second plot, several clusters
+/// appear.
+///
+/// ### Images without and with transparency
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 #include "TFile.h"
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -6,13 +22,6 @@
 #include "TParallelCoord.h"
 #include "TParallelCoordVar.h"
 #include "TParallelCoordRange.h"
-
-// Script illustrating the use of transparency (right now in PDF file only) with ||-Coord.
-// It displays the same data set twice. The first time without transparency and
-// the second time with transparency. On the second plot, several clusters
-// appear.
-//Author: Olivier Couet
-
 
 Double_t r1,r2,r3,r4,r5,r6,r7,r8,r9;
 Double_t dr = 3.5;

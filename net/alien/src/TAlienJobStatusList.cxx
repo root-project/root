@@ -23,12 +23,12 @@
 
 ClassImp(TAlienJobStatusList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print information about jobs.
+
 void TAlienJobStatusList::PrintCollectionEntry(TObject* entry, Option_t* /*option*/,
                                                Int_t /*recurse*/) const
 {
-   // Print information about jobs.
-
    TAlienJobStatus* jobstatus = (TAlienJobStatus*) entry;
    TString split(jobstatus->GetKey("split"));
    TString queueid(jobstatus->GetKey("queueId"));

@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofOutputList                                                     //
-//                                                                      //
-// Derivation of TList with an overload of ls() and Print() allowing    //
-// to filter out some of the variables.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofOutputList
+\ingroup proofkernel
+
+Derivation of TList with an overload of ls() and Print() allowing to filter
+out some of the variables
+
+*/
 
 #include "TObjString.h"
 #include "TProof.h"
@@ -26,11 +25,11 @@
 
 ClassImp(TProofOutputList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TProofOutputList::TProofOutputList(const char *dontshow) : TList()
 {
-   // Constructor
-
    fDontShow = new TList();
    TString regs(dontshow), reg;
    Int_t from = 0;
@@ -39,20 +38,20 @@ TProofOutputList::TProofOutputList(const char *dontshow) : TList()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TProofOutputList::~TProofOutputList()
 {
-   // Destructor
-
    fDontShow->SetOwner(kTRUE);
    SafeDelete(fDontShow);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach to list 'alist'
+
 void TProofOutputList::AttachList(TList *alist)
 {
-   // Attach to list 'alist'
-
    if (!alist) return;
 
    if (GetSize() > 0) Clear();
@@ -63,11 +62,11 @@ void TProofOutputList::AttachList(TList *alist)
    SetOwner(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List the content of the list
+
 void TProofOutputList::ls(Option_t *option) const
 {
-   // List the content of the list
-
    TString opt(option);
    opt.ToUpper();
    if (opt.BeginsWith("ALL")) {
@@ -110,11 +109,11 @@ void TProofOutputList::ls(Option_t *option) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the content of the list
+
 void TProofOutputList::Print(Option_t *option) const
 {
-   // Print the content of the list
-
    TString opt(option);
    opt.ToUpper();
    if (opt.BeginsWith("ALL")) {

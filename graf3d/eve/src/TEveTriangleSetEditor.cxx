@@ -15,21 +15,22 @@
 #include "TGWidget.h"
 #include "TGLabel.h"
 
-//______________________________________________________________________________
-//
-// Editor for TEveTriangleSet class.
+/** \class TEveTriangleSetEditor
+\ingroup TEve
+Editor for TEveTriangleSet class.
+*/
 
 ClassImp(TEveTriangleSetEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM    (0),
    fInfo (0)
 {
-   // Constructor.
-
    MakeTitle("TEveTriangleSet");
 
    fInfo = new TGLabel(this);
@@ -37,13 +38,11 @@ TEveTriangleSetEditor::TEveTriangleSetEditor(const TGWindow *p, Int_t width, Int
    AddFrame(fInfo, new TGLayoutHints(kLHintsNormal|kLHintsExpandX, 8, 0, 2, 0));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveTriangleSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveTriangleSet*>(obj);
 
    fInfo->SetText(Form("Vertices: %d, Triangles: %d", fM->GetNVerts(), fM->GetNTrings()));

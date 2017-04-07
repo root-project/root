@@ -56,38 +56,32 @@
 #include "TGeoVolume.h"
 #include "TGeoNode.h"
 
+/** \class TEveListTreeItem
+\ingroup TEve
+Special list-tree-item for Eve.
 
-//==============================================================================
-//==============================================================================
-// TEveListTreeItem
-//==============================================================================
+Most state is picked directly from TEveElement, no need to store it
+locally nor to manage its consistency.
 
-//______________________________________________________________________________
-//
-// Special list-tree-item for Eve.
-//
-// Most state is picked directly from TEveElement, no need to store it
-// locally nor to manage its consistency.
-//
-// Handles also selected/highlighted colors and, in the future,
-// drag-n-drop.
+Handles also selected/highlighted colors and, in the future, drag-n-drop.
+*/
 
 ClassImp(TEveListTreeItem);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Warn about access to function members that should never be called.
+/// TGListTree calls them in cases that are not used by Eve.
+
 void TEveListTreeItem::NotSupported(const char* func) const
 {
-   // Warn about access to function members that should never be called.
-   // TGListTree calls them in cases that are not used by Eve.
-
    Warning(Form("TEveListTreeItem::%s()", func), "not supported.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return highlight color corresponding to current state of TEveElement.
+
 Pixel_t TEveListTreeItem::GetActiveColor() const
 {
-   // Return highlight color corresponding to current state of TEveElement.
-
    switch (fElement->GetSelectedLevel())
    {
       case 1: return TColor::Number2Pixel(kBlue - 2);
@@ -98,32 +92,28 @@ Pixel_t TEveListTreeItem::GetActiveColor() const
    return TGFrame::GetDefaultSelectedBackground();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Item's check-box state has been toggled ... forward to element's
+/// render-state.
+
 void TEveListTreeItem::Toggle()
 {
-   // Item's check-box state has been toggled ... forward to element's
-   // render-state.
-
    fElement->SetRnrState(!IsChecked());
    fElement->ElementChanged(kTRUE, kTRUE);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveGListTreeEditorFrame
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
-//
+/** \class TEveGListTreeEditorFrame
+\ingroup TEve
+Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
+*/
 
 ClassImp(TEveGListTreeEditorFrame);
 
 TString TEveGListTreeEditorFrame::fgEditorClass("TEveGedEditor");
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t width, Int_t height) :
    TGMainFrame (p ? p : gClient->GetRoot(), width, height),
    fFrame      (0),
@@ -134,8 +124,6 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t widt
    fCtxMenu    (0),
    fSignalsConnected (kFALSE)
 {
-   // Constructor.
-
    SetCleanup(kNoCleanup);
 
    fFrame = new TGCompositeFrame(this, width, height, kVerticalFrame);
@@ -191,11 +179,11 @@ TEveGListTreeEditorFrame::TEveGListTreeEditorFrame(const TGWindow* p, Int_t widt
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGListTreeEditorFrame::~TEveGListTreeEditorFrame()
 {
-   // Destructor.
-
    DisconnectSignals();
 
    delete fCtxMenu;
@@ -210,19 +198,19 @@ TEveGListTreeEditorFrame::~TEveGListTreeEditorFrame()
    delete fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set GED editor class.
+
 void TEveGListTreeEditorFrame::SetEditorClass(const char* edclass)
 {
-   // Set GED editor class.
-
    fgEditorClass = edclass;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect list-tree signals.
+
 void TEveGListTreeEditorFrame::ConnectSignals()
 {
-   // Connect list-tree signals.
-
    fListTree->Connect("MouseOver(TGListTreeItem*, UInt_t)", "TEveGListTreeEditorFrame",
                       this, "ItemBelowMouse(TGListTreeItem*, UInt_t)");
    fListTree->Connect("Clicked(TGListTreeItem*, Int_t, UInt_t, Int_t, Int_t)", "TEveGListTreeEditorFrame",
@@ -235,11 +223,11 @@ void TEveGListTreeEditorFrame::ConnectSignals()
    fSignalsConnected = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect list-tree signals.
+
 void TEveGListTreeEditorFrame::DisconnectSignals()
 {
-   // Disconnect list-tree signals.
-
    if (!fSignalsConnected) return;
 
    fListTree->Disconnect("MouseOver(TGListTreeItem*, UInt_t)",
@@ -254,13 +242,11 @@ void TEveGListTreeEditorFrame::DisconnectSignals()
    fSignalsConnected = kFALSE;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Reconfigure to horizontal layout, list-tree and editor side by side.
 
-//______________________________________________________________________________
 void TEveGListTreeEditorFrame::ReconfToHorizontal()
 {
-   // Reconfigure to horizontal layout, list-tree and editor side by side.
-
    UnmapWindow();
 
    fFrame->ChangeOptions(kHorizontalFrame);
@@ -297,11 +283,11 @@ void TEveGListTreeEditorFrame::ReconfToHorizontal()
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reconfigure to vertical layout, list-tree above the editor.
+
 void TEveGListTreeEditorFrame::ReconfToVertical()
 {
-   // Reconfigure to vertical layout, list-tree above the editor.
-
    UnmapWindow();
 
    fFrame->ChangeOptions(kVerticalFrame);
@@ -338,25 +324,23 @@ void TEveGListTreeEditorFrame::ReconfToVertical()
    MapWindow();
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Different item is below mouse.
 
-//______________________________________________________________________________
 void TEveGListTreeEditorFrame::ItemBelowMouse(TGListTreeItem *entry, UInt_t /*mask*/)
 {
-   // Different item is below mouse.
-
    TEveElement* el = entry ? (TEveElement*) entry->GetUserData() : 0;
    gEve->GetHighlight()->UserPickedElement(el, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Item has been clicked, based on mouse button do:
+///  - M1 - select, show in editor;
+///  - M2 - paste (call gEve->ElementPaste();
+///  - M3 - popup context menu.
+
 void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, UInt_t mask, Int_t x, Int_t y)
 {
-   // Item has been clicked, based on mouse button do:
-   // M1 - select, show in editor;
-   // M2 - paste (call gEve->ElementPaste();
-   // M3 - popup context menu.
-
    //printf("ItemClicked item %s List %d btn=%d, x=%d, y=%d\n",
    //  item->GetText(),fDisplayFrame->GetList()->GetEntries(), btn, x, y);
 
@@ -390,11 +374,11 @@ void TEveGListTreeEditorFrame::ItemClicked(TGListTreeItem *item, Int_t btn, UInt
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Item has been double-clicked, potentially expand the children.
+
 void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 {
-   // Item has been double-clicked, potentially expand the children.
-
    static const TEveException eh("TEveGListTreeEditorFrame::ItemDblClicked ");
 
    if (btn != 1) return;
@@ -429,14 +413,14 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// A key has been pressed for an item.
+///
+/// Only <Delete>, <Enter> and <Return> keys are handled here,
+/// otherwise the control is passed back to TGListTree.
+
 void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 {
-   // A key has been pressed for an item.
-   //
-   // Only <Delete>, <Enter> and <Return> keys are handled here,
-   // otherwise the control is passed back to TGListTree.
-
    static const TEveException eh("TEveGListTreeEditorFrame::ItemKeyPress ");
 
    entry = fListTree->GetCurrent();
@@ -489,22 +473,18 @@ void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym
 }
 
 
-//==============================================================================
-//==============================================================================
-// TEveBrowser
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Specialization of TRootBrowser for Eve.
+/** \class TEveBrowser
+\ingroup TEve
+Specialization of TRootBrowser for Eve.
+*/
 
 ClassImp(TEveBrowser);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add "Export to CINT" into context-menu for class cl.
+
 void TEveBrowser::SetupCintExport(TClass* cl)
 {
-   // Add "Export to CINT" into context-menu for class cl.
-
    TList* l = cl->GetMenuList();
    TClassMenuItem* n = new TClassMenuItem(TClassMenuItem::kPopupUserFunction, cl,
                                           "Export to CINT", "ExportToCINT", this, "const char*,TObject*", 1);
@@ -512,11 +492,11 @@ void TEveBrowser::SetupCintExport(TClass* cl)
    l->AddFirst(n);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate position of a widget for reparenting into parent.
+
 void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
 {
-   // Calculate position of a widget for reparenting into parent.
-
    UInt_t   w, h;
    Window_t childdum;
    gVirtualX->GetWindowSize(parent->GetId(), x, y, w, h);
@@ -524,8 +504,6 @@ void TEveBrowser::CalculateReparentXY(TGObject* parent, Int_t& x, Int_t& y)
                                    gClient->GetDefaultRoot()->GetId(),
                                    0, 0, x, y, childdum);
 }
-
-/******************************************************************************/
 
 namespace
 {
@@ -543,7 +521,9 @@ enum EEveMenu_e {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    TRootBrowser(0, "Eve Main Window", w, h, "", kFALSE),
    fFileBrowser(0),
@@ -551,8 +531,6 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fSelPopup   (0),
    fHilPopup   (0)
 {
-   // Constructor.
-
    // Construct Eve menu.
 
    fEvePopup = new TGPopupMenu(gClient->GetRoot());
@@ -621,13 +599,11 @@ TEveBrowser::TEveBrowser(UInt_t w, UInt_t h) :
    fMenuFile->GetEntry(kCloseWindow)->GetLabel()->SetString("Close Eve");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Handle events from Eve menu.
 
-//______________________________________________________________________________
 void TEveBrowser::EveMenu(Int_t id)
 {
-   // Handle events from Eve menu.
-
    switch (id)
    {
       case kNewMainFrameSlot: {
@@ -737,13 +713,11 @@ void TEveBrowser::EveMenu(Int_t id)
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize standard plugins.
 
-//______________________________________________________________________________
 void TEveBrowser::InitPlugins(Option_t *opt)
 {
-   // Initialize standard plugins.
-
    TString o(opt);
 
    // File Browser plugin ... we have to process it here.
@@ -761,14 +735,15 @@ void TEveBrowser::InitPlugins(Option_t *opt)
    TRootBrowser::InitPlugins(o);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a file-browser. Caller should provide Start/StopEmbedding() calls
+/// and populate the new browser.
+///
+/// If flag make_default is kTRUE, the default file-browser is set to the
+/// newly created browser.
+
 TGFileBrowser* TEveBrowser::MakeFileBrowser(Bool_t make_default)
 {
-   // Create a file-browser. Caller should provide Start/StopEmbedding() calls
-   // and populate the new browser.
-   // If flag make_default is kTRUE, the default file-browser is set to the
-   // newly created browser.
-
    TBrowserImp    imp;
    TBrowser      *tb = new TBrowser("Pipi", "Strel", &imp);
    TGFileBrowser *fb = new TGFileBrowser(gClient->GetRoot(), tb, 200, 500);
@@ -786,36 +761,36 @@ TGFileBrowser* TEveBrowser::MakeFileBrowser(Bool_t make_default)
    return fb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the default file-browser.
+
 TGFileBrowser* TEveBrowser::GetFileBrowser() const
 {
-  // Returns the default file-browser.
-
   return fFileBrowser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the default file browser.
+
 void TEveBrowser::SetFileBrowser(TGFileBrowser* b)
 {
-  // Set the default file browser.
-
   fFileBrowser = b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Override from TRootBrowser. We need to be more brutal as fBrowser is
+/// not set in Eve case.
+
 void TEveBrowser::ReallyDelete()
 {
-   // Override from TRootBrowser. We need to be more brutal as fBrowser is
-   // not set in Eve case.
-
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TRootBrowser. Need to intercept closing of Eve tabs.
+
 void TEveBrowser::CloseTab(Int_t id)
 {
-   // Virtual from TRootBrowser. Need to intercept closing of Eve tabs.
-
    // Check if this is an Eve window and destroy accordingly.
    TGCompositeFrame *pcf = fTabRight->GetTabContainer(id);
    if (pcf)
@@ -836,30 +811,30 @@ void TEveBrowser::CloseTab(Int_t id)
    TRootBrowser::CloseTab(id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TGMainFrame. Calls TEveManager::Terminate().
+
 void TEveBrowser::CloseWindow()
 {
-   // Virtual from TGMainFrame. Calls TEveManager::Terminate().
-
    TEveManager::Terminate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide the bottom tab (usually holding command-line widget).
+
 void TEveBrowser::HideBottomTab()
 {
-   // Hide the bottom tab (usually holding command-line widget).
-
    fV2->HideFrame(fHSplitter);
    fV2->HideFrame(fH2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TRootBrowser keeps (somewhat unnecessarily) counters for number ob tabs
+/// on each position. Eve bastardizes the right tab so we have to fix the counters
+/// when a new window is added ... it doesn't seem to be needed when it is removed.
+
 void TEveBrowser::SanitizeTabCounts()
 {
-   // TRootBrowser keeps (somewhat unnecessarily) counters for number ob tabs
-   // on each position. Eve bastardizes the right tab so we have to fix the counters
-   // when a new window is added ... it doesn't seem to be needed when it is removed.
-
    fNbTab[TRootBrowser::kRight] = fTabRight->GetNumberOfTabs();
    fCrTab[TRootBrowser::kRight] = fTabRight->GetNumberOfTabs() - 1;
 }

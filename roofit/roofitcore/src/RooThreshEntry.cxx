@@ -14,12 +14,13 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooThreshEntry is a utility class for RooThresholdCategory
-// END_HTML
-//
+/**
+\file RooThreshEntry.cxx
+\class RooThreshEntry
+\ingroup Roofitcore
+
+Class RooThreshEntry is a utility class for RooThresholdCategory
+**/
 
 #include "RooFit.h"
 
@@ -33,31 +34,33 @@ ClassImp(RooThreshEntry)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with threshold value and associated category value
+
 RooThreshEntry::RooThreshEntry(Double_t inThresh, const RooCatType& inCat) : 
   _thresh(inThresh), _cat(inCat) 
 {
-  // Constructor with threshold value and associated category value
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooThreshEntry::RooThreshEntry(const RooThreshEntry& other) : 
   TObject(other), _thresh(other._thresh), _cat(other._cat) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implement TObject Compare() operator to facilitate sorting of 
+/// RooThreshEntry object in ROOT collection. Only comparison
+/// to other RooThreshEntry objects is supported
+
 Int_t RooThreshEntry::Compare(const TObject* other) const 
 {
-  // Implement TObject Compare() operator to facilitate sorting of 
-  // RooThreshEntry object in ROOT collection. Only comparison
-  // to other RooThreshEntry objects is supported
-
   // Can only compare objects of same type
   if (!other->IsA()->InheritsFrom(RooThreshEntry::Class())) return 0 ;
 

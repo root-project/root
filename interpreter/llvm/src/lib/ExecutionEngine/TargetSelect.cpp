@@ -14,11 +14,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/Module.h"
 #include "llvm/MC/SubtargetFeature.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetMachine.h"
@@ -49,20 +48,18 @@ TargetMachine *EngineBuilder::selectTarget(const Triple &TargetTriple,
   // Adjust the triple to match what the user requested.
   const Target *TheTarget = nullptr;
   if (!MArch.empty()) {
-    for (TargetRegistry::iterator it = TargetRegistry::begin(),
-           ie = TargetRegistry::end(); it != ie; ++it) {
-      if (MArch == it->getName()) {
-        TheTarget = &*it;
-        break;
-      }
-    }
+    auto I = std::find_if(
+        TargetRegistry::targets().begin(), TargetRegistry::targets().end(),
+        [&](const Target &T) { return MArch == T.getName(); });
 
-    if (!TheTarget) {
+    if (I == TargetRegistry::targets().end()) {
       if (ErrorStr)
         *ErrorStr = "No available targets are compatible with this -march, "
                     "see -version for the available targets.\n";
       return nullptr;
     }
+
+    TheTarget = &*I;
 
     // Adjust the triple to match (if known), otherwise stick with the
     // requested/host triple.

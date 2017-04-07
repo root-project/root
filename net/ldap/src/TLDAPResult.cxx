@@ -13,33 +13,35 @@
 
 ClassImp(TLDAPResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TLDAPResult object is just a wrapper of the LDAPMessage structure.
+/// LDAP *ld:                  The current session handler
+/// LDAPMessage *searchresult: The LDAPMessage structure returned from
+///                            the ldap_search_s() call
+
 TLDAPResult::TLDAPResult(LDAP *ld, LDAPMessage *searchresult)
    : fLd(ld), fSearchResult(searchresult), fCurrentEntry(searchresult)
 {
-   // TLDAPResult object is just a wrapper of the LDAPMessage structure.
-   // LDAP *ld:                  The current session handler
-   // LDAPMessage *searchresult: The LDAPMessage structure returned from
-   //                            the ldap_search_s() call
-
    if (!GetCount())
       fCurrentEntry = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TLDAPResult::TLDAPResult(const TLDAPResult& ldr) :
    TObject(ldr),
    fLd(ldr.fLd),
    fSearchResult(ldr.fSearchResult),
    fCurrentEntry(ldr.fCurrentEntry)
 {
-   // Copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Equal operator
+
 TLDAPResult& TLDAPResult::operator=(const TLDAPResult& ldr)
 {
-   // Equal operator
    if(this!=&ldr) {
       TObject::operator=(ldr);
       fLd=ldr.fLd;
@@ -48,38 +50,38 @@ TLDAPResult& TLDAPResult::operator=(const TLDAPResult& ldr)
    } return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the LDAPMessage structure
+
 TLDAPResult::~TLDAPResult()
 {
-   // Deletes the LDAPMessage structure
-
    if (fSearchResult)
       ldap_msgfree(fSearchResult);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns next entry from the search result.
+/// After the last entry it returns a zero pointer
+/// and after this it returns the first entry again.
+/// The user is responsable for deleting the returned object after use.
+
 TLDAPEntry *TLDAPResult::GetNext()
 {
-   // Returns next entry from the search result.
-   // After the last entry it returns a zero pointer
-   // and after this it returns the first entry again.
-   // The user is responsable for deleting the returned object after use.
-
    TLDAPEntry *entry = CreateEntry(fCurrentEntry);
    fCurrentEntry = (fCurrentEntry != 0 ? ldap_next_entry(fLd, fCurrentEntry) :
                    (GetCount() != 0 ? fSearchResult : 0));
    return entry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TLDAPEntry object from the data containing in the LDAPMessage
+/// structure and returns pointer to it.
+/// The user is responsable for deleting the returned object after use.
+/// LDAPMessage *entry: Pointer to the LDAPMessage structure containing
+/// the entry data.
+
 TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
 {
-   // Creates TLDAPEntry object from the data containing in the LDAPMessage
-   // structure and returns pointer to it.
-   // The user is responsable for deleting the returned object after use.
-   // LDAPMessage *entry: Pointer to the LDAPMessage structure containing
-   // the entry data.
-
    if (entry == 0)
       return 0;
 
@@ -106,23 +108,23 @@ TLDAPEntry *TLDAPResult::CreateEntry(LDAPMessage *entry)
    return ldapentry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the number of entries in the search result
+
 Int_t TLDAPResult::GetCount() const
 {
-   // Returns the number of entries in the search result
-
    LDAP *ld = fLd;
    LDAPMessage *result = fSearchResult;
 
    return ldap_count_entries(ld, result);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints all entries.
+/// Calls the Print() member function of the each entry.
+
 void TLDAPResult::Print(Option_t *) const
 {
-   // Prints all entries.
-   // Calls the Print() member function of the each entry.
-
    TLDAPEntry *e;
    Int_t count = GetCount() + 1;
    for (Int_t i = 0; i < count; i++) {

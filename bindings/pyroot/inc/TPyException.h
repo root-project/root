@@ -30,20 +30,14 @@
 //////////////////////////////////////////////////////////////////////////////
 
 // ROOT
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Standard
 #include <exception>
 
 
 namespace PyROOT {
-
-R__EXTERN void* TPyExceptionMagic;
 
 class TPyException : public std::exception {
 public:

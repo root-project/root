@@ -18,44 +18,44 @@
 #include <sys/time.h> // For gettimeofday()
 #endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLStopwatch                                                         //
-//                                                                      //
-// Stopwatch object for timing GL work. We do not use the TStopwatch as //
-// we need to perform GL flushing to get accurate times + we record     //
-// timing overheads here.                                               //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLStopwatch
+\ingroup opengl
+Stopwatch object for timing GL work. We do not use the TStopwatch as
+we need to perform GL flushing to get accurate times + we record
+timing overheads here.
+*/
 
 ClassImp(TGLStopwatch);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct stopwatch object.
+
 TGLStopwatch::TGLStopwatch() : fStart(0), fEnd(0), fLastRun(0)
 {
-   // Construct stopwatch object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy stopwatch object.
+
 TGLStopwatch::~TGLStopwatch()
 {
-   // Destroy stopwatch object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start timing.
+
 void TGLStopwatch::Start()
 {
-   // Start timing.
-
    fStart   = GetClock();
    fEnd     = 0;
 }
 
 // In milliseconds
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return lap time since Start(), in milliseconds.
+
 Double_t TGLStopwatch::Lap() const
 {
-   // Return lap time since Start(), in milliseconds.
-
    if (fStart == 0)
       return 0;
    else
@@ -63,11 +63,11 @@ Double_t TGLStopwatch::Lap() const
 }
 
 // In milliseconds
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End timing, return total time since Start(), in milliseconds.
+
 Double_t TGLStopwatch::End()
 {
-   // End timing, return total time since Start(), in milliseconds.
-
    if (fStart == 0)
       return 0;
    if (fEnd == 0) {
@@ -77,11 +77,11 @@ Double_t TGLStopwatch::End()
    return fLastRun;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get internal clock time, in milliseconds.
+
 Double_t TGLStopwatch::GetClock(void) const
 {
-   // Get internal clock time, in milliseconds.
-
 #ifdef R__WIN32
    // Use performance counter (system dependent support) if possible
    static LARGE_INTEGER perfFreq;

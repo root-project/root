@@ -36,13 +36,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 
@@ -62,6 +58,7 @@ private:
    TString   fTimeStamp;   // Request time stamp
    TString   fAccessKey;   // Access key (for authentication)
    TString   fSecretKey;   // Secret key (for authentication)
+   TString   fSessionToken; // Session token (for authentication)
 
 
 protected:
@@ -72,6 +69,7 @@ protected:
    TString MakeAuthPrefix() const;
    TString MakeHostHeader() const;
    TString MakeDateHeader() const;
+   TString MakeTokenHeader() const;
    TS3HTTPRequest& SetTimeStamp();
 
 public:
@@ -101,6 +99,7 @@ public:
    TS3HTTPRequest& SetSecretKey(const TString& secretKey);
    TS3HTTPRequest& SetAuthKeys(const TString& accessKey, const TString& secretKey);
    TS3HTTPRequest& SetAuthType(TS3HTTPRequest::EAuthType authType);
+   TS3HTTPRequest& SetSessionToken(const TString& token);
 
    ClassDef(TS3HTTPRequest, 0)  // Create generic HTTP request for Amazon S3 and Google Storage services
 };
@@ -152,6 +151,12 @@ inline TS3HTTPRequest& TS3HTTPRequest::SetAccessKey(const TString& accessKey)
 inline TS3HTTPRequest& TS3HTTPRequest::SetSecretKey(const TString& secretKey)
 {
    fSecretKey = secretKey;
+   return *this;
+}
+
+inline TS3HTTPRequest& TS3HTTPRequest::SetSessionToken(const TString& token)
+{
+   fSessionToken = token;
    return *this;
 }
 

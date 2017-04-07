@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooGenFitStudy is an abstract base class for RooStudyManager modules
-//
-// END_HTML
-//
+/**
+\file RooGenFitStudy.cxx
+\class RooGenFitStudy
+\ingroup Roofitcore
+
+RooGenFitStudy is an abstract base class for RooStudyManager modules
+
+**/
 
 
 
@@ -43,7 +44,9 @@ ClassImp(RooGenFitStudy)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) : 
   RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy"), 
   _genPdf(0), 
@@ -54,12 +57,13 @@ RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) :
   _params(0),
   _initParams(0)
 {  
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) : 
   RooAbsStudy(other),
   _genPdfName(other._genPdfName),
@@ -74,7 +78,6 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
   _params(0),
   _initParams(0)
 {  
-  // Copy constructor
   TIterator* giter = other._genOpts.MakeIterator() ;
   TObject* o ;
   while((o=giter->Next())) {
@@ -92,7 +95,8 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooGenFitStudy::~RooGenFitStudy()
 {
   if (_params) delete _params ;
@@ -100,10 +104,11 @@ RooGenFitStudy::~RooGenFitStudy()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called after insertion into workspace
+
 Bool_t RooGenFitStudy::attach(RooWorkspace& w) 
 { 
-  // Function called after insertion into workspace
   Bool_t ret = kFALSE ;
 
   RooAbsPdf* pdf = w.pdf(_genPdfName.c_str()) ;
@@ -139,7 +144,8 @@ Bool_t RooGenFitStudy::attach(RooWorkspace& w)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3) 
 {
   _genPdfName = pdfName ;
@@ -151,7 +157,8 @@ void RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3) 
 {
   _fitPdfName = pdfName ;
@@ -163,11 +170,11 @@ void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, cons
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of study 
+
 Bool_t RooGenFitStudy::initialize() 
 { 
-  // One-time initialization of study 
-
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
   _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
   
@@ -185,10 +192,11 @@ Bool_t RooGenFitStudy::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute one study iteration
+
 Bool_t RooGenFitStudy::execute() 
 { 
-  // Execute one study iteration
   *_params = *_initParams ;
   RooDataSet* data = _genPdf->generate(*_genSpec) ;
   RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(kTRUE),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
@@ -206,10 +214,11 @@ Bool_t RooGenFitStudy::execute()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalization of study
+
 Bool_t RooGenFitStudy::finalize() 
 { 
-  // Finalization of study
   delete _params ;
   delete _nllVar ;
   delete _ngenVar ;
@@ -226,7 +235,8 @@ Bool_t RooGenFitStudy::finalize()
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooGenFitStudy::Print(Option_t* /*options*/) const
 {
 }

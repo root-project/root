@@ -82,21 +82,22 @@ ClassImp(TGListTree)
 // TGListTreeItem
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGListTreeItem::TGListTreeItem(TGClient *client) :
    fClient(client),
    fParent    (0), fFirstchild(0), fLastchild (0), fPrevsibling(0),
    fNextsibling(0),fOpen (kFALSE), fDNDState  (0),
    fY         (0), fXtext     (0), fYtext(0), fHeight(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return width of item's icon.
+
 UInt_t TGListTreeItem::GetPicWidth() const
 {
-   // Return width of item's icon.
-
    const TGPicture *pic = GetPicture();
    return (pic) ? pic->GetWidth() : 0;
 }
@@ -106,15 +107,15 @@ UInt_t TGListTreeItem::GetPicWidth() const
 // TGListTreeItemStd
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create list tree item.
+
 TGListTreeItemStd::TGListTreeItemStd(TGClient *client, const char *name,
                                      const TGPicture *opened,
                                      const TGPicture *closed,
                                      Bool_t checkbox) :
    TGListTreeItem(client)
 {
-   // Create list tree item.
-
    fText = name;
    fCheckBox = checkbox;
    fChecked = kTRUE;
@@ -145,11 +146,11 @@ TGListTreeItemStd::TGListTreeItemStd(TGClient *client, const char *name,
    fDNDState = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete list tree item.
+
 TGListTreeItemStd::~TGListTreeItemStd()
 {
-   // Delete list tree item.
-
    if (fOwnsData && fUserData) {
       TObject *obj = static_cast<TObject *>(fUserData);
       delete dynamic_cast<TObject *>(obj);
@@ -160,19 +161,19 @@ TGListTreeItemStd::~TGListTreeItemStd()
    fClient->FreePicture(fUncheckedPic);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return color for marking items that are active or selected.
+
 Pixel_t TGListTreeItemStd::GetActiveColor() const
 {
-   // Return color for marking items that are active or selected.
-
    return TGFrame::GetDefaultSelectedBackground();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all child items of 'item' into the list 'checked'.
+
 Bool_t TGListTreeItemStd::HasCheckedChild(Bool_t first)
 {
-   // Add all child items of 'item' into the list 'checked'.
-
    TGListTreeItem *item = this;
 
    while (item) {
@@ -191,11 +192,11 @@ Bool_t TGListTreeItemStd::HasCheckedChild(Bool_t first)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all child items of 'item' into the list 'checked'.
+
 Bool_t TGListTreeItemStd::HasUnCheckedChild(Bool_t first)
 {
-   // Add all child items of 'item' into the list 'checked'.
-
    TGListTreeItem *item = this;
 
    while (item) {
@@ -214,11 +215,11 @@ Bool_t TGListTreeItemStd::HasUnCheckedChild(Bool_t first)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the state of the node 'item' according to the children states.
+
 void TGListTreeItemStd::UpdateState()
 {
-   // Update the state of the node 'item' according to the children states.
-
    if ((!fChecked && HasCheckedChild(kTRUE)) ||
        (fChecked && HasUnCheckedChild(kTRUE))) {
       SetCheckBoxPictures(gClient->GetPicture("checked_dis_t.xpm"),
@@ -230,12 +231,12 @@ void TGListTreeItemStd::UpdateState()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set all child items of this one checked if state=kTRUE,
+/// unchecked if state=kFALSE.
+
 void TGListTreeItemStd::CheckAllChildren(Bool_t state)
 {
-   // Set all child items of this one checked if state=kTRUE,
-   // unchecked if state=kFALSE.
-
    if (state) {
       if (!IsChecked())
          CheckItem();
@@ -247,12 +248,12 @@ void TGListTreeItemStd::CheckAllChildren(Bool_t state)
    UpdateState();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set all child items of 'item' checked if state=kTRUE;
+/// unchecked if state=kFALSE.
+
 void TGListTreeItemStd::CheckChildren(TGListTreeItem *item, Bool_t state)
 {
-   // Set all child items of 'item' checked if state=kTRUE;
-   // unchecked if state=kFALSE.
-
    if (!item) return;
 
    while (item) {
@@ -271,20 +272,20 @@ void TGListTreeItemStd::CheckChildren(TGListTreeItem *item, Bool_t state)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a check box on the tree node.
+
 void TGListTreeItemStd::SetCheckBox(Bool_t on)
 {
-   // Set a check box on the tree node.
-
    fCheckBox = on;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change list tree check item icons.
+
 void TGListTreeItemStd::SetCheckBoxPictures(const TGPicture *checked,
                                          const TGPicture *unchecked)
 {
-   // Change list tree check item icons.
-
    fClient->FreePicture(fCheckedPic);
    fClient->FreePicture(fUncheckedPic);
 
@@ -304,11 +305,11 @@ void TGListTreeItemStd::SetCheckBoxPictures(const TGPicture *checked,
    fUncheckedPic = unchecked;
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change list tree item icons.
+
 void TGListTreeItemStd::SetPictures(const TGPicture *opened, const TGPicture *closed)
 {
-   // Change list tree item icons.
-
    fClient->FreePicture(fOpenPic);
    fClient->FreePicture(fClosedPic);
 
@@ -334,13 +335,13 @@ void TGListTreeItemStd::SetPictures(const TGPicture *opened, const TGPicture *cl
 // TGListTree
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list tree widget.
+
 TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
                        ULong_t back) :
    TGContainer(p, w, h, options, back)
 {
-   // Create a list tree widget.
-
    fMsgWindow   = p;
    fCanvas      = 0;
    fTip         = 0;
@@ -351,6 +352,9 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fBdown       = kFALSE;
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
+   fExposeTop = fExposeBottom = 0;
+   fDropItem = 0;
+   fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();
@@ -396,12 +400,12 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
    fEditDisabled = kEditDisable | kEditDisableGrab | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list tree widget.
+
 TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    TGContainer(p, options, back)
 {
-   // Create a list tree widget.
-
    fMsgWindow   = p;
    fTip         = 0;
    fTipItem     = 0;
@@ -411,6 +415,9 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fBdown       = kFALSE;
    fUserControlled = kFALSE;
    fEventHandled   = kFALSE;
+   fExposeTop = fExposeBottom = 0;
+   fDropItem = 0;
+   fLastEventState = 0;
 
    fGrayPixel   = GetGrayPixel();
    fFont        = GetDefaultFontStruct();
@@ -456,11 +463,11 @@ TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
    fEditDisabled = kEditDisable | kEditDisableGrab | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete list tree widget.
+
 TGListTree::~TGListTree()
 {
-   // Delete list tree widget.
-
    TGListTreeItem *item, *sibling;
 
    delete [] fDNDTypeList;
@@ -477,21 +484,21 @@ TGListTree::~TGListTree()
 
 //--- text utility functions
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns height of currently used font.
+
 Int_t TGListTree::FontHeight()
 {
-   // Returns height of currently used font.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->TextHeight();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ascent of currently used font.
+
 Int_t TGListTree::FontAscent()
 {
-   // Returns ascent of currently used font.
-
    FontMetrics_t m;
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
@@ -499,11 +506,11 @@ Int_t TGListTree::FontAscent()
    return m.fAscent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns text width relative to currently used font.
+
 Int_t TGListTree::TextWidth(const char *c)
 {
-   // Returns text width relative to currently used font.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->TextWidth(c);
@@ -511,11 +518,11 @@ Int_t TGListTree::TextWidth(const char *c)
 
 //---- highlighting utilities
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Highlight tree item.
+
 void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {
-   // Highlight tree item.
-
    if (item) {
       if ((item == fSelected) && !state) {
          fSelected = 0;
@@ -527,11 +534,11 @@ void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Higlight item children.
+
 void TGListTree::HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {
-   // Higlight item children.
-
    while (item) {
       HighlightItem(item, state, draw);
       if (item->fFirstchild)
@@ -540,20 +547,20 @@ void TGListTree::HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t dr
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unselect all items.
+
 void TGListTree::UnselectAll(Bool_t draw)
 {
-   // Unselect all items.
-
    ClearViewPort();
    HighlightChildren(fFirst, kFALSE, draw);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button events in the list tree.
+
 Bool_t TGListTree::HandleButton(Event_t *event)
 {
-   // Handle button events in the list tree.
-
    TGListTreeItem *item;
 
    if (fTip) fTip->Hide();
@@ -647,11 +654,11 @@ Bool_t TGListTree::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click event in the list tree (only for kButton1).
+
 Bool_t TGListTree::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click event in the list tree (only for kButton1).
-
    TGListTreeItem *item = 0;
 
    if (event->fCode == kButton4 || event->fCode == kButton5) {
@@ -689,11 +696,11 @@ Bool_t TGListTree::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGListTree::HandleCrossing(Event_t *event)
 {
-   // Handle mouse crossing event.
-
    if (event->fType == kLeaveNotify) {
       if (fTip) {
          fTip->Hide();
@@ -716,12 +723,12 @@ Bool_t TGListTree::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle dragging position events.
+
 Atom_t TGListTree::HandleDNDPosition(Int_t /*x*/, Int_t y, Atom_t action,
                                       Int_t /*xroot*/, Int_t /*yroot*/)
 {
-   // Handle dragging position events.
-
    static TGListTreeItem *olditem = 0;
    TGListTreeItem *item;
    if ((item = FindItem(y)) != 0) {
@@ -742,11 +749,11 @@ Atom_t TGListTree::HandleDNDPosition(Int_t /*x*/, Int_t y, Atom_t action,
    return kNone;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag enter events.
+
 Atom_t TGListTree::HandleDNDEnter(Atom_t *typelist)
 {
-   // Handle drag enter events.
-
    Atom_t ret = kNone;
    for (int i = 0; typelist[i] != kNone; ++i) {
       if (typelist[i] == fDNDTypeList[0])
@@ -757,30 +764,30 @@ Atom_t TGListTree::HandleDNDEnter(Atom_t *typelist)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag leave events.
+
 Bool_t TGListTree::HandleDNDLeave()
 {
-   // Handle drag leave events.
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drop events.
+
 Bool_t TGListTree::HandleDNDDrop(TDNDData *data)
 {
-   // Handle drop events.
-
    DataDropped(fDropItem, data);
    HighlightItem(fDropItem, kFALSE, kTRUE);
    //ClearHighlighted();
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DataDropped() signal.
+
 void TGListTree::DataDropped(TGListTreeItem *item, TDNDData *data)
 {
-   // Emit DataDropped() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)item;
@@ -789,12 +796,12 @@ void TGListTree::DataDropped(TGListTreeItem *item, TDNDData *data)
    Emit("DataDropped(TGListTreeItem*,TDNDData*)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event. Used to set tool tip, to emit
+/// MouseOver() signal and for DND handling.
+
 Bool_t TGListTree::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event. Used to set tool tip, to emit
-   // MouseOver() signal and for DND handling.
-
    TGListTreeItem *item;
    TGPosition pos = GetPagePosition();
 
@@ -917,12 +924,12 @@ Bool_t TGListTree::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The key press event handler converts a key press to some line editor
+/// action.
+
 Bool_t TGListTree::HandleKey(Event_t *event)
 {
-   // The key press event handler converts a key press to some line editor
-   // action.
-
    char   input[10];
    UInt_t keysym;
    TGListTreeItem *item = 0;
@@ -1035,45 +1042,45 @@ Bool_t TGListTree::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when pointer is over entry.
+
 void TGListTree::MouseOver(TGListTreeItem *entry)
 {
-   // Signal emitted when pointer is over entry.
-
    Emit("MouseOver(TGListTreeItem*)", (Long_t)entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when pointer is over entry.
+
 void TGListTree::MouseOver(TGListTreeItem *entry, UInt_t mask)
 {
-   // Signal emitted when pointer is over entry.
-
    Long_t args[2];
    args[0] = (Long_t)entry;
    args[1] = mask;
    Emit("MouseOver(TGListTreeItem*,UInt_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when keyboard key pressed
+///
+/// entry - selected item
+/// keysym - defined in "KeySymbols.h"
+/// mask - modifier key mask, defined in "GuiTypes.h"
+///
+/// const Mask_t kKeyShiftMask   = BIT(0);
+/// const Mask_t kKeyLockMask    = BIT(1);
+/// const Mask_t kKeyControlMask = BIT(2);
+/// const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
+/// const Mask_t kButton1Mask    = BIT(8);
+/// const Mask_t kButton2Mask    = BIT(9);
+/// const Mask_t kButton3Mask    = BIT(10);
+/// const Mask_t kButton4Mask    = BIT(11);
+/// const Mask_t kButton5Mask    = BIT(12);
+/// const Mask_t kAnyModifier    = BIT(15);
+
 void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 {
-   // Signal emitted when keyboard key pressed
-   //
-   // entry - selected item
-   // keysym - defined in "KeySymbols.h"
-   // mask - modifier key mask, defined in "GuiTypes.h"
-   //
-   // const Mask_t kKeyShiftMask   = BIT(0);
-   // const Mask_t kKeyLockMask    = BIT(1);
-   // const Mask_t kKeyControlMask = BIT(2);
-   // const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
-   // const Mask_t kButton1Mask    = BIT(8);
-   // const Mask_t kButton2Mask    = BIT(9);
-   // const Mask_t kButton3Mask    = BIT(10);
-   // const Mask_t kButton4Mask    = BIT(11);
-   // const Mask_t kButton5Mask    = BIT(12);
-   // const Mask_t kAnyModifier    = BIT(15);
-
    Long_t args[3];
    args[0] = (Long_t)entry;
    args[1] = (Long_t)keysym;
@@ -1082,19 +1089,19 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
    SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit ReturnPressed() signal.
+
 void TGListTree::ReturnPressed(TGListTreeItem *entry)
 {
-   // Emit ReturnPressed() signal.
-
    Emit("ReturnPressed(TGListTreeItem*)", (Long_t)entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Checked() signal.
+
 void TGListTree::Checked(TObject *entry, Bool_t on)
 {
-   // Emit Checked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -1103,11 +1110,11 @@ void TGListTree::Checked(TObject *entry, Bool_t on)
    Emit("Checked(TObject*,Bool_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
 {
-   // Emit Clicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -1116,11 +1123,11 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
    Emit("Clicked(TGListTreeItem*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit Clicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -1131,11 +1138,11 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
    Emit("Clicked(TGListTreeItem*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x, Int_t y)
 {
-   // Emit Clicked() signal.
-
    Long_t args[5];
 
    args[0] = (Long_t)entry;
@@ -1147,11 +1154,11 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x,
    Emit("Clicked(TGListTreeItem*,Int_t,UInt_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -1160,11 +1167,11 @@ void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn)
    Emit("DoubleClicked(TGListTreeItem*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -1175,27 +1182,27 @@ void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t 
    Emit("DoubleClicked(TGListTreeItem*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content to the top.
+
 void TGListTree::Home(Bool_t /*select*/)
 {
-   // Move content to the top.
-
    if (fCanvas) fCanvas->SetVsbPosition(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content to the bottom.
+
 void TGListTree::End(Bool_t /*select*/)
 {
-   // Move content to the bottom.
-
    if (fCanvas) fCanvas->SetVsbPosition((Int_t)fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content one page up.
+
 void TGListTree::PageUp(Bool_t /*select*/)
 {
-   // Move content one page up.
-
    if (!fCanvas) return;
 
    TGDimension dim = GetPageDimension();
@@ -1206,11 +1213,11 @@ void TGListTree::PageUp(Bool_t /*select*/)
    fCanvas->SetVsbPosition(newpos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content one page down.
+
 void TGListTree::PageDown(Bool_t /*select*/)
 {
-   // Move content one page down.
-
    if (!fCanvas) return;
 
    TGDimension dim = GetPageDimension();
@@ -1220,11 +1227,11 @@ void TGListTree::PageDown(Bool_t /*select*/)
    fCanvas->SetVsbPosition(newpos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content one item-size up.
+
 void TGListTree::LineUp(Bool_t /*select*/)
 {
-   // Move content one item-size up.
-
    Int_t height = 0;
    if (!fCurrent) return;
 
@@ -1247,11 +1254,11 @@ void TGListTree::LineUp(Bool_t /*select*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content one item-size down.
+
 void TGListTree::LineDown(Bool_t /*select*/)
 {
-   // Move content one item-size down.
-
    Int_t height;
    if (!fCurrent) return;
 
@@ -1274,12 +1281,12 @@ void TGListTree::LineDown(Bool_t /*select*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content to position of item. If item is 0, move to position
+/// of currently selected item.
+
 void TGListTree::AdjustPosition(TGListTreeItem *item)
 {
-   // Move content to position of item. If item is 0, move to position
-   // of currently selected item.
-
    TGListTreeItem *it = item;
 
    if (!it) it = fSelected;
@@ -1315,11 +1322,11 @@ void TGListTree::AdjustPosition(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes search dialog. Looks for item with the entered name.
+
 void TGListTree::Search(Bool_t close)
 {
-   // Invokes search dialog. Looks for item with the entered name.
-
    Int_t ret = 0;
    char msg[256];
    static TString buf;
@@ -1350,11 +1357,11 @@ void TGListTree::Search(Bool_t close)
 
 //---- drawing functions
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw list tree.
+
 void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
 {
-   // Redraw list tree.
-
    static GContext_t gcBg = 0;
 
    // sanity checks
@@ -1392,11 +1399,11 @@ void TGListTree::DrawRegion(Int_t /*x*/, Int_t y, UInt_t /*w*/, UInt_t h)
    gVirtualX->Update(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw list tree widget.
+
 void TGListTree::Draw(Handle_t id, Int_t yevent, Int_t hevent)
 {
-   // Draw list tree widget.
-
    TGListTreeItem *item;
    Int_t  x, y, xbranch;
    UInt_t width, height, old_width, old_height;
@@ -1438,12 +1445,12 @@ void TGListTree::Draw(Handle_t id, Int_t yevent, Int_t hevent)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw children of item in list tree.
+
 Int_t TGListTree::DrawChildren(Handle_t id, TGListTreeItem *item,
                                Int_t x, Int_t y, Int_t xroot)
 {
-   // Draw children of item in list tree.
-
    UInt_t width, height;
    Int_t  xbranch;
    TGPosition pos = GetPagePosition();
@@ -1467,13 +1474,13 @@ Int_t TGListTree::DrawChildren(Handle_t id, TGListTreeItem *item,
    return y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw list tree item.
+
 void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
                           Int_t *xroot, UInt_t *retwidth, UInt_t *retheight)
 {
-   // Draw list tree item.
-
-   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext, xline, yline, xc;
+   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, xline, yline, xc;
    Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
@@ -1578,12 +1585,12 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    *retheight = height;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a outline of color 'col' around an item.
+
 void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
                              Bool_t clear)
 {
-   // Draw a outline of color 'col' around an item.
-
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -1603,11 +1610,11 @@ void TGListTree::DrawOutline(Handle_t id, TGListTreeItem *item, Pixel_t col,
    gVirtualX->SetForeground(fDrawGC, fgBlackPixel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw active item with its active color.
+
 void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
 {
-   // Draw active item with its active color.
-
    UInt_t width;
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
@@ -1627,11 +1634,11 @@ void TGListTree::DrawActive(Handle_t id, TGListTreeItem *item)
                          item->GetText(), item->GetTextLength());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw name of list tree item.
+
 void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
 {
-   // Draw name of list tree item.
-
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -1668,11 +1675,11 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw node (little + in box).
+
 void TGListTree::DrawNode(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y)
 {
-   // Draw node (little + in box).
-
    TGPosition pos = GetPagePosition();
    Int_t yp = y - pos.fY;
 
@@ -1691,14 +1698,14 @@ void TGListTree::DrawNode(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tool tip text associated with this item. The delay is in
+/// milliseconds (minimum 250). To remove tool tip call method with
+/// delayms = 0. To change delayms you first have to call this method
+/// with delayms=0.
+
 void TGListTree::SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delayms)
 {
-   // Set tool tip text associated with this item. The delay is in
-   // milliseconds (minimum 250). To remove tool tip call method with
-   // delayms = 0. To change delayms you first have to call this method
-   // with delayms=0.
-
    if (delayms == 0) {
       delete fTip;
       fTip = 0;
@@ -1715,12 +1722,12 @@ void TGListTree::SetToolTipText(const char *text, Int_t x, Int_t y, Long_t delay
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function removes the specified item from the linked list.
+/// It does not do anything with the data contained in the item, though.
+
 void TGListTree::RemoveReference(TGListTreeItem *item)
 {
-   // This function removes the specified item from the linked list.
-   // It does not do anything with the data contained in the item, though.
-
    ClearViewPort();
 
    // Disentangle from front (previous-sibling, parent's first child)
@@ -1743,12 +1750,12 @@ void TGListTree::RemoveReference(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete given item. Takes care of list-tree state members
+/// fSelected, fCurrent and fBelowMouse.
+
 void TGListTree::PDeleteItem(TGListTreeItem *item)
 {
-   // Delete given item. Takes care of list-tree state members
-   // fSelected, fCurrent and fBelowMouse.
-
    if (fSelected == item) {
       fSelected = 0;
    }
@@ -1771,11 +1778,11 @@ void TGListTree::PDeleteItem(TGListTreeItem *item)
    delete item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively delete all children of an item.
+
 void TGListTree::PDeleteChildren(TGListTreeItem *item)
 {
-   // Recursively delete all children of an item.
-
    TGListTreeItem *child = item->fFirstchild;
 
    while (child) {
@@ -1788,11 +1795,11 @@ void TGListTree::PDeleteChildren(TGListTreeItem *item)
    item->fFirstchild = item->fLastchild = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert child in list.
+
 void TGListTree::InsertChild(TGListTreeItem *parent, TGListTreeItem *item)
 {
-   // Insert child in list.
-
    TGListTreeItem *i;
 
    item->fParent = parent;
@@ -1836,11 +1843,11 @@ void TGListTree::InsertChild(TGListTreeItem *parent, TGListTreeItem *item)
       UpdateChecked(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a list of ALREADY LINKED children into another list
+
 void TGListTree::InsertChildren(TGListTreeItem *parent, TGListTreeItem *item)
 {
-   // Insert a list of ALREADY LINKED children into another list
-
    TGListTreeItem *next, *newnext;
 
    //while (item) {
@@ -1877,12 +1884,12 @@ void TGListTree::InsertChildren(TGListTreeItem *parent, TGListTreeItem *item)
       newnext->fPrevsibling = item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search child item.
+
 Int_t TGListTree::SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
                                  TGListTreeItem **finditem)
 {
-   // Search child item.
-
    UInt_t height;
    const TGPicture *pic;
 
@@ -1912,11 +1919,11 @@ Int_t TGListTree::SearchChildren(TGListTreeItem *item, Int_t y, Int_t findy,
    return y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find item at postion findy.
+
 TGListTreeItem *TGListTree::FindItem(Int_t findy)
 {
-   // Find item at postion findy.
-
    Int_t  y;
    UInt_t height;
    TGListTreeItem *item, *finditem;
@@ -1951,24 +1958,24 @@ TGListTreeItem *TGListTree::FindItem(Int_t findy)
 
 //----- Public Functions
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add given item to list tree.
+
 void TGListTree::AddItem(TGListTreeItem *parent, TGListTreeItem *item)
 {
-   // Add given item to list tree.
-
    InsertChild(parent, item);
 
    if ((parent == 0) || (parent && parent->IsOpen()))
       ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add item to list tree. Returns new item.
+
 TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
                                     const TGPicture *open, const TGPicture *closed,
                                     Bool_t checkbox)
 {
-   // Add item to list tree. Returns new item.
-
    TGListTreeItem *item;
 
    item = new TGListTreeItemStd(fClient, string, open, closed, checkbox);
@@ -1979,15 +1986,15 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add item to list tree. If item with same userData already exists
+/// don't add it. Returns new item.
+
 TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
                                     void *userData, const TGPicture *open,
                                     const TGPicture *closed,
                                     Bool_t checkbox)
 {
-   // Add item to list tree. If item with same userData already exists
-   // don't add it. Returns new item.
-
    TGListTreeItem *item = FindChildByData(parent, userData);
    if (!item) {
       item = AddItem(parent, string, open, closed, checkbox);
@@ -1997,11 +2004,11 @@ TGListTreeItem *TGListTree::AddItem(TGListTreeItem *parent, const char *string,
    return item;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename item in list tree.
+
 void TGListTree::RenameItem(TGListTreeItem *item, const char *string)
 {
-   // Rename item in list tree.
-
    if (item) {
       item->Rename(string);
    }
@@ -2009,11 +2016,11 @@ void TGListTree::RenameItem(TGListTreeItem *item, const char *string)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete item from list tree.
+
 Int_t TGListTree::DeleteItem(TGListTreeItem *item)
 {
-   // Delete item from list tree.
-
    if (!fUserControlled)
       fCurrent = fBelowMouse = 0;
 
@@ -2026,11 +2033,11 @@ Int_t TGListTree::DeleteItem(TGListTreeItem *item)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open item in list tree (i.e. show child items).
+
 void TGListTree::OpenItem(TGListTreeItem *item)
 {
-   // Open item in list tree (i.e. show child items).
-
    if (item) {
       item->SetOpen(kTRUE);
       DoRedraw(); // force layout
@@ -2038,11 +2045,11 @@ void TGListTree::OpenItem(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close item in list tree (i.e. hide child items).
+
 void TGListTree::CloseItem(TGListTreeItem *item)
 {
-   // Close item in list tree (i.e. hide child items).
-
    if (item) {
       item->SetOpen(kFALSE);
       DoRedraw(); // force layout
@@ -2050,12 +2057,12 @@ void TGListTree::CloseItem(TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete item with fUserData == ptr. Search tree downwards starting
+/// at item.
+
 Int_t TGListTree::RecursiveDeleteItem(TGListTreeItem *item, void *ptr)
 {
-   // Delete item with fUserData == ptr. Search tree downwards starting
-   // at item.
-
    if (item && ptr) {
       if (item->GetUserData() == ptr) {
          DeleteItem(item);
@@ -2069,23 +2076,23 @@ Int_t TGListTree::RecursiveDeleteItem(TGListTreeItem *item, void *ptr)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tooltip text for this item. By default an item for which the
+/// userData is a pointer to an TObject the TObject::GetTitle() will
+/// be used to get the tip text.
+
 void TGListTree::SetToolTipItem(TGListTreeItem *item, const char *string)
 {
-   // Set tooltip text for this item. By default an item for which the
-   // userData is a pointer to an TObject the TObject::GetTitle() will
-   // be used to get the tip text.
-
    if (item) {
       item->SetTipText(string);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete children of item from list.
+
 Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
 {
-   // Delete children of item from list.
-
    if (!fUserControlled)
       fCurrent = fBelowMouse = 0;
 
@@ -2096,11 +2103,11 @@ Int_t TGListTree::DeleteChildren(TGListTreeItem *item)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make newparent the new parent of item.
+
 Int_t TGListTree::Reparent(TGListTreeItem *item, TGListTreeItem *newparent)
 {
-   // Make newparent the new parent of item.
-
    // Remove the item from its old location.
    RemoveReference(item);
 
@@ -2112,12 +2119,12 @@ Int_t TGListTree::Reparent(TGListTreeItem *item, TGListTreeItem *newparent)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make newparent the new parent of the children of item.
+
 Int_t TGListTree::ReparentChildren(TGListTreeItem *item,
                                  TGListTreeItem *newparent)
 {
-   // Make newparent the new parent of the children of item.
-
    TGListTreeItem *first;
 
    if (item->fFirstchild) {
@@ -2132,7 +2139,8 @@ Int_t TGListTree::ReparentChildren(TGListTreeItem *item,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C"
 Int_t Compare(const void *item1, const void *item2)
 {
@@ -2140,11 +2148,11 @@ Int_t Compare(const void *item1, const void *item2)
                  (*((TGListTreeItem **) item2))->GetText());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort items starting with item.
+
 Int_t TGListTree::Sort(TGListTreeItem *item)
 {
-   // Sort items starting with item.
-
    TGListTreeItem *first, *parent, **list;
    size_t i, count;
 
@@ -2194,19 +2202,19 @@ Int_t TGListTree::Sort(TGListTreeItem *item)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort siblings of item.
+
 Int_t TGListTree::SortSiblings(TGListTreeItem *item)
 {
-   // Sort siblings of item.
-
    return Sort(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort children of item.
+
 Int_t TGListTree::SortChildren(TGListTreeItem *item)
 {
-   // Sort children of item.
-
    TGListTreeItem *first;
 
    if (item) {
@@ -2226,11 +2234,11 @@ Int_t TGListTree::SortChildren(TGListTreeItem *item)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find sibling of item by name.
+
 TGListTreeItem *TGListTree::FindSiblingByName(TGListTreeItem *item, const char *name)
 {
-   // Find sibling of item by name.
-
    // Get first child in list
    if (item) {
       while (item->fPrevsibling) {
@@ -2248,11 +2256,11 @@ TGListTreeItem *TGListTree::FindSiblingByName(TGListTreeItem *item, const char *
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find sibling of item by userData.
+
 TGListTreeItem *TGListTree::FindSiblingByData(TGListTreeItem *item, void *userData)
 {
-   // Find sibling of item by userData.
-
    // Get first child in list
    if (item) {
       while (item->fPrevsibling) {
@@ -2270,11 +2278,11 @@ TGListTreeItem *TGListTree::FindSiblingByData(TGListTreeItem *item, void *userDa
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find child of item by name.
+
 TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *name)
 {
-   // Find child of item by name.
-
    // Get first child in list
    if (item && item->fFirstchild) {
       item = item->fFirstchild;
@@ -2293,11 +2301,11 @@ TGListTreeItem *TGListTree::FindChildByName(TGListTreeItem *item, const char *na
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find child of item by userData.
+
 TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData)
 {
-   // Find child of item by userData.
-
    // Get first child in list
    if (item && item->fFirstchild) {
       item = item->fFirstchild;
@@ -2316,12 +2324,12 @@ TGListTreeItem *TGListTree::FindChildByData(TGListTreeItem *item, void *userData
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find item by pathname. Pathname is in the form of /xx/yy/zz. If zz
+/// in path /xx/yy is found it returns item, 0 otherwise.
+
 TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
 {
-   // Find item by pathname. Pathname is in the form of /xx/yy/zz. If zz
-   // in path /xx/yy is found it returns item, 0 otherwise.
-
    if (!path || !*path) return 0;
 
    const char *p = path, *s;
@@ -2371,30 +2379,30 @@ TGListTreeItem *TGListTree::FindItemByPathname(const char *path)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Highlight item.
+
 void TGListTree::HighlightItem(TGListTreeItem *item)
 {
-   // Highlight item.
-
    UnselectAll(kFALSE);
    HighlightItem(item, kTRUE, kFALSE);
    AdjustPosition(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Un highlight items.
+
 void TGListTree::ClearHighlighted()
 {
-   // Un highlight items.
-
    UnselectAll(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get pathname from item. Use depth to limit path name to last
+/// depth levels. By default depth is not limited.
+
 void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t depth)
 {
-   // Get pathname from item. Use depth to limit path name to last
-   // depth levels. By default depth is not limited.
-
    char tmppath[1024];
 
    *path = '\0';
@@ -2410,11 +2418,11 @@ void TGListTree::GetPathnameFromItem(TGListTreeItem *item, char *path, Int_t dep
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return gray draw color in use.
+
 Pixel_t TGListTree::GetGrayPixel()
 {
-   // Return gray draw color in use.
-
    static Bool_t init = kFALSE;
    if (!init) {
       if (!gClient->GetColorByName("#808080", fgGrayPixel))
@@ -2424,21 +2432,21 @@ Pixel_t TGListTree::GetGrayPixel()
    return fgGrayPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGListTree::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGListTree::GetActiveGC()
 {
-   // Return default graphics context in use.
-
    if (!fgActiveGC) {
       GCValues_t gcv;
 
@@ -2459,11 +2467,11 @@ const TGGC &TGListTree::GetActiveGC()
    return *fgActiveGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGListTree::GetDrawGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDrawGC) {
       GCValues_t gcv;
 
@@ -2481,11 +2489,11 @@ const TGGC &TGListTree::GetDrawGC()
    return *fgDrawGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context in use for line drawing.
+
 const TGGC &TGListTree::GetLineGC()
 {
-   // Return graphics context in use for line drawing.
-
    if (!fgLineGC) {
       GCValues_t gcv;
 
@@ -2505,11 +2513,11 @@ const TGGC &TGListTree::GetLineGC()
    return *fgLineGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context for highlighted frame background.
+
 const TGGC &TGListTree::GetHighlightGC()
 {
-   // Return graphics context for highlighted frame background.
-
    if (!fgHighlightGC) {
       GCValues_t gcv;
 
@@ -2527,11 +2535,11 @@ const TGGC &TGListTree::GetHighlightGC()
    return *fgHighlightGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return graphics context for highlighted frame background.
+
 const TGGC &TGListTree::GetColorGC()
 {
-   // Return graphics context for highlighted frame background.
-
    if (!fgColorGC) {
       GCValues_t gcv;
 
@@ -2548,55 +2556,55 @@ const TGGC &TGListTree::GetColorGC()
    return *fgColorGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the icon used by items in open state.
+
 const TGPicture *TGListTree::GetOpenPic()
 {
-   // Returns the icon used by items in open state.
-
    if (!fgOpenPic)
       fgOpenPic = gClient->GetPicture("ofolder_t.xpm");
    ((TGPicture *)fgOpenPic)->AddReference();
    return fgOpenPic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the icon used by items in closed state.
+
 const TGPicture *TGListTree::GetClosedPic()
 {
-   // Returns the icon used by items in closed state.
-
    if (!fgClosedPic)
       fgClosedPic = gClient->GetPicture("folder_t.xpm");
    ((TGPicture *)fgClosedPic)->AddReference();
    return fgClosedPic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the icon used for checked checkbox.
+
 const TGPicture *TGListTree::GetCheckedPic()
 {
-   // Returns the icon used for checked checkbox.
-
    if (!fgCheckedPic)
       fgCheckedPic = gClient->GetPicture("checked_t.xpm");
    ((TGPicture *)fgCheckedPic)->AddReference();
    return fgCheckedPic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the icon used for unchecked checkbox.
+
 const TGPicture *TGListTree::GetUncheckedPic()
 {
-   // Returns the icon used for unchecked checkbox.
-
    if (!fgUncheckedPic)
       fgUncheckedPic = gClient->GetPicture("unchecked_t.xpm");
    ((TGPicture *)fgUncheckedPic)->AddReference();
    return fgUncheckedPic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list tree widget as a C++ statements on output stream out.
+
 void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a list tree widget as a C++ statements on output stream out.
-
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
 
    out << std::endl << "   // list tree" << std::endl;
@@ -2653,11 +2661,11 @@ void TGListTree::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save child items as a C++ statements on output stream out.
+
 void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
 {
-   // Save child items as a C++ statements on output stream out.
-
    Int_t p = n-1;
    while (item) {
       out << "   TGListTreeItem *item" << n << " = " << GetName() << "->AddItem(";
@@ -2670,11 +2678,11 @@ void TGListTree::SaveChildren(std::ostream &out, TGListTreeItem *item, Int_t &n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list tree item attributes as a C++ statements on output stream.
+
 void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t n)
 {
-   // Save a list tree item attributes as a C++ statements on output stream.
-
    static const TGPicture *oldopen=0;
    static const TGPicture *oldclose=0;
    static const TGPicture *oldcheck=0;
@@ -2751,35 +2759,35 @@ void TGListTreeItemStd::SavePrimitive(std::ostream &out, Option_t *option, Int_t
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set check button state for the node 'item'.
+
 void TGListTree::CheckItem(TGListTreeItem *item, Bool_t check)
 {
-   // Set check button state for the node 'item'.
-
    item->CheckItem(check);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set check button state for the node 'item'.
+
 void TGListTree::SetCheckBox(TGListTreeItem *item, Bool_t on)
 {
-   // Set check button state for the node 'item'.
-
    item->SetCheckBox(on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle check button state of the node 'item'.
+
 void TGListTree::ToggleItem(TGListTreeItem *item)
 {
-   // Toggle check button state of the node 'item'.
-
    item->Toggle();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the state of the node 'item' according to the children states.
+
 void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
 {
-   // Update the state of the node 'item' according to the children states.
-
    if (fAutoCheckBoxPic == kFALSE) return;
 
    TGListTreeItem *parent;
@@ -2818,12 +2826,12 @@ void TGListTree::UpdateChecked(TGListTreeItem *item, Bool_t redraw)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find item with fUserData == ptr. Search tree downwards starting
+/// at item.
+
 TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
 {
-   // Find item with fUserData == ptr. Search tree downwards starting
-   // at item.
-
    TGListTreeItem *fitem;
    if (item && ptr) {
       if (item->GetUserData() == ptr)
@@ -2839,13 +2847,13 @@ TGListTreeItem *TGListTree::FindItemByObj(TGListTreeItem *item, void *ptr)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all checked list tree items of this list tree into
+/// the list 'checked'. This list is not adopted and must
+/// be deleted by the user later.
+
 void TGListTree::GetChecked(TList *checked)
 {
-   // Add all checked list tree items of this list tree into
-   // the list 'checked'. This list is not adopted and must
-   // be deleted by the user later.
-
    if (!checked || !fFirst) return;
    TGListTreeItem *current = fFirst;
    if (current->IsChecked()) {
@@ -2858,11 +2866,11 @@ void TGListTree::GetChecked(TList *checked)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add all child items of 'item' into the list 'checked'.
+
 void TGListTree::GetCheckedChildren(TList *checked, TGListTreeItem *item)
 {
-   // Add all child items of 'item' into the list 'checked'.
-
    if (!checked || !item) return;
 
    while (item) {
@@ -2876,12 +2884,12 @@ void TGListTree::GetCheckedChildren(TList *checked, TGListTreeItem *item)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check all child items of 'item' and 'item' itself according
+/// to the state value: kTRUE means check all, kFALSE - uncheck all.
+
 void TGListTree::CheckAllChildren(TGListTreeItem *item, Bool_t state)
 {
-   // Check all child items of 'item' and 'item' itself according
-   // to the state value: kTRUE means check all, kFALSE - uncheck all.
-
    if (item)
       item->CheckAllChildren(state);
 }

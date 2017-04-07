@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooRealVarSharedProperties is an implementation of RooSharedProperties
-// that stores the properties of a RooRealVar that are shared among clones.
-// For RooRealVars these are the definitions of the named ranges.
-// END_HTML
-//
+/**
+\file RooRealVarSharedProperties.cxx
+\class RooRealVarSharedProperties
+\ingroup Roofitcore
+
+Class RooRealVarSharedProperties is an implementation of RooSharedProperties
+that stores the properties of a RooRealVar that are shared among clones.
+For RooRealVars these are the definitions of the named ranges.
+**/
 
 #include "RooFit.h"
 #include "RooRealVarSharedProperties.h"
@@ -35,35 +36,38 @@ ClassImp(RooRealVarSharedProperties)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooRealVarSharedProperties::RooRealVarSharedProperties() 
 {
-  // Default constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with unique-id string
+
 RooRealVarSharedProperties::RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
-  // Constructor with unique-id string
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooRealVarSharedProperties::RooRealVarSharedProperties(const RooRealVarSharedProperties& other) :
   RooSharedProperties(other), 
   _altBinning(other._altBinning)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooRealVarSharedProperties::~RooRealVarSharedProperties() 
 {
-  // Destructor
-
   _altBinning.Delete() ;
 } 
 

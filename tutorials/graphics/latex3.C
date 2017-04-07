@@ -1,5 +1,13 @@
-//Example illustrating a TPaveText with Latex inside
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// Example illustrating a TPaveText with Latex inside.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void latex3() {
 
    TCanvas *c1 = new TCanvas("c1");

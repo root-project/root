@@ -15,7 +15,7 @@
 
 (** {6 Abstract types}
 
-    These abstract types correlate directly to the LLVM VMCore classes. *)
+    These abstract types correlate directly to the LLVMCore classes. *)
 
 (** The top-level container for all LLVM global data. See the
     [llvm::LLVMContext] class. *)
@@ -352,6 +352,16 @@ module ValueKind : sig
   | Instruction of Opcode.t
 end
 
+(** The kind of [Diagnostic], the result of [Diagnostic.severity d].
+    See [llvm::DiagnosticSeverity]. *)
+module DiagnosticSeverity : sig
+  type t =
+  | Error
+  | Warning
+  | Remark
+  | Note
+end
+
 
 (** {6 Iteration} *)
 
@@ -398,6 +408,22 @@ val reset_fatal_error_handler : unit -> unit
     See the function [llvm::cl::ParseCommandLineOptions()]. *)
 val parse_command_line_options : ?overview:string -> string array -> unit
 
+(** {6 Context error handling} *)
+
+module Diagnostic : sig
+  type t
+
+  (** [description d] returns a textual description of [d]. *)
+  val description : t -> string
+
+  (** [severity d] returns the severity of [d]. *)
+  val severity : t -> DiagnosticSeverity.t
+end
+
+(** [set_diagnostic_handler c h] set the diagnostic handler of [c] to [h].
+    See the method [llvm::LLVMContext::setDiagnosticHandler]. *)
+val set_diagnostic_handler : llcontext -> (Diagnostic.t -> unit) option -> unit
+
 (** {6 Contexts} *)
 
 (** [create_context ()] creates a context for storing the "global" state in
@@ -408,7 +434,7 @@ val create_context : unit -> llcontext
     [llvm::LLVMContext::~LLVMContext]. *)
 val dispose_context : llcontext -> unit
 
-(** See the function [llvm::getGlobalContext]. *)
+(** See the function [LLVMGetGlobalContext]. *)
 val global_context : unit -> llcontext
 
 (** [mdkind_id context name] returns the MDKind ID that corresponds to the
@@ -825,6 +851,10 @@ val mdnull : llcontext -> llvalue
 (** [get_mdstring v] returns the MDString.
     See the method [llvm::MDString::getString] *)
 val get_mdstring : llvalue -> string option
+
+(** [get_mdnode_operands v] returns the operands in the MDNode. *)
+(*     See the method [llvm::MDNode::getOperand] *)
+val get_mdnode_operands : llvalue -> llvalue array
 
 (** [get_named_metadata m name] returns all the MDNodes belonging to the named
     metadata (if any).
@@ -1254,6 +1284,16 @@ val linkage : llvalue -> Linkage.t
 (** [set_linkage l g] sets the linkage of the global value [g] to [l].
     See the method [llvm::GlobalValue::setLinkage]. *)
 val set_linkage : Linkage.t -> llvalue -> unit
+
+(** [unnamed_addr g] returns [true] if the global value [g] has the unnamed_addr
+    attribute. Returns [false] otherwise.
+    See the method [llvm::GlobalValue::getUnnamedAddr]. *)
+val unnamed_addr : llvalue -> bool
+
+(** [set_unnamed_addr b g] if [b] is [true], sets the unnamed_addr attribute of
+    the global value [g]. Unset it otherwise.
+    See the method [llvm::GlobalValue::setUnnamedAddr]. *)
+val set_unnamed_addr : bool -> llvalue -> unit
 
 (** [section g] returns the linker section of the global value [g].
     See the method [llvm::GlobalValue::getSection]. *)
@@ -2421,6 +2461,12 @@ val build_fcmp : Fcmp.t -> llvalue -> llvalue -> string ->
     See the method [llvm::LLVMBuilder::CreatePHI]. *)
 val build_phi : (llvalue * llbasicblock) list -> string -> llbuilder ->
                      llvalue
+
+(** [build_empty_phi ty name b] creates a
+    [%name = phi %ty] instruction at the position specified by
+    the instruction builder [b]. [ty] is the type of the instruction.
+    See the method [llvm::LLVMBuilder::CreatePHI]. *)
+val build_empty_phi : lltype -> string -> llbuilder -> llvalue
 
 (** [build_call fn args name b] creates a
     [%name = call %fn(args...)]

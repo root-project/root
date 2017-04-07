@@ -4,19 +4,15 @@
 #ifndef ROOT_TRootSniffer
 #define ROOT_TRootSniffer
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TFolder;
 class TMemFile;
 class TBufferFile;
 class TDataMember;
-class THttpServer;
+class THttpCallArg;
 class TRootSnifferStore;
 class TRootSniffer;
 
@@ -40,7 +36,9 @@ protected:
    UInt_t               fMask;        //! defines operation kind
    const char          *fSearchPath;  //! current path searched
    Int_t                fLevel;       //! current level of hierarchy
+   TString              fItemName;    //! name of current item
    TList                fItemsNames;  //! list of created items names, need to avoid duplication
+   Int_t                fRestriction; //! restriction 0 - default, 1 - read-only, 2 - full access
 
    TRootSnifferStore   *fStore;       //! object to store results
    Bool_t               fHasMore;     //! indicates that potentially there are more items can be found
@@ -83,8 +81,11 @@ public:
    /** Checks if result will be accepted. Used to verify if sniffer should read object from the file */
    Bool_t IsReadyForResult() const;
 
-   /** Set result pointer and return true if result is found */
+      /** Obsolete, use SetFoundResult instead */
    Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0);
+
+   /** Set found element with class and datamember (optional) */
+   Bool_t SetFoundResult(void *obj, TClass *cl, TDataMember *member = 0);
 
    /** Returns depth of hierarchy */
    Int_t Depth() const;
@@ -95,7 +96,13 @@ public:
    /** Construct item name, using object name as basis */
    void MakeItemName(const char *objname, TString &itemname);
 
-   Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0);
+   /** Produces full name for the current item */
+   void BuildFullName(TString& buf, TRootSnifferScanRec* prnt = 0);
+
+   /** Returns read-only flag for current item */
+   Bool_t IsReadOnly(Bool_t dflt = kTRUE);
+
+   Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0, TRootSniffer* sniffer = 0);
 
    ClassDef(TRootSnifferScanRec, 0) // Scan record for objects sniffer
 };
@@ -107,12 +114,18 @@ class TRootSniffer : public TNamed {
       kItemField = BIT(21)  // item property stored as TNamed
    };
 protected:
-   TString     fObjectsPath; //! default path for registered objects
-   TMemFile   *fMemFile;     //! file used to manage streamer infos
-   Int_t       fSinfoSize;   //! number of elements in streamer info, used as version
-   Bool_t      fReadOnly;    //! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
+   TString        fObjectsPath;     //! default path for registered objects
+   TMemFile      *fMemFile;         //! file used to manage streamer infos
+   TList         *fSinfo;           //! last produced streamer info
+   Bool_t         fReadOnly;        //! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
+   Bool_t         fScanGlobalDir;   //! when enabled (default), scan gROOT for histograms, canvases, open files
+   THttpCallArg  *fCurrentArg;      //! current http arguments (if any)
+   Int_t          fCurrentRestrict; //! current restriction for last-found object
+   TString        fCurrentAllowedMethods;  //! list of allowed methods, extracted when analyzed object restrictions
+   TList          fRestrictions;    //! list of restrictions for different locations
+   TString        fAutoLoad;        //! scripts names, which are add as _autoload parameter to h.json request
 
-   void ScanObjectMemebers(TRootSnifferScanRec &rec, TClass *cl, char *ptr, unsigned long int cloffset);
+   void ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 
    virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj);
 
@@ -140,6 +153,8 @@ protected:
    Bool_t AccessField(TFolder *parent, TObject *item,
                       const char *name, const char *value, TNamed **only_get = 0);
 
+   Int_t WithCurrentUserName(const char* option);
+
 public:
 
    TRootSniffer(const char *name, const char *objpath = "Objects");
@@ -147,28 +162,53 @@ public:
 
    static Bool_t IsDrawableClass(TClass *cl);
 
-   /** When readonly on (default), sniffer is not allowed to change ROOT structures.
-    * For instance, it is not allowed to read new objects from files */
    void  SetReadOnly(Bool_t on = kTRUE)
    {
+      // When readonly on (default), sniffer is not allowed to change ROOT structures
+      // For instance, it is not allowed to read new objects from files
+
       fReadOnly = on;
    }
 
-   /** Return readonly mode */
    Bool_t IsReadOnly() const
    {
+      // Returns readonly mode
+
       return fReadOnly;
    }
+
+   void Restrict(const char* path, const char* options);
+
+   Bool_t HasRestriction(const char* item_name);
+
+   Int_t CheckRestriction(const char* item_name);
+
+   void SetScanGlobalDir(Bool_t on = kTRUE)
+   {
+      // When enabled (default), sniffer scans gROOT for files, canvases, histograms
+
+      fScanGlobalDir = on;
+   }
+
+   void SetAutoLoad(const char* scripts = "");
+
+   const char* GetAutoLoad() const;
+
+   Bool_t IsScanGlobalDir() const { return fScanGlobalDir; }
 
    Bool_t RegisterObject(const char *subfolder, TObject *obj);
 
    Bool_t UnregisterObject(TObject *obj);
+
+   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon);
 
    Bool_t CreateItem(const char *fullname, const char *title);
 
    Bool_t SetItemField(const char *fullname, const char *name, const char *value);
 
    const char *GetItemField(const char *fullname, const char *name);
+
+   void SetCurrentCallArg(THttpCallArg* arg);
 
    /** Method scans normal objects, registered in ROOT */
    void ScanHierarchy(const char *topname, const char *path,
@@ -199,6 +239,10 @@ public:
    Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str, void **ret_ptr = 0, Long_t *ret_length = 0);
 
    Bool_t ExecuteCmd(const char *path, const char *options, TString &res);
+
+   Bool_t ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson = kTRUE);
+
+   Bool_t ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str, Bool_t asjson = kTRUE);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 

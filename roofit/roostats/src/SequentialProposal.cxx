@@ -8,6 +8,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::SequentialProposal
+    \ingroup Roostats
+
+Class implementing a proposal function that samples the parameter space
+by moving only in one coordinate (chosen randomly) at each step
+*/
 
 #include "RooStats/SequentialProposal.h"
 #include <RooArgSet.h>
@@ -21,16 +27,19 @@ using namespace std;
 
 ClassImp(RooStats::SequentialProposal)
 
-namespace RooStats { 
+namespace RooStats {
 
-SequentialProposal::SequentialProposal(double divisor) : 
+////////////////////////////////////////////////////////////////////////////////
+
+SequentialProposal::SequentialProposal(double divisor) :
     ProposalFunction(),
     fDivisor(1./divisor)
 {
 }
-     
 
-// Populate xPrime with a new proposed point
+////////////////////////////////////////////////////////////////////////////////
+/// Populate xPrime with a new proposed point
+
 void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
 {
    RooStats::SetParameters(&x, &xPrime);
@@ -50,12 +59,14 @@ void SequentialProposal::Propose(RooArgSet& xPrime, RooArgSet& x )
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the probability of proposing the point x1 given the starting
+/// point x2
+
 Bool_t SequentialProposal::IsSymmetric(RooArgSet& , RooArgSet& ) {
    return true;
 }
 
-// Return the probability of proposing the point x1 given the starting
-// point x2
 Double_t SequentialProposal::GetProposalDensity(RooArgSet& ,
                                                 RooArgSet& )
 {
@@ -63,4 +74,3 @@ Double_t SequentialProposal::GetProposalDensity(RooArgSet& ,
 }
 
 }
-

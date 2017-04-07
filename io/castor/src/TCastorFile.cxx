@@ -10,41 +10,44 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCastorFile                                                          //
-//                                                                      //
-// A TCastorFile is like a normal TNetFile except that it obtains the   //
-// remote node (disk server) via the CASTOR API, once the disk server   //
-// and the local file path are determined, the file will be accessed    //
-// via the rootd daemon. File names have to be specified like:          //
-//    castor:/castor/cern.ch/user/r/rdm/bla.root.                       //
-//                                                                      //
-// If Castor 2.1 is used the file names can also be specified           //
-// in the following ways:                                               //
-//                                                                      //
-//  castor://stager_host:stager_port/?path=/castor/cern.ch/user/        //
-//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
-//                                                                      //
-//  castor://stager_host/?path=/castor/cern.ch/user/                    //
-//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
-//                                                                      //
-//  castor:///castor?path=/castor/cern.ch/user/                         //
-//    r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION   //
-//                                                                      //
-// path is mandatory as parameter but all the other ones are optional.  //
-//                                                                      //
-// Use "&rootAuth=<auth_prot_code>" in the option field to force the    //
-// specified authentication protocol when contacting the server, e.g.   //
-//                                                                      //
-//  castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root           //
-//    &svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3      //
-//                                                                      //
-// will try first the globus/GSI protocol; available protocols are      //
-//  0: passwd, 1: srp, 2: krb5, 3: globus, 4: ssh, 5 uidgid             //
-// The defaul is taken from the env ROOTCASTORAUTH.                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TCastorFile TCastorFile.cxx
+\ingroup IO
+A TNetFile interfaced to the Castor storage backend
+
+A TCastorFile is like a normal TNetFile except that it obtains the
+remote node (disk server) via the CASTOR API, once the disk server
+and the local file path are determined, the file will be accessed
+via the rootd daemon. File names have to be specified like:
+~~~{.bash}
+castor:/castor/cern.ch/user/r/rdm/bla.root
+~~~
+
+If Castor 2.1 is used the file names can also be specified
+in the following ways:
+~~~{.bash}
+castor://stager_host:stager_port/?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION
+castor://stager_host/?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION
+castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION
+~~~
+
+The path is mandatory as parameter but all the other ones are optional.
+Use "&rootAuth=<auth_prot_code>" in the option field to force the
+specified authentication protocol when contacting the server, e.g.
+~~~{.bash}
+castor:///castor?path=/castor/cern.ch/user/r/rdm/bla.root&svcClass=MYSVCLASS&castorVersion=MYCASTORVERSION&rootAuth=3
+~~~
+
+will try first the globus/GSI protocol; available protocols are
+  -# passwd
+  -# srp
+  -# krb5
+  -# globus
+  -# ssh
+  -# uidgid
+
+The default is taken from the env ROOTCASTORAUTH.
+*/
 
 #include "NetErrors.h"
 #include "TCastorFile.h"
@@ -84,22 +87,19 @@ extern int tSvcClassKey;
 extern int tCastorVersionKey;
 extern "C" { int use_castor2_api(); }
 
-//______________________________________________________________________________
+
+/// Function that checks whether we should use the old or new stager API.
 static int UseCastor2API()
 {
-   // Function that checks whether we should use the old or new stager API.
-
    int version = use_castor2_api();
    return version;
 }
 
 #else
 
-//______________________________________________________________________________
+// Function that checks whether we should use the old or new stager API.
 static int UseCastor2API()
 {
-   // Function that checks whether we should use the old or new stager API.
-
    char *p;
 
    if (((p = getenv(RFIO_USE_CASTOR_V2)) == 0) &&
@@ -122,12 +122,10 @@ static int UseCastor2API()
 
 #endif
 
-//______________________________________________________________________________
+/// Determine the authentication protocol to be tried first from the url
+/// string or from defaults. The auth option, if any, is removed from 'url'.
 static const char *GetAuthProto(TString &url)
 {
-   // Determine the authentication protocol to be tried first from the url
-   // string or from defaults. The auth option, if any, is removed from 'url'.
-
    const Int_t rootNumSec = 6;
    const char *protoSec[rootNumSec] = {"rootup", "roots", "rootk",
                                        "rootg", "rooth", "rootug" };
@@ -158,18 +156,18 @@ static const char *GetAuthProto(TString &url)
 
 ClassImp(TCastorFile)
 
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Create a TCastorFile. A TCastorFile is like a normal TNetFile except
+/// that it obtains the remote node (disk server) via the CASTOR API, once
+/// the disk server and the local file path are determined, the file will
+/// be accessed via the rootd daemon. File names have to be specified like:
+///    castor:/castor/cern.ch/user/r/rdm/bla.root.
+/// The other arguments are the same as for TNetFile and TFile.
+
 TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
                               Int_t compress, Int_t netopt)
       : TNetFile(url, ftitle, compress, kFALSE)
 {
-   // Create a TCastorFile. A TCastorFile is like a normal TNetFile except
-   // that it obtains the remote node (disk server) via the CASTOR API, once
-   // the disk server and the local file path are determined, the file will
-   // be accessed via the rootd daemon. File names have to be specified like:
-   //    castor:/castor/cern.ch/user/r/rdm/bla.root.
-   // The other arguments are the same as for TNetFile and TFile.
-
    fIsCastor  = kFALSE;
    fWrittenTo = kFALSE;
 
@@ -191,11 +189,10 @@ TCastorFile::TCastorFile(const char *url, Option_t *option, const char *ftitle,
    Create(url, opt, netopt);
 }
 
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Find the CASTOR disk server and internal file path.
 void TCastorFile::FindServerAndPath()
 {
-   // Find the CASTOR disk server and internal file path.
-
    // just call rfio_parse and no extra parsing is added here to that
 
    TString castorturl;
@@ -502,10 +499,12 @@ void TCastorFile::FindServerAndPath()
    fIsCastor = kTRUE;
 }
 
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Close currently open file.
+
 Int_t TCastorFile::SysClose(Int_t fd)
 {
-   // Close currently open file.
+
 
    Int_t r = TNetFile::SysClose(fd);
 
@@ -522,12 +521,12 @@ Int_t TCastorFile::SysClose(Int_t fd)
    return r;
 }
 
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Write specified byte range to remote file via rootd daemon.
+/// Returns kTRUE in case of error.
+
 Bool_t TCastorFile::WriteBuffer(const char *buf, Int_t len)
 {
-   // Write specified byte range to remote file via rootd daemon.
-   // Returns kTRUE in case of error.
-
    if (TNetFile::WriteBuffer(buf, len))
       return kTRUE;
 
@@ -551,13 +550,13 @@ Bool_t TCastorFile::WriteBuffer(const char *buf, Int_t len)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+///////////////////////////////////////////////////////////////////////////////
+/// Connect to remote rootd server on CASTOR disk server.
+
 void TCastorFile::ConnectServer(Int_t *stat, EMessageTypes *kind, Int_t netopt,
                                 Int_t tcpwindowsize, Bool_t forceOpen,
                                 Bool_t forceRead)
 {
-   // Connect to remote rootd server on CASTOR disk server.
-
    FindServerAndPath();
 
    // Continue only if successful

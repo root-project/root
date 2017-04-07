@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAdaptiveIntegratorND implements an adaptive one-dimensional 
-// numerical integration algorithm.
-// END_HTML
-//
+/**
+\file RooAdaptiveIntegratorND.cxx
+\class RooAdaptiveIntegratorND
+\ingroup Roofitcore
+
+RooAdaptiveIntegratorND implements an adaptive one-dimensional 
+numerical integration algorithm.
+**/
 
 
 #include "RooFit.h"
@@ -48,11 +49,11 @@ ClassImp(RooAdaptiveIntegratorND)
 
 // Register this class with RooNumIntConfig
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooAdaptiveIntegratorND, its parameters, dependencies and capabilities with RooNumIntFactory
+
 void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooAdaptiveIntegratorND, its parameters, dependencies and capabilities with RooNumIntFactory
-
   RooRealVar maxEval2D("maxEval2D","Max number of function evaluations for 2-dim integrals",100000) ;
   RooRealVar maxEval3D("maxEval3D","Max number of function evaluations for 3-dim integrals",1000000) ;
   RooRealVar maxEvalND("maxEvalND","Max number of function evaluations for >3-dim integrals",10000000) ;
@@ -63,10 +64,11 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
  
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor
+
 RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
 {
-  // Default ctor
   _xmin = 0 ;
   _xmax = 0 ;
   _epsRel = 1e-7 ;
@@ -82,14 +84,14 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of integral on given function binding and with given configuration. The
+/// integration limits are taken from the definition in the function binding
+///_func = function.
+
 RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function)
 {
-  // Constructor of integral on given function binding and with given configuration. The
-  // integration limits are taken from the definition in the function binding
-  //_func = function.
-
 
   _func = new RooMultiGenFunction(function) ;  
   _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
@@ -99,7 +101,10 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   case 3: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval3D")) ; break ;
   default: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEvalND")) ; break ;
   }
-  _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(config.epsAbs(),config.epsRel(),_nmax) ;
+  // by default do not use absolute tolerance (see https://root.cern.ch/phpBB3/viewtopic.php?f=15&t=20071 )
+  _epsAbs = 0.0;
+  _epsRel = config.epsRel();      
+  _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(_epsAbs,_epsRel,_nmax) ;
   _integrator->SetFunction(*_func) ;
   _useIntegrandLimits=kTRUE ;
 
@@ -107,19 +112,17 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   _xmax = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
-  _epsRel = 1e-7 ;
-  _epsAbs = 1e-7 ;
   checkLimits() ;
   _intName = function.getName() ;
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
+
 RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
   RooAbsIntegrator* ret = new RooAdaptiveIntegratorND(function,config) ;
   
   return ret ;
@@ -128,10 +131,11 @@ RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, con
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
-  // Destructor
   delete[] _xmin ;
   delete[] _xmax ;
   delete _integrator ;
@@ -145,12 +149,12 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooAdaptiveIntegratorND::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-  
   if (!_xmin) {
     _xmin = new Double_t[_func->NDim()] ;
     _xmax = new Double_t[_func->NDim()] ;
@@ -167,13 +171,13 @@ Bool_t RooAdaptiveIntegratorND::checkLimits() const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change our integration limits. Return kTRUE if the new limits are
+/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// if this object was constructed to always use our integrand's limits.
+
 Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax) 
 {
-  // Change our integration limits. Return kTRUE if the new limits are
-  // ok, or otherwise kFALSE. Always returns kFALSE and does nothing
-  // if this object was constructed to always use our integrand's limits.
-
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
     return kFALSE;
@@ -189,10 +193,11 @@ Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate integral at given function binding parameter values
+
 Double_t RooAdaptiveIntegratorND::integral(const Double_t* /*yvec*/) 
 {
-  // Evaluate integral at given function binding parameter values
   Double_t ret = _integrator->Integral(_xmin,_xmax) ;  
   if (_integrator->Status()==1) {
     _nError++ ;

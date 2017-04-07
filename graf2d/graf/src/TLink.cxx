@@ -17,61 +17,56 @@
 
 ClassImp(TLink)
 
+/** \class TLink
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-//
-// Special TText object used to show hyperlinks.
-// In the example below created by TObject::Inspect, TLinks are used
-// to show pointers to other objects.
-// Clicking on one link, inspect the corresponding object.
-//Begin_Html
-/*
-<img src="gif/link.gif">
+Special TText object used to show hyperlinks.
+
+In the example below created by TObject::Inspect, TLinks are used
+to show pointers to other objects.
+Clicking on one link, inspect the corresponding object.
 */
-//End_Html
-//
 
+////////////////////////////////////////////////////////////////////////////////
+/// Link default constructor.
 
-//______________________________________________________________________________
 TLink::TLink() : TText()
 {
-   // Link default constructor.
-
    fLink  = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor to define a link object.
+///
+/// pointer points to any kind of object.
 
-//______________________________________________________________________________
 TLink::TLink(Double_t x, Double_t y, void *pointer)
            : TText(x, y, "")
 {
-   // Constructor to define a link object.
-   //
-   // pointer points to any kind of object.
-
    fLink  = pointer;
    static char line[16];
    snprintf(line,16,"->%lx ", (Long_t)pointer);
    SetTitle(line);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Link default destructor.
 
-//______________________________________________________________________________
 TLink::~TLink()
 {
-   // Link default destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a link is clicked with the locator
+///
+///  If mouse is clicked on a link text, the object pointed by the link
+///  is Inspected
 
-//______________________________________________________________________________
 void TLink::ExecuteEvent(Int_t event, Int_t, Int_t)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a link is clicked with the locator
-   //
-   //  If mouse is clicked on a link text, the object pointed by the link
-   //  is Inspected
+   if (!gPad) return;
 
    if (event == kMouseMotion)
       gPad->SetCursor(kHand);

@@ -11,9 +11,7 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #include "TString.h"
 
@@ -117,7 +115,6 @@ public:
    virtual void Finalize(  Double_t&, Double_t&);  // Prints summary of MC integration
    virtual TFoamIntegrand  *GetRho(){return fRho;} // Gets pointer of the distribut. (after restoring from disk)
    virtual TRandom *GetPseRan() const {return fPseRan;}   // Gets pointer of r.n. generator (after restoring from disk)
-   virtual void SetRhoInt(void *Rho);              // Set new integrand distr. in interactive mode
    virtual void SetRhoInt(Double_t (*fun)(Int_t, Double_t *));    // Set new integrand distr. in compiled mode
    virtual void SetRho(TFoamIntegrand *Rho);       // Set new integrand distr. in compiled mode
    virtual void ResetRho(TFoamIntegrand *Rho);                // Set new distribution, delete old

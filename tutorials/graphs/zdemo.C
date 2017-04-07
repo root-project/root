@@ -1,17 +1,22 @@
-// This macro is an example of graphs in log scales with annotations.
-//
-//  The  begin_html <a href="gif/zdemo.gif" >presented results</a> end_html
-//  are predictions of invariant cross-section of Direct Photons produced
-//  at RHIC energies, based on the universality of scaling function H(z).
-//
-//Authors: Michael Tokarev and Elena Potrebenikova (JINR Dubna)
-//
-//  These Figures were published in JINR preprint E2-98-64, Dubna,
-//  1998 and submitted to CPC.
-//
-// Note that the way greek symbols, super/subscripts are obtained
-// illustrate the current limitations of Root in this area.
-//
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// This macro is an example of graphs in log scales with annotations.
+///
+/// The presented results are predictions of invariant cross-section
+/// of Direct Photons produced at RHIC energies, based on the universality of
+/// scaling function H(z).
+///
+/// These Figures were published in JINR preprint E2-98-64, Dubna,
+/// 1998 and submitted to CPC.
+///
+/// Note that the way greek symbols, super/subscripts are obtained
+/// illustrate the current limitations of Root in this area.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \authors Michael Tokarev and Elena Potrebenikova (JINR Dubna)
 
 #include "TCanvas.h"
 #include "TPad.h"
@@ -19,6 +24,10 @@
 #include "TLatex.h"
 #include "TGraph.h"
 #include "TFrame.h"
+
+#ifdef HZ
+#undef HZ
+#endif
 
 const Int_t NMAX = 20;
 Int_t NLOOP;

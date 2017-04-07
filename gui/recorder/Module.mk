@@ -28,9 +28,18 @@ RECLIB    := $(LPATH)/libRecorder.$(SOEXT)
 RECMAP    := $(RECLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RECH))
+RECH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(RECH))
+ALLHDRS     += $(RECH_REL)
 ALLLIBS     += $(RECLIB)
 ALLMAPS     += $(RECMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RECH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(RECLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(RECDEP)

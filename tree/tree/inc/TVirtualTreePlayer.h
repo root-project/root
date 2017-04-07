@@ -21,9 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
+
+#include <limits>
 
 class TClass;
 class TTree;
@@ -38,15 +38,17 @@ class TVirtualIndex;
 class TVirtualTreePlayer : public TObject {
 
 private:
-   static TClass              *fgPlayer;  //Pointer to class of Tree player
-   static TVirtualTreePlayer  *fgCurrent; //Pointer to current Tree player
+   static TClass              *fgPlayer;  ///< Pointer to class of Tree player
+   static TVirtualTreePlayer  *fgCurrent; ///< Pointer to current Tree player
 
 public:
+   static constexpr Long64_t kMaxEntries = std::numeric_limits<Long64_t>::max();
+
    TVirtualTreePlayer() { }
    virtual ~TVirtualTreePlayer();
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
    virtual TTree         *CopyTree(const char *selection, Option_t *option=""
-                                   ,Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+                                   ,Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
    virtual Long64_t       DrawScript(const char *wrapperPrefix,
                                      const char *macrofilename, const char *cutfilename,
                                      Option_t *option, Long64_t nentries, Long64_t firstentry) = 0;
@@ -76,10 +78,11 @@ public:
    virtual Int_t          MakeProxy(const char *classname,
                                     const char *macrofilename = 0, const char *cutfilename = 0,
                                     const char *option = 0, Int_t maxUnrolling = 3) = 0;
+   virtual Int_t          MakeReader(const char *classname, Option_t *option) = 0;
    virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
-                                    ,Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
-   virtual Long64_t       Process(const char *filename,Option_t *option="", Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
-   virtual Long64_t       Process(TSelector *selector,Option_t *option="",  Long64_t nentries=1000000000, Long64_t firstentry=0) = 0;
+                                    ,Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
+   virtual Long64_t       Process(const char *filename,Option_t *option="", Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
+   virtual Long64_t       Process(TSelector *selector,Option_t *option="",  Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
    virtual Long64_t       Scan(const char *varexp, const char *selection, Option_t *option
                                ,Long64_t nentries, Long64_t firstentry) = 0;
    virtual TSQLResult    *Query(const char *varexp, const char *selection, Option_t *option

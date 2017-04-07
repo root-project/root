@@ -83,9 +83,9 @@ ClassImp(TGViewPort)
 ClassImp(TGContainer)
 
 
-//______________________________________________________________________________
-class TGContainerKeyboardTimer : public TTimer {
+////////////////////////////////////////////////////////////////////////////////
 
+class TGContainerKeyboardTimer : public TTimer {
 private:
    TGContainer   *fContainer;
 public:
@@ -93,20 +93,20 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// single shot timer
+
 Bool_t TGContainerKeyboardTimer::Notify()
 {
-   // single shot timer
-
    fContainer->SearchPattern();
    Reset();
    if (gSystem) gSystem->RemoveTimer(this);
    return kFALSE;
 }
 
-//______________________________________________________________________________
-class TGContainerScrollTimer : public TTimer {
+////////////////////////////////////////////////////////////////////////////////
 
+class TGContainerScrollTimer : public TTimer {
 private:
    TGContainer   *fContainer;
 public:
@@ -114,24 +114,24 @@ public:
    Bool_t Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// on-timeout
+
 Bool_t TGContainerScrollTimer::Notify()
 {
-   // on-timeout
-
    fContainer->OnAutoScroll();
    Reset();
    return kFALSE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a viewport object.
+
 TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
                        UInt_t options, ULong_t back) :
     TGCompositeFrame(p, w, h, options, back)
 {
-   // Create a viewport object.
-
    fContainer = 0;
    fX0 = fY0  = 0;
 
@@ -140,13 +140,13 @@ TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisable | kEditDisableGrab;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add container frame to the viewport. We must make sure that the added
+/// container is at least a TGCompositeFrame (TGCanvas::AddFrame depends
+/// on it).
+
 void TGViewPort::SetContainer(TGFrame *f)
 {
-   // Add container frame to the viewport. We must make sure that the added
-   // container is at least a TGCompositeFrame (TGCanvas::AddFrame depends
-   // on it).
-
    if (!f) {
       RemoveFrame(fContainer);
       fContainer = 0;
@@ -167,11 +167,11 @@ void TGViewPort::SetContainer(TGFrame *f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves content of container frame in horizontal direction.
+
 void TGViewPort::SetHPos(Int_t xpos)
 {
-   // Moves content of container frame in horizontal direction.
-
    Int_t diff;
 
    if (!fContainer) return;
@@ -218,11 +218,11 @@ void TGViewPort::SetHPos(Int_t xpos)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Moves content of container frame in vertical direction.
+
 void TGViewPort::SetVPos(Int_t ypos)
 {
-   // Moves content of container frame in vertical direction.
-
    Int_t diff;
 
    if (!fContainer) return;
@@ -270,22 +270,22 @@ void TGViewPort::SetVPos(Int_t ypos)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Goto new position.
+
 void TGViewPort::SetPos(Int_t xpos, Int_t ypos)
 {
-   // Goto new position.
-
    if (!fContainer) return;
 
    SetHPos(fX0 = xpos);
    SetVPos(fY0 = ypos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle resize events.
+
 Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
 {
-   // Handle resize events.
-
    if (!fContainer->InheritsFrom(TGContainer::Class())) {
       TGFrame::HandleConfigureNotify(event);
       return kTRUE;
@@ -303,15 +303,16 @@ Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas container. This is the (large) frame that contains
+/// all the list items. It will be shown through a TGViewPort (which is
+/// created by the TGCanvas).
+
 TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
    TGCompositeFrame(p, w, h, options, back)
 {
-   // Create a canvas container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas).
-
+   fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
    fViewPort = 0;
    fBdown = kFALSE;
    fMsgWindow  = p;
@@ -347,14 +348,15 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas container. This is the (large) frame that contains
+/// all the list items. It will be shown through a TGViewPort (which is
+/// created by the TGCanvas).
+
 TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    TGCompositeFrame(p->GetViewPort(), p->GetWidth(), p->GetHeight(), options, back)
 {
-   // Create a canvas container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas).
-
+   fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
    fViewPort = 0;
    fBdown = kFALSE;
    fMsgWindow  = p->GetViewPort();
@@ -393,11 +395,11 @@ TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete canvas container.
+
 TGContainer::~TGContainer()
 {
-   // Delete canvas container.
-
    if (TGSearchDialog::SearchDialog()) {
       TQObject::Disconnect(TGSearchDialog::SearchDialog(), 0, this);
    }
@@ -409,11 +411,11 @@ TGContainer::~TGContainer()
    fKeyTimer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout container entries.
+
 void TGContainer::Layout()
 {
-   // Layout container entries.
-
    TGCompositeFrame::Layout();
    TGLayoutManager *lm = GetLayoutManager();
 
@@ -421,11 +423,11 @@ void TGContainer::Layout()
    if (lm && lm->IsModified()) ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when current position changed.
+
 void TGContainer::CurrentChanged(Int_t x, Int_t y)
 {
-   // Emit signal when current position changed.
-
    Long_t args[2];
 
    args[0] = x;
@@ -434,34 +436,34 @@ void TGContainer::CurrentChanged(Int_t x, Int_t y)
    Emit("CurrentChanged(Int_t,Int_t)",args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit signal when current selected frame changed.
+
 void TGContainer::CurrentChanged(TGFrame* f)
 {
-   // Emit signal when current selected frame changed.
-
    Emit("CurrentChanged(TGFrame*)", (Long_t)f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when keyboard key pressed
+///
+/// frame - activated frame
+/// keysym - defined in "KeySymbols.h"
+/// mask - modifier key mask, defined in "GuiTypes.h"
+///
+/// const Mask_t kKeyShiftMask   = BIT(0);
+/// const Mask_t kKeyLockMask    = BIT(1);
+/// const Mask_t kKeyControlMask = BIT(2);
+/// const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
+/// const Mask_t kButton1Mask    = BIT(8);
+/// const Mask_t kButton2Mask    = BIT(9);
+/// const Mask_t kButton3Mask    = BIT(10);
+/// const Mask_t kButton4Mask    = BIT(11);
+/// const Mask_t kButton5Mask    = BIT(12);
+/// const Mask_t kAnyModifier    = BIT(15);
+
 void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
 {
-   // Signal emitted when keyboard key pressed
-   //
-   // frame - activated frame
-   // keysym - defined in "KeySymbols.h"
-   // mask - modifier key mask, defined in "GuiTypes.h"
-   //
-   // const Mask_t kKeyShiftMask   = BIT(0);
-   // const Mask_t kKeyLockMask    = BIT(1);
-   // const Mask_t kKeyControlMask = BIT(2);
-   // const Mask_t kKeyMod1Mask    = BIT(3);   // typically the Alt key
-   // const Mask_t kButton1Mask    = BIT(8);
-   // const Mask_t kButton2Mask    = BIT(9);
-   // const Mask_t kButton3Mask    = BIT(10);
-   // const Mask_t kButton4Mask    = BIT(11);
-   // const Mask_t kButton5Mask    = BIT(12);
-   // const Mask_t kAnyModifier    = BIT(15);
-
    Long_t args[3];
    args[0] = (Long_t)frame;
    args[1] = (Long_t)keysym;
@@ -470,38 +472,38 @@ void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_KEY), keysym, mask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when Return/Enter key pressed.
+/// It's equivalent to "double click" of mouse button.
+
 void TGContainer::ReturnPressed(TGFrame* f)
 {
-   // Signal emitted when Return/Enter key pressed.
-   // It's equivalent to "double click" of mouse button.
-
    Emit("ReturnPressed(TGFrame*)", (Long_t)f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when space key pressed.
+/// Pressing space key inverts selection.
+
 void TGContainer::SpacePressed(TGFrame* f)
 {
-   // Signal emitted when space key pressed.
-   // Pressing space key inverts selection.
-
    Emit("SpacePressed(TGFrame*)", (Long_t)f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Signal emitted when pointer is over entry.
+
 void TGContainer::OnMouseOver(TGFrame* f)
 {
-   // Signal emitted when pointer is over entry.
-
    if (!fOnMouseOver) Emit("OnMouseOver(TGFrame*)", (Long_t)f);
    fOnMouseOver = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGContainer::Clicked(TGFrame *entry, Int_t btn)
 {
-   // Emit Clicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -510,11 +512,11 @@ void TGContainer::Clicked(TGFrame *entry, Int_t btn)
    Emit("Clicked(TGFrame*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGContainer::Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit Clicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -525,11 +527,11 @@ void TGContainer::Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
    Emit("Clicked(TGFrame*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -538,11 +540,11 @@ void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn)
    Emit("DoubleClicked(TGFrame*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -553,12 +555,12 @@ void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
    Emit("DoubleClicked(TGFrame*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select all items in the container.
+/// SelectAll() signal emitted.
+
 void TGContainer::SelectAll()
 {
-   // Select all items in the container.
-   // SelectAll() signal emitted.
-
    TIter next(fList);
    TGFrameElement *el;
    TGFrame *fr;
@@ -577,11 +579,11 @@ void TGContainer::SelectAll()
    Emit("SelectAll()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unselect all items in the container.
+
 void TGContainer::UnSelectAll()
 {
-   // Unselect all items in the container.
-
    TIter next(fList);
    TGFrameElement *el;
    TGPosition pos = GetPagePosition();
@@ -602,12 +604,12 @@ void TGContainer::UnSelectAll()
    Emit("UnSelectAll()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the selection, all selected items become unselected and
+/// vice versa.
+
 void TGContainer::InvertSelection()
 {
-   // Invert the selection, all selected items become unselected and
-   // vice versa.
-
    int selected = 0;
 
    TIter next(fList);
@@ -630,11 +632,11 @@ void TGContainer::InvertSelection()
    Emit("InvertSelection()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all items from the container.
+
 void TGContainer::RemoveAll()
 {
-   // Remove all items from the container.
-
    TGFrameElement *el;
    TIter next(fList);
 
@@ -649,11 +651,11 @@ void TGContainer::RemoveAll()
    ClearViewPort();  // full redraw
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove item from container.
+
 void TGContainer::RemoveItem(TGFrame *item)
 {
-   // Remove item from container.
-
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
@@ -669,12 +671,12 @@ void TGContainer::RemoveItem(TGFrame *item)
    ClearViewPort();  // fill redraw
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the next selected item. If the "current" pointer is 0, the first
+/// selected item will be returned.
+
 const TGFrame *TGContainer::GetNextSelected(void **current)
 {
-   // Return the next selected item. If the "current" pointer is 0, the first
-   // selected item will be returned.
-
    TGFrame *f;
    TObjLink *lnk = (TObjLink *) *current;
 
@@ -690,11 +692,11 @@ const TGFrame *TGContainer::GetNextSelected(void **current)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate item.
+
 void TGContainer::ActivateItem(TGFrameElement *el)
 {
-   // Activate item.
-
    TGFrame *fr = el->fFrame;
    fr->Activate(kTRUE);
 
@@ -713,11 +715,11 @@ void TGContainer::ActivateItem(TGFrameElement *el)
    DrawRegion(fr->GetX() - pos.fX, fr->GetY() - pos.fY, fr->GetWidth(), fr->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DeActivate item.
+
 void TGContainer::DeActivateItem(TGFrameElement *el)
 {
-   // DeActivate item.
-
    TGFrame *fr = el->fFrame;
    fr->Activate(kFALSE);
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_SELCHANGED), fTotal, fSelected);
@@ -726,11 +728,11 @@ void TGContainer::DeActivateItem(TGFrameElement *el)
    DrawRegion(fr->GetX() - pos.fX, fr->GetY() - pos.fY, fr->GetWidth(), fr->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns page position.
+
 TGPosition TGContainer::GetPagePosition() const
 {
-   // Returns page position.
-
    TGPosition ret;
    if (!fViewPort) return ret;
 
@@ -740,11 +742,11 @@ TGPosition TGContainer::GetPagePosition() const
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns page dimension.
+
 TGDimension TGContainer::GetPageDimension() const
 {
-   // Returns page dimension.
-
    TGDimension ret;
    if (!fViewPort) return ret;
 
@@ -753,46 +755,47 @@ TGDimension TGContainer::GetPageDimension() const
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set page position.
+
 void TGContainer::SetPagePosition(const TGPosition& pos)
 {
-   // Set page position.
-
    if (!fViewPort) return;
    fViewPort->SetPos(pos.fX, pos.fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set page position.
+
 void TGContainer::SetPagePosition(Int_t x, Int_t y)
 {
-   // Set page position.
-
    if (!fViewPort) return;
    fViewPort->SetPos(x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set page dimension.
+
 void TGContainer::SetPageDimension(const TGDimension& dim)
 {
-   // Set page dimension.
-
    if (!fViewPort) return;
    fViewPort->Resize(dim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set page dimension.
+
 void TGContainer::SetPageDimension(UInt_t w, UInt_t h)
 {
-   // Set page dimension.
-
    if (!fViewPort) return;
    fViewPort->Resize(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw content of container in the viewport region.
+
 void TGContainer::DoRedraw()
 {
-   // Redraw content of container in the viewport region.
 #ifdef R__HAS_COCOA
    DrawRegion(0, 0, GetWidth(), GetHeight());
 #else
@@ -805,13 +808,13 @@ void TGContainer::DoRedraw()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw a region of container in viewport.
+/// x, y, w, h are position and dimension of area to be
+/// redrawn in viewport coordinates.
+
 void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Draw a region of container in viewport.
-   // x, y, w, h are position and dimension of area to be
-   // redrawn in viewport coordinates.
-
    static GContext_t gcBg = 0;
    Pixmap_t pixmap = 0;
 
@@ -879,11 +882,11 @@ void TGContainer::DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    gVirtualX->Update(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear view port and redraw full content
+
 void TGContainer::ClearViewPort()
 {
-   // Clear view port and redraw full content
-
    if (!fViewPort) return;
    fExposedRegion.fW = fViewPort->GetWidth();
    fExposedRegion.fH = fViewPort->GetHeight();
@@ -891,11 +894,11 @@ void TGContainer::ClearViewPort()
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expose events. Do not use double buffer.
+
 Bool_t TGContainer::HandleExpose(Event_t *event)
 {
-   // Handle expose events. Do not use double buffer.
-
    if (fMapSubwindows) return TGCompositeFrame::HandleExpose(event);
 
    if (event->fWindow == GetId()) {
@@ -917,11 +920,11 @@ Bool_t TGContainer::HandleExpose(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in container.
+
 Bool_t TGContainer::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in container.
-
    Int_t total, selected, page = 0;
 
    TGPosition pos = GetPagePosition();
@@ -1026,12 +1029,12 @@ Bool_t TGContainer::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve icons associated with class "name". Association is made
+/// via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
+
 const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
 {
-   // Retrieve icons associated with class "name". Association is made
-   // via the user's ~/.root.mimes file or via $ROOTSYS/etc/root.mimes.
-
    TObject *obj = 0;
    TClass *cl;
    const TGPicture *pic=0;
@@ -1068,11 +1071,11 @@ const TGPicture *TGContainer::GetObjPicture(TGFrame *f)
    return pic;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set drag window pixmaps and hotpoint.
+
 void TGContainer::SetDragPixmap(const TGPicture *p)
 {
-   // Set drag window pixmaps and hotpoint.
-
    Pixmap_t pic, mask;
    TGPicture *selpic = new TGSelectedPicture(gClient, p);
    pic  = selpic->GetPicture();
@@ -1086,11 +1089,11 @@ void TGContainer::SetDragPixmap(const TGPicture *p)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click mouse event.
+
 Bool_t TGContainer::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click mouse event.
-
    TGFrameElement *el;
    TIter next(fList);
 
@@ -1129,11 +1132,11 @@ Bool_t TGContainer::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion events.
+
 Bool_t TGContainer::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion events.
-
    int xf0, yf0, xff, yff, total, selected;
 
    TGPosition pos = GetPagePosition();
@@ -1265,12 +1268,12 @@ Bool_t TGContainer::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The key press event handler converts a key press to some line editor
+/// action.
+
 Bool_t TGContainer::HandleKey(Event_t *event)
 {
-   // The key press event handler converts a key press to some line editor
-   // action.
-
    char   input[10];
    Int_t  n;
    UInt_t keysym;
@@ -1404,11 +1407,11 @@ Bool_t TGContainer::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find frame by name.
+
 TGFrame *TGContainer::FindFrameByName(const char *name)
 {
-   // Find frame by name.
-
    if (!IsMapped()) return 0;
 
    Bool_t direction = kTRUE;
@@ -1455,11 +1458,11 @@ TGFrame *TGContainer::FindFrameByName(const char *name)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes search dialog. Looks for item with the entered name.
+
 void TGContainer::Search(Bool_t close)
 {
-   // Invokes search dialog. Looks for item with the entered name.
-
    static TGSearchType *srch = 0;
    Int_t ret = 0;
 
@@ -1483,11 +1486,11 @@ void TGContainer::Search(Bool_t close)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Autoscroll while close to & beyond  The Wall
+
 void TGContainer::OnAutoScroll()
 {
-   // Autoscroll while close to & beyond  The Wall
-
    TGFrameElement *el = 0;
    TGFrame *f = 0;
    int xf0, yf0, xff, yff, total, selected;
@@ -1585,11 +1588,11 @@ void TGContainer::OnAutoScroll()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Search for entry which name begins with pattern.
+
 void TGContainer::SearchPattern()
 {
-   // Search for entry which name begins with pattern.
-
    TGFrameElement *fe = 0;
    TIter next(fList);
    TString str;
@@ -1611,11 +1614,11 @@ void TGContainer::SearchPattern()
    fKeyTimerActive = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Repeats search.
+
 void TGContainer::RepeatSearch()
 {
-   // Repeats search.
-
    TGFrameElement *fe = 0;
 
    if (fLastName == "")
@@ -1645,11 +1648,11 @@ void TGContainer::RepeatSearch()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find frame located int container at position x,y.
+
 TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
 {
-   // Find frame located int container at position x,y.
-
    TIter next(fList);
    TGFrameElement *el;
    TGFrameElement *ret = 0;
@@ -1679,11 +1682,11 @@ TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void *TGContainer::FindItem(const TString& name, Bool_t direction,
                             Bool_t caseSensitive, Bool_t subString)
 {
-
    // Find a frame which assosiated object has a name containing a "name"
    // string.
 
@@ -1733,27 +1736,27 @@ void *TGContainer::FindItem(const TString& name, Bool_t direction,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pointer to hor. scroll bar
+
 TGHScrollBar *TGContainer::GetHScrollbar() const
 {
-   // returns pointer to hor. scroll bar
-
    return fCanvas ? fCanvas->GetHScrollbar() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns pointer to vert. scroll bar
+
 TGVScrollBar *TGContainer::GetVScrollbar() const
 {
-   // returns pointer to vert. scroll bar
-
    return fCanvas ? fCanvas->GetVScrollbar() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position of vertical scrollbar.
+
 void TGContainer::SetVsbPosition(Int_t newPos)
 {
-   // Set position of vertical scrollbar.
-
    if (!fViewPort) return;
    TGVScrollBar *vb = GetVScrollbar();
 
@@ -1765,11 +1768,11 @@ void TGContainer::SetVsbPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set new hor. position
+
 void TGContainer::SetHsbPosition(Int_t newPos)
 {
-   // set new hor. position
-
    if (!fViewPort) return;
    TGHScrollBar *hb = GetHScrollbar();
 
@@ -1781,11 +1784,11 @@ void TGContainer::SetHsbPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move content to position of highlighted/activated frame.
+
 void TGContainer::AdjustPosition()
 {
-   // Move content to position of highlighted/activated frame.
-
    if (!fViewPort) return;
    if (!fLastActiveEl) return;
    TGFrame *f = fLastActiveEl->fFrame;
@@ -1839,11 +1842,11 @@ void TGContainer::AdjustPosition()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move current position one column left.
+
 void TGContainer::LineLeft(Bool_t select)
 {
-   // Move current position one column left.
-
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -1878,11 +1881,11 @@ void TGContainer::LineLeft(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move current position one column right.
+
 void TGContainer::LineRight(Bool_t select)
 {
-   // Move current position one column right.
-
    TGPosition pos = GetPagePosition();
    TGDimension dim = GetPageDimension();
 
@@ -1915,11 +1918,11 @@ void TGContainer::LineRight(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make current position first line in window by scrolling up.
+
 void TGContainer::LineUp(Bool_t select)
 {
-   // Make current position first line in window by scrolling up.
-
    TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
@@ -1944,11 +1947,11 @@ void TGContainer::LineUp(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move one line down.
+
 void TGContainer::LineDown(Bool_t select)
 {
-   // Move one line down.
-
    TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
@@ -1971,11 +1974,11 @@ void TGContainer::LineDown(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move  position one page up.
+
 void TGContainer::PageUp(Bool_t select)
 {
-   // Move  position one page up.
-
    TGDimension dim = GetPageDimension();
 
    TGFrameElement *fe = (TGFrameElement*)fList->First();
@@ -2015,11 +2018,11 @@ void TGContainer::PageUp(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move position one page down.
+
 void TGContainer::PageDown(Bool_t select)
 {
-   // Move position one page down.
-
    TGDimension dim = GetPageDimension();
 
    TList *li = GetList();
@@ -2059,11 +2062,11 @@ void TGContainer::PageDown(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move to upper-left corner of container.
+
 void TGContainer::Home(Bool_t select)
 {
-   // Move to upper-left corner of container.
-
    TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
@@ -2076,11 +2079,11 @@ void TGContainer::Home(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move to the bottom-right corner of container.
+
 void TGContainer::End(Bool_t select)
 {
-   // Move to the bottom-right corner of container.
-
    TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
@@ -2093,11 +2096,11 @@ void TGContainer::End(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get graphics context for line drawing.
+
 const TGGC &TGContainer::GetLineGC()
 {
-   // Get graphics context for line drawing.
-
    if (!fgLineGC) {
       GCValues_t gval;
       gval.fMask = kGCForeground | kGCBackground | kGCFunction | kGCFillStyle |
@@ -2118,13 +2121,13 @@ const TGGC &TGContainer::GetLineGC()
    return *fgLineGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a canvas object.
+
 TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
                    UInt_t options, ULong_t back) :
     TGFrame(p, w, h, options, back)
 {
-   // Create a canvas object.
-
    fVport      = new TGViewPort(this, w-4, h-4, kChildFrame | kOwnBackground,
                                 fgWhitePixel);
    fHScrollbar = new TGHScrollBar(this, w-4, kDefaultScrollBarWidth);
@@ -2143,21 +2146,21 @@ TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
    fHScrollbar->SetEditDisabled(kEditDisable | kEditDisableGrab | kEditDisableBtnEnable);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete canvas.
+
 TGCanvas::~TGCanvas()
 {
-   // Delete canvas.
-
    delete fHScrollbar;
    delete fVScrollbar;
    delete fVport;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map all canvas sub windows.
+
 void TGCanvas::MapSubwindows()
 {
-   // Map all canvas sub windows.
-
    if (fHScrollbar) fHScrollbar->MapSubwindows();
    if (fVScrollbar) fVScrollbar->MapSubwindows();
 
@@ -2174,13 +2177,13 @@ void TGCanvas::MapSubwindows()
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adding a frame to a canvas is actually adding the frame to the
+/// viewport container. The viewport container must be at least a
+/// TGCompositeFrame for this method to succeed.
+
 void TGCanvas::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
-   // Adding a frame to a canvas is actually adding the frame to the
-   // viewport container. The viewport container must be at least a
-   // TGCompositeFrame for this method to succeed.
-
    TGFrame *container = fVport->GetContainer();
    if (!container) {
       Error("AddFrame", "no canvas container set yet");
@@ -2192,11 +2195,11 @@ void TGCanvas::AddFrame(TGFrame *f, TGLayoutHints *l)
       Error("AddFrame", "canvas container must inherit from TGCompositeFrame");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw canvas border.
+
 void TGCanvas::DrawBorder()
 {
-   // Draw canvas border.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
          gVirtualX->DrawLine(fId, GetShadowGC()(), 0, 0, fWidth-2, 0);
@@ -2216,12 +2219,12 @@ void TGCanvas::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create layout for canvas. Depending on the size of the container
+/// we need to add the scrollbars.
+
 void TGCanvas::Layout()
 {
-   // Create layout for canvas. Depending on the size of the container
-   // we need to add the scrollbars.
-
    Bool_t   need_vsb, need_hsb;
    UInt_t   cw, ch, tcw, tch;
 
@@ -2332,11 +2335,11 @@ void TGCanvas::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle message generated by the canvas scrollbars.
+
 Bool_t TGCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Handle message generated by the canvas scrollbars.
-
    switch (GET_MSG(msg)) {
       case kC_HSCROLL:
          switch (GET_SUBMSG(msg)) {
@@ -2362,31 +2365,31 @@ Bool_t TGCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get position of horizontal scrollbar.
+
 Int_t TGCanvas::GetHsbPosition() const
 {
-   // Get position of horizontal scrollbar.
-
    if (fHScrollbar && fHScrollbar->IsMapped())
       return fHScrollbar->GetPosition();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get position of vertical scrollbar.
+
 Int_t TGCanvas::GetVsbPosition() const
 {
-   // Get position of vertical scrollbar.
-
    if (fVScrollbar && fVScrollbar->IsMapped())
       return fVScrollbar->GetPosition();
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position of horizontal scrollbar.
+
 void TGCanvas::SetHsbPosition(Int_t newPos)
 {
-   // Set position of horizontal scrollbar.
-
    if (fHScrollbar && fHScrollbar->IsMapped()) {
       TGFrame *container = fVport->GetContainer();
       fHScrollbar->SetRange((Int_t)container->GetWidth(), (Int_t)fVport->GetWidth());
@@ -2396,11 +2399,11 @@ void TGCanvas::SetHsbPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position of vertical scrollbar.
+
 void TGCanvas::SetVsbPosition(Int_t newPos)
 {
-   // Set position of vertical scrollbar.
-
    if (fVScrollbar && fVScrollbar->IsMapped()) {
       TGFrame *container = fVport->GetContainer();
       fVScrollbar->SetRange((Int_t)container->GetHeight(), (Int_t)fVport->GetHeight());
@@ -2410,23 +2413,23 @@ void TGCanvas::SetVsbPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set scrolling policy. Use values defined by the enum: kCanvasNoScroll,
+/// kCanvasScrollHorizontal, kCanvasScrollVertical, kCanvasScrollBoth.
+
 void TGCanvas::SetScrolling(Int_t scrolling)
 {
-   // Set scrolling policy. Use values defined by the enum: kCanvasNoScroll,
-   // kCanvasScrollHorizontal, kCanvasScrollVertical, kCanvasScrollBoth.
-
    if (scrolling != fScrolling) {
       fScrolling = scrolling;
       Layout();
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear view port and redraw content.
+
 void TGCanvas::ClearViewPort()
 {
-   // Clear view port and redraw content.
-
    TGFrame *cont = GetContainer();
    if (!cont) return;
 
@@ -2434,11 +2437,11 @@ void TGCanvas::ClearViewPort()
    fClient->NeedRedraw(cont);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a canvas widget as a C++ statement(s) on output stream out.
+
 void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a canvas widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // canvas widget" << std::endl;
@@ -2492,11 +2495,11 @@ void TGCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a canvas container as a C++ statement(s) on output stream out.
+
 void TGContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a canvas container as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // canvas container" << std::endl;

@@ -31,10 +31,11 @@ ClassImp(TGeoOverlap)
 //   each other nor extrude the shape of their mother volume.
 //______________________________________________________________________________
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TGeoOverlap::TGeoOverlap()
 {
-// Default ctor.
    fOverlap = 0;
    fVolume1 = 0;
    fVolume2 = 0;
@@ -43,13 +44,14 @@ TGeoOverlap::TGeoOverlap()
    fMarker  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a named overlap belonging to volume VOL and having the size OVLP.
+
 TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
                          const TGeoMatrix *matrix1, const TGeoMatrix *matrix2,
                          Bool_t isovlp, Double_t ovlp)
             :TNamed("",name)
 {
-// Creates a named overlap belonging to volume VOL and having the size OVLP.
    fOverlap = ovlp;
    fVolume1  = vol1;
    fVolume2  = vol2;
@@ -64,30 +66,33 @@ TGeoOverlap::TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
 //   fMarker->SetMarkerSize(0.5);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoOverlap::~TGeoOverlap()
 {
-// Destructor.
    if (fMarker) delete fMarker;
    if (fMatrix1) delete fMatrix1;
    if (fMatrix2) delete fMatrix2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define double-click action
+
 void TGeoOverlap::Browse(TBrowser *b)
 {
-// Define double-click action
    if (!b) return;
    Draw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Method to compare this overlap with another. Returns :
+///   -1 - this is smaller than OBJ
+///    0 - equal
+///    1 - greater
+
 Int_t TGeoOverlap::Compare(const TObject *obj) const
 {
-// Method to compare this overlap with another. Returns :
-//   -1 - this is smaller than OBJ
-//    0 - equal
-//    1 - greater
    TGeoOverlap *other = 0;
    other = (TGeoOverlap*)obj;
    if (!other) {
@@ -103,40 +108,45 @@ Int_t TGeoOverlap::Compare(const TObject *obj) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Distance to primitive for an overlap.
+
 Int_t TGeoOverlap::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Distance to primitive for an overlap.
    return fVolume1->GetGeoManager()->GetGeomPainter()->DistanceToPrimitiveVol(fVolume1, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the overlap. One daughter will be blue, the other green,
+/// extruding points red.
+
 void TGeoOverlap::Draw(Option_t *option)
 {
-// Draw the overlap. One daughter will be blue, the other green,
-// extruding points red.
    fVolume1->GetGeoManager()->GetGeomPainter()->DrawOverlap(this, option);
    PrintInfo();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Event interception.
+
 void TGeoOverlap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-// Event interception.
    fVolume1->GetGeoManager()->GetGeomPainter()->ExecuteVolumeEvent(fVolume1, event, px, py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the overlap.
+
 void TGeoOverlap::Paint(Option_t *option)
 {
-// Paint the overlap.
    fVolume1->GetGeoManager()->GetGeomPainter()->PaintOverlap(this, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print detailed info.
+
 void TGeoOverlap::Print(Option_t *) const
 {
-// Print detailed info.
    PrintInfo();
    printf(" - first volume: %s at position:\n", fVolume1->GetName());
    fMatrix1->Print();
@@ -146,24 +156,27 @@ void TGeoOverlap::Print(Option_t *) const
    fVolume2->InspectShape();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info.
+
 void TGeoOverlap::PrintInfo() const
 {
-// Print some info.
    printf(" = Overlap %s: %s ovlp=%g\n", GetName(), GetTitle(),fOverlap);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set next overlapping point.
+
 void TGeoOverlap::SetNextPoint(Double_t x, Double_t y, Double_t z)
 {
-// Set next overlapping point.
    fMarker->SetNextPoint(x,y,z);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw overlap and sample with random points the overlapping region.
+
 void TGeoOverlap::SampleOverlap(Int_t npoints)
 {
-// Draw overlap and sample with random points the overlapping region.
    Draw();
    // Select bounding box of the second volume (may extrude first)
    TPolyMarker3D *marker = 0;
@@ -216,18 +229,20 @@ void TGeoOverlap::SampleOverlap(Int_t npoints)
          GetName(), capacity, err*capacity);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get 3D size of this.
+
 void TGeoOverlap::Sizeof3D() const
 {
-// Get 3D size of this.
    fVolume1->GetShape()->Sizeof3D();
    fVolume2->GetShape()->Sizeof3D();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate this overlap.
+
 void TGeoOverlap::Validate() const
 {
-// Validate this overlap.
    Double_t point[3];
    Double_t local[3];
    Double_t safe1,safe2;

@@ -9,10 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-// old version of a  dynamic particle class created by event generators.
-// This class is now obsolete. Use TParticle instead.
+/** \class  TPrimary
+    \ingroup eg
+
+Old version of a  dynamic particle class created by event generators.
+
+This class is now obsolete. Use TParticle instead.
+*/
 
 #include "TObject.h"
 #include "Rtypes.h"
@@ -26,13 +29,13 @@
 
 ClassImp(TPrimary)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Primary vertex particle default constructor
+///
+
 TPrimary::TPrimary()
 {
-//
-//  Primary vertex particle default constructor
-//
-
    //do nothing
    fPart         = 0;
    fFirstMother  = 0;
@@ -51,15 +54,16 @@ TPrimary::TPrimary()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  TPrimary vertex particle normal constructor
+///
+
 TPrimary::TPrimary(Int_t part, Int_t first, Int_t second, Int_t gener,
                    Double_t px, Double_t py, Double_t pz,
                    Double_t etot, Double_t vx, Double_t vy, Double_t vz,
                    Double_t time, Double_t timend, const char *type)
 {
-//
-//  TPrimary vertex particle normal constructor
-//
    fPart         = part;
    fFirstMother  = first;
    fSecondMother = second;
@@ -76,28 +80,27 @@ TPrimary::TPrimary(Int_t part, Int_t first, Int_t second, Int_t gener,
    fType         = type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///   Primaray vertex particle default destructor
+///
+
 TPrimary::~TPrimary()
 {
-//
-//   Primaray vertex particle default destructor
-//
-
    //do nothing
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a primary track
+///
+/// Compute the closest distance of approach from point px,py to each segment
+/// of a track.
+/// The distance is computed in pixels units.
+///
+
 Int_t TPrimary::DistancetoPrimitive(Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*Compute distance from point px,py to a primary track*-*-*-*
-//*-*            ====================================================
-//*-*
-//*-*  Compute the closest distance of approach from point px,py to each segment
-//*-*  of a track.
-//*-*  The distance is computed in pixels units.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
    const Int_t big = 9999;
    Float_t xv[3], xe[3], xndc[3];
    Float_t rmin[3], rmax[3];
@@ -126,51 +129,55 @@ Int_t TPrimary::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event
+///
+
 void TPrimary::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-//*-*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*
-//*-*                  =========================================
-
    gPad->SetCursor(kPointer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of primary particle
+
 const char *TPrimary::GetName() const
 {
-   //return name of primary particle
    static char def[4] = "XXX";
    const TAttParticle *ap = GetParticle();
    if (ap) return ap->GetName();
    else    return def;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Returning a pointer to the particle attributes
+///
+
 const TAttParticle *TPrimary::GetParticle() const
 {
-//
-//  returning a pointer to the particle attributes
-//
    if (!TAttParticle::fgList) TAttParticle::DefinePDG();
    return TAttParticle::GetParticle(fPart);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return title of primary particle
+
 const char *TPrimary::GetTitle() const
 {
-   //return title of primary particle
    static char title[128];
    Float_t pmom = TMath::Sqrt(fPx*fPx+fPy*fPy+fPz*fPz);
    snprintf(title,128,"pmom=%f GeV",pmom);
    return title;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Paint a primary track
+///
+
 void TPrimary::Paint(Option_t *option)
 {
-//
-//  Paint a primary track
-//
    Float_t rmin[3], rmax[3];
    static TPolyLine3D *pline = 0;
    if (!pline) {
@@ -193,12 +200,13 @@ void TPrimary::Paint(Option_t *option)
    pline->Paint(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Print the internals of the primary vertex particle
+///
+
 void TPrimary::Print(Option_t *) const
 {
-//
-//  Print the internals of the primary vertex particle
-//
    char def[8] = "XXXXXXX";
    const char *name;
    TAttParticle *ap = (TAttParticle*)GetParticle();
@@ -209,12 +217,12 @@ void TPrimary::Print(Option_t *) const
    fFirstMother,fSecondMother,fType.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D size of this primary
+///
+
 void TPrimary::Sizeof3D() const
 {
-//*-*-*-*-*-*Return total X3D size of this primary*-*-*-*-*-*-*
-//*-*        =====================================
-
    Float_t pmom = TMath::Sqrt(fPx*fPx+fPy*fPy+fPz*fPz);
    if (pmom == 0) return;
    Int_t npoints = 2;

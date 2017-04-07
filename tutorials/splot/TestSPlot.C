@@ -1,3 +1,26 @@
+/// \file
+/// \ingroup tutorial_splot
+/// This tutorial illustrates the use of class TSPlot and of the sPlots method
+///
+/// It is an example of analysis of charmless B decays, performed for BABAR.
+/// One is dealing with a data sample in which two species are present:
+/// the first is termed signal and the second background.
+/// A maximum Likelihood fit is performed to obtain the two yields N1 and N2
+/// The fit relies on two discriminating variables collectively denoted y,
+/// which are chosen within three possible variables denoted Mes, dE and F.
+/// The variable which is not incorporated in y, is used as the control variable x.
+/// The distributions of discriminating variables and more details about the method
+/// can be found in the TSPlot class description
+///
+/// NOTE: This script requires a data file `$ROOTSYS/tutorials/splot/TestSPlot_toyMC.dat`.
+///
+/// \notebook -js
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Anna Kreshuk, Muriel Pivc
+
 #include "TSPlot.h"
 #include "TTree.h"
 #include "TH1.h"
@@ -10,24 +33,6 @@
 
 void TestSPlot()
 {
-//This tutorial illustrates the use of class TSPlot and of the sPlots method
-//
-//It is an example of analysis of charmless B decays, performed for BABAR.
-//One is dealing with a data sample in which two species are present:
-//the first is termed signal and the second background.
-//A maximum Likelihood fit is performed to obtain the two yields N1 and N2
-//The fit relies on two discriminating variables collectively denoted y,
-//which are chosen within three possible variables denoted Mes, dE and F.
-//The variable which is not incorporated in y, is used as the control variable x.
-//The distributions of discriminating variables and more details about the method
-//can be found in the TSPlot class description
-//
-// NOTE: This script requires a data file "TestSPlot_toyMC.dat".
-//       This data file is not distributed in the standard ROOT binary tar file.
-//       You can download it from ftp://root.cern.ch/root/TestSPlot_toyMC.dat
-//
-//Authors: Anna Kreshuk, Muriel Pivc
-
    TString dir = gSystem->UnixPathName(__FILE__);
    dir.ReplaceAll("TestSPlot.C","");
    dir.ReplaceAll("/./","/");
@@ -66,14 +71,14 @@ void TestSPlot()
    //The first two histograms are sPlots for the Mes variable signal and
    //background. dE and F were chosen as discriminating variables to determine
    //N1 and N2, through a maximum Likelihood fit, and thus the sPlots for the
-   //control variable Mes, unknown to the fit, was contructed.
+   //control variable Mes, unknown to the fit, was constructed.
    //One can see that the sPlot for signal reproduces the PDF correctly,
    //even when the latter vanishes.
    //
    //The lower two histograms are sPlots for the F variables signal and
    //background. dE and Mes were chosen as discriminating variables to
    //determine N1 and N2, through a maximum Likelihood fit, and thus the
-   //sPlots for the control variable F, unknown to the fit, was contructed.
+   //sPlots for the control variable F, unknown to the fit, was constructed.
 
    TCanvas *myc = new TCanvas("myc",
    "sPlots of Mes and F signal and background", 800, 600);

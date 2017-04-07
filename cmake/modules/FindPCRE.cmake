@@ -2,34 +2,20 @@
 #
 # This module defines
 # PCRE_INCLUDE_DIR, where to locate PCRE header files
-# PCRE_LIBRARIES, the libraries to link against to use Pythia6
-# PCRE_FOUND.  If false, you cannot build anything that requires Pythia6.
+# PCRE_LIBRARIES, the libraries to link against to use PCRE
+# PCRE_FOUND.  If false, you cannot build anything that requires PCRE.
 
-if(PCRE_CONFIG_EXECUTABLE)
-  set(PCRE_FIND_QUIETLY 1)
-endif()
-set(PCRE_FOUND 0)
+set(_PCRE_PATHS ${PCRE_DIR} $ENV{PCRE_DIR})
 
+find_path(PCRE_INCLUDE_DIR pcre.h HINTS ${_PCRE_PATHS} PATH_SUFFIXES pcre)
+find_library(PCRE_PCRE_LIBRARY NAMES pcre HINTS ${_PCRE_PATHS})
+find_library(PCRE_PCREPOSIX_LIBRARY NAMES pcreposix HINTS ${_PCRE_PATHS})
 
-find_program(PCRE_CONFIG_EXECUTABLE pcre-config)
-
-if(PCRE_CONFIG_EXECUTABLE)
-  execute_process(COMMAND ${PCRE_CONFIG_EXECUTABLE} --version OUTPUT_VARIABLE PCRE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND ${PCRE_CONFIG_EXECUTABLE} --cflags OUTPUT_VARIABLE PCRE_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string( REGEX MATCHALL "-I[^;]+" PCRE_INCLUDE_DIR "${PCRE_CFLAGS}" )
-  string( REPLACE "-I" "" PCRE_INCLUDE_DIR "${PCRE_INCLUDE_DIR}")
-  if(NOT  PCRE_INCLUDE_DIR)
-    execute_process(COMMAND ${PCRE_CONFIG_EXECUTABLE} --prefix OUTPUT_VARIABLE PCRE_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
-    set(PCRE_INCLUDE_DIR ${PCRE_PREFIX}/include)
-  endif()
-  execute_process(COMMAND ${PCRE_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE PCRE_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(PCRE_FOUND 1)
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(PCRE DEFAULT_MSG PCRE_INCLUDE_DIR PCRE_PCRE_LIBRARY)
+mark_as_advanced(PCRE_INCLUDE_DIR PCRE_PCREPOSIX_LIBRARY PCRE_PCRE_LIBRARY)
+set(PCRE_LIBRARIES ${PCRE_PCRE_LIBRARY})
+if(PCRE_PCREPOSIX_LIBRARY)
+  list(APPEND PCRE_LIBRARIES ${PCRE_PCREPOSIX_LIBRARY})
 endif()
 
-if(PCRE_FOUND)
-  if(NOT PCRE_FIND_QUIETLY)
-    message(STATUS "Found PCRE version ${PCRE_VERSION} using ${PCRE_CONFIG_EXECUTABLE}")
-  endif()
-endif()
-
-mark_as_advanced(PCRE_CONFIG_EXECUTABLE)

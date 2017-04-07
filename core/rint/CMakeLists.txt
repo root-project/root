@@ -1,7 +1,6 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT core/rint package
 ############################################################################
-ROOT_USE_PACKAGE(core)
 
 ROOT_GENERATE_DICTIONARY(G__Rint *.h STAGE1 MODULE Rint LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 

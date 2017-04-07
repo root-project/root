@@ -1,6 +1,6 @@
 // @(#)root/roostats:$Id$
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
-// Additional Contributions: Giovanni Petrucciani 
+// Additional Contributions: Giovanni Petrucciani
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -12,47 +12,19 @@
 #ifndef ROOSTATS_ProfileLikelihoodTestStat
 #define ROOSTATS_ProfileLikelihoodTestStat
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ProfileLikelihoodTestStat is an implementation of the TestStatistic interface that calculates the profile
-likelihood ratio at a particular parameter point given a dataset.  It does not constitute a statistical test, for that one may either use:
-<ul>
- <li> the ProfileLikelihoodCalculator that relies on asymptotic properties of the Profile Likelihood Ratio</li>
- <li> the Neyman Construction classes with this class as a test statistic</li>
- <li> the Hybrid Calculator class with this class as a test statistic</li>
-</ul>
 
-</p>
-END_HTML
-*/
-//
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
 
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
-#ifndef ROOTT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOSTATS_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
 
 namespace RooStats {
@@ -68,19 +40,19 @@ namespace RooStats {
         fNll = 0;
         fCachedBestFitParams = 0;
         fLastData = 0;
-	fLimitType = twoSided;
-	fSigned = false;
+   fLimitType = twoSided;
+   fSigned = false;
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
         fDetailedOutput = NULL;
-	fLOffset = RooStats::IsNLLOffset() ;
-      
+   fLOffset = RooStats::IsNLLOffset() ;
+
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
-	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+   fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
         fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
-	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
      }
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
@@ -94,7 +66,7 @@ namespace RooStats {
        fDetailedOutputEnabled = false;
        fDetailedOutput = NULL;
        fLOffset = RooStats::IsNLLOffset() ;
-      
+
        fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
        fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
@@ -103,7 +75,7 @@ namespace RooStats {
        fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
-     
+
      virtual ~ProfileLikelihoodTestStat() {
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
@@ -129,15 +101,15 @@ namespace RooStats {
      void SetStrategy(Int_t strategy){fStrategy=strategy;}
      void SetTolerance(double tol){fTolerance=tol;}
      void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
-    
+
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
         return EvaluateProfileLikelihood(0, data, paramsOfInterest);
      }
 
-     // evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2) 
+     // evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2)
      virtual Double_t EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
-     
+
      virtual void EnableDetailedOutput( bool e=true, bool withErrorsAndPulls=false ) {
         fDetailedOutputEnabled = e;
         fDetailedOutputWithErrorsAndPulls = withErrorsAndPulls;
@@ -145,17 +117,17 @@ namespace RooStats {
         fDetailedOutput = NULL;
      }
      virtual const RooArgSet* GetDetailedOutput(void) const {
-	     // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
-	     // The returned RooArgSet contains the following:
-	     // <ul>
-	     // <li> the minimum nll, fitstatus and convergence quality for each fit </li> 
-	     // <li> for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
-	     // </ul>
-	     return fDetailedOutput;
+        // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
+        // The returned RooArgSet contains the following:
+        // <ul>
+        // <li> the minimum nll, fitstatus and convergence quality for each fit </li>
+        // <li> for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
+        // </ul>
+        return fDetailedOutput;
      }
-         
+
      // set the conditional observables which will be used when creating the NLL
-     // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+     // so the pdf's will not be normalized on the conditional observables when computing the NLL
      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
      virtual void SetVarName(const char* name) { fVarName = name; }
@@ -163,7 +135,7 @@ namespace RooStats {
 
      virtual RooAbsPdf * GetPdf() const { return fPdf; }
 
-      
+
       //      const bool PValueIsRightTail(void) { return false; } // overwrites default
 
   private:
@@ -179,21 +151,21 @@ namespace RooStats {
       //      Double_t fLastMLE;
       LimitType fLimitType;
       Bool_t fSigned;
-      
+
       // this will store a snapshot of the unconditional nuisance
       // parameter fit.
       bool fDetailedOutputEnabled;
       bool fDetailedOutputWithErrorsAndPulls;
       RooArgSet* fDetailedOutput; //!
-      RooArgSet fConditionalObs;    // conditional observables 
-      
+      RooArgSet fConditionalObs;    // conditional observables
+
       TString fVarName;
 
       static Bool_t fgAlwaysReuseNll ;
       Bool_t fReuseNll ;
       TString fMinimizer;
       Int_t fStrategy;
-      Double_t fTolerance; 
+      Double_t fTolerance;
       Int_t fPrintLevel;
       Bool_t fLOffset ;
 

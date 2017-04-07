@@ -38,6 +38,7 @@
 #include <map>
 #include <list>
 #include <array>
+#include <functional>
 #include <stdlib.h>
 #include "TApplication.h"
 #include "TEntryList.h"
@@ -602,6 +603,8 @@ void CleanUp(Int_t nfiles)
 
 Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 {
+   // Make sure files are not existing already.
+   CleanUp(nfiles);
 
    MakeTrees(nentries, nfiles);
    printf("**********************************************************************\n");

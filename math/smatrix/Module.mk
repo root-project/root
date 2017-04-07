@@ -24,13 +24,13 @@ SMATRIXDO32 := $(SMATRIXDS32:.cxx=.o)
 SMATRIXDH   := $(SMATRIXDS:.cxx=.h)
 SMATRIXDH32 := $(SMATRIXDS32:.cxx=.h)
 
-SMATRIXDH1  :=  $(MODDIRI)/Math/SMatrix.h \
-		$(MODDIRI)/Math/SVector.h \
-		$(MODDIRI)/Math/SMatrixDfwd.h \
-		$(MODDIRI)/Math/SMatrixFfwd.h 
-#		$(MODDIRI)/Math/SMatrixD32fwd.h
+SMATRIXDICTH:= Math/SMatrix.h \
+		Math/SVector.h \
+		Math/SMatrixDfwd.h \
+		Math/SMatrixFfwd.h
+#		Math/SMatrixD32fwd.h
 
-
+SMATRIXDICTHINC := $(add-prefix include/,$(SMATRIXDICTH))
 
 SMATRIXH1   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.h))
 SMATRIXH2   := $(filter-out $(MODDIRI)/Math/LinkDef%, $(wildcard $(MODDIRI)/Math/*.icc))
@@ -45,10 +45,19 @@ SMATRIXMAP  := $(SMATRIXLIB:.$(SOEXT)=.rootmap)
 SMATRIXMAP32:= $(SMATRIXLIB:.$(SOEXT)=32.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(SMATRIXH1))
-ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.icc,include/Math/%.icc,$(SMATRIXH2))
+SMATRIXH1_REL := $(patsubst $(MODDIRI)/Math/%,include/Math/%,$(SMATRIXH1))
+SMATRIXH2_REL := $(patsubst $(MODDIRI)/Math/%,include/Math/%,$(SMATRIXH2))
+ALLHDRS      += $(SMATRIXH1_REL) $(SMATRIXH2_REL)
 ALLLIBS      += $(SMATRIXLIB)
 ALLMAPS      += $(SMATRIXMAP) $(SMATRIXMAP32)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(SMATRIXH1_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SMATRIXLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(SMATRIXDEP)
@@ -78,25 +87,25 @@ $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,SMATRIX)
 	$(noop)
 
-$(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
+$(SMATRIXDS):  $(SMATRIXDICTHINC) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SMATRIX) -c -writeEmptyRootPCM $(SMATRIXDH1) $(SMATRIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SMATRIX) -c -writeEmptyRootPCM $(SMATRIXDICTH) $(SMATRIXL)
 
-$(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE)
+$(SMATRIXDS32): $(SMATRIXDICTHINC) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c -writeEmptyRootPCM $(SMATRIXDH1) $(SMATRIXL32)
+		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c -writeEmptyRootPCM $(SMATRIXDICTH) $(SMATRIXL32)
 
-$(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
+$(SMATRIXMAP):  $(SMATRIXDICTHINC) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
+		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDICTH) $(SMATRIXL)
 
-$(SMATRIXMAP32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
+$(SMATRIXMAP32): $(SMATRIXDICTHINC) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c $(SMATRIXDH1) $(SMATRIXL32)
+		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c $(SMATRIXDICTH) $(SMATRIXL32)
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range

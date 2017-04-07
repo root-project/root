@@ -1,7 +1,12 @@
-// A set of classes deriving from TTask
-// see macro tasks.C to see an example of use
-// The Exec function of each class prints one line when it is called.
-//Author: Rene Brun
+/// \file
+/// \ingroup Tutorials
+/// A set of classes deriving from TTask.
+/// See macro tasks.C to see an example of use
+/// The Exec function of each class prints one line when it is called.
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TTask.h"
 
@@ -144,7 +149,8 @@ public:
 };
 
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRun)
 
 MyRun::MyRun(const char *name, const char *title)
@@ -157,7 +163,8 @@ void MyRun::Exec(Option_t * /*option*/)
    printf("MyRun executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyEvent)
 
 MyEvent::MyEvent(const char *name, const char *title)
@@ -170,7 +177,8 @@ void MyEvent::Exec(Option_t * /*option*/)
    printf("MyEvent executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyGeomInit)
 
 MyGeomInit::MyGeomInit(const char *name, const char *title)
@@ -183,7 +191,8 @@ void MyGeomInit::Exec(Option_t * /*option*/)
    printf("MyGeomInit executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyMaterialInit)
 
 MyMaterialInit::MyMaterialInit(const char *name, const char *title)
@@ -196,7 +205,8 @@ void MyMaterialInit::Exec(Option_t * /*option*/)
    printf("MyMaterialInit executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyTracker)
 
 MyTracker::MyTracker(const char *name, const char *title)
@@ -209,7 +219,8 @@ void MyTracker::Exec(Option_t * /*option*/)
    printf("MyTracker executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecTPC)
 
 MyRecTPC::MyRecTPC(const char *name, const char *title)
@@ -222,7 +233,8 @@ void MyRecTPC::Exec(Option_t * /*option*/)
    printf("MyRecTPC executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecITS)
 
 MyRecITS::MyRecITS(const char *name, const char *title)
@@ -235,7 +247,8 @@ void MyRecITS::Exec(Option_t * /*option*/)
    printf("MyRecITS executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecMUON)
 
 MyRecMUON::MyRecMUON(const char *name, const char *title)
@@ -248,7 +261,8 @@ void MyRecMUON::Exec(Option_t * /*option*/)
    printf("MyRecMUON executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecPHOS)
 
 MyRecPHOS::MyRecPHOS(const char *name, const char *title)
@@ -261,7 +275,8 @@ void MyRecPHOS::Exec(Option_t * /*option*/)
    printf("MyRecPHOS executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecRICH)
 
 MyRecRICH::MyRecRICH(const char *name, const char *title)
@@ -274,7 +289,8 @@ void MyRecRICH::Exec(Option_t * /*option*/)
    printf("MyRecRICH executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecTRD)
 
 MyRecTRD::MyRecTRD(const char *name, const char *title)
@@ -287,7 +303,8 @@ void MyRecTRD::Exec(Option_t * /*option*/)
    printf("MyRecTRD executing\n");
 }
 
-//---------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
 ClassImp(MyRecGlobal)
 
 MyRecGlobal::MyRecGlobal(const char *name, const char *title)

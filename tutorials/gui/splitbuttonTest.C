@@ -1,7 +1,11 @@
-// A simple example that shows the usage of a TGSplitButton.
-// The checkbutton is used to change the split state of the button.
-//
-// author, Roel Aaij 13/07/2007
+/// \file
+/// \ingroup tutorial_gui
+/// A simple example that shows the usage of a TGSplitButton.
+/// The checkbutton is used to change the split state of the button.
+///
+/// \macro_code
+///
+/// \author Roel Aaij 13/07/2007
 
 #include <iostream>
 #include <TApplication.h>

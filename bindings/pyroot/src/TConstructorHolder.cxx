@@ -13,7 +13,7 @@
 
 
 //- protected members --------------------------------------------------------
-Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor )
+Bool_t PyROOT::TConstructorHolder::InitExecutor_( TExecutor*& executor, TCallContext* )
 {
 // pick up special case new object executor
    executor = CreateExecutor( "__init__" );
@@ -29,11 +29,12 @@ PyObject* PyROOT::TConstructorHolder::GetDocString()
       clName.c_str(), clName.c_str(), this->GetMethod() ? this->GetSignatureString().c_str() : "()" );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// preliminary check in case keywords are accidently used (they are ignored otherwise)
+
 PyObject* PyROOT::TConstructorHolder::Call(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
       return 0;
@@ -47,7 +48,7 @@ PyObject* PyROOT::TConstructorHolder::Call(
    }
 
 // setup as necessary
-   if ( ! this->Initialize() )
+   if ( ! this->Initialize( ctxt ) )
       return 0;                              // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
@@ -61,7 +62,7 @@ PyObject* PyROOT::TConstructorHolder::Call(
    }
 
 // perform the call, 0 makes the other side allocate the memory
-   Long_t address = (Long_t)this->Execute( 0, ctxt );
+   Long_t address = (Long_t)this->Execute( 0, 0, ctxt );
 
 // done with filtered args
    Py_DECREF( args );

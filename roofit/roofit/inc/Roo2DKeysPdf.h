@@ -22,7 +22,7 @@
 #include "RooDataSet.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
-class Roo2DKeysPdf : public RooAbsPdf 
+class Roo2DKeysPdf : public RooAbsPdf
 {
 public:
   Roo2DKeysPdf(const char *name, const char *title,
@@ -33,13 +33,13 @@ public:
   virtual ~Roo2DKeysPdf();
 
 //load in a new dataset and re-calculate the PDF
-//return 0 if sucessful
+//return 0 if successful
   Int_t    loadDataSet(RooDataSet& data, TString options);
 
 // The Roo2DKeys options available are:
-//      a = select an adaptove bandwidth [default]
+//      a = select an adaptive bandwidth [default]
 //      n = select a normal bandwidth
-//      m = mirror kernal contributions at edges [fold gaussians back into the x,y plane]
+//      m = mirror kernel contributions at edges [fold gaussians back into the x,y plane]
 //      d = print debug statements [useful for development only; default is off]
 //      v  = print verbose debug statements [useful for development only; default is off]
 //      vv = print ludicrously verbose debug statements [useful for development only; default is off]
@@ -47,7 +47,7 @@ public:
   void     getOptions(void) const;
 
 // Set the value of a scale factor to modify the bandwidth by. The default value for this is unity.
-// Modification of 'normal' bandwidths is useful when the data are not 'normally distributed', 
+// Modification of 'normal' bandwidths is useful when the data are not 'normally distributed',
 // otherwise one expects little departure from that behavior.  Note that both the normal and adaptive
 // bandwidth selections are modified by this factor.  Useful for systematic studies.
 //           ***********
@@ -55,8 +55,8 @@ public:
 //           ***********
   inline void     setWidthScaleFactor(Double_t widthScaleFactor);
 
-// choose the kernel bandwith to use.  The default is 0                                               
-//    0 = use adaptive kernel estimator (uses local population to vary with of kernels)               
+// choose the kernel bandwith to use.  The default is 0
+//    0 = use adaptive kernel estimator (uses local population to vary with of kernels)
 //    1 = use trivial kernel estimator (uses all data and sigma to estimate uniform kernel bandwidth)
   Int_t    calculateBandWidth(Int_t kernel = -999);
 
@@ -68,9 +68,9 @@ public:
   void     PrintInfo(std::ostream &) const;
 
 // save PDF to a file as a TH2F *, TTree * or both
-// this is so that you only need to compute the PDF once and 
-// are free to use the much faster Roo2DHistPdf class in order 
-// to perform fits/do toy studies etc.  
+// this is so that you only need to compute the PDF once and
+// are free to use the much faster Roo2DHistPdf class in order
+// to perform fits/do toy studies etc.
   void     writeToFile(char * outputFile, const char * name) const;
   void     writeHistToFile(char * outputFile, const char * histName) const;
   void     writeNTupleToFile(char * outputFile, const char * name) const;
@@ -85,8 +85,8 @@ protected:
 private:
   // these are used in calculating bandwidths for x and y
   Double_t evaluateFull(Double_t thisX, Double_t thisY) const;
-  Double_t g(Double_t var1, Double_t * _var1, Double_t sigma1, Double_t var2, 
-	     Double_t * _var2, Double_t sigma2) const; 
+  Double_t g(Double_t var1, Double_t * _var1, Double_t sigma1, Double_t var2,
+	     Double_t * _var2, Double_t sigma2) const;
 
   //mirror corrections for the boundaries
   Double_t highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const;
@@ -124,6 +124,3 @@ private:
 inline void  Roo2DKeysPdf::setWidthScaleFactor(Double_t widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }
 
 #endif
-
-
-

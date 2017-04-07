@@ -267,7 +267,14 @@ void FitConfig::SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt)
    fMinimizerOpts = minopt;
 }
 
+std::vector<double> FitConfig::ParamsValues() const {
 
+   std::vector<double> params(NPar() );
+   for (unsigned int i = 0; i < params.size();  ++i) {
+      params[i] = fSettings[i].Value();
+   }
+   return params;
+}
    } // end namespace Fit
 
 } // end namespace ROOT

@@ -1,7 +1,7 @@
 // test program for quasi random numbers
 
 #include "Math/QuasiRandom.h"
-#include "Math/Random.h"
+#include "Math/GSLRandom.h"
 #include "TH2.h"
 #include "TCanvas.h"
 #include "TApplication.h"

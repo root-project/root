@@ -9,59 +9,63 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-// THelix has two different constructors.
-//
-//   If a particle with charge q passes through a point (x,y,z)
-//   with momentum (px,py,pz) with magnetic field B along an axis (nx,ny,nz),
-//   this helix can be constrcuted like
-//
-//      THelix p(x,y,z, px,py,pz, q*B, nx,ny,nz);
-//
-//     (nx,ny,nz) defaults to (0,0,1).
-//
-//   A helix in its own frame can be defined with a pivotal point
-//   (x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
-//   an angular frequency w.  Combining vx0 and vy0 to a transverse
-//   velocity vt0 one can parametrize the helix as
-//
-//    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
-//    y(t) = y0 + vt0 / w * cos(-w * t + phi0)
-//    z(t) = z0 + vz0 * t
-//
-//
-//   The second constructor has 6 parameters,
-//
-//       Example:
-//                 THelix pl1(xyz, v, w, range, rtype, axis);
-//
-//         where:
-//             xyz  : array of initial position
-//             v    : array of initial velocity
-//             w    : angular frequency
-//             range: helix range
-//             rtype: kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
-//                    kLabZ specifies drawing range in lab frame.
-//                    kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
-//             axis : helix axis
-//
-//
-//
-// Example constructing a helix with several default values and drawing it:
-//
-// BEGIN_MACRO(source)
-// {
-//   TCanvas* helix_example_c1 = new TCanvas("helix_example_c1");
-//   TView *view = TView::CreateView(1);
-//   view->SetRange(-1,-1,-1,1,1,1);
-//   THelix *helix = new THelix(0., 0., 0., 1., 0., 0.3, 10.);
-//   helix->Draw();
-// }
-// END_MACRO
-//
-// This initializes a helix with its axis in Z direction (rtype=kHelixZ).
-//
+/** \class THelix
+\ingroup g3d
+THelix has two different constructors.
 
+If a particle with charge q passes through a point (x,y,z)
+with momentum (px,py,pz) with magnetic field B along an axis (nx,ny,nz),
+this helix can be constructed like:
+
+~~~ {.cpp}
+      THelix p(x,y,z, px,py,pz, q*B, nx,ny,nz);
+      (nx,ny,nz) defaults to (0,0,1).
+~~~
+
+A helix in its own frame can be defined with a pivotal point
+(x0,y0,z0), the velocity at that point (vx0,vy0,vz0), and
+an angular frequency w.  Combining vx0 and vy0 to a transverse
+velocity vt0 one can parametrize the helix as:
+
+~~~ {.cpp}
+    x(t) = x0 - vt0 / w * sin(-w * t + phi0)
+    y(t) = y0 + vt0 / w * cos(-w * t + phi0)
+    z(t) = z0 + vz0 * t
+~~~
+
+The second constructor has 6 parameters,
+
+Example:
+
+~~~ {.cpp}
+      THelix pl1(xyz, v, w, range, rtype, axis);
+~~~
+
+where:
+
+  - xyz  : array of initial position
+  - v    : array of initial velocity
+  - w    : angular frequency
+  - range: helix range
+  - rtype: kHelixZ specifies allowed drawing range in helix Z direction, i.e., along B field.
+           kLabZ specifies drawing range in lab frame.
+           kHelixX, kHelixY, kLabX, kLabY, kUnchanged ... etc can also be specified
+  - axis : helix axis
+
+Example constructing a helix with several default values and drawing it:
+
+Begin_Macro(source)
+{
+   TCanvas* helix_example_c1 = new TCanvas("helix_example_c1");
+   TView *view = TView::CreateView(1);
+   view->SetRange(-1,-1,-1,1,1,1);
+   THelix *helix = new THelix(0., 0., 0., 1., 0., 0.3, 10.);
+   helix->Draw();
+}
+End_Macro
+
+This initializes a helix with its axis in Z direction (rtype=kHelixZ).
+*/
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -74,14 +78,13 @@ Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
 
 ClassImp(THelix)
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set all helix parameters.
 
-//______________________________________________________________________________
 void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
                        Double_t *range, EHelixRangeType rType,
                        Double_t *axis )
 {
-   // Set all helix parameters.
-
    // Define the helix frame by setting the helix axis and rotation matrix
    SetAxis(axis);
 
@@ -113,12 +116,11 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helix default constructor.
 
-//______________________________________________________________________________
 THelix::THelix()
 {
-   // Helix default constructor.
-
    fX0 = fY0 = fZ0 = fVt = fPhi0 = fVz = fAxis[0] = fAxis[1] = 0.0;
    fAxis[2]  = 1.0;
    fW        = 1.5E7;   // roughly the cyclon frequency of proton in AMS
@@ -127,14 +129,14 @@ THelix::THelix()
    fRotMat   = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helix normal constructor.
 
-//______________________________________________________________________________
 THelix::THelix(Double_t x,  Double_t y,  Double_t z,
                Double_t vx, Double_t vy, Double_t vz,
                Double_t w)
         : TPolyLine3D()
 {
-   // Helix normal constructor.
    Double_t p[3], v[3];
    p[0] = x;
    p[1] = y;
@@ -149,14 +151,13 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    fOption = "";
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helix normal constructor.
 
-//______________________________________________________________________________
 THelix::THelix(Double_t * p, Double_t * v, Double_t w,
                Double_t * range, EHelixRangeType rType, Double_t * axis)
         : TPolyLine3D()
 {
-   // Helix normal constructor.
-
    Double_t r[2];
    if ( range ) {
       r[0] = range[0];   r[1] = range[1];
@@ -176,11 +177,11 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
 
 
 #if 0
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helix copy constructor.
+
 THelix::THelix(const THelix &h) : TPolyLine3D()
 {
-   // Helix copy constructor.
-
    fX0   = h.fX0;
    fY0   = h.fY0;
    fZ0   = h.fZ0;
@@ -197,10 +198,11 @@ THelix::THelix(const THelix &h) : TPolyLine3D()
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 THelix& THelix::operator=(const THelix& hx)
 {
-   //assignement operator
    if(this!=&hx) {
       TPolyLine3D::operator=(hx);
       fX0=hx.fX0;
@@ -219,30 +221,30 @@ THelix& THelix::operator=(const THelix& hx)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helix destructor.
+
 THelix::~THelix()
 {
-   // Helix destructor.
-
    if (fRotMat) delete fRotMat;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helix copy constructor.
+
 THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 {
-   // Helix copy constructor.
-
    fRotMat=0;
    ((THelix&)helix).THelix::Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this helix to obj.
+
 void THelix::Copy(TObject &obj) const
 {
-   // Copy this helix to obj.
-
    TObject::Copy(obj);
    TAttLine::Copy(((THelix&)obj));
 
@@ -272,29 +274,29 @@ void THelix::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this helix with its current attributes.
+
 void THelix::Draw(Option_t *option)
 {
-   // Draw this helix with its current attributes.
-
    AppendPad(option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this helix with its attributes.
+
 void THelix::Print(Option_t *option) const
 {
-   // Dump this helix with its attributes.
-
    std::cout <<"    THelix Printing N=" <<fN<<" Option="<<option<<std::endl;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(THelix::Class())) {
@@ -314,11 +316,11 @@ void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new axis for the helix.  This will make a new rotation matrix.
+
 void THelix::SetAxis(Double_t * axis)
 {
-   // Set a new axis for the helix.  This will make a new rotation matrix.
-
    if (axis) {
       Double_t len = TMath::Sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);
       if (len <= 0) {
@@ -339,21 +341,21 @@ void THelix::SetAxis(Double_t * axis)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set axis.
+
 void THelix::SetAxis(Double_t x, Double_t y, Double_t z)
 {
-   // Set axis.
-
    Double_t axis[3];    axis[0] = x;    axis[1] = y;    axis[2] = z;
    SetAxis(axis);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a new range for the helix.  This will remake the polyline.
+
 void THelix::SetRange(Double_t * range, EHelixRangeType rType)
 {
-   // Set a new range for the helix.  This will remake the polyline.
-
    Double_t a[2];
    Double_t halfpi = TMath::Pi()/2.0;
    Int_t i;
@@ -542,11 +544,11 @@ void THelix::SetRange(Double_t * range, EHelixRangeType rType)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set range.
+
 void THelix::SetRange(Double_t r1, Double_t r2, EHelixRangeType rType)
 {
-   // Set range.
-
    Double_t range[2];
    range[0] = r1;       range[1] = r2;
    SetRange(range, rType);
@@ -560,11 +562,11 @@ void THelix::SetRange(Double_t r1, Double_t r2, EHelixRangeType rType)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the rotational matrix according to the helix axis.
+
 void THelix::SetRotMatrix()
 {
-   // Set the rotational matrix according to the helix axis.
-
    // Calculate all 6 angles.
    // Note that TRotMatrix::TRotMatrix() expects angles in degrees.
    Double_t raddeg = 180.0 / TMath::Pi();
@@ -589,11 +591,11 @@ void THelix::SetRotMatrix()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finds the closest phase to phi0 that gives cos(phase) = cosine
+
 Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
 {
-   // Finds the closest phase to phi0 that gives cos(phase) = cosine
-
    const Double_t pi    = TMath::Pi();
    const Double_t twopi = TMath::Pi() * 2.0;
    Double_t phi1 = TMath::ACos(cosine);
@@ -612,11 +614,11 @@ Double_t  THelix::FindClosestPhase(Double_t phi0,  Double_t cosine)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class THelix.
+
 void THelix::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class THelix.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }

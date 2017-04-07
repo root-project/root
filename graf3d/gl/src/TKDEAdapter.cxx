@@ -20,7 +20,9 @@
 namespace Rgl {
 namespace Fgt {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Constructor. "Half-baked" object.
+
 TKDEAdapter::TKDEAdapter()
                : fW(0), fH(0), fD(0),
                  fSliceSize(0),
@@ -30,13 +32,13 @@ TKDEAdapter::TKDEAdapter()
                  fDE(0),
                  fE(10.)
 {
-   //Constructor. "Half-baked" object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set grid's dimensions.
+
 void TKDEAdapter::SetGeometry(const TGL5DDataSet *dataSet)
 {
-   //Set grid's dimensions.
    const TAxis *xA = dataSet->GetXAxis();
    const Rgl::Range_t &xMinMax = dataSet->GetXRange();
    const Double_t xRange = xMinMax.second - xMinMax.first;
@@ -65,52 +67,59 @@ void TKDEAdapter::SetGeometry(const TGL5DDataSet *dataSet)
    fZStep = (zA->GetBinCenter(zA->GetLast()) - zA->GetBinLowEdge(zA->GetFirst())) / (fD - 1) / zRange;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///e for kdefgt.
+
 void TKDEAdapter::SetE(Double_t e)
 {
-   //e for kdefgt.
    fE = e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///e for kdefgt.
+
 Double_t TKDEAdapter::GetE()const
 {
-   //e for kdefgt.
    return fE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of cells along X.
+
 UInt_t TKDEAdapter::GetW()const
 {
-   //Number of cells along X.
    return fW;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of cells along Y.
+
 UInt_t TKDEAdapter::GetH()const
 {
-   //Number of cells along Y.
    return fH;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Number of cells along Z.
+
 UInt_t TKDEAdapter::GetD()const
 {
-   //Number of cells along Z.
    return fD;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set density estimator as a data source.
+
 void TKDEAdapter::SetDataSource(const TKDEFGT *de)
 {
-   //Set density estimator as a data source.
    fDE = de;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Do some initialization and calculate densities.
+
 void TKDEAdapter::FetchDensities()const
 {
-   //Do some initialization and calculate densities.
    if (!fDE) {
       Error("TKDEAdapter::FetchFirstSlices", "Density estimator is a null pointer."
             " Set it correctly first.");
@@ -137,18 +146,20 @@ void TKDEAdapter::FetchDensities()const
    fDE->Predict(fGrid, fDensities, fE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get data at given position.
+
 Float_t TKDEAdapter::GetData(UInt_t i, UInt_t j, UInt_t k)const
 {
-   // Get data at given position.
    const UInt_t ind = k * fSliceSize + j * fW + i;
    return fDensities[ind];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free grid and density vectors.
+
 void TKDEAdapter::FreeVectors()
 {
-   // Free grid and density vectors.
    vector_t().swap(fGrid);
    vector_t().swap(fDensities);
 }

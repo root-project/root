@@ -22,9 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include "TTreeFormula.h"
 

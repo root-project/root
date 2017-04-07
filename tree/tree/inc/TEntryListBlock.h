@@ -38,23 +38,21 @@
 #ifndef ROOT_TEntryListBlock
 #define ROOT_TEntryListBlock
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TEntryListBlock:public TObject
 {
  protected:
-   Int_t    fNPassed;    //number of entries in the entry list (if fPassing=0 - number of entries
-                         //not in the entry list
-   Int_t    fN;          //size of fIndices for I/O  =fNPassed for list, fBlockSize for bits
-   UShort_t *fIndices;   //[fN]
-   Int_t    fType;       //0 - bits, 1 - list
-   Bool_t   fPassing;    //1 - stores entries that belong to the list
-                         //0 - stores entries that don't belong to the list
-   UShort_t fCurrent;    //! to fasten  Contains() in list mode
-   Int_t    fLastIndexQueried; //! to optimize GetEntry() in a loop
-   Int_t    fLastIndexReturned; //! to optimize GetEntry() in a loop
+   Int_t    fNPassed;           ///< number of entries in the entry list (if fPassing=0 - number of entries
+                                ///< not in the entry list
+   Int_t    fN;                 ///< size of fIndices for I/O  =fNPassed for list, fBlockSize for bits
+   UShort_t *fIndices;          ///<[fN]
+   Int_t    fType;              ///<0 - bits, 1 - list
+   Bool_t   fPassing;           ///<1 - stores entries that belong to the list
+                                ///<0 - stores entries that don't belong to the list
+   UShort_t fCurrent;           ///<! to fasten  Contains() in list mode
+   Int_t    fLastIndexQueried;  ///<! to optimize GetEntry() in a loop
+   Int_t    fLastIndexReturned; ///<! to optimize GetEntry() in a loop
 
    void Transform(Bool_t dir, UShort_t *indexnew);
 

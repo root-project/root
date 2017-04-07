@@ -21,17 +21,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
 
 class TLeafO : public TLeaf {
 
 protected:
-   Bool_t       fMinimum;         //Minimum value if leaf range is specified
-   Bool_t       fMaximum;         //Maximum value if leaf range is specified
-   Bool_t       *fValue;          //!Pointer to data buffer
-   Bool_t       **fPointer;       //!Address of a pointer to data buffer!
+   Bool_t       fMinimum;         ///<  Minimum value if leaf range is specified
+   Bool_t       fMaximum;         ///<  Maximum value if leaf range is specified
+   Bool_t       *fValue;          ///<! Pointer to data buffer
+   Bool_t       **fPointer;       ///<! Address of a pointer to data buffer!
 
 public:
    TLeafO();

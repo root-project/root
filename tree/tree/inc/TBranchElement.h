@@ -21,21 +21,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <vector>
 
@@ -58,48 +50,60 @@ class TBranchElement : public TBranch {
 protected:
    enum {
       kBranchFolder = BIT(14),
-      kDeleteObject = BIT(16),  //  We are the owner of fObject.
-      kCache        = BIT(18),  //  Need to pushd/pop fOnfileObject.
-      kOwnOnfileObj = BIT(19),  //  We are the owner of fOnfileObject.
-      kAddressSet   = BIT(20),  //  The addressing set have been called for this branch
-      kMakeClass    = BIT(21),  //  This branch has been switched to using the MakeClass Mode
-      kDecomposedObj= BIT(21)   //  More explicit alias for kMakeClass.
+      kDeleteObject = BIT(16),  ///<  We are the owner of fObject.
+      kCache        = BIT(18),  ///<  Need to pushd/pop fOnfileObject.
+      kOwnOnfileObj = BIT(19),  ///<  We are the owner of fOnfileObject.
+      kAddressSet   = BIT(20),  ///<  The addressing set have been called for this branch
+      kMakeClass    = BIT(21),  ///<  This branch has been switched to using the MakeClass Mode
+      kDecomposedObj= BIT(21)   ///<  More explicit alias for kMakeClass.
    };
+
+   // Note on fType values:
+   // -1 unsplit object with custom streamer at time of writing
+   //  0 unsplit object with default streamer at time of writing
+   //    OR simple data member of split object (fID==-1 for the former)
+   //  1 base class of a split object.
+   //  2 class typed data member of a split object
+   //  3 branch count of a split TClonesArray
+   // 31 data member of the content of a split TClonesArray
+   //  4 branch count of a split STL Collection.
+   // 41 data member of the content of a split STL collection
+
 
 // Data Members
 protected:
-   TString                  fClassName;     //  Class name of referenced object
-   TString                  fParentName;    //  Name of parent class
-   TString                  fClonesName;    //  Name of class in TClonesArray (if any)
-   TVirtualCollectionProxy *fCollProxy;     //! collection interface (if any)
-   UInt_t                   fCheckSum;      //  CheckSum of class
-   Version_t                fClassVersion;  //  Version number of class
-   Int_t                    fID;            //  element serial number in fInfo
-   Int_t                    fType;          //  branch type
-   Int_t                    fStreamerType;  //  branch streamer type
-   Int_t                    fMaximum;       //  Maximum entries for a TClonesArray or variable array
-   Int_t                    fSTLtype;       //! STL container type
-   Int_t                    fNdata;         //! Number of data in this branch
-   TBranchElement          *fBranchCount;   //  pointer to primary branchcount branch
-   TBranchElement          *fBranchCount2;  //  pointer to secondary branchcount branch
-   TStreamerInfo           *fInfo;          //! Pointer to StreamerInfo
-   char                    *fObject;        //! Pointer to object at *fAddress
-   TVirtualArray           *fOnfileObject;  //! Place holder for the onfile representation of data members.
-   Bool_t                   fInit;          //! Initialization flag for branch assignment
-   Bool_t                   fInitOffsets;   //! Initialization flag to not endlessly recalculate offsets
-   TClassRef                fTargetClass;   //! Reference to the target in-memory class
-   TClassRef                fCurrentClass;  //! Reference to current (transient) class definition
-   TClassRef                fParentClass;   //! Reference to class definition in fParentName
-   TClassRef                fBranchClass;   //! Reference to class definition in fClassName
-   TClassRef                fClonesClass;   //! Reference to class definition in fClonesName
-   Int_t                   *fBranchOffset;  //! Sub-Branch offsets with respect to current transient class
-   Int_t                    fBranchID;      //! ID number assigned by a TRefTable.
-   std::vector<Int_t>       fIDs;           //! List of the serial number of all the StreamerInfo to be used.
-   TStreamerInfoActions::TActionSequence *fReadActionSequence;  //! Set of actions to be executed to extract the data from the basket.
-   TStreamerInfoActions::TActionSequence *fFillActionSequence; //! Set of actions to be executed to write the data to the basket.
-   TVirtualCollectionIterators           *fIterators;     //! holds the iterators when the branch is of fType==4.
-   TVirtualCollectionIterators           *fWriteIterators;//! holds the read (non-staging) iterators when the branch is of fType==4 and associative containers.
-   TVirtualCollectionPtrIterators        *fPtrIterators;  //! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
+   TString                  fClassName;     ///<  Class name of referenced object
+   TString                  fParentName;    ///<  Name of parent class
+   TString                  fClonesName;    ///<  Name of class in TClonesArray (if any)
+   TVirtualCollectionProxy *fCollProxy;     ///<! collection interface (if any)
+   UInt_t                   fCheckSum;      ///<  CheckSum of class
+   Version_t                fClassVersion;  ///<  Version number of class
+   Int_t                    fID;            ///<  element serial number in fInfo
+   Int_t                    fType;          ///<  branch type
+   Int_t                    fStreamerType;  ///<  branch streamer type
+   Int_t                    fMaximum;       ///<  Maximum entries for a TClonesArray or variable array
+   Int_t                    fSTLtype;       ///<! STL container type
+   Int_t                    fNdata;         ///<! Number of data in this branch
+   TBranchElement          *fBranchCount;   ///<  pointer to primary branchcount branch
+   TBranchElement          *fBranchCount2;  ///<  pointer to secondary branchcount branch
+   TStreamerInfo           *fInfo;          ///<! Pointer to StreamerInfo
+   char                    *fObject;        ///<! Pointer to object at *fAddress
+   TVirtualArray           *fOnfileObject;  ///<! Place holder for the onfile representation of data members.
+   Bool_t                   fInit;          ///<! Initialization flag for branch assignment
+   Bool_t                   fInitOffsets;   ///<! Initialization flag to not endlessly recalculate offsets
+   TClassRef                fTargetClass;   ///<! Reference to the target in-memory class
+   TClassRef                fCurrentClass;  ///<! Reference to current (transient) class definition
+   TClassRef                fParentClass;   ///<! Reference to class definition in fParentName
+   TClassRef                fBranchClass;   ///<! Reference to class definition in fClassName
+   TClassRef                fClonesClass;   ///<! Reference to class definition in fClonesName
+   Int_t                   *fBranchOffset;  ///<! Sub-Branch offsets with respect to current transient class
+   Int_t                    fBranchID;      ///<! ID number assigned by a TRefTable.
+   std::vector<Int_t>       fIDs;           ///<! List of the serial number of all the StreamerInfo to be used.
+   TStreamerInfoActions::TActionSequence *fReadActionSequence;  ///<! Set of actions to be executed to extract the data from the basket.
+   TStreamerInfoActions::TActionSequence *fFillActionSequence;  ///<! Set of actions to be executed to write the data to the basket.
+   TVirtualCollectionIterators           *fIterators;      ///<! holds the iterators when the branch is of fType==4.
+   TVirtualCollectionIterators           *fWriteIterators; ///<! holds the read (non-staging) iterators when the branch is of fType==4 and associative containers.
+   TVirtualCollectionPtrIterators        *fPtrIterators;   ///<! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
 
 // Not implemented
 private:
@@ -170,7 +174,6 @@ public:
    virtual                  ~TBranchElement();
 
    virtual void             Browse(TBrowser* b);
-   virtual Int_t            Fill();
    virtual TBranch         *FindBranch(const char *name);
    virtual TLeaf           *FindLeaf(const char *name);
    virtual char            *GetAddress() const;
@@ -239,6 +242,9 @@ public:
       kSTLMemberNode = 41
    };
 
+private:
+   virtual Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *);
+
    ClassDef(TBranchElement,10)  // Branch in case of an object
 };
 
@@ -263,7 +269,8 @@ inline void TBranchElement::ValidateAddress() const
          // FIXME: Disable the check/warning TTree until we add a missing interface.
          if (TestBit(kDeleteObject)) {
             // This should never happen!
-            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p", fObject, *((char**) fAddress));
+            Error("ValidateAddress", "We owned an object whose address changed!  our ptr: %p  new ptr: %p",
+                  (void*)fObject, (void*)*((char**) fAddress));
             const_cast<TBranchElement*>(this)->ResetBit(kDeleteObject);
          }
          const_cast<TBranchElement*>(this)->SetAddress(fAddress);

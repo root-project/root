@@ -85,7 +85,8 @@ using namespace std;
 
 ClassImp(TAlien)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
                const char *options)
 {
@@ -193,28 +194,28 @@ TAlien::TAlien(const char *gridurl, const char *uid, const char * passwd,
    delete gurl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// do we need to delete fGc ? (rdm)
+
 TAlien::~TAlien()
 {
-   // do we need to delete fGc ? (rdm)
-
    if (gDebug > 1)
       Info("~TAlien", "destructor called");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start an interactive AliEn shell.
+
 void TAlien::Shell()
 {
-   // Start an interactive AliEn shell.
-
    fGc->Shell();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Escape \" by \\\".
+
 TString TAlien::Escape(const char *input)
 {
-   // Escape \" by \\\".
-
    if (!input)
       return TString();
 
@@ -224,11 +225,11 @@ TString TAlien::Escape(const char *input)
    return output;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Submit a command to AliEn. Returns 0 in case of error.
+
 TGridJob *TAlien::Submit(const char *jdl)
 {
-   // Submit a command to AliEn. Returns 0 in case of error.
-
    if (!jdl)
       return 0;
 
@@ -275,19 +276,19 @@ TGridJob *TAlien::Submit(const char *jdl)
    return dynamic_cast<TGridJob*>(new TAlienJob(jobID));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Alien JDL.
+
 TGridJDL *TAlien::GetJDLGenerator()
 {
-   // Create a Alien JDL.
-
    return new TAlienJDL();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get job status list.
+
 TGridJobStatusList *TAlien::Ps(const char* /*options*/, Bool_t verbose)
 {
-   // Get job status list.
-
    GAPI_JOBARRAY* gjobarray = gapi_queryjobs("-", gGrid->GetUser(), "-", "-", "-",
                                              "-", "-", "-", "-");
    if (!gjobarray)
@@ -317,33 +318,33 @@ TGridJobStatusList *TAlien::Ps(const char* /*options*/, Bool_t verbose)
    return joblist;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Kill a specific job.
+
 Bool_t TAlien::KillById(TString jobid)
 {
-   // Kill a specific job.
-
    if (gapi_kill(atoi(jobid.Data())))
       return kFALSE;
    else
       return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resubmit a specific job.
+
 Bool_t TAlien::ResubmitById(TString jobid)
 {
-   // Resubmit a specific job.
-
   if (gapi_resubmit(atoi(jobid.Data())))
       return kFALSE;
    else
       return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute AliEn command. Returns 0 in case or error.
+
 TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t stream)
 {
-   // Execute AliEn command. Returns 0 in case or error.
-
    if (fGc) {
       if (fGc->Command(command)) {
          // command successful
@@ -369,13 +370,15 @@ TGridResult *TAlien::Command(const char *command, bool interactive, UInt_t strea
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGridResult *TAlien::LocateSites()
 {
    return Command("locatesites");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TAlien::Stdout()
 {
    if (fGc) {
@@ -383,7 +386,8 @@ void TAlien::Stdout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TAlien::Stderr()
 {
    if (fGc) {
@@ -391,7 +395,8 @@ void TAlien::Stderr()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGridResult *TAlien::Query(const char *path, const char *pattern,
                            const char *conditions, const char *options)
 {
@@ -399,14 +404,16 @@ TGridResult *TAlien::Query(const char *path, const char *pattern,
    return Command(cmdline);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGridResult *TAlien::OpenDataset(const char *lfn, const char *options)
 {
    TString cmdline = TString("getdataset") + TString(" ") + TString(options) + TString(" ") + TString(lfn);
    return Command(cmdline, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TMap *TAlien::GetColumn(UInt_t stream, UInt_t column)
 {
    TMap *gmap = new TMap();
@@ -417,19 +424,22 @@ TMap *TAlien::GetColumn(UInt_t stream, UInt_t column)
    return gmap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TAlien::GetStreamFieldValue(UInt_t stream, UInt_t column, UInt_t row)
 {
    return fGc->GetStreamFieldValue(stream,column,row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *TAlien::GetStreamFieldKey(UInt_t stream, UInt_t column, UInt_t row)
 {
    return fGc->GetStreamFieldKey(stream,column,row);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t TAlien::GetNColumns(UInt_t stream)
 {
    return fGc->GetStreamColumns(stream);
@@ -437,7 +447,8 @@ UInt_t TAlien::GetNColumns(UInt_t stream)
 
 //--- Catalogue Interface
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGridResult *TAlien::Ls(const char* ldn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("ls") + TString(" ") + TString(options) + TString(" ") + TString(ldn);
@@ -445,7 +456,8 @@ TGridResult *TAlien::Ls(const char* ldn, Option_t* options, Bool_t verbose)
    return Command(cmdline, verbose);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlien::Cd(const char* ldn, Bool_t verbose)
 {
    TString cmdline = TString("cd") + TString(" ") + TString(ldn);
@@ -471,7 +483,8 @@ Bool_t TAlien::Cd(const char* ldn, Bool_t verbose)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char* TAlien::Pwd(Bool_t verbose)
 {
    TString cmdline = TString("pwd");
@@ -503,7 +516,8 @@ const char* TAlien::Pwd(Bool_t verbose)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t TAlien::Mkdir(const char* ldn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("mkdir");
@@ -534,7 +548,8 @@ Int_t TAlien::Mkdir(const char* ldn, Option_t* options, Bool_t verbose)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlien::Rmdir(const char* ldn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("rmdir");
@@ -564,7 +579,8 @@ Bool_t TAlien::Rmdir(const char* ldn, Option_t* options, Bool_t verbose)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlien::Register(const char* lfn, const char* turl, Long_t size, const char* se, const char* guid, Bool_t verbose)
 {
    TString cmdline = TString("register") + TString(" ") + TString(lfn) + TString(" ") + TString(turl);
@@ -598,7 +614,8 @@ Bool_t TAlien::Register(const char* lfn, const char* turl, Long_t size, const ch
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TAlien::Rm(const char* lfn, Option_t* options, Bool_t verbose)
 {
    TString cmdline = TString("rm") + TString(" -s ") + TString(options) + TString(" ") + TString(lfn);
@@ -623,12 +640,12 @@ Bool_t TAlien::Rm(const char* lfn, Option_t* options, Bool_t verbose)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factory function for a TAlienCollection based on an XML file.
+
 TGridCollection *TAlien::OpenCollection(const char *collectionfile,
                                         UInt_t maxentries)
 {
-   // Factory function for a TAlienCollection based on an XML file.
-
    TString path(collectionfile);
    if (path.BeginsWith("alien://", TString::kIgnoreCase)) {
       TAlien* alien = dynamic_cast<TAlien*> (gGrid);
@@ -654,20 +671,20 @@ TGridCollection *TAlien::OpenCollection(const char *collectionfile,
    return TAlienCollection::Open(collectionfile, maxentries);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Factory function fo a TAlienCollection based on a gGrid Query.
+
 TGridCollection *TAlien::OpenCollectionQuery(TGridResult *queryresult,
                                              Bool_t nogrouping)
 {
-   // Factory function fo a TAlienCollection based on a gGrid Query.
-
    return (TGridCollection*)TAlienCollection::OpenQuery(queryresult, nogrouping);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns the type of the given lfn
+
 TAlien::CatalogType TAlien::Type(const char* lfn, Option_t* option, Bool_t verbose)
 {
-   // returns the type of the given lfn
-
    TString cmdline = TString("type -z") + TString(" ") + TString(option) + TString(" ") + TString(lfn);
 
    TGridResult* gridResult = Command(cmdline, kFALSE);
@@ -705,11 +722,11 @@ TAlien::CatalogType TAlien::Type(const char* lfn, Option_t* option, Bool_t verbo
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 TGridResult* TAlien::GetCollection(const char* lfn, Option_t* option, Bool_t verbose)
 {
-   //
-
    TString cmdline = TString("listFilesFromCollection -z -v") + TString(" ") + TString(option) + TString(" ") + TString(lfn);
 
    TGridResult* gridResult = Command(cmdline, kFALSE);
@@ -722,11 +739,11 @@ TGridResult* TAlien::GetCollection(const char* lfn, Option_t* option, Bool_t ver
    return gridResult;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List packages in the specified directory.
+
 TGridResult* TAlien::ListPackages(const char* alienpackagedir)
 {
-   // List packages in the specified directory.
-
    if (!alienpackagedir) {
       alienpackagedir = "/alice/packages";
    }

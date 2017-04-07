@@ -1,5 +1,11 @@
-// Example to create a new xml file with the TXMLEngine class
-//Author: Sergey Linev
+/// \file
+/// \ingroup tutorial_xml
+/// \notebook -nodraw
+/// Example to create a new xml file with the TXMLEngine class
+///
+/// \macro_code
+///
+/// \author Sergey Linev
 
 #include "TXMLEngine.h"
 
@@ -32,7 +38,7 @@ void xmlnewfile(const char* filename = "example.xml")
    xml->NewChild(child4, ns4, "subchild2", "subchild2 content");
    xml->NewChild(child4, ns4, "subchild3", "subchild3 content");
 
-   // now create doccumnt and assign main node of document
+   // now create document and assign main node of document
    XMLDocPointer_t xmldoc = xml->NewDoc();
    xml->DocSetRootElement(xmldoc, mainnode);
 

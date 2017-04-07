@@ -13,9 +13,7 @@
 #ifndef ROOT_Math_FitMethodFunction
 #define ROOT_Math_FitMethodFunction
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 // #ifndef ROOT_Math_IParamFunctionfwd
 // #include "Math/IParamFunctionfwd.h"

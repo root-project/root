@@ -12,76 +12,88 @@
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TStreamer.h"
 
 ClassImp(TRealData)
 
-//______________________________________________________________________________
-//
-//  The TRealData class manages the effective list of all data members
-//  for a given class. For example for an object of class TLine that inherits
-//  from TObject and TAttLine, the TRealData object for a line contains the
-//  complete list of all data members of the 3 classes.
-//
-//  The list of TRealData members in TClass is built when functions like
-//  object.Inspect or object.DrawClass are called.
+/** \class TRealData
+The TRealData class manages the effective list of all data members
+for a given class. For example for an object of class TLine that inherits
+from TObject and TAttLine, the TRealData object for a line contains the
+complete list of all data members of the 3 classes.
 
-//______________________________________________________________________________
+The list of TRealData members in TClass is built when functions like
+object.Inspect or object.DrawClass are called.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// RealData default constructor.
+
 TRealData::TRealData() : TObject(), fDataMember(0), fThisOffset(-1),
    fStreamer(0), fIsObject(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*-*RealData default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ============================
-
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor to define one persistent data member.
+/// datamember is the pointer to the data member descriptor.
+
 TRealData::TRealData(const char *name, Long_t offset, TDataMember *datamember)
    : TObject(), fDataMember(datamember), fThisOffset(offset), fName(name),
      fStreamer(0), fIsObject(kFALSE)
 {
-//*-*-*-*-*-*-*-*-*-*Constructor to define one persistent data member*-*-*-*-*
-//*-*                ================================================
-//*-* datamember is the pointer to the data member descriptor.
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// RealData default destructor.
+
 TRealData::~TRealData()
 {
-//*-*-*-*-*-*-*-*-*-*-*RealData default destructor*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =============================
-
    delete fStreamer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write one persistent data member on output buffer.
+/// pointer points to the current persistent data member
+
 void TRealData::WriteRealData(void *, char *&)
 {
-//*-*-*-*-*Write one persistent data member on output buffer*-*-*-*-*-*-*-*
-//*-*      =================================================
-//*-* pointer points to the current persistent data member
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TRealData::AdoptStreamer(TMemberStreamer *str)
 {
-   //fDataMember->SetStreamer(str);
-   //delete fStreamer;
+// fDataMember->SetStreamer(str);
+// delete fStreamer;
    fStreamer = str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the data member as represented in the list of
+/// real data.
+
 void TRealData::GetName(TString &output, TDataMember *dm)
 {
-   // Return the name of the data member as represented in the list of
-   // real data.
-
    output.Clear();
+   const char* dmType  = dm->GetTypeName();
+   if (TClassEdit::IsStdArray(dmType)) {
+      std::string typeNameBuf;
+      Int_t ndim = dm->GetArrayDim();
+      std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
+      TClassEdit::GetStdArrayProperties(dmType,
+                                        typeNameBuf,
+                                        maxIndices,
+                                        ndim);
+      output = dm->GetName();
+      for (Int_t idim = 0; idim < ndim; ++idim) {
+         output += TString::Format("[%d]",maxIndices[idim] );
+      }
+      return;
+   }
+
    // keep an empty name if data member is not found
    if (dm) output = dm->GetName();
    if (dm->IsaPointer())
@@ -97,10 +109,11 @@ void TRealData::GetName(TString &output, TDataMember *dm)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the associate streamer object.
+
 TMemberStreamer *TRealData::GetStreamer() const
 {
-   // Return the associate streamer object.
    return fStreamer; // return fDataMember->GetStreamer();
 }
 

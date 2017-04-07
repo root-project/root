@@ -49,12 +49,12 @@ namespace textinput {
     if (fIsConsole) {
       // Allocate our own console handle, to prevent redirection from
       // stealing it.
-      fIn = ::CreateFile("CONIN$", GENERIC_READ | GENERIC_WRITE,
+      fIn = ::CreateFileA("CONIN$", GENERIC_READ | GENERIC_WRITE,
         FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
         FILE_ATTRIBUTE_NORMAL, NULL);
       ::GetConsoleMode(fIn, &fOldMode);
       fMyMode = fOldMode | ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS;
-      fMyMode = fOldMode & ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT
+      fMyMode &= ~(ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT
         | ENABLE_ECHO_INPUT | ENABLE_INSERT_MODE);
     }
   }
@@ -176,9 +176,21 @@ namespace textinput {
         return false;
       }
     } else {
+      // Testing for the End of a File
+      // https://msdn.microsoft.com/en-us/library/windows/desktop/aa365690(v=vs.85).aspx
       if (!::ReadFile(fIn, &C, 1, &NRead, NULL)) {
-        HandleError("reading file input");
-        return false;
+        if (NRead != 0) {
+          switch (::GetLastError()) {
+            default:
+              HandleError("reading file input");
+              return false;
+            case ERROR_HANDLE_EOF:
+            case ERROR_BROKEN_PIPE:
+              break;
+          }
+        }
+        in.SetExtended(InputData::kEIEOF);
+        return true;
       }
     }
     HandleKeyEvent(C, in);

@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /************************************************************************/
-/*! \file TGLiteresult.h
+/*! \file TGLiteResult.h
 *//*
 
          version number:    $LastChangedRevision: 1678 $
@@ -35,9 +35,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridResult
 #include "TGridResult.h"
-#endif
 
 class TGLiteResult : public TGridResult
 {

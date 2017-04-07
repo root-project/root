@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeCloner                                                          //
-//                                                                      //
-// Class implementing or helping  the various TTree cloning method      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeCloner
+\ingroup tree
+
+Class implementing or helping  the various TTree cloning method
+*/
 
 #include "TBasket.h"
 #include "TBranch.h"
@@ -35,10 +33,12 @@
 #include "TLeafS.h"
 #include "TLeafO.h"
 #include "TLeafC.h"
+#include "TFileCacheRead.h"
 
 #include <algorithm>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketSeek[i1] ==  fObject->fBasketSeek[i2]) {
@@ -50,7 +50,8 @@ Bool_t TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
    return fObject->fBasketSeek[i1] <  fObject->fBasketSeek[i2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
@@ -59,7 +60,46 @@ Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
    return  fObject->fBasketEntry[i1] <  fObject->fBasketEntry[i2];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.  This object would transfer the data from
+/// 'from' to 'to' using the method indicated in method.
+///
+/// The value of the parameter 'method' determines in which
+/// order the branches' baskets are written to the output file.
+///
+/// When a TTree is filled the data is stored in the individual
+/// branches' basket.  Each basket is written individually to
+/// the disk as soon as it is full.  In consequence the baskets
+/// of branches that contain 'large' data chunk are written to
+/// the disk more often.
+///
+/// There is currently 3 supported sorting order:
+///
+///     SortBasketsByOffset (the default)
+///     SortBasketsByBranch
+///     SortBasketsByEntry
+///
+/// When using SortBasketsByOffset the baskets are written in
+/// the output file in the same order as in the original file
+/// (i.e. the basket are sorted on their offset in the original
+/// file; Usually this also means that the baskets are sorted
+/// on the index/number of the _last_ entry they contain)
+///
+/// When using SortBasketsByBranch all the baskets of each
+/// individual branches are stored contiguously.  This tends to
+/// optimize reading speed when reading a small number (1->5) of
+/// branches, since all their baskets will be clustered together
+/// instead of being spread across the file.  However it might
+/// decrease the performance when reading more branches (or the full
+/// entry).
+///
+/// When using SortBasketsByEntry the baskets with the lowest
+/// starting entry are written first.  (i.e. the baskets are
+/// sorted on the index/number of the first entry they contain).
+/// This means that on the file the baskets will be in the order
+/// in which they will be needed when reading the whole tree
+/// sequentially.
+
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
    fWarningMsg(),
    fIsValid(kTRUE),
@@ -78,47 +118,11 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    fBasketIndex(new UInt_t[fMaxBaskets]),
    fPidOffset(0),
    fCloneMethod(TTreeCloner::kDefault),
-   fToStartEntries(0)
+   fToStartEntries(0),
+   fCacheSize(0LL),
+   fFileCache(nullptr),
+   fPrevCache(nullptr)
 {
-   // Constructor.  This object would transfer the data from
-   // 'from' to 'to' using the method indicated in method.
-   //
-   // The value of the parameter 'method' determines in which
-   // order the branches' baskets are written to the output file.
-   //
-   // When a TTree is filled the data is stored in the individual
-   // branches' basket.  Each basket is written individually to
-   // the disk as soon as it is full.  In consequence the baskets
-   // of branches that contain 'large' data chunk are written to
-   // the disk more often.
-   //
-   // There is currently 3 supported sorting order:
-   //    SortBasketsByOffset (the default)
-   //    SortBasketsByBranch
-   //    SortBasketsByEntry
-   //
-   // When using SortBasketsByOffset the baskets are written in
-   // the output file in the same order as in the original file
-   // (i.e. the basket are sorted on their offset in the original
-   // file; Usually this also means that the baskets are sorted
-   // on the index/number of the _last_ entry they contain)
-   //
-   // When using SortBasketsByBranch all the baskets of each
-   // individual branches are stored contiguously.  This tends to
-   // optimize reading speed when reading a small number (1->5) of
-   // branches, since all their baskets will be clustered together
-   // instead of being spread across the file.  However it might
-   // decrease the performance when reading more branches (or the full
-   // entry).
-   //
-   // When using SortBasketsByEntry the baskets with the lowest
-   // starting entry are written first.  (i.e. the baskets are
-   // sorted on the index/number of the first entry they contain).
-   // This means that on the file the baskets will be in the order
-   // in which they will be needed when reading the whole tree
-   // sequentially.
-   //
-
    TString opt(method);
    opt.ToLower();
    if (opt.Contains("sortbasketsbybranch")) {
@@ -133,21 +137,32 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    }
    if (fToTree) fToStartEntries = fToTree->GetEntries();
 
-   if (fToTree == 0) {
-      fWarningMsg.Form("An output TTree is required (cloning %s).",
-                       from->GetName());
+   if (fFromTree == nullptr) {
+      if (to)
+         fWarningMsg.Form("An input TTree is required (cloning to %s).",
+                          to->GetName());
+      else
+         fWarningMsg.Form("An input and output TTree are required.");
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
       fIsValid = kFALSE;
-   } else if (fToTree->GetDirectory() == 0) {
+   }
+   if (fToTree == nullptr) {
+      fWarningMsg.Form("An output TTree is required (cloning %s).",
+                       from ? from->GetName() : "no tree");
+      if (!(fOptions & kNoWarnings)) {
+         Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
+      }
+      fIsValid = kFALSE;
+   } else if (fToTree->GetDirectory() == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory.",
                        fToTree->GetName());
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
       fIsValid = kFALSE;
-   } else if (fToTree->GetCurrentFile() == 0) {
+   } else if (fToTree->GetCurrentFile() == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory (%s) that is in a file.",
                        fToTree->GetName(),fToTree->GetDirectory()->GetName());
       if (!(fOptions & kNoWarnings)) {
@@ -167,16 +182,21 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       }
       fIsValid = kFALSE;
    }
+
+   if (fIsValid && (!(fOptions & kNoFileCache))) {
+      fCacheSize = fFromTree->GetCacheAutoSize();
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the cloning.
+
 Bool_t TTreeCloner::Exec()
 {
-   // Execute the cloning.
-
    if (!IsValid()) {
       return kFALSE;
    }
+   CreateCache();
    ImportClusterRanges();
    CopyStreamerInfos();
    CopyProcessIds();
@@ -185,15 +205,19 @@ Bool_t TTreeCloner::Exec()
    SortBaskets();
    WriteBaskets();
    CopyMemoryBaskets();
+   RestoreCache();
 
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TTreeCloner destructor
+
 TTreeCloner::~TTreeCloner()
 {
-   // TTreeCloner destructor
-
+   // The file cache was restored to its previous value at the end of Exec,
+   // we can safely delete our cache.
+   delete fFileCache;
    delete [] fBasketBranchNum;
    delete [] fBasketNum;
    delete [] fBasketSeek;
@@ -201,25 +225,25 @@ TTreeCloner::~TTreeCloner()
    delete [] fBasketIndex;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Before we can start adding new basket, we need to flush to
+/// disk the partially filled baskets (the WriteBasket)
+
 void TTreeCloner::CloseOutWriteBaskets()
 {
-   // Before we can start adding new basket, we need to flush to
-   // disk the partially filled baskets (the WriteBasket)
-
    for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
       TBranch *to = (TBranch*)fToBranches.UncheckedAt(i);
       to->FlushOneBasket(to->GetWriteBasket());
    }
 }
 
-//______________________________________________________________________________
-UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
-   // Fill the array of branches, adding the branch 'from' and 'to',
-   // and matching the sub-branches of the 'from' and 'to' branches.
-   // Returns the total number of baskets in all the from branch and
-   // it sub-branches.
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the array of branches, adding the branch 'from' and 'to',
+/// and matching the sub-branches of the 'from' and 'to' branches.
+/// Returns the total number of baskets in all the from branch and
+/// it sub-branches.
 
+UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    // Since this is called from the constructor, this can not be a virtual function
 
    UInt_t numBaskets = 0;
@@ -345,12 +369,12 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
    return numBaskets;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the array of branches, matching the branches of the 'from' and 'to' arrays.
+/// Returns the total number of baskets in all the branches.
+
 UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 {
-   // Fill the array of branches, matching the branches of the 'from' and 'to' arrays.
-   // Returns the total number of baskets in all the branches.
-
    // Since this is called from the constructor, this can not be a virtual function
 
    Int_t fnb = from->GetEntries();
@@ -410,12 +434,12 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
    return numBasket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the array of branches, matching the branches of the 'from' and 'to' TTrees
+/// Returns the total number of baskets in all the branches.
+
 UInt_t TTreeCloner::CollectBranches()
 {
-   // Fill the array of branches, matching the branches of the 'from' and 'to' TTrees
-   // Returns the total number of baskets in all the branches.
-
    // Since this is called from the constructor, this can not be a virtual function
 
    if (!fFromTree || !fToTree) {
@@ -431,12 +455,12 @@ UInt_t TTreeCloner::CollectBranches()
    return numBasket;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Collect the information about the on-file basket that need
+/// to be copied.
+
 void TTreeCloner::CollectBaskets()
 {
-   // Collect the information about the on-file basket that need
-   // to be copied.
-
    UInt_t len = fFromBranches.GetEntries();
 
    for(UInt_t i=0,bi=0; i<len; ++i) {
@@ -452,12 +476,12 @@ void TTreeCloner::CollectBaskets()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that all the needed TStreamerInfo are
+/// present in the output file
+
 void TTreeCloner::CopyStreamerInfos()
 {
-   // Make sure that all the needed TStreamerInfo are
-   // present in the output file
-
    TFile *fromFile = fFromTree->GetDirectory()->GetFile();
    TFile *toFile = fToTree->GetDirectory()->GetFile();
    TList *l = fromFile->GetStreamerInfoList();
@@ -470,8 +494,7 @@ void TTreeCloner::CopyStreamerInfos()
       TStreamerInfo *curInfo = 0;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
-      if ((cl->IsLoaded() && (cl->GetNew()!=0 || cl->HasDefaultConstructor()))
-          || !cl->IsLoaded())  {
+      if (!cl->IsLoaded() || cl->GetNew()) {
          // Insure that the TStreamerInfo is loaded
          curInfo = (TStreamerInfo*)cl->GetStreamerInfo(oldInfo->GetClassVersion());
          if (oldInfo->GetClassVersion()==1) {
@@ -495,11 +518,11 @@ void TTreeCloner::CopyStreamerInfos()
    delete l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the basket from the input file to the output file
+
 void TTreeCloner::CopyMemoryBaskets()
 {
-   // Transfer the basket from the input file to the output file
-
    TBasket *basket = 0;
    for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
@@ -521,12 +544,12 @@ void TTreeCloner::CopyMemoryBaskets()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure that all the needed TStreamerInfo are
+/// present in the output file
+
 void TTreeCloner::CopyProcessIds()
 {
-   // Make sure that all the needed TStreamerInfo are
-   // present in the output file
-
    // NOTE: We actually need to merge the ProcessId somehow :(
 
    TFile *fromfile = fFromTree->GetDirectory()->GetFile();
@@ -536,7 +559,7 @@ void TTreeCloner::CopyProcessIds()
 
    TIter next(fromfile->GetListOfKeys());
    TKey *key;
-   TDirectory::TContext cur(gDirectory,fromfile);
+   TDirectory::TContext cur(fromfile);
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
          TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
@@ -575,11 +598,41 @@ void TTreeCloner::CopyProcessIds()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TFileCacheRead if it was requested.
+
+void TTreeCloner::CreateCache()
+{
+   if (fCacheSize && fFromTree->GetCurrentFile()) {
+      TFile *f = fFromTree->GetCurrentFile();
+      auto prev = f->GetCacheRead(fFromTree);
+      if (fFileCache && prev == fFileCache) {
+         return;
+      }
+      fPrevCache = prev;
+      // Remove the previous cache if any.
+      if (prev) f->SetCacheRead(nullptr, fFromTree);
+      // The constructor attach the new cache.
+      fFileCache = new TFileCacheRead(f, fCacheSize, fFromTree);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Restore the TFileCacheRead to its previous value.
+
+void TTreeCloner::RestoreCache() {
+   if (IsValid() && fFileCache && fFromTree->GetCurrentFile()) {
+      TFile *f = fFromTree->GetCurrentFile();
+      f->SetCacheRead(nullptr,fFromTree); // Remove our file cache.
+      f->SetCacheRead(fPrevCache, fFromTree);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the entries and import the cluster range of the
+
 void TTreeCloner::ImportClusterRanges()
 {
-   // Set the entries and import the cluster range of the
-
    // First undo, the external call to SetEntries
    // We could improve the interface to optional tell the TTreeCloner that the
    // SetEntries was not done.
@@ -590,11 +643,32 @@ void TTreeCloner::ImportClusterRanges()
    fToTree->SetEntries(fToTree->GetEntries() + fFromTree->GetTree()->GetEntries());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the TFile cache size to be used.
+/// Note that the default is to use the same size as the default TTreeCache for
+/// the input tree.
+/// \param size Size of the cache. Zero disable the use of the cache.
+
+void TTreeCloner::SetCacheSize(Int_t size)
+{
+   fCacheSize = size;
+   if (IsValid() && fFileCache) {
+      if (fCacheSize == 0 || fCacheSize != fFileCache->GetBufferSize()) {
+         TFile *f = fFromTree->GetCurrentFile();
+         f->SetCacheRead(nullptr,fFromTree);
+         delete fFileCache;
+         fFileCache = nullptr;
+      }
+   }
+   // Note if the TFile cache is needed, it will be created at the
+   // beginning of Exec.
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sort the basket according to the user request.
+
 void TTreeCloner::SortBaskets()
 {
-   // Sort the basket according to the user request.
-
    // Currently this sort __has to__ preserve the order
    // of basket for each individual branch.
 
@@ -616,13 +690,42 @@ void TTreeCloner::SortBaskets()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the file cache with the next set of basket.
+///
+/// \param from index of the first lement of fFromBranches to start caching
+/// \return The index of first element of fFromBranches that is not in the cache
+UInt_t TTreeCloner::FillCache(UInt_t from)
+{
+   if (!fFileCache) return 0;
+   // Reset the cache
+   fFileCache->Prefetch(0, 0);
+   Long64_t size = 0;
+   for (UInt_t j = from; j < fMaxBaskets; ++j) {
+      TBranch *frombr = (TBranch *) fFromBranches.UncheckedAt(fBasketBranchNum[fBasketIndex[j]]);
+
+
+      Int_t index = fBasketNum[ fBasketIndex[j] ];
+      Long64_t pos = frombr->GetBasketSeek(index);
+      Int_t len = frombr->GetBasketBytes()[index];
+      if (pos && len) {
+         size += len;
+         if (size > fFileCache->GetBufferSize()) {
+            return j;
+         }
+         fFileCache->Prefetch(pos,len);
+      }
+   }
+   return fMaxBaskets;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer the basket from the input file to the output file
+
 void TTreeCloner::WriteBaskets()
 {
-   // Transfer the basket from the input file to the output file
-
    TBasket *basket = new TBasket();
-   for(UInt_t j=0; j<fMaxBaskets; ++j) {
+   for(UInt_t j = 0, notCached = 0; j<fMaxBaskets; ++j) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
 
@@ -633,6 +736,9 @@ void TTreeCloner::WriteBaskets()
 
       Long64_t pos = from->GetBasketSeek(index);
       if (pos!=0) {
+         if (fFileCache && j >= notCached) {
+            notCached = FillCache(notCached);
+         }
          if (from->GetBasketBytes()[index] == 0) {
             from->GetBasketBytes()[index] = basket->ReadBasketBytes(pos, fromfile);
          }

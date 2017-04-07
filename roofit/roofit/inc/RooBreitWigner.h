@@ -26,7 +26,7 @@ class RooBreitWigner : public RooAbsPdf {
 public:
   RooBreitWigner() {} ;
   RooBreitWigner(const char *name, const char *title,
-	      RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _width);
+         RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _width);
   RooBreitWigner(const RooBreitWigner& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooBreitWigner(*this,newname); }
   inline virtual ~RooBreitWigner() { }
@@ -39,7 +39,7 @@ protected:
   RooRealProxy x ;
   RooRealProxy mean ;
   RooRealProxy width ;
-  
+
   Double_t evaluate() const ;
 
 //   void initGenerator();

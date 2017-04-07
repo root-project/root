@@ -29,12 +29,8 @@ struct sigjmp_buf;
 struct jmp_buf;
 #endif
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 
 struct ExceptionContext_t {
 #ifdef NEED_SIGJMP
@@ -46,12 +42,6 @@ struct ExceptionContext_t {
 
 #ifdef NEED_SIGJMP
 # define SETJMP(buf) sigsetjmp(buf,1)
-# ifdef __has_feature
-#  if __has_feature(modules) // A not implemented in the modulemaps macro re-export
-#   undef SETJMP
-#   define SETJMP(buf) __sigsetjmp(buf,1)
-#  endif
-# endif
 #else
 #define SETJMP(buf) setjmp(buf)
 #endif

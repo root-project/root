@@ -9,33 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-// TEntryListFromFile
-//
-// Manages entry lists from different files, when they are not loaded
-// in memory at the same time.
-//
-// This entry list should only be used when processing a TChain (see
-// TChain::SetEntryList() function). File naming convention:
-// - by default, filename_elist.root is used, where filename is the
-//   name of the chain element.
-// - xxx$xxx.root - $ sign is replaced by the name of the chain element
-// If the list name is not specified (by passing filename_elist.root/listname to
-// the TChain::SetEntryList() function, the first object of class TEntryList
-// in the file is taken.
-// It is assumed that there are as many lists, as there are chain elements,
-// and they are in the same order.
-//
-// If one of the list files can't be opened, or there is an error reading a list
-// from the file, this list is skipped and the entry loop continues on the next
-// list.
+/** \class TEntryListFromFile
+\ingroup tree
 
+Manages entry lists from different files, when they are not loaded
+in memory at the same time.
+
+This entry list should only be used when processing a TChain (see
+TChain::SetEntryList() function). File naming convention:
+- by default, filename_elist.root is used, where filename is the
+  name of the chain element.
+- xxx$xxx.root - $ sign is replaced by the name of the chain element
+If the list name is not specified (by passing filename_elist.root/listname to
+the TChain::SetEntryList() function, the first object of class TEntryList
+in the file is taken.
+It is assumed that there are as many lists, as there are chain elements,
+and they are in the same order.
+
+If one of the list files can't be opened, or there is an error reading a list
+from the file, this list is skipped and the entry loop continues on the next
+list.
+*/
 
 #include "TEntryListFromFile.h"
+#include "TBuffer.h"
 #include "TObjArray.h"
 #include "TFile.h"
 #include "TKey.h"
 #include "TError.h"
+#include "TTree.h"
 
 ClassImp(TEntryListFromFile)
 
@@ -46,48 +48,51 @@ TEntryListFromFile::TEntryListFromFile(): TEntryList(),
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// File naming convention:
+/// - by default, filename_elist.root is used, where filename is the
+///   name of the chain element
+/// - xxx$xxx.root - $ sign is replaced by the name of the chain element
+///
+/// The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
+/// function.
+///
+/// If the list name is not specified, the first object of class TEntryList
+/// in the file is taken.
+///
+/// nfiles is the total number of files to process
+
 TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles) : TEntryList(),
    fListFileName(filename), fListName(listname), fNFiles(nfiles), fListOffset(0), fFile(0), fFileNames(0)
 {
-   // File naming convention:
-   // - by default, filename_elist.root is used, where filename is the
-   //   name of the chain element
-   // - xxx$xxx.root - $ sign is replaced by the name of the chain element
-   // The TObjArray of chain elements is set by the TEntryListFromFile::SetFileNames()
-   // function.
-   // If the list name is not specified, the first object of class TEntryList
-   // in the file is taken.
-   // nfiles is the total number of files to process
-
    fListOffset = new Long64_t[fNFiles+1];
    fListOffset[0]=0;
    for (Int_t i=1; i<fNFiles+1; i++){
-      fListOffset[i]=kBigNumber;
+      fListOffset[i]=TTree::kMaxEntries;
    }
-   fN = kBigNumber;
+   fN = TTree::kMaxEntries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// d-tor
+
 TEntryListFromFile::~TEntryListFromFile()
 {
-   // d-tor
-
    delete [] fListOffset;
    fListOffset = 0;
    delete fFile;
    fFile = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns entry \#index
+/// See also Next() for a faster alternative
+
 Long64_t TEntryListFromFile::GetEntry(Int_t index)
 {
-   //returns entry #index
-   //See also Next() for a faster alternative
-
    if (index<0) return -1;
 
-   if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=kBigNumber){
+   if (index > fListOffset[fNFiles] && fListOffset[fNFiles]!=TTree::kMaxEntries){
       Error("GetEntry", "Index value is too large\n");
       return -1;
    }
@@ -119,7 +124,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
       itree = fTreeNumber;
       while (itree < fNFiles){
          itree++;
-         if (fListOffset[itree+1]==kBigNumber){
+         if (fListOffset[itree+1]==TTree::kMaxEntries){
             //this list hasn't been loaded yet
             LoadList(itree);
          }
@@ -144,26 +149,26 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the entry corresponding to the index parameter and the
+/// number of the tree, where this entry is
+
 Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
 {
-   //return the entry corresponding to the index parameter and the
-   //number of the tree, where this entry is
-
    Long64_t result = GetEntry(index);
    treenum = fTreeNumber;
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the total number of entries in the list.
+/// If some lists have not been loaded, loads them.
+
 Long64_t TEntryListFromFile::GetEntries()
 {
-   //Returns the total number of entries in the list.
-   //If some lists have not been loaded, loads them.
-
-   if (fN==kBigNumber){
+   if (fN==TTree::kMaxEntries){
       for (Int_t i=0; i<fNFiles; i++){
-         if (fListOffset[i+1]==kBigNumber){
+         if (fListOffset[i+1]==TTree::kMaxEntries){
             LoadList(i);
          }
       }
@@ -173,12 +178,12 @@ Long64_t TEntryListFromFile::GetEntries()
    return fN;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the next entry in the list.
+/// Faster than GetEntry()
+
 Long64_t TEntryListFromFile::Next()
 {
-   //Returns the next entry in the list.
-   //Faster than GetEntry()
-
    Int_t itree =0;
    while (!fCurrent && itree<fNFiles){
       LoadList(itree);
@@ -220,12 +225,12 @@ Long64_t TEntryListFromFile::Next()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loads the list \#listnumber
+/// This is the only function that can modify fCurrent and fFile data members
+
 Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 {
-   //Loads the list #listnumber
-   //This is the only function that can modify fCurrent and fFile data members
-
    //first close the current list
    if (fCurrent){
       if (fFile) {
@@ -295,10 +300,11 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print info about this list
+
 void TEntryListFromFile::Print(const Option_t* option) const
 {
-   //Print info about this list
    printf("total number of files: %d\n", fNFiles);
    TFile *f;
    TEntryList *el=0;

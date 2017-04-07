@@ -11,39 +11,28 @@
 #ifndef ROOT_TCurlyLine
 #define ROOT_TCurlyLine
 
-// This class implements a curly or wavy polyline typically
-// used to draw Feynman diagrams.
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-#ifndef ROOT_TPolyLine
 #include "TPolyLine.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TPoint;
 
 class TCurlyLine : public TPolyLine , public TAttBBox2D {
 
 protected:
-   Double_t fX1;             // start x, center for arc
-   Double_t fY1;             // start y, center for arc
-   Double_t fX2;             // end x
-   Double_t fY2;             // end y
-   Double_t fWaveLength;     // wavelength of sinusoid in percent of pad height
-   Double_t fAmplitude;      // amplitude of sinusoid in percent of pad height
-   Int_t    fNsteps;         // used internally (controls precision)
-   Bool_t   fIsCurly;        // true: Gluon, false: Gamma
+   Double_t fX1;             ///< start x, center for arc
+   Double_t fY1;             ///< start y, center for arc
+   Double_t fX2;             ///< end x
+   Double_t fY2;             ///< end y
+   Double_t fWaveLength;     ///< wavelength of sinusoid in percent of pad height
+   Double_t fAmplitude;      ///< amplitude of sinusoid in percent of pad height
+   Int_t    fNsteps;         ///< used internally (controls precision)
+   Bool_t   fIsCurly;        ///< true: Gluon, false: Gamma
 
-   static Double_t fgDefaultWaveLength;   //default wavelength
-   static Double_t fgDefaultAmplitude;    //default amplitude
-   static Bool_t   fgDefaultIsCurly;      //default curly type
+   static Double_t fgDefaultWaveLength;   ///< default wavelength
+   static Double_t fgDefaultAmplitude;    ///< default amplitude
+   static Bool_t   fgDefaultIsCurly;      ///< default curly type
 
 public:
    TCurlyLine();

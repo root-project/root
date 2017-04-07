@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Global variables class (global variables are obtained from CINT).    //
-// This class describes the attributes of a global variable.            //
-// The TROOT class contains a list of all currently defined global      //
-// variables (accessible via TROOT::GetListOfGlobals()).                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGlobal
+Global variables class (global variables are obtained from CINT).
+This class describes the attributes of a global variable.
+The TROOT class contains a list of all currently defined global
+variables (accessible via TROOT::GetListOfGlobals()).
+*/
 
 #include "TGlobal.h"
 #include "TInterpreter.h"
@@ -26,22 +24,22 @@
 
 ClassImp(TGlobal)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TGlobal ctor.
+
 TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 {
-   // Default TGlobal ctor.
-
    if (fInfo) {
       SetName(gCling->DataMemberInfo_Name(fInfo));
       SetTitle(gCling->DataMemberInfo_Title(fInfo));
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
 {
-   // Copy constructor
-
    if (rhs.fInfo) {
       fInfo = gCling->DataMemberInfo_FactoryCopy(rhs.fInfo);
       SetName(gCling->DataMemberInfo_Name(fInfo));
@@ -49,11 +47,11 @@ TGlobal::TGlobal(const TGlobal &rhs) : TDictionary( ), fInfo(0)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TGlobal &TGlobal::operator=(const TGlobal &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       gCling->DataMemberInfo_Delete(fInfo);
       if (rhs.fInfo) {
@@ -65,72 +63,73 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGlobal dtor deletes adopted CINT DataMemberInfo object.
+
 TGlobal::~TGlobal()
 {
-   // TGlobal dtor deletes adopted CINT DataMemberInfo object.
-
-   gCling->DataMemberInfo_Delete(fInfo);
+   if (fInfo && gCling) gCling->DataMemberInfo_Delete(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return address of global.
+
 void *TGlobal::GetAddress() const
 {
-   // Return address of global.
-
    return (void *)gCling->DataMemberInfo_Offset(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of array dimensions.
+
 Int_t TGlobal::GetArrayDim() const
 {
-   // Return number of array dimensions.
-
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_ArrayDim(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TDictionary::DeclId_t TGlobal::GetDeclId() const
 {
    return gInterpreter->GetDeclId(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum index for array dimension "dim".
+
 Int_t TGlobal::GetMaxIndex(Int_t dim) const
 {
-   // Return maximum index for array dimension "dim".
-
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get type of global variable, e,g.: "class TDirectory*" -> "TDirectory".
+/// Result needs to be used or copied immediately.
+
 const char *TGlobal::GetTypeName() const
 {
-   // Get type of global variable, e,g.: "class TDirectory*" -> "TDirectory".
-   // Result needs to be used or copied immediately.
-
    if (!fInfo) return 0;
    return gCling->TypeName(gCling->DataMemberInfo_TypeName(fInfo));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of global variable, e,g.: "class TDirectory*".
+
 const char *TGlobal::GetFullTypeName() const
 {
-   // Get full type description of global variable, e,g.: "class TDirectory*".
-
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_TypeName(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this global object is pointing to a currently
+/// loaded global.  If a global is unloaded after the TGlobal
+/// is created, the TGlobal will be set to be invalid.
+
 Bool_t TGlobal::IsValid()
 {
-   // Return true if this global object is pointing to a currently
-   // loaded global.  If a global is unloaded after the TGlobal
-   // is created, the TGlobal will be set to be invalid.
-
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetDataMember(0, fName);
@@ -143,23 +142,23 @@ Bool_t TGlobal::IsValid()
    return fInfo != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TGlobal::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_Property(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the TFunction to reflect the new info.
+///
+/// This can be used to implement unloading (info == 0) and then reloading
+/// (info being the 'new' decl address).
+
 Bool_t TGlobal::Update(DataMemberInfo_t *info)
 {
-   // Update the TFunction to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
    if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
    fInfo = info;
    if (fInfo) {
@@ -171,8 +170,13 @@ Bool_t TGlobal::Update(DataMemberInfo_t *info)
 
 TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
 {
-   // Used to storeTGlobalMappedFunctions from other libs, before gROOT was inistialized
+   // Used to storeTGlobalMappedFunctions from other libs, before gROOT was initialized
    static TList fEarlyRegisteredGlobals;
+   // For thread-safe setting of SetOwner(kTRUE).
+   static bool earlyRegisteredGlobalsSetOwner
+      = (fEarlyRegisteredGlobals.SetOwner(kTRUE), true);
+   (void) earlyRegisteredGlobalsSetOwner; // silence unused var
+
    return fEarlyRegisteredGlobals;
 }
 

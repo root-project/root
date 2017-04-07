@@ -13,24 +13,14 @@
 #define ROOT_TPoints
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPoints                                                              //
-//                                                                      //
-// 2-D graphics point (world coordinates, i.e. floating point).         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TPoints {
 
 private:
-   Double_t    fX;           //X world coordinate
-   Double_t    fY;           //Y world coordinate
+   Double_t    fX;           ///< X world coordinate
+   Double_t    fY;           ///< Y world coordinate
 
 public:
    TPoints() : fX(0), fY(0) { }

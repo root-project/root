@@ -17,12 +17,13 @@
 namespace Rgl {
 
 //Functions for TGLTF3/TGLIso/TGL5DPainter.
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Surface with material and lighting.
+
 template<class V>
 void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<V> &ns,
               const std::vector<UInt_t> &fTS)
 {
-   //Surface with material and lighting.
    glEnableClientState(GL_VERTEX_ARRAY);
    glEnableClientState(GL_NORMAL_ARRAY);
    glVertexPointer(3, type, 0, &vs[0]);
@@ -32,55 +33,61 @@ void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<V> &ns,
    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts)
 {
-   //Call function-template.
    DrawMesh(GL_FLOAT, vs, ns, ts);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts)
 {
-   //Call function-template.
    DrawMesh(GL_DOUBLE, vs, ns, ts);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Only vertices, no normal (no lighting and material).
+
 template<class V>
 void DrawMesh(GLenum type, const std::vector<V> &vs, const std::vector<UInt_t> &fTS)
 {
-   //Only vertices, no normal (no lighting and material).
    glEnableClientState(GL_VERTEX_ARRAY);
    glVertexPointer(3, type, 0, &vs[0]);
    glDrawElements(GL_TRIANGLES, fTS.size(), GL_UNSIGNED_INT, &fTS[0]);
    glDisableClientState(GL_VERTEX_ARRAY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts)
 {
-   //Call function-template.
    DrawMesh(GL_FLOAT, vs, ts);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts)
 {
-   //Call function-template.
    DrawMesh(GL_DOUBLE, vs, ts);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mesh with cut.
+///Material and lighting are enabled.
+
 template<class V, class GLN, class GLV>
 void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
               const std::vector<V> &ns, const std::vector<UInt_t> &fTS,
               const TGLBoxCut &box)
 {
-   //Mesh with cut.
-   //Material and lighting are enabled.
    glBegin(GL_TRIANGLES);
 
    for (UInt_t i = 0, e = fTS.size() / 3; i < e; ++i) {
@@ -105,29 +112,32 @@ void DrawMesh(GLN normal3, GLV vertex3, const std::vector<V> &vs,
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<Float_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   //Call function-template.
    DrawMesh(&glNormal3fv, &glVertex3fv, vs,  ns, ts, box);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
               const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   //Call function-template.
    DrawMesh(&glNormal3dv, &glVertex3dv, vs, ns, ts, box);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Mesh with cut.
+///No material and lighting.
+
 template<class V, class GLV>
 void DrawMesh(GLV vertex3, const std::vector<V> &vs, const std::vector<UInt_t> &fTS,
               const TGLBoxCut &box)
 {
-   //Mesh with cut.
-   //No material and lighting.
    glBegin(GL_TRIANGLES);
 
    for (UInt_t i = 0, e = fTS.size() / 3; i < e; ++i) {
@@ -147,24 +157,27 @@ void DrawMesh(GLV vertex3, const std::vector<V> &vs, const std::vector<UInt_t> &
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Float_t> &vs, const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   //Call function-template.
    DrawMesh(&glVertex3fv, vs, ts, box);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call function-template.
+
 void DrawMesh(const std::vector<Double_t> &vs, const std::vector<UInt_t> &ts, const TGLBoxCut &box)
 {
-   //Call function-template.
    DrawMesh(&glVertex3dv, vs, ts, box);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///NormalToColor generates a color from a given normal
+
 void NormalToColor(Double_t *rfColor, const Double_t *n)
 {
-   //NormalToColor generates a color from a given normal
    const Double_t x = n[0];
    const Double_t y = n[1];
    const Double_t z = n[2];
@@ -173,11 +186,12 @@ void NormalToColor(Double_t *rfColor, const Double_t *n)
    rfColor[2] = (z > 0. ? z : 0.) + (x < 0. ? -0.5 * x : 0.) + (y < 0. ? -0.5 * y : 0.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Colored mesh with lighting disabled.
+
 void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
                    const std::vector<UInt_t> &fTS)
 {
-   //Colored mesh with lighting disabled.
    Double_t color[] = {0., 0., 0., 0.15};
 
    glBegin(GL_TRIANGLES);
@@ -204,11 +218,12 @@ void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> 
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Colored mesh with cut and disabled lighting.
+
 void DrawMapleMesh(const std::vector<Double_t> &vs, const std::vector<Double_t> &ns,
                    const std::vector<UInt_t> &fTS, const TGLBoxCut & box)
 {
-   //Colored mesh with cut and disabled lighting.
    Double_t color[] = {0., 0., 0., 0.15};
 
    glBegin(GL_TRIANGLES);

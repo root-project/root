@@ -28,9 +28,18 @@ MONALISALIB  := $(LPATH)/libMonaLisa.$(SOEXT)
 MONALISAMAP  := $(MONALISALIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MONALISAH))
+MONALISAH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(MONALISAH))
+ALLHDRS      += $(MONALISAH_REL)
 ALLLIBS      += $(MONALISALIB)
 ALLMAPS      += $(MONALISAMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(MONALISAH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(MONALISALIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(MONALISADEP)

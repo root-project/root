@@ -1,10 +1,19 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+##  Draw the geometry using the x3d viewver.
+##  Note that this viewver may also be invoked from the "View" menu in
+##  the canvas tool bar
+##
+## once in x3d viewer, type m to see the menu.
+## For example typing r will show a solid model of this geometry.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 import ROOT
 
-ROOT.gROOT.Reset();
 c1 = ROOT.TCanvas( 'c1', 'Geometry Shapes', 200, 10, 700, 500 )
 
 # delete previous geometry objects in case this script is reexecuted
@@ -76,7 +85,8 @@ node14 = ROOT.TNode( 'NODE14', 'NODE14', 'SPHE1',   10,   250,   300 )
 node15 = ROOT.TNode( 'NODE15', 'NODE15', 'SPHE2',   10,  -100,  -200 )
 
 # for memory management
-for l, o in locals().items():
+list_of_locals = dict(locals())
+for l, o in list_of_locals.items():
    if isinstance( o, ROOT.TShape ) or isinstance( o, ROOT.TNode ):
       ROOT.SetOwnership( o, False )
 
@@ -84,10 +94,3 @@ for l, o in locals().items():
 node1.cd()
 node1.Draw( 'gl' )
 c1.Update()
-#
-#  Draw the geometry using the x3d viewver.
-#  Note that this viewver may also be invoked from the "View" menu in
-#  the canvas tool bar
-#
-# once in x3d viewer, type m to see the menu.
-# For example typing r will show a solid model of this geometry.

@@ -51,16 +51,32 @@
 #include "TApplication.h"
 #include "TMath.h"
 #include "TSystem.h"
+#include "TVirtualGeoConverter.h"
 
+// Total and reference times
+Double_t tpstot = 0;
+Double_t tpsref = 112.1; //time including the generation of the ref files
+Bool_t testfailed = kFALSE;
 #ifndef __CINT__
-void stressGeometry(const char*, Bool_t);
+void stressGeometry(const char*, Bool_t, Bool_t);
 
 int main(int argc, char **argv)
 {
    gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
-   if (argc > 1) stressGeometry(argv[1],kFALSE);
-   else          stressGeometry("*",kFALSE);
+   Bool_t vecgeom = kFALSE;
+   TString geom = "*";
+   if (argc > 1) geom = argv[1];
+   geom.ToLower();
+   if (geom == "all") geom = "*";
+   printf("geom: %s\n", geom.Data());
+
+   if (argc > 1) {
+       for (Int_t iarg=1; iarg<argc; ++iarg) {
+          if (!strcmp(argv[iarg], "vecgeom")) vecgeom = kTRUE;
+       }
+   }
+   stressGeometry(geom,kFALSE,vecgeom);
    return 0;
 }
 
@@ -76,7 +92,7 @@ typedef struct {
 } p_t;
 p_t p;
 
-const Int_t NG = 33;
+const Int_t NG = 34;
 const char *exps[NG] = {"aleph",
                         "barres",
                         "felix",
@@ -111,12 +127,12 @@ const char *exps[NG] = {"aleph",
                         "belle",
                         "atlas"
 };
-const Int_t versions[NG] =  {4, //aleph
+const Int_t versions[NG] =  {5, //aleph
                              3, //barres
                              3, //felix
                              3, //phenix
                              3, //chambers
-                             3, //p326
+                             4, //p326
                              3, //bes
                              3, //dubna
                              3, //ganil
@@ -128,22 +144,22 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //na49
                              3, //wa91
                              3, //sdc
-                             3, //integral
+                             4, //integral
                              3, //ams
                              3, //brahms
-                             3, //gem
+                             4, //gem
                              3, //tesla
                              3, //btev
-                             4, //cdf
+                             5, //cdf
                              4, //hades2
-                             3, //lhcbfull
-                             3, //star
-                             3, //sld
-                             3, //cms
-                             4, //alice3
-                             3, //babar2
+                             4, //lhcbfull
+                             4, //star
+                             4, //sld
+                             4, //cms
+                             5, //alice3
+                             4, //babar2
                              3, //belle
-                             4}; //atlas
+                             5}; //atlas
 // The timings below are on my machine PIV 3GHz
 const Double_t cp_brun[NG] = {1.9,  //aleph
                               0.1,  //barres
@@ -213,10 +229,6 @@ Double_t boxes[NG][3] = {{600,600,500},     // aleph
                          {440,440,538},     // belle
                          {1000,1000,1500}   // atlas
 };
-// Total and reference times
-Double_t tpstot = 0;
-Double_t tpsref = 112.1; //time including the generation of the ref files
-Bool_t testfailed = kFALSE;
 
 Int_t iexp[NG];
 Bool_t gen_ref=kFALSE;
@@ -225,7 +237,7 @@ void ReadRef(Int_t kexp);
 void WriteRef(Int_t kexp);
 void InspectRef(const char *exp="alice", Int_t vers=3);
 
-void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
+void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE, Bool_t vecgeom=kFALSE) {
    TGeoManager::SetVerboseLevel(0);
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
@@ -257,7 +269,8 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
       }
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
       if (!gGeoManager) return;
-
+      if (vecgeom) TVirtualGeoConverter::Instance()->ConvertGeometry();
+      
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
 
       if (gen_ref || !TFile::Open(Form("http://root.cern.ch/files/%s_ref_%d.root",exps[i],versions[i]),"CACHEREAD")) {
@@ -300,7 +313,6 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
 }
 
 void ReadRef(Int_t kexp) {
-   TStopwatch sw;
    TString fname;
    TFile *f = 0;
    //use ref_[version[i]] files
@@ -335,6 +347,7 @@ void ReadRef(Int_t kexp) {
    Float_t diffmax = 0.01;  // percent of rad!
    Int_t nbad = 0;
    vect(0) = 0;//gGeoManager->Weight(0.01, "va");
+   TStopwatch sw;
    for (Long64_t i=0;i<nentries;i++) {
       T->GetEntry(i);
       nbound = 0;
@@ -461,9 +474,7 @@ void FindRad(Double_t x, Double_t y, Double_t z,Double_t theta, Double_t phi, In
    TGeoNode *nextnode = gGeoManager->GetCurrentNode();
    safe = gGeoManager->Safety();
    while (nextnode) {
-      med = 0;
-      if (nextnode) med = nextnode->GetVolume()->GetMedium();
-      else return;
+      med = nextnode->GetVolume()->GetMedium();
       shape = nextnode->GetVolume()->GetShape();
       lastnode = nextnode;
       nextnode = gGeoManager->FindNextBoundaryAndStep();

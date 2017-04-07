@@ -1,4 +1,18 @@
-// Example of the usage of the TRolke class
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// Example of the usage of the TRolke class
+/// The TRolke class computes the profile likelihood
+/// confidence limits for 7 different model assumptions
+/// on systematic/statistical uncertainties
+///
+/// Please read TRolke.cxx and TRolke.h for more docs.
+///
+/// \macro_output
+/// \macro_code
+///
+/// \authors Jan Conrad. Johan Lundberg
+
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TRolke.h"
@@ -6,22 +20,7 @@
 
 void Rolke()
 {
-//////////////////////////////////////////////////////////
-//
-// The TRolke class computes the profile likelihood
-// confidence limits for 7 different model assumptions
-// on systematic/statistical uncertainties
-//
-// Author : Jan Conrad (CERN) <jan.conrad@cern.ch> 2004
-//          Johan Lundberg (CERN) <johan.lundberg@cern.ch> 2009
-//
-// Please read TRolke.cxx and TRolke.h for more docs.
-//             ----------     --------
-//
-//////////////////////////////////////////////////////
-
-
-   /* variables used throughout the example */
+   // variables used throughout the example
    Double_t bm;
    Double_t tau;
    Int_t mid;
@@ -43,8 +42,7 @@ void Rolke()
    Double_t ul ; // upper limit
    Double_t ll ; // lower limit
 
-
-/////////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 1 assumes:
 //
 // Poisson uncertainty in the background estimate
@@ -69,8 +67,7 @@ void Rolke()
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-/////////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 2 assumes:
 //
 // Poisson uncertainty in the background estimate
@@ -94,9 +91,7 @@ void Rolke()
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-
-/////////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 3 assumes:
 //
 // Gaussian uncertainty in the background estimate
@@ -118,8 +113,6 @@ void Rolke()
    cout << "For model 3 : Gaussian / Gaussian" << endl;
    cout << "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
-
-
 
    cout << "***************************************" << endl;
    cout << "* some more example's for gauss/gauss *" << endl;
@@ -157,8 +150,7 @@ void Rolke()
 
    cout << "***************************************" << endl;
 
-
-/////////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 4 assumes:
 //
 // Poisson uncertainty in the background estimate
@@ -182,8 +174,7 @@ void Rolke()
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 5 assumes:
 //
 // Gaussian uncertainty in the background estimate
@@ -206,9 +197,7 @@ void Rolke()
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-
-////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 6 assumes:
 //
 // Known background
@@ -231,8 +220,7 @@ void Rolke()
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Model 7 assumes:
 //
 // Known Background
@@ -257,11 +245,9 @@ void Rolke()
    cout <<  "the Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
 
-
-////////////////////////////////////////////////////////
+//-----------------------------------------------
 // Example of bounded and unbounded likelihood
 // Example for Model 1
-///////////////////////////////////////////////////////
 
    bm = 0.0;
    tau = 5;
@@ -287,6 +273,4 @@ void Rolke()
 
    cout <<  "the UNBOUNDED Profile Likelihood interval is :" << endl;
    cout << "[" << ll << "," << ul << "]" << endl;
-
 }
-

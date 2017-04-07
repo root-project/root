@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
 #include "Foption.h"
 
 
@@ -49,12 +45,12 @@ protected:
    TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
    void                 (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
-   static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
-   static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
-   static Int_t           fgMaxiter;   //Maximum number of iterations
-   static Double_t        fgErrorDef;  //Error definition (default=1)
-   static Double_t        fgPrecision; //maximum precision
-   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
+//   static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
+//   static Int_t           fgMaxpar;    //Maximum number of fit parameters for current fitter
+//   static Int_t           fgMaxiter;   //Maximum number of iterations
+//   static Double_t        fgErrorDef;  //Error definition (default=1)
+//   static Double_t        fgPrecision; //maximum precision
+//   static TString         fgDefault;   //name of the default fitter ("Minuit","Fumili",etc)
 
    TVirtualFitter(const TVirtualFitter& tvf);
    TVirtualFitter& operator=(const TVirtualFitter& tvf);
@@ -96,7 +92,6 @@ public:
    virtual void      PrintResults(Int_t level, Double_t amin) const = 0;
    virtual void      ReleaseParameter(Int_t ipar) = 0;
    virtual Double_t *SetCache(Int_t npoints, Int_t psize);
-   virtual void      SetFCN(void *fcn);
    virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t));
    virtual void      SetFitMethod(const char *name) = 0;
    virtual void      SetFitOption(Foption_t option) {fOption = option;}

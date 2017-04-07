@@ -12,13 +12,9 @@
 #ifndef ROOT_TODBCResult
 #define ROOT_TODBCResult
 
-#ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 #ifdef __CLING__

@@ -14,18 +14,10 @@
 
 #include <deque>
 
-#ifndef ROOT_TVirtualPadPainter
 #include "TVirtualPadPainter.h"
-#endif
-#ifndef ROOT_TGLFontmanager
 #include "TGLFontManager.h"
-#endif
-#ifndef ROOT_TGLPadUtils
 #include "TGLPadUtils.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 class TLinearGradient;
 class TRadialGradient;

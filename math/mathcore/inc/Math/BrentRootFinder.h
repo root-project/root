@@ -30,13 +30,9 @@
 #ifndef ROOT_Math_BrentRootFinder
 #define ROOT_Math_BrentRootFinder
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IRootFinderMethod
 #include "Math/IRootFinderMethod.h"
-#endif
 
 namespace ROOT {
 namespace Math {

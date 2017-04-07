@@ -28,6 +28,7 @@ using namespace ento;
 static bool isArc4RandomAvailable(const ASTContext &Ctx) {
   const llvm::Triple &T = Ctx.getTargetInfo().getTriple();
   return T.getVendor() == llvm::Triple::Apple ||
+         T.getOS() == llvm::Triple::CloudABI ||
          T.getOS() == llvm::Triple::FreeBSD ||
          T.getOS() == llvm::Triple::NetBSD ||
          T.getOS() == llvm::Triple::OpenBSD ||
@@ -85,8 +86,7 @@ public:
   // Helpers.
   bool checkCall_strCommon(const CallExpr *CE, const FunctionDecl *FD);
 
-  typedef void (WalkAST::*FnCheck)(const CallExpr *,
-				   const FunctionDecl *);
+  typedef void (WalkAST::*FnCheck)(const CallExpr *, const FunctionDecl *);
 
   // Checker-specific methods.
   void checkLoopConditionForFloat(const ForStmt *FS);
@@ -108,13 +108,13 @@ public:
 //===----------------------------------------------------------------------===//
 
 void WalkAST::VisitChildren(Stmt *S) {
-  for (Stmt::child_iterator I = S->child_begin(), E = S->child_end(); I!=E; ++I)
-    if (Stmt *child = *I)
-      Visit(child);
+  for (Stmt *Child : S->children())
+    if (Child)
+      Visit(Child);
 }
 
 void WalkAST::VisitCallExpr(CallExpr *CE) {
-  // Get the callee.  
+  // Get the callee.
   const FunctionDecl *FD = CE->getDirectCallee();
 
   if (!FD)
@@ -161,11 +161,11 @@ void WalkAST::VisitCallExpr(CallExpr *CE) {
 }
 
 void WalkAST::VisitCompoundStmt(CompoundStmt *S) {
-  for (Stmt::child_iterator I = S->child_begin(), E = S->child_end(); I!=E; ++I)
-    if (Stmt *child = *I) {
-      if (CallExpr *CE = dyn_cast<CallExpr>(child))
+  for (Stmt *Child : S->children())
+    if (Child) {
+      if (CallExpr *CE = dyn_cast<CallExpr>(Child))
         checkUncheckedReturnValue(CE);
-      Visit(child);
+      Visit(Child);
     }
 }
 
@@ -306,7 +306,7 @@ void WalkAST::checkLoopConditionForFloat(const ForStmt *FS) {
 void WalkAST::checkCall_gets(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_gets)
     return;
-  
+
   const FunctionProtoType *FPT = FD->getType()->getAs<FunctionProtoType>();
   if (!FPT)
     return;
@@ -433,18 +433,18 @@ void WalkAST::checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD) {
       .Case("mkdtemp", std::make_pair(0,-1))
       .Case("mkstemps", std::make_pair(0,1))
       .Default(std::make_pair(-1, -1));
-  
+
   assert(ArgSuffix.first >= 0 && "Unsupported function");
 
   // Check if the number of arguments is consistent with out expectations.
   unsigned numArgs = CE->getNumArgs();
   if ((signed) numArgs <= ArgSuffix.first)
     return;
-  
+
   const StringLiteral *strArg =
     dyn_cast<StringLiteral>(CE->getArg((unsigned)ArgSuffix.first)
                               ->IgnoreParenImpCasts());
-  
+
   // Currently we only handle string literals.  It is possible to do better,
   // either by looking at references to const variables, or by doing real
   // flow analysis.
@@ -469,13 +469,13 @@ void WalkAST::checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD) {
     suffix = (unsigned) Result.getZExtValue();
     n = (n > suffix) ? n - suffix : 0;
   }
-  
+
   for (unsigned i = 0; i < n; ++i)
     if (str[i] == 'X') ++numX;
-  
+
   if (numX >= 6)
     return;
-  
+
   // Issue a warning.
   PathDiagnosticLocation CELoc =
     PathDiagnosticLocation::createBegin(CE, BR.getSourceManager(), AC);
@@ -501,13 +501,13 @@ void WalkAST::checkCall_mkstemp(const CallExpr *CE, const FunctionDecl *FD) {
 //===----------------------------------------------------------------------===//
 // Check: Any use of 'strcpy' is insecure.
 //
-// CWE-119: Improper Restriction of Operations within 
-// the Bounds of a Memory Buffer 
+// CWE-119: Improper Restriction of Operations within
+// the Bounds of a Memory Buffer
 //===----------------------------------------------------------------------===//
 void WalkAST::checkCall_strcpy(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_strcpy)
     return;
-  
+
   if (!checkCall_strCommon(CE, FD))
     return;
 
@@ -528,8 +528,8 @@ void WalkAST::checkCall_strcpy(const CallExpr *CE, const FunctionDecl *FD) {
 //===----------------------------------------------------------------------===//
 // Check: Any use of 'strcat' is insecure.
 //
-// CWE-119: Improper Restriction of Operations within 
-// the Bounds of a Memory Buffer 
+// CWE-119: Improper Restriction of Operations within
+// the Bounds of a Memory Buffer
 //===----------------------------------------------------------------------===//
 void WalkAST::checkCall_strcat(const CallExpr *CE, const FunctionDecl *FD) {
   if (!filter.check_strcpy)
@@ -683,7 +683,7 @@ void WalkAST::checkCall_vfork(const CallExpr *CE, const FunctionDecl *FD) {
 void WalkAST::checkUncheckedReturnValue(CallExpr *CE) {
   if (!filter.check_UncheckedReturn)
     return;
-  
+
   const FunctionDecl *FD = CE->getDirectCallee();
   if (!FD)
     return;
@@ -748,7 +748,7 @@ namespace {
 class SecuritySyntaxChecker : public Checker<check::ASTCodeBody> {
 public:
   ChecksFilter filter;
-  
+
   void checkASTCodeBody(const Decl *D, AnalysisManager& mgr,
                         BugReporter &BR) const {
     WalkAST walker(BR, mgr.getAnalysisDeclContext(D), filter);

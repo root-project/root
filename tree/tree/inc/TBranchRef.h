@@ -21,21 +21,17 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
-#ifndef ROOT_TRefTable
 #include "TRefTable.h"
-#endif
 
 class TTree;
 
 class TBranchRef : public TBranch {
 private:
-   Long64_t   fRequestedEntry;  //! Cursor indicating which entry is being requested.
+   Long64_t   fRequestedEntry;  ///<! Cursor indicating which entry is being requested.
 
 protected:
-   TRefTable *fRefTable;        // pointer to the TRefTable
+   TRefTable *fRefTable;        ///< pointer to the TRefTable
 
    void    ReadLeavesImpl(TBuffer &b);
    void    FillLeavesImpl(TBuffer &b);
@@ -45,7 +41,6 @@ public:
    TBranchRef(TTree *tree);
    virtual ~TBranchRef();
    virtual void    Clear(Option_t *option="");
-   virtual Int_t   Fill();
    TRefTable      *GetRefTable() const {return fRefTable;}
    virtual Bool_t  Notify();
    virtual void    Print(Option_t *option="") const;
@@ -53,6 +48,9 @@ public:
    virtual void    ResetAfterMerge(TFileMergeInfo *);
    virtual Int_t   SetParent(const TObject* obj, Int_t branchID);
    virtual void    SetRequestedEntry(Long64_t entry) {fRequestedEntry = entry;}
+
+private:
+   virtual Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
    ClassDef(TBranchRef,1);  //to support referenced objects on other branches
 };

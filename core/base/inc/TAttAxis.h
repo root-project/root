@@ -12,36 +12,22 @@
 #ifndef ROOT_TAttAxis
 #define ROOT_TAttAxis
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttAxis                                                             //
-//                                                                      //
-// Axis attributes.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 
 class TAttAxis {
 protected:
-   Int_t        fNdivisions;   //Number of divisions(10000*n3 + 100*n2 + n1)
-   Color_t      fAxisColor;    //color of the line axis
-   Color_t      fLabelColor;   //color of labels
-   Style_t      fLabelFont;    //font for labels
-   Float_t      fLabelOffset;  //offset of labels
-   Float_t      fLabelSize;    //size of labels
-   Float_t      fTickLength;   //length of tick marks
-   Float_t      fTitleOffset;  //offset of axis title
-   Float_t      fTitleSize;    //size of axis title
-   Color_t      fTitleColor;   //color of axis title
-   Style_t      fTitleFont;    //font for axis title
+   Int_t        fNdivisions;   ///< Number of divisions(10000*n3 + 100*n2 + n1)
+   Color_t      fAxisColor;    ///< Color of the line axis
+   Color_t      fLabelColor;   ///< Color of labels
+   Style_t      fLabelFont;    ///< Font for labels
+   Float_t      fLabelOffset;  ///< Offset of labels
+   Float_t      fLabelSize;    ///< Size of labels
+   Float_t      fTickLength;   ///< Length of tick marks
+   Float_t      fTitleOffset;  ///< Offset of axis title
+   Float_t      fTitleSize;    ///< Size of axis title
+   Color_t      fTitleColor;   ///< Color of axis title
+   Style_t      fTitleFont;    ///< Font for axis title
 
 public:
    TAttAxis();

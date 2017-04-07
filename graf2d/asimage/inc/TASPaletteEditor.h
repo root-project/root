@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAttImage
 #include "TAttImage.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
 
 
 class TVirtualPad;
@@ -65,14 +59,14 @@ protected:
       void Paint(Option_t *option);
    };
 
-   Double_t              fMinValue;           // min value of image
-   Double_t              fMaxValue;           // max value of image
+   Double_t              fMinValue;           ///< min value of image
+   Double_t              fMaxValue;           ///< max value of image
 
-   TH1D                 *fHisto;              // hitogram of image pixels
-   TRootEmbeddedCanvas  *fPaletteCanvas;      // canvas to draw the current palette
-   TRootEmbeddedCanvas  *fHistCanvas;         // canvas to draw the histogram
-   TList                *fPaletteList;        // list of palettes for undo and redo
-   TImagePalette        *fPalette;            // current palette
+   TH1D                 *fHisto;              ///< histogram of image pixels
+   TRootEmbeddedCanvas  *fPaletteCanvas;      ///< canvas to draw the current palette
+   TRootEmbeddedCanvas  *fHistCanvas;         ///< canvas to draw the histogram
+   TList                *fPaletteList;        ///< list of palettes for undo and redo
+   TImagePalette        *fPalette;            ///< current palette
    TVirtualPad          *fImagePad;
    PaintPalette         *fPaintPalette;
    LimitLine            *fLimitLine[2];

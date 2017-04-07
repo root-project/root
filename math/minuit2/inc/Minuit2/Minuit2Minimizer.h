@@ -13,17 +13,11 @@
 #ifndef ROOT_Minuit2_Minuit2Minimizer
 #define ROOT_Minuit2_Minuit2Minimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Minuit2_MnUserParameterState
 #include "Minuit2/MnUserParameterState.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 
@@ -55,6 +49,8 @@ namespace ROOT {
    In ROOT it can be instantiated using the plug-in manager (plug-in "Minuit2")
    Using a string  (used by the plugin manager) or via an enumeration
    an one can set all the possible minimization algorithms (Migrad, Simplex, Combined, Scan and Fumili).
+
+   @ingroup Minuit
 */
 class Minuit2Minimizer : public ROOT::Math::Minimizer {
 

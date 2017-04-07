@@ -37,18 +37,20 @@ using namespace RooFit ;
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
 {
-   // Print test program number and its title
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// width of lines when printing test results
+
 Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun)
 {
-   // width of lines when printing test results
    const Int_t lineWidth = 120;
 
    // Save memory directory location
@@ -240,6 +242,21 @@ int main(int argc, const char *argv[])
    }
 
    gBenchmark = new TBenchmark();
+   return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t stressHistFactory()
+{
+   Bool_t doWrite     = kFALSE;
+   Int_t  verbose     =      0;
+   Bool_t allTests    = kFALSE;
+   Bool_t oneTest     = kFALSE;
+   Int_t testNumber   =      0;
+   Bool_t dryRun      = kFALSE;
+
+   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
    return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 

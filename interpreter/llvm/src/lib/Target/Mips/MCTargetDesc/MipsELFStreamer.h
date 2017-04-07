@@ -33,8 +33,8 @@ class MipsELFStreamer : public MCELFStreamer {
 
 
 public:
-  MipsELFStreamer(MCContext &Context, MCAsmBackend &MAB, raw_ostream &OS,
-                  MCCodeEmitter *Emitter, const MCSubtargetInfo &STI)
+  MipsELFStreamer(MCContext &Context, MCAsmBackend &MAB, raw_pwrite_stream &OS,
+                  MCCodeEmitter *Emitter)
       : MCELFStreamer(Context, MAB, OS, Emitter) {
 
     RegInfoRecord = new MipsRegInfoRecord(this, Context);
@@ -55,20 +55,22 @@ public:
 
   /// Overriding this function allows us to dismiss all labels that are
   /// candidates for marking as microMIPS when .section directive is processed.
-  void SwitchSection(const MCSection *Section,
+  void SwitchSection(MCSection *Section,
                      const MCExpr *Subsection = nullptr) override;
 
   /// Overriding this function allows us to dismiss all labels that are
   /// candidates for marking as microMIPS when .word directive is emitted.
-  void EmitValueImpl(const MCExpr *Value, unsigned Size,
-                     const SMLoc &Loc) override;
+  void EmitValueImpl(const MCExpr *Value, unsigned Size, SMLoc Loc) override;
 
   /// Emits all the option records stored up until the point it's called.
   void EmitMipsOptionRecords();
+
+  /// Mark labels as microMIPS, if necessary for the subtarget.
+  void createPendingLabelRelocs();
 };
 
 MCELFStreamer *createMipsELFStreamer(MCContext &Context, MCAsmBackend &MAB,
-                                     raw_ostream &OS, MCCodeEmitter *Emitter,
-                                     const MCSubtargetInfo &STI, bool RelaxAll);
+                                     raw_pwrite_stream &OS,
+                                     MCCodeEmitter *Emitter, bool RelaxAll);
 } // namespace llvm.
 #endif

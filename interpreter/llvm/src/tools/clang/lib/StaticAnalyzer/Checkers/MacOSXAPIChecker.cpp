@@ -62,7 +62,7 @@ void MacOSXAPIChecker::CheckDispatchOnce(CheckerContext &C, const CallExpr *CE,
   if (!R || !isa<StackSpaceRegion>(R->getMemorySpace()))
     return;
 
-  ExplodedNode *N = C.generateSink(state);
+  ExplodedNode *N = C.generateErrorNode(state);
   if (!N)
     return;
 
@@ -75,11 +75,11 @@ void MacOSXAPIChecker::CheckDispatchOnce(CheckerContext &C, const CallExpr *CE,
   // _dispatch_once is then a function which then calls the real dispatch_once.
   // Users do not care; they just want the warning at the top-level call.
   if (CE->getLocStart().isMacroID()) {
-    StringRef TrimmedFName = FName.ltrim("_");
+    StringRef TrimmedFName = FName.ltrim('_');
     if (TrimmedFName != FName)
       FName = TrimmedFName;
   }
-  
+
   SmallString<256> S;
   llvm::raw_svector_ostream os(S);
   os << "Call to '" << FName << "' uses";
@@ -92,9 +92,9 @@ void MacOSXAPIChecker::CheckDispatchOnce(CheckerContext &C, const CallExpr *CE,
   if (isa<VarRegion>(R) && isa<StackLocalsSpaceRegion>(R->getMemorySpace()))
     os << "  Perhaps you intended to declare the variable as 'static'?";
 
-  BugReport *report = new BugReport(*BT_dispatchOnce, os.str(), N);
+  auto report = llvm::make_unique<BugReport>(*BT_dispatchOnce, os.str(), N);
   report->addRange(CE->getArg(0)->getSourceRange());
-  C.emitReport(report);
+  C.emitReport(std::move(report));
 }
 
 //===----------------------------------------------------------------------===//

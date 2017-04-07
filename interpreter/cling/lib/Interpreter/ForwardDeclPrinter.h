@@ -11,6 +11,8 @@
 #ifndef CLING_AUTOLOADING_VISITOR_H
 #define CLING_AUTOLOADING_VISITOR_H
 
+#include "cling/Utils/Output.h"
+
 #include "clang/AST/DeclVisitor.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Specifiers.h"
@@ -90,10 +92,13 @@ namespace cling {
 
   class ForwardDeclPrinter : public clang::DeclVisitor<ForwardDeclPrinter> {
   private:
+    using IgnoreFilesFunc_t = bool (*)(const clang::PresumedLoc&);
+
     clang::PrintingPolicy m_Policy; // intentional copy
     llvm::raw_ostream& m_Log;
     unsigned m_Indentation;
     bool m_PrintInstantiation;
+    clang::Preprocessor& m_PP;
     clang::SourceManager& m_SMgr;
     clang::ASTContext& m_Ctx;
     bool m_SkipFlag;
@@ -102,14 +107,18 @@ namespace cling {
     llvm::DenseMap<const clang::Decl*, bool> m_Visited; // fwd decl success
     std::stack<llvm::raw_ostream*> m_StreamStack;
     std::set<const char*> m_BuiltinNames;
+    IgnoreFilesFunc_t m_IgnoreFile; // Call back to ignore some top level files.
 
   public:
     ForwardDeclPrinter(llvm::raw_ostream& OutS,
                        llvm::raw_ostream& LogS,
-                       clang::Sema& S,
+                       clang::Preprocessor& P,
+                       clang::ASTContext& Ctx,
                        const Transaction& T,
                        unsigned Indentation = 0,
-                       bool printMacros = false);
+                       bool printMacros = false,
+                       IgnoreFilesFunc_t ignoreFiles =
+                          [](const clang::PresumedLoc&) { return false; } );
 
 //    void VisitDeclContext(clang::DeclContext *DC, bool shouldIndent = true);
 
@@ -155,7 +164,7 @@ namespace cling {
     void PrintTemplateParameters(llvm::raw_ostream& Stream,
                                  clang::TemplateParameterList *Params,
                                  const clang::TemplateArgumentList *Args = 0);
-    void prettyPrintAttributes(clang::Decl *D, std::string extra = "");
+    void prettyPrintAttributes(clang::Decl *D);
 
     bool isOperator(clang::FunctionDecl* D);
     bool hasDefaultArgument(clang::FunctionDecl* D);
@@ -255,35 +264,31 @@ namespace cling {
     class StreamRAII {
       ForwardDeclPrinter& m_pr;
       clang::PrintingPolicy m_oldPol;
-      std::string m_Output;
-      llvm::raw_string_ostream m_Stream;
+      largestream m_Stream;
       bool m_HavePopped;
     public:
       StreamRAII(ForwardDeclPrinter& pr, clang::PrintingPolicy* pol = 0):
-        m_pr(pr), m_oldPol(pr.m_Policy), m_Stream(m_Output),
-        m_HavePopped(false) {
-        m_pr.m_StreamStack.push(&m_Stream);
+        m_pr(pr), m_oldPol(pr.m_Policy), m_HavePopped(false) {
+        m_pr.m_StreamStack.push(&static_cast<llvm::raw_ostream&>(m_Stream));
         if (pol)
           m_pr.m_Policy = *pol;
       }
       ~StreamRAII() {
         if (!m_HavePopped) {
           m_pr.m_StreamStack.pop();
-          m_Stream.flush();
           if (!m_pr.m_SkipFlag) {
-            m_pr.Out() << m_Output;
+            m_pr.Out() << m_Stream.str();
           }
         }
         m_pr.m_Policy = m_oldPol;
       }
-      std::string take(bool pop = false) {
-        m_Stream.flush();
+      llvm::StringRef take(bool pop = false) {
         if (pop) {
           assert(!m_HavePopped && "No popping twice");
           m_HavePopped = true;
           m_pr.m_StreamStack.pop();
         }
-        return m_Output;
+        return m_Stream.str();
       }
     };
   };

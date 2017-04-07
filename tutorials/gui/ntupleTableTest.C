@@ -1,14 +1,15 @@
-// This TableTest class is a simple example of how to use a TGTable
-// with a TTreeTableInterface. TableTest inherits from TGMainFrame to
-// create a top level frame to embed the TGTable in. First, the
-// hsimple.root file is opened to obtain an ntuple. Then a
-// TTreeTableInterface is created using this ntuple. A table is then
-// created using the interface. In the end, the table is added to the
-// TGMainFrame that is the TableTest and the necessary calls to
-// correctly draw the window are made. For more information about the
-// use of TTreeTableInterface and TGTable, see their documentation.
-
-// author: Roel Aaij 13/07/2007
+/// \file
+/// \ingroup tutorial_gui
+/// This TableTest class is a simple example of how to use a TGTable with a TTreeTableInterface.
+/// TableTest inherits from TGMainFrame to create a top level frame to embed the TGTable in.
+/// First, the hsimple.root file is opened to obtain an ntuple. Then a TTreeTableInterface is created using this ntuple.
+/// A table is then created using the interface.
+/// In the end, the table is added to the TGMainFrame that is the TableTest and the necessary calls to correctly draw the window are made.
+/// For more information about the use of TTreeTableInterface and TGTable, see their documentation.
+///
+/// \macro_code
+///
+/// \author Roel Aaij 13/07/2007
 
 #include <iostream>
 #include <TApplication.h>

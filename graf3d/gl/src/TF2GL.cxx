@@ -24,34 +24,34 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________
-//
-// GL renderer for TF2.
-// TGLPlotPainter is used internally.
+/** \class TF2GL
+\ingroup opengl
+GL renderer for TF2.
+TGLPlotPainter is used internally.
+*/
 
 ClassImp(TF2GL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TF2GL::TF2GL() : TGLPlot3D(), fM(0), fH(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TF2GL::~TF2GL()
 {
-   // Destructor.
-
    delete fH;
 }
 
-/**************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
 {
-   // Set model object.
-
    TString option(opt);
    option.ToLower();
 
@@ -80,19 +80,19 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup bounding-box.
+
 void TF2GL::SetBBox()
 {
-   // Setup bounding-box.
-
    fBoundingBox.Set(fPlotPainter->RefBackBox().Get3DBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the object.
+
 void TF2GL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Render the object.
-
    fPlotPainter->RefBackBox().FindFrontPoint();
 
    glPushAttrib(GL_ENABLE_BIT | GL_LIGHTING_BIT);

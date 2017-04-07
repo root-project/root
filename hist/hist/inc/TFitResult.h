@@ -21,17 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_FIT_FitResult
 #include "Fit/FitResult.h"
-#endif
 
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
 
 class TFitResult:public TNamed, public ROOT::Fit::FitResult {
 
@@ -70,7 +64,10 @@ public:
    }
 
 private:
-   ClassDef(TFitResult,1)  // Class holding the result of the fit
+   ClassDef(TFitResult, 0);  // Class holding the result of the fit
 };
 
+namespace cling {
+   std::string printValue(const TFitResult* val);
+}
 #endif

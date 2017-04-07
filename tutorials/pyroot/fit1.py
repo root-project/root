@@ -1,11 +1,18 @@
-#
-# To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
-#
+## \file
+## \ingroup tutorial_pyroot
+## \notebook
+## Fit example.
+##
+## \macro_image
+## \macro_output
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 from os import path
 from ROOT import TCanvas, TFile, TPaveText
 from ROOT import gROOT, gBenchmark
 
-gROOT.Reset()
 c1 = TCanvas( 'c1', 'The Fit Canvas', 200, 10, 700, 500 )
 c1.SetGridx()
 c1.SetGridy()
@@ -16,9 +23,8 @@ c1.GetFrame().SetBorderSize( 5 )
 gBenchmark.Start( 'fit1' )
 #
 # We connect the ROOT file generated in a previous tutorial
-# (see begin_html <a href="fillrandom.C.html">Filling histograms with random numbers from a function</a>) end_html
 #
-fill = TFile( 'fillrandom.root' )
+fill = TFile( 'py-fillrandom.root' )
 
 #
 # The function "ls()" lists the directory contents of this file
@@ -45,7 +51,7 @@ h1f.Fit( 'sqroot' )
 fitlabel = TPaveText( 0.6, 0.3, 0.9, 0.80, 'NDC' )
 fitlabel.SetTextAlign( 12 )
 fitlabel.SetFillColor( 42 )
-fitlabel.ReadFile(path.join(path.dirname(__file__),'fit1_py.py'))
+fitlabel.ReadFile(path.join(str(gROOT.GetTutorialDir()), 'pyroot', 'fit1_py.py'))
 fitlabel.Draw()
 c1.Update()
 gBenchmark.Show( 'fit1' )

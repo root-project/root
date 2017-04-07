@@ -12,37 +12,7 @@
 #ifndef ROOT_TGeoHype
 #define ROOT_TGeoHype
 
-#ifndef ROOT_TGeoTube
 #include "TGeoTube.h"
-#endif
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// TGeoHype - Hyperboloid class defined by 5 parameters. Bounded by:
-//            - Two z planes at z=+/-dz
-//            - Inner and outer lateral surfaces. These represent the surfaces
-//              described by the revolution of 2 hyperbolas about the Z axis:
-//               r^2 - (t*z)^2 = a^2
-//
-//            r = distance between hyperbola and Z axis at coordinate z
-//            t = tangent of the stereo angle (angle made by hyperbola
-//                asimptotic lines and Z axis). t=0 means cylindrical surface.
-//            a = distance between hyperbola and Z axis at z=0
-//
-//          The inner hyperbolic surface is described by:
-//              r^2 - (tin*z)^2 = rin^2
-//           - absence of the inner surface (filled hyperboloid can be forced
-//             by rin=0 and sin=0
-//          The outer hyperbolic surface is described by:
-//              r^2 - (tout*z)^2 = rout^2
-//  TGeoHype parameters: dz[cm], rin[cm], sin[deg], rout[cm], sout[deg].
-//    MANDATORY conditions:
-//           - rin < rout
-//           - rout > 0
-//           - rin^2 + (tin*dz)^2 > rout^2 + (tout*dz)^2
-//
-///////////////////////////////////////////////////////////////////////////////
-
 
 class TGeoHype : public TGeoTube
 {

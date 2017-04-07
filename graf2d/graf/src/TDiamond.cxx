@@ -19,53 +19,54 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 
-
 ClassImp(TDiamond)
 
-//______________________________________________________________________________
-//
-// A diamond is defined by :
-//   - Its central left coordinates x1,y1
-//   - Its top central coordinates x2,y2
-//
-// A diamond has line attributes (see TAttLine)
-//   and fill area attributes (see TAttFill).
-//
-// Like for the class TPaveText, a TDiamond may have one or more line(s)
-// of text inside.
-//Begin_Html
-/*
-<img src="gif/diamond.gif">
-*/
-//End_Html
-//
+/** \class TDiamond
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
+Draw a Diamond.
+
+A diamond is defined by:
+
+- Its central left coordinates x1,y1
+- Its top central coordinates x2,y2
+
+A diamond has line attributes (see TAttLine) and fill area attributes (see TAttFill).
+
+Like for the class TPaveText, a TDiamond may have one or more line(s) of text inside.
+
+Begin_Macro(source)
+../../../tutorials/graphics/diamond.C
+End_Macro
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Diamond default constructor.
+
 TDiamond::TDiamond(): TPaveText()
 {
-   // Diamond default constructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Diamond standard constructor.
+
 TDiamond::TDiamond(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
      :TPaveText(x1,y1,x2,y2)
 {
-   // Diamond standard constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Diamond destructor.
+
 TDiamond::~TDiamond()
 {
-   // Diamond destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
 {
-   // Copy constructor.
-
    TBufferFile b(TBuffer::kWrite);
    TDiamond *p = (TDiamond*)(&diamond);
    p->Streamer(b);
@@ -74,51 +75,40 @@ TDiamond::TDiamond(const TDiamond &diamond) : TPaveText()
    Streamer(b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a diamond.
+///
+///  Compute the closest distance of approach from point px,py to the
+///  edges of this diamond.
+///  The distance is computed in pixels units.
+
 Int_t TDiamond::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a diamond.
-   //
-   //  Compute the closest distance of approach from point px,py to the
-   //  edges of this diamond.
-   //  The distance is computed in pixels units.
-
    return TPaveText::DistancetoPrimitive(px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this diamond with its current attributes.
+
 void TDiamond::Draw(Option_t *option)
 {
-   // Draw this diamond with its current attributes.
-
    AppendPad(option);
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+/// This member function is called when a Diamond object is clicked.
+///
+/// If the mouse is clicked inside the diamond, the diamond is moved.
+///
+/// If the mouse is clicked on the 4 tops (pL,pR,pTop,pBot), the diamond is
+/// rescaled.
+
 void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function is called when a Diamond object is clicked.
-   //
-   //  If the mouse is clicked inside the diamond, the diamond is moved.
-   //
-   //  If the mouse is clicked on the 4 tops (pL,pR,pTop,pBot), the diamond is rscaled.
-   //
-   //
-   //                           pTop
-   //                        +---------+
-   //                        |   / \   |
-   //                        |  /   \  |
-   //                        | /     \ |
-   //                      pL|/pinside\|pR
-   //                        |\       /|
-   //                        | \     / |
-   //                        |  \   /  |
-   //                        |   \ /   |
-   //                        +---------+
-   //                            pBot
+   if (!gPad) return;
 
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
@@ -384,11 +374,11 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this diamond with its current attributes.
+
 void TDiamond::Paint(Option_t *)
 {
-   // Paint this diamond with its current attributes.
-
    Double_t x[7],y[7],depx,depy;
    Double_t x1 = fX1;
    Double_t y1 = fY1;
@@ -443,12 +433,13 @@ void TDiamond::Paint(Option_t *)
    PaintPrimitives(kDiamond);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out.
+
 void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out.
-
-   if (gROOT->ClassSaved(TDiamond::Class())) {
+   Bool_t saved = gROOT->ClassSaved(TDiamond::Class());
+   if (saved) {
       out<<"   ";
    } else {
       out<<"   TDiamond *";
@@ -459,6 +450,6 @@ void TDiamond::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveLineAttributes(out,"diamond",1,1,1);
    SaveTextAttributes(out,"diamond",11,0,1,62,0.05);
 
-   SaveLines(out,"diamond");
+   SaveLines(out,"diamond",saved);
    out<<"   diamond->Draw();"<<std::endl;
 }

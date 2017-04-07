@@ -12,26 +12,10 @@
 #ifndef ROOT_TGraphPolargram
 #define ROOT_TGraphPolargram
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGraphPolargramgram                                                  //
-//                                                                      //
-// Creates the polar coordinate system                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGraphPolargram: public TNamed, public TAttText, public TAttLine {
 
@@ -40,29 +24,29 @@ private:
    Bool_t   fDegree;
    Bool_t   fGrad;
 
-   Color_t  fPolarLabelColor;  //Set color of the angular labels
-   Color_t  fRadialLabelColor; //Set color of the radial labels
+   Color_t  fPolarLabelColor;  ///< Set color of the angular labels
+   Color_t  fRadialLabelColor; ///< Set color of the radial labels
 
-   Double_t fAxisAngle;        //Set angle of the radial axis
-   Double_t fPolarOffset;      //Offset for Polar labels
-   Double_t fPolarTextSize;    //Set Polar text size
-   Double_t fRadialOffset;     //Offset for radial labels
+   Double_t fAxisAngle;        ///< Set angle of the radial axis
+   Double_t fPolarOffset;      ///< Offset for Polar labels
+   Double_t fPolarTextSize;    ///< Set Polar text size
+   Double_t fRadialOffset;     ///< Offset for radial labels
    Double_t fRadialTextSize;
-   Double_t fRwrmin;           //Minimal radial value (real world)
-   Double_t fRwrmax;           //Maximal radial value (real world)
-   Double_t fRwtmin;           //Minimal angular value (real world)
-   Double_t fRwtmax;           //Minimal angular value (real world)
-   Double_t fTickpolarSize;    //Set size of Tickmarks
+   Double_t fRwrmin;           ///< Minimal radial value (real world)
+   Double_t fRwrmax;           ///< Maximal radial value (real world)
+   Double_t fRwtmin;           ///< Minimal angular value (real world)
+   Double_t fRwtmax;           ///< Minimal angular value (real world)
+   Double_t fTickpolarSize;    ///< Set size of Tickmarks
 
-   Font_t   fPolarLabelFont;   //Set font of angular labels
-   Font_t   fRadialLabelFont;  //Set font of radial labels
+   Font_t   fPolarLabelFont;   ///< Set font of angular labels
+   Font_t   fRadialLabelFont;  ///< Set font of radial labels
 
-   Int_t    fCutRadial;        //if fCutRadial = 0, circles are cut by radial axis
-                               //if fCutRadial = 1, circles are not cut
-   Int_t    fNdivRad;          //Number of radial divisions
-   Int_t    fNdivPol;          //Number of polar divisions
+   Int_t    fCutRadial;        ///< if fCutRadial = 0, circles are cut by radial axis
+                               ///< if fCutRadial = 1, circles are not cut
+   Int_t    fNdivRad;          ///< Number of radial divisions
+   Int_t    fNdivPol;          ///< Number of polar divisions
 
-   TString* fPolarLabels;      //![fNdivPol] Specified polar labels
+   TString* fPolarLabels;      ///<! [fNdivPol] Specified polar labels
 
    void Paint(Option_t* options="");
    void PaintRadialDivisions(Bool_t drawaxis);

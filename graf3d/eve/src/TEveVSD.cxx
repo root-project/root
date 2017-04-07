@@ -12,18 +12,17 @@
 #include "TEveVSD.h"
 #include "TFile.h"
 
-//==============================================================================
-// TEveVSD
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Visualization Summary Data - a collection of trees holding standard
-// event data in experiment independent format.
+/** \class TEveVSD
+\ingroup TEve
+Visualization Summary Data - a collection of trees holding standard
+event data in experiment independent format.
+*/
 
 ClassImp(TEveVSD);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveVSD::TEveVSD(const char* , const char*) :
    TObject(),
 
@@ -50,32 +49,28 @@ TEveVSD::TEveVSD(const char* , const char*) :
    fCC(), fpCC(&fCC),
    fGI(), fpGI(&fGI)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveVSD::~TEveVSD()
 {
-   // Destructor.
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set directory in which the trees are (or will be) created.
 
-//______________________________________________________________________________
 void TEveVSD::SetDirectory(TDirectory* dir)
 {
-   // Set directory in which the trees are (or will be) created.
-
    fDirectory = dir;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Create internal trees.
 
-//______________________________________________________________________________
 void TEveVSD::CreateTrees()
 {
-   // Create internal trees.
-
    fDirectory->cd();
    fTreeK  = new TTree("Kinematics", "Simulated tracks.");
    fTreeH  = new TTree("Hits",       "Combined detector hits.");
@@ -87,11 +82,11 @@ void TEveVSD::CreateTrees()
    fTreeGI = new TTree("TEveMCRecCrossRef", "Objects prepared for cross query.");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete internal trees.
+
 void TEveVSD::DeleteTrees()
 {
-   // Delete interal trees.
-
    delete fTreeK;  fTreeK  = 0;
    delete fTreeH;  fTreeH  = 0;
    delete fTreeC;  fTreeC  = 0;
@@ -101,11 +96,11 @@ void TEveVSD::DeleteTrees()
    delete fTreeGI; fTreeGI = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create internal VSD branches.
+
 void TEveVSD::CreateBranches()
 {
-   // Create internal VSD branches.
-
    if (fTreeK)  fTreeK ->Branch("K",  "TEveMCTrack",  &fpK);
    if (fTreeH)  fTreeH ->Branch("H",  "TEveHit",      &fpH);
    if (fTreeC)  fTreeC ->Branch("C",  "TEveCluster",  &fpC);
@@ -121,11 +116,11 @@ void TEveVSD::CreateBranches()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set branche addresses of internal trees.
+
 void TEveVSD::SetBranchAddresses()
 {
-   // Set branche addresses of internal trees.
-
    if (fTreeK)  fTreeK ->SetBranchAddress("K",  &fpK);
    if (fTreeH)  fTreeH ->SetBranchAddress("H",  &fpH);
    if (fTreeC)  fTreeC ->SetBranchAddress("C",  &fpC);
@@ -141,19 +136,18 @@ void TEveVSD::SetBranchAddresses()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Does nothing here ... reimplemented in sub-classes.
+
 void TEveVSD::WriteTrees()
 {
-   // Does nothing here ... reimplemented in sub-classes.
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Load internal trees from directory.
 
-//______________________________________________________________________________
 void TEveVSD::LoadTrees()
 {
-   // Load internal trees from directory.
-
    static const TEveException eH("TEveVSD::LoadTrees ");
 
    if (fDirectory == 0)
@@ -203,14 +197,12 @@ void TEveVSD::LoadTrees()
 
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Disable TObject streamers for those VSD structs that inherit from
+/// TObject directly.
 
-//______________________________________________________________________________
 void TEveVSD::DisableTObjectStreamersForVSDStruct()
 {
-   // Disble TObject streamers for those VSD structs that inherit from
-   // TObject directly.
-
    // TEveVector is not TObject
 
    // TEveMCTrack derives from TParticle

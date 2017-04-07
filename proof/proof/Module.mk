@@ -38,9 +38,18 @@ PROOFLIB     := $(LPATH)/libProof.$(SOEXT)
 PROOFMAP     := $(PROOFLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFH))
+PROOFH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PROOFH))
+ALLHDRS     += $(PROOFH_REL)
 ALLLIBS     += $(PROOFLIB)
 ALLMAPS     += $(PROOFMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PROOFH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Proof_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PROOFLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PROOFDEP)

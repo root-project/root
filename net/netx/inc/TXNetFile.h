@@ -44,15 +44,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNetFile
 #include "TNetFile.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
 class TFileStager;
 class TSocket;

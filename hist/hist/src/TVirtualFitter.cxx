@@ -10,24 +10,48 @@
  *************************************************************************/
 
 
-//______________________________________________________________________________
-//
-//     Abstract Base Class for Fitting
+/** \class TVirtualFitter
+    \ingroup Hist
+  Abstract Base Class for Fitting
+*/
 
 #include "TROOT.h"
 #include "TVirtualFitter.h"
 #include "TPluginManager.h"
 #include "TEnv.h"
-#include "TInterpreter.h"
 #include "Math/MinimizerOptions.h"
+#include "ThreadLocalStorage.h"
 
 
-TVirtualFitter *TVirtualFitter::fgFitter    = 0;
-Int_t           TVirtualFitter::fgMaxpar    = 0;
+// Implement a thread local static member as a replacement
+// for TVirtualFitter::fgFitter
+namespace {
+   struct FitterGlobals {
+      FitterGlobals() : fFitter(nullptr),fMaxPar(0) {}
+
+      TVirtualFitter *fFitter;
+      Int_t           fMaxPar;
+      TString         fDefault;
+   };
+   static FitterGlobals &GetGlobals() {
+      TTHREAD_TLS_DECL(FitterGlobals,globals);
+      return globals;
+   }
+   static TVirtualFitter *&GetGlobalFitter() {
+      return GetGlobals().fFitter;
+   }
+   static Int_t &GetGlobalMaxPar() {
+      return GetGlobals().fMaxPar;
+   }
+   static TString &GetGlobalDefault() {
+      return GetGlobals().fDefault;
+   }
+}
+//Int_t           TVirtualFitter::fgMaxpar    = 0;
 // Int_t           TVirtualFitter::fgMaxiter   = 5000;
 // Double_t        TVirtualFitter::fgPrecision = 1e-6;
 // Double_t        TVirtualFitter::fgErrorDef  = 1;
-TString         TVirtualFitter::fgDefault   = "";
+//TString         TVirtualFitter::fgDefault   = "";
 
 ClassImp(TVirtualFitter)
 
@@ -42,7 +66,9 @@ namespace {
 }
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TVirtualFitter::TVirtualFitter() :
    fXfirst(0),
    fXlast(0),
@@ -59,10 +85,11 @@ TVirtualFitter::TVirtualFitter() :
    fMethodCall(0),
    fFCN(0)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
   TNamed(tvf),
   fOption(tvf.fOption),
@@ -81,13 +108,13 @@ TVirtualFitter::TVirtualFitter(const TVirtualFitter& tvf) :
   fMethodCall(tvf.fMethodCall),
   fFCN(tvf.fFCN)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
 {
-   //assignment operator
    if(this!=&tvf) {
       TNamed::operator=(tvf);
       fOption=tvf.fOption;
@@ -109,166 +136,150 @@ TVirtualFitter& TVirtualFitter::operator=(const TVirtualFitter& tvf)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup virtual fitter.
+
 TVirtualFitter::~TVirtualFitter()
 {
-   // Cleanup virtual fitter.
-
    delete fMethodCall;
    delete [] fCache;
-   if ( fgFitter == this ) {
-      fgFitter    = 0;
-      fgMaxpar    = 0;
+   if ( GetGlobalFitter() == this ) {
+      GetGlobalFitter()    = 0;
+      GetGlobalMaxPar()    = 0;
    }
    fMethodCall = 0;
    fFCN        = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to the current fitter.
+/// If the fitter does not exist, the default TFitter is created.
+/// Don't delete the returned fitter object, it will be re-used.
+
 TVirtualFitter *TVirtualFitter::Fitter(TObject *obj, Int_t maxpar)
 {
-   // Static function returning a pointer to the current fitter.
-   // If the fitter does not exist, the default TFitter is created.
-   // Don't delete the returned fitter object, it will be re-used.
-
-   if (fgFitter && maxpar > fgMaxpar) {
-      delete fgFitter;
-      fgFitter = 0;
+   if (GetGlobalFitter() && maxpar > GetGlobalMaxPar()) {
+      delete GetGlobalFitter();
+      GetGlobalFitter() = 0;
    }
 
-   if (!fgFitter) {
+   if (!GetGlobalFitter()) {
       TPluginHandler *h;
-      if (fgDefault.Length() == 0) fgDefault = gEnv->GetValue("Root.Fitter","Minuit");
-      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",fgDefault))) {
+      if (GetGlobalDefault().Length() == 0) GetGlobalDefault() = gEnv->GetValue("Root.Fitter","Minuit");
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFitter",GetGlobalDefault()))) {
          if (h->LoadPlugin() == -1)
             return 0;
-         fgFitter = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
-         fgMaxpar = maxpar;
+         GetGlobalFitter() = (TVirtualFitter*) h->ExecPlugin(1, maxpar);
+         GetGlobalMaxPar() = maxpar;
       }
    }
 
-   if (fgFitter) fgFitter->SetObjectFit(obj);
-   return fgFitter;
+   if (GetGlobalFitter()) GetGlobalFitter()->SetObjectFit(obj);
+   return GetGlobalFitter();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return confidence intervals in array x of dimension ndim
+///implemented in TFitter and TLinearFitter
+
 void  TVirtualFitter::GetConfidenceIntervals(Int_t /*n*/, Int_t /*ndim*/, const Double_t * /*x*/, Double_t * /*ci*/, Double_t /*cl*/)
 {
-   //return confidence intervals in array x of dimension ndim
-   //implemented in TFitter and TLinearFitter
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return confidence intervals in TObject obj
+///implemented in TFitter and TLinearFitter
+
 void  TVirtualFitter::GetConfidenceIntervals(TObject * /*obj*/, Double_t /*cl*/)
 {
-   //return confidence intervals in TObject obj
-   //implemented in TFitter and TLinearFitter
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: return the name of the default fitter
+
 const char *TVirtualFitter::GetDefaultFitter()
 {
-   // static: return the name of the default fitter
-
-   //return fgDefault.Data();
+   //return GetGlobalDefault().Data();
    return ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: return the current Fitter
+
 TVirtualFitter *TVirtualFitter::GetFitter()
 {
-   // static: return the current Fitter
-   return fgFitter;
+   return GetGlobalFitter();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: Return the maximum number of iterations
+/// actually max number of function calls
+
 Int_t TVirtualFitter::GetMaxIterations()
 {
-   // static: Return the maximum number of iterations
-   // actually max number of function calls
-
    //return fgMaxiter;
    return ROOT::Math::MinimizerOptions::DefaultMaxFunctionCalls();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: Return the Error Definition
+
 Double_t TVirtualFitter::GetErrorDef()
 {
-   // static: Return the Error Definition
-
 //   return fgErrorDef;
    return ROOT::Math::MinimizerOptions::DefaultErrorDef();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: Return the fit relative precision
+
 Double_t TVirtualFitter::GetPrecision()
 {
-   // static: Return the fit relative precision
-
    //return fgPrecision;
    return ROOT::Math::MinimizerOptions::DefaultTolerance();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: set name of default fitter
+
 void TVirtualFitter::SetDefaultFitter(const char *name)
 {
-   // static: set name of default fitter
-
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(name,"");
-   if (fgDefault == name) return;
-   delete fgFitter;
-   fgFitter = 0;
-   fgDefault = name;
+   if (GetGlobalDefault() == name) return;
+   delete GetGlobalFitter();
+   GetGlobalFitter() = 0;
+   GetGlobalDefault() = name;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set an alternative fitter
+
 void TVirtualFitter::SetFitter(TVirtualFitter *fitter, Int_t maxpar)
 {
-   // Static function to set an alternative fitter
-
-   fgFitter = fitter;
-   fgMaxpar = maxpar;
+   GetGlobalFitter() = fitter;
+   GetGlobalMaxPar() = maxpar;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To set the address of the minimization objective function
+/// called by the native compiler (see function below when called by CINT)
+
 void TVirtualFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t))
 {
-   // To set the address of the minimization objective function
-   // called by the native compiler (see function below when called by CINT)
-
    fFCN = fcn;
 }
 
-//______________________________________________________________________________
-void InteractiveFCN(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag)
-{
-   // Static function called when SetFCN is called in interactive mode
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the cache array
+/// npoints is the number of points to be stored (or already stored) in the cache
+/// psize is the number of elements per point
+///
+/// if (npoints*psize > fCacheSize) the existing cache is deleted
+/// and a new array is created.
+/// The function returns a pointer to the cache
 
-   TMethodCall *m = TVirtualFitter::GetFitter()->GetMethodCall();
-   if (!m) return;
-
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
-   m->SetParamPtrs(args);
-   Double_t result;
-   m->Execute(result);
-}
-
-//______________________________________________________________________________
 Double_t *TVirtualFitter::SetCache(Int_t npoints, Int_t psize)
 {
-   // Initialize the cache array
-   // npoints is the number of points to be stored (or already stored) in the cache
-   // psize is the number of elements per point
-   //
-   // if (npoints*psize > fCacheSize) the existing cache is deleted
-   // and a new array is created.
-   // The function returns a pointer to the cache
-
    if (npoints*psize > fCacheSize) {
       delete [] fCache;
       fCacheSize = npoints*psize;
@@ -279,56 +290,38 @@ Double_t *TVirtualFitter::SetCache(Int_t npoints, Int_t psize)
    return fCache;
 }
 
-//______________________________________________________________________________
-void TVirtualFitter::SetFCN(void *fcn)
-{
-   //  To set the address of the minimization objective function
-   //
-   //     this function is called by CINT instead of the function above
+////////////////////////////////////////////////////////////////////////////////
+/// static: Set the maximum number of function calls for the minimization algorithm
+/// For example for MIGRAD this is the maxcalls value passed as first argument
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html )
 
-   if (!fcn) return;
-
-   const char *funcname = gCling->Getp2f2funcname(fcn);
-   if (funcname) {
-      delete fMethodCall;
-      fMethodCall = new TMethodCall();
-      fMethodCall->InitWithPrototype(funcname,"Int_t&,Double_t*,Double_t&,Double_t*,Int_t");
-   }
-   fFCN = InteractiveFCN;
-}
-
-//______________________________________________________________________________
 void TVirtualFitter::SetMaxIterations(Int_t niter)
 {
-   // static: Set the maximum number of function calls for the minimization algorithm
-   // For example for MIGRAD this is the maxcalls value passed as first argument
-   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
-
    ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls(niter);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: Set the Error Definition (default=1)
+/// For Minuit this is the value passed with the "SET ERR" command
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html)
+
 void TVirtualFitter::SetErrorDef(Double_t errdef)
 {
-   // static: Set the Error Definition (default=1)
-   // For Minuit this is the value passed with the "SET ERR" command
-   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html)
-
 //    fgErrorDef = errdef;
    ROOT::Math::MinimizerOptions::SetDefaultErrorDef(errdef);
-   if (!fgFitter) return;
+   if (!GetGlobalFitter()) return;
    Double_t arglist[1];
    arglist[0] = errdef;
-   fgFitter->ExecuteCommand("SET ERRORDEF", arglist, 1);
+   GetGlobalFitter()->ExecuteCommand("SET ERRORDEF", arglist, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// static: Set the tolerance used in the minimization algorithm
+/// For example for MIGRAD this is tolerance value passed as second argument
+/// (see https://cern-tex.web.cern.ch/cern-tex/minuit/node18.html )
+
 void TVirtualFitter::SetPrecision(Double_t prec)
 {
-   // static: Set the tolerance used in the minimization algorithm
-   // For example for MIGRAD this is tolerance value passed as second argument
-   // (see http://wwwasdoc.web.cern.ch/wwwasdoc/minuit/node18.html )
-
    //fgPrecision = prec;
    ROOT::Math::MinimizerOptions::SetDefaultTolerance(prec);
 }

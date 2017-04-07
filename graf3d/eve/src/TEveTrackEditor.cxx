@@ -29,22 +29,22 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveTrackEditor
-//
-// Editor for TEveTrack class.
+/** \class TEveTrackEditor
+\ingroup TEve
+Editor for TEveTrack class.
+*/
 
 ClassImp(TEveTrackEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0),
    fRSEditor(0)
 {
-   // Constructor.
-
    MakeTitle("TEveTrack");
 
    TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -56,31 +56,32 @@ TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f, new TGLayoutHints(kLHintsTop, 0,0,2,1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveTrackEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveTrack*>(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for EditPropagator.
+
 void TEveTrackEditor::DoEditPropagator()
 {
-   // Slot for EditPropagator.
-
    fGedEditor->SetModel(fGedEditor->GetPad(), fM->GetPropagator(), kButton1Down);
 }
 
-
-//______________________________________________________________________________
-// TEveTrackListEditor
-//
-// Editor for TEveTrackList class.
+/** \class TEveTrackListEditor
+\ingroup TEve
+Editor for TEveTrackList class.
+*/
 
 ClassImp(TEveTrackListEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
                                          Int_t width, Int_t height,
                                          UInt_t options, Pixel_t back) :
@@ -91,14 +92,12 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    fPRange     (0),
    fRSSubEditor(0)
 {
-   // Constructor.
-
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
       fRnrPoints = new TGCheckButton(f, "Draw Marker");
       f->AddFrame(fRnrPoints, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fRnrPoints->Connect("Toggled(Bool_t)"," TEveTrackListEditor", this, "DoRnrPoints()");
+      fRnrPoints->Connect("Toggled(Bool_t)", "TEveTrackListEditor", this, "DoRnrPoints()");
 
       fRnrLine  = new TGCheckButton(f, "Draw Line");
       f->AddFrame(fRnrLine, new TGLayoutHints(kLHintsLeft, 1,2,0,0));
@@ -138,13 +137,11 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
    CreateRefsTab();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Create tab for control of path-mark display.
 
-//______________________________________________________________________________
 void TEveTrackListEditor::CreateRefsTab()
 {
-   // Create tab for control of path-mark display.
-
    fRefs = CreateEditorTabSubFrame("Refs");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fRefs, 145, 10,
@@ -164,13 +161,11 @@ void TEveTrackListEditor::CreateRefsTab()
    fRSSubEditor->fFVAtt->SetGedEditor((TGedEditor*)gEve->GetEditor());
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveTrackListEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fTC = dynamic_cast<TEveTrackList*>(obj);
    fRnrLine  ->SetState(fTC->GetRnrLine()   ? kButtonDown : kButtonUp);
    fRnrPoints->SetState(fTC->GetRnrPoints() ? kButtonDown : kButtonUp);
@@ -186,42 +181,38 @@ void TEveTrackListEditor::SetModel(TObject* obj)
    fRSSubEditor->SetModel(fTC->GetPropagator());
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLine.
 
-//______________________________________________________________________________
 void TEveTrackListEditor::DoRnrLine()
 {
-   // Slot for RnrLine.
-
    fTC->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPoints.
+
 void TEveTrackListEditor::DoRnrPoints()
 {
-   // Slot for RnrPoints.
-
    fTC->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PtRange.
 
-//______________________________________________________________________________
 void TEveTrackListEditor::DoPtRange()
 {
-   // Slot for PtRange.
-
    fTC->SelectByPt(fPtRange->GetMin(), fPtRange->GetMax());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for PRange.
+
 void TEveTrackListEditor::DoPRange()
 {
-   // Slot for PRange.
-
    fTC->SelectByP(fPRange->GetMin(), fPRange->GetMax());
    Update();
 }

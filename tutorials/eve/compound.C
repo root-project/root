@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstates usage of EVE compound objects - class TEveCompound.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of EVE compound objects - class TEveCompound.
+///
+/// \image html eve_compound.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TEveLine* random_line(TRandom& rnd, Int_t n, Float_t delta)
 {

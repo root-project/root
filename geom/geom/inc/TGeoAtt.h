@@ -12,15 +12,7 @@
 #ifndef ROOT_TGeoAtt
 #define ROOT_TGeoAtt
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoAtt - visualization and tracking attributes for volumes and nodes  //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoAtt
 {

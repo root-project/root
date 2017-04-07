@@ -3,7 +3,7 @@
 You know how other books go on and on about programming fundamentals and
 finally work up to building a complete, working program ? Let's skip all
 that. In this guide, we will describe macros executed by the ROOT C++
-interpreter CINT.
+interpreter Cling.
 
 It is relatively easy to compile a macro, either as a pre-compiled
 library to load into ROOT, or as a stand-alone application, by adding
@@ -31,7 +31,14 @@ The macro is executed by typing
  > root MacroName.C
 ```
 
-at the system prompt, or it can be loaded into a ROOT session and then
+at the system prompt, or executed using `.x`
+
+``` {.cpp}
+ > root
+ root [0] .x MacroName.C
+```
+
+at the ROOT prompt. or it can be loaded into a ROOT session and then
 be executed by typing
 
 ``` {.cpp}
@@ -49,7 +56,7 @@ gStyle->SetOptStat(111111); // draw statistics on plots,
                             // (0) for no output
 gStyle->SetOptFit(1111);    // draw fit results on plot,
                             // (0) for no ouput
-gStyle->SetPalette(53);     // set color map
+gStyle->SetPalette(57);     // set color map
 gStyle->SetOptTitle(0);     // suppress title box
    ...
 ```
@@ -59,15 +66,14 @@ subdivisions and format suitable to your needs, see documentation of
 class `TCanvas`:
 
 ``` {.cpp}
-// create a canvas, specify position and size in pixels
-TCanvas c1("c1","<Title>",0,0,400,300);
+TCanvas c1("c1","<Title>",0,0,400,300); // create a canvas, specify position and size in pixels
 c1.Divide(2,2); //set subdivisions, called pads
 c1.cd(1); //change to pad 1 of canvas c1
 ```
 
 These parts of a well-written macro are pretty standard, and you should
 remember to include pieces of code like in the examples above to make
-sure your output always comes out as you had intended.
+sure your plots always look as you had intended.
 
 Below, in section [Interpretation and Compilation](#interpretation-and-compilation), some more code fragments
 will be shown, allowing you to use the system compiler to compile macros for
@@ -95,76 +101,7 @@ statements for header files, they will only become important at the end
 in section [Interpretation and Compilation](#interpretation-and-compilation).
 
 ``` {.cpp .numberLines}
- // Builds a graph with errors, displays it and saves it
- // as image. First, include some header files (within,
- // CINT these will be ignored).
-
- #include "TCanvas.h"
- #include "TROOT.h"
- #include "TGraphErrors.h"
- #include "TF1.h"
- #include "TLegend.h"
- #include "TArrow.h"
- #include "TLatex.h"
-
- void macro1(){
-     // The values and the errors on the Y axis
-    const int n_points=10;
-    double x_vals[n_points]=
-            {1,2,3,4,5,6,7,8,9,10};
-    double y_vals[n_points]=
-            {6,12,14,20,22,24,35,45,44,53};
-    double y_errs[n_points]=
-            {5,5,4.7,4.5,4.2,5.1,2.9,4.1,4.8,5.43};
-
-    // Instance of the graph
-    TGraphErrors graph(n_points,x_vals,y_vals,NULL,y_errs);
-    graph.SetTitle("Measurement XYZ;lenght [cm];Arb.Units");
-
-    // Make the plot looks better
-    graph.SetMarkerStyle(kOpenCircle);
-    graph.SetMarkerColor(kBlue);
-    graph.SetLineColor(kBlue);
-
-    // The canvas on which we'll draw the graph
-    TCanvas* mycanvas = new TCanvas();
-
-    // Draw the graph !
-    graph.DrawClone("APE");
-
-    // Define a linear function
-    TF1 f("Linear law","[0]+x*[1]",.5,10.5);
-    // Let's make the function line nicer
-    f.SetLineColor(kRed); f.SetLineStyle(2);
-    // Fit it to the graph and draw it
-    graph.Fit(&f);
-    f.DrawClone("Same");
-
-    // Build and Draw a legend
-    TLegend leg(.1,.7,.3,.9,"Lab. Lesson 1");
-    leg.SetFillColor(0);
-    graph.SetFillColor(0);
-    leg.AddEntry(&graph,"Exp. Points");
-    leg.AddEntry(&f,"Th. Law");
-    leg.DrawClone("Same");
-
-    // Draw an arrow on the canvas
-    TArrow arrow(8,8,6.2,23,0.02,"|>");
-    arrow.SetLineWidth(2);
-    arrow.DrawClone();
-
-    // Add some text to the plot
-    TLatex text(8.2,7.5,"#splitline{Maximum}{Deviation}");
-    text.DrawClone();
-
-    mycanvas->Print("graph_with_law.pdf");
- }
-
- #ifndef __CINT__
- int main(){
-     macro1();
-     }
- #endif
+@ROOT_INCLUDE_FILE macros/macro1.C
 ```
 
 Let's comment it in detail:
@@ -175,15 +112,12 @@ Let's comment it in detail:
 
 -   Line *24-25*: instance of the `TGraphErrors` class. The constructor
     takes the number of points and the pointers to the arrays of
-    \$x\$\~values, \$y\$\~values, \$x\$\~errors (in this case none,
-    represented by the NULL pointer) and \$y\$\~errors. The second line
+    x values, y values, x errors (in this case none,
+    represented by the NULL pointer) and y errors. The second line
     defines in one shot the title of the graph and the titles of the two
     axes, separated by a ";".
 
--   Line *28-30*: the first line refers to the style of the plot, set as
-    *Plain*. This is done through a manipulation of the global variable
-    `gSystem` (ROOT global variables begin always with "g"). The
-    following three lines are rather intuitive right ? To understand
+-   Line *28-30*:  These three lines are rather intuitive right ? To understand
     better the enumerators for colours and styles see the reference for
     the `TColor` and `TMarker` classes.
 
@@ -198,9 +132,9 @@ Let's comment it in detail:
 
     -   *A* imposes the drawing of the Axes.
 
-    -   *P* imposes the drawing of the graphs markers.
+    -   *P* imposes the drawing of the graph's markers.
 
-    -   *E* imposes the drawing of the graphs error bars.
+    -   *E* imposes the drawing of the graph's error bars.
 
 -   Line *39*: define a mathematical function. There are several ways to
     accomplish this, but in this case the constructor accepts the name
@@ -216,7 +150,8 @@ Let's comment it in detail:
 
 -   Line *44*: again draws the clone of the object on the canvas. The
     "Same" option avoids the cancellation of the already drawn objects,
-    in our case, the graph.
+    in our case, the graph. The function *f* will be drawn using the *same* axis
+    system defined by the previously drawn graph.
 
 -   Line *47-52*: completes the plot with a legend, represented by a
     `TLegend` instance. The constructor takes as parameters the lower
@@ -256,21 +191,21 @@ reader.\label{f31}][f31]
 We have seen that to specify a colour, some identifiers like kWhite,
 kRed or kBlue can be specified for markers, lines, arrows etc. The
 complete summary of colours is represented by the ROOT "[colour
-wheel](http://root.cern.ch/root/html534/TColor.html#C02)". To know more
+wheel](http://root.cern.ch/root/htmldoc/TColor.html#C02)". To know more
 about the full story, refer to the online documentation of `TColor`.
 
-ROOT provides an analogue of the colour wheel for the [graphics
-markers](http://root.cern.ch/root/html534/TAttMarker.html#M2). Select
+ROOT provides several [graphics
+markers](http://root.cern.ch/root/htmldoc/TAttMarker.html#M2) types. Select
 the most suited symbols for your plot among dots, triangles, crosses or
 stars. An alternative set of names for the markers is available.
 
 ### Arrows and Lines
 
-The macro line 56 shows how to define an arrow and draw it. The class
+The macro line *55* shows how to define an arrow and draw it. The class
 representing arrows is `TArrow`, which inherits from `TLine`. The
 constructors of lines and arrows always contain the coordinates of the
 endpoints. Arrows also foresee parameters to [specify
-their](http://root.cern.ch/root/html534/TArrow.html) shapes. Do not
+their](http://root.cern.ch/root/htmldoc/TArrow.html) shapes. Do not
 underestimate the role of lines and arrows in your plots. Since each
 plot should contain a message, it is convenient to stress it with
 additional graphics primitives.
@@ -282,13 +217,13 @@ A possibility to add text in your plot is provided by the `TLatex`
 class. The objects of this class are constructed with the coordinates of
 the bottom-left corner of the text and a string which contains the text
 itself. The real twist is that ordinary
-[Latex mathematical symbols](http://root.cern.ch/root/html534/TLatex.html#L5)
+[Latex mathematical symbols](http://root.cern.ch/root/htmldoc/TLatex.html#L5)
 are automatically interpreted, you just need to replace the "\\" by a "\#".
 
 If
-["\\" is used as control character](http://root.cern.ch/root/html534/TLatex.html#L14)
+["\\" is used as control character](http://root.cern.ch/root/htmldoc/TLatex.html#L14)
 , then the
-[TMathText interface](http://root.cern.ch/root/html534/TMathText.html)
+[TMathText interface](http://root.cern.ch/root/htmldoc/TMathText.html)
 is invoked. It provides the plain TeX syntax and allow to access character's
 set like Russian and Japenese.
 
@@ -304,9 +239,8 @@ answers.
 
 ACLiC will create for you a compiled dynamic library for your macro,
 without any effort from your side, except the insertion of the
-appropriate header files in lines 3--9. In this example, they are
-already included. This does not harm, as they are not loaded by CINT. To
-generate an object libary from the macro code, from inside the
+appropriate header files in lines *5--11*. In this example, they are
+already included. To generate an object library from the macro code, from inside the
 interpreter type (please note the "+"):
 
 ``` {.cpp}
@@ -337,29 +271,22 @@ end of the macro file. This defines the procedure main, the only purpose
 of which is to call your macro:
 
 ``` {.cpp}
-#ifndef __CINT__
 int main() {
   ExampleMacro();
   return 0;
 }
-#endif
 ```
 
-Within ROOT, the variable `__CINT__` is defined, and the code enclosed
-by `#ifndef __CINT__` and `#endif` is not executed; on the contrary,
-when running the system compiler `GCC`, this symbol is not defined, and
-the code is compiled. To create a stand-alone program from a macro
-called `ExampleMacro.C`, simply type
+To create a stand-alone program from a macro called `ExampleMacro.C`, simply type
 
 ``` {.cpp}
- > g++ -o ExampleMacro.exe ExampleMacro.C \
-  `root-config --cflags --libs`
+ > g++ -o ExampleMacro ExampleMacro.C `root-config --cflags --libs`
 ```
 
 and execute it by typing
 
 ``` {.cpp}
-> ./ExampleMacro.exe
+> ./ExampleMacro
 ```
 
 This procedure will, however, not give access to the ROOT graphics, as
@@ -367,13 +294,12 @@ neither control of mouse or keyboard events nor access to the graphics
 windows of ROOT is available. If you want your stand-alone application
 have display graphics output and respond to mouse and keyboard, a
 slightly more complex piece of code can be used. In the example below, a
-macro `ExampleMacro_GUI` is executed by the ROOT class TApplication. As
+macro `ExampleMacro_GUI` is executed by the ROOT class `TApplication`. As
 a additional feature, this code example offers access to parameters
 eventually passed to the program when started from the command line.
 Here is the code fragment:
 
 ``` {.cpp}
-#ifndef __CINT__
 void StandaloneApplication(int argc, char** argv) {
   // eventually, evaluate the application parameters argc, argv
   // ==>> here the ROOT macro is called
@@ -387,18 +313,16 @@ int main(int argc, char** argv) {
    app.Run();
    return 0;
 }
-#endif
 ```
 
 Compile the code with
 
 ``` {.cpp}
- > g++ -o ExampleMacro_GUI.exe \
-  ExampleMacro_GUI `root-config --cflags --libs`
+ > g++ -o ExampleMacro_GUI ExampleMacro_GUI `root-config --cflags --libs`
 ```
 
 and execute the program with
 
 ``` {.cpp}
-> ./ExampleMacro_GUI.exe
+> ./ExampleMacro_GUI
 ```

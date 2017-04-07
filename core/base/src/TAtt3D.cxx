@@ -9,23 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAtt3D                                                               //
-//                                                                      //
-// Use this attribute class when an object should have 3D capabilities. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TAtt3D
+\ingroup Base
+\ingroup GraphicsAtt
+
+Use this attribute class when an object should have 3D capabilities.
+*/
 
 #include "TAtt3D.h"
 
 
 ClassImp(TAtt3D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total size of this 3D object (used by X3D interface).
+
 void TAtt3D::Sizeof3D() const
 {
-   // Set total size of this 3D object (used by X3D interface).
-
    return;
 }

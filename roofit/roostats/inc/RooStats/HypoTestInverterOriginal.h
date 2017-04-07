@@ -13,17 +13,11 @@
 
 
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
-#ifndef  ROOSTATS_HypoTestInverterResult
 #include "RooStats/HypoTestInverterResult.h"
-#endif
 
 class RooRealVar;
 
@@ -40,10 +34,10 @@ namespace RooStats {
 
     // constructor
     HypoTestInverterOriginal( HypoTestCalculator& myhc0,
-		      RooRealVar& scannedVariable, 
+            RooRealVar& scannedVariable,
                       double size = 0.05) ;
 
-     
+
 
     virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
 
@@ -57,7 +51,7 @@ namespace RooStats {
 
     virtual void  SetData(RooAbsData &) { } // not needed
 
-    virtual void SetModel(const ModelConfig &) { } // not needed 
+    virtual void SetModel(const ModelConfig &) { } // not needed
 
     // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
      virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
@@ -67,13 +61,13 @@ namespace RooStats {
     virtual Double_t Size() const {return fSize;}
     // Get the Confidence level for the test
     virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
- 
+
     // destructor
     virtual ~HypoTestInverterOriginal() ;
 
   private:
 
-    void CreateResults(); 
+    void CreateResults();
 
     HypoTestCalculator* fCalculator0;   // pointer to the calculator passed in the constructor
     RooRealVar* fScannedVariable;     // pointer to the constrained variable

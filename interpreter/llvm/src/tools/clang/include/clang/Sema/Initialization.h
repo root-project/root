@@ -284,9 +284,10 @@ public:
 
 
   /// \brief Create the initialization entity for a base class subobject.
-  static InitializedEntity InitializeBase(ASTContext &Context,
-                                          const CXXBaseSpecifier *Base,
-                                          bool IsInheritedVirtualBase);
+  static InitializedEntity
+  InitializeBase(ASTContext &Context, const CXXBaseSpecifier *Base,
+                 bool IsInheritedVirtualBase,
+                 const InitializedEntity *Parent = nullptr);
 
   /// \brief Create the initialization entity for a delegated constructor.
   static InitializedEntity InitializeDelegation(QualType Type) {
@@ -828,6 +829,9 @@ public:
     /// \brief Initializer has a placeholder type which cannot be
     /// resolved by initialization.
     FK_PlaceholderType,
+    /// \brief Trying to take the address of a function that doesn't support
+    /// having its address taken.
+    FK_AddressOfUnaddressableFunction,
     /// \brief List-copy-initialization chose an explicit constructor.
     FK_ExplicitConstructor
   };
@@ -844,6 +848,21 @@ private:
 
   /// \brief The incomplete type that caused a failure.
   QualType FailedIncompleteType;
+
+  /// \brief The fixit that needs to be applied to make this initialization
+  /// succeed.
+  std::string ZeroInitializationFixit;
+  SourceLocation ZeroInitializationFixitLoc;
+
+public:
+  /// \brief Call for initializations are invalid but that would be valid
+  /// zero initialzations if Fixit was applied.
+  void SetZeroInitializationFixit(const std::string& Fixit, SourceLocation L) {
+    ZeroInitializationFixit = Fixit;
+    ZeroInitializationFixitLoc = L;
+  }
+
+private:
   
   /// \brief Prints a follow-up note that highlights the location of
   /// the initialized entity, if it's remote.
@@ -867,14 +886,17 @@ public:
   /// \param TopLevelOfInitList true if we are initializing from an expression
   ///        at the top level inside an initializer list. This disallows
   ///        narrowing conversions in C++11 onwards.
+  /// \param TreatUnavailableAsInvalid true if we want to treat unavailable
+  ///        as invalid.
   InitializationSequence(Sema &S, 
                          const InitializedEntity &Entity,
                          const InitializationKind &Kind,
                          MultiExprArg Args,
-                         bool TopLevelOfInitList = false);
+                         bool TopLevelOfInitList = false,
+                         bool TreatUnavailableAsInvalid = true);
   void InitializeFrom(Sema &S, const InitializedEntity &Entity,
                       const InitializationKind &Kind, MultiExprArg Args,
-                      bool TopLevelOfInitList);
+                      bool TopLevelOfInitList, bool TreatUnavailableAsInvalid);
 
   ~InitializationSequence();
   
@@ -921,7 +943,7 @@ public:
   void setSequenceKind(enum SequenceKind SK) { SequenceKind = SK; }
   
   /// \brief Determine whether the initialization sequence is valid.
-  LLVM_EXPLICIT operator bool() const { return !Failed(); }
+  explicit operator bool() const { return !Failed(); }
 
   /// \brief Determine whether the initialization sequence is invalid.
   bool Failed() const { return SequenceKind == FailedSequence; }
@@ -929,6 +951,9 @@ public:
   typedef SmallVectorImpl<Step>::const_iterator step_iterator;
   step_iterator step_begin() const { return Steps.begin(); }
   step_iterator step_end()   const { return Steps.end(); }
+
+  typedef llvm::iterator_range<step_iterator> step_range;
+  step_range steps() const { return {step_begin(), step_end()}; }
 
   /// \brief Determine whether this initialization is a direct reference 
   /// binding (C++ [dcl.init.ref]).
@@ -1024,8 +1049,8 @@ public:
   /// \param FromInitList The constructor call is syntactically an initializer
   /// list.
   /// \param AsInitList The constructor is called as an init list constructor.
-  void AddConstructorInitializationStep(CXXConstructorDecl *Constructor,
-                                        AccessSpecifier Access,
+  void AddConstructorInitializationStep(DeclAccessPair FoundDecl,
+                                        CXXConstructorDecl *Constructor,
                                         QualType T,
                                         bool HadMultipleCandidates,
                                         bool FromInitList, bool AsInitList);

@@ -50,7 +50,7 @@ public:
 protected:
 
   // Function evaluation and error tracing
-  const char* traceEval() const ;
+  TString traceEval() const ;
   virtual Bool_t traceEvalHook(const char* value) const ;
   virtual TString evaluate() const { return "" ; }
 

@@ -13,34 +13,21 @@
 #ifndef ROOT_TGeoVolume
 #define ROOT_TGeoVolume
 
+#include <mutex>
 
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TGeoMedium
 #include "TGeoMedium.h"
-#endif
 
-#ifndef ROOT_TGeoShape
 #include "TGeoShape.h"
-#endif
 
 // forward declarations
 class TH2F;
@@ -262,7 +249,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoVolumeMulti - class storing a list of volumes that have to         //
-//   be handled togeather at build time                                   //
+//   be handled together at build time                                   //
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -336,7 +323,8 @@ public:
 protected:
    mutable std::vector<ThreadData_t*> fThreadData; //! Thread specific data vector
    mutable Int_t                      fThreadSize; //! Thread vector size
-
+   mutable std::mutex                 fMutex;      //! Mutex for concurrent operations
+   
 public:
    TGeoVolumeAssembly();
    TGeoVolumeAssembly(const char *name);

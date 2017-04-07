@@ -161,11 +161,11 @@ typedef long off_t;
  */
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// rand() implementation using /udev/random or /dev/random, if available
+
 static int aux_rand()
 {
-   // rand() implementation using /udev/random or /dev/random, if available
-
 #ifndef WIN32
    int frnd = open("/dev/urandom", O_RDONLY);
    if (frnd < 0) frnd = open("/dev/random", O_RDONLY);

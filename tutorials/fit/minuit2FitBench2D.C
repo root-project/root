@@ -1,11 +1,12 @@
-// @(#)root/minuit2:$Id$
-// Author: L. Moneta    10/2005
-
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2005 ROOT Foundation,  CERN/PH-SFT                   *
- *                                                                    *
- **********************************************************************/
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 #include "TH1.h"
 #include "TF1.h"

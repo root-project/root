@@ -22,17 +22,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
 
 class TLeafL : public TLeaf {
 
 protected:
-   Long64_t     fMinimum;         //Minimum value if leaf range is specified
-   Long64_t     fMaximum;         //Maximum value if leaf range is specified
-   Long64_t    *fValue;           //!Pointer to data buffer
-   Long64_t   **fPointer;         //!Address of pointer to data buffer
+   Long64_t     fMinimum;         ///<  Minimum value if leaf range is specified
+   Long64_t     fMaximum;         ///<  Maximum value if leaf range is specified
+   Long64_t    *fValue;           ///<! Pointer to data buffer
+   Long64_t   **fPointer;         ///<! Address of pointer to data buffer
 
 public:
    TLeafL();

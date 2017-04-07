@@ -16,11 +16,10 @@
 
 #include "TGLIncludes.h"
 
-//______________________________________________________________________
-// TGLLightSet
-//
-// Encapsulates a set of lights for OpenGL.
-//
+/** \class TGLLightSet
+\ingroup opengl
+Encapsulates a set of lights for OpenGL.
+*/
 
 ClassImp(TGLLightSet)
 
@@ -35,11 +34,11 @@ TGLLightSet::TGLLightSet() :
    // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle light on/off.
+
 void TGLLightSet::ToggleLight(ELight light)
 {
-   // Toggle light on/off.
-
    if (light == kLightSpecular) {
       fUseSpecular = !fUseSpecular;
    } else if (light >= kLightMask) {
@@ -50,11 +49,11 @@ void TGLLightSet::ToggleLight(ELight light)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a light on/off.
+
 void TGLLightSet::SetLight(ELight light, Bool_t on)
 {
-   // Set a light on/off.
-
    if (light == kLightSpecular) {
       fUseSpecular = on;
    } else if (light >= kLightMask) {
@@ -69,14 +68,14 @@ void TGLLightSet::SetLight(ELight light, Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup lights for current given bounding box and camera.
+/// This is called by standard GL viewer.
+/// Expects matrix-mode to be model-view.
+
 void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
                                  const TGLCamera     & camera, Bool_t debug)
 {
-   // Setup lights for current given bounding box and camera.
-   // This is called by standard GL viewer.
-   // Expects matrix-mode to be model-view.
-
    glPushMatrix();
 
    if (!bbox.IsEmpty())
@@ -137,7 +136,7 @@ void TGLLightSet::StdSetupLights(const TGLBoundingBox& bbox,
       glLightfv(GL_LIGHT4, GL_DIFFUSE,  sideLightColor);
    }
 
-   // Set light states everytime - must be defered until now when we know we
+   // Set light states every time - must be deferred until now when we know we
    // are in the correct thread for GL context
    // TODO: Could detect state change and only adjust if a change
    for (UInt_t light = 0; (1<<light) < kLightMask; light++)

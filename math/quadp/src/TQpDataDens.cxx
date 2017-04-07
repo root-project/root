@@ -53,19 +53,21 @@
 
 ClassImp(TQpDataDens)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpDataDens::TQpDataDens(Int_t nx,Int_t my,Int_t mz)
 : TQpDataBase(nx,my,mz)
 {
-// Constructor
-
    fQ.ResizeTo(fNx,fNx);
    fA.ResizeTo(fMy,fNx);
    fC.ResizeTo(fMz,fNx);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
                          TVectorD &xlow_in,TVectorD    &ixlow_in,
                          TVectorD &xupp_in,TVectorD    &ixupp_in,
@@ -74,8 +76,6 @@ TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
                          TVectorD &clow_in,TVectorD    &iclow_in,
                          TVectorD &cupp_in,TVectorD    &icupp_in)
 {
-// Constructor
-
    fG       .ResizeTo(c_in)    ; fG        = c_in;
    fBa      .ResizeTo(bA_in)   ; fBa       = bA_in;
    fXloBound.ResizeTo(xlow_in) ; fXloBound = xlow_in;
@@ -104,75 +104,75 @@ TQpDataDens::TQpDataDens(TVectorD &c_in,   TMatrixDSym &Q_in,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpDataDens::TQpDataDens(const TQpDataDens &another) : TQpDataBase(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fQ*x)
+
 void TQpDataDens::Qmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x )
 {
-// calculate y = beta*y + alpha*(fQ*x)
-
    y *= beta;
    if (fQ.GetNoElements() > 0)
       y += alpha*(fQ*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fA*x)
+
 void TQpDataDens::Amult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fA*x)
-
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(fA*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fC*x)
+
 void TQpDataDens::Cmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fC*x)
-
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(fC*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fA^T*x)
+
 void TQpDataDens::ATransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fA^T*x)
-
    y *= beta;
    if (fA.GetNoElements() > 0)
       y += alpha*(TMatrixD(TMatrixD::kTransposed,fA)*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// calculate y = beta*y + alpha*(fC^T*x)
+
 void TQpDataDens::CTransmult(Double_t beta,TVectorD &y,Double_t alpha,const TVectorD &x)
 {
-// calculate y = beta*y + alpha*(fC^T*x)
-
    y *= beta;
    if (fC.GetNoElements() > 0)
       y += alpha*(TMatrixD(TMatrixD::kTransposed,fC)*x);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the largest component of several vectors in the data class
+
 Double_t TQpDataDens::DataNorm()
 {
-// Return the largest component of several vectors in the data class
-
    Double_t norm = 0.0;
 
    Double_t componentNorm = fG.NormInf();
@@ -213,11 +213,11 @@ Double_t TQpDataDens::DataNorm()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print all class members
+
 void TQpDataDens::Print(Option_t * /*opt*/) const
 {
-// Print all class members
-
    fQ.Print("Q");
    fG.Print("c");
 
@@ -239,52 +239,52 @@ void TQpDataDens::Print(Option_t * /*opt*/) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the Hessian Q into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataDens::PutQIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the Hessian Q into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fQ);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the constraint matrix A into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataDens::PutAIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the constraint matrix A into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fA);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the constraint matrix C into the matrix M at index (row,col) for the fundamental
+/// linear system
+
 void TQpDataDens::PutCIntoAt(TMatrixDBase &m,Int_t row,Int_t col)
 {
-// Insert the constraint matrix C into the matrix M at index (row,col) for the fundamental
-// linear system
-
    m.SetSub(row,col,fC);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return in vector dq the diagonal of matrix fQ (Quadratic part of Objective function)
+
 void TQpDataDens::GetDiagonalOfQ(TVectorD &dq)
 {
-// Return in vector dq the diagonal of matrix fQ (Quadratic part of Objective function)
-
    const Int_t n = TMath::Min(fQ.GetNrows(),fQ.GetNcols());
    dq.ResizeTo(n);
    dq = TMatrixDDiag(fQ);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of the objective function
+
 Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 {
-// Return value of the objective function
-
    TVectorD tmp(fG);
    this->Qmult(1.0,tmp,0.5,vars->fX);
 
@@ -292,11 +292,11 @@ Double_t TQpDataDens::ObjectiveValue(TQpVar *vars)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Choose randomly a QP problem
+
 void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 {
-// Choose randomly a QP problem
-
    Double_t ix = 3074.20374;
 
    TVectorD xdual(fNx);
@@ -330,11 +330,11 @@ void TQpDataDens::DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpDataDens &TQpDataDens::operator=(const TQpDataDens &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TQpDataBase::operator=(source);
       fQ.ResizeTo(source.fQ); fQ = source.fQ;

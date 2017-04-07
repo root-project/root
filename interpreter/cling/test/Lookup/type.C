@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %cling -fno-rtti 2>&1 | FileCheck %s
+// RUN: cat %s | %built_cling -fno-rtti 2>&1 | FileCheck %s
 // Test Interpreter::lookupType()
 //
 #include "cling/Interpreter/Interpreter.h"
@@ -41,11 +41,11 @@ cl_A.getAsString().c_str()
 
 QualType cl_B_in_N = lookup.findType("N::B", LookupHelper::WithDiagnostics);
 cl_B_in_N.getAsString().c_str()
-//CHECK: ({{[^)]+}}) "N::B"
+//CHECK: ({{[^)]+}}) "class N::B"
 
 QualType cl_C_in_M = lookup.findType("N::M::C", LookupHelper::WithDiagnostics);
 cl_C_in_M.getAsString().c_str()
-//CHECK: ({{[^)]+}}) "N::M::C"
+//CHECK: ({{[^)]+}}) "class N::M::C"
 
 QualType builtin_int = lookup.findType("int", LookupHelper::WithDiagnostics);
 builtin_int.getAsString().c_str()

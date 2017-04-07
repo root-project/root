@@ -16,13 +16,9 @@
 #ifndef ROOT_Math_GaussIntegrator
 #define ROOT_Math_GaussIntegrator
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 
 namespace ROOT {
@@ -48,8 +44,10 @@ public:
    /** Destructor */
    virtual ~GaussIntegrator();
 
-   /** Default Constructor. */
-   GaussIntegrator(double absTol = 0, double relTol = 0);
+   /** Default Constructor.
+       If the tolerance are not given, use default values specified in  ROOT::Math::IntegratorOneDimOptions
+    */
+   GaussIntegrator(double absTol = -1, double relTol = -1);
 
 
    /** Static function: set the fgAbsValue flag.
@@ -90,31 +88,28 @@ public:
     Method:
        For any interval [a,b] we define g8(a,b) and g16(a,b) to be the 8-point
        and 16-point Gaussian quadrature approximations to
-   Begin_Latex
-      I = #int^{b}_{a} f(x)dx
-   End_Latex
+   \f[
+      I = \int^{b}_{a} f(x)dx
+   \f]
       and define
-   Begin_Latex
-      r(a,b) = #frac{#||{g_{16}(a,b)-g_{8}(a,b)}}{1+#||{g_{16}(a,b)}}
-   End_Latex
+   \f[
+      r(a,b) = \frac{\left|g_{16}(a,b)-g_{8}(a,b)\right|}{1+\left|g_{16}(a,b)\right|}
+   \f]
       Then,
-   Begin_Latex
-      G = #sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
-   End_Latex
-      where, starting with x0 = A and finishing with xk = B,
-      the subdivision points xi(i=1,2,...) are given by
-   Begin_Latex
-      x_{i} = x_{i-1} + #lambda(B-x_{i-1})
-   End_Latex
-   Begin_Latex
-      #lambda
-   End_Latex
-      is equal to the first member of the
-      sequence 1,1/2,1/4,... for which r(xi-1, xi) < EPS.
+   \f[
+      G = \sum_{i=1}^{k}g_{16}(x_{i-1},x_{i})
+   \f]
+      where, starting with \f$x_{0} = A\f$ and finishing with \f$x_{k} = B\f$,
+      the subdivision points \f$x_{i}(i=1,2,...)\f$ are given by
+   \f[
+      x_{i} = x_{i-1} + \lambda(B-x_{i-1})
+   \f]
+      \f$\lambda\f$ is equal to the first member of the
+      sequence 1,1/2,1/4,... for which \f$r(x_{i-1}, x_{i}) < EPS\f$.
       If, at any stage in the process of subdivision, the ratio
-  Begin_Latex
-      q = #||{#frac{x_{i}-x_{i-1}}{B-A}}
-  End_Latex
+  \f[
+      q = \left|\frac{x_{i}-x_{i-1}}{B-A}\right|
+  \f]
       is so small that 1+0.005q is indistinguishable from 1 to
       machine accuracy, an error exit occurs with the function value
       set equal to zero.
@@ -129,13 +124,13 @@ public:
       |I|&gt;1, and a bound on the absolute error in the case |I|&lt;1. More
       precisely, if k is the number of sub-intervals contributing to the
       approximation (see Method), and if
-      Begin_Latex
-      I_{abs} = #int^{B}_{A} #||{f(x)}dx
-      End_Latex
+   \f[
+      I_{abs} = \int^{B}_{A} \left|f(x)\right|dx
+   \f]
       then the relation
-   Begin_Latex
-    #frac{#||{G-I}}{I_{abs}+k} < EPS
-   End_Latex
+   \f[
+      \frac{\left|G-I\right|}{I_{abs}+k} < EPS
+   \f]
       will nearly always be true, provided the routine terminates without
       printing an error message. For functions f having no singularities in
       the closed interval [A,B] the accuracy will usually be much higher than
@@ -154,9 +149,9 @@ public:
 
    /** Returns Integral of function on an infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{#infinity}_{-#infinity} f(x)dx
-   End_Latex
+   \f[
+      I = \int^{\infty}_{-\infty} f(x)dx
+   \f]
       Usage:
         In any arithmetic expression, this function has the approximate value
         of the integral I.
@@ -167,9 +162,9 @@ public:
 
    /** Returns Integral of function on an upper semi-infinite interval.
       This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{#infinity}_{A} f(x)dx
-   End_Latex
+   \f[
+      I = \int^{\infty}_{A} f(x)dx
+   \f]
       Usage:
         In any arithmetic expression, this function has the approximate value
         of the integral I.
@@ -181,9 +176,9 @@ public:
 
    /** Returns Integral of function on a lower semi-infinite interval.
        This function computes, to an attempted specified accuracy, the value of the integral:
-   Begin_Latex
-      I = #int^{B}_{#infinity} f(x)dx
-   End_Latex
+   \f[
+      I = \int^{B}_{-\infty} f(x)dx
+   \f]
       Usage:
          In any arithmetic expression, this function has the approximate value
          of the integral I.
@@ -214,7 +209,7 @@ public:
 private:
 
    /**
-      Integration surrugate method. Return integral of passed function in  interval [a,b]
+      Integration surrogate method. Return integral of passed function in  interval [a,b]
       Derived class (like GaussLegendreIntegrator)  can re-implement this method to modify to use
       an improved algorithm
    */
@@ -226,14 +221,14 @@ protected:
    double fEpsRel;                  // Relative error.
    double fEpsAbs;                  // Absolute error.
    bool fUsedOnce;                  // Bool value to check if the function was at least called once.
-   double fLastResult;              // Result from the last stimation.
-   double fLastError;               // Error from the last stimation.
+   double fLastResult;              // Result from the last estimation.
+   double fLastError;               // Error from the last estimation.
    const IGenFunction* fFunction;   // Pointer to function used.
 
 };
 
 /**
-   Auxillary inner class for mapping infinite and semi-infinite integrals
+   Auxiliary inner class for mapping infinite and semi-infinite integrals
 */
 class IntegrandTransform : public IGenFunction {
 public:

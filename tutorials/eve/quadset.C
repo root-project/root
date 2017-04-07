@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstates usage of 2D digit class TEveQuadSet.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstates usage of 2D digit class TEveQuadSet.
+///
+/// \image html eve_quadset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t registerSet=kTRUE)
@@ -9,7 +13,6 @@ TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    TEveRGBAPalette *pal = new TEveRGBAPalette(0, 130);
    TEveFrameBox    *box = new TEveFrameBox();
@@ -69,7 +72,6 @@ TEveQuadSet* quadset_emc(Float_t x=0, Float_t y=0, Float_t z=0, Int_t num=100)
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    TEveQuadSet* q = new TEveQuadSet("EMC Supermodule");
    q->SetOwnIds(kTRUE);
@@ -99,7 +101,6 @@ TEveQuadSet* quadset_circ()
    TEveManager::Create();
 
    TRandom rnd(0);
-   gStyle->SetPalette(1, 0);
 
    Float_t R = 10, dW = 1, dH = .5;
 
@@ -148,7 +149,6 @@ TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    {
       TEveQuadSet* q = new TEveQuadSet("HexagonXY");
@@ -205,7 +205,6 @@ TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
    TEveManager::Create();
 
    TRandom r(0);
-   gStyle->SetPalette(1, 0);
 
    TEveQuadSet* q = new TEveQuadSet("HexagonXY");
 
@@ -248,7 +247,6 @@ void quadset_hierarchy(Int_t n=4)
 {
    TEveManager::Create();
 
-   gStyle->SetPalette(1, 0);
 
    TEveRGBAPalette* pal = new TEveRGBAPalette(20, 100);
    pal->SetLimits(0, 120);

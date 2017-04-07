@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TListOfEnums
 #include "TListOfEnums.h"
-#endif
 
 class TExMap;
 class TEnum;
@@ -41,6 +39,8 @@ public:
 
    TListOfEnumsWithLock(TClass *cl = 0);
    ~TListOfEnumsWithLock() override;
+
+   TEnum *GetObject(const char*) const override;
 
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;

@@ -1,13 +1,22 @@
-// pythia8 basic example
-//Author: Andreas Morsch
-//
-// to run, do
-//  root > .x pythia8.C
-//
-// Note that before executing this script,
-//   -the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
-//   -the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
-//
+/// \file
+/// \ingroup tutorial_pythia
+/// pythia8 basic example
+///
+/// to run, do:
+///
+/// ~~~{.cpp}
+///  root > .x pythia8.C
+/// ~~~
+///
+/// Note that before executing this script,
+///
+///  - the env variable PYTHIA8 must point to the pythia8100 (or newer) directory
+///  - the env variable PYTHIA8DATA must be defined and it must point to $PYTHIA8/xmldoc
+///
+/// \macro_code
+///
+/// \author Andreas Morsch
+
 void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 {
    const char *p8dataenv = gSystem->Getenv("PYTHIA8DATA");
@@ -32,7 +41,11 @@ void pythia8(Int_t nev  = 100, Int_t ndeb = 1)
 
 // Load libraries
 #ifndef G__WIN32 // Pythia8 is a static library on Windows
-   gSystem->Load("$PYTHIA8/lib/libpythia8");
+   if (gSystem->Getenv("PYTHIA8")) {
+      gSystem->Load("$PYTHIA8/lib/libpythia8");
+   } else {
+      gSystem->Load("libpythia8");
+   }
 #endif
    gSystem->Load("libEG");
    gSystem->Load("libEGPythia8");

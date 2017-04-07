@@ -14,12 +14,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooArgusBg is a RooAbsPdf implementation describing the ARGUS background shape
-// END_HTML
-//
+/** \class RooArgusBG
+    \ingroup Roofit
+
+RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
+*/
 
 #include "RooFit.h"
 
@@ -39,11 +38,12 @@ using namespace std;
 
 ClassImp(RooArgusBG)
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
-//_____________________________________________________________________________
 RooArgusBG::RooArgusBG(const char *name, const char *title,
-		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
-  RooAbsPdf(name, title), 
+             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c) :
+  RooAbsPdf(name, title),
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),
   c("c","Slope parameter",this,_c),
@@ -51,11 +51,12 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
-//_____________________________________________________________________________
 RooArgusBG::RooArgusBG(const char *name, const char *title,
-		       RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
-  RooAbsPdf(name, title), 
+             RooAbsReal& _m, RooAbsReal& _m0, RooAbsReal& _c, RooAbsReal& _p) :
+  RooAbsPdf(name, title),
   m("m","Mass",this,_m),
   m0("m0","Resonance mass",this,_m0),
   c("c","Slope parameter",this,_c),
@@ -63,32 +64,31 @@ RooArgusBG::RooArgusBG(const char *name, const char *title,
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
-//_____________________________________________________________________________
 RooArgusBG::RooArgusBG(const RooArgusBG& other, const char* name) :
-  RooAbsPdf(other,name), 
-  m("m",this,other.m), 
-  m0("m0",this,other.m0), 
+  RooAbsPdf(other,name),
+  m("m",this,other.m),
+  m0("m0",this,other.m0),
   c("c",this,other.c),
   p("p",this,other.p)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
 Double_t RooArgusBG::evaluate() const {
   Double_t t= m/m0;
   if(t >= 1) return 0;
 
   Double_t u= 1 - t*t;
-  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ; 
+  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ;
   return m*TMath::Power(u,p)*exp(c*u) ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
 Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (p.arg().isConstant()) {
@@ -99,9 +99,8 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
 Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1);
@@ -119,5 +118,3 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   return area;
 
 }
-
-

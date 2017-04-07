@@ -4,9 +4,9 @@
 #
 # Library definitions
 #
-SRCDIR  = pcre-7.8
+SRCDIR  = pcre-8.37
 LIBDIR  = ./
-LIBRARY = libpcre-7.8
+LIBRARY = libpcre-8.37
 LIBDLL  = $(LIBDIR)\$(LIBRARY).dll
 LIBLIB  = $(LIBDIR)\$(LIBRARY).lib
 

@@ -27,7 +27,8 @@
 TVirtualX *TGWin32VirtualXProxy::fgRealObject = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TVirtualX *TGWin32VirtualXProxy::RealObject()
 {
    return fgRealObject;
@@ -258,82 +259,82 @@ RETURN_METHOD_ARG2(VirtualX,Bool_t,IsDNDAware,Window_t,win,Atom_t*,typelist);
 //RETURN_METHOD_ARG3(VirtualX,Int_t,AddWindow,ULong_t,qwid,UInt_t,w,UInt_t,h)
 
 //////////////////////// some non-standard methods /////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+
 void TGWin32VirtualXProxy::CloseDisplay()
 {
-   //
-
    if (gDebug) printf("CloseDisplay\n");
    fgRealObject->CloseDisplay();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// might be thread unsafe (?)
+
 Window_t TGWin32VirtualXProxy::GetParent(Window_t id) const
 {
-   // might be thread unsafe (?)
-
    return (Window_t)gdk_window_get_parent((GdkWindow *) id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Convert the keycode from the event structure to a key symbol (according
+/// to the modifiers specified in the event structure and the current
+/// keyboard mapping). In buf a null terminated ASCII string is returned
+/// representing the string that is currently mapped to the key code.
+
 void TGWin32VirtualXProxy::LookupString(Event_t * event, char *buf, Int_t buflen,
                                 UInt_t & keysym)
 {
-   // Convert the keycode from the event structure to a key symbol (according
-   // to the modifiers specified in the event structure and the current
-   // keyboard mapping). In buf a null terminated ASCII string is returned
-   // representing the string that is currently mapped to the key code.
-
    DEBUG_PROFILE_PROXY_START(LookupString)
    fgRealObject->LookupString(event,buf,buflen,keysym);
    DEBUG_PROFILE_PROXY_STOP(LookupString)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return number of pending events.
+
 Int_t TGWin32VirtualXProxy::EventsPending()
 {  
-   // Return number of pending events.
-
    return fgRealObject->EventsPending();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process next event in the queue - if any.
+
 void TGWin32VirtualXProxy::NextEvent(Event_t & event)
 {
-   // Process next event in the queue - if any.
-
    fgRealObject->NextEvent(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if there is for window "id" an event of type "type".
+
 Bool_t TGWin32VirtualXProxy::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
 {
-   // Check if there is for window "id" an event of type "type".
-
    return fgRealObject->CheckEvent(id,type,ev);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send event ev to window id.
+
 void TGWin32VirtualXProxy::SendEvent(Window_t id, Event_t *ev)
 {
-   // Send event ev to window id.
-
    fgRealObject->SendEvent(id,ev);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if we are inside cmd/server thread.
+
 Bool_t TGWin32VirtualXProxy::IsCmdThread() const 
 {
-   // Return kTRUE if we are inside cmd/server thread.
-
    return fgRealObject->IsCmdThread();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the current window.
+
 Window_t TGWin32VirtualXProxy::GetCurrentWindow() const 
 {
-   // Return a pointer to the current window.
-
    return fgRealObject->GetCurrentWindow(); 
 }
 

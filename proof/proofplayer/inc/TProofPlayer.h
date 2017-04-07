@@ -30,33 +30,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualProofPlayer
 #include "TVirtualProofPlayer.h"
-#endif
-#ifndef ROOT_TArrayL64
 #include "TArrayL64.h"
-#endif
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TQueryResult
 #include "TQueryResult.h"
-#endif
-#ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
+
+#include <mutex>
 
 class TSelector;
 class TSocket;
@@ -64,7 +48,6 @@ class TVirtualPacketizer;
 class TSlave;
 class TEventIter;
 class TProofStats;
-class TMutex;
 class TStatus;
 class TTimer;
 class THashList;
@@ -104,7 +87,7 @@ protected:
    Int_t         fMaxDrawQueries;  //Max number of Draw queries kept
 
    TTimer       *fStopTimer;       //Timer associated with a stop request
-   TMutex       *fStopTimerMtx;    //To protect the stop timer
+   std::mutex    fStopTimerMtx;    //To protect the stop timer
 
    TTimer       *fDispatchTimer;    //Dispatch pending events while processing
 
@@ -124,8 +107,8 @@ protected:
    virtual Int_t DrawCanvas(TObject *obj); // Canvas drawing via libProofDraw
 
    virtual void SetupFeedback();  // specialized setup
-
-   virtual void  MergeOutput();
+   
+   virtual void  MergeOutput(Bool_t savememvalues = kFALSE);
 
 public:   // fix for broken compilers so TCleanup can call StopFeedback()
    virtual void StopFeedback();   // specialized teardown
@@ -228,6 +211,9 @@ public:
                           Bool_t abort = kFALSE, Int_t timeout = 0);
 
    virtual void      SetInitTime() { }
+
+   virtual void      SetMerging(Bool_t = kTRUE) { }
+
    Long64_t  GetCacheSize();
    Int_t     GetLearnEntries();
 
@@ -303,8 +289,11 @@ protected:
    ErrorHandlerFunc_t  fErrorHandler;  // Store previous handler when redirecting output
    Bool_t              fMergeTH1OneByOne;  // If kTRUE forces TH1 merge one-by-one [kTRUE]
    TH1                *fProcPackets;    //!Histogram with packets being processed (owned by TPerfStats)
-   TMessage           *fProcessMessage;  // Process message to replay when adding new workers dynamically
-   TString             fSelectorFileName;  // Current Selector's name, set by Process()
+   TMessage           *fProcessMessage; // Process message to replay when adding new workers dynamically
+   TString             fSelectorFileName; // Current Selector's name, set by Process()
+
+   TStopwatch         *fMergeSTW;      // Merging stop watch
+   Int_t               fNumMergers;    // Number of submergers
 
    virtual Bool_t  HandleTimer(TTimer *timer);
    Int_t           InitPacketizer(TDSet *dset, Long64_t nentries,
@@ -325,7 +314,7 @@ public:
                                            fFeedbackLists(0), fPacketizer(0),
                                            fMergeFiles(kFALSE), fDSet(0), fErrorHandler(0),
                                            fMergeTH1OneByOne(kTRUE), fProcPackets(0),
-                                           fProcessMessage(0)
+                                           fProcessMessage(0), fMergeSTW(0), fNumMergers(0) 
                                            { fProgressStatus = new TProofProgressStatus(); }
    virtual ~TProofPlayerRemote();   // Owns the fOutput list
    virtual Long64_t Process(TDSet *set, const char *selector,
@@ -350,7 +339,7 @@ public:
    Bool_t         HistoSameAxis(TH1 *h0, TH1 *h1);
    Int_t          AddOutputObject(TObject *obj);
    void           AddOutput(TList *out);   // Incorporate a list
-   virtual void   MergeOutput();
+   virtual void   MergeOutput(Bool_t savememvalues = kFALSE);
    void           Progress(Long64_t total, Long64_t processed); // *SIGNAL*
    void           Progress(TSlave*, Long64_t total, Long64_t processed)
                      { Progress(total, processed); }
@@ -371,6 +360,8 @@ public:
    Bool_t         IsClient() const;
 
    void           SetInitTime();
+
+   void           SetMerging(Bool_t on = kTRUE);
 
    ClassDef(TProofPlayerRemote,0)  // PROOF player running on master server
 };

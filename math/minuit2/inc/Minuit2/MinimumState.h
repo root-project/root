@@ -31,17 +31,20 @@ class MinimumState {
 public:
 
   /** invalid state */
-  MinimumState(unsigned int n) :
-    fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(n))) {}
+   MinimumState(unsigned int n) :
+      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(n,0.,0.,0.))) {}
+   /** state without parameters and errors (only function value an, edm and nfcn) */
+   MinimumState(double fval, double edm, int nfcn) :
+      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(0, fval, edm, nfcn))) {}
   /** state with parameters only (from stepping methods like Simplex, Scan) */
-  MinimumState(const MinimumParameters& states, double edm, int nfcn) :
-    fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, edm, nfcn))) {}
+   MinimumState(const MinimumParameters& states, double edm, int nfcn) :
+      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, edm, nfcn))) {}
 
   /** state with parameters, Gradient and covariance (from Gradient methods
       such as Migrad) */
   MinimumState(const MinimumParameters& states, const MinimumError& err,
                const FunctionGradient& grad, double edm, int nfcn) :
-    fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, err, grad, edm, nfcn))) {}
+     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, err, grad, edm, nfcn))) {}
 
   ~MinimumState() {}
 

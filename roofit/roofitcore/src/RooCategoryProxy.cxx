@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCategoryProxy is the proxy implementation for RooAbsCategory objects
-// A RooCategoryProxy is the general mechanism to store references
-// to RooAbsCategoriess inside a RooAbsArg
-//
-// RooCategoryProxy provides a cast operator to Int_t and 'const char*', allowing
-// the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
-// END_HTML
-//
+/**
+\file RooCategoryProxy.cxx
+\class RooCategoryProxy
+\ingroup Roofitcore
+
+RooCategoryProxy is the proxy implementation for RooAbsCategory objects
+A RooCategoryProxy is the general mechanism to store references
+to RooAbsCategoriess inside a RooAbsArg
+
+RooCategoryProxy provides a cast operator to Int_t and 'const char*', allowing
+the proxy to functions a Int_t/'const char*' on the right hand side of expressions.
+**/
 
 
 #include "RooFit.h"
@@ -38,49 +39,53 @@ ClassImp(RooCategoryProxy)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with owner and proxied category object
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner,
 				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(Name, desc, owner, valueServer, shapeServer, ownArg)
 {
-  // Constructor with owner and proxied category object
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with owner and proxied category object
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, const char* desc, RooAbsArg* owner, RooAbsCategory& ref,
 				   Bool_t valueServer, Bool_t shapeServer, Bool_t ownArg) : 
   RooArgProxy(Name, desc, owner, ref, valueServer, shapeServer, ownArg)
 {
-  // Constructor with owner and proxied category object
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooCategoryProxy::RooCategoryProxy(const char* Name, RooAbsArg* owner, const RooCategoryProxy& other) : 
   RooArgProxy(Name, owner, other) 
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCategoryProxy::~RooCategoryProxy() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return RooAbsCategoryLValye pointer of contained object if
+/// it is indeed an lvalue
+
 RooAbsCategoryLValue* RooCategoryProxy::lvptr() const 
 {
-  // Return RooAbsCategoryLValye pointer of contained object if
-  // it is indeed an lvalue
-
   // Assert that the held arg is an LValue
   RooAbsCategoryLValue* Lvptr = dynamic_cast<RooAbsCategoryLValue*>(_arg) ;
   if (!Lvptr) {
@@ -92,10 +97,11 @@ RooAbsCategoryLValue* RooCategoryProxy::lvptr() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change object held in proxy into newRef
+
 Bool_t RooCategoryProxy::setArg(RooAbsCategory& newRef) 
 {
-  // Change object held in proxy into newRef
   if (absArg()) {
     if (TString(arg().GetName()!=newRef.GetName())) {
       newRef.setAttribute(Form("ORIGNAME:%s",arg().GetName())) ;

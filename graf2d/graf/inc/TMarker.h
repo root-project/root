@@ -13,39 +13,24 @@
 #define ROOT_TMarker
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMarker                                                              //
-//                                                                      //
-// Marker.                                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TPoint;
 
 class TMarker : public TObject, public TAttMarker, public TAttBBox2D {
 
 protected:
-   Double_t     fX;           //X position of marker (left,center,etc..)
-   Double_t     fY;           //Y position of marker (left,center,etc..)
+   Double_t     fX;           ///< X position of marker (left,center,etc..)
+   Double_t     fY;           ///< Y position of marker (left,center,etc..)
 
 public:
    // TMarker status bits
-   enum { kMarkerNDC = BIT(14) };
+   enum {
+      kMarkerNDC = BIT(14)  ///< Marker position is in NDC
+   };
 
    TMarker();
    TMarker(Double_t x, Double_t y, Int_t marker);

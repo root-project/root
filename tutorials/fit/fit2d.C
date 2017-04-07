@@ -1,8 +1,16 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+/// Example illustrating how to fit a 2-d histogram of type y=f(x)
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 void fit2d()
 {
-   //example illustrating how to fit a 2-d histogram of type y=f(x)
-   //Author: Rene Brun
-
    // generate a 2-d histogram using a TCutG
    const Int_t n = 6;
    Float_t x[n] = {0.092,0.83,0.94,0.81,0.12,0.1};

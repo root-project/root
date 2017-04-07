@@ -14,17 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooGenContext implement a universal generator context for all
-// RooAbsPdf classes that do not have or need a specialized generator
-// context. This generator context queries the input p.d.f which observables
-// it can generate internally and delegates generation of those observables
-// to the p.d.f if it deems that safe. The other observables are generated
-// use a RooAcceptReject sampling technique.
-// END_HTML
-//
+/**
+\file RooGenContext.cxx
+\class RooGenContext
+\ingroup Roofitcore
+
+Class RooGenContext implement a universal generator context for all
+RooAbsPdf classes that do not have or need a specialized generator
+context. This generator context queries the input p.d.f which observables
+it can generate internally and delegates generation of those observables
+to the p.d.f if it deems that safe. The other observables are generated
+use a RooAcceptReject sampling technique.
+**/
 
 
 #include "RooFit.h"
@@ -56,7 +57,16 @@ ClassImp(RooGenContext)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize a new context for generating events with the specified
+/// variables, using the specified PDF model. A prototype dataset (if provided)
+/// is not cloned and still belongs to the caller. The contents and shape
+/// of this dataset can be changed between calls to generate() as long as the
+/// expected columns to be copied to the generated dataset are present.
+/// Any argument supplied in the forceDirect RooArgSet are always offered
+/// for internal generation to the p.d.f., even if this is deemed unsafe by
+/// the logic of RooGenContext.
+
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, const RooArgSet* auxProto,
 			     Bool_t verbose, const RooArgSet* forceDirect) :  
@@ -64,15 +74,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
   _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
 {
-  // Initialize a new context for generating events with the specified
-  // variables, using the specified PDF model. A prototype dataset (if provided)
-  // is not cloned and still belongs to the caller. The contents and shape
-  // of this dataset can be changed between calls to generate() as long as the
-  // expected columns to be copied to the generated dataset are present.
-  // Any argument supplied in the forceDirect RooArgSet are always offered
-  // for internal generation to the p.d.f., even if this is deemed unsafe by
-  // the logic of RooGenContext.
-
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName() 
 			<< " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
@@ -237,21 +238,30 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(*depList,vars) ;
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     
-    if (_directVars.getSize()==0)  {
-      
-      // Check if PDF supports maximum finding
-      Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
+    // Check if PDF supports maximum finding for the entire phase space
+    RooArgSet allVars(_otherVars);
+    allVars.add(_directVars);
+    Int_t maxFindCode = _pdfClone->getMaxVal(allVars) ;
+    if (maxFindCode != 0) {
+      // Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
+      coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
+                        << "model supports analytical maximum finding in the full phase space: " 
+                        << "can provide analytical pdf maximum to numeric generator" << endl ;
+      _maxVar = new RooRealVar("funcMax","function maximum",_pdfClone->maxVal(maxFindCode)) ;
+    } else {
+      maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {
-	
-	// Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
-	coutI(Generation) << "RooGenContext::ctor() prototype data provided, all observables are generated numerically and "
-			    << "model supports analytical maximum finding: can provide analytical pdf maximum to numeric generator" << endl ;
-	_maxVar = new RooRealVar("funcMax","function maximum",1) ;
-	_updateFMaxPerEvent = maxFindCode ;
-	cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each event with configuration code " << maxFindCode << endl ;
+         _updateFMaxPerEvent = maxFindCode ;
+         coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
+                           << "model supports analytical maximum finding in the variables which are not"
+                           << " internally generated. Can provide analytical pdf maximum to numeric "
+                           << "generator" << endl;
+         cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each "
+                             << "event with configuration code " << maxFindCode << endl ;
+         _maxVar = new RooRealVar("funcMax","function maximum",1) ;    
       }
     }
-    
+
     if (!_maxVar) {
       
       // Regular case: First find maximum in other+proto space
@@ -301,11 +311,11 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 RooGenContext::~RooGenContext() 
 {
-  // Destructor.
-
   // Clean up the cloned objects used in this context.
   delete _cloneSet;
 
@@ -318,11 +328,11 @@ RooGenContext::~RooGenContext()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Attach the cloned model to the event buffer we will be filling.
+
 void RooGenContext::attach(const RooArgSet& args) 
 {
-  // Attach the cloned model to the event buffer we will be filling.
-  
   _pdfClone->recursiveRedirectServers(args,kFALSE);
   if (_acceptRejectFunc) {
     _acceptRejectFunc->recursiveRedirectServers(args,kFALSE) ; // WVE DEBUG
@@ -337,11 +347,11 @@ void RooGenContext::attach(const RooArgSet& args)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform one-time initialization of the generator context
+
 void RooGenContext::initGenerator(const RooArgSet &theEvent) 
 {
-  // Perform one-time initialization of the generator context
-
   RooFIter iter = theEvent.fwdIterator() ;
   RooAbsArg* arg ;
   while((arg=iter.next())) {
@@ -366,12 +376,12 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate one event. The 'remaining' integer is not used other than
+/// for printing messages 
+
 void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) 
 {
-  // Generate one event. The 'remaining' integer is not used other than
-  // for printing messages 
-
   if(_otherVars.getSize() > 0) {
     // call the accept-reject generator to generate its variables
 
@@ -423,11 +433,11 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printing interface
+
 void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
 {
-  // Printing interface
-
   RooAbsGenContext::printMultiline(os,content,verbose,indent);
   os << indent << " --- RooGenContext --- " << endl ;
   os << indent << "Using PDF ";

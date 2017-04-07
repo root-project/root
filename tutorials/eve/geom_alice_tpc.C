@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Shows geometry of ALICE TPC.
+/// \file
+/// \ingroup tutorial_eve
+/// Shows geometry of ALICE TPC.
+///
+/// \image html eve_geom_alice_tpc.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void geom_alice_tpc()
 {

@@ -19,9 +19,9 @@
  * Implementation in THnSparse.cxx.                                      *
  *************************************************************************/
 
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
+
+#include "TObject.h"
 
 class TBrowser;
 class TH1;

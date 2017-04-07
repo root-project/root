@@ -12,28 +12,28 @@
 #include "TEvePlot3D.h"
 #include "TEveTrans.h"
 
-
-//______________________________________________________________________________
-// Description of TEvePlot3D
-//
+/** \class TEvePlot3D
+\ingroup TEve
+Description of TEvePlot3D
+*/
 
 ClassImp(TEvePlot3D);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePlot3D::TEvePlot3D(const char* n, const char* t) :
    TEveElementList(n, t),
    fPlot(0),
    fLogX(kFALSE), fLogY(kFALSE), fLogZ(kFALSE)
 {
-   // Constructor.
-
    InitMainTrans();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this object. Only direct rendering is supported.
+
 void TEvePlot3D::Paint(Option_t* )
 {
-   // Paint this object. Only direct rendering is supported.
-
    PaintStandard(this);
 }

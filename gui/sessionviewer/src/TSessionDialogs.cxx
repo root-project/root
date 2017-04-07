@@ -73,14 +73,14 @@ static const char *gFileTypes[] = {
 // New Chain Dialog
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new chain dialog box. Used to list chains present in memory
+/// and offers the possibility to create new ones by executing macros
+/// directly from the associate file container.
+
 TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    TGTransientFrame(p, main, 350, 300, kVerticalFrame)
 {
-   // Create a new chain dialog box. Used to list chains present in memory
-   // and offers the possibility to create new ones by executing macros
-   // directly from the associate file container.
-
    Pixel_t backgnd;
    if (!p || !main) return;
    SetCleanup(kDeepCleanup);
@@ -163,33 +163,34 @@ TNewChainDlg::TNewChainDlg(const TGWindow *p, const TGWindow *main) :
    UpdateList();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete chain dialog.
+
 TNewChainDlg::~TNewChainDlg()
 {
-   // Delete chain dialog.
    if (IsZombie()) return;
    delete fLVContainer;
    delete fContents;
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits OnElementSelected signal if dset is not zero.
+
 void TNewChainDlg::OnElementSelected(TObject *obj)
 {
-   // Emits OnElementSelected signal if dset is not zero.
-
    if (obj && (obj->IsA() == TChain::Class() ||
        obj->IsA() == TDSet::Class())) {
       Emit("OnElementSelected(TObject *)", (Long_t)obj);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle click in the Memory list view and put the type
+/// and name of selected object in the text entry.
+
 void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
 {
-   // Handle click in the Memory list view and put the type
-   // and name of selected object in the text entry.
-
    fChain = (TObject *)entry->GetUserData();
    if (fChain->IsA() == TChain::Class()) {
       TString s = TString::Format("%s : %s" , ((TChain *)fChain)->GetTitle(),
@@ -204,11 +205,11 @@ void TNewChainDlg::OnElementClicked(TGLVEntry *entry, Int_t)
    fOkButton->SetEnabled(kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update Memory list view.
+
 void TNewChainDlg::UpdateList()
 {
-   // Update Memory list view.
-
    TGLVEntry *item=0;
    TObject *obj = 0;
    fChains = gROOT->GetListOfDataSets();
@@ -239,11 +240,11 @@ void TNewChainDlg::UpdateList()
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display content of directory.
+
 void TNewChainDlg::DisplayDirectory(const TString &fname)
 {
-   // Display content of directory.
-
    fContents->SetDefaultHeaders();
    gSystem->ChangeDirectory(fname);
    fContents->ChangeDirectory(fname);
@@ -252,11 +253,11 @@ void TNewChainDlg::DisplayDirectory(const TString &fname)
    Resize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click in the File container.
+
 void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
 {
-   // Handle double click in the File container.
-
    if (btn!=kButton1) return;
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kWatch));
 
@@ -278,11 +279,11 @@ void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
    gVirtualX->SetCursor(fContents->GetId(),gVirtualX->CreateCursor(kPointer));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for new chain dialog.
+
 Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for new chain dialog.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -324,11 +325,11 @@ Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close file dialog.
+
 void TNewChainDlg::CloseWindow()
 {
-   // Close file dialog.
-
    DeleteWindow();
 }
 
@@ -337,14 +338,14 @@ void TNewChainDlg::CloseWindow()
 // New Query Dialog
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new Query dialog, used by the Session Viewer, to Edit a Query if
+/// the editmode flag is set, or to create a new one if not set.
+
 TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
          TQueryDescription *query, Bool_t editmode) :
          TGTransientFrame(gClient->GetRoot(), gui, Width, Height)
 {
-   // Create a new Query dialog, used by the Session Viewer, to Edit a Query if
-   // the editmode flag is set, or to create a new one if not set.
-
    Window_t wdummy;
    Int_t  ax, ay;
    fEditMode = editmode;
@@ -382,20 +383,20 @@ TNewQueryDlg::TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
    Move(ax + fViewer->GetWidth()/2, ay + 35);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete query dialog.
+
 TNewQueryDlg::~TNewQueryDlg()
 {
-   // Delete query dialog.
-
    if (IsZombie()) return;
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the "new query" dialog.
+
 void TNewQueryDlg::Build(TSessionViewer *gui)
 {
-   // Build the "new query" dialog.
-
    TGButton*   btnTmp;
    fViewer = gui;
    SetLayoutManager(new TGVerticalLayout(this));
@@ -538,19 +539,19 @@ void TNewQueryDlg::Build(TSessionViewer *gui)
    fBtnSubmit->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when window is closed via the window manager.
+
 void TNewQueryDlg::CloseWindow()
 {
-   // Called when window is closed via the window manager.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show/hide options frame and update button text accordingly.
+
 void TNewQueryDlg::OnNewQueryMore()
 {
-   // Show/hide options frame and update button text accordingly.
-
    if (fFrmNewQuery->IsVisible(fFrmMore)) {
       fFrmNewQuery->HideFrame(fFrmMore);
       fBtnMore->SetText(" More >> ");
@@ -561,21 +562,21 @@ void TNewQueryDlg::OnNewQueryMore()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Call new chain dialog.
+
 void TNewQueryDlg::OnBrowseChain()
 {
-   // Call new chain dialog.
-
    TNewChainDlg *dlg = new TNewChainDlg(fClient->GetRoot(), this);
    dlg->Connect("OnElementSelected(TObject *)", "TNewQueryDlg",
          this, "OnElementSelected(TObject *)");
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle OnElementSelected signal coming from new chain dialog.
+
 void TNewQueryDlg::OnElementSelected(TObject *obj)
 {
-   // Handle OnElementSelected signal coming from new chain dialog.
-
    if (obj) {
       fChain = obj;
       if (obj->IsA() == TChain::Class())
@@ -585,11 +586,11 @@ void TNewQueryDlg::OnElementSelected(TObject *obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open file browser to choose selector macro.
+
 void TNewQueryDlg::OnBrowseSelector()
 {
-   // Open file browser to choose selector macro.
-
    TGFileInfo fi;
    fi.fFileTypes = gFileTypes;
    new TGFileDialog(fClient->GetRoot(), this, kFDOpen, &fi);
@@ -597,18 +598,18 @@ void TNewQueryDlg::OnBrowseSelector()
    fTxtSelector->SetText(gSystem->UnixPathName(fi.fFilename));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Browse event list
+
 void TNewQueryDlg::OnBrowseEventList()
 {
-   //Browse event list
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save current settings in main session viewer.
+
 void TNewQueryDlg::OnBtnSaveClicked()
 {
-   // Save current settings in main session viewer.
-
    // if we are in edition mode and query description is valid,
    // use it, otherwise create a new one
    TQueryDescription *newquery;
@@ -697,20 +698,20 @@ void TNewQueryDlg::OnBtnSaveClicked()
    fModified = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save and submit query description.
+
 void TNewQueryDlg::OnBtnSubmitClicked()
 {
-   // Save and submit query description.
-
    OnBtnSaveClicked();
    fViewer->GetQueryFrame()->OnBtnSubmit();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close dialog.
+
 void TNewQueryDlg::OnBtnCloseClicked()
 {
-   // Close dialog.
-
    Int_t result = kMBNo;
    if (fModified) {
       new TGMsgBox(fClient->GetRoot(), this, "Modified Settings",
@@ -725,20 +726,20 @@ void TNewQueryDlg::OnBtnCloseClicked()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display dialog and set focus to query name text entry.
+
 void TNewQueryDlg::Popup()
 {
-   // Display dialog and set focus to query name text entry.
-
    MapWindow();
    fTxtQueryName->SetFocus();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Settings have changed, update GUI accordingly.
+
 void TNewQueryDlg::SettingsChanged()
 {
-   // Settings have changed, update GUI accordingly.
-
    if (fEditMode && fQuery) {
       if ((strcmp(fQuery->fSelectorString.Data(), fTxtSelector->GetText())) ||
           (strcmp(fQuery->fQueryName.Data(), fTxtQueryName->GetText())) ||
@@ -770,11 +771,11 @@ void TNewQueryDlg::SettingsChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update entry fields with query description values.
+
 void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 {
-   // Update entry fields with query description values.
-
    fQuery = desc;
    fTxtQueryName->SetText(desc->fQueryName);
    fTxtChain->SetText("");
@@ -786,12 +787,12 @@ void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
    fNumFirstEntry->SetIntNumber(desc->fFirstEntry);
    fTxtEventList->SetText(desc->fEventList);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for new query dialog.
+/// Essentially used to navigate between text entry fields.
+
 Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for new query dialog.
-   // Essentially used to navigate between text entry fields.
-
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
          switch (GET_SUBMSG(msg)) {
@@ -836,12 +837,12 @@ Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 // Upload DataSet Dialog
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a Upload DataSet dialog box. Used to create and upload a dataset
+
 TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
          TGTransientFrame(gClient->GetRoot(), gui, w, h)
 {
-   // Create a Upload DataSet dialog box. Used to create and upload a dataset
-
    fUploading = kFALSE;
    if (!gui) return;
    fViewer = gui;
@@ -1002,28 +1003,29 @@ TUploadDataSetDlg::TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h) :
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete chain dialog.
+
 TUploadDataSetDlg::~TUploadDataSetDlg()
 {
-   // Delete chain dialog.
    if (IsZombie()) return;
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close upload dataset dialog.
+
 void TUploadDataSetDlg::CloseWindow()
 {
-   // Close upload dataset dialog.
-
    if (!fUploading)
       DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for upload dataset dialog.
+
 Bool_t TUploadDataSetDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages for upload dataset dialog.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -1067,11 +1069,11 @@ Bool_t TUploadDataSetDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add File name(s) from the file location URL to the list view.
+
 void TUploadDataSetDlg::AddFiles(const char *fileName)
 {
-   // Add File name(s) from the file location URL to the list view.
-
    if (strlen(fileName) < 5)
       return;
    if (strstr(fileName,"*.")) {
@@ -1112,11 +1114,11 @@ void TUploadDataSetDlg::AddFiles(const char *fileName)
    fClient->NeedRedraw(fLVContainer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add File name(s) from the file location URL to the list view.
+
 void TUploadDataSetDlg::AddFiles(TList *fileList)
 {
-   // Add File name(s) from the file location URL to the list view.
-
    TObjString *el;
    TIter next(fileList);
    while ((el = (TObjString *) next())) {
@@ -1137,12 +1139,12 @@ void TUploadDataSetDlg::AddFiles(TList *fileList)
    fClient->NeedRedraw(fLVContainer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Opens the TGFileDialog to allow user to select local file(s) to be added
+/// in the list view of dataset files.
+
 void TUploadDataSetDlg::BrowseFiles()
 {
-   // Opens the TGFileDialog to allow user to select local file(s) to be added
-   // in the list view of dataset files.
-
    TGFileInfo fi;
    fi.fFileTypes = gDatasetTypes;
    fi.fFilename  = strdup("*.root");
@@ -1155,47 +1157,47 @@ void TUploadDataSetDlg::BrowseFiles()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear content of the list view.
+
 void TUploadDataSetDlg::ClearFiles()
 {
-   // Clear content of the list view.
-
    fLVContainer->RemoveAll();
    fListView->Layout();
    // update list view
    fClient->NeedRedraw(fLVContainer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notification of Overwrite Dataset check button.
+
 void TUploadDataSetDlg::OnOverwriteDataset(Bool_t on)
 {
-   // Notification of Overwrite Dataset check button.
-
    if (on && fAppendFiles->IsOn())
       fAppendFiles->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notification of Overwrite Files check button.
+
 void TUploadDataSetDlg::OnOverwriteFiles(Bool_t)
 {
-   // Notification of Overwrite Files check button.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notification of Append Files check button.
+
 void TUploadDataSetDlg::OnAppendFiles(Bool_t on)
 {
-   // Notification of Append Files check button.
-
    if (on && fOverwriteDSet->IsOn())
       fOverwriteDSet->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the selected entry from the list view.
+
 void TUploadDataSetDlg::RemoveFile()
 {
-   // Remove the selected entry from the list view.
-
    TGFrame *item = (TGFrame *)fLVContainer->GetLastActive();
    fLVContainer->RemoveItem(item);
    // update list view
@@ -1204,11 +1206,11 @@ void TUploadDataSetDlg::RemoveFile()
    fClient->NeedRedraw(fLVContainer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Upload the dataset to the server.
+
 void TUploadDataSetDlg::UploadDataSet()
 {
-   // Upload the dataset to the server.
-
    Int_t retval;
    TString fileList;
    const char *dsetName = fDSetName->GetText();

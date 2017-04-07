@@ -13,18 +13,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooVoigtian is an efficient implementation of the convolution of a 
-// Breit-Wigner with a Gaussian, making use of the complex error function.
-// RooFitCore provides two algorithms for the evaluation of the complex error 
-// function (the default CERNlib C335 algorithm, and a faster, look-up-table 
-// based method). By default, RooVoigtian employs the default (CERNlib) 
-// algorithm. Select the faster algorithm either in the constructor, or with
-// the selectFastAlgorithm() method.
-// END_HTML
-//
+/** \class RooVoigtian
+    \ingroup Roofit
+
+RooVoigtian is an efficient implementation of the convolution of a
+Breit-Wigner with a Gaussian, making use of the complex error function.
+RooFitCore provides two algorithms for the evaluation of the complex error
+function (the default CERNlib C335 algorithm, and a faster, look-up-table
+based method). By default, RooVoigtian employs the default (CERNlib)
+algorithm. Select the faster algorithm either in the constructor, or with
+the selectFastAlgorithm() method.
+**/
 
 #include <cmath>
 #include <complex>
@@ -42,12 +41,12 @@ using namespace std;
 
 ClassImp(RooVoigtian)
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 RooVoigtian::RooVoigtian(const char *name, const char *title,
-			 RooAbsReal& _x, RooAbsReal& _mean,
-			 RooAbsReal& _width, RooAbsReal& _sigma,
-    			 Bool_t doFast) :
+          RooAbsReal& _x, RooAbsReal& _mean,
+          RooAbsReal& _width, RooAbsReal& _sigma,
+              Bool_t doFast) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
   mean("mean","Mean",this,_mean),
@@ -58,10 +57,9 @@ RooVoigtian::RooVoigtian(const char *name, const char *title,
   _invRootPi= 1./sqrt(atan2(0.,-1.));
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
-RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) : 
+RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
   RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
   width("width",this,other.width),sigma("sigma",this,other.sigma),
   _doFast(other._doFast)
@@ -69,9 +67,8 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
   _invRootPi= 1./sqrt(atan2(0.,-1.));
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
 Double_t RooVoigtian::evaluate() const
 {
   Double_t s = (sigma>0) ? sigma : -sigma ;

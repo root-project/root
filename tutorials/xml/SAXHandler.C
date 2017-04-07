@@ -1,17 +1,24 @@
-//////////////////////////////////////////////////////////////////////////////
-//
-// ROOT implementation of a simple SAX Handler.
-//
-// This handler uses TSAXParser, a SAX Parser using the SAX interface
-// of libxml2. This script will output all elements of the original xml
-// file, if sucessfully parsed.
-//
-// To run this program do:
-// .x SAXHandler.C
-//
-// Requires: saxexample.xml
-//
-//////////////////////////////////////////////////////////////////////////////
+/// \file
+/// \ingroup tutorial_xml
+/// \notebook -nodraw
+/// ROOT implementation of a simple SAX Handler.
+///
+/// This handler uses TSAXParser, a SAX Parser using the SAX interface
+/// of libxml2. This script will output all elements of the original xml
+/// file, if successfully parsed.
+///
+/// To run this program do:
+/// ~~~{.cpp}
+/// .x SAXHandler.C
+/// ~~~
+///
+/// Requires: `saxexample.xml`
+///
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Sergey Linev
 
 #include <Riostream.h>
 #include <TList.h>
@@ -97,6 +104,6 @@ void SAXHandler()
    SaxHandler *saxHandler = new SaxHandler();
 
    saxParser->ConnectToHandler("SaxHandler", saxHandler);
-   TString dir = gSystem->DirName(__FILE__);
-   saxParser->ParseFile(dir+"/saxexample.xml");
+   TString dir = gROOT->GetTutorialDir();
+   saxParser->ParseFile(dir+"/xml/saxexample.xml");
 }

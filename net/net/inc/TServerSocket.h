@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSocket
 #include "TSocket.h"
-#endif
 #include <string>
 
 class TSeqCollection;
@@ -94,7 +92,7 @@ public:
    static void        SetAcceptOptions(UChar_t Opt);
    static void        ShowAcceptOptions();
 
-   ClassDef(TServerSocket,1)  //This class implements server sockets
+   ClassDef(TServerSocket, 0);  //This class implements server sockets
 };
 
 #endif

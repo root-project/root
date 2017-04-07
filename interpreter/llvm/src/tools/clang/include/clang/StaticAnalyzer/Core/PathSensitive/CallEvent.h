@@ -24,6 +24,7 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SVals.h"
 #include "llvm/ADT/PointerIntPair.h"
+#include <utility>
 
 namespace clang {
 class ProgramPoint;
@@ -48,6 +49,30 @@ enum CallEventKind {
 
 class CallEvent;
 class CallEventManager;
+
+/// This class represents a description of a function call using the number of
+/// arguments and the name of the function.
+class CallDescription {
+  friend CallEvent;
+  mutable IdentifierInfo *II;
+  StringRef FuncName;
+  unsigned RequiredArgs;
+
+public:
+  const static unsigned NoArgRequirement = ~0;
+  /// \brief Constructs a CallDescription object.
+  ///
+  /// @param FuncName The name of the function that will be matched.
+  ///
+  /// @param RequiredArgs The number of arguments that is expected to match a
+  /// call. Omit this parameter to match every occurance of call with a given
+  /// name regardless the number of arguments.
+  CallDescription(StringRef FuncName, unsigned RequiredArgs = NoArgRequirement)
+      : II(nullptr), FuncName(FuncName), RequiredArgs(RequiredArgs) {}
+
+  /// \brief Get the name of the function that this object matches.
+  StringRef getFunctionName() const { return FuncName; }
+};
 
 template<typename T = CallEvent>
 class CallEventRef : public IntrusiveRefCntPtr<const T> {
@@ -119,7 +144,7 @@ private:
   const LocationContext *LCtx;
   llvm::PointerUnion<const Expr *, const Decl *> Origin;
 
-  void operator=(const CallEvent &) LLVM_DELETED_FUNCTION;
+  void operator=(const CallEvent &) = delete;
 
 protected:
   // This is user data for subclasses.
@@ -141,10 +166,10 @@ protected:
   friend class CallEventManager;
 
   CallEvent(const Expr *E, ProgramStateRef state, const LocationContext *lctx)
-    : State(state), LCtx(lctx), Origin(E), RefCount(0) {}
+      : State(std::move(state)), LCtx(lctx), Origin(E), RefCount(0) {}
 
   CallEvent(const Decl *D, ProgramStateRef state, const LocationContext *lctx)
-    : State(state), LCtx(lctx), Origin(D), RefCount(0) {}
+      : State(std::move(state)), LCtx(lctx), Origin(D), RefCount(0) {}
 
   // DO NOT MAKE PUBLIC
   CallEvent(const CallEvent &Original)
@@ -164,7 +189,8 @@ protected:
 
   /// \brief Used to specify non-argument regions that will be invalidated as a
   /// result of this call.
-  virtual void getExtraInvalidatedValues(ValueList &Values) const {}
+  virtual void getExtraInvalidatedValues(ValueList &Values,
+                 RegionAndSymbolInvalidationTraits *ETraits) const {}
 
 public:
   virtual ~CallEvent() {}
@@ -226,6 +252,13 @@ public:
     return false;
   }
 
+  /// \brief Returns true if the CallEvent is a call to a function that matches
+  /// the CallDescription.
+  ///
+  /// Note that this function is not intended to be used to match Obj-C method
+  /// calls.
+  bool isCalled(const CallDescription &CD) const;
+
   /// \brief Returns a source range for the entire call, suitable for
   /// outputting in diagnostics.
   virtual SourceRange getSourceRange() const {
@@ -253,8 +286,15 @@ public:
   /// which the return value has already been bound to the origin expression.
   SVal getReturnValue() const;
 
+  /// \brief Returns true if the type of any of the non-null arguments satisfies
+  /// the condition.
+  bool hasNonNullArgumentsWithType(bool (*Condition)(QualType)) const;
+
   /// \brief Returns true if any of the arguments appear to represent callbacks.
   bool hasNonZeroCallbackArg() const;
+
+  /// \brief Returns true if any of the arguments is void*.
+  bool hasVoidPointerToNonConstArg() const;
 
   /// \brief Returns true if any of the arguments are known to escape to long-
   /// term storage, even if this method will not modify them.
@@ -472,7 +512,8 @@ protected:
   BlockCall(const BlockCall &Other) : CallEvent(Other) {}
   void cloneTo(void *Dest) const override { new (Dest) BlockCall(*this); }
 
-  void getExtraInvalidatedValues(ValueList &Values) const override;
+  void getExtraInvalidatedValues(ValueList &Values,
+         RegionAndSymbolInvalidationTraits *ETraits) const override;
 
 public:
   virtual const CallExpr *getOriginExpr() const {
@@ -497,8 +538,55 @@ public:
     return BR->getDecl();
   }
 
+  bool isConversionFromLambda() const {
+    const BlockDecl *BD = getDecl();
+    if (!BD)
+      return false;
+
+    return BD->isConversionFromLambda();
+  }
+
+  /// \brief For a block converted from a C++ lambda, returns the block
+  /// VarRegion for the variable holding the captured C++ lambda record.
+  const VarRegion *getRegionStoringCapturedLambda() const {
+    assert(isConversionFromLambda());
+    const BlockDataRegion *BR = getBlockRegion();
+    assert(BR && "Block converted from lambda must have a block region");
+
+    auto I = BR->referenced_vars_begin();
+    assert(I != BR->referenced_vars_end());
+
+    return I.getCapturedRegion();
+  }
+
   RuntimeDefinition getRuntimeDefinition() const override {
-    return RuntimeDefinition(getDecl());
+    if (!isConversionFromLambda())
+      return RuntimeDefinition(getDecl());
+
+    // Clang converts lambdas to blocks with an implicit user-defined
+    // conversion operator method on the lambda record that looks (roughly)
+    // like:
+    //
+    // typedef R(^block_type)(P1, P2, ...);
+    // operator block_type() const {
+    //   auto Lambda = *this;
+    //   return ^(P1 p1, P2 p2, ...){
+    //     /* return Lambda(p1, p2, ...); */
+    //   };
+    // }
+    //
+    // Here R is the return type of the lambda and P1, P2, ... are
+    // its parameter types. 'Lambda' is a fake VarDecl captured by the block
+    // that is initialized to a copy of the lambda.
+    //
+    // Sema leaves the body of a lambda-converted block empty (it is
+    // produced by CodeGen), so we can't analyze it directly. Instead, we skip
+    // the block body and analyze the operator() method on the captured lambda.
+    const VarDecl *LambdaVD = getRegionStoringCapturedLambda()->getDecl();
+    const CXXRecordDecl *LambdaDecl = LambdaVD->getType()->getAsCXXRecordDecl();
+    CXXMethodDecl* LambdaCallOperator = LambdaDecl->getLambdaCallOperator();
+
+    return RuntimeDefinition(LambdaCallOperator);
   }
 
   bool argumentsMayEscape() const override {
@@ -521,7 +609,8 @@ public:
 /// it is written.
 class CXXInstanceCall : public AnyFunctionCall {
 protected:
-  void getExtraInvalidatedValues(ValueList &Values) const override;
+  void getExtraInvalidatedValues(ValueList &Values, 
+         RegionAndSymbolInvalidationTraits *ETraits) const override;
 
   CXXInstanceCall(const CallExpr *CE, ProgramStateRef St,
                   const LocationContext *LCtx)
@@ -704,7 +793,8 @@ protected:
   CXXConstructorCall(const CXXConstructorCall &Other) : AnyFunctionCall(Other){}
   void cloneTo(void *Dest) const override { new (Dest) CXXConstructorCall(*this); }
 
-  void getExtraInvalidatedValues(ValueList &Values) const override;
+  void getExtraInvalidatedValues(ValueList &Values,
+         RegionAndSymbolInvalidationTraits *ETraits) const override;
 
 public:
   virtual const CXXConstructExpr *getOriginExpr() const {
@@ -803,7 +893,8 @@ protected:
   ObjCMethodCall(const ObjCMethodCall &Other) : CallEvent(Other) {}
   void cloneTo(void *Dest) const override { new (Dest) ObjCMethodCall(*this); }
 
-  void getExtraInvalidatedValues(ValueList &Values) const override;
+  void getExtraInvalidatedValues(ValueList &Values,
+         RegionAndSymbolInvalidationTraits *ETraits) const override;
 
   /// Check if the selector may have multiple definitions (may have overrides).
   virtual bool canBeOverridenInSubclass(ObjCInterfaceDecl *IDecl,
@@ -869,6 +960,11 @@ public:
     }
     llvm_unreachable("Unknown message kind");
   }
+
+  // Returns the property accessed by this method, either explicitly via
+  // property syntax or implicitly via a getter or setter method. Returns
+  // nullptr if the call is not a prooperty access.
+  const ObjCPropertyDecl *getAccessedProperty() const;
 
   RuntimeDefinition getRuntimeDefinition() const override;
 

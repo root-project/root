@@ -67,54 +67,60 @@ static int  gSockFd             = -1;
 static SigPipe_t   gSigPipeHook = 0;
 extern int  gParallel;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return received bytes
+
 double NetGetBytesRecv()
 {
-   // return received bytes
    return gBytesRecv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return sent bytes
+
 double NetGetBytesSent()
 {
-   // return sent bytes
    return gBytesSent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return name of connected host
+
 void NetGetRemoteHost(std::string &OpenHost)
 {
-   // Return name of connected host
    OpenHost = gOpenhost;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return open socket descriptor
+
 int NetGetSockFd()
 {
-   // return open socket descriptor
    return gSockFd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset byte counts
+
 void NetResetByteCount()
 {
-   // reset byte counts
    gBytesRecv = 0;
    gBytesSent = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set hook for SIGPIPE calls
+
 void NetSetSigPipeHook(SigPipe_t Hook)
 {
-   // Set hook for SIGPIPE calls
    gSigPipeHook = Hook;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send exactly length bytes from buffer.
+
 static int Sendn(int sock, const void *buffer, int length)
 {
-   // Send exactly length bytes from buffer.
-
    if (sock < 0) return -1;
 
    int n, nsent = 0;
@@ -133,12 +139,12 @@ static int Sendn(int sock, const void *buffer, int length)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive exactly length bytes into buffer. Returns number of bytes
+/// received or 0 in case connection is closed. Returns -1 in case of error.
+
 static int Recvn(int sock, void *buffer, int length)
 {
-   // Receive exactly length bytes into buffer. Returns number of bytes
-   // received or 0 in case connection is closed. Returns -1 in case of error.
-
    if (sock < 0) return -1;
 
    int n, nrecv = 0;
@@ -160,11 +166,11 @@ static int Recvn(int sock, void *buffer, int length)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send buffer of len bytes.
+
 int NetSendRaw(const void *buf, int len)
 {
-   // Send buffer of len bytes.
-
    if (gParallel > 0) {
 
       if (NetParSend(buf, len) != len) {
@@ -182,11 +188,11 @@ int NetSendRaw(const void *buf, int len)
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer of maximum len bytes.
+
 int NetRecvRaw(void *buf, int len)
 {
-   // Receive a buffer of maximum len bytes.
-
    if (gParallel > 0) {
 
       if (NetParRecv(buf, len) != len) {
@@ -204,11 +210,11 @@ int NetRecvRaw(void *buf, int len)
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer of maximum len bytes from generic socket sock.
+
 int NetRecvRaw(int sock, void *buf, int len)
 {
-   // Receive a buffer of maximum len bytes from generic socket sock.
-
    if (sock == -1) return -1;
 
    if (Recvn(sock, buf, len) < 0) {
@@ -218,11 +224,11 @@ int NetRecvRaw(int sock, void *buf, int len)
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send buffer of len bytes. Message will be of type "kind".
+
 int NetSend(const void *buf, int len, EMessageTypes kind)
 {
-   // Send buffer of len bytes. Message will be of type "kind".
-
    int hdr[2];
    int hlen = sizeof(int) + len;
    hdr[0] = htonl(hlen);
@@ -233,11 +239,11 @@ int NetSend(const void *buf, int len, EMessageTypes kind)
    return NetSendRaw(buf, len);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send integer. Message will be of type "kind".
+
 int NetSend(int code, EMessageTypes kind)
 {
-   // Send integer. Message will be of type "kind".
-
    int hdr[3];
    int hlen = sizeof(int) + sizeof(int);
    hdr[0] = htonl(hlen);
@@ -246,11 +252,11 @@ int NetSend(int code, EMessageTypes kind)
    return NetSendRaw(hdr, sizeof(hdr));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a string. Message will be of type "kind".
+
 int NetSend(const char *msg, EMessageTypes kind)
 {
-   // Send a string. Message will be of type "kind".
-
    int len = 0;
 
    if (msg)
@@ -259,24 +265,26 @@ int NetSend(const char *msg, EMessageTypes kind)
    return NetSend(msg, len, kind);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int NetSendAck()
 {
    return NetSend(0, kROOTD_ACK);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 int NetSendError(ERootdErrors err)
 {
    return NetSend(err, kROOTD_ERR);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a buffer. Returns the newly allocated buffer, the length
+/// of the buffer and message type in kind.
+
 int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
 {
-   // Receive a buffer. Returns the newly allocated buffer, the length
-   // of the buffer and message type in kind.
-
    int hdr[2] = { 0, 0 };
 
    if (NetRecvRaw(hdr, sizeof(hdr)) < 0)
@@ -293,12 +301,12 @@ int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a string of maximum len length. Returns message type in kind.
+/// Return value is msg length.
+
 int NetRecv(char *msg, int len, EMessageTypes &kind)
 {
-   // Receive a string of maximum len length. Returns message type in kind.
-   // Return value is msg length.
-
    int   mlen;
 
    void *tmpbuf = 0;
@@ -323,27 +331,27 @@ int NetRecv(char *msg, int len, EMessageTypes &kind)
    return mlen - 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Simulate TSocket::Recv(char *str, int max).
+
 int NetRecv(char *msg, int max)
 {
-   // Simulate TSocket::Recv(char *str, int max).
-
    EMessageTypes kind;
 
    return NetRecv((char *)msg, max, kind);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the server's end.
+/// We are passed a flag that says whether or not we are started
+/// by a "master daemon" such as inetd. A master daemon will have
+/// already waited for a message to arrive for us and will have
+/// already set up the connection to the client. If we weren't
+/// started by a master daemon, then we must wait for a client's
+/// request to arrive.
+
 int NetOpen(int inetdflag, EService service)
 {
-   // Initialize the server's end.
-   // We are passed a flag that says whether or not we are started
-   // by a "master daemon" such as inetd. A master daemon will have
-   // already waited for a message to arrive for us and will have
-   // already set up the connection to the client. If we weren't
-   // started by a master daemon, then we must wait for a client's
-   // request to arrive.
-
 #if defined(USE_SIZE_T)
    size_t clilen = sizeof(gTcpCliAddr);
 #elif defined(USE_SOCKLEN_T)
@@ -439,11 +447,11 @@ again:
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the network connection.
+
 void NetClose()
 {
-   // Close the network connection.
-
    if (gParallel > 0) {
 
       NetParClose();
@@ -458,12 +466,12 @@ void NetClose()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the network connection for the server, when it has *not*
+/// been invoked by inetd. Used by rootd.
+
 int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
 {
-   // Initialize the network connection for the server, when it has *not*
-   // been invoked by inetd. Used by rootd.
-
    // We weren't started by a master daemon.
    // We have to create a socket ourselves and bind our well-known
    // address to it.
@@ -547,11 +555,11 @@ int NetInit(EService servtype, int port1, int port2, int tcpwindowsize)
    return gTcpSrvSock;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set some options for network socket.
+
 void NetSetOptions(EService serv, int sock, int tcpwindowsize)
 {
-   // Set some options for network socket.
-
    int val = 1;
 
    if (serv == kROOTD) {

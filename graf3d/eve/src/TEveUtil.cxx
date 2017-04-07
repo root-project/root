@@ -35,27 +35,24 @@
 #include <algorithm>
 #include <string>
 
-//==============================================================================
-// TEveUtil
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Standard utility functions for Eve.
+/** \class TEveUtil
+\ingroup TEve
+Standard utility functions for Eve.
+*/
 
 ClassImp(TEveUtil);
 
 TObjArray* TEveUtil::fgDefaultColors = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup Include and Macro paths.
+/// Since inclusion into ROOT this does nothing but could
+/// potentially be reactivated if some common macros are established
+/// and shipped with binary ROOT (in macros/eve). For example, these
+/// might be used to spawn specific GUI / GL configurations.
+
 void TEveUtil::SetupEnvironment()
 {
-   // Setup Include and Macro paths.
-   // Since inclusion into ROOT this does nothing but could
-   // potentially be reactivated if some common macros are established
-   // and shipped with binary ROOT (in macros/eve). For example, these
-   // might be used to spawn specific GUI / GL configurations.
-
    static const TEveException eh("TEveUtil::SetupEnvironment");
    static Bool_t setupDone = kFALSE;
 
@@ -94,11 +91,11 @@ void TEveUtil::SetupEnvironment()
    */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup icon pictures and mime-types.
+
 void TEveUtil::SetupGUI()
 {
-   // Setup icon pictures and mime-types.
-
    TEveElement::fgRnrIcons[0] = gClient->GetPicture("eve_rnr00_t.xpm");
    TEveElement::fgRnrIcons[1] = gClient->GetPicture("eve_rnr01_t.xpm");
    TEveElement::fgRnrIcons[2] = gClient->GetPicture("eve_rnr10_t.xpm");
@@ -118,17 +115,15 @@ void TEveUtil::SetupGUI()
                                        "tmacro_s.xpm", "tmacro_t.xpm", "");
 }
 
-/******************************************************************************/
-
 namespace
 {
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove last part of string 's', starting from the last
+/// occurrence of character 'c'.
+/// Remove directory part -- everything until the last '/'.
+
 void ChompTailAndDir(TString& s, char c='.')
 {
-   // Remove last part of string 's', starting from the last
-   // occurrence of character 'c'.
-   // Remove directory part -- everything until the last '/'.
-
    Ssiz_t p = s.Last(c);
    if (p != kNPOS)
       s.Remove(p);
@@ -139,11 +134,11 @@ void ChompTailAndDir(TString& s, char c='.')
 }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if macro 'mac' is loaded.
+
 Bool_t TEveUtil::CheckMacro(const char* mac)
 {
-   // Checks if macro 'mac' is loaded.
-
    // Axel's advice; now sth seems slow, using old method below for test.
    // return gROOT->GetInterpreter()->IsLoaded(mac);
 
@@ -157,21 +152,21 @@ Bool_t TEveUtil::CheckMacro(const char* mac)
       return (gROOT->GetGlobalFunction(foo.Data(), 0, kTRUE) != 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load and execute macro 'mac' if it has not been loaded yet.
+
 void TEveUtil::AssertMacro(const char* mac)
 {
-   // Load and execute macro 'mac' if it has not been loaded yet.
-
    if( CheckMacro(mac) == kFALSE) {
       gROOT->Macro(mac);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute macro 'mac'. Do not reload the macro.
+
 void TEveUtil::Macro(const char* mac)
 {
-   // Execute macro 'mac'. Do not reload the macro.
-
    if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
@@ -179,27 +174,23 @@ void TEveUtil::Macro(const char* mac)
    gROOT->ProcessLine(foo.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Makes sure that macro 'mac' is loaded, but do not reload it.
+
 void TEveUtil::LoadMacro(const char* mac)
 {
-   // Makes sure that macro 'mac' is loaded, but do not reload it.
-
    if (CheckMacro(mac) == kFALSE) {
       gROOT->LoadMacro(mac);
    }
 }
 
-/******************************************************************************/
-// Color management
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Fill col with RGBA values corresponding to index ci. If alpha
+/// is true, set alpha component of col to 255.
+/// ROOT's indexed color palette does not support transparency.
 
-//______________________________________________________________________________
 void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Bool_t alpha)
 {
-   // Fill col with RGBA values corresponding to index ci. If alpha
-   // is true, set alpha component of col to 255.
-   // ROOT's indexed color palette does not support transparency.
-
    TColor* c = gROOT->GetColor(ci);
    if (c)
    {
@@ -217,12 +208,12 @@ void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Bool_t alpha)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill col with RGBA values corresponding to index ci and transparency.
+/// ROOT's indexed color palette does not support transparency.
+
 void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Char_t transparency)
 {
-   // Fill col with RGBA values corresponding to index ci and transparency.
-   // ROOT's indexed color palette does not support transparency.
-
    UChar_t alpha = (255*(100 - transparency))/100;
 
    TColor* c = gROOT->GetColor(ci);
@@ -241,14 +232,14 @@ void TEveUtil::ColorFromIdx(Color_t ci, UChar_t col[4], Char_t transparency)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill col with weighted RGBA values corresponding to
+/// color-indices c1 and c2. If alpha is true, set alpha component
+/// of col to 255.
+
 void TEveUtil::ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
                             UChar_t col[4], Bool_t alpha)
 {
-   // Fill col with weighted RGBA values corresponding to
-   // color-indices c1 and c2. If alpha is true, set alpha component
-   // of col to 255.
-
    TColor* t1 = gROOT->GetColor(c1);
    TColor* t2 = gROOT->GetColor(c2);
    if(t1 && t2) {
@@ -259,16 +250,16 @@ void TEveUtil::ColorFromIdx(Float_t f1, Color_t c1, Float_t f2, Color_t c2,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find address of Color_t data-member with name varname in object
+/// obj.
+///
+/// This is used to access color information for TGListTreeItem
+/// coloration from visualization macros that wrap TObjects into
+/// TEveElementObjectPtr instances.
+
 Color_t* TEveUtil::FindColorVar(TObject* obj, const char* varname)
 {
-   // Find address of Color_t data-member with name varname in object
-   // obj.
-   //
-   // This is used to access color information for TGListTreeItem
-   // coloration from visualization macros that wrap TObjects into
-   // TEveElementObjectPtr instances.
-
    static const TEveException eh("TEveUtil::FindColorVar");
 
    Int_t off = obj->IsA()->GetDataMemberOffset(varname);
@@ -277,17 +268,17 @@ Color_t* TEveUtil::FindColorVar(TObject* obj, const char* varname)
    return (Color_t*) (((char*)obj) + off);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tweak all ROOT colors to become brighter (if value > 0) or
+/// darker (value < 0). Reasonable values for the value argument are
+/// from -2.5 to 2.5 (error will be printed otherwise).
+/// If value is zero, the original colors are restored.
+///
+/// You should call TEveManager::FullRedraw3D() afterwards or set
+/// the argument full_redraw to true (default is false).
+
 void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
 {
-   // Tweak all ROOT colors to become brighter (if value > 0) or
-   // darker (value < 0). Reasonable values for the value argument are
-   // from -2.5 to 2.5 (error will be printed otherwise).
-   // If value is zero, the original colors are restored.
-   //
-   // You should call TEveManager::FullRedraw3D() afterwards or set
-   // the argument full_redraw to true (default is false).
-
    if (value < -2.5 || value > 2.5)
    {
       Error("TEveUtil::SetColorBrightness", "value '%f' out of range [-0.5, 0.5].", value);
@@ -347,18 +338,14 @@ void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       gEve->FullRedraw3D();
 }
 
-/******************************************************************************/
-// Math utilities
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if interval Q is contained within interval M for U1 variables.
+/// It is assumed that all values are within the [-2pi, 2pi] interval and
+/// minM <= maxM & minQ <= maxQ.
 
-//______________________________________________________________________________
 Bool_t TEveUtil::IsU1IntervalContainedByMinMax(Float_t minM, Float_t maxM,
                                                Float_t minQ, Float_t maxQ)
 {
-   // Return true if interval Q is contained within interval M for U1 variables.
-   // It is assumed that all values are within the [-2pi, 2pi] interval and
-   // minM <= maxM & minQ <= maxQ.
-
    using namespace TMath;
 
    if (maxQ < minM)
@@ -372,14 +359,14 @@ Bool_t TEveUtil::IsU1IntervalContainedByMinMax(Float_t minM, Float_t maxM,
    return minQ >= minM && maxQ <= maxM;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if interval Q is overlapping within interval M for U1 variables.
+/// It is assumed that all values are within the [-2pi, 2pi] interval and
+/// minM <= maxM & minQ <= maxQ.
+
 Bool_t TEveUtil::IsU1IntervalOverlappingByMinMax(Float_t minM, Float_t maxM,
                                                  Float_t minQ, Float_t maxQ)
 {
-   // Return true if interval Q is overlapping within interval M for U1 variables.
-   // It is assumed that all values are within the [-2pi, 2pi] interval and
-   // minM <= maxM & minQ <= maxQ.
-
    using namespace TMath;
 
    if (maxQ < minM)
@@ -393,11 +380,11 @@ Bool_t TEveUtil::IsU1IntervalOverlappingByMinMax(Float_t minM, Float_t maxM,
    return maxQ >= minM && minQ <= maxM;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get fraction of interval [minQ, maxQ] in [minM, maxM]
+
 Float_t TEveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t maxQ)
 {
-   // Get fraction of interval [minQ, maxQ] in [minM, maxM]
-
    if (minQ>=minM && maxQ<=maxM)
       return 1;
 
@@ -413,17 +400,16 @@ Float_t TEveUtil::GetFraction(Float_t minM, Float_t maxM, Float_t minQ, Float_t 
    return 0;
 }
 
-/******************************************************************************/
-// TEveException
-/******************************************************************************/
 
-//______________________________________________________________________________
-//
-// Exception class thrown by TEve classes and macros.
+/** \class TEveException
+\ingroup TEve
+Exception class thrown by TEve classes and macros.
+*/
 
 ClassImp(TEveException);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool operator==(const TString& t, const std::string& s)
 { return (s == t.Data()); }
 
@@ -449,35 +435,32 @@ TEveException operator+(const TEveException &s1,  const char *s2)
 { TEveException r(s1); r += s2; return r; }
 
 
-/******************************************************************************/
-// TEvePadHolder
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Exception safe wrapper for setting gPad.
-// Optionally calls gPad->Modified()/Update() in destructor.
+/** \class TEvePadHolder
+\ingroup TEve
+Exception safe wrapper for setting gPad.
+Optionally calls gPad->Modified()/Update() in destructor.
+*/
 
 ClassImp(TEvePadHolder);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePadHolder::TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad, Int_t subpad) :
    fOldPad        (gPad),
    fModifyUpdateP (modify_update_p)
 {
-   // Constructor.
-
    if (new_pad != 0)
       new_pad->cd(subpad);
    else
       gPad = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEvePadHolder::~TEvePadHolder()
 {
-   // Destructor.
-
    if (fModifyUpdateP && gPad != 0) {
       gPad->Modified();
       gPad->Update();
@@ -485,28 +468,24 @@ TEvePadHolder::~TEvePadHolder()
    gPad = fOldPad;
 }
 
-
-/******************************************************************************/
-// TEveGeoManagerHolder
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Exception safe wrapper for setting gGeoManager.
-// Functionality to lock-unlock via setting of a static lock in
-// TGeoManager should be added (new feature of TGeoManager).
+/** \class TEveGeoManagerHolder
+\ingroup TEve
+Exception safe wrapper for setting gGeoManager.
+Functionality to lock-unlock via setting of a static lock in
+TGeoManager should be added (new feature of TGeoManager).
+*/
 
 ClassImp(TEveGeoManagerHolder);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+/// If n_seg is specified and larger than 2, the new geo-manager's
+/// NSegments is set to this value.
+
 TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
    fManager   (gGeoManager),
    fNSegments (0)
 {
-   // Constructor.
-   // If n_seg is specified and larger than 2, the new geo-manager's
-   // NSegments is set to this value.
-
    gGeoManager = new_gmgr;
    if (gGeoManager)
    {
@@ -523,11 +502,11 @@ TEveGeoManagerHolder::TEveGeoManagerHolder(TGeoManager* new_gmgr, Int_t n_seg) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveGeoManagerHolder::~TEveGeoManagerHolder()
 {
-   // Destructor.
-
    if (gGeoManager && fNSegments > 2)
    {
       gGeoManager->SetNsegments(fNSegments);
@@ -543,81 +522,73 @@ TEveGeoManagerHolder::~TEveGeoManagerHolder()
    }
 }
 
-
-/******************************************************************************/
-// TEveRefCnt
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Base-class for reference-counted objects.
-// By default the object is destroyed when zero referece-count is reached.
+/** \class TEveRefCnt
+\ingroup TEve
+Base-class for reference-counted objects.
+By default the object is destroyed when zero reference-count is reached.
+*/
 
 ClassImp(TEveRefCnt);
 
-
-/******************************************************************************/
-// TEveRefBackPtr
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// Base-class for reference-counted objects with reverse references to
-// TEveElement objects.
+/** \class TEveRefBackPtr
+\ingroup TEve
+Base-class for reference-counted objects with reverse references to
+TEveElement objects.
+*/
 
 ClassImp(TEveRefBackPtr);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveRefBackPtr::TEveRefBackPtr() :
    TEveRefCnt(),
    fBackRefs()
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Noop, should complain if back-ref list is not empty.
+
 TEveRefBackPtr::~TEveRefBackPtr()
 {
-   // Destructor. Noop, should complain if back-ref list is not empty.
-
    // !!! Complain if list not empty.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. New copy starts with zero reference count and
+/// empty back-reference list.
+
 TEveRefBackPtr::TEveRefBackPtr(const TEveRefBackPtr&) :
    TEveRefCnt(),
    fBackRefs()
 {
-   // Copy constructor. New copy starts with zero reference count and
-   // empty back-reference list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. Reference count and back-reference
+/// information is not assigned as these object hold pointers to a
+/// specific object.
+
 TEveRefBackPtr& TEveRefBackPtr::operator=(const TEveRefBackPtr&)
 {
-   // Assignment operator. Reference count and back-reference
-   // information is not assigned as these object hold pointers to a
-   // specific object.
-
    return *this;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Increase reference count and add re to the list of back-references.
 
-//______________________________________________________________________________
 void TEveRefBackPtr::IncRefCount(TEveElement* re)
 {
-   // Increase reference cound and add re to the list of back-references.
-
    TEveRefCnt::IncRefCount();
    ++fBackRefs[re];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrease reference count and remove re from the list of back-references.
+
 void TEveRefBackPtr::DecRefCount(TEveElement* re)
 {
-   // Decrease reference cound and remove re from the list of back-references.
-
    static const TEveException eh("TEveRefBackPtr::DecRefCount ");
 
    RefMap_i i = fBackRefs.find(re);
@@ -631,13 +602,11 @@ void TEveRefBackPtr::DecRefCount(TEveElement* re)
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Add given stamps to elements in the list of reverse references.
 
-//______________________________________________________________________________
 void TEveRefBackPtr::StampBackPtrElements(UChar_t stamps)
 {
-   // Add givem stamps to elements in the list of reverse references.
-
    RefMap_i i = fBackRefs.begin();
    while (i != fBackRefs.end())
    {

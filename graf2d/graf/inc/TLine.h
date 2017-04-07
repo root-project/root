@@ -13,45 +13,27 @@
 #define ROOT_TLine
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLine                                                                //
-//                                                                      //
-// A line segment.                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 class TLine : public TObject, public TAttLine, public TAttBBox2D {
 
 protected:
-   Double_t      fX1;           //X of 1st point
-   Double_t      fY1;           //Y of 1st point
-   Double_t      fX2;           //X of 2nd point
-   Double_t      fY2;           //Y of 2nd point
+   Double_t      fX1;           ///< X of 1st point
+   Double_t      fY1;           ///< Y of 1st point
+   Double_t      fX2;           ///< X of 2nd point
+   Double_t      fY2;           ///< Y of 2nd point
 
 public:
    // TLine status bits
    enum {
-      kLineNDC    = BIT(14), // Use NDC coordinates
-      kVertical   = BIT(15), // Line is vertical
-      kHorizontal = BIT(16)  // Line is horizontal
+      kLineNDC    = BIT(14), ///< Use NDC coordinates
+      kVertical   = BIT(15), ///< Line is vertical
+      kHorizontal = BIT(16)  ///< Line is horizontal
    };
 
    TLine();

@@ -9,35 +9,33 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXHandler                                                            //
-//                                                                      //
-// Handler of asynchronous events for xproofd sockets.                  //
-// Classes needing this should inherit from this and overload the       //
-// relevant methods.                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TXHandler
+\ingroup proofx
+
+Handler of asynchronous events for XProofD sockets.
+Classes needing this should inherit from this and overload the relevant methods.
+
+*/
 
 #include "TError.h"
 #include "TXHandler.h"
 
 ClassImp(TXHandler)
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler of asynchronous input events
+
 Bool_t TXHandler::HandleInput(const void *)
 {
-   // Handler of asynchronous input events
-
    AbstractMethod("HandleInput");
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler of asynchronous error events
+
 Bool_t TXHandler::HandleError(const void *)
 {
-   // Handler of asynchronous error events
-
    AbstractMethod("HandleError");
    return kTRUE;
 }

@@ -1,47 +1,50 @@
+/// \file
+/// \ingroup tutorial_mlp
+/// \notebook
+/// Example of a Multi Layer Perceptron
+/// For a LEP search for invisible Higgs boson, a neural network
+/// was used to separate the signal from the background passing
+/// some selection cuts. Here is a simplified version of this network,
+/// taking into account only WW events.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Christophe Delaere
+
 void mlpHiggs(Int_t ntrain=100) {
-// Example of a Multi Layer Perceptron
-// For a LEP search for invisible Higgs boson, a neural network
-// was used to separate the signal from the background passing
-// some selection cuts. Here is a simplified version of this network,
-// taking into account only WW events.
-//Author: Christophe Delaere
-
-   if (!gROOT->GetClass("TMultiLayerPerceptron")) {
-      gSystem->Load("libMLP");
-   }
-
-   // Prepare inputs
-   // The 2 trees are merged into one, and a "type" branch,
-   // equal to 1 for the signal and 0 for the background is added.
    const char *fname = "mlpHiggs.root";
    TFile *input = 0;
    if (!gSystem->AccessPathName(fname)) {
       input = TFile::Open(fname);
+   } else if (!gSystem->AccessPathName(Form("%s/mlp/%s", TROOT::GetTutorialDir().Data(), fname))) {
+      input = TFile::Open(Form("%s/mlp/%s", TROOT::GetTutorialDir().Data(), fname));
    } else {
       printf("accessing %s file from http://root.cern.ch/files\n",fname);
       input = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
    }
    if (!input) return;
 
-   TTree *signal = (TTree *) input->Get("sig_filtered");
-   TTree *background = (TTree *) input->Get("bg_filtered");
+   TTree *sig_filtered = (TTree *) input->Get("sig_filtered");
+   TTree *bg_filtered = (TTree *) input->Get("bg_filtered");
    TTree *simu = new TTree("MonteCarlo", "Filtered Monte Carlo Events");
    Float_t ptsumf, qelep, nch, msumf, minvis, acopl, acolin;
    Int_t type;
-   signal->SetBranchAddress("ptsumf", &ptsumf);
-   signal->SetBranchAddress("qelep",  &qelep);
-   signal->SetBranchAddress("nch",    &nch);
-   signal->SetBranchAddress("msumf",  &msumf);
-   signal->SetBranchAddress("minvis", &minvis);
-   signal->SetBranchAddress("acopl",  &acopl);
-   signal->SetBranchAddress("acolin", &acolin);
-   background->SetBranchAddress("ptsumf", &ptsumf);
-   background->SetBranchAddress("qelep",  &qelep);
-   background->SetBranchAddress("nch",    &nch);
-   background->SetBranchAddress("msumf",  &msumf);
-   background->SetBranchAddress("minvis", &minvis);
-   background->SetBranchAddress("acopl",  &acopl);
-   background->SetBranchAddress("acolin", &acolin);
+   sig_filtered->SetBranchAddress("ptsumf", &ptsumf);
+   sig_filtered->SetBranchAddress("qelep",  &qelep);
+   sig_filtered->SetBranchAddress("nch",    &nch);
+   sig_filtered->SetBranchAddress("msumf",  &msumf);
+   sig_filtered->SetBranchAddress("minvis", &minvis);
+   sig_filtered->SetBranchAddress("acopl",  &acopl);
+   sig_filtered->SetBranchAddress("acolin", &acolin);
+   bg_filtered->SetBranchAddress("ptsumf", &ptsumf);
+   bg_filtered->SetBranchAddress("qelep",  &qelep);
+   bg_filtered->SetBranchAddress("nch",    &nch);
+   bg_filtered->SetBranchAddress("msumf",  &msumf);
+   bg_filtered->SetBranchAddress("minvis", &minvis);
+   bg_filtered->SetBranchAddress("acopl",  &acopl);
+   bg_filtered->SetBranchAddress("acolin", &acolin);
    simu->Branch("ptsumf", &ptsumf, "ptsumf/F");
    simu->Branch("qelep",  &qelep,  "qelep/F");
    simu->Branch("nch",    &nch,    "nch/F");
@@ -52,16 +55,16 @@ void mlpHiggs(Int_t ntrain=100) {
    simu->Branch("type",   &type,   "type/I");
    type = 1;
    Int_t i;
-   for (i = 0; i < signal->GetEntries(); i++) {
-      signal->GetEntry(i);
+   for (i = 0; i < sig_filtered->GetEntries(); i++) {
+      sig_filtered->GetEntry(i);
       simu->Fill();
    }
    type = 0;
-   for (i = 0; i < background->GetEntries(); i++) {
-      background->GetEntry(i);
+   for (i = 0; i < bg_filtered->GetEntries(); i++) {
+      bg_filtered->GetEntry(i);
       simu->Fill();
    }
-   // Build and train the NN ptsumf is used as a weight since we are primarly
+   // Build and train the NN ptsumf is used as a weight since we are primarily
    // interested  by high pt events.
    // The datasets used here are the same as the default ones.
    TMultiLayerPerceptron *mlp =
@@ -96,15 +99,15 @@ void mlpHiggs(Int_t ntrain=100) {
    bg->SetDirectory(0);
    sig->SetDirectory(0);
    Double_t params[3];
-   for (i = 0; i < background->GetEntries(); i++) {
-      background->GetEntry(i);
+   for (i = 0; i < bg_filtered->GetEntries(); i++) {
+      bg_filtered->GetEntry(i);
       params[0] = msumf;
       params[1] = ptsumf;
       params[2] = acolin;
       bg->Fill(mlp->Evaluate(0, params));
    }
-   for (i = 0; i < signal->GetEntries(); i++) {
-      signal->GetEntry(i);
+   for (i = 0; i < sig_filtered->GetEntries(); i++) {
+      sig_filtered->GetEntry(i);
       params[0] = msumf;
       params[1] = ptsumf;
       params[2] = acolin;

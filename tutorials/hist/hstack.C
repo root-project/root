@@ -1,8 +1,14 @@
-TCanvas *hstack() {
-// Example of stacked histograms: class THStack
-//
-//  Author: Rene Brun
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Example of stacked histograms: class THStack.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
+TCanvas *hstack() {
    THStack *hs = new THStack("hs","Stacked 1D histograms");
    //create three 1-d histograms
    TH1F *h1st = new TH1F("h1st","test hstack",100,-4,4);
@@ -25,7 +31,6 @@ TCanvas *hstack() {
    hs->Add(h3st);
 
    TCanvas *cst = new TCanvas("cst","stacked hists",10,10,700,700);
-   cst->SetFillColor(41);
    cst->Divide(2,2);
    // in top left pad, draw the stack with defaults
    cst->cd(1);

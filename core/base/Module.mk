@@ -26,7 +26,7 @@ BASEH3       := GuiTypes.h KeySymbols.h Buttons.h TTimeStamp.h TVirtualMutex.h \
                 TBase64.h
 BASEH3       := $(patsubst %,$(MODDIRI)/%,$(BASEH3))
 BASEH1       := $(filter-out $(BASEH3),$(BASEH1))
-BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+BASEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h $(MODDIRI)/ROOT/*.hxx))
 BASEDICTH    := $(BASEH1) $(BASEH3)
 ROOTAS       := $(MODDIRS)/roota.cxx
 ROOTAO       := $(call stripsrc,$(ROOTAS:.cxx=.o))
@@ -38,7 +38,8 @@ BASEO        := $(call stripsrc,$(BASES:.cxx=.o))
 BASEDEP      := $(BASEO:.o=.d) $(ROOTAO:.o=.d)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(BASEH))
+BASEH_REL   := $(patsubst $(MODDIRI)/%,include/%,$(BASEH))
+ALLHDRS     += $(BASEH_REL)
 
 # include all dependency files
 INCLUDEFILES += $(BASEDEP)
@@ -46,7 +47,11 @@ INCLUDEFILES += $(BASEDEP)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%.h:    $(BASEDIRI)/%.h
+include/%.h:	$(BASEDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:	$(BASEDIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 # Explicitely state this dependency.
@@ -90,6 +95,3 @@ $(COREDO): CXXFLAGS += $(PCREINC)
 ifeq ($(ARCH),linuxicc)
 $(COREDO):     CXXFLAGS += -wd191
 endif
-
-# rebuild after reconfigure
-$(call stripsrc,$(BASEDIRS)/TROOT.o): config/Makefile.config

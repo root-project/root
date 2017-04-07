@@ -16,7 +16,6 @@
 #include "TFunction.h"
 #include "TGlobal.h"
 #include "TInterpreter.h"
-#include "TInterpreterValue.h"
 #include "TList.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
@@ -25,13 +24,22 @@
 // Standard
 #include <assert.h>
 #include <map>
+#include <set>
 #include <sstream>
-#include <vector>
 
 // temp
 #include <iostream>
-typedef PyROOT::TParameter TParameter;
+// FIXME: Should refer to PyROOT::TParameter in the code.
+#ifdef R__CXXMODULES
+  #define TParameter PyROOT::TParameter
+#else
+  typedef PyROOT::TParameter TParameter;
+#endif
 // --temp
+
+
+// small number that allows use of stack for argument passing
+const int SMALL_ARGS_N = 8;
 
 
 // data for life time management ---------------------------------------------
@@ -53,6 +61,10 @@ static GlobalVars_t g_globalvars;
 
 // data ----------------------------------------------------------------------
 Cppyy::TCppScope_t Cppyy::gGlobalScope = GLOBAL_HANDLE;
+
+// smart pointer types
+static std::set< std::string > gSmartPtrTypes =
+   { "auto_ptr", "shared_ptr", "weak_ptr", "unique_ptr" };
 
 
 // global initialization -----------------------------------------------------
@@ -85,7 +97,7 @@ public:
 static inline
 TClassRef& type_from_handle( Cppyy::TCppScope_t scope )
 {
-   assert( (ClassRefs_t::size_type) scope < g_classrefs.size());
+   assert( (ClassRefs_t::size_type) scope < g_classrefs.size() );
    return g_classrefs[ (ClassRefs_t::size_type)scope ];
 }
 
@@ -118,7 +130,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumScopes( TCppScope_t scope )
    return gClassTable->Classes();
 }
 
-std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope ) 
+std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope )
 {
 // Retrieve the scope name of the scope indexed with iscope in parent.
    TClassRef& cr = type_from_handle( parent );
@@ -128,6 +140,27 @@ std::string Cppyy::GetScopeName( TCppScope_t parent, TCppIndex_t iscope )
    if ( name.find("::") == std::string::npos )
        return name;
    return "";
+}
+
+std::string Cppyy::GetName( const std::string& name )
+{
+   if( name.size() == 0) return name; 
+   // need to deal with template paremeters that can have scopes themselves
+   Int_t tpl_open = 0;
+   for ( std::string::size_type pos = name.size() - 1; pos > 0; pos-- ) {
+      std::string::value_type c = name[pos];
+      // count '<' and '>' to be able to skip template contents
+      if ( c == '>' )
+         ++tpl_open;
+      else if ( c == '<' )
+         --tpl_open;
+      // by only checking for "::" the last part (class name) is dropped
+      else if ( tpl_open == 0 && c == ':'&& name[ pos - 1 ] == ':' ) {
+      // found a new scope part
+         return name.substr( pos+1 );
+      }
+   }
+   return name;
 }
 
 std::string Cppyy::ResolveName( const std::string& cppitem_name )
@@ -148,6 +181,7 @@ Cppyy::TCppScope_t Cppyy::GetScope( const std::string& sname )
    else
       scope_name = sname;
 
+   scope_name = ResolveName( scope_name );
    auto icr = g_name2classrefidx.find( scope_name );
    if ( icr != g_name2classrefidx.end() )
       return (TCppType_t)icr->second;
@@ -196,10 +230,10 @@ Bool_t Cppyy::IsBuiltin( const std::string& type_name )
 }
 
 Bool_t Cppyy::IsComplete( const std::string& type_name )
-{  
+{
 // verify whether the dictionary of this class is fully available
    Bool_t b = kFALSE;
-   
+
    Int_t oldEIL = gErrorIgnoreLevel;
    gErrorIgnoreLevel = 3000;
    TClass* klass = TClass::GetClass( TClassEdit::ShortType( type_name.c_str(), 1 ).c_str() );
@@ -213,25 +247,30 @@ Bool_t Cppyy::IsComplete( const std::string& type_name )
       }
    }
    gErrorIgnoreLevel = oldEIL;
-   return b;    
-}  
+   return b;
+}
 
 // memory management ---------------------------------------------------------
-Cppyy::TCppObject_t Cppyy::Allocate( TCppType_t klass )
+Cppyy::TCppObject_t Cppyy::Allocate( TCppType_t type )
 {
-   TClassRef& cr = type_from_handle( klass );
+   TClassRef& cr = type_from_handle( type );
+   return (TCppObject_t)malloc( cr->Size() );
+}
+
+void Cppyy::Deallocate( TCppType_t /* type */, TCppObject_t instance )
+{
+   free( instance );
+}
+
+Cppyy::TCppObject_t Cppyy::Construct( TCppType_t type )
+{
+   TClassRef& cr = type_from_handle( type );
    return (TCppObject_t)cr->New();
 }
 
-void Cppyy::Deallocate( TCppType_t /* klass */, TCppObject_t /* instance */ )
+void Cppyy::Destruct( TCppType_t type, TCppObject_t instance )
 {
-    /* nothing ... deletion is done in Destruct; that is not a requirement,
-       but works well enough */
-}
-
-void Cppyy::Destruct( TCppType_t klass, TCppObject_t instance )
-{
-   TClassRef& cr = type_from_handle( klass );
+   TClassRef& cr = type_from_handle( type );
    cr->Destructor( (void*)instance );
 }
 
@@ -263,10 +302,10 @@ static CallFunc_t* GetCallFunc( Cppyy::TCppMethod_t method )
 
       TCollection* method_args = func->GetListOfMethodArgs();
       TIter iarg( method_args );
-   
+
       TMethodArg* method_arg = 0;
       while ((method_arg = (TMethodArg*)iarg.Next())) {
-         std::string fullType = method_arg->GetFullTypeName();
+         std::string fullType = method_arg->GetTypeNormalizedName();
          if ( callString.empty() )
             callString = fullType;
          else
@@ -316,149 +355,155 @@ static CallFunc_t* GetCallFunc( Cppyy::TCppMethod_t method )
    return callf;
 }
 
-static CallFunc_t* PrepareCall( Cppyy::TCppMethod_t method, void* args_ )
-{
-   CallFunc_t* callf = GetCallFunc( method );
-   if ( callf ) {
-      gInterpreter->CallFunc_ResetArg( callf );
-      const std::vector<TParameter>& args = *(std::vector<TParameter>*)args_;
-      for ( auto arg : args ) {
-         switch ( arg.fTypeCode ) {
-         case 'd':       /* double */
-            gInterpreter->CallFunc_SetArg( callf, arg.fValue.fDouble );
-            break;
-         case 'k':       /* long long */
-            gInterpreter->CallFunc_SetArg( callf, arg.fValue.fLongLong );
-            break;
-         case 'K':       /* unsigned long long */
-            gInterpreter->CallFunc_SetArg( callf, arg.fValue.fULongLong );
-            break;
-         case 'l':       /* long */
-            gInterpreter->CallFunc_SetArg( callf, arg.fValue.fLong );
-            break;
-         case 'U':       /* unsigned long */
-            gInterpreter->CallFunc_SetArg( callf, (ULong64_t)arg.fValue.fULong );
-            break;
-         case 'v':       /* void* */
-            gInterpreter->CallFunc_SetArg( callf, (Long_t)arg.fValue.fVoidp );
-            break;
-         case 'V':       /* void** */
-            gInterpreter->CallFunc_SetArg( callf, (Long_t)arg.fRef );
-            break;
-         default:
-            std::cerr << "unknown type code: " << arg.fTypeCode << std::endl;
-            break;
-         }
+static inline void copy_args( void* args_, void** vargs ) {
+   std::vector<TParameter>& args = *(std::vector<TParameter>*)args_;
+   for ( std::vector<TParameter>::size_type i = 0; i < args.size(); ++i ) {
+      switch ( args[i].fTypeCode ) {
+      case 'l':          /* long */
+         vargs[i] = (void*)&args[i].fValue.fLong;
+         break;
+      case 'f':          /* double */
+         vargs[i] = (void*)&args[i].fValue.fFloat;
+         break;
+      case 'd':          /* double */
+         vargs[i] = (void*)&args[i].fValue.fDouble;
+         break;
+      case 'D':          /* long double */
+         vargs[i] = (void*)&args[i].fValue.fLongDouble;
+         break;
+      case 'k':          /* long long */
+      case 'K':          /* unsigned long long */
+      case 'U':          /* unsigned long */
+      case 'p':          /* void* */
+         vargs[i] = (void*)&args[i].fValue.fVoidp;
+         break;
+      case 'V':          /* (void*)type& */
+         vargs[i] = args[i].fValue.fVoidp;
+         break;
+      case 'r':          /* const type& */
+         vargs[i] = args[i].fRef;
+         break;
+      default:
+         std::cerr << "unknown type code: " << args[i].fTypeCode << std::endl;
+         break;
       }
+   }
+}
 
+Bool_t FastCall(
+      Cppyy::TCppMethod_t method, void* args_, void* self, void* result )
+{
+   const std::vector<TParameter>& args = *(std::vector<TParameter>*)args_;
+
+   CallFunc_t* callf = GetCallFunc( method );
+   if ( ! callf )
+      return kFALSE;
+
+   TInterpreter::CallFuncIFacePtr_t faceptr = gCling->CallFunc_IFacePtr( callf );
+   if ( faceptr.fKind == TInterpreter::CallFuncIFacePtr_t::kGeneric ) {
+      if ( args.size() <= SMALL_ARGS_N ) {
+         void* smallbuf[SMALL_ARGS_N];
+         copy_args( args_, smallbuf );
+         faceptr.fGeneric( self, args.size(), smallbuf, result );
+      } else {
+         std::vector<void*> buf( args.size() );
+         copy_args( args_, buf.data() );
+         faceptr.fGeneric( self, args.size(), buf.data(), result );
+      }
+      return kTRUE;
    }
 
-   return callf;
+   if ( faceptr.fKind == TInterpreter::CallFuncIFacePtr_t::kCtor ) {
+      if ( args.size() <= SMALL_ARGS_N ) {
+         void* smallbuf[SMALL_ARGS_N];
+         copy_args( args_, (void**)smallbuf );
+         faceptr.fCtor( (void**)smallbuf, result, args.size() );
+      } else {
+         std::vector<void*> buf( args.size() );
+         copy_args( args_, buf.data() );
+         faceptr.fCtor( buf.data(), result, args.size() );
+      }
+      return kTRUE;
+   }
+
+   if ( faceptr.fKind == TInterpreter::CallFuncIFacePtr_t::kDtor ) {
+      std::cerr << " DESTRUCTOR NOT IMPLEMENTED YET! " << std::endl;
+      return kFALSE;
+   }
+
+   return kFALSE;
+}
+
+template< typename T >
+static inline T CallT( Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, void* args )
+{
+   T t{};
+   if ( FastCall( method, args, (void*)self, &t ) )
+      return t;
+   return (T)-1;
+}
+
+#define CPPYY_IMP_CALL( typecode, rtype )                                     \
+rtype Cppyy::Call##typecode( TCppMethod_t method, TCppObject_t self, void* args )\
+{                                                                            \
+   return CallT< rtype >( method, self, args );                              \
 }
 
 void Cppyy::CallV( TCppMethod_t method, TCppObject_t self, void* args )
 {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return /* TODO ... report error */;
-   gInterpreter->CallFunc_Exec( func, (void*)self );
+   if ( ! FastCall( method, args, (void*)self, nullptr ) )
+      return /* TODO ... report error */;
 }
 
-UChar_t Cppyy::CallB( TCppMethod_t method, TCppObject_t self, void* args ) {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (UChar_t)-1;
-   return (UChar_t)gInterpreter->CallFunc_ExecInt( func, (void*)self );
-}
+CPPYY_IMP_CALL( B,  UChar_t      )
+CPPYY_IMP_CALL( C,  Char_t       )
+CPPYY_IMP_CALL( H,  Short_t      )
+CPPYY_IMP_CALL( I,  Int_t        )
+CPPYY_IMP_CALL( L,  Long_t       )
+CPPYY_IMP_CALL( LL, Long64_t     )
+CPPYY_IMP_CALL( F,  Float_t      )
+CPPYY_IMP_CALL( D,  Double_t     )
+CPPYY_IMP_CALL( LD, LongDouble_t )
 
-Char_t Cppyy::CallC( TCppMethod_t method, TCppObject_t self, void* args )
+void* Cppyy::CallR( TCppMethod_t method, TCppObject_t self, void* args )
 {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Char_t)-1;
-   return (Char_t)gInterpreter->CallFunc_ExecInt( func, (void*)self );
-}
-
-Short_t Cppyy::CallH( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Short_t)-1;
-   return (Short_t)gInterpreter->CallFunc_ExecInt( func, (void*)self );
-}
-
-Int_t Cppyy::CallI( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Int_t)-1;
-   return (Int_t)gInterpreter->CallFunc_ExecInt( func, (void*)self );
-}
-
-Long_t Cppyy::CallL( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Long_t)-1;
-// the name ExecInt is historic, the return is Long_t
-   return (Long_t)gInterpreter->CallFunc_ExecInt( func, (void*)self );
-}
-
-Long64_t Cppyy::CallLL( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Long64_t)-1;
-   return (Long64_t)gInterpreter->CallFunc_ExecInt64( func, (void*)self );
-}
-
-Float_t Cppyy::CallF( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Float_t)-1.f;
-   return (Float_t)gInterpreter->CallFunc_ExecDouble( func, (void*)self );
-}
-
-Double_t Cppyy::CallD( TCppMethod_t method, TCppObject_t self, void* args )
-{
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return -1.;
-   return gInterpreter->CallFunc_ExecDouble( func, (void*)self );
-}
-
-void* Cppyy::CallR( TCppMethod_t /* method */, TCppObject_t /* self */, void* /* args */ )
-{
-   return NULL;
+   void* r = nullptr;
+   if ( FastCall( method, args, (void*)self, &r ) )
+      return r;
+   return nullptr;
 }
 
 Char_t* Cppyy::CallS( TCppMethod_t method, TCppObject_t self, void* args )
 {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (Char_t*)nullptr;
-   return (Char_t*)gInterpreter->CallFunc_ExecInt( func, (void*)self );
+   Char_t* s = nullptr;
+   if ( FastCall( method, args, (void*)self, &s ) )
+      return s;
+   return nullptr;
 }
 
 Cppyy::TCppObject_t Cppyy::CallConstructor(
       TCppMethod_t method, TCppType_t /* klass */, void* args ) {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (TCppObject_t)0;
-// the name ExecInt is historic, the return is Long_t
-   return (TCppObject_t)gInterpreter->CallFunc_ExecInt( func, nullptr );
+   void* obj = nullptr;
+   if ( FastCall( method, args, nullptr, &obj ) )
+      return (TCppObject_t)obj;
+   return (TCppObject_t)0;
+}
+
+void Cppyy::CallDestructor( TCppType_t type, TCppObject_t self )
+{
+   TClassRef& cr = type_from_handle( type );
+   cr->Destructor( (void*)self, kTRUE );
 }
 
 Cppyy::TCppObject_t Cppyy::CallO( TCppMethod_t method,
-      TCppObject_t self, void* args, TCppType_t /* result_type */ )
+      TCppObject_t self, void* args, TCppType_t result_type )
 {
-   CallFunc_t* func = PrepareCall( method, args );
-   if ( !func ) return (TCppObject_t)0;
-
-   TInterpreterValue* value = gInterpreter->CreateTemporary();
-   gInterpreter->CallFunc_Exec( func, self, *value );
-   if ( ! value->IsValid() ) {
-      delete value;
-      return (TCppObject_t)0;
-   }
-
-// last time I checked, this was a no-op, but by convention it is required
-   gInterpreter->ClearStack();
-
-// need to return as a TInterpreterValue as it does not allow taking ownership
-// of just the pointer, so the caller needs to delete the TInterpreterValue to
-// delete the held object
-   return (TCppObject_t)value;
+   TClassRef& cr = type_from_handle( result_type );
+   size_t s = gInterpreter->ClassInfo_Size(cr->GetClassInfo());
+   void* obj = malloc( s );
+   if ( FastCall( method, args, self, obj ) )
+      return (TCppObject_t)obj;
+   return (TCppObject_t)0;
 }
 
 Cppyy::TCppMethPtrGetter_t Cppyy::GetMethPtrGetter(
@@ -491,7 +536,7 @@ size_t Cppyy::GetFunctionArgTypeoffset()\
 
 
 // scope reflection information ----------------------------------------------
-Bool_t Cppyy::IsNamespace( TCppScope_t scope) {
+Bool_t Cppyy::IsNamespace( TCppScope_t scope ) {
 // Test if this scope represents a namespace.
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )
@@ -510,8 +555,8 @@ Bool_t Cppyy::IsAbstract( TCppType_t klass ) {
 Bool_t Cppyy::IsEnum( const std::string& type_name ) {
    return gInterpreter->ClassInfo_IsEnum( type_name.c_str() );
 }
-    
-    
+
+
 // class reflection information ----------------------------------------------
 std::string Cppyy::GetFinalName( TCppType_t klass )
 {
@@ -519,15 +564,15 @@ std::string Cppyy::GetFinalName( TCppType_t klass )
       return "";
    // TODO: either this or GetScopedFinalName is wrong
    TClassRef& cr = type_from_handle( klass );
-   return ResolveName( cr->GetName() );
+   return cr->GetName();
 }
 
 std::string Cppyy::GetScopedFinalName( TCppType_t klass )
 {
    // TODO: either this or GetFinalName is wrong
    TClassRef& cr = type_from_handle( klass );
-   return ResolveName( cr->GetName() );
-}   
+   return cr->GetName();
+}
 
 Bool_t Cppyy::HasComplexHierarchy( TCppType_t /* handle */ )
 {
@@ -552,14 +597,28 @@ std::string Cppyy::GetBaseName( TCppType_t klass, TCppIndex_t ibase )
 
 Bool_t Cppyy::IsSubtype( TCppType_t derived, TCppType_t base )
 {
+   if ( derived == base )
+      return kTRUE;
    TClassRef& derived_type = type_from_handle( derived );
    TClassRef& base_type = type_from_handle( base );
    return derived_type->GetBaseClass( base_type ) != 0;
 }
 
+void Cppyy::AddSmartPtrType( const std::string& type_name ) {
+   gSmartPtrTypes.insert( ResolveName( type_name ) );
+}
+
+Bool_t Cppyy::IsSmartPtr( const std::string& type_name ) {
+// checks if typename denotes a smart pointer
+// TODO: perhaps make this stricter?
+   const std::string& real_name = ResolveName( type_name );
+   return gSmartPtrTypes.find(
+      real_name.substr( 0,real_name.find( "<" ) ) ) != gSmartPtrTypes.end();
+}
+
 // type offsets --------------------------------------------------------------
-ptrdiff_t Cppyy::GetBaseOffset(
-      TCppType_t derived, TCppType_t base, TCppObject_t address, int direction )
+ptrdiff_t Cppyy::GetBaseOffset( TCppType_t derived, TCppType_t base,
+      TCppObject_t address, int direction, bool rerror )
 {
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
    if ( derived == base || !(base && derived) )
@@ -571,15 +630,26 @@ ptrdiff_t Cppyy::GetBaseOffset(
    if ( !cd.GetClass() || !cb.GetClass() )
       return (ptrdiff_t)0;
 
-   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset(
-      cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
-   if ( offset == -1 ) {
-   // warn to allow diagnostics, but 0 offset is often good, so use that and continue
-      std::ostringstream msg;
-      msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
-      PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
-      return 0;
+   Long_t offset = -1;
+   if ( ! (cd->GetClassInfo() && cb->GetClassInfo()) ) {    // gInterpreter requirement
+   // would like to warn, but can't quite determine error from intentional
+   // hiding by developers, so only cover the case where we really should have
+   // had a class info, but apparently don't:
+      if ( cd->IsLoaded() ) {
+      // warn to allow diagnostics
+         std::ostringstream msg;
+         msg << "failed offset calculation between " << cb->GetName() << " and " << cd->GetName();
+         PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
+      }
+
+   // return -1 to signal caller NOT to apply offset
+      return rerror ? (ptrdiff_t)offset : 0;
    }
+
+   offset = gInterpreter->ClassInfo_GetBaseOffset(
+      cd->GetClassInfo(), cb->GetClassInfo(), (void*)address, direction > 0 );
+   if ( offset == -1 )  // Cling error, treat silently
+      return rerror ? (ptrdiff_t)offset : 0;
 
    return (ptrdiff_t)(direction < 0 ? -offset : offset);
 }
@@ -589,22 +659,25 @@ ptrdiff_t Cppyy::GetBaseOffset(
 Cppyy::TCppIndex_t Cppyy::GetNumMethods( TCppScope_t scope )
 {
    TClassRef& cr = type_from_handle( scope );
-   if ( cr.GetClass() && cr->GetListOfMethods() )
-      return (TCppIndex_t)cr->GetListOfMethods()->GetSize();
-   else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
-      // TODO: make sure the following is done lazily instead
-      std::cerr << " GetNumMethods on global scope must be made lazy " << std::endl;
-      if (g_globalfuncs.empty()) {
-         TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
-         g_globalfuncs.reserve(funcs->GetSize());
-
-         TIter ifunc(funcs);
-
-         TFunction* func = 0;
-         while ((func = (TFunction*)ifunc.Next()))
-            g_globalfuncs.push_back(*func);
+   if ( cr.GetClass() && cr->GetListOfMethods() ) {
+      Cppyy::TCppIndex_t nMethods = (TCppIndex_t)cr->GetListOfMethods()->GetSize();
+      if ( nMethods == (TCppIndex_t)0 ) {
+         std::string clName = GetScopedFinalName( scope );
+         if ( clName.find( '<' ) != std::string::npos ) {
+         // chicken-and-egg problem: TClass does not know about methods until instantiation: force it
+            if ( TClass::GetClass( ("std::" + clName).c_str() ) )
+               clName = "std::" + clName;
+            std::ostringstream stmt;
+            stmt << "template class " << clName << ";";
+            gInterpreter->Declare( stmt.str().c_str() );
+         // now reload the methods
+            return (TCppIndex_t)cr->GetListOfMethods( kTRUE )->GetSize();
+         }
       }
-      return (TCppIndex_t)g_globalfuncs.size();
+      return nMethods;
+   } else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
+   // enforce lazines by denying the existence of methods
+      return (TCppIndex_t)0;
    }
    return (TCppIndex_t)0;
 }
@@ -620,7 +693,7 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
 // TODO: this method assumes that the call for this name is made only
 // once, and thus there is no need to store the results of the search
 // in g_globalfuncs ... probably true, but needs verification
-   std::vector< TCppIndex_t > methods;
+   std::vector< TCppMethod_t > methods;
    if ( scope == GLOBAL_HANDLE ) {
       TCollection* funcs = gROOT->GetListOfGlobalFunctions( kTRUE );
       g_globalfuncs.reserve(funcs->GetSize());
@@ -638,6 +711,13 @@ std::vector< Cppyy::TCppMethod_t > Cppyy::GetMethodsFromName(
                methods.push_back( (TCppMethod_t)func );
             }
          }
+      }
+   } else {
+      TClassRef& cr = type_from_handle( scope );
+      if ( cr.GetClass() ) {
+      // todo: handle overloads
+         TMethod* m = cr->GetMethodAny( name.c_str() );
+         if ( m ) methods.push_back( (TCppMethod_t)m );
       }
    }
 
@@ -667,7 +747,7 @@ std::string Cppyy::GetMethodResultType( TCppMethod_t method )
       TFunction* f = (TFunction*)method;
       if ( f->ExtraProperty() & kIsConstructor )
          return "constructor";
-      return f->GetReturnTypeName();
+      return f->GetReturnTypeNormalizedName();
    }
    return "<unknown>";
 }
@@ -703,14 +783,22 @@ std::string Cppyy::GetMethodArgType( TCppMethod_t method, int iarg )
    if ( method ) {
       TFunction* f = (TFunction*)method;
       TMethodArg* arg = (TMethodArg*)f->GetListOfMethodArgs()->At( iarg );
-      return arg->GetFullTypeName();
+      return arg->GetTypeNormalizedName();
    }
    return "<unknown>";
 }
 
-std::string Cppyy::GetMethodArgDefault( TCppMethod_t /* method */, int /* iarg */ )
+std::string Cppyy::GetMethodArgDefault( TCppMethod_t method, int iarg )
 {
-   return "";      // unused for now
+   if ( method ) {
+      TFunction* f = (TFunction*)method;
+      TMethodArg* arg = (TMethodArg*)f->GetListOfMethodArgs()->At( iarg );
+      const char* def = arg->GetDefault();
+      if ( def )
+         return def;
+   }
+
+   return "";
 }
 
 std::string Cppyy::GetMethodSignature( TCppScope_t /* scope */, TCppIndex_t /* imeth */ )
@@ -792,7 +880,7 @@ Cppyy::TCppIndex_t Cppyy::GetNumDatamembers( TCppScope_t scope )
       return cr->GetListOfDataMembers()->GetSize();
    else if ( scope == (TCppScope_t)GLOBAL_HANDLE ) {
       std::cerr << " global data should be retrieved lazily " << std::endl;
-      TCollection* vars = gROOT->GetListOfGlobals( kTRUE ); 
+      TCollection* vars = gROOT->GetListOfGlobals( kTRUE );
       if ( g_globalvars.size() != (GlobalVars_t::size_type)vars->GetSize() ) {
          g_globalvars.clear();
          g_globalvars.reserve(vars->GetSize());
@@ -841,7 +929,7 @@ std::string Cppyy::GetDatamemberType( TCppScope_t scope, TCppIndex_t idata )
    TClassRef& cr = type_from_handle( scope );
    if ( cr.GetClass() )  {
       TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
-      std::string fullType = m->GetFullTypeName();
+      std::string fullType = m->GetTrueTypeName();
       if ( (int)m->GetArrayDim() > 1 || (!m->IsBasic() && m->IsaPointer()) )
          fullType.append( "*" );
       else if ( (int)m->GetArrayDim() == 1 ) {
@@ -859,8 +947,6 @@ ptrdiff_t Cppyy::GetDatamemberOffset( TCppScope_t scope, TCppIndex_t idata )
 {
    if ( scope == GLOBAL_HANDLE ) {
       TGlobal* gbl = g_globalvars[ idata ];
-      if ( gbl->Property() & kIsEnum )
-         return (ptrdiff_t)*(void**)gbl->GetAddress();
       return (ptrdiff_t)gbl->GetAddress();
    }
 
@@ -882,16 +968,6 @@ Cppyy::TCppIndex_t Cppyy::GetDatamemberIndex( TCppScope_t scope, const std::stri
          return g_globalvars.size() - 1;
       }
 
-   /*
-      ClassInfo_t* gbl = gInterpreter->ClassInfo_Factory( "" ); // "" == global namespace
-      DataMemberInfo_t* dt = gInterpreter->DataMemberInfo_Factory( gbl );
-      while ( gInterpreter->DataMemberInfo_Next( dt ) ) {
-         if ( gInterpreter->DataMemberInfo_IsValid( dt ) &&
-            gInterpreter->DataMemberInfo_Name( dt ) == name ) {
-            // store and return ...
-         }
-      }
-   */
    } else {
       TClassRef& cr = type_from_handle( scope );
       if ( cr.GetClass() ) {
@@ -927,6 +1003,20 @@ Bool_t Cppyy::IsStaticData( TCppScope_t scope, TCppIndex_t idata  )
       return kTRUE;
    TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
    return m->Property() & kIsStatic;
+}
+
+Bool_t Cppyy::IsConstData( TCppScope_t scope, TCppIndex_t idata )
+{
+   if ( scope == GLOBAL_HANDLE ) {
+      TGlobal* gbl = g_globalvars[ idata ];
+      return gbl->Property() & kIsConstant;
+   }
+   TClassRef& cr = type_from_handle( scope );
+   if ( cr.GetClass() ) {
+      TDataMember* m = (TDataMember*)cr->GetListOfDataMembers()->At( idata );
+      return m->Property() & kIsConstant;
+   }
+   return kFALSE;
 }
 
 Bool_t Cppyy::IsEnumData( TCppScope_t scope, TCppIndex_t idata )

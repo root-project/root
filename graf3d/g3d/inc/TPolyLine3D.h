@@ -21,30 +21,20 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TTString
 #include "TString.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
 
 class TPolyLine3D : public TObject, public TAttLine, public TAtt3D
 {
 protected:
-   Int_t        fN;            //Number of points
-   Float_t     *fP;            //[3*fN] Array of 3-D coordinates  (x,y,z)
-   TString      fOption;       //options
-   Int_t        fLastPoint;    //The index of the last filled point
+   Int_t        fN;            ///< Number of points
+   Float_t     *fP;            ///< [3*fN] Array of 3-D coordinates  (x,y,z)
+   TString      fOption;       ///< options
+   Int_t        fLastPoint;    ///< The index of the last filled point
 
 public:
    TPolyLine3D();

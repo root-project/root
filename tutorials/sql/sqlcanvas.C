@@ -1,7 +1,12 @@
-// This is slight modification of ntuple1.C example.
-// A canvas with subpads is produced, stored to an sql data base and read back
-// To run this macro, you need the hsimple.root file, produced by the hsimple.C macro
-// Author: S.Linev
+/// \file
+/// \ingroup tutorial_sql
+/// This is slight modification of ntuple1.C example.
+/// A canvas with sub-pads is produced, stored to an sql data base and read back
+/// To run this macro, you need the hsimple.root file, produced by the hsimple.C macro
+///
+/// \macro_code
+///
+/// \author Sergey Linev
 
 // example configuration for MySQL 4.1
 const char* dbname = "mysql://host.domain/test";

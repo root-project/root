@@ -28,9 +28,18 @@ FITPANELLIB  := $(LPATH)/libFitPanel.$(SOEXT)
 FITPANELMAP  := $(FITPANELLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FITPANELH))
+FITPANELH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(FITPANELH))
+ALLHDRS      += $(FITPANELH_REL)
 ALLLIBS      += $(FITPANELLIB)
 ALLMAPS      += $(FITPANELMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(FITPANELH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Gui_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(FITPANELLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(FITPANELDEP)

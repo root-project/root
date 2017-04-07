@@ -48,7 +48,7 @@ namespace PyROOT {
 
    public:               // public, as the python C-API works with C structs
       PyObject_HEAD
-      ObjectProxy*   fSelf;        // The instance it is bound to, or NULL
+      ObjectProxy*   fSelf;        // must be first (same layout as TemplateProxy)
       MethodInfo_t*  fMethodInfo;
 
    private:              // private, as the python C-API will handle creation

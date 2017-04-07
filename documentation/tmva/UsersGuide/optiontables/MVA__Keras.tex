@@ -1,0 +1,11 @@
+\begin{optiontableAuto}
+FilenameModel & \mc{1}{c}{--} & \mc{1}{c}{--} & \mc{1}{c}{--} & Filename of the neural network model defined by Keras\\
+FilenameTrainedModel & \mc{1}{c}{--} & Placed in weights directory of dataloader & \mc{1}{c}{--} & Filename of the model with trained weights. By default, the file is placed in the weights directory of the dataloader, but you can define with this option a custom path to the model file with trained weights.\\
+BatchSize & \mc{1}{c}{--} & 100 & \mc{1}{c}{--} & Batch size used for a single gradient step during training\\
+NumEpochs & \mc{1}{c}{--} & 10 & \mc{1}{c}{--} & Number of training epochs\\
+Verbose & \mc{1}{c}{--} & 1 & \mc{1}{c}{--} & Verbosity during training \\
+ContinueTraining & \mc{1}{c}{--} & false & \mc{1}{c}{--} & Continue training by loading weights from \texttt{FilenameTrainedModel} at beginning of training\\
+SaveBestOnly & \mc{1}{c}{--} & true & \mc{1}{c}{--} & Store only weights with smallest validation loss\\
+TriesEarlyStopping & \mc{1}{c}{--} & -1 & \mc{1}{c}{--} & Number of epochs with no improvement in validation loss after which training will be stopped. The default or a negative number deactivates this option.\\
+LearningRateSchedule & \mc{1}{c}{--} & '' & \mc{1}{c}{--} & Set new learning rate during training at specific epochs, e.g., set new learning rate at epochs 50 and 70 with \code{'50,0.01;70,0.005'}. By default, there is no schedule set.\\
+\end{optiontableAuto}

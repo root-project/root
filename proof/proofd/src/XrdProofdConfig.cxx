@@ -36,20 +36,20 @@
 
 XrdOucString XrdProofdConfig::fgHost;
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor
+
 XrdProofdConfig::XrdProofdConfig(const char *fn, XrdSysError *edest)
                 : fCfgFile(fn), fEDest(edest)
 {
-   // Main constructor
-
    SetCfgEDest(fn, edest);
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set config file and error handler
+
 void XrdProofdConfig::SetCfgEDest(const char *fn, XrdSysError *edest)
 {
-   // Set config file and error handler
-
    fEDest = edest;
    if (fn && fCfgFile.fName != fn) {
       fCfgFile.fName = fn;
@@ -58,13 +58,14 @@ void XrdProofdConfig::SetCfgEDest(const char *fn, XrdSysError *edest)
    fCfgFile.fMtime = 0;
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the file has never been read or did change since last
+/// reading, false otherwise.
+/// If update is true, the modification time is updated, so next call will
+/// return 0.
+
 bool XrdProofdConfig::ReadFile(bool update)
 {
-   // Return true if the file has never been read or did change since last
-   // reading, false otherwise.
-   // If update is true, the modification time is updated, so next call will
-   // return 0.
    XPDLOC(ALL, "Config::ReadFile")
 
    // If we have a file, record the time of last change
@@ -93,12 +94,13 @@ bool XrdProofdConfig::ReadFile(bool update)
    }
 }
 
-//__________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Parse config file for the registered directives. The flag 'rcf' is 0
+/// on the first call, 1 on successive calls.
+/// Returns 0 on success, -1 otherwise
+
 int XrdProofdConfig::ParseFile(bool rcf)
 {
-   // Parse config file for the registered directives. The flag 'rcf' is 0
-   // on the first call, 1 on successive calls.
-   // Returns 0 on success, -1 otherwise
    XPDLOC(ALL, "Config::ParseFile")
 
    XrdOucString mp;

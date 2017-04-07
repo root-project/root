@@ -6,232 +6,196 @@
 //    Oct 20 1999: Bug fix: sign in PseudoRapidity
 //                 Warning-> Error in Double_t operator()
 
-//______________________________________________________________________________
-//*-*-*-*-*-*-*-*-*-*-*-*The Physics Vector package *-*-*-*-*-*-*-*-*-*-*-*
-//*-*                    ==========================                       *
-//*-* The Physics Vector package consists of five classes:                *
-//*-*   - TVector2                                                        *
-//*-*   - TVector3                                                        *
-//*-*   - TRotation                                                       *
-//*-*   - TLorentzVector                                                  *
-//*-*   - TLorentzRotation                                                *
-//*-* It is a combination of CLHEPs Vector package written by             *
-//*-* Leif Lonnblad, Andreas Nilsson and Evgueni Tcherniaev               *
-//*-* and a ROOT package written by Pasha Murat.                          *
-//*-* for CLHEP see:  http://wwwinfo.cern.ch/asd/lhc++/clhep/             *
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//BEGIN_HTML <!--
-/* -->
-<H2>
-TVector3</H2>
-<TT>TVector3</TT> is a general three vector class, which can be used for
+/** \class TVector3
+    \ingroup Physics
+
+TVector3 is a general three vector class, which can be used for
 the description of different vectors in 3D.
-<H3>
-Declaration / Access to the components</H3>
-<TT>TVector3</TT> has been implemented as a vector of three <TT>Double_t</TT>
+
+### Declaration / Access to the components
+
+TVector3 has been implemented as a vector of three Double_t
 variables, representing the cartesian coordinates. By default all components
 are initialized to zero:
 
-<P><TT>&nbsp; TVector3 v1;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; //
-v1 = (0,0,0)</TT>
-<BR><TT>&nbsp; TVector3 v3(1,2,3); // v3 = (1,2,3)</TT>
-<BR><TT>&nbsp; TVector3 v4(v2);&nbsp;&nbsp;&nbsp; // v4 = v2</TT>
+~~~
+ TVector3 v1;        // v1 = (0,0,0)
+ TVector3 v3(1,2,3); // v3 = (1,2,3)
+ TVector3 v4(v2);    // v4 = v2
+~~~
 
-<P>It is also possible (but not recommended) to initialize a <TT>TVector3</TT>
-with a <TT>Double_t</TT> or <TT>Float_t</TT> C array.
+It is also possible (but not recommended) to initialize a TVector3
+with a Double_t or Float_t C array.
 
-<P>You can get the basic components either by name or by index using <TT>operator()</TT>:
+You can get the basic components either by name or by index using operator():
 
-<P><TT>&nbsp; xx = v1.X();&nbsp;&nbsp;&nbsp; or&nbsp;&nbsp;&nbsp; xx =
-v1(0);</TT>
-<BR><TT>&nbsp; yy = v1.Y();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-yy = v1(1);</TT>
-<BR><TT>&nbsp; zz = v1.Z();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-zz = v1(2);</TT>
+~~~
+ xx = v1.X(); or xx = v1(0);
+ yy = v1.Y();    yy = v1(1);
+ zz = v1.Z();    zz = v1(2);
+~~~
 
-<P>The memberfunctions <TT>SetX()</TT>, <TT>SetY()</TT>, <TT>SetZ()</TT>
-and<TT> SetXYZ()</TT> allow to set the components:
+The member functions SetX(), SetY(), SetZ() and SetXYZ() allow to set the components:
 
-<P><TT>&nbsp; v1.SetX(1.); v1.SetY(2.); v1.SetZ(3.);</TT>
-<BR><TT>&nbsp; v1.SetXYZ(1.,2.,3.);</TT>
-<BR>&nbsp;
-<H3>
-Noncartesian coordinates</H3>
-To get information on the <TT>TVector3</TT> in spherical (rho,phi,theta)
+~~~
+ v1.SetX(1.); v1.SetY(2.); v1.SetZ(3.);
+ v1.SetXYZ(1.,2.,3.);
+~~~
+
+### Non-cartesian coordinates
+
+To get information on the TVector3 in spherical (rho,phi,theta)
 or cylindrical (z,r,theta) coordinates, the
-<BR>the member functions <TT>Mag()</TT> (=magnitude=rho in spherical coordinates),
-<TT>Mag2()</TT>, <TT>Theta()</TT>, <TT>CosTheta()</TT>, <TT>Phi()</TT>,
-<TT>Perp()</TT> (the transverse component=r in cylindrical coordinates),
-<TT>Perp2()</TT> can be used:
 
-<P><TT>&nbsp; Double_t m&nbsp; = v.Mag();&nbsp;&nbsp;&nbsp; // get magnitude
-(=rho=Sqrt(x*x+y*y+z*z)))</TT>
-<BR><TT>&nbsp; Double_t m2 = v.Mag2();&nbsp;&nbsp; // get magnitude squared</TT>
-<BR><TT>&nbsp; Double_t t&nbsp; = v.Theta();&nbsp; // get polar angle</TT>
-<BR><TT>&nbsp; Double_t ct = v.CosTheta();// get cos of theta</TT>
-<BR><TT>&nbsp; Double_t p&nbsp; = v.Phi();&nbsp;&nbsp;&nbsp; // get azimuth
-angle</TT>
-<BR><TT>&nbsp; Double_t pp = v.Perp();&nbsp;&nbsp; // get transverse component</TT>
-<BR><TT>&nbsp; Double_t pp2= v.Perp2();&nbsp; // get transvers component
-squared</TT>
+the member functions Mag() (=magnitude=rho in spherical coordinates),
+Mag2(), Theta(), CosTheta(), Phi(), Perp() (the transverse component=r in
+cylindrical coordinates), Perp2() can be used:
 
-<P>It is also possible to get the transverse component with respect to
+
+~~~
+ Double_t m = v.Mag();       // get magnitude (=rho=Sqrt(x*x+y*y+z*z)))
+ Double_t m2 = v.Mag2();     // get magnitude squared
+ Double_t t = v.Theta();     // get polar angle
+ Double_t ct = v.CosTheta(); // get cos of theta
+ Double_t p = v.Phi();       // get azimuth angle
+ Double_t pp = v.Perp();     // get transverse component
+ Double_t pp2= v.Perp2();    // get transvers component squared
+~~~
+
+It is also possible to get the transverse component with respect to
 another vector:
 
-<P><TT>&nbsp; Double_t ppv1 = v.Perp(v1);</TT>
-<BR><TT>&nbsp; Double_t pp2v1 = v.Perp2(v1);</TT>
+~~~
+ Double_t ppv1 = v.Perp(v1);
+ Double_t pp2v1 = v.Perp2(v1);
+~~~
 
-<P>The pseudo-rapidity ( eta=-ln (tan (theta/2)) ) can be obtained by <TT>Eta()</TT>
-or <TT>PseudoRapidity()</TT>:
-<BR>&nbsp;
-<BR><TT>&nbsp; Double_t eta = v.PseudoRapidity();</TT>
+The pseudo-rapidity ( eta=-ln (tan (theta/2)) ) can be obtained by Eta()
+or PseudoRapidity():
 
-<P>There are set functions to change one of the noncartesian coordinates:
+~~~
+ Double_t eta = v.PseudoRapidity();
+~~~
 
-<P><TT>&nbsp; v.SetTheta(.5); // keeping rho and phi</TT>
-<BR><TT>&nbsp; v.SetPhi(.8);&nbsp;&nbsp; // keeping rho and theta</TT>
-<BR><TT>&nbsp; v.SetMag(10.);&nbsp; // keeping theta and phi</TT>
-<BR><TT>&nbsp; v.SetPerp(3.);&nbsp; // keeping z and phi</TT>
-<BR>&nbsp;
-<H3>
-Arithmetic / Comparison</H3>
-The <TT>TVector3</TT> class provides the operators to add, subtract, scale and compare
+There are set functions to change one of the non-cartesian coordinates:
+
+~~~
+ v.SetTheta(.5); // keeping rho and phi
+ v.SetPhi(.8);   // keeping rho and theta
+ v.SetMag(10.);  // keeping theta and phi
+ v.SetPerp(3.);  // keeping z and phi
+~~~
+
+### Arithmetic / Comparison
+
+The TVector3 class provides the operators to add, subtract, scale and compare
 vectors:
 
-<P><TT>&nbsp; v3&nbsp; = -v1;</TT>
-<BR><TT>&nbsp; v1&nbsp; = v2+v3;</TT>
-<BR><TT>&nbsp; v1 += v3;</TT>
-<BR><TT>&nbsp; v1&nbsp; = v1 - v3</TT>
-<BR><TT>&nbsp; v1 -= v3;</TT>
-<BR><TT>&nbsp; v1 *= 10;</TT>
-<BR><TT>&nbsp; v1&nbsp; = 5*v2;</TT>
+~~~
+ v3  = -v1;
+ v1  = v2+v3;
+ v1 += v3;
+ v1  = v1 - v3
+ v1 -= v3;
+ v1 *= 10;
+ v1  = 5*v2;
+ if (v1==v2) {...}
+ if (v1!=v2) {...}
+~~~
 
-<P><TT>&nbsp; if(v1==v2) {...}</TT>
-<BR><TT>&nbsp; if(v1!=v2) {...}</TT>
-<BR>&nbsp;
-<H3>
-Related Vectors</H3>
-<TT>&nbsp; v2 = v1.Unit();&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // get unit
-vector parallel to v1</TT>
-<BR><TT>&nbsp; v2 = v1.Orthogonal(); // get vector orthogonal to v1</TT>
-<H3>
-Scalar and vector products</H3>
-<TT>&nbsp; s = v1.Dot(v2);&nbsp;&nbsp; // scalar product</TT>
-<BR><TT>&nbsp; s = v1 * v2;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // scalar product</TT>
-<BR><TT>&nbsp; v = v1.Cross(v2); // vector product</TT>
-<H3>
-&nbsp;Angle between two vectors</H3>
-<TT>&nbsp; Double_t a = v1.Angle(v2);</TT>
-<H3>
-Rotations</H3>
+### Related Vectors
 
-<H5>
-Rotation around axes</H5>
-<TT>&nbsp; v.RotateX(.5);</TT>
-<BR><TT>&nbsp; v.RotateY(TMath::Pi());</TT>
-<BR><TT>&nbsp; v.RotateZ(angle);</TT>
-<H5>
-Rotation around a vector</H5>
-<TT>&nbsp; v1.Rotate(TMath::Pi()/4, v2); // rotation around v2</TT>
-<H5>
-Rotation by TRotation</H5>
-<TT>TVector3</TT> objects can be rotated by objects of the <TT>TRotation</TT>
-class using the <TT>Transform()</TT> member functions,
-<BR>the <TT>operator *=</TT> or the <TT>operator *</TT> of the TRotation
-class:
+~~~
+ v2 = v1.Unit(); // get unit vector parallel to v1
+ v2 = v1.Orthogonal(); // get vector orthogonal to v1
+~~~
 
-<P><TT>&nbsp; TRotation m;</TT>
-<BR><TT>&nbsp; ...</TT>
-<BR><TT>&nbsp; v1.transform(m);</TT>
-<BR><TT>&nbsp; v1 = m*v1;</TT>
-<BR><TT>&nbsp; v1 *= m; // Attention v1 = m*v1</TT>
-<H5>
-Transformation from rotated frame</H5>
-<TT>&nbsp; TVector3 direction = v.Unit()</TT>
-<BR><TT>&nbsp; v1.RotateUz(direction); // direction must be TVector3 of
-unit length</TT>
+### Scalar and vector products
 
-<P>transforms v1 from the rotated frame (z' parallel to direction, x' in
+~~~
+ s = v1.Dot(v2);   // scalar product
+ s = v1 * v2;      // scalar product
+ v = v1.Cross(v2); // vector product
+~~~
+
+### Angle between two vectors
+
+~~~
+ Double_t a = v1.Angle(v2);
+~~~
+
+### Rotations
+
+#### Rotation around axes
+
+~~~
+ v.RotateX(.5);
+ v.RotateY(TMath::Pi());
+ v.RotateZ(angle);
+~~~
+
+#### Rotation around a vector
+
+~~~
+ v1.Rotate(TMath::Pi()/4, v2); // rotation around v2
+~~~
+
+#### Rotation by TRotation
+TVector3 objects can be rotated by objects of the TRotation
+class using the Transform() member functions,
+
+the operator *= or the operator * of the TRotation class:
+
+~~~
+ TRotation m;
+ ...
+ v1.transform(m);
+ v1  = m*v1;
+ v1 *= m; // Attention v1 = m*v1
+~~~
+
+#### Transformation from rotated frame
+
+~~~
+ TVector3 direction = v.Unit()
+ v1.RotateUz(direction); // direction must be TVector3 of unit length
+~~~
+
+transforms v1 from the rotated frame (z' parallel to direction, x' in
 the theta plane and y' in the xy plane as well as perpendicular to the
 theta plane) to the (x,y,z) frame.
+*/
 
-<!--*/
-// -->END_HTML
-//
 
+#include "TMatrix.h"
 #include "TVector3.h"
+
+#include "TBuffer.h"
 #include "TRotation.h"
 #include "TMath.h"
-#include "TClass.h"
 
 ClassImp(TVector3)
 
-//______________________________________________________________________________
-TVector3::TVector3()
-: fX(0.0), fY(0.0), fZ(0.0) {}
 
-TVector3::TVector3(const TVector3 & p) : TObject(p),
-  fX(p.fX), fY(p.fY), fZ(p.fZ) {}
+////////////////////////////////////////////////////////////////////////////////
+/// Multiplication operator
 
-TVector3::TVector3(Double_t xx, Double_t yy, Double_t zz)
-: fX(xx), fY(yy), fZ(zz) {}
-
-TVector3::TVector3(const Double_t * x0)
-: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
-
-TVector3::TVector3(const Float_t * x0)
-: fX(x0[0]), fY(x0[1]), fZ(x0[2]) {}
-
-TVector3::~TVector3() {}
-
-//______________________________________________________________________________
-Double_t TVector3::operator () (int i) const {
-   //dereferencing operator const
-   switch(i) {
-      case 0:
-         return fX;
-      case 1:
-         return fY;
-      case 2:
-         return fZ;
-      default:
-         Error("operator()(i)", "bad index (%d) returning 0",i);
-   }
-   return 0.;
-}
-
-//______________________________________________________________________________
-Double_t & TVector3::operator () (int i) {
-   //dereferencing operator
-   switch(i) {
-      case 0:
-         return fX;
-      case 1:
-         return fY;
-      case 2:
-         return fZ;
-      default:
-         Error("operator()(i)", "bad index (%d) returning &fX",i);
-   }
-   return fX;
-}
-
-//______________________________________________________________________________
 TVector3 & TVector3::operator *= (const TRotation & m){
-   //multiplication operator
    return *this = m * (*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transform this vector with a TRotation
+
 TVector3 & TVector3::Transform(const TRotation & m) {
-   //transform this vector with a TRotation
    return *this = m * (*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the angle w.r.t. another 3-vector.
+
 Double_t TVector3::Angle(const TVector3 & q) const
 {
-   // return the angle w.r.t. another 3-vector
    Double_t ptot2 = Mag2()*q.Mag2();
    if(ptot2 <= 0) {
       return 0.0;
@@ -243,58 +207,54 @@ Double_t TVector3::Angle(const TVector3 & q) const
    }
 }
 
-//______________________________________________________________________________
-Double_t TVector3::Mag() const
-{
-   // return the magnitude (rho in spherical coordinate system)
+////////////////////////////////////////////////////////////////////////////////
+/// Return the transverse component  (R in cylindrical coordinate system)
 
-   return TMath::Sqrt(Mag2());
-}
-
-//______________________________________________________________________________
 Double_t TVector3::Perp() const
 {
-   //return the transverse component  (R in cylindrical coordinate system)
-
    return TMath::Sqrt(Perp2());
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the transverse component (R in cylindrical coordinate system)
+
 Double_t TVector3::Perp(const TVector3 & p) const
 {
-   //return the transverse component (R in cylindrical coordinate system)
-
    return TMath::Sqrt(Perp2(p));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the azimuth angle. Returns phi from -pi to pi.
+
 Double_t TVector3::Phi() const
 {
-   //return the  azimuth angle. returns phi from -pi to pi
    return fX == 0.0 && fY == 0.0 ? 0.0 : TMath::ATan2(fY,fX);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the polar angle
+
 Double_t TVector3::Theta() const
 {
-   //return the polar angle
    return fX == 0.0 && fY == 0.0 && fZ == 0.0 ? 0.0 : TMath::ATan2(Perp(),fZ);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return unit vector parallel to this.
+
 TVector3 TVector3::Unit() const
 {
-   // return unit vector parallel to this.
    Double_t  tot2 = Mag2();
    Double_t tot = (tot2 > 0) ?  1.0/TMath::Sqrt(tot2) : 1.0;
    TVector3 p(fX*tot,fY*tot,fZ*tot);
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector around X.
+
 void TVector3::RotateX(Double_t angle) {
-   //rotate vector around X
    Double_t s = TMath::Sin(angle);
    Double_t c = TMath::Cos(angle);
    Double_t yy = fY;
@@ -302,9 +262,10 @@ void TVector3::RotateX(Double_t angle) {
    fZ = s*yy + c*fZ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector around Y.
+
 void TVector3::RotateY(Double_t angle) {
-   //rotate vector around Y
    Double_t s = TMath::Sin(angle);
    Double_t c = TMath::Cos(angle);
    Double_t zz = fZ;
@@ -312,9 +273,10 @@ void TVector3::RotateY(Double_t angle) {
    fX = s*zz + c*fX;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector around Z.
+
 void TVector3::RotateZ(Double_t angle) {
-   //rotate vector around Z
    Double_t s = TMath::Sin(angle);
    Double_t c = TMath::Cos(angle);
    Double_t xx = fX;
@@ -322,18 +284,19 @@ void TVector3::RotateZ(Double_t angle) {
    fY = s*xx + c*fY;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rotate vector.
+
 void TVector3::Rotate(Double_t angle, const TVector3 & axis){
-   //rotate vector
    TRotation trans;
    trans.Rotate(angle, axis);
    operator*=(trans);
 }
 
-//______________________________________________________________________________
-void TVector3::RotateUz(const TVector3& NewUzVector) {
-   // NewUzVector must be normalized !
+////////////////////////////////////////////////////////////////////////////////
+/// NewUzVector must be normalized !
 
+void TVector3::RotateUz(const TVector3& NewUzVector) {
    Double_t u1 = NewUzVector.fX;
    Double_t u2 = NewUzVector.fY;
    Double_t u3 = NewUzVector.fZ;
@@ -349,39 +312,43 @@ void TVector3::RotateUz(const TVector3& NewUzVector) {
    else {};
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Double_t m = Mag();
+/// return 0.5*log( (m+fZ)/(m-fZ) );
+/// guard against Pt=0
+
 Double_t TVector3::PseudoRapidity() const {
-   //Double_t m = Mag();
-   //return 0.5*log( (m+fZ)/(m-fZ) );
-   // guard against Pt=0
    double cosTheta = CosTheta();
    if (cosTheta*cosTheta < 1) return -0.5* TMath::Log( (1.0-cosTheta)/(1.0+cosTheta) );
    if (fZ == 0) return 0;
-   Warning("PseudoRapidity","transvers momentum = 0! return +/- 10e10");
+   //Warning("PseudoRapidity","transvers momentum = 0! return +/- 10e10");
    if (fZ > 0) return 10e10;
    else        return -10e10;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Pt, Eta and Phi
+
 void TVector3::SetPtEtaPhi(Double_t pt, Double_t eta, Double_t phi) {
-   //set Pt, Eta and Phi
    Double_t apt = TMath::Abs(pt);
    SetXYZ(apt*TMath::Cos(phi), apt*TMath::Sin(phi), apt/TMath::Tan(2.0*TMath::ATan(TMath::Exp(-eta))) );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Pt, Theta and Phi
+
 void TVector3::SetPtThetaPhi(Double_t pt, Double_t theta, Double_t phi) {
-   //set Pt, Theta and Phi
    fX = pt * TMath::Cos(phi);
    fY = pt * TMath::Sin(phi);
    Double_t tanTheta = TMath::Tan(theta);
    fZ = tanTheta ? pt / tanTheta : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set theta keeping mag and phi constant (BaBar).
+
 void TVector3::SetTheta(Double_t th)
 {
-   // Set theta keeping mag and phi constant (BaBar).
    Double_t ma   = Mag();
    Double_t ph   = Phi();
    SetX(ma*TMath::Sin(th)*TMath::Cos(ph));
@@ -389,39 +356,42 @@ void TVector3::SetTheta(Double_t th)
    SetZ(ma*TMath::Cos(th));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set phi keeping mag and theta constant (BaBar).
+
 void TVector3::SetPhi(Double_t ph)
 {
-   // Set phi keeping mag and theta constant (BaBar).
    Double_t xy   = Perp();
    SetX(xy*TMath::Cos(ph));
    SetY(xy*TMath::Sin(ph));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return deltaR with respect to v.
+
 Double_t TVector3::DeltaR(const TVector3 & v) const
 {
-   //return deltaR with respect to v
    Double_t deta = Eta()-v.Eta();
    Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
    return TMath::Sqrt( deta*deta+dphi*dphi );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setter with mag, theta, phi.
+
 void TVector3::SetMagThetaPhi(Double_t mag, Double_t theta, Double_t phi)
 {
-   //setter with mag, theta, phi
    Double_t amag = TMath::Abs(mag);
    fX = amag * TMath::Sin(theta) * TMath::Cos(phi);
    fY = amag * TMath::Sin(theta) * TMath::Sin(phi);
    fZ = amag * TMath::Cos(theta);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TVector3.
+
 void TVector3::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TVector3.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -442,25 +412,41 @@ void TVector3::Streamer(TBuffer &R__b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TVector3 operator + (const TVector3 & a, const TVector3 & b) {
    return TVector3(a.X() + b.X(), a.Y() + b.Y(), a.Z() + b.Z());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
 
 TVector3 operator - (const TVector3 & a, const TVector3 & b) {
    return TVector3(a.X() - b.X(), a.Y() - b.Y(), a.Z() - b.Z());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TVector3 operator * (const TVector3 & p, Double_t a) {
    return TVector3(a*p.X(), a*p.Y(), a*p.Z());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
 
 TVector3 operator * (Double_t a, const TVector3 & p) {
    return TVector3(a*p.X(), a*p.Y(), a*p.Z());
 }
 
+////////////////////////////////////////////////////////////////////////////////
 Double_t operator * (const TVector3 & a, const TVector3 & b) {
    return a.Dot(b);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
 
 TVector3 operator * (const TMatrix & m, const TVector3 & v ) {
    return TVector3( m(0,0)*v.X()+m(0,1)*v.Y()+m(0,2)*v.Z(),
@@ -468,14 +454,11 @@ TVector3 operator * (const TMatrix & m, const TVector3 & v ) {
                     m(2,0)*v.X()+m(2,1)*v.Y()+m(2,2)*v.Z());
 }
 
-
-//const TVector3 kXHat(1.0, 0.0, 0.0);
-//const TVector3 kYHat(0.0, 1.0, 0.0);
-//const TVector3 kZHat(0.0, 0.0, 1.0);
+////////////////////////////////////////////////////////////////////////////////
+/// Print vector parameters.
 
 void TVector3::Print(Option_t*)const
 {
-   //print vector parameters
    Printf("%s %s (x,y,z)=(%f,%f,%f) (rho,theta,phi)=(%f,%f,%f)",GetName(),GetTitle(),X(),Y(),Z(),
                                           Mag(),Theta()*TMath::RadToDeg(),Phi()*TMath::RadToDeg());
 }

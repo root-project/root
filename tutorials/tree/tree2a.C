@@ -1,3 +1,22 @@
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// This example is the same as tree2.C, but uses a class instead of a C-struct.
+/// In this example, we are mapping a class to one of the Geant3
+/// common blocks /gctrak/. In the real life, this common will be filled
+/// by Geant3 at each step and only the Tree Fill function should be called.
+/// The example emulates the Geant3 step routines.
+///
+/// to run the example, do to execute with native compiler:
+/// ~~~
+/// .x tree2a.C+ 
+/// ~~~
+///
+/// Note that since IO is involved, ACLiC has to be invoked to create the dictionary of class Gctrak.
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TROOT.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -6,20 +25,6 @@
 #include "TMath.h"
 #include "TRandom.h"
 #include "TCanvas.h"
-
-//+ This example is the same as tree2.C, but uses a class instead of a C-struct.
-// In this example, we are mapping a class to one of the Geant3
-// common blocks /gctrak/. In the real life, this common will be filled
-// by Geant3 at each step and only the Tree Fill function should be called.
-// The example emulates the Geant3 step routines.
-//
-// to run the example, do:
-// .x tree2a.C+ to execute with native compiler
-//
-//  Note that this example cannot be run under CINT (ie .x tree2a.c)
-//  because an interpreted class cannot derive from a compiled class.
-//
-//  Author: Rene Brun
 
 const Int_t MAXMEC = 30;
 

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include "TF1.h"
 
@@ -69,6 +67,8 @@ public:
    TH1F             *GetHistogram() const;
    TF1              *GetFunction(const char *name) const;
    TList            *GetListOfGraphs() const { return fGraphs; }
+   TIter             begin() const;
+   TIter             end() const { return TIter::End(); }
    TList            *GetListOfFunctions();  // non const method (create list if empty)
    const TList      *GetListOfFunctions() const { return fFunctions; }
    TAxis            *GetXaxis() const;

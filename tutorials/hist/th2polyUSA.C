@@ -1,12 +1,17 @@
-//This tutorial illustrates how to create an histogram with polygonal
-//bins (TH2Poly), fill it and draw it using GL. The initial data are stored
-//in TMultiGraphs. They represent the USA.
-//
-//The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
-//This database was developed in 1991/1992 and national boundaries reflect
-//political reality as of that time.
-//
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_hist
+/// This tutorial illustrates how to create an histogram with polygonal
+/// bins (TH2Poly), fill it and draw it using GL. The initial data are stored
+/// in TMultiGraphs. They represent the USA.
+///
+/// The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
+/// This database was developed in 1991/1992 and national boundaries reflect
+/// political reality as of that time.
+///
+/// \macro_code
+/// \macro_image(nobatch)
+///
+/// \author Olivier Couet
 
 void th2polyUSA()
 {
@@ -44,8 +49,8 @@ void th2polyUSA()
    Double_t lat2 = 50;
    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
-   TFile *f;
-   f = TFile::Open("http://root.cern.ch/files/usa.root");
+   TFile::SetCacheFileDir(".");
+   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
@@ -68,6 +73,5 @@ void th2polyUSA()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   gStyle->SetPalette(1);
    p->Draw("legogl");
 }

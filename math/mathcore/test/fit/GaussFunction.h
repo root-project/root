@@ -11,11 +11,11 @@ public:
       kNPar = 3
    };
 
-   GaussFunction(double amp = 1, double mean = 0, double sigma = 1) {
-      fParams[0] = amp;
-      fParams[1] = mean;
-      fParams[2] = sigma;
-      fLogAmp = std::log(amp);
+   GaussFunction(double _amp = 1, double _mean = 0, double _sigma = 1) {
+      fParams[0] = _amp;
+      fParams[1] = _mean;
+      fParams[2] = _sigma;
+      fLogAmp = std::log(_amp);
    }
 
    unsigned int NDim() const { return 1; }

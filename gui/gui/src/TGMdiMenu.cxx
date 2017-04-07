@@ -46,12 +46,12 @@
 
 ClassImp(TGMdiMenuBar)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMdiMenuBar constructor.
+
 TGMdiMenuBar::TGMdiMenuBar(const TGWindow *p, int w, int h) :
    TGCompositeFrame(p, w, h, kHorizontalFrame)
 {
-   // TGMdiMenuBar constructor.
-
    fLHint = new TGLayoutHints(kLHintsNormal);
    fLeftHint = new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1, 1, 1, 1);
    fBarHint = new TGLayoutHints(kLHintsExpandX | kLHintsCenterY, 1, 1, 1, 1);
@@ -66,11 +66,11 @@ TGMdiMenuBar::TGMdiMenuBar(const TGWindow *p, int w, int h) :
    AddFrame(fRight, fRightHint);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMdiMenuBar destructor.
+
 TGMdiMenuBar::~TGMdiMenuBar()
 {
-   // TGMdiMenuBar destructor.
-
    if (!MustCleanup()) {
       delete fLHint;
       delete fLeftHint;
@@ -79,20 +79,20 @@ TGMdiMenuBar::~TGMdiMenuBar()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add popup menu to the MDI menu bar with layout hints l.
+
 void TGMdiMenuBar::AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l)
 {
-   // Add popup menu to the MDI menu bar with layout hints l.
-
    fBar->AddPopup(s, menu, l);
    // Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is called from TGMdiMainFrame on Maximize().
+
 void TGMdiMenuBar::AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
-   // This is called from TGMdiMainFrame on Maximize().
-
    // Hide all frames first
    TGFrameElement *el;
    TIter nextl(fLeft->GetList());
@@ -110,11 +110,11 @@ void TGMdiMenuBar::AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
    fRight->AddFrame(buttons, fLHint);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is called from TGMdiMainFrame on Restore()
+
 void TGMdiMenuBar::RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
-   // This is called from TGMdiMainFrame on Restore()
-
    // Remove specified frames
    fLeft->RemoveFrame(icon);
    fRight->RemoveFrame(buttons);
@@ -128,11 +128,11 @@ void TGMdiMenuBar::RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
       fRight->ShowFrame(el->fFrame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is called from TGMdiMainFrame on Maximize().
+
 void TGMdiMenuBar::ShowFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
-   // This is called from TGMdiMainFrame on Maximize().
-
    // Hide all frames first
    TGFrameElement *el;
    TIter nextl(fLeft->GetList());
@@ -148,11 +148,11 @@ void TGMdiMenuBar::ShowFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
    fRight->ShowFrame(buttons);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to hide specific frames from menu bar
+
 void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
 {
-   // Used to hide specific frames from menu bar
-
    // Hide specified frames
    fLeft->HideFrame(icon);
    fRight->HideFrame(buttons);
@@ -167,11 +167,11 @@ void TGMdiMenuBar::HideFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons)
       fRight->ShowFrame(el->fFrame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a MDI menu as a C++ statement(s) on output stream out
+
 void TGMdiMenuBar::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a MDI menu as a C++ statement(s) on output stream out
-
    out << std::endl;
    out << "   // MDI menu bar" << std::endl;
 

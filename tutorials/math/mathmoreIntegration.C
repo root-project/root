@@ -1,24 +1,32 @@
-//+ Example on the  usage of the adaptive 1D integration algorithm of MathMore
-// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
-// to execute the macro type it (you need to compile with AClic)
-//
-// root[0]: .x mathmoreIntegration.C+
-//
-// This tutorials require having libMathMore built with ROOT.
-//
-// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
-// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
-// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
-//
-//
-// Authors: M. Slawinska and L. Moneta
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// Example on the  usage of the adaptive 1D integration algorithm of MathMore
+/// it calculates the numerically cumulative integral of a distribution (like in this case the BreitWigner)
+/// to execute the macro type it (you need to compile with AClic)
+///
+/// ~~~{.cpp}
+/// root[0] .x mathmoreIntegration.C+
+/// ~~~
+///
+/// This tutorials require having libMathMore built with ROOT.
+///
+/// To build mathmore you need to have a version of GSL >= 1.8 installed in your system
+/// The ROOT configure will automatically find GSL if the script gsl-config (from GSL) is in your PATH,.
+/// otherwise you need to configure root with the options --gsl-incdir and --gsl-libdir.
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors M. Slawinska, L. Moneta
 
 #include "TMath.h"
 #include "TH1.h"
 #include "TCanvas.h"
 #include "TLegend.h"
 
-//#include "TLabel.h"
+/*#include "TLabel.h"*/
 #include "Math/Functor.h"
 #include "Math/WrappedFunction.h"
 #include "Math/IFunction.h"
@@ -42,6 +50,7 @@ double func( double x){
    nc++;
    return TMath::BreitWigner(x);
 }
+
 // TF1 requires the function to have the ( )( double *, double *) signature
 double func2(const double *x, const double * = 0){
    nc++;
@@ -187,12 +196,6 @@ void  DrawCumulative(double x1, double x2, int n = 100){
 
 void mathmoreIntegration(double a = -2, double b = 2)
 {
-#if defined(__CINT__) && !defined(__MAKECINT__)
-  cout << "WARNING: This tutorial can run only using ACliC, you must run it by doing: " << endl;
-  cout << "\t .x $ROOTSYS/tutorials/math/mathmoreIntegration.C+" << endl;
-  return;
-#endif
-
    DrawCumulative(a, b);
    testIntegPerf(a, b);
 }

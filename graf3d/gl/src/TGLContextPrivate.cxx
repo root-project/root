@@ -10,18 +10,20 @@
 #include "TError.h"
 #endif
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Register gl-context to find it later as current (GetCurrentContext)
+
 void TGLContextPrivate::RegisterContext(TGLContext *ctx)
 {
-   //Register gl-context to find it later as current (GetCurrentContext)
    if (ctx->IsValid())
       fgContexts[ctx->fPimpl->fGLContext] = ctx;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Un-register deleted context.
+
 void TGLContextPrivate::RemoveContext(TGLContext *ctx)
 {
-   //Un-register deleted context.
    if (ctx->IsValid())
       fgContexts.erase(ctx->fPimpl->fGLContext);
 }
@@ -30,10 +32,11 @@ void TGLContextPrivate::RemoveContext(TGLContext *ctx)
 
 std::map<HGLRC, TGLContext *> TGLContextPrivate::fgContexts;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ask wgl what HGLRC is current and look up corresponding TGLContext.
+
 TGLContext *TGLContextPrivate::GetCurrentContext()
 {
-   //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    HGLRC glContext = wglGetCurrentContext();
    std::map<HGLRC, TGLContext *>::const_iterator it = fgContexts.find(glContext);
 
@@ -47,7 +50,8 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
 
 std::map<Handle_t, TGLContext *> TGLContextPrivate::fgContexts;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TGLContext *TGLContextPrivate::GetCurrentContext()
 {
    const Handle_t ctxID = gVirtualX->GetCurrentOpenGLContext();
@@ -64,10 +68,11 @@ TGLContext *TGLContextPrivate::GetCurrentContext()
 
 std::map<GLXContext, TGLContext *> TGLContextPrivate::fgContexts;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Ask wgl what HGLRC is current and look up corresponding TGLContext.
+
 TGLContext *TGLContextPrivate::GetCurrentContext()
 {
-   //Ask wgl what HGLRC is current and look up corresponding TGLContext.
    GLXContext glContext = glXGetCurrentContext();
    std::map<GLXContext, TGLContext *>::const_iterator it = fgContexts.find(glContext);
 

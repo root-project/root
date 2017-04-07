@@ -34,6 +34,7 @@ struct DataOptions {
    DataOptions () :
       fIntegral(false),
       fBinVolume(false),
+      fNormBinVolume(false),
       fUseEmpty(false),
       fUseRange(false),
       fErrors1(false),
@@ -45,6 +46,7 @@ struct DataOptions {
 
    bool fIntegral;    // use integral of bin content instead of bin center (default is false)
    bool fBinVolume;   // normalize data by the bin volume (it is used in the Poisson likelihood fits)
+   bool fNormBinVolume;  // normalize data by a normalized the bin volume ( bin volume divided by a reference value)
    bool fUseEmpty;    // use empty bins (default is false) with a fixed error of 1
    bool fUseRange;    // use the function range when creating the fit data (default is false)
    bool fErrors1;     // use all errors equal to 1, i.e. fit without errors (default is false)

@@ -327,10 +327,11 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
   printf("******************************************************************\n");
 }
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const TString &title,Bool_t status)
 {
-  // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
   snprintf(number,4,"%2d",id);
@@ -1236,7 +1237,7 @@ void mstress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign" << std::endl;
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     Double_t d1,d2;
     m.Determinant(d1,d2);
     TMatrixDRow row1(m,1);
@@ -1267,7 +1268,7 @@ void mstress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign" << std::endl;
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     Double_t d1,d2;
     m.Determinant(d1,d2);
 
@@ -2076,7 +2077,7 @@ void mstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vmatrix.root", "RECREATE");
+  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -2123,7 +2124,7 @@ void mstress_matrix_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("vmatrix.root");
+  TFile *f1 = new TFile("stress-vmatrix.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -2980,7 +2981,7 @@ void spstress_vm_multiplications()
       TMatrixD vm(msize,1);
       TMatrixDColumn(vm,0) = vb;
       TMatrixD hilbert_with_zeros = THilbertMatrixD(0,msize,0,msize-1);
-      TMatrixDRow   (hilbert_with_zeros,3) = 0.0;
+      TMatrixDRow   (hilbert_with_zeros,3).Assign(0.0);
       TMatrixDColumn(hilbert_with_zeros,3) = 0.0;
       const TMatrixDSparse m = hilbert_with_zeros;
       vb *= m;
@@ -3109,7 +3110,7 @@ void spstress_matrix_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vmatrix.root", "RECREATE");
+  TFile *f = new TFile("stress-vmatrix.root", "RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3142,7 +3143,7 @@ void spstress_matrix_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("vmatrix.root");
+  TFile *f1 = new TFile("stress-vmatrix.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -3647,7 +3648,7 @@ void vstress_matrix_slices(Int_t vsize)
   m = pattern;
   ok &= ( m == pattern ) ? kTRUE : kFALSE;
   for (i = m.GetRowLwb(); i <= m.GetRowUpb(); i++) {
-    TMatrixDRow(m,i) = pattern+2;
+     TMatrixDRow(m,i).Assign(pattern+2);
     ok &= ( !( m == pattern ) && !( m != pattern ) ) ? kTRUE : kFALSE;
     vr = TMatrixDRow(m,i);
     ok &= VerifyVectorValue(vr,pattern+2,gVerbose,EPSILON);
@@ -3711,7 +3712,7 @@ void vstress_matrix_slices(Int_t vsize)
               m.GetColLwb(),TMath::Max(m.GetRowUpb(),m.GetColUpb()));
   TVectorD vc1(vc),vc2(vc);
   for (i = m.GetRowLwb(); i < m.GetRowUpb(); i++)
-    TMatrixDRow(m,i) = pattern+i;      // Make a multiplicand
+     TMatrixDRow(m,i).Assign(pattern+i);      // Make a multiplicand
   mm = m;                          // Save it
 
   m1 = pattern+10;
@@ -3746,7 +3747,7 @@ void vstress_vector_io()
   Bool_t ok = kTRUE;
   const Double_t pattern = TMath::Pi();
 
-  TFile *f = new TFile("vvector.root","RECREATE");
+  TFile *f = new TFile("stress-vvector.root","RECREATE");
 
   Char_t name[80];
   Int_t iloop = gNrLoop;
@@ -3783,7 +3784,7 @@ void vstress_vector_io()
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read vector" << std::endl;
-  TFile *f1 = new TFile("vvector.root");
+  TFile *f1 = new TFile("stress-vvector.root");
 
   iloop = gNrLoop;
   while (iloop >= 0) {
@@ -4272,7 +4273,7 @@ void astress_decomp_io(Int_t msize)
   if (gVerbose)
     std::cout << "\nWrite decomp m to database" << std::endl;
 
-  TFile *f = new TFile("vdecomp.root", "RECREATE");
+  TFile *f = new TFile("stress-vdecomp.root", "RECREATE");
 
   TDecompLU   lu(m,1.0e-20);
   TDecompQRH  qrh(m,1.0e-20);
@@ -4292,7 +4293,7 @@ void astress_decomp_io(Int_t msize)
 
   if (gVerbose)
     std::cout << "\nOpen database in read-only mode and read matrix" << std::endl;
-  TFile *f1 = new TFile("vdecomp.root");
+  TFile *f1 = new TFile("stress-vdecomp.root");
 
   if (gVerbose)
     std::cout << "\nRead decompositions should create same solutions" << std::endl;
@@ -4415,7 +4416,7 @@ void stress_backward_io()
 
 void cleanup()
 {
-  gSystem->Unlink("vmatrix.root");
-  gSystem->Unlink("vvector.root");
-  gSystem->Unlink("vdecomp.root");
+  gSystem->Unlink("stress-vmatrix.root");
+  gSystem->Unlink("stress-vvector.root");
+  gSystem->Unlink("stress-vdecomp.root");
 }

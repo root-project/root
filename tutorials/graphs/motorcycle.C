@@ -1,3 +1,21 @@
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
+/// as described in:
+///
+///      Modern Applied Statistics with S-Plus, 3rd Edition
+///      W.N. Venables and B.D. Ripley
+///      Chapter 9: Smooth Regression, Figure 9.1
+///
+/// Example is a set of data on 133 observations of acceleration against time
+/// for a simulated motorcycle accident, taken from Silverman (1985).
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Christian Stratowa, Vienna, Austria
+
 #include "TString.h"
 #include "TInterpreter.h"
 #include <fstream>
@@ -22,27 +40,11 @@ void DrawSmooth(Int_t pad, const char *title, const char *xt, const char *yt)
    grout->DrawClone("LPX");
 }
 
-
 void motorcycle()
 {
-/******************************************************************************
-* Author: Christian Stratowa, Vienna, Austria.                                *
-* Created: 26 Aug 2001                            Last modified: 29 Sep 2001  *
-******************************************************************************/
-
-// Macro to test scatterplot smoothers: ksmooth, lowess, supsmu
-// as described in:
-//    Modern Applied Statistics with S-Plus, 3rd Edition
-//    W.N. Venables and B.D. Ripley
-//    Chapter 9: Smooth Regression, Figure 9.1
-//
-// Example is a set of data on 133 observations of acceleration against time
-// for a simulated motorcycle accident, taken from Silverman (1985).
-
-
 // data taken from R library MASS: mcycle.txt
-   TString dir = gSystem->UnixPathName(__FILE__);
-   dir.ReplaceAll("motorcycle.C","");
+   TString dir = gROOT->GetTutorialDir();
+   dir.Append("/graphs/");
    dir.ReplaceAll("/./","/");
 
 // read file and add to fit object
@@ -99,4 +101,3 @@ void motorcycle()
    delete [] y;
    delete gs;
 }
-

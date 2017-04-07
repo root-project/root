@@ -10,18 +10,17 @@
  *                                                                           *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// END_HTML
-//
+/** \class RooMathMoreReg
+    \ingroup Roofit
 
-#include "Riostream.h" 
+**/
+
+#include "Riostream.h"
 #include "RooMathMoreReg.h"
-#include "RooCFunction1Binding.h" 
-#include "RooCFunction2Binding.h" 
-#include "RooCFunction3Binding.h" 
-#include "RooCFunction4Binding.h" 
+#include "RooCFunction1Binding.h"
+#include "RooCFunction2Binding.h"
+#include "RooCFunction3Binding.h"
+#include "RooCFunction4Binding.h"
 #include "Math/SpecFunc.h"
 #include "Math/DistFunc.h"
 

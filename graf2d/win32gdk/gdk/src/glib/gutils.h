@@ -254,7 +254,7 @@ g_bit_nth_msf (gulong mask,
 G_INLINE_FUNC guint
 g_bit_storage (gulong number)
 {
-  register guint n_bits = 0;
+  /*register*/ guint n_bits = 0;
   
   do
     {

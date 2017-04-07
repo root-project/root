@@ -1,10 +1,15 @@
-//Author: Timur Pocheptsov, 25/03/2014.
-//This tutorial demonstrates how to use radial gradients,
-//custom colors, transparency.
-//Requires OpenGL: either set OpenGL.CanvasPreferGL to 1
-//in the $ROOTSYS/etc/system.rootrc,
-//or use gStyle->SetCanvasPreferGL(kTRUE).
-
+/// \file
+/// \ingroup tutorial_gl
+/// This tutorial demonstrates how to use radial gradients,
+/// custom colors, transparency.
+/// Requires OpenGL: either set OpenGL.CanvasPreferGL to 1
+/// in the $ROOTSYS/etc/system.rootrc,
+/// or use `gStyle->SetCanvasPreferGL(kTRUE)`.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC:
 #include <cassert>

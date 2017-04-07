@@ -25,9 +25,10 @@
 using namespace clang;
 
 Module::Module(StringRef Name, SourceLocation DefinitionLoc, Module *Parent,
-               bool IsFramework, bool IsExplicit)
+               bool IsFramework, bool IsExplicit, unsigned VisibilityID)
     : Name(Name), DefinitionLoc(DefinitionLoc), Parent(Parent), Directory(),
-      Umbrella(), ASTFile(nullptr), IsMissingRequirement(false),
+      Umbrella(), Signature(0), ASTFile(nullptr), VisibilityID(VisibilityID),
+      IsMissingRequirement(false), HasIncompatibleModuleFile(false),
       IsAvailable(true), IsFromModuleFile(false), IsFramework(IsFramework),
       IsExplicit(IsExplicit), IsSystem(false), IsExternC(false),
       IsInferred(false), InferSubmodules(false), InferExplicitSubmodules(false),
@@ -58,16 +59,22 @@ Module::~Module() {
 /// language options has the given feature.
 static bool hasFeature(StringRef Feature, const LangOptions &LangOpts,
                        const TargetInfo &Target) {
-  return llvm::StringSwitch<bool>(Feature)
-           .Case("altivec", LangOpts.AltiVec)
-           .Case("blocks", LangOpts.Blocks)
-           .Case("cplusplus", LangOpts.CPlusPlus)
-           .Case("cplusplus11", LangOpts.CPlusPlus11)
-           .Case("objc", LangOpts.ObjC1)
-           .Case("objc_arc", LangOpts.ObjCAutoRefCount)
-           .Case("opencl", LangOpts.OpenCL)
-           .Case("tls", Target.isTLSSupported())
-           .Default(Target.hasFeature(Feature));
+  bool HasFeature = llvm::StringSwitch<bool>(Feature)
+                        .Case("altivec", LangOpts.AltiVec)
+                        .Case("blocks", LangOpts.Blocks)
+                        .Case("cplusplus", LangOpts.CPlusPlus)
+                        .Case("cplusplus11", LangOpts.CPlusPlus11)
+                        .Case("objc", LangOpts.ObjC1)
+                        .Case("objc_arc", LangOpts.ObjCAutoRefCount)
+                        .Case("opencl", LangOpts.OpenCL)
+                        .Case("tls", Target.isTLSSupported())
+                        .Case("zvector", LangOpts.ZVector)
+                        .Default(Target.hasFeature(Feature));
+  if (!HasFeature)
+    HasFeature = std::find(LangOpts.ModuleFeatures.begin(),
+                           LangOpts.ModuleFeatures.end(),
+                           Feature) != LangOpts.ModuleFeatures.end();
+  return HasFeature;
 }
 
 bool Module::isAvailable(const LangOptions &LangOpts, const TargetInfo &Target,
@@ -77,16 +84,16 @@ bool Module::isAvailable(const LangOptions &LangOpts, const TargetInfo &Target,
     return true;
 
   for (const Module *Current = this; Current; Current = Current->Parent) {
-    if (!Current->MissingHeaders.empty()) {
-      MissingHeader = Current->MissingHeaders.front();
-      return false;
-    }
     for (unsigned I = 0, N = Current->Requirements.size(); I != N; ++I) {
       if (hasFeature(Current->Requirements[I].first, LangOpts, Target) !=
               Current->Requirements[I].second) {
         Req = Current->Requirements[I];
         return false;
       }
+    }
+    if (!Current->MissingHeaders.empty()) {
+      MissingHeader = Current->MissingHeaders.front();
+      return false;
     }
   }
 
@@ -133,11 +140,20 @@ std::string Module::getFullModuleName() const {
   return Result;
 }
 
-const DirectoryEntry *Module::getUmbrellaDir() const {
-  if (const FileEntry *Header = getUmbrellaHeader())
-    return Header->getDir();
+bool Module::fullModuleNameIs(ArrayRef<StringRef> nameParts) const {
+  for (const Module *M = this; M; M = M->Parent) {
+    if (nameParts.empty() || M->Name != nameParts.back())
+      return false;
+    nameParts = nameParts.drop_back();
+  }
+  return nameParts.empty();
+}
+
+Module::DirectoryName Module::getUmbrellaDir() const {
+  if (Header U = getUmbrellaHeader())
+    return {"", U.Entry->getDir()};
   
-  return Umbrella.dyn_cast<const DirectoryEntry *>();
+  return {UmbrellaAsWritten, Umbrella.dyn_cast<const DirectoryEntry *>()};
 }
 
 ArrayRef<const FileEntry *> Module::getTopHeaders(FileManager &FileMgr) {
@@ -153,6 +169,19 @@ ArrayRef<const FileEntry *> Module::getTopHeaders(FileManager &FileMgr) {
   return llvm::makeArrayRef(TopHeaders.begin(), TopHeaders.end());
 }
 
+bool Module::directlyUses(const Module *Requested) const {
+  auto *Top = getTopLevelModule();
+
+  // A top-level module implicitly uses itself.
+  if (Requested->isSubModuleOf(Top))
+    return true;
+
+  for (auto *Use : Top->DirectUses)
+    if (Requested->isSubModuleOf(Use))
+      return true;
+  return false;
+}
+
 void Module::addRequirement(StringRef Feature, bool RequiredState,
                             const LangOptions &LangOpts,
                             const TargetInfo &Target) {
@@ -166,7 +195,11 @@ void Module::addRequirement(StringRef Feature, bool RequiredState,
 }
 
 void Module::markUnavailable(bool MissingRequirement) {
-  if (!IsAvailable)
+  auto needUpdate = [MissingRequirement](Module *M) {
+    return M->IsAvailable || (!M->IsMissingRequirement && MissingRequirement);
+  };
+
+  if (!needUpdate(this))
     return;
 
   SmallVector<Module *, 2> Stack;
@@ -175,7 +208,7 @@ void Module::markUnavailable(bool MissingRequirement) {
     Module *Current = Stack.back();
     Stack.pop_back();
 
-    if (!Current->IsAvailable)
+    if (!needUpdate(Current))
       continue;
 
     Current->IsAvailable = false;
@@ -183,7 +216,7 @@ void Module::markUnavailable(bool MissingRequirement) {
     for (submodule_iterator Sub = Current->submodule_begin(),
                          SubEnd = Current->submodule_end();
          Sub != SubEnd; ++Sub) {
-      if ((*Sub)->IsAvailable)
+      if (needUpdate(*Sub))
         Stack.push_back(*Sub);
     }
   }
@@ -316,15 +349,15 @@ void Module::print(raw_ostream &OS, unsigned Indent) const {
     OS << "\n";
   }
   
-  if (const FileEntry *UmbrellaHeader = getUmbrellaHeader()) {
+  if (Header H = getUmbrellaHeader()) {
     OS.indent(Indent + 2);
     OS << "umbrella header \"";
-    OS.write_escaped(UmbrellaHeader->getName());
+    OS.write_escaped(H.NameAsWritten);
     OS << "\"\n";
-  } else if (const DirectoryEntry *UmbrellaDir = getUmbrellaDir()) {
+  } else if (DirectoryName D = getUmbrellaDir()) {
     OS.indent(Indent + 2);
     OS << "umbrella \"";
-    OS.write_escaped(UmbrellaDir->getName());
+    OS.write_escaped(D.NameAsWritten);
     OS << "\"\n";    
   }
 
@@ -385,12 +418,8 @@ void Module::print(raw_ostream &OS, unsigned Indent) const {
     OS.indent(Indent + 2);
     OS << "export ";
     printModuleId(OS, UnresolvedExports[I].Id);
-    if (UnresolvedExports[I].Wildcard) {
-      if (UnresolvedExports[I].Id.empty())
-        OS << "*";
-      else
-        OS << ".*";
-    }
+    if (UnresolvedExports[I].Wildcard)
+      OS << (UnresolvedExports[I].Id.empty() ? "*" : ".*");
     OS << "\n";
   }
 
@@ -453,8 +482,52 @@ void Module::print(raw_ostream &OS, unsigned Indent) const {
   OS << "}\n";
 }
 
-void Module::dump() const {
+LLVM_DUMP_METHOD void Module::dump() const {
   print(llvm::errs());
 }
 
+void VisibleModuleSet::setVisible(Module *M, SourceLocation Loc,
+                                  VisibleCallback Vis, ConflictCallback Cb) {
+  assert(Loc.isValid() && "setVisible expects a valid import location");
+  if (isVisible(M))
+    return;
 
+  ++Generation;
+
+  struct Visiting {
+    Module *M;
+    Visiting *ExportedBy;
+  };
+
+  std::function<void(Visiting)> VisitModule = [&](Visiting V) {
+    // Modules that aren't available cannot be made visible.
+    if (!V.M->isAvailable())
+      return;
+
+    // Nothing to do for a module that's already visible.
+    unsigned ID = V.M->getVisibilityID();
+    if (ImportLocs.size() <= ID)
+      ImportLocs.resize(ID + 1);
+    else if (ImportLocs[ID].isValid())
+      return;
+
+    ImportLocs[ID] = Loc;
+    Vis(M);
+
+    // Make any exported modules visible.
+    SmallVector<Module *, 16> Exports;
+    V.M->getExportedModules(Exports);
+    for (Module *E : Exports)
+      VisitModule({E, &V});
+
+    for (auto &C : V.M->Conflicts) {
+      if (isVisible(C.Other)) {
+        llvm::SmallVector<Module*, 8> Path;
+        for (Visiting *I = &V; I; I = I->ExportedBy)
+          Path.push_back(I->M);
+        Cb(Path, C.Other, C.Message);
+      }
+    }
+  };
+  VisitModule({M, nullptr});
+}

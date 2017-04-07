@@ -224,7 +224,7 @@ public:
 
    virtual TClass* ProjectedClass(const TEveProjection* p) const;
 
-   ClassDef(TEveTrackList, 1); // A list of tracks supporting change of common attributes and selection based on track parameters.
+   ClassDef(TEveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
 };
 
 #endif

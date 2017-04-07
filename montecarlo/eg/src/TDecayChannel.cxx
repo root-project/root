@@ -9,37 +9,45 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//-----------------------------------------------------------------------------
-//  Feb 16 2001 P.Murat: description of the decay channel
-//-----------------------------------------------------------------------------
+/** \class TDecayChannel
+    \ingroup eg
+
+Description of the decay channel
+
+Feb 16 2001 P.Murat
+*/
+
 #include "TDecayChannel.h"
 
 ClassImp(TDecayChannel)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///default constructor
+
 TDecayChannel::TDecayChannel()
 {
-   //default constructor
    fNumber            = 0;
    fMatrixElementCode = 0;
    fBranchingRatio    = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///constructor
+
 TDecayChannel::TDecayChannel(Int_t    NumberD,
                              Int_t    MatrixElementType,
                              Double_t BRatio,
                              Int_t    NumberDaughters,
                              Int_t*   DaughterCode)
 {
-   //constructor
    fNumber            = NumberD;
    fMatrixElementCode = MatrixElementType;
    fBranchingRatio    = BRatio;
    fDaughters.Set(NumberDaughters,DaughterCode);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
 TDecayChannel::~TDecayChannel() {
 }
 

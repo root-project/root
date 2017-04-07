@@ -9,39 +9,35 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TIterator                                                            //
-//                                                                      //
-// Iterator abstract base class. This base class provides the interface //
-// for collection iterators.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TIterator
+\ingroup Containers
+Iterator abstract base class. This base class provides the interface
+for collection iterators.
+*/
 
 #include "TIterator.h"
 #include "TError.h"
 
-
 ClassImp(TIterator)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two iterator objects.
+/// For backward compatibility reasons we have to provide this
+/// default implementation.
+
 Bool_t TIterator::operator!=(const TIterator &) const
 {
-   // Compare two iterator objects.
-   // For backward compatibility reasons we have to provide this
-   // default implementation.
-
    ::Warning("TIterator::operator!=", "this method must be overridden!");
    return false;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return current object or nullptr.
+/// For backward compatibility reasons we have to provide this
+/// default implementation.
+
 TObject *TIterator::operator*() const
 {
-   // Return current object or nullptr.
-   // For backward compatibility reasons we have to provide this
-   // default implementation.
-
    ::Warning("TIterator::operator*", "this method must be overridden!");
    return nullptr;
 }

@@ -12,15 +12,9 @@
 #ifndef ROOT_TDocInfo
 #define ROOT_TDocInfo
 
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 #include <string>
 #include <set>
 

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,11 +10,11 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoMaterialEditor, TGeoMixtureEditor
 // =======================================
 //
-//   Editors for materials and mixtures.                                                                      
+//   Editors for materials and mixtures.
 //______________________________________________________________________________
 
 #include "TGeoMaterialEditor.h"
@@ -42,18 +42,19 @@ enum ETGeoMaterialWid {
 
 enum ETGeoMaterialStates {
    kMAT_UNDEFINED, kMAT_SOLID, kMAT_LIQUID, kMAT_GAS
-};   
+};
 
 enum ETGeoMixtureWid {
    kMIX_ELEM, kMIX_CHK1, kMIX_FRAC, kMIX_CHK2, kMIX_NATOMS, kMIX_ADDELEM
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for material editor.
+
 TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for material editor.
    fMaterial   = 0;
    fAi = fZi = 0;
    fDensityi = 0.0;
@@ -87,8 +88,8 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fMatZ, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    f1->Resize(150,30);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
-   
-   
+
+
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Combo box for material state
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
@@ -114,7 +115,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    fMatDensity->Associate(this);
    f1->AddFrame(fMatDensity, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    // Number entry for temperature
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                              kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -150,7 +151,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    fMatRadLen->Associate(this);
    f1->AddFrame(fMatRadLen, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    // Number entry for absorbtion length
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                              kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -162,7 +163,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    fMatAbsLen->Associate(this);
    f1->AddFrame(fMatAbsLen, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-      
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 0, 0, 2, 2));
 
@@ -174,27 +175,29 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 1, 1));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMaterialEditor::~TGeoMaterialEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoMaterialEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoMaterialEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoMaterialEditor", this, "DoUndo()");
    fMaterialName->Connect("TextChanged(const char *)", "TGeoMaterialEditor", this, "DoName()");
@@ -209,14 +212,15 @@ void TGeoMaterialEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected material.
+
 void TGeoMaterialEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected material.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMaterial::Class()))) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fMaterial = (TGeoMaterial*)obj;
    fAi = fMaterial->GetA();
    fZi = (Int_t)fMaterial->GetZ();
@@ -236,43 +240,46 @@ void TGeoMaterialEditor::SetModel(TObject* obj)
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change.
+
 void TGeoMaterialEditor::DoName()
 {
-// Perform name change.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for atomic mass.
+
 void TGeoMaterialEditor::DoA()
 {
-// Slot for atomic mass.
    if (fMaterial->IsMixture()) {
       fMatA->SetNumber(fMaterial->GetA());
       return;
-   }   
+   }
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for charge.
+
 void TGeoMaterialEditor::DoZ()
 {
-// Slot for charge.
    if (fMaterial->IsMixture()) {
       fMatZ->SetNumber(fMaterial->GetZ());
       return;
-   }   
+   }
    Int_t z = (Int_t)fMatZ->GetNumber();
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (z >= table->GetNelements()) {
       z = table->GetNelements()-1;
       fMatZ->SetNumber(z);
-   }   
+   }
    TGeoElement *elem = table->GetElement(z);
    if (!elem) return;
    Double_t a = elem->A();
@@ -280,51 +287,57 @@ void TGeoMaterialEditor::DoZ()
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material state.
+
 void TGeoMaterialEditor::DoState(Int_t /*state*/)
 {
-// Slot for material state.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material temperature.
+
 void TGeoMaterialEditor::DoTemperature()
 {
-// Slot for material temperature.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for material pressure.
+
 void TGeoMaterialEditor::DoPressure()
 {
-// Slot for material pressure.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for density.
+///   fMatDensity->SetNumber(fDensityi);
+
 void TGeoMaterialEditor::DoDensity()
 {
-// Slot for density.
-//   fMatDensity->SetNumber(fDensityi);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for radiation/absorbtion length.
+
 void TGeoMaterialEditor::DoRadAbs()
 {
-// Slot for radiation/absorbtion length. 
    fMatRadLen->SetNumber(fMaterial->GetRadLen());
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoMaterialEditor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
-   
+
    fMaterial->SetA(fMatA->GetNumber());
    fMaterial->SetZ(fMatZ->GetNumber());
    fMaterial->SetDensity(fMatDensity->GetNumber());
@@ -338,10 +351,11 @@ void TGeoMaterialEditor::DoApply()
    fApply->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for cancelling current modifications.
+
 void TGeoMaterialEditor::DoUndo()
 {
-// Slot for cancelling current modifications.
    fMaterialName->SetText(fNamei.Data());
    fMaterial->SetName(fNamei.Data());
    fMatA->SetNumber(fAi);
@@ -362,21 +376,23 @@ void TGeoMaterialEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoMaterialEditor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
 ClassImp(TGeoMixtureEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for mixture editor.
+
 TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoMaterialEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for mixture editor.
    fMixture = 0;
    TGCompositeFrame *compxyz=0, *f1=0;
    TGTextEntry *nef;
@@ -395,7 +411,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
          element = table->GetElement(i);
          if (element) fMixElem->AddEntry(element->GetTitle(),i);
       }
-   }      
+   }
    fMixElem->Select(0);
    fMixElem->Resize(90, fMaterialName->GetDefaultHeight());
    f1->AddFrame(fMixElem, new TGLayoutHints(kLHintsLeft , 2, 2, 1, 1));
@@ -422,7 +438,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
    fNEFraction->Associate(this);
    f1->AddFrame(fNEFraction, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    // Fraction by number of atoms
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                              kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -446,18 +462,19 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
 
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 1));
-   
+
    // List view with all components
    fComps = new TGCompositeFrame(this, 150, 100, kVerticalFrame | kSunkenFrame);
    AddFrame(fComps, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 0, 2, 1, 2));
 
    TGeoTabManager::MoveFrame(f23, this);
-}   
-   
-//______________________________________________________________________________
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoMixtureEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoMixtureEditor", this, "DoApply1()");
    fUndo->Connect("Clicked()", "TGeoMixtureEditor", this, "DoUndo1()");
    fChkFraction->Connect("Clicked()", "TGeoMixtureEditor", this, "DoChkFraction()");
@@ -477,84 +494,91 @@ void TGeoMixtureEditor::ConnectSignals2Slots()
    fMatAbsLen->Connect("ValueSet(Long_t)", "TGeoMaterialEditor", this, "DoRadAbs()");
    fInit = kFALSE;
 }
-      
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected mixture.
+
 void TGeoMixtureEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected mixture.
    if (obj == 0 || !(obj->InheritsFrom(TGeoMixture::Class()))) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    TGeoMaterialEditor::SetModel(obj);
    fMixture = (TGeoMixture*)fMaterial;
    UpdateElements();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check button state changed for fraction.
+
 void TGeoMixtureEditor::DoChkFraction()
 {
-// Check button state changed for fraction.
    if (fMixture->GetNelements() && fMixture->GetNmixt()) {
       fChkFraction->SetDown(kFALSE);
       fChkNatoms->SetDown(kTRUE);
       return;
-   }   
+   }
    Bool_t isDown = fChkFraction->IsDown();
    fChkNatoms->SetDown(!isDown);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check button state changed for natoms.
+
 void TGeoMixtureEditor::DoChkNatoms()
 {
-// Check button state changed for natoms.
    if (fMixture->GetNelements() && !fMixture->GetNmixt()) {
       fChkFraction->SetDown(kTRUE);
       fChkNatoms->SetDown(kFALSE);
       return;
-   }   
+   }
    Bool_t isDown = fChkNatoms->IsDown();
    fChkFraction->SetDown(!isDown);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fraction changed.
+
 void TGeoMixtureEditor::DoFraction()
 {
-// Fraction changed.
    if (fMixture->GetNelements() && fMixture->GetNmixt()) return;
    fChkFraction->SetDown(kTRUE);
    fChkNatoms->SetDown(kFALSE);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Natoms changed.
+
 void TGeoMixtureEditor::DoNatoms()
 {
-// Natoms changed.
    if (fMixture->GetNelements() && !fMixture->GetNmixt()) return;
    fChkFraction->SetDown(kFALSE);
    fChkNatoms->SetDown(kTRUE);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for selecting an element.
+
 void TGeoMixtureEditor::DoSelectElement(Int_t ielem)
 {
-// Slot for selecting an element.
    TGeoElement *el = gGeoManager->GetElementTable()->GetElement(ielem);
    if (!el) {
       Error("DoSelectElement", "No element at index %d", ielem);
       return;
-   }   
+   }
    TString z = TString::Format("Z=%d",el->Z());
    TString a = TString::Format("A=%d",(Int_t)el->A());
    fAelem->SetText(a.Data());
    fZelem->SetText(z.Data());
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for adding an element. No undo.
+
 void TGeoMixtureEditor::DoAddElem()
 {
-// Slot for adding an element. No undo.
-   Bool_t byfraction = fChkFraction->IsDown();   
+   Bool_t byfraction = fChkFraction->IsDown();
    Int_t natoms = (Int_t)fNENatoms->GetNumber();
    if (!byfraction && natoms<=0) return;
    Double_t frac = fNEFraction->GetNumber();
@@ -562,17 +586,18 @@ void TGeoMixtureEditor::DoAddElem()
    TGeoElement *el = gGeoManager->GetElementTable()->GetElement(fMixElem->GetSelected());
    if (!el) return;
    if (byfraction) fMixture->AddElement(el, frac);
-   else            fMixture->AddElement(el, natoms);   
+   else            fMixture->AddElement(el, natoms);
    fTabMgr->GetMaterialEditor(fMixture);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoMixtureEditor::DoApply1()
 {
-// Slot for applying modifications.
    const char *name = fMaterialName->GetText();
    fMaterial->SetName(name);
-   
+
    fMaterial->SetDensity(fMatDensity->GetNumber());
    fMaterial->SetTemperature(fMatTemperature->GetNumber());
    fMaterial->SetPressure(6.2415e+8*fMatPressure->GetNumber());
@@ -582,12 +607,13 @@ void TGeoMixtureEditor::DoApply1()
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    fUndo->SetEnabled();
    fApply->SetEnabled(kFALSE);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing all changes.
+
 void TGeoMixtureEditor::DoUndo1()
 {
-// Slot for undoing all changes.
    fMaterialName->SetText(fNamei.Data());
    fMaterial->SetName(fNamei.Data());
    fMatState->Select(fStatei);
@@ -602,27 +628,28 @@ void TGeoMixtureEditor::DoUndo1()
    fMatAbsLen->SetNumber(fMaterial->GetIntLen());
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the list of elements in the TGCanvas.
+
 void TGeoMixtureEditor::UpdateElements()
 {
-// Update the list of elements in the TGCanvas.
    fComps->RemoveAll();
    Int_t nelem = fMixture->GetNelements();
    for (Int_t i=0; i<nelem; i++) {
       TString s;
       Bool_t byfrac = (fMixture->GetNmixt())?kFALSE:kTRUE;
-      if (byfrac) 
-         s.TString::Format("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+      if (byfrac)
+         s.TString::Format("%d-%s-%d: Wmass = %g %%", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(),
                 (Int_t)fMixture->GetAmixt()[i],fMixture->GetWmixt()[i]);
       else
-         s.TString::Format("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(), 
+         s.TString::Format("%d-%s-%d: Natoms = %d", (Int_t)fMixture->GetZmixt()[i], fMixture->GetElement(i)->GetName(),
                 (Int_t)fMixture->GetAmixt()[i],fMixture->GetNmixt()[i]);
-                     
+
       TGLabel *label = new TGLabel(fComps, s);
       label->SetTextJustify(kTextLeft | kTextCenterY);
       fComps->AddFrame(label, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 1, 1, 0, 0));
-   }   
+   }
    fComps->MapSubwindows();
 }

@@ -8,17 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::UpperLimitMCSModule
+    \ingroup Roostats
 
+This class allow to compute in the ToyMcStudy framework the ProfileLikelihood
+upper limit for each toy-MC sample generated
 
-
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// This modules allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
-
-// END_HTML
-//
-//
+*/
 
 #include "Riostream.h"
 
@@ -40,8 +36,6 @@
 #include "RooCmdArg.h"
 #include "RooRealVar.h"
 
-
-
 using namespace std;
 
 ClassImp(RooStats::UpperLimitMCSModule);
@@ -49,12 +43,11 @@ ClassImp(RooStats::UpperLimitMCSModule);
 
 using namespace RooStats ;
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
-UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) : 
+UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
   RooAbsMCStudyModule(Form("UpperLimitMCSModule_%s",poi->first()->GetName()),Form("UpperLimitMCSModule_%s",poi->first()->GetName())),
-  _parName(poi->first()->GetName()), 
+  _parName(poi->first()->GetName()),
   _plc(0),_ul(0),_poi(0), _data(0),_cl(CL), _model(0)
 {
   std::cout<<"RooUpperLimitConstructor ParName:"<<_parName<<std::endl;
@@ -65,23 +58,22 @@ UpperLimitMCSModule::UpperLimitMCSModule(const RooArgSet* poi, Double_t CL) :
 
 
 
-//_____________________________________________________________________________
-UpperLimitMCSModule::UpperLimitMCSModule(const UpperLimitMCSModule& other) : 
-  RooAbsMCStudyModule(other), 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
+UpperLimitMCSModule::UpperLimitMCSModule(const UpperLimitMCSModule& other) :
+  RooAbsMCStudyModule(other),
   _parName(other._poi->first()->GetName()),
   _plc(0),_ul(0),_poi(other._poi), _data(0), _cl(other._cl), _model(other._model)
 {
-  // Copy constructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
 
-
-//_____________________________________________________________________________
-UpperLimitMCSModule:: ~UpperLimitMCSModule() 
+UpperLimitMCSModule:: ~UpperLimitMCSModule()
 {
-  // Destructor
 
- 
   if (_plc) {
     delete _plc ;
   }
@@ -99,19 +91,17 @@ UpperLimitMCSModule:: ~UpperLimitMCSModule()
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module after attachment to RooMCStudy object
 
-
-//_____________________________________________________________________________
 Bool_t UpperLimitMCSModule::initializeInstance()
 {
-  // Initialize module after attachment to RooMCStudy object
-
   // Check that parameter is also present in fit parameter list of RooMCStudy object
   if (!fitParams()->find(_parName.c_str())) {
     coutE(InputArguments) << "UpperLimitMCSModule::initializeInstance:: ERROR: No parameter named " << _parName << " in RooMCStudy!" << endl ;
     return kFALSE ;
   }
-  
+
   //Construct the ProfileLikelihoodCalculator
   _poi=new RooArgSet(*(fitParams()->find(_parName.c_str())));
   std::cout<<"RooUpperLimit Initialize Instance: POI Set:"<<std::endl;
@@ -119,7 +109,7 @@ Bool_t UpperLimitMCSModule::initializeInstance()
   std::cout<<"RooUpperLimit Initialize Instance: End:"<<std::endl;
 
 
-  
+
   TString ulName = Form("ul_%s",_parName.c_str()) ;
   TString ulTitle = Form("UL for parameter %s",_parName.c_str()) ;
   _ul = new RooRealVar(ulName.Data(),ulTitle.Data(),0) ;
@@ -131,45 +121,39 @@ Bool_t UpperLimitMCSModule::initializeInstance()
   return kTRUE ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize module at beginning of RooCMStudy run
 
-
-//_____________________________________________________________________________
-Bool_t UpperLimitMCSModule::initializeRun(Int_t /*numSamples*/) 
+Bool_t UpperLimitMCSModule::initializeRun(Int_t /*numSamples*/)
 {
-  // Initialize module at beginning of RooCMStudy run
-
   _data->reset() ;
   return kTRUE ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return auxiliary dataset with results of delta(-log(L))
+/// calculations of this module so that it is merged with
+/// RooMCStudy::fitParDataSet() by RooMCStudy
 
-
-//_____________________________________________________________________________
-RooDataSet* UpperLimitMCSModule::finalizeRun() 
+RooDataSet* UpperLimitMCSModule::finalizeRun()
 {
-  // Return auxiliary dataset with results of delta(-log(L))
-  // calculations of this module so that it is merged with
-  // RooMCStudy::fitParDataSet() by RooMCStudy
-
   return _data ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
-
-// Bool_t UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)  
+// Bool_t UpperLimitMCSModule::processAfterFit(Int_t /*sampleNum*/)
 // {
 //   // Save likelihood from nominal fit, fix chosen parameter to its
 //   // null hypothesis value and rerun fit Save difference in likelihood
-//   // and associated Gaussian significance in auxilary dataset
+//   // and associated Gaussian significance in auxiliary dataset
 
 //   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
 //   par->setVal(_nullValue) ;
 //   par->setConstant(kTRUE) ;
 //   RooFitResult* frnull = refit() ;
 //   par->setConstant(kFALSE) ;
-  
+
 //   _nll0h->setVal(frnull->minNll()) ;
 
 //   Double_t deltaLL = (frnull->minNll() - nllVar()->getVal()) ;
@@ -185,16 +169,15 @@ RooDataSet* UpperLimitMCSModule::finalizeRun()
 
 // }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
 Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
-
   std::cout<<"after generation Test"<<std::endl;
 
-  if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return kFALSE; 
+  if (!fitInitParams() || !genSample() || !fitParams() || !fitModel() ) return kFALSE;
 
   static_cast<RooRealVar*>(_poi->first())->setVal(static_cast<RooRealVar*>(fitInitParams()->find(_parName.c_str()))->getVal());
-  
+
   //_poi->first()->Print();
   static_cast<RooRealVar*>(_poi->first())->setBins(1000);
   //fitModel()->Print("v");
@@ -202,7 +185,7 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   std::cout<<"generated Entries:"<<genSample()->numEntries()<<std::endl;
 
   RooStats::ProfileLikelihoodCalculator plc( *(genSample()), *(fitModel()), *_poi);
-   
+
   //PLC calculates intervals. for one sided ul multiply testsize by two
   plc.SetTestSize(2*(1-_cl));
   RooStats::ConfInterval* pllint=plc.GetInterval();
@@ -214,17 +197,17 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
   std::cout<<((RooStats::LikelihoodInterval*)pllint)->UpperLimit((RooRealVar&)*(_poi->first()))<<std::endl;
 
 
-  //Go to the fit Value for zour POI to make sure upperlimit works correct.
+  //Go to the fit Value for zour POI to make sure upper limit works correct.
   //fitModel()->fitTo(*genSample());
-  
+
 
 
   _ul->setVal(((RooStats::LikelihoodInterval*)pllint)->UpperLimit(static_cast<RooRealVar&>(*(fitParams()->find(_parName.c_str())))));
-  
+
   _data->add(RooArgSet(*_ul));
   std::cout<<"UL:"<<_ul->getVal()<<std::endl;
 //   if (_ul->getVal()<1){
-    
+
 //   RooStats::LikelihoodIntervalPlot plotpll((RooStats::LikelihoodInterval*) pllint);
 //   TCanvas c1;
 //   plotpll.Draw();
@@ -232,9 +215,9 @@ Bool_t UpperLimitMCSModule::processBetweenGenAndFit(Int_t /*sampleNum*/) {
 //   std::cout<<" UL<1 whats going on here?"<<std::endl;
 //   abort();
 //   }
-  
+
   delete pllint;
-  
-  
+
+
   return kTRUE;
 }

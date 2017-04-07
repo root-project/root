@@ -295,6 +295,9 @@ template <typename Class> struct bind_ty {
 /// \brief Match a value, capturing it if we match.
 inline bind_ty<Value> m_Value(Value *&V) { return V; }
 
+/// \brief Match an instruction, capturing it if we match.
+inline bind_ty<Instruction> m_Instruction(Instruction *&I) { return I; }
+
 /// \brief Match a binary operator, capturing it if we match.
 inline bind_ty<BinaryOperator> m_BinOp(BinaryOperator *&I) { return I; }
 
@@ -1103,6 +1106,52 @@ m_UnordFMax(const LHS &L, const RHS &R) {
   return MaxMin_match<FCmpInst, LHS, RHS, ufmax_pred_ty>(L, R);
 }
 
+//===----------------------------------------------------------------------===//
+// Matchers for overflow check patterns: e.g. (a + b) u< a
+//
+
+template <typename LHS_t, typename RHS_t, typename Sum_t>
+struct UAddWithOverflow_match {
+  LHS_t L;
+  RHS_t R;
+  Sum_t S;
+
+  UAddWithOverflow_match(const LHS_t &L, const RHS_t &R, const Sum_t &S)
+      : L(L), R(R), S(S) {}
+
+  template <typename OpTy> bool match(OpTy *V) {
+    Value *ICmpLHS, *ICmpRHS;
+    ICmpInst::Predicate Pred;
+    if (!m_ICmp(Pred, m_Value(ICmpLHS), m_Value(ICmpRHS)).match(V))
+      return false;
+
+    Value *AddLHS, *AddRHS;
+    auto AddExpr = m_Add(m_Value(AddLHS), m_Value(AddRHS));
+
+    // (a + b) u< a, (a + b) u< b
+    if (Pred == ICmpInst::ICMP_ULT)
+      if (AddExpr.match(ICmpLHS) && (ICmpRHS == AddLHS || ICmpRHS == AddRHS))
+        return L.match(AddLHS) && R.match(AddRHS) && S.match(ICmpLHS);
+
+    // a >u (a + b), b >u (a + b)
+    if (Pred == ICmpInst::ICMP_UGT)
+      if (AddExpr.match(ICmpRHS) && (ICmpLHS == AddLHS || ICmpLHS == AddRHS))
+        return L.match(AddLHS) && R.match(AddRHS) && S.match(ICmpRHS);
+
+    return false;
+  }
+};
+
+/// \brief Match an icmp instruction checking for unsigned overflow on addition.
+///
+/// S is matched to the addition whose result is being checked for overflow, and
+/// L and R are matched to the LHS and RHS of S.
+template <typename LHS_t, typename RHS_t, typename Sum_t>
+UAddWithOverflow_match<LHS_t, RHS_t, Sum_t>
+m_UAddWithOverflow(const LHS_t &L, const RHS_t &R, const Sum_t &S) {
+  return UAddWithOverflow_match<LHS_t, RHS_t, Sum_t>(L, R, S);
+}
+
 /// \brief Match an 'unordered' floating point minimum function.
 /// Floating point has one special value 'NaN'. Therefore, there is no total
 /// order. However, if we can ignore the 'NaN' value (for example, because of a
@@ -1221,6 +1270,83 @@ template <typename Opnd0, typename Opnd1>
 inline typename m_Intrinsic_Ty<Opnd0, Opnd1>::Ty m_FMax(const Opnd0 &Op0,
                                                         const Opnd1 &Op1) {
   return m_Intrinsic<Intrinsic::maxnum>(Op0, Op1);
+}
+
+template <typename Opnd_t> struct Signum_match {
+  Opnd_t Val;
+  Signum_match(const Opnd_t &V) : Val(V) {}
+
+  template <typename OpTy> bool match(OpTy *V) {
+    unsigned TypeSize = V->getType()->getScalarSizeInBits();
+    if (TypeSize == 0)
+      return false;
+
+    unsigned ShiftWidth = TypeSize - 1;
+    Value *OpL = nullptr, *OpR = nullptr;
+
+    // This is the representation of signum we match:
+    //
+    //  signum(x) == (x >> 63) | (-x >>u 63)
+    //
+    // An i1 value is its own signum, so it's correct to match
+    //
+    //  signum(x) == (x >> 0)  | (-x >>u 0)
+    //
+    // for i1 values.
+
+    auto LHS = m_AShr(m_Value(OpL), m_SpecificInt(ShiftWidth));
+    auto RHS = m_LShr(m_Neg(m_Value(OpR)), m_SpecificInt(ShiftWidth));
+    auto Signum = m_Or(LHS, RHS);
+
+    return Signum.match(V) && OpL == OpR && Val.match(OpL);
+  }
+};
+
+/// \brief Matches a signum pattern.
+///
+/// signum(x) =
+///      x >  0  ->  1
+///      x == 0  ->  0
+///      x <  0  -> -1
+template <typename Val_t> inline Signum_match<Val_t> m_Signum(const Val_t &V) {
+  return Signum_match<Val_t>(V);
+}
+
+//===----------------------------------------------------------------------===//
+// Matchers for two-operands operators with the operators in either order
+//
+
+/// \brief Matches an ICmp with a predicate over LHS and RHS in either order.
+/// Does not swap the predicate.
+template<typename LHS, typename RHS>
+inline match_combine_or<CmpClass_match<LHS, RHS, ICmpInst, ICmpInst::Predicate>,
+                        CmpClass_match<RHS, LHS, ICmpInst, ICmpInst::Predicate>>
+m_c_ICmp(ICmpInst::Predicate &Pred, const LHS &L, const RHS &R) {
+  return m_CombineOr(m_ICmp(Pred, L, R), m_ICmp(Pred, R, L));
+}
+
+/// \brief Matches an And with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<BinaryOp_match<LHS, RHS, Instruction::And>,
+                        BinaryOp_match<RHS, LHS, Instruction::And>>
+m_c_And(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_And(L, R), m_And(R, L));
+}
+
+/// \brief Matches an Or with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<BinaryOp_match<LHS, RHS, Instruction::Or>,
+                        BinaryOp_match<RHS, LHS, Instruction::Or>>
+m_c_Or(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_Or(L, R), m_Or(R, L));
+}
+
+/// \brief Matches an Xor with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<BinaryOp_match<LHS, RHS, Instruction::Xor>,
+                        BinaryOp_match<RHS, LHS, Instruction::Xor>>
+m_c_Xor(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_Xor(L, R), m_Xor(R, L));
 }
 
 } // end namespace PatternMatch

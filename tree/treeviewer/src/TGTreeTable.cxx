@@ -24,40 +24,37 @@
 
 ClassImp(TGTreeTable)
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTreeTable                                                          //
-//                                                                      //
-// TGTreeTable is a TGTable that owns it's own interface, it            //
-// can be used to view a TTree. If an expression is given to the        //
-// constuctor, it will be used to define the columns. A selection can   //
-// also be given. This selection is applied to the TTree as a           //
-// TEntryList. See the documentation of TGTable for more information    //
-//                                                                      //
-// The interface is accesible after the creation through the            //
-// GetInterface() method.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTreeTable
 
-//______________________________________________________________________________
+TGTreeTable is a TGTable that owns it's own interface.
+It can be used to view a TTree. If an expression is given to the
+constructor, it will be used to define the columns. A selection can
+also be given. This selection is applied to the TTree as a
+TEntryList. See the documentation of TGTable for more information
+
+The interface is accesible after the creation through the
+GetInterface() method.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// TGTreeTable constructor.
+
 TGTreeTable::TGTreeTable(TGWindow *p, Int_t id, TTree *tree,
                          const char *expression, const char *selection,
                          const char *option, UInt_t nrows, UInt_t ncolumns)
    : TGTable(p, id, 0, nrows, ncolumns)
 {
-   // TGTreeTable constructor.
-
    TTreeTableInterface *iface = new TTreeTableInterface(tree, expression,
                                                         selection, option);
    SetInterface(iface, nrows, ncolumns);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTreeTable destructor.
+
 TGTreeTable::~TGTreeTable()
 {
-   // TGTreeTable destructor.
-
    //FIXME this causes a double delete segfault, why???
 //    delete fInterface;
 }

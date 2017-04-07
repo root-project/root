@@ -9,21 +9,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLockFile                                                            //
-//                                                                      //
-// Lock an object using a file.                                         //
-// Constructor blocks until lock is obtained. Lock is released in the   //
-// destructor.                                                          //
-//                                                                      //
-// Use it in scope-blocks like:                                         //
-// {                                                                    //
-//    TLockFile lock("path.to.lock.file");                              //
-//    // do something you need the lock for                             //
-// } // lock is automatically released                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TLockFile
+\ingroup IO
+
+A scoped lock based on files.
+
+The RAAI idiom is used: the constructor blocks until lock is obtained.
+Lock is released in the destructor.
+Use it in scope-blocks like:
+~~~{.cpp}
+{
+   TLockFile lock("path.to.lock.file");
+   // do something you need the lock for
+} // lock is automatically released
+~~~
+*/
 
 #include "TLockFile.h"
 #include "TSystem.h"
@@ -32,13 +33,15 @@
 
 ClassImp(TLockFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+///
+/// Blocks until lock is obtained.
+/// If a lock exists that is older than the given time limit,
+/// the file is removed. If timeLimit <= 0, wait for ever.
+
 TLockFile::TLockFile(const char *path, Int_t timeLimit) : fPath(path)
 {
-   // Default constructor. Blocks until lock is obtained.
-   // If a lock exists that is older than the given time limit,
-   // the file is removed. If timeLimit <= 0, wait for ever.
-
    while (1) {
       if (Lock(fPath, timeLimit))
          break;
@@ -49,22 +52,22 @@ TLockFile::TLockFile(const char *path, Int_t timeLimit) : fPath(path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Releases the lock.
+
 TLockFile::~TLockFile()
 {
-   // Destructor. Releases the lock.
-
    if (gDebug > 0)
       Info("~TLockFile", "releasing lock %s", fPath.Data());
 
    gSystem->Unlink(fPath);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal function that locks with the given path.
+
 Bool_t TLockFile::Lock(const char *path, Int_t timeLimit)
 {
-   // Internal function that locks with the given path.
-
    Long_t modTime = 0;
    if (gSystem->GetPathInfo(path, 0, (Long_t*) 0, 0, &modTime) == 0) {
       if (timeLimit > 0) {

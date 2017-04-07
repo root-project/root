@@ -18,10 +18,10 @@ HISTDS       := $(call stripsrc,$(MODDIRS)/G__Hist.cxx)
 HISTDO       := $(HISTDS:.cxx=.o)
 HISTDH       := $(HISTDS:.cxx=.h)
 
-HISTH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
-HISTHMAT     := $(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h))
+HISTMH       := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h)) \
+		$(filter-out $(MODDIRI)/Math/LinkDef%,$(wildcard $(MODDIRI)/Math/*.h)) \
+		$(filter-out $(MODDIRI)/v5/LinkDef%,$(wildcard $(MODDIRI)/v5/*.h))
 #HISTHMAT     += mathcore/inc/Math/WrappedFunction.h
-HISTHH       := $(HISTH) $(HISTHMAT) 
 
 HISTS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 HISTO        := $(call stripsrc,$(HISTS:.cxx=.o))
@@ -32,10 +32,18 @@ HISTLIB      := $(LPATH)/libHist.$(SOEXT)
 HISTMAP      := $(HISTLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HISTHH))
-#ALLHDRS     += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(HISTHH))
+HISTMH_REL  := $(patsubst $(MODDIRI)/%,include/%,$(HISTMH))
+ALLHDRS     += $(HISTMH_REL)
 ALLLIBS     += $(HISTLIB)
 ALLMAPS     += $(HISTMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(HISTMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Hist_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(HBOOKLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(HISTDEP)
@@ -46,6 +54,12 @@ INCLUDEFILES += $(HISTDEP)
 include/Math/%.h: $(HISTDIRI)/Math/%.h
 		@(if [ ! -d "include/Math" ]; then     \
 		   mkdir -p include/Math;              \
+		fi)
+		cp $< $@
+
+include/v5/%.h: $(HISTDIRI)/v5/%.h
+		@(if [ ! -d "include/v5" ]; then     \
+		   mkdir -p include/v5;              \
 		fi)
 		cp $< $@
 
@@ -60,15 +74,15 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(call pcmrule,HIST)
 	$(noop)
 
-$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
+$(HISTDS):      $(HISTMH_REL) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c -writeEmptyRootPCM $(HISTHH) $(HISTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c -writeEmptyRootPCM $(patsubst include/%,%,$(HISTMH_REL)) $(HISTL)
 
-$(HISTMAP):     $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
+$(HISTMAP):     $(HISTMH_REL) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(HISTDS) $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+		$(ROOTCLINGSTAGE2) -r $(HISTDS) $(call dictModule,HIST) -c $(patsubst include/%,%,$(HISTMH_REL)) $(HISTL)
 
 all-$(MODNAME): $(HISTLIB)
 
@@ -79,9 +93,9 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(HISTDEP) $(HISTDS) $(HISTDH) $(HISTLIB) $(HISTMAP)
+		@rm -rf include/v5
 
 distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(HISTDO): NOOPT = $(OPT)
-$(HISTDO): CXXFLAGS := $(filter-out -Xclang -fmodules -Xclang -fmodules-cache-path=$(ROOTSYS)/pcm/, $(CXXFLAGS))

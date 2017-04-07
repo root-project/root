@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TQueryResult                                                         //
-//                                                                      //
-// A container class for query results.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TQueryResult
+\ingroup tree
+
+A container class for query results.
+*/
+
 #include <string.h>
 
 #include "TBrowser.h"
@@ -29,20 +28,20 @@
 #include "TSystem.h"
 #include "TTimeStamp.h"
 
-
 ClassImp(TQueryResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor.
+
 TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                            Long64_t entries, Long64_t first, const char *selec)
              : fSeqNum(seqnum), fStatus(kSubmitted), fUsedCPU(0.), fOptions(opt),
                fEntries(entries), fFirst(first),
                fBytes(0), fParList("-"), fOutputList(0),
                fFinalized(kFALSE), fArchived(kFALSE), fResultFile("-"),
-               fInitTime(0.), fProcTime(0.), fNumWrks(-1)
+               fPrepTime(0.), fInitTime(0.), fProcTime(0.), fMergeTime(0.),
+               fRecvTime(-1), fTermTime(-1), fNumWrks(-1), fNumMergers(-1)
 {
-   // Main constructor.
-
    // Name and unique title
    SetName(TString::Format("q%d", fSeqNum));
    SetTitle(TString::Format("session-localhost-%ld-%d",
@@ -103,11 +102,11 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
    fLibList = (pl && (strlen(pl) > 0)) ? pl : "-";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TQueryResult::~TQueryResult()
 {
-   // Destructor.
-
    SafeDelete(fInputList);
    SafeDelete(fOutputList);
    SafeDelete(fLogFile);
@@ -115,14 +114,14 @@ TQueryResult::~TQueryResult()
    SafeDelete(fSelecHdr);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an instance of TQueryResult containing only the local
+/// info fields, i.e. no outputlist, liblist, dset, selectors, etc..
+/// Used for fast retrieve of information about existing queries
+/// and their status.
+
 TQueryResult *TQueryResult::CloneInfo()
 {
-   // Return an instance of TQueryResult containing only the local
-   // info fields, i.e. no outputlist, liblist, dset, selectors, etc..
-   // Used for fast retrieve of information about existing queries
-   // and their status.
-
    // Create instance
    TQueryResult *qr = new TQueryResult(fSeqNum, fOptions, 0, fEntries,
                                        fFirst, 0);
@@ -138,9 +137,14 @@ TQueryResult *TQueryResult::CloneInfo()
    qr->fParList = fParList;
    qr->fResultFile = fResultFile;
    qr->fArchived = fArchived;
+   qr->fPrepTime = fPrepTime;
    qr->fInitTime = fInitTime;
    qr->fProcTime = fProcTime;
+   qr->fMergeTime = fMergeTime;
+   qr->fRecvTime = fRecvTime;
+   qr->fTermTime = fTermTime;
    qr->fNumWrks = fNumWrks;
+   qr->fNumMergers = fNumMergers;
 
    qr->fSelecHdr = 0;
    if (GetSelecHdr()) {
@@ -162,13 +166,13 @@ TQueryResult *TQueryResult::CloneInfo()
    return qr;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the selector header and implementation into the dedicated
+/// TMacro instances. The header is searched for in the same directory
+/// of the implementation file.
+
 void TQueryResult::SaveSelector(const char *selector)
 {
-   // Save the selector header and implementation into the dedicated
-   // TMacro instances. The header is searched for in the same directory
-   // of the implementation file.
-
    if (!selector)
       return;
 
@@ -186,19 +190,18 @@ void TQueryResult::SaveSelector(const char *selector)
    // If the selector is in a precompiled shared lib (e.g. in a PAR)
    // we just save the name
    TString selname = gSystem->BaseName(selec);
+   fSelecImp->SetName(selname);
    Int_t idx = selname.Index(".");
    if (idx < 0) {
       // Notify
       if (gDebug > 0)
          Info("SaveSelector", "precompiled selector: just save the name");
-      fSelecImp->SetName(selname);
       fSelecImp->SetTitle(selname);
-      fSelecHdr->SetName(selname);
-      fSelecHdr->SetTitle(selname);
    } else {
       // We locate the file and save it in compressed form
       if (idx > -1)
          selname.Remove(idx);
+      fSelecImp->SetTitle(selname);
 
       // Locate the implementation file
       char *selc = gSystem->Which(TROOT::GetMacroPath(), selec, kReadPermission);
@@ -212,7 +215,6 @@ void TQueryResult::SaveSelector(const char *selector)
       // Fill the TMacro instance
       fSelecImp->ReadFile(selc);
       fSelecImp->SetName(gSystem->BaseName(selc));
-      fSelecImp->SetTitle(selname);
 
       // Locate the included header file
       char *p = (char *) strrchr(selc,'.');
@@ -237,11 +239,11 @@ void TQueryResult::SaveSelector(const char *selector)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// End of query settings.
+
 void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
 {
-   // End of query settings.
-
    // End time
    fEnd.Set();
 
@@ -263,12 +265,12 @@ void TQueryResult::RecordEnd(EQueryStatus status, TList *outlist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set processing info.
+
 void TQueryResult::SetProcessInfo(Long64_t ent, Float_t cpu, Long64_t bytes,
                                   Float_t init, Float_t proc)
 {
-   // Set processing info.
-
    fEntries = (ent > 0) ? ent : fEntries;
    fUsedCPU = (cpu > 0.) ? cpu : fUsedCPU;
    fBytes = (bytes > 0.) ? bytes : fBytes;
@@ -276,29 +278,29 @@ void TQueryResult::SetProcessInfo(Long64_t ent, Float_t cpu, Long64_t bytes,
    fProcTime = (proc > 0.) ? proc : fProcTime;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill log file.
+
 void TQueryResult::AddLogLine(const char *logline)
 {
-   // Fill log file.
-
    if (logline)
       fLogFile->AddLine(logline);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add obj to the input list
+
 void TQueryResult::AddInput(TObject *obj)
 {
-   // Add obj to the input list
-
    if (fInputList && obj)
       fInputList->Add(obj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set (or update) query in archived state.
+
 void TQueryResult::SetArchived(const char *archfile)
 {
-   // Set (or update) query in archived state.
-
    if (IsDone()) {
       fArchived = kTRUE;
       if (archfile && (strlen(archfile) > 0))
@@ -306,11 +308,11 @@ void TQueryResult::SetArchived(const char *archfile)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print query content. Use opt = "F" for a full listing.
+
 void TQueryResult::Print(Option_t *opt) const
 {
-   // Print query content. Use opt = "F" for a full listing.
-
    // Attention: the list must match EQueryStatus
    const char *qst[] = {
       "aborted  ", "submitted", "running  ", "stopped  ", "completed"
@@ -363,8 +365,19 @@ void TQueryResult::Print(Option_t *opt) const
    Float_t elapsed = (fProcTime > 0.) ? fProcTime
                                       : (Float_t)(fEnd.Convert() - fStart.Convert());
    Printf("+++        started:   %s", fStart.AsString());
-   Printf("+++        init time: %.3f sec", fInitTime);
-   Printf("+++        proc time: %.3f sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
+   if (fPrepTime > 0.)
+      Printf("+++        prepare:   %.3f sec", fPrepTime);
+   Printf("+++        init:      %.3f sec", fInitTime);
+   Printf("+++        process:   %.3f sec (CPU time: %.1f sec)", elapsed, fUsedCPU);
+   if (fNumMergers > 0) {
+      Printf("+++        merge:     %.3f sec (%d mergers)", fMergeTime, fNumMergers);
+   } else {
+      Printf("+++        merge:     %.3f sec ", fMergeTime);
+   }
+   if (fRecvTime > 0.)
+      Printf("+++        transfer:  %.3f sec", fRecvTime);
+   if (fTermTime > 0.)
+      Printf("+++        terminate: %.3f sec", fTermTime);
 
    // Number of events processed, rate, size
    Double_t rate = 0.0;
@@ -399,23 +412,23 @@ void TQueryResult::Print(Option_t *opt) const
       Printf("+++        outlist:   %d objects", fOutputList->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To support browsing of the results.
+
 void TQueryResult::Browse(TBrowser *b)
 {
-   // To support browsing of the results.
-
    if (fOutputList)
       b->Add(fOutputList, fOutputList->Class(), "OutputList");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set / change the input list.
+/// The flag 'adopt' determines whether the list is adopted (default)
+/// or cloned. If adopted, object ownership is transferred to this object.
+/// The internal fInputList will always be owner of its objects.
+
 void TQueryResult::SetInputList(TList *in, Bool_t adopt)
 {
-   // Set / change the input list.
-   // The flag 'adopt' determines whether the list is adopted (default)
-   // or cloned. If adopted, object ownership is transferred to this object.
-   // The internal fInputList will always be owner of its objects.
-
    if (!in || in != fInputList)
       SafeDelete(fInputList);
 
@@ -434,14 +447,14 @@ void TQueryResult::SetInputList(TList *in, Bool_t adopt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set / change the output list.
+/// The flag 'adopt' determines whether the list is adopted (default)
+/// or cloned.  If adopted, object ownership is transferred to this object.
+/// The internal fOutputList will always be owner of its objects.
+
 void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
 {
-   // Set / change the output list.
-   // The flag 'adopt' determines whether the list is adopted (default)
-   // or cloned.  If adopted, object ownership is transferred to this object.
-   // The internal fOutputList will always be owner of its objects.
-
    if (!out) {
       SafeDelete(fOutputList);
       return;
@@ -470,23 +483,23 @@ void TQueryResult::SetOutputList(TList *out, Bool_t adopt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compare two query result instances for equality.
+/// Session name and query number are compared.
+
 Bool_t operator==(const TQueryResult &qr1, const TQueryResult &qr2)
 {
-   // Compare two query result instances for equality.
-   // Session name and query number are compared.
-
    if (!strcmp(qr1.GetTitle(), qr2.GetTitle()))
       if (qr1.GetSeqNum() == qr2.GetSeqNum())
          return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if reference ref matches.
+
 Bool_t TQueryResult::Matches(const char *ref)
 {
-   // Return TRUE if reference ref matches.
-
    TString lref; lref.Form("%s:%s", GetTitle(), GetName());
 
    if (lref == ref)
@@ -495,12 +508,12 @@ Bool_t TQueryResult::Matches(const char *ref)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return first instance of class 'classname' in the input list.
+/// Usefull to access TDSet, TEventList, ...
+
 TObject *TQueryResult::GetInputObject(const char *classname) const
 {
-   // Return first instance of class 'classname' in the input list.
-   // Usefull to access TDSet, TEventList, ...
-
    TObject *o = 0;
    if (classname && fInputList) {
       TIter nxi(fInputList);

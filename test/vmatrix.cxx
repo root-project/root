@@ -118,16 +118,17 @@ void stress_matrix(Int_t verbose=0)
   std::cout << "******************************************************************" <<std::endl;
 }
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+///   const Int_t kMAX = 65;
+///   TString header = TString("Test ")+Form("%2d",id)+" : "+title;
+///   const Int_t nch = header.Length();
+///   for (Int_t i = nch; i < kMAX; i++) header += '.';
+///   std::cout << header << (status ? "OK" : "FAILED") << std::endl;
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const Char_t *title,Bool_t status)
 {
-  // Print test program number and its title
-//   const Int_t kMAX = 65;
-//   TString header = TString("Test ")+Form("%2d",id)+" : "+title;
-//   const Int_t nch = header.Length();
-//   for (Int_t i = nch; i < kMAX; i++) header += '.';
-//   std::cout << header << (status ? "OK" : "FAILED") << std::endl;
-  // Print test program number and its title
    const Int_t kMAX = 65;
    char header[80];
    snprintf(header,80,"Test %2d : %s",id,title);
@@ -973,7 +974,7 @@ void stress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 1 and watch det's sign";
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     const double det1 = m.Determinant();
     TMatrixDRow row1(m,1);
     TVectorD vrow1(m.GetRowLwb(),m.GetRowUpb()); vrow1 = row1;
@@ -991,7 +992,7 @@ void stress_determinant(Int_t msize)
     if (gVerbose)
       std::cout << "\nswap two rows/cols of a matrix through method 2 and watch det's sign";
     m.UnitMatrix();
-    TMatrixDRow(m,3) = pattern;
+    TMatrixDRow(m,3).Assign(pattern);
     const double det1 = m.Determinant();
 
     TMatrixD m_save( m);

@@ -13,22 +13,9 @@
 #define ROOT_TGWin32
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32                                                              //
-//                                                                      //
-// Interface to low level Win32. This class gives access to basic       //
-// Win32 graphics, pixmap, text and font handling routines              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
-#ifndef ROOT_TTF
 #include "TTF.h"
-#endif
 
 
 #if !defined(__CINT__)
@@ -83,7 +70,7 @@ private:
    enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
                  kBLeft, kBCenter, kBRight };
 
-   FT_Vector        fAlign;                 // alignment vector
+   FT_Vector        fAlign;                 ///< alignment vector
 
    void    Align(void);
    void    DrawImage(FT_Bitmap *source, ULong_t fore, ULong_t back, GdkImage *xim,
@@ -92,10 +79,10 @@ private:
    GdkImage *GetBackground(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    RenderString(Int_t x, Int_t y, ETextMode mode);
 
-   Int_t            fMaxNumberOfWindows;    //Maximum number of windows
-   XWindow_t       *fWindows;               //List of windows
-   TExMap          *fColors;                //Hash list of colors
-   GdkCursor       *fCursors[kNumCursors];  //List of cursors
+   Int_t            fMaxNumberOfWindows;    ///< Maximum number of windows
+   XWindow_t       *fWindows;               ///< List of windows
+   TExMap          *fColors;                ///< Hash list of colors
+   GdkCursor       *fCursors[kNumCursors];  ///< List of cursors
 
    void  CloseWindow1();
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
@@ -121,33 +108,33 @@ private:
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
 protected:
-   GdkVisual   *fVisual;            //
-   GdkColormap *fColormap;          // Default colormap, 0 if b/w
-   Int_t       fScreenNumber;       // Screen number
-   Bool_t      fHasTTFonts;         // True when TrueType fonts are used
-   Bool_t      fUseSysPointers;     // True when using system mouse pointers
-   Int_t       fTextAlignH;         // Text Alignment Horizontal
-   Int_t       fTextAlignV;         // Text Alignment Vertical
-   Int_t       fTextAlign;          // Text alignment (set in SetTextAlign)
-   Float_t     fCharacterUpX;       // Character Up vector along X
-   Float_t     fCharacterUpY;       // Character Up vector along Y
-   Float_t     fTextMagnitude;      // Text Magnitude
-   Int_t       fDepth;              // Number of color planes
-   Int_t       fRedDiv;             // Red value divider, -1 if no TrueColor visual
-   Int_t       fGreenDiv;           // Green value divider
-   Int_t       fBlueDiv;            // Blue value divider
-   Int_t       fRedShift;           // Bits to left shift red, -1 if no TrueColor visual
-   Int_t       fGreenShift;         // Bits to left shift green
-   Int_t       fBlueShift;          // Bits to left shift blue
-   Handle_t    fXEvent;             // Current native (GDK) event
-   TObject*    fRefreshTimer;       // TGWin32RefreshTimer for GUI thread message handler
+   GdkVisual   *fVisual;
+   GdkColormap *fColormap;          ///< Default colormap, 0 if b/w
+   Int_t       fScreenNumber;       ///< Screen number
+   Bool_t      fHasTTFonts;         ///< True when TrueType fonts are used
+   Bool_t      fUseSysPointers;     ///< True when using system mouse pointers
+   Int_t       fTextAlignH;         ///< Text Alignment Horizontal
+   Int_t       fTextAlignV;         ///< Text Alignment Vertical
+   Int_t       fTextAlign;          ///< Text alignment (set in SetTextAlign)
+   Float_t     fCharacterUpX;       ///< Character Up vector along X
+   Float_t     fCharacterUpY;       ///< Character Up vector along Y
+   Float_t     fTextMagnitude;      ///< Text Magnitude
+   Int_t       fDepth;              ///< Number of color planes
+   Int_t       fRedDiv;             ///< Red value divider, -1 if no TrueColor visual
+   Int_t       fGreenDiv;           ///< Green value divider
+   Int_t       fBlueDiv;            ///< Blue value divider
+   Int_t       fRedShift;           ///< Bits to left shift red, -1 if no TrueColor visual
+   Int_t       fGreenShift;         ///< Bits to left shift green
+   Int_t       fBlueShift;          ///< Bits to left shift blue
+   Handle_t    fXEvent;             ///< Current native (GDK) event
+   TObject*    fRefreshTimer;       ///< TGWin32RefreshTimer for GUI thread message handler
 
-   Bool_t      fFillColorModified;  //
-   Bool_t      fFillStyleModified;  //
-   Bool_t      fLineColorModified;  //
-   Bool_t      fPenModified;        // line syle || width modified
-   Bool_t      fMarkerStyleModified; //
-   Bool_t      fMarkerColorModified; //
+   Bool_t      fFillColorModified;
+   Bool_t      fFillStyleModified;
+   Bool_t      fLineColorModified;
+   Bool_t      fPenModified;        ///< line syle || width modified
+   Bool_t      fMarkerStyleModified;
+   Bool_t      fMarkerColorModified;
 
    void        UpdateFillColor();
    void        UpdateFillStyle();
@@ -176,7 +163,7 @@ public:
    void      SetTextSize(Float_t textsize);
 
    Bool_t    Init(void *display=0);
-   //UInt_t	 ExecCommand(TGWin32Command *);
+   //UInt_t  ExecCommand(TGWin32Command *);
    void      ClearWindow();
    void      ClosePixmap();
    void      CloseWindow();

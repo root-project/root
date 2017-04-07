@@ -1,19 +1,26 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -nodraw
+/// Fit a 5d hyperplane by n points, using the linear fitter directly
+///
+/// This macro shows some features of the TLinearFitter class
+/// A 5-d hyperplane is fit, a constant term is assumed in the hyperplane
+/// equation `(y = a0 + a1*x0 + a2*x1 + a3*x2 + a4*x3 + a5*x4)`
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TLinearFitter.h"
 #include "TF1.h"
 #include "TRandom.h"
 
 void fitLinear2()
 {
-   //Fit a 5d hyperplane by n points, using the linear fitter directly
-
-   //This macro shows some features of the TLinearFitter class
-   //A 5-d hyperplane is fit, a constant term is assumed in the hyperplane
-   //equation (y = a0 + a1*x0 + a2*x1 + a3*x2 + a4*x3 + a5*x4)
-   //Author: Anna Kreshuk
-
    Int_t n=100;
    Int_t i;
-   TRandom rand;
+   TRandom randNum;
    TLinearFitter *lf=new TLinearFitter(5);
 
    //The predefined "hypN" functions are the fastest to fit
@@ -25,13 +32,13 @@ void fitLinear2()
 
    //Create the points and put them into the fitter
    for (i=0; i<n; i++){
-      x[0 + i*5] = rand.Uniform(-10, 10);
-      x[1 + i*5] = rand.Uniform(-10, 10);
-      x[2 + i*5] = rand.Uniform(-10, 10);
-      x[3 + i*5] = rand.Uniform(-10, 10);
-      x[4 + i*5] = rand.Uniform(-10, 10);
+      x[0 + i*5] = randNum.Uniform(-10, 10);
+      x[1 + i*5] = randNum.Uniform(-10, 10);
+      x[2 + i*5] = randNum.Uniform(-10, 10);
+      x[3 + i*5] = randNum.Uniform(-10, 10);
+      x[4 + i*5] = randNum.Uniform(-10, 10);
       e[i] = 0.01;
-      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + rand.Gaus()*e[i];
+      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + randNum.Gaus()*e[i];
    }
 
    //To avoid copying the data into the fitter, the following function can be used:
@@ -54,13 +61,13 @@ void fitLinear2()
 
    //Now suppose you want to add some more points and see if the parameters will change
    for (i=n; i<n*2; i++) {
-      x[0+i*5] = rand.Uniform(-10, 10);
-      x[1+i*5] = rand.Uniform(-10, 10);
-      x[2+i*5] = rand.Uniform(-10, 10);
-      x[3+i*5] = rand.Uniform(-10, 10);
-      x[4+i*5] = rand.Uniform(-10, 10);
+      x[0+i*5] = randNum.Uniform(-10, 10);
+      x[1+i*5] = randNum.Uniform(-10, 10);
+      x[2+i*5] = randNum.Uniform(-10, 10);
+      x[3+i*5] = randNum.Uniform(-10, 10);
+      x[4+i*5] = randNum.Uniform(-10, 10);
       e[i] = 0.01;
-      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + rand.Gaus()*e[i];
+      y[i] = 4*x[0+i*5] + x[1+i*5] + 2*x[2+i*5] + 3*x[3+i*5] + 0.2*x[4+i*5]  + randNum.Gaus()*e[i];
    }
 
    //Assign the data the same way as before

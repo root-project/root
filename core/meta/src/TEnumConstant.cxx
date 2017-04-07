@@ -9,11 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TEnumConstant class implements the constants of the enum type.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TEnumConstant
+The TEnumConstant class implements the constants of the enum type.
+*/
 
 #include "TEnumConstant.h"
 #include "TEnum.h"
@@ -21,12 +19,12 @@
 
 ClassImp(TEnumConstant)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of the TEnumConstant.
+/// Takes as parameters DataMemberInfo, value, and enum type.
+
 TEnumConstant::TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type)
    : TGlobal(info), fEnum(type), fValue(value) {
-   // Constructor of the TEnumConstant.
-   // Takes as parameters DataMemberInfo, value, and enum type.
-
    //Set name of constant
    this->SetName(name);
 
@@ -34,8 +32,9 @@ TEnumConstant::TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t 
    type->AddConstant(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor
+
 TEnumConstant::~TEnumConstant()
 {
-   //Destructor
 }

@@ -1,27 +1,32 @@
 // @(#)root/mathcore:$Id$
 // Author: Peter Malzacher   31/08/99
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TRandom3
-//
-// Random number generator class based on
-//   M. Matsumoto and T. Nishimura,
-//   Mersenne Twistor: A 623-diminsionally equidistributed
-//   uniform pseudorandom number generator
-//   ACM Transactions on Modeling and Computer Simulation,
-//   Vol. 8, No. 1, January 1998, pp 3--30.
-//
-// For more information see the Mersenne Twistor homepage
-//   http://www.math.keio.ac.jp/~matumoto/emt.html
-//
-// Advantage: large period 2**19937-1
-//            relativly fast
-//              (only two times slower than TRandom, but
-//               two times faster than TRandom2)
-// Drawback:  a relative large internal state of 624 integers
-//
-//
+/**
+
+\class TRandom3
+
+Random number generator class based on
+  M. Matsumoto and T. Nishimura,
+  Mersenne Twister: A 623-diminsionally equidistributed
+  uniform pseudorandom number generator
+  ACM Transactions on Modeling and Computer Simulation,
+  Vol. 8, No. 1, January 1998, pp 3--30.
+
+For more information see the Mersenne Twister homepage
+  [http://www.math.keio.ac.jp/~matumoto/emt.html]
+
+Advantage: 
+
+-  large period 2**19937 -1
+-  relativly fast (slightly slower than TRandom1 and TRandom2 but much faster than TRandom1)
+
+Drawback:  a relative large internal state of 624 integers
+
+@ingroup Random
+
+*/
+
+//////////////////////////////////////////////////////////////////////
 // Aug.99 ROOT implementation based on CLHEP by P.Malzacher
 //
 // the original code contains the following copyright notice:
@@ -44,6 +49,7 @@
 /////////////////////////////////////////////////////////////////////
 
 #include "TRandom3.h"
+#include "TBuffer.h"
 #include "TRandom2.h"
 #include "TClass.h"
 #include "TUUID.h"
@@ -60,33 +66,33 @@ namespace {
 
 ClassImp(TRandom3)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// If seed is 0, the seed is automatically computed via a TUUID object.
+/// In this case the seed is guaranteed to be unique in space and time.
+
 TRandom3::TRandom3(UInt_t seed)
 {
-//*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-// If seed is 0, the seed is automatically computed via a TUUID object.
-// In this case the seed is guaranteed to be unique in space and time.
-
    SetName("Random3");
-   SetTitle("Random number generator: Mersenne Twistor");
+   SetTitle("Random number generator: Mersenne Twister");
    SetSeed(seed);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==================
+
 TRandom3::~TRandom3()
 {
-//*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==================
-
 }
 
-//______________________________________________________________________________
-Double_t TRandom3::Rndm(Int_t)
-{
-//  Machine independent random number generator.
-//  Produces uniformly-distributed floating points in (0,1)
-//  Method: Mersenne Twistor
+////////////////////////////////////////////////////////////////////////////////
+///  Machine independent random number generator.
+///  Produces uniformly-distributed floating points in (0,1)
+///  Method: Mersenne Twister
 
+Double_t TRandom3::Rndm()
+{
    UInt_t y;
 
    const Int_t  kM = 397;
@@ -126,19 +132,19 @@ Double_t TRandom3::Rndm(Int_t)
    return Rndm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of n random numbers uniformly distributed in ]0,1]
+
 void TRandom3::RndmArray(Int_t n, Float_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
-
   for(Int_t i=0; i<n; i++) array[i]=(Float_t)Rndm();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an array of n random numbers uniformly distributed in ]0,1]
+
 void TRandom3::RndmArray(Int_t n, Double_t *array)
 {
-  // Return an array of n random numbers uniformly distributed in ]0,1]
-
    Int_t k = 0;
 
    UInt_t y;
@@ -183,17 +189,17 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
    }
 }
 
-//______________________________________________________________________________
-void TRandom3::SetSeed(UInt_t seed)
-{
-//  Set the random generator sequence
-// if seed is 0 (default value) a TUUID is generated and used to fill
-// the first 8 integers of the seed array.
-// In this case the seed is guaranteed to be unique in space and time.
-// Use upgraded seeding procedure to fix a known problem when seeding with values
-// with many zero in the bit pattern (like 2**28).
-// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
+////////////////////////////////////////////////////////////////////////////////
+///  Set the random generator sequence
+/// if seed is 0 (default value) a TUUID is generated and used to fill
+/// the first 8 integers of the seed array.
+/// In this case the seed is guaranteed to be unique in space and time.
+/// Use upgraded seeding procedure to fix a known problem when seeding with values
+/// with many zero in the bit pattern (like 2**28).
+/// see http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html
 
+void TRandom3::SetSeed(ULong_t seed)
+{
    TRandom::SetSeed(seed);
    fCount624 = 624;
    if (seed > 0) {
@@ -220,11 +226,11 @@ void TRandom3::SetSeed(UInt_t seed)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TRandom3.
+
 void TRandom3::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TRandom3.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

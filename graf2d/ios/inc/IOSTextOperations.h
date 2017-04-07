@@ -27,13 +27,9 @@
 #include <CoreText/CTFont.h>
 #include <CoreText/CTLine.h>
 
-#ifndef ROOT_IOSResourceManagement
 #include "IOSResourceManagement.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 namespace ROOT {
 namespace iOS {

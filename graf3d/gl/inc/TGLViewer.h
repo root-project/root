@@ -44,6 +44,7 @@ class TGLCameraOverlay;
 class TGLContextIdentity;
 class TGLAutoRotator;
 class TTimer;
+class TImage;
 
 class TContextMenu;
 class TGedEditor;
@@ -56,6 +57,7 @@ class TGLViewer : public TVirtualViewer3D,
 {
    friend class TGLOutput;
    friend class TGLEventHandler;
+   friend class TGLAutoRotator;
 public:
 
    enum ECameraType { kCameraPerspXOZ,  kCameraPerspYOZ,  kCameraPerspXOY,
@@ -96,6 +98,7 @@ protected:
 
    // Stereo
    Bool_t               fStereo;               //! use stereo rendering
+   Bool_t               fStereoQuadBuf;        //! draw quad buffer or left/right stereo in left/right half of window
    Float_t              fStereoZeroParallax;   //! position of zero-parallax plane: 0 - near clipping plane, 1 - far clipping plane
    Float_t              fStereoEyeOffsetFac;   //!
    Float_t              fStereoFrustumAsymFac; //!
@@ -286,7 +289,7 @@ public:
    Float_t GetStereoEyeOffsetFac()   const { return fStereoEyeOffsetFac;   }
    Float_t GetStereoFrustumAsymFac() const { return fStereoFrustumAsymFac; }
 
-   void SetStereo(Bool_t s)                { fStereo = s; }
+   void SetStereo(Bool_t stereo, Bool_t quad_buf=kTRUE);
    void SetStereoZeroParallax(Float_t f)   { fStereoZeroParallax   = f; }
    void SetStereoEyeOffsetFac(Float_t f)   { fStereoEyeOffsetFac   = f; }
    void SetStereoFrustumAsymFac(Float_t f) { fStereoFrustumAsymFac = f; }
@@ -335,6 +338,10 @@ public:
    Bool_t SavePictureWidth (const TString &fileName, Int_t width, Bool_t pixel_object_scale=kTRUE);
    Bool_t SavePictureHeight(const TString &fileName, Int_t height, Bool_t pixel_object_scale=kTRUE);
    Bool_t SavePictureScale (const TString &fileName, Float_t scale, Bool_t pixel_object_scale=kTRUE);
+
+   // Methods returning screen image
+   TImage* GetPictureUsingBB();
+   TImage* GetPictureUsingFBO(Int_t w, Int_t h,Float_t pixel_object_scale=0);
 
    const char*  GetPictureFileName() const { return fPictureFileName.Data(); }
    void         SetPictureFileName(const TString& f) { fPictureFileName = f; }

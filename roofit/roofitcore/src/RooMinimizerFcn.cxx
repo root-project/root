@@ -500,7 +500,8 @@ Bool_t RooMinimizerFcn::SetPdfParamVal(const Int_t &index, const Double_t &value
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooMinimizerFcn::updateFloatVec() 
 {
   _floatParamVec.clear() ;

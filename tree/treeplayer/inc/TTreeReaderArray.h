@@ -22,14 +22,12 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTreeReaderValue
 #include "TTreeReaderValue.h"
-#endif
-#ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
-#endif
 
 namespace ROOT {
+namespace Internal {
+
    class TTreeReaderArrayBase: public TTreeReaderValueBase {
    public:
       TTreeReaderArrayBase(TTreeReader* reader, const char* branchname,
@@ -44,9 +42,12 @@ namespace ROOT {
    protected:
       void* UntypedAt(size_t idx) const { return fImpl->At(GetProxy(), idx); }
       virtual void CreateProxy();
+      bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
+                            TDictionary* &branchActualType);
+      void SetImpl(TBranch* branch, TLeaf* myLeaf);
       const char* GetBranchContentDataType(TBranch* branch,
                                            TString& contentTypeName,
-                                           TDictionary* &dict) const;
+                                           TDictionary* &dict);
 
       TVirtualCollectionReader* fImpl; // Common interface to collections
 
@@ -54,10 +55,11 @@ namespace ROOT {
       //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };
 
+} // namespace Internal
 } // namespace ROOT
 
 template <typename T>
-class TTreeReaderArray: public ROOT::TTreeReaderArrayBase {
+class TTreeReaderArray: public ROOT::Internal::TTreeReaderArrayBase {
 public:
 
    // Iterator through the indices of a TTreeReaderArray.
@@ -113,6 +115,8 @@ public:
          R__ASSERT(fArray && "invalid iterator!");
          return fArray->At(fIndex);
       }
+
+      operator const T*() const { return &fArray->At(fIndex); }
    };
 
    typedef Iterator_t iterator;
@@ -127,8 +131,9 @@ public:
    T& operator[](size_t idx) { return At(idx); }
 
    Iterator_t begin() {
-      // Return an iterator to the 0th TTree entry.
-      return Iterator_t(0, this);
+      // Return an iterator to the 0th TTree entry or an empty iterator if the
+      // array is empty.
+      return IsEmpty() ? Iterator_t() : Iterator_t(0, this);
    }
    Iterator_t end() const { return Iterator_t(); }
 

@@ -45,10 +45,23 @@ def remark_fe_backend_optimization_remark_missed : Remark<"%0">, BackendInfo,
     InGroup<BackendOptimizationRemarkMissed>;
 def remark_fe_backend_optimization_remark_analysis : Remark<"%0">, BackendInfo,
     InGroup<BackendOptimizationRemarkAnalysis>;
+def remark_fe_backend_optimization_remark_analysis_fpcommute : Remark<"%0; "
+    "allow reordering by specifying '#pragma clang loop vectorize(enable)' "
+    "before the loop or by providing the compiler option '-ffast-math'.">,
+    BackendInfo, InGroup<BackendOptimizationRemarkAnalysis>;
+def remark_fe_backend_optimization_remark_analysis_aliasing : Remark<"%0; "
+    "allow reordering by specifying '#pragma clang loop vectorize(enable)' "
+    "before the loop. If the arrays will always be independent specify "
+    "'#pragma clang loop vectorize(assume_safety)' before the loop or provide "
+    "the '__restrict__' qualifier with the independent array arguments. "
+    "Erroneous results will occur if these options are incorrectly applied!">,
+    BackendInfo, InGroup<BackendOptimizationRemarkAnalysis>;
 def warn_fe_backend_optimization_failure : Warning<"%0">, BackendInfo,
     InGroup<BackendOptimizationFailure>, DefaultWarn;
-def note_fe_backend_optimization_remark_invalid_loc : Note<"could "
-  "not determine the original source location for %0:%1:%2">;
+def note_fe_backend_invalid_loc : Note<"could "
+  "not determine the original source location for %0:%1:%2">, BackendInfo;
+
+def err_fe_backend_unsupported : Error<"%0">, BackendInfo;
 
 def remark_sanitize_address_insert_extra_padding_accepted : Remark<
     "-fsanitize-address-field-padding applied to %0">, ShowInSystemHeader,
@@ -161,6 +174,9 @@ def warn_incompatible_analyzer_plugin_api : Warning<
 def note_incompatible_analyzer_plugin_api : Note<
     "current API version is '%0', but plugin was compiled with version '%1'">;
 
+def warn_module_config_mismatch : Warning<
+  "module file %0 cannot be loaded due to a configuration mismatch with the current "
+  "compilation">, InGroup<DiagGroup<"module-file-config-mismatch">>, DefaultError;
 def err_module_map_not_found : Error<"module map file '%0' not found">, 
   DefaultFatal;
 def err_missing_module_name : Error<
@@ -173,10 +189,6 @@ def err_no_submodule_suggest : Error<
   "no submodule named %0 in module '%1'; did you mean '%2'?">;
 def warn_missing_submodule : Warning<"missing submodule '%0'">,
   InGroup<IncompleteUmbrella>;
-def err_module_unavailable : Error<
-  "module '%0' %select{is incompatible with|requires}1 feature '%2'">;
-def err_module_header_missing : Error<
-  "%select{|umbrella }0header '%1' not found">;
 def err_module_cannot_create_includes : Error<
   "cannot create includes file for module %0: %1">;
 def warn_module_config_macro_undef : Warning<
@@ -190,19 +202,19 @@ def remark_module_build : Remark<"building module '%0' as '%1'">,
   InGroup<ModuleBuild>;
 def remark_module_build_done : Remark<"finished building module '%0'">,
   InGroup<ModuleBuild>;
+def err_modules_embed_file_not_found :
+  Error<"file '%0' specified by '-fmodules-embed-file=' not found">,
+  DefaultFatal;
 
-def err_conflicting_module_names : Error<
-  "conflicting module names specified: '-fmodule-name=%0' and "
-  "'-fmodule-implementation-of %1'">;
-def err_conflicting_module_files : Error<
-  "module '%0' is defined in both '%1' and '%2'">;
-def err_module_file_not_found : Error<
-  "file '%0' is not a precompiled module file">, DefaultFatal;
-def err_module_file_not_module : Error<
-  "AST file '%0' was not built as a module">, DefaultFatal;
+def err_test_module_file_extension_version : Error<
+  "test module file extension '%0' has different version (%1.%2) than expected "
+  "(%3.%4)">;
 
 def err_missing_vfs_overlay_file : Error<
   "virtual filesystem overlay file '%0' not found">, DefaultFatal;
 def err_invalid_vfs_overlay : Error<
   "invalid virtual filesystem overlay file '%0'">, DefaultFatal;
+
+def warn_option_invalid_ocl_version : Warning<
+  "OpenCL version %0 does not support the option '%1'">, InGroup<Deprecated>;
 }

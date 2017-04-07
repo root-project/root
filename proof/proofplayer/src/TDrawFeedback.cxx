@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TDrawFeedback                                                        //
-//                                                                      //
-// Utility class to draw objects in the feedback list during queries.   //
-// Draws histograms in separated canvases and user-defined objects via  //
-// Draw(). Users requiring advanced treatment should implement their    //
-// own version following this example. See also TStatsFeedback.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDrawFeedback
+\ingroup proofkernel
+
+Utility class to draw objects in the feedback list during queries.
+Draws histograms in separated canvases and user-defined objects via
+Draw(). Users requiring advanced treatment should implement their
+own version following this example. See also TStatsFeedback.
+
+*/
 
 #include "TDrawFeedback.h"
 
@@ -36,12 +35,12 @@
 ClassImp(TDrawFeedback)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
   : fAll(kFALSE)
 {
-   // Constructor
-
    fNames = new THashList;
    fNames->SetOwner();
 
@@ -55,8 +54,8 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
    fProof = p;
    fName = fProof->GetSessionTag();
 
-   Bool_t ok = proof->Connect("Feedback(TList *objs)", "TDrawFeedback",
-                  this, "Feedback(TList *objs)");
+   Bool_t ok = proof->Connect("Feedback(TList*)", "TDrawFeedback",
+                  this, "Feedback(TList*)");
 
    if ( !ok ) {
       Error("TDrawFeedback","Connect() failed");
@@ -75,20 +74,20 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
    fOption = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TDrawFeedback::~TDrawFeedback()
 {
-   // Destructor
-
    delete fNames;
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display feedback
+
 void TDrawFeedback::Feedback(TList *objs)
 {
-   // Display feedback
-
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
    TVirtualPad *save = gPad;
 

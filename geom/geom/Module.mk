@@ -30,7 +30,7 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h \
 		TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h \
                 TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h \
-                TGeoBuilder.h TGeoNavigator.h
+                TGeoBuilder.h TGeoNavigator.h TVirtualGeoConverter.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
                 TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
                 TGeoExtension.h TGeoParallelWorld.h
@@ -48,9 +48,19 @@ GEOMLIB      := $(LPATH)/libGeom.$(SOEXT)
 GEOMMAP      := $(GEOMLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMH))
+GEOMH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GEOMH))
+ALLHDRS     += $(GEOMH_REL)
 ALLLIBS     += $(GEOMLIB)
 ALLMAPS     += $(GEOMMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GEOMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Geom_Geom { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GEOMLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 
 # include all dependency files
 INCLUDEFILES += $(GEOMDEP)

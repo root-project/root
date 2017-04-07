@@ -17,8 +17,6 @@
 #include "cling/Interpreter/Value.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 
-#include "../lib/Interpreter/IncrementalParser.h"
-
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -84,70 +82,64 @@ namespace cling {
     m_Interpreter.declare(comment);
   }
 
+  namespace {
+    /// Replace non-identifier chars by '_'
+    std::string normalizeDotXFuncName(const std::string& FuncName) {
+      std::string ret = FuncName;
+      // Prepend '_' if name starts with a digit.
+      if (ret[0] >= '0' && ret[0] <= '9')
+        ret.insert(ret.begin(), '_');
+      for (char& c: ret) {
+        // Instead of "escaping" all non-C++-id chars, only escape those that
+        // are fairly certainly file names, to keep helpful error messages for
+        // broken quoting or parsing. Example:
+        // "Cannot find '_func_1___'" is much less helpful than
+        // "Cannot find '/func(1)*&'"
+        // I.e. find a compromise between helpful diagnostics and common file
+        // name (stem) ingredients.
+        if (c == '+' || c == '-' || c == '=' || c == '.' || c == ' '
+            || c == '@')
+          c = '_';
+      }
+      return ret;
+    }
+  }
+
   MetaSema::ActionResult MetaSema::actOnxCommand(llvm::StringRef file,
                                                  llvm::StringRef args,
                                                  Value* result) {
 
     // Check if there is a function named after the file.
+    assert(!args.empty() && "Arguments must be provided (at least \"()\"");
     cling::Transaction* T = 0;
     MetaSema::ActionResult actionResult = actOnLCommand(file, &T);
-    if (actionResult == AR_Success) {
-      // Look for start of parameters:
-      typedef std::pair<llvm::StringRef,llvm::StringRef> StringRefPair;
+    // T can be nullptr if there is no code (but comments)
+    if (actionResult == AR_Success && T) {
+      std::string expression;
+      std::string FuncName = llvm::sys::path::stem(file);
+      if (!FuncName.empty()) {
+        FuncName = normalizeDotXFuncName(FuncName);
+        if (T->containsNamedDecl(FuncName)) {
+          expression = FuncName + args.str();
+          // Give the user some context in case we have a problem invoking
+          expression += " /* invoking function corresponding to '.x' */";
+          if (m_Interpreter.echo(expression, result) != Interpreter::kSuccess)
+            actionResult = AR_Failure;
+        }
+      } else
+        FuncName = file; // Not great, but pass the diagnostics below something
 
-      StringRefPair pairPathFile = file.rsplit('/');
-      if (pairPathFile.second.empty()) {
-        pairPathFile.second = pairPathFile.first;
-      }
-
-      StringRefPair pairFuncExt = pairPathFile.second.rsplit('.');
-      std::string expression = pairFuncExt.first.str() + "(" + args.str() + ")";
-      // Give the user some context in case we have a problem in an invocation.
-      expression += " /* invoking function corresponding to '.x' */";
-
-      assert(T);
-
-      using namespace clang;
-      NamedDecl* ND = T->containsNamedDecl(pairFuncExt.first);
-      DiagnosticsEngine& Diags = m_Interpreter.getCI()->getDiagnostics();
-      SourceLocation noLoc;
-      if (!ND) {
+      if (expression.empty()) {
+        using namespace clang;
+        DiagnosticsEngine& Diags = m_Interpreter.getDiagnostics();
         unsigned diagID
           = Diags.getCustomDiagID (DiagnosticsEngine::Level::Warning,
                                    "cannot find function '%0()'; falling back to .L");
         //FIXME: Figure out how to pass in proper source locations, which we can
         // use with -verify.
-        Diags.Report(noLoc, diagID)
-          << pairFuncExt.first;
+        Diags.Report(SourceLocation(), diagID) << FuncName;
         return AR_Success;
       }
-      else if (args.empty()) {
-        // No arguments passed - can we call it?
-        if (FunctionDecl* FD = dyn_cast<FunctionDecl>(ND)) {
-          // Check whether we can call it with no arguments.
-          bool canCall = true;
-          for (auto Param: FD->params()) {
-            if (!Param->hasDefaultArg()) {
-              canCall = false;
-              break;
-            }
-          }
-          if (!canCall) {
-            // FIXME: Produce clang diagnostics no viable function to call.
-            unsigned diagID
-              = Diags.getCustomDiagID (DiagnosticsEngine::Level::Warning,
-                           "function '%0' cannot be called with no arguments.");
-            //FIXME: Figure out how to pass in proper source locations, which we
-            // can use with -verify.
-            Diags.Report(noLoc, diagID)
-              << FD->getNameAsString();
-            return AR_Success;
-          }
-        } // FIXME: else no function to call!
-      }
-
-      if (m_Interpreter.echo(expression, result) != Interpreter::kSuccess)
-        actionResult = AR_Failure;
     }
     return actionResult;
   }
@@ -239,6 +231,41 @@ namespace cling {
       m_Interpreter.enableRawInput(mode);
   }
 
+  void MetaSema::actOndebugCommand(llvm::Optional<int> mode) const {
+    clang::CodeGenOptions& CGO = m_Interpreter.getCI()->getCodeGenOpts();
+    if (!mode) {
+      bool flag = CGO.getDebugInfo() == clang::codegenoptions::NoDebugInfo;
+      if (flag)
+        CGO.setDebugInfo(clang::codegenoptions::LimitedDebugInfo);
+      else
+        CGO.setDebugInfo(clang::codegenoptions::NoDebugInfo);
+      // FIXME:
+      m_MetaProcessor.getOuts() << (flag ? "G" : "Not g")
+                                << "enerating debug symbols\n";
+    }
+    else {
+      static const int NumDebInfos = 5;
+      clang::codegenoptions::DebugInfoKind DebInfos[NumDebInfos] = {
+        clang::codegenoptions::NoDebugInfo,
+        clang::codegenoptions::LocTrackingOnly,
+        clang::codegenoptions::DebugLineTablesOnly,
+        clang::codegenoptions::LimitedDebugInfo,
+        clang::codegenoptions::FullDebugInfo
+      };
+      if (*mode >= NumDebInfos)
+        mode = NumDebInfos - 1;
+      else if (*mode < 0)
+        mode = 0;
+      CGO.setDebugInfo(DebInfos[*mode]);
+      if (!*mode) {
+        m_MetaProcessor.getOuts() << "Not generating debug symbols\n";
+      } else {
+        m_MetaProcessor.getOuts() << "Generating debug symbols level "
+                                  << *mode << '\n';
+      }
+    }
+  }
+
   void MetaSema::actOnprintDebugCommand(SwitchMode mode/* = kToggle*/) const {
     if (mode == kToggle) {
       bool flag = !m_Interpreter.isPrintingDebug();
@@ -258,10 +285,9 @@ namespace cling {
     m_Interpreter.compareInterpreterState(name);
   }
 
-  void MetaSema::actOnstatsCommand(llvm::StringRef name) const {
-    if (name.equals("ast")) {
-      m_Interpreter.getCI()->getSema().getASTContext().PrintStats();
-    }
+  void MetaSema::actOnstatsCommand(llvm::StringRef name,
+                                   llvm::StringRef args) const {
+    m_Interpreter.dump(name, args);
   }
 
   void MetaSema::actOndynamicExtensionsCommand(SwitchMode mode/* = kToggle*/)
@@ -332,8 +358,11 @@ namespace cling {
       "   " << metaString << "compareState <filename>\t- Compare the interpreter's state with the one"
                              "\n\t\t\t\t  saved in a given file\n"
       "\n"
-      "   " << metaString << "stats [name]\t\t- Show stats for various internal data"
-                             "\n\t\t\t\t  structures (only 'ast' for the time being)\n"
+      "   " << metaString << "stats [name]\t\t- Show stats for internal data structures\n"
+                             "\t\t\t\t  'ast'  abstract syntax tree stats\n"
+                             "\t\t\t\t  'asttree [filter]'  abstract syntax tree layout\n"
+                             "\t\t\t\t  'decl' dump ast declarations\n"
+                             "\t\t\t\t  'undo' show undo stack\n"
       "\n"
       "   " << metaString << "help\t\t\t- Shows this information\n"
       "\n"

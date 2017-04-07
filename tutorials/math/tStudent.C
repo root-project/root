@@ -1,10 +1,18 @@
-// Example macro describing the student t distribution
-//
-// root[0]: .x tStudent.C
-//
-// It draws the pdf, the cdf and then 10 quantiles of the t Student distribution
-//
-// Author: Magdalena Slawinska
+/// \file
+/// \ingroup tutorial_math
+/// \notebook
+/// Example macro describing the student t distribution
+///
+/// ~~~{.cpp}
+/// root[0]: .x tStudent.C
+/// ~~~
+///
+/// It draws the pdf, the cdf and then 10 quantiles of the t Student distribution
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Magdalena Slawinska
 
 #include "TH1.h"
 #include "TF1.h"
@@ -18,7 +26,8 @@
 void tStudent()
 {
 
-   //gSystem->Load("libMathMore");
+   /* gSystem->Load("libMathMore");*/
+
    // this is the way to force load of MathMore in Cling
    ROOT::Math::MathMoreLibrary::Load();
 
@@ -52,7 +61,7 @@ void tStudent()
       }
    }
 
-   TCanvas *Canvas = new TCanvas("DistCanvas", "Student Distribution graphs", 10, 10, 1000, 800);
+   TCanvas *Canvas = new TCanvas("DistCanvas", "Student Distribution graphs", 10, 10, 800, 700);
    pdf->SetTitle("Student t distribution function");
    cum->SetTitle("Cumulative for Student t");
    quant->SetTitle("10-quantiles  for Student t");

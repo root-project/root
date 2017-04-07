@@ -9,20 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofResourcesStatic                                                //
-//                                                                      //
-// Implementation of PROOF static resources.                            //
-// The purpose of this class is to provide a standard interface to      //
-// static config files. It interprets Proof config files (proof.conf)   //
-// and sorts the contents into TProofNodeInfo objects. Master info will //
-// be placed in fMaster (of type TProofNodeInfo). Submaster info will   //
-// be put in fSubmasterList (a TList of TProofNodeInfo objects), while  //
-// workers (and condorworkers) will be placed in fWorkerList (a TList   //
-// of TProofNodeInfo objects).                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofResourcesStatic
+\ingroup proofkernel
+
+The purpose of this class is to provide a standard interface to
+static config files. It interprets Proof config files (proof.conf)
+and sorts the contents into TProofNodeInfo objects. Master info will
+be placed in fMaster (of type TProofNodeInfo). Submaster info will
+be put in fSubmasterList (a TList of TProofNodeInfo objects), while
+workers (and condorworkers) will be placed in fWorkerList (a TList
+of TProofNodeInfo objects).
+
+*/
 
 #include "Riostream.h"
 #include "TProofResourcesStatic.h"
@@ -39,24 +37,24 @@
 ClassImp(TProofResourcesStatic)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This ctor is used in TProofServ::Setup() in combination with GetWorkDir()
+/// for a quick scan of the config file to retrieve the work directory.
+
 TProofResourcesStatic::TProofResourcesStatic()
 {
-   // This ctor is used in TProofServ::Setup() in combination with GetWorkDir()
-   // for a quick scan of the config file to retrieve the work directory.
-
    // Create master node info and submaster/worker lists, and set default values
    InitResources();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Using this ctor will retrieve all information in the config file
+/// and store it in fMaster, fSubmasterList and fWorkerList,
+/// condorworkers will be stored in the fWorkerList.
+
 TProofResourcesStatic::TProofResourcesStatic(const char *confDir,
                                              const char *fileName)
 {
-   // Using this ctor will retrieve all information in the config file
-   // and store it in fMaster, fSubmasterList and fWorkerList,
-   // condorworkers will be stored in the fWorkerList.
-
    // Create master node info and submaster/worker lists, and set default values
    InitResources();
 
@@ -68,22 +66,22 @@ TProofResourcesStatic::TProofResourcesStatic(const char *confDir,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofResourcesStatic::~TProofResourcesStatic()
 {
-   // Destructor.
-
    delete fSubmasterList;
    delete fWorkerList;
    delete fMaster;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create master node info and submaster/worker lists,
+/// and set default values.
+
 void TProofResourcesStatic::InitResources()
 {
-   // Create master node info and submaster/worker lists,
-   // and set default values.
-
    // Create master
    fMaster = new TProofNodeInfo();
    fMaster->fNodeType = TProofNodeInfo::GetNodeType("master");
@@ -101,40 +99,40 @@ void TProofResourcesStatic::InitResources()
    fValid = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the master node. Only return the master info if it was set
+/// in the config file.
+
 TProofNodeInfo *TProofResourcesStatic::GetMaster()
 {
-   // Get the master node. Only return the master info if it was set
-   // in the config file.
-
    if (fFoundMaster)
       return fMaster;
 
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the list of submaster nodes.
+
 TList *TProofResourcesStatic::GetSubmasters()
 {
-   // Get the list of submaster nodes.
-
    return fSubmasterList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the list of worker nodes.
+
 TList *TProofResourcesStatic::GetWorkers(void)
 {
-   // Get the list of worker nodes.
-
    return fWorkerList;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the PROOF config file and fill the master and worker list.
+
 Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
                                              const char *fileName)
 {
-   // Read the PROOF config file and fill the master and worker list.
-
    Bool_t status = kTRUE;
 
    // Skip prefix (e.g. "sm:") if any
@@ -326,13 +324,13 @@ Bool_t TProofResourcesStatic::ReadConfigFile(const char *confDir,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set the node info options.
+
 void TProofResourcesStatic::SetOption(TProofNodeInfo *nodeinfo,
                                       const TString &option,
                                       const TString &value)
 {
-   // Static method to set the node info options.
-
    if (!nodeinfo) return;
 
    if (option == "workdir") {
@@ -352,11 +350,11 @@ void TProofResourcesStatic::SetOption(TProofNodeInfo *nodeinfo,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to determine the info type.
+
 TProofResourcesStatic::EInfoType TProofResourcesStatic::GetInfoType(const TString &word)
 {
-   // Static method to determine the info type.
-
    EInfoType type = kNodeType;
 
    if ((word == "node") || (word == "master") || (word == "submaster") ||
@@ -373,11 +371,11 @@ TProofResourcesStatic::EInfoType TProofResourcesStatic::GetInfoType(const TStrin
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill out the preliminary TProofNodeInfo structure.
+
 TProofNodeInfo *TProofResourcesStatic::CreateNodeInfo(const TString &name)
 {
-   // Fill out the preliminary TProofNodeInfo structure.
-
    TProofNodeInfo *nodeInfo = new TProofNodeInfo();
    nodeInfo->fNodeType  = TProofNodeInfo::GetNodeType(name);
    nodeInfo->fNodeName  = name;

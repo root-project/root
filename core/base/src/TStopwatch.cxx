@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStopwatch                                                           //
-//                                                                      //
-// Stopwatch class. This class returns the real and cpu time between    //
-// the start and stop events.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStopwatch
+\ingroup Base
+
+Stopwatch class. This class returns the real and cpu time between
+the start and stop events.
+*/
 
 #include "TStopwatch.h"
 #include "TTimeStamp.h"
@@ -35,11 +33,11 @@ const Double_t gTicks = 1.0e-7;
 
 ClassImp(TStopwatch)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a stopwatch and start it.
+
 TStopwatch::TStopwatch()
 {
-   // Create a stopwatch and start it.
-
 #ifdef R__UNIX
    if (gTicks <= 0.0)
       gTicks = (Double_t)sysconf(_SC_CLK_TCK);
@@ -51,14 +49,14 @@ TStopwatch::TStopwatch()
    Start();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start the stopwatch. If reset is kTRUE reset the stopwatch before
+/// starting it (including the stopwatch counter).
+/// Use kFALSE to continue timing after a Stop() without
+/// resetting the stopwatch.
+
 void TStopwatch::Start(Bool_t reset)
 {
-   // Start the stopwatch. If reset is kTRUE reset the stopwatch before
-   // starting it (including the stopwatch counter).
-   // Use kFALSE to continue timing after a Stop() without
-   // resetting the stopwatch.
-
    if (reset) {
       fState         = kUndefined;
       fTotalCpuTime  = 0;
@@ -73,11 +71,11 @@ void TStopwatch::Start(Bool_t reset)
    fCounter++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the stopwatch.
+
 void TStopwatch::Stop()
 {
-   // Stop the stopwatch.
-
    fStopRealTime = GetRealTime();
    fStopCpuTime  = GetCPUTime();
 
@@ -88,12 +86,12 @@ void TStopwatch::Stop()
    fState = kStopped;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resume a stopped stopwatch. The stopwatch continues counting from the last
+/// Start() onwards (this is like the laptimer function).
+
 void TStopwatch::Continue()
 {
-   // Resume a stopped stopwatch. The stopwatch continues counting from the last
-   // Start() onwards (this is like the laptimer function).
-
    if (fState == kUndefined)
       Error("Continue", "stopwatch not started");
 
@@ -105,12 +103,12 @@ void TStopwatch::Continue()
    fState = kRunning;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the stopwatch (if it is running) and return the realtime (in
+/// seconds) passed between the start and stop events.
+
 Double_t TStopwatch::RealTime()
 {
-   // Stop the stopwatch (if it is running) and return the realtime (in
-   // seconds) passed between the start and stop events.
-
    if (fState == kUndefined)
       Error("RealTime", "stopwatch not started");
 
@@ -120,12 +118,12 @@ Double_t TStopwatch::RealTime()
    return fTotalRealTime;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop the stopwatch (if it is running) and return the cputime (in
+/// seconds) passed between the start and stop events.
+
 Double_t TStopwatch::CpuTime()
 {
-   // Stop the stopwatch (if it is running) and return the cputime (in
-   // seconds) passed between the start and stop events.
-
    if (fState == kUndefined)
       Error("CpuTime", "stopwatch not started");
 
@@ -135,11 +133,11 @@ Double_t TStopwatch::CpuTime()
    return fTotalCpuTime;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Private static method returning system realtime.
+
 Double_t TStopwatch::GetRealTime()
 {
-   // Private static method returning system realtime.
-
 #if defined(R__UNIX)
    return TTimeStamp();
 #elif defined(WIN32)
@@ -154,11 +152,11 @@ Double_t TStopwatch::GetRealTime()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Private static method returning system CPU time.
+
 Double_t TStopwatch::GetCPUTime()
 {
-   // Private static method returning system CPU time.
-
 #if defined(R__UNIX)
    struct tms cpt;
    times(&cpt);
@@ -212,14 +210,14 @@ Double_t TStopwatch::GetCPUTime()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the real and cpu time passed between the start and stop events.
+/// and the number of times (slices) this TStopwatch was called
+/// (if this number > 1). If opt="m" print out realtime in milli second
+/// precision. If opt="u" print out realtime in micro second precision.
+
 void TStopwatch::Print(Option_t *opt) const
 {
-   // Print the real and cpu time passed between the start and stop events.
-   // and the number of times (slices) this TStopwatch was called
-   // (if this number > 1). If opt="m" print out realtime in milli second
-   // precision. If opt="u" print out realtime in micro second precision.
-
    Double_t  realt = const_cast<TStopwatch*>(this)->RealTime();
    Double_t  cput  = const_cast<TStopwatch*>(this)->CpuTime();
 

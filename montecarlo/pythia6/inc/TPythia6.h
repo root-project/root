@@ -75,17 +75,11 @@
 //#pragma interface
 //#endif
 
-#ifndef ROOT_TPythia6Calls
 #include "TPythia6Calls.h"
-#endif
 
-#ifndef ROOT_TGenerator
 #include "TGenerator.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TPythia6 : public TGenerator {
 
@@ -326,7 +320,7 @@ public:
    void             Pyrset(int lun, int move);
    void             Pystat(int flag);
    void             Pytest(int flag);
-   //void             Pytune(int itune);   // not (anymore) in libPythia6
+   void             Pytune(int itune);
    void             Pyupda(int mupda, int lun);
    void             SetupTest();
 

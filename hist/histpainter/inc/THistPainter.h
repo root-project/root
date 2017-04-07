@@ -1,5 +1,5 @@
 // @(#)root/histpainter:$Id$
-// Author: Rene Brun   26/08/99
+// Author: Rene Brun, Olivier Couet
 
 /*************************************************************************
  * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
@@ -21,12 +21,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualHistPainter
 #include "TVirtualHistPainter.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
+
+#include <vector>
+#include <utility>
 
 
 class TH1;
@@ -37,6 +36,13 @@ class TPainter3dAlgorithms;
 class TGraph2DPainter;
 class TPie;
 const Int_t kMaxCuts = 16;
+
+struct THistRenderingRegion
+{
+   std::pair<Int_t, Int_t> fPixelRange;
+   std::pair<Int_t, Int_t> fBinRange;
+};
+
 
 class THistPainter : public TVirtualHistPainter {
 
@@ -79,22 +85,26 @@ public:
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
    virtual void       PaintCandlePlot(Option_t *option);
-   virtual void       PaintViolinPlot(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
+   virtual void       PaintColorLevelsFast(Option_t *option);
+   virtual std::vector<THistRenderingRegion> ComputeRenderingRegions(TAxis *pAxis, Int_t nPixels, bool isLog);
+
    virtual void       PaintTH2PolyBins(Option_t *option);
    virtual void       PaintTH2PolyColorLevels(Option_t *option);
    virtual void       PaintTH2PolyScatterPlot(Option_t *option);
    virtual void       PaintTH2PolyText(Option_t *option);
    virtual void       PaintContour(Option_t *option);
    virtual Int_t      PaintContourLine(Double_t elev1, Int_t icont1, Double_t x1, Double_t y1,
-                          Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
-                          Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
+                                       Double_t elev2, Int_t icont2, Double_t x2, Double_t y2,
+                                       Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels);
    virtual void       PaintErrors(Option_t *option);
    virtual void       Paint2DErrors(Option_t *option);
    virtual void       PaintFrame();
    virtual void       PaintFunction(Option_t *option);
    virtual void       PaintHist(Option_t *option);
    virtual void       PaintH3(Option_t *option="");
+   virtual void       PaintH3Box(Int_t iopt);
+   virtual void       PaintH3BoxRaster();
    virtual void       PaintH3Iso();
    virtual Int_t      PaintInit();
    virtual Int_t      PaintInitH();
@@ -126,8 +136,8 @@ public:
    virtual void       ShowProjection3(Int_t px, Int_t py);
    virtual Int_t      TableInit();
 
-   static const char * GetBestFormat(Double_t v, Double_t e, const char *f);
-   static void       PaintSpecialObjects(const TObject *obj, Option_t *option);
+   static const char *GetBestFormat(Double_t v, Double_t e, const char *f);
+   static void        PaintSpecialObjects(const TObject *obj, Option_t *option);
 
    ClassDef(THistPainter,0)  //Helper class to draw histograms
 };

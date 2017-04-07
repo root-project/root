@@ -4,7 +4,7 @@
   <navindex>
     <tab type="user" url="http://root.cern.ch" title="ROOT Home Page"/>
     <tab type="mainpage" visible="yes" title=""/>
-    <tab type="pages" visible="yes" title="" intro=""/>
+    <tab type="user" visible="yes" title="Tutorials" url="group__Tutorials.html"/>
     <tab type="modules" visible="yes" title="User's Classes" intro=""/>
     <tab type="namespaces" visible="yes" title="">
       <tab type="namespacelist" visible="yes" title="" intro=""/>
@@ -20,12 +20,14 @@
       <tab type="filelist" visible="yes" title="" intro=""/>
       <tab type="globals" visible="yes" title="" intro=""/>
     </tab>
+    <tab type="user" visible="yes" title="Release Notes" url="release-notes.html"/>
     <tab type="examples" visible="yes" title="" intro=""/>
   </navindex>
 
   <!-- Layout definition for a class page -->
   <class>
     <briefdescription visible="no"/>
+    <allmemberslink visible="yes"/>
     <detaileddescription title=" "/>
     <memberdecl>
       <nestedclasses visible="yes" title=""/>
@@ -63,7 +65,6 @@
     </memberdecl>
     <includes visible="$SHOW_INCLUDE_FILES"/>
     <inheritancegraph visible="$CLASS_GRAPH"/>
-    <collaborationgraph visible="$COLLABORATION_GRAPH"/>
     <memberdef>
       <inlineclasses title=""/>
       <typedefs title=""/>
@@ -77,8 +78,8 @@
       <properties title=""/>
       <events title=""/>
     </memberdef>
-
     <allmemberslink visible="yes"/>
+    <collaborationgraph visible="$COLLABORATION_GRAPH"/>
     <usedfiles visible="$SHOW_USED_FILES"/>
     <authorsection visible="yes"/>
   </class>
@@ -109,11 +110,11 @@
 
   <!-- Layout definition for a file page -->
   <file>
-    <briefdescription visible="yes"/>
+    <briefdescription visible="no"/>
     <includes visible="$SHOW_INCLUDE_FILES"/>
     <includegraph visible="$INCLUDE_GRAPH"/>
     <includedbygraph visible="$INCLUDED_BY_GRAPH"/>
-    <sourcelink visible="yes"/>
+    <sourcelink visible="no"/>
     <memberdecl>
       <classes visible="yes" title=""/>
       <namespaces visible="yes" title=""/>
@@ -139,7 +140,8 @@
 
   <!-- Layout definition for a group page -->
   <group>
-    <briefdescription visible="yes"/>
+    <briefdescription visible="no"/>
+    <detaileddescription title=" "/>
     <groupgraph visible="$GROUP_GRAPHS"/>
     <memberdecl>
       <nestedgroups visible="yes" title=""/>
@@ -162,7 +164,6 @@
       <friends title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <pagedocs/>
       <inlineclasses title=""/>

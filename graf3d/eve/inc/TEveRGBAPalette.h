@@ -155,7 +155,7 @@ public:
 
    void MinMaxValChanged(); // *SIGNAL*
 
-   ClassDef(TEveRGBAPalette, 1); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
+   ClassDef(TEveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
 };
 
 

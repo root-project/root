@@ -12,24 +12,8 @@
 #ifndef ROOT_TGroupButton
 #define ROOT_TGroupButton
 
-//////////////////////////////////////////////////////////////////////////
-//
-// TGroupButton
-//
-//  A TGroupButton object is a specialized TButton used in a group of Buttons.
-//  When a button from a group of TGroupButtons is selected, all other buttons
-//  from the group with the same name are disabled.
-//
-//  For examples of use of TGroupButton objects, see:
-//    TAttFillCanvas, TAttLineCanvas, TAttTextCanvas and TAttMarkerCanvas.
-//  A TGroupButton object is a specialized TPad including possible list
-//  of primitives used to build selections and options menus in a canvas.
-//
-//////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TButton
 #include "TButton.h"
-#endif
 
 class TGroupButton : public TButton {
 

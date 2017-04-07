@@ -62,17 +62,17 @@ Long64_t TFTP::fgBytesRead  = 0;
 
 ClassImp(TFTP)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open connection to host specified by the url using par parallel sockets.
+/// The url has the form: [root[s,k]://]host[:port].
+/// If port is not specified the default rootd port (1094) will be used.
+/// Using wsize one can specify the tcp window size. Normally this is not
+/// needed when using parallel sockets.
+/// An existing connection (TSocket *sock) can also be used to establish
+/// the FTP session.
+
 TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
 {
-   // Open connection to host specified by the url using par parallel sockets.
-   // The url has the form: [root[s,k]://]host[:port].
-   // If port is not specified the default rootd port (1094) will be used.
-   // Using wsize one can specify the tcp window size. Normally this is not
-   // needed when using parallel sockets.
-   // An existing connection (TSocket *sock) can also be used to establish
-   // the FTP session.
-
    fSocket = sock;
 
    TString s = url;
@@ -89,11 +89,11 @@ TFTP::TFTP(const char *url, Int_t par, Int_t wsize, TSocket *sock)
    Init(s, par, wsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set up the actual connection.
+
 void TFTP::Init(const char *surl, Int_t par, Int_t wsize)
 {
-   // Set up the actual connection.
-
    TUrl url(surl);
    TString hurl(url.GetProtocol());
    if (hurl.Contains("root")) {
@@ -143,19 +143,19 @@ zombie:
    SafeDelete(fSocket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TFTP dtor. Send close message and close socket.
+
 TFTP::~TFTP()
 {
-   // TFTP dtor. Send close message and close socket.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print some info about the FTP connection.
+
 void TFTP::Print(Option_t *) const
 {
-   // Print some info about the FTP connection.
-
    TString secCont;
 
    Printf("Local host:           %s", gSystem->HostName());
@@ -176,20 +176,20 @@ void TFTP::Print(Option_t *) const
    Printf("Bytes received:       %lld", fBytesRead);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print error string depending on error code.
+
 void TFTP::PrintError(const char *where, Int_t err) const
 {
-   // Print error string depending on error code.
-
    Error(where, "%s", gRootdErrStr[err]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return status from rootd server and message kind. Returns -1 in
+/// case of error otherwise 8 (sizeof 2 words, status and kind).
+
 Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind) const
 {
-   // Return status from rootd server and message kind. Returns -1 in
-   // case of error otherwise 8 (sizeof 2 words, status and kind).
-
    kind   = kROOTD_ERR;
    status = 0;
 
@@ -201,11 +201,11 @@ Int_t TFTP::Recv(Int_t &status, EMessageTypes &kind) const
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure the block size is a power of two, with a minimum of 32768.
+
 void TFTP::SetBlockSize(Int_t blockSize)
 {
-   // Make sure the block size is a power of two, with a minimum of 32768.
-
    if (blockSize < 32768) {
       fBlockSize = 32768;
       return;
@@ -219,19 +219,19 @@ void TFTP::SetBlockSize(Int_t blockSize)
    fBlockSize = 1 << i;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer file to remote host. Returns number of bytes
+/// sent or < 0 in case of error. Error -1 connection is still
+/// open, error -2 connection has been closed. In case of failure
+/// fRestartAt is set to the number of bytes correclty transfered.
+/// Calling PutFile() immediately afterwards will restart at fRestartAt.
+/// If this is not desired call SetRestartAt(0) before calling PutFile().
+/// If rootd reports that the file is locked, and you are sure this is not
+/// the case (e.g. due to a crash), you can force unlock it by prepending
+/// the remoteName with a '-'.
+
 Long64_t TFTP::PutFile(const char *file, const char *remoteName)
 {
-   // Transfer file to remote host. Returns number of bytes
-   // sent or < 0 in case of error. Error -1 connection is still
-   // open, error -2 connection has been closed. In case of failure
-   // fRestartAt is set to the number of bytes correclty transfered.
-   // Calling PutFile() immediately afterwards will restart at fRestartAt.
-   // If this is not desired call SetRestartAt(0) before calling PutFile().
-   // If rootd reports that the file is locked, and you are sure this is not
-   // the case (e.g. due to a crash), you can force unlock it by prepending
-   // the remoteName with a '-'.
-
    if (!IsOpen() || !file || !*file) return -1;
 
 #if defined(R__WIN32) || defined(R__WINGCC)
@@ -392,19 +392,19 @@ Long64_t TFTP::PutFile(const char *file, const char *remoteName)
    return Long64_t(size - restartat);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transfer file from remote host. Returns number of bytes
+/// received or < 0 in case of error. Error -1 connection is still
+/// open, error -2 connection has been closed. In case of failure
+/// fRestartAt is set to the number of bytes correclty transfered.
+/// Calling GetFile() immediately afterwards will restart at fRestartAt.
+/// If this is not desired call SetRestartAt(0) before calling GetFile().
+/// If rootd reports that the file is locked, and you are sure this is not
+/// the case (e.g. due to a crash), you can force unlock it by prepending
+/// the file name with a '-'.
+
 Long64_t TFTP::GetFile(const char *file, const char *localName)
 {
-   // Transfer file from remote host. Returns number of bytes
-   // received or < 0 in case of error. Error -1 connection is still
-   // open, error -2 connection has been closed. In case of failure
-   // fRestartAt is set to the number of bytes correclty transfered.
-   // Calling GetFile() immediately afterwards will restart at fRestartAt.
-   // If this is not desired call SetRestartAt(0) before calling GetFile().
-   // If rootd reports that the file is locked, and you are sure this is not
-   // the case (e.g. due to a crash), you can force unlock it by prepending
-   // the file name with a '-'.
-
    if (!IsOpen() || !file || !*file) return -1;
 
    if (!localName) {
@@ -620,13 +620,13 @@ Long64_t TFTP::GetFile(const char *file, const char *localName)
    return Long64_t(size - restartat);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the remote directory. If the remote directory contains a .message
+/// file and it is < 1024 characters then the contents is echoed back.
+/// Returns 0 in case of success and -1 in case of failure.
+
 Int_t TFTP::ChangeDirectory(const char *dir) const
 {
-   // Change the remote directory. If the remote directory contains a .message
-   // file and it is < 1024 characters then the contents is echoed back.
-   // Returns 0 in case of success and -1 in case of failure.
-
    if (!IsOpen()) return -1;
 
    if (!dir || !*dir) {
@@ -660,12 +660,12 @@ Int_t TFTP::ChangeDirectory(const char *dir) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a remote directory. Anonymous users may not create directories.
+/// Returns 0 in case of success and -1 in case of failure.
+
 Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
 {
-   // Make a remote directory. Anonymous users may not create directories.
-   // Returns 0 in case of success and -1 in case of failure.
-
    if (!IsOpen()) return -1;
 
    if (!dir || !*dir) {
@@ -695,12 +695,12 @@ Int_t TFTP::MakeDirectory(const char *dir, Bool_t print) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a remote directory. Anonymous users may not delete directories.
+/// Returns 0 in case of success and -1 in case of failure.
+
 Int_t TFTP::DeleteDirectory(const char *dir) const
 {
-   // Delete a remote directory. Anonymous users may not delete directories.
-   // Returns 0 in case of success and -1 in case of failure.
-
    if (!IsOpen()) return -1;
 
    if (!dir || !*dir) {
@@ -726,13 +726,13 @@ Int_t TFTP::DeleteDirectory(const char *dir) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// List remote directory. With cmd you specify the options and directory
+/// to be listed to ls. Returns 0 in case of success and -1 in case of
+/// failure.
+
 Int_t TFTP::ListDirectory(Option_t *cmd) const
 {
-   // List remote directory. With cmd you specify the options and directory
-   // to be listed to ls. Returns 0 in case of success and -1 in case of
-   // failure.
-
    if (!IsOpen()) return -1;
 
    if (!cmd || !*cmd)
@@ -757,12 +757,12 @@ Int_t TFTP::ListDirectory(Option_t *cmd) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print path of remote working directory. Returns 0 in case of succes and
+/// -1 in cse of failure.
+
 Int_t TFTP::PrintDirectory() const
 {
-   // Print path of remote working directory. Returns 0 in case of succes and
-   // -1 in cse of failure.
-
    if (!IsOpen()) return -1;
 
    if (fSocket->Send("", kROOTD_PWD) < 0) {
@@ -783,12 +783,12 @@ Int_t TFTP::PrintDirectory() const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rename a remote file. Anonymous users may not rename files.
+/// Returns 0 in case of success and -1 in case of failure.
+
 Int_t TFTP::RenameFile(const char *file1, const char *file2) const
 {
-   // Rename a remote file. Anonymous users may not rename files.
-   // Returns 0 in case of success and -1 in case of failure.
-
    if (!IsOpen()) return -1;
 
    if (!file1 || !file2 || !*file1 || !*file2) {
@@ -814,12 +814,12 @@ Int_t TFTP::RenameFile(const char *file1, const char *file2) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a remote file. Anonymous users may not delete files.
+/// Returns 0 in case of success and -1 in case of failure.
+
 Int_t TFTP::DeleteFile(const char *file) const
 {
-   // Delete a remote file. Anonymous users may not delete files.
-   // Returns 0 in case of success and -1 in case of failure.
-
    if (!IsOpen()) return -1;
 
    if (!file || !*file) {
@@ -845,13 +845,13 @@ Int_t TFTP::DeleteFile(const char *file) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change permissions of a remote file. Anonymous users may not
+/// chnage permissions. Returns 0 in case of success and -1 in case
+/// of failure.
+
 Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
 {
-   // Change permissions of a remote file. Anonymous users may not
-   // chnage permissions. Returns 0 in case of success and -1 in case
-   // of failure.
-
    if (!IsOpen()) return -1;
 
    if (!file || !*file) {
@@ -877,12 +877,12 @@ Int_t TFTP::ChangePermission(const char *file, Int_t mode) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close ftp connection. Returns 0 in case of success and -1 in case of
+/// failure.
+
 Int_t TFTP::Close()
 {
-   // Close ftp connection. Returns 0 in case of success and -1 in case of
-   // failure.
-
    if (!IsOpen()) return -1;
 
    if (fSocket->Send(kROOTD_CLOSE) < 0) {
@@ -906,13 +906,13 @@ Int_t TFTP::Close()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a directory via rootd.
+/// Returns kTRUE in case of success.
+/// Returns kFALSE in case of error.
+
 Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
 {
-   // Open a directory via rootd.
-   // Returns kTRUE in case of success.
-   // Returns kFALSE in case of error.
-
    fDir = kFALSE;
 
    if (!IsOpen()) return fDir;
@@ -950,11 +950,11 @@ Bool_t TFTP::OpenDirectory(const char *dir, Bool_t print)
    return fDir;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Free a remotely open directory via rootd.
+
 void TFTP::FreeDirectory(Bool_t print)
 {
-   // Free a remotely open directory via rootd.
-
    if (!IsOpen() || !fDir) return;
 
    if (fProtocol < 12) {
@@ -981,12 +981,12 @@ void TFTP::FreeDirectory(Bool_t print)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get directory entry via rootd.
+/// Returns 0 in case no more entries or in case of error.
+
 const char *TFTP::GetDirEntry(Bool_t print)
 {
-   // Get directory entry via rootd.
-   // Returns 0 in case no more entries or in case of error.
-
    static char dirent[1024] = {0};
 
    if (!IsOpen() || !fDir) return 0;
@@ -1020,14 +1020,14 @@ const char *TFTP::GetDirEntry(Bool_t print)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get info about a file. Info is returned in the form of a FileStat_t
+/// structure (see TSystem.h).
+/// The function returns 0 in case of success and 1 if the file could
+/// not be stat'ed.
+
 Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
 {
-   // Get info about a file. Info is returned in the form of a FileStat_t
-   // structure (see TSystem.h).
-   // The function returns 0 in case of success and 1 if the file could
-   // not be stat'ed.
-
    TUrl url(path);
 
    if (!IsOpen()) return 1;
@@ -1103,13 +1103,13 @@ Int_t TFTP::GetPathInfo(const char *path, FileStat_t &buf, Bool_t print)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kFALSE if one can access a file using the specified access mode.
+/// Mode is the same as for the Unix access(2) function.
+/// Attention, bizarre convention of return value!!
+
 Bool_t TFTP::AccessPathName(const char *path, EAccessMode mode, Bool_t print)
 {
-   // Returns kFALSE if one can access a file using the specified access mode.
-   // Mode is the same as for the Unix access(2) function.
-   // Attention, bizarre convention of return value!!
-
    if (!IsOpen()) return kTRUE;
 
    if (fProtocol < 12) {

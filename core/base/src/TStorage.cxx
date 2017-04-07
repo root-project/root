@@ -9,27 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStorage                                                             //
-//                                                                      //
-// Storage manager. The storage manager works best in conjunction with  //
-// the custom ROOT new and delete operators defined in the file         //
-// NewDelete.cxx (libNew.so). Only when using the custom allocation     //
-// operators will memory usage statistics be gathered using the         //
-// TStorage EnterStat(), RemoveStat(), etc. functions.                  //
-// Memory checking is by default enabled (when using libNew.so) and     //
-// usage statistics is gathered. Using the resource (in .rootrc):       //
-// Root.MemStat one can toggle statistics gathering on or off. More     //
-// specifically on can trap the allocation of a block of memory of a    //
-// certain size. This can be specified using the resource:              //
-// Root.MemStat.size, using the resource Root.MemStat.cnt one can       //
-// specify after how many allocations of this size the trap should      //
-// occur.                                                               //
-// Set the compile option R__NOSTATS to de-activate all memory checking //
-// and statistics gathering in the system.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStorage
+\ingroup Base
+
+Storage manager. The storage manager works best in conjunction with
+the custom ROOT new and delete operators defined in the file
+NewDelete.cxx (libNew.so). Only when using the custom allocation
+operators will memory usage statistics be gathered using the
+TStorage EnterStat(), RemoveStat(), etc. functions.
+Memory checking is by default enabled (when using libNew.so) and
+usage statistics is gathered. Using the resource (in .rootrc):
+Root.MemStat one can toggle statistics gathering on or off. More
+specifically on can trap the allocation of a block of memory of a
+certain size. This can be specified using the resource:
+Root.MemStat.size, using the resource Root.MemStat.cnt one can
+specify after how many allocations of this size the trap should
+occur.
+
+Set the compile option R__NOSTATS to de-activate all memory checking
+and statistics gathering in the system.
+*/
 
 #include <stdlib.h>
 
@@ -85,15 +84,20 @@ static void   **gTraceArray = 0;
 static Int_t    gTraceCapacity = 10, gTraceIndex = 0,
                 gMemSize = -1, gMemIndex = -1;
 
+// Used in NewDelete.cxx; set by TMapFile.
+ROOT::Internal::FreeIfTMapFile_t *ROOT::Internal::gFreeIfTMapFile = nullptr;
+void *ROOT::Internal::gMmallocDesc = 0; //is used and set in TMapFile
 
-//______________________________________________________________________________
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Register a memory allocation operation. If desired one can trap an
+/// allocation of a certain size in case one tries to find a memory
+/// leak of that particular size. This function is only called via
+/// the ROOT custom new operators.
+
 void TStorage::EnterStat(size_t size, void *p)
 {
-   // Register a memory allocation operation. If desired one can trap an
-   // allocation of a certain size in case one tries to find a memory
-   // leak of that particular size. This function is only called via
-   // the ROOT custom new operators.
-
    TStorage::SetMaxBlockSize(TMath::Max(TStorage::GetMaxBlockSize(), size));
 
    if (!gMemStatistics) return;
@@ -118,12 +122,12 @@ void TStorage::EnterStat(size_t size, void *p)
    gAllocatedTotal += size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register a memory free operation. This function is only called via
+/// the custom ROOT delete operator.
+
 void TStorage::RemoveStat(void *vp)
 {
-   // Register a memory free operation. This function is only called via
-   // the custom ROOT delete operator.
-
    if (!gMemStatistics) return;
 
    size_t size = storage_size(vp);
@@ -141,12 +145,12 @@ void TStorage::RemoveStat(void *vp)
    gFreedTotal += size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate a block of memory, that later can be resized using
+/// TStorage::ReAlloc().
+
 void *TStorage::Alloc(size_t size)
 {
-   // Allocate a block of memory, that later can be resized using
-   // TStorage::ReAlloc().
-
    static const char *where = "TStorage::Alloc";
 
 #ifndef WIN32
@@ -160,11 +164,11 @@ void *TStorage::Alloc(size_t size)
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// De-allocate block of memory, that was allocated via TStorage::Alloc().
+
 void TStorage::Dealloc(void *ptr)
 {
-   // De-allocate block of memory, that was allocated via TStorage::Alloc().
-
 #ifndef WIN32
    ::operator delete[](ptr);
 #else
@@ -172,12 +176,12 @@ void TStorage::Dealloc(void *ptr)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) block of memory. Don't use if size is larger
+/// than old size, use ReAlloc(void *, size_t, size_t) instead.
+
 void *TStorage::ReAlloc(void *ovp, size_t size)
 {
-   // Reallocate (i.e. resize) block of memory. Don't use if size is larger
-   // than old size, use ReAlloc(void *, size_t, size_t) instead.
-
    ::Obsolete("ReAlloc(void*,size_t)", "v5-34-00", "v6-02-00");
    ::Info("ReAlloc(void*,size_t)", "please use ReAlloc(void*,size_t,size_t)");
 
@@ -211,12 +215,12 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) block of memory. Checks if current size is
+/// equal to oldsize. If not memory was overwritten.
+
 void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 {
-   // Reallocate (i.e. resize) block of memory. Checks if current size is
-   // equal to oldsize. If not memory was overwritten.
-
    // Needs to be protected by global mutex
    {
       R__LOCKGUARD(gGlobalMutex);
@@ -254,12 +258,12 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) array of chars. Size and oldsize are
+/// in number of chars.
+
 char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
 {
-   // Reallocate (i.e. resize) array of chars. Size and oldsize are
-   // in number of chars.
-
    static const char *where = "TStorage::ReAllocChar";
 
    char *vp;
@@ -284,12 +288,12 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reallocate (i.e. resize) array of integers. Size and oldsize are
+/// number of integers (not number of bytes).
+
 Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 {
-   // Reallocate (i.e. resize) array of integers. Size and oldsize are
-   // number of integers (not number of bytes).
-
    static const char *where = "TStorage::ReAllocInt";
 
    Int_t *vp;
@@ -314,71 +318,93 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to allocate a TObject on the heap (via TObject::operator new()).
+/// Directly after this routine one can call (in the TObject ctor)
+/// TStorage::FilledByObjectAlloc() to find out if the just created object is on
+/// the heap.  This technique is necessary as there is one stack per thread
+/// and we can not rely on comparison with the current stack memory position.
+
 void *TStorage::ObjectAlloc(size_t sz)
 {
-   // Used to allocate a TObject on the heap (via TObject::operator new()).
-   // Directly after this routine one can call (in the TObject ctor)
-   // TStorage::FilledByObjectAlloc() to find out if the just created object is on
-   // the heap.  This technique is necessary as there is one stack per thread
-   // and we can not rely on comparison with the current stack memory position.
-
    void* space =  ::operator new(sz);
    memset(space, kObjectAllocMemValue, sz);
    return space;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to allocate array of TObject on the heap (via TObject::operator new[]()).
+/// Unlike the 'singular' ObjectAlloc, we do not mark those object has being
+/// allocated on the heap as they can not be individually deleted.
+
+void *TStorage::ObjectAllocArray(size_t sz)
+{
+   void* space =  ::operator new(sz);
+   return space;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Used to allocate a TObject on the heap (via TObject::operator new(size_t,void*))
+/// in position vp. vp is already allocated (maybe on heap, maybe on
+/// stack) so just return.
+
 void *TStorage::ObjectAlloc(size_t , void *vp)
 {
-   // Used to allocate a TObject on the heap (via TObject::operator new(size_t,void*))
-   // in position vp. vp is already allocated (maybe on heap, maybe on
-   // stack) so just return.
-
    return vp;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to deallocate a TObject on the heap (via TObject::operator delete()).
+
 void TStorage::ObjectDealloc(void *vp)
 {
-   // Used to deallocate a TObject on the heap (via TObject::operator delete()).
-
 
    ::operator delete(vp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Used to deallocate a TObject on the heap (via TObject::operator delete(void*,void*)).
+
 void TStorage::ObjectDealloc(void *vp, void *ptr)
 {
-   // Used to deallocate a TObject on the heap (via TObject::operator delete(void*,void*)).
-
    if (vp && ptr) { }
 }
 
-//______________________________________________________________________________
+#ifdef R__SIZEDDELETE
+////////////////////////////////////////////////////////////////////////////////
+/// Used to deallocate a TObject on the heap (via TObject::operator delete()),
+/// for sized deallocation.
+
+void TStorage::ObjectDealloc(void *vp, size_t size)
+{
+   ::operator delete(vp, size);
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set a free handler.
+
 void TStorage::SetFreeHook(FreeHookFun_t fh, void *data)
 {
-   // Set a free handler.
-
    fgFreeHook     = fh;
    fgFreeHookData = data;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a custom ReAlloc handlers. This function is typically
+/// called via a static object in the ROOT libNew.so shared library.
+
 void TStorage::SetReAllocHooks(ReAllocFun_t rh1, ReAllocCFun_t rh2)
 {
-   // Set a custom ReAlloc handlers. This function is typically
-   // called via a static object in the ROOT libNew.so shared library.
-
    fgReAllocHook  = rh1;
    fgReAllocCHook = rh2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print memory usage statistics.
+
 void TStorage::PrintStatistics()
 {
-   // Print memory usage statistics.
-
    // Needs to be protected by global mutex
    R__LOCKGUARD(gGlobalMutex);
 
@@ -416,13 +442,13 @@ void TStorage::PrintStatistics()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable memory usage statistics gathering. Size is the size of the memory
+/// block that should be trapped and ix is after how many such allocations
+/// the trap should happen.
+
 void TStorage::EnableStatistics(int size, int ix)
 {
-   // Enable memory usage statistics gathering. Size is the size of the memory
-   // block that should be trapped and ix is after how many such allocations
-   // the trap should happen.
-
 #ifdef MEM_STAT
    gMemSize       = size;
    gMemIndex      = ix;
@@ -432,7 +458,8 @@ void TStorage::EnableStatistics(int size, int ix)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ULong_t TStorage::GetHeapBegin()
 {
    ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
@@ -440,7 +467,8 @@ ULong_t TStorage::GetHeapBegin()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ULong_t TStorage::GetHeapEnd()
 {
    ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
@@ -448,49 +476,54 @@ ULong_t TStorage::GetHeapEnd()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return static free hook data
+
 void *TStorage::GetFreeHookData()
 {
-   //return static free hook data
    return fgFreeHookData;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return the has custom delete flag
+
 Bool_t TStorage::HasCustomNewDelete()
 {
-   //return the has custom delete flag
    return fgHasCustomNewDelete;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set the has custom delete flag
+
 void TStorage::SetCustomNewDelete()
 {
-   //set the has custom delete flag
    fgHasCustomNewDelete = kTRUE;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///add a range to the heap
+
 void TStorage::AddToHeap(ULong_t, ULong_t)
 {
-   //add a range to the heap
    ::Obsolete("AddToHeap(ULong_t,ULong_t)", "v5-34-00", "v6-02-00");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///is object at p in the heap?
+
 Bool_t TStorage::IsOnHeap(void *)
 {
-   //is object at p in the heap?
    ::Obsolete("IsOnHeap(void*)", "v5-34-00", "v6-02-00");
    return false;
 }
 
 #ifdef WIN32
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///called by TObject's constructor to determine if object was created by call to new
+
 Bool_t TStorage::FilledByObjectAlloc(UInt_t *member)
 {
-   //called by TObject's constructor to determine if object was created by call to new
-
    // This technique is necessary as there is one stack per thread
    // and we can not rely on comparison with the current stack memory position.
    // Note that a false positive (this routine returning true for an object
@@ -513,24 +546,27 @@ Bool_t TStorage::FilledByObjectAlloc(UInt_t *member)
    return *member == kObjectAllocMemValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return max block size
+
 size_t TStorage::GetMaxBlockSize()
 {
-   //return max block size
    return fgMaxBlockSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///set max block size
+
 void TStorage::SetMaxBlockSize(size_t size)
 {
-   //set max block size
    fgMaxBlockSize = size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///return free hook
+
 FreeHookFun_t TStorage::GetFreeHook()
 {
-   //return free hook
    return fgFreeHook;
 }
 

@@ -13,17 +13,7 @@
 #define ROOT_TClassTree
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TClassTree                                                           //
-//                                                                      //
-// Manager class to draw classes inheritance tree and relations         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TTnamed
 #include "TNamed.h"
-#endif
 
 class TClass;
 class TObjString;
@@ -31,25 +21,25 @@ class TObjString;
 class TClassTree : public TNamed {
 
 protected:
-   TString   fClasses;    //List of classes to be drawn
-   Float_t   fYoffset;    //offset at top of picture in per cent of pad
-   Float_t   fLabelDx;    //width along x of TPaveLabels in per cent of pad
-   Int_t     fNclasses;   //current number of classes
-   Int_t     fShowCod;    //if 1 show classes referenced by implementation
-   Int_t     fShowMul;    //if 1 show multiple inheritance
-   Int_t     fShowHas;    //if 1 show "has a" relationship
-   Int_t     fShowRef;    //if 1 show classes relationship other than inheritance
-   Int_t    *fCstatus;    //[fNclasses] classes status
-   Int_t    *fNdata;      //[fNclasses] Number of data members per class
-   Int_t    *fParents;    //[fNclasses] parent number of classes (permanent)
-   Int_t    *fCparent;    //!parent number of classes (temporary)
-   char    **fDerived;    //![fNclasses] table to indicate if i derives from j
-   TClass  **fCpointer;   //![fNclasses] pointers to the TClass objects
-   TString **fCnames;     //![fNclasses] class names
-   TString **fCtitles;    //![fNclasses] class titles
-   TString **fOptions;    //![fNclasses] List of options per class
-   TString   fSourceDir;  //Concatenated source directories
-   TList   **fLinks;      //![fNclasses] for each class, the list of referenced(ing) classes
+   TString   fClasses;    ///<List of classes to be drawn
+   Float_t   fYoffset;    ///<offset at top of picture in per cent of pad
+   Float_t   fLabelDx;    ///<width along x of TPaveLabels in per cent of pad
+   Int_t     fNclasses;   ///<current number of classes
+   Int_t     fShowCod;    ///<if 1 show classes referenced by implementation
+   Int_t     fShowMul;    ///<if 1 show multiple inheritance
+   Int_t     fShowHas;    ///<if 1 show "has a" relationship
+   Int_t     fShowRef;    ///<if 1 show classes relationship other than inheritance
+   Int_t    *fCstatus;    ///<[fNclasses] classes status
+   Int_t    *fNdata;      ///<[fNclasses] Number of data members per class
+   Int_t    *fParents;    ///<[fNclasses] parent number of classes (permanent)
+   Int_t    *fCparent;    ///<!parent number of classes (temporary)
+   char    **fDerived;    ///<![fNclasses] table to indicate if i derives from j
+   TClass  **fCpointer;   ///<![fNclasses] pointers to the TClass objects
+   TString **fCnames;     ///<![fNclasses] class names
+   TString **fCtitles;    ///<![fNclasses] class titles
+   TString **fOptions;    ///<![fNclasses] List of options per class
+   TString   fSourceDir;  ///<Concatenated source directories
+   TList   **fLinks;      ///<![fNclasses] for each class, the list of referenced(ing) classes
 
    virtual  void FindClassPosition(const char *classname, Float_t &x, Float_t &y);
    virtual  void FindClassesUsedBy(Int_t iclass);

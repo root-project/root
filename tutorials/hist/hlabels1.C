@@ -1,5 +1,13 @@
-// 1-D histograms with alphanumeric labels
-// author; Rene Brun
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// 1-D histograms with alphanumeric labels
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 TCanvas *hlabels1()
 {
    const Int_t nx = 20;

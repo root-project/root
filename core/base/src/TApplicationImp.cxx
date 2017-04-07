@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TApplicationImp                                                      //
-//                                                                      //
-// ABC describing GUI independent application implementation protocol.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TApplicationImp
+\ingroup Base
+
+ABC describing GUI independent application implementation protocol.
+*/
 
 #include "TApplicationImp.h"
 

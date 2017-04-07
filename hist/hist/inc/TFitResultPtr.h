@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TFitResult;
 
@@ -61,4 +59,7 @@ private:
    ClassDef(TFitResultPtr,2)  //indirection to TFitResult
 };
 
+namespace cling {
+   std::string printValue(const TFitResultPtr* val);
+}
 #endif

@@ -23,7 +23,14 @@ THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
-                $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h
+                $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
+                $(MODDIRI)/ROOT/TThreadedObject.hxx \
+                $(MODDIRI)/ROOT/TSpinMutex.hxx
+
+ifeq ($(IMT),yes)
+THREADH      += $(MODDIRI)/ROOT/TThreadExecutor.hxx
+endif
+
 ifneq ($(ARCH),win32)
 THREADH      += $(MODDIRI)/TPosixCondition.h $(MODDIRI)/TPosixMutex.h \
                 $(MODDIRI)/TPosixThread.h $(MODDIRI)/TPosixThreadFactory.h \
@@ -34,7 +41,7 @@ THREADH_EXT  += $(MODDIRI)/TAtomicCountGcc.h $(MODDIRI)/TAtomicCountPthread.h
 else
 THREADH      += $(MODDIRI)/TWin32Condition.h $(MODDIRI)/TWin32Mutex.h \
                 $(MODDIRI)/TWin32Thread.h $(MODDIRI)/TWin32ThreadFactory.h
-THREADH_EXT  += $(MODDIRI)/TAtomicCountWin32.h
+THREADH_EXT  += $(MODDIRI)/TWin32AtomicCount.h
 endif
 
 THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
@@ -54,18 +61,39 @@ THREADO      := $(call stripsrc,$(THREADS:.cxx=.o))
 
 THREADDEP    := $(THREADO:.o=.d) $(THREADDO:.o=.d)
 
+ifeq ($(BUILDTBB),yes)
+THREADIMTS   := $(MODDIRS)/TImplicitMT.cxx
+THREADIMTO   := $(call stripsrc,$(THREADIMTS:.cxx=.o))
+THREADIMTDEP := $(THREADIMTO:.o=.d)
+else
+THREADIMTS   :=
+THREADIMTO   :=
+THREADIMTDEP :=
+endif
+
 THREADLIB    := $(LPATH)/libThread.$(SOEXT)
 THREADMAP    := $(THREADLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(THREADH) $(THREADH_EXT))
+THREADH_REL  := $(patsubst $(MODDIRI)/%,include/%,$(THREADH))
+ALLHDRS      += $(THREADH_REL) $(patsubst $(MODDIRI)/%,include/%, $(THREADH_EXT))
 ALLLIBS      += $(THREADLIB)
 ALLMAPS      += $(THREADMAP)
+ifeq ($(CXXMODULES),yes)
+  # We need to prefilter ThreadLocalStorage.h because this is a non-modular header,
+  # on which depends libCore. Otherwise we end up having a libThread->libCore->libThread
+  # header file dependency.
+  THREADH_FILTERED_REL := $(filter-out include/ThreadLocalStorage.h, $(THREADH_REL))
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(THREADH_FILTERED_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Core_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(THREADLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 CXXFLAGS     += $(OSTHREADFLAG)
 CFLAGS       += $(OSTHREADFLAG)
-CINTCXXFLAGS += $(OSTHREADFLAG)
-CINTCFLAGS   += $(OSTHREADFLAG)
 
 # include all dependency files
 INCLUDEFILES += $(THREADDEP)
@@ -76,10 +104,16 @@ INCLUDEFILES += $(THREADDEP)
 include/%.h:    $(THREADDIRI)/%.h
 		cp $< $@
 
-$(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
+include/%.hxx:  $(THREADDIRI)/%.hxx
+		mkdir -p include/ROOT
+		cp $< $@
+
+$(THREADLIB):   $(THREADO) $(THREADDO) $(THREADIMTO) \
+		   $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libThread.$(SOEXT) $@ "$(THREADO) $(THREADDO)" \
-		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB)"
+		   "$(SOFLAGS)" libThread.$(SOEXT) $@ \
+		   "$(THREADO) $(THREADDO) $(THREADIMTO)" \
+		   "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(TBBLIBDIR) $(TBBLIB)"
 
 $(call pcmrule,THREAD)
 	$(noop)
@@ -106,3 +140,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 
 distclean::     distclean-$(MODNAME)
 
+##### extra rules ######
+ifeq ($(BUILDTBB),yes)
+$(THREADO) $(THREADIMTO): CXXFLAGS += $(TBBINCDIR:%=-I%)
+endif

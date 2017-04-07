@@ -20,7 +20,8 @@ namespace ROOT {
 namespace iOS {
 namespace GraphicUtils {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void GetColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b)
 {
    if (const TColor *color = gROOT->GetColor(colorIndex))
@@ -28,7 +29,8 @@ void GetColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b)
 }
 
 //IDEncoder.
-//______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 IDEncoder::IDEncoder(UInt_t radix, UInt_t channelSize)
             : fRadix(radix),
               fRadix2(radix * radix),
@@ -38,7 +40,8 @@ IDEncoder::IDEncoder(UInt_t radix, UInt_t channelSize)
 {
 }
 
-//______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t IDEncoder::IdToColor(UInt_t id, Float_t *rgb) const
 {
    if (id >= fMaxID)
@@ -55,7 +58,8 @@ Bool_t IDEncoder::IdToColor(UInt_t id, Float_t *rgb) const
    return kTRUE;
 }
 
-//______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t IDEncoder::ColorToId(UInt_t r, UInt_t g, UInt_t b) const
 {
    const UInt_t red   = FixValue(r);
@@ -65,7 +69,8 @@ UInt_t IDEncoder::ColorToId(UInt_t r, UInt_t g, UInt_t b) const
    return fRadix2 * red + fRadix * green + blue;
 }
 
-//______________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 UInt_t IDEncoder::FixValue(UInt_t val) const
 {
    const UInt_t orig = val / fStepSize;

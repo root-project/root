@@ -21,9 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
+
+#include <vector>
 
 class TVirtualStreamerInfo;
 class TStreamerElement;
@@ -257,7 +257,7 @@ public:
    virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0) = 0;
    virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0) = 0;
 
-   virtual   void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0 ) = 0;
+   virtual   void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0 ) = 0;
    virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 ) = 0;
    virtual   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 ) = 0;
    virtual   void     StreamObject(TObject *obj) = 0;
@@ -277,7 +277,10 @@ public:
    virtual   void     ReadDouble(Double_t   &d) = 0;
    virtual   void     ReadCharP(Char_t      *c) = 0;
    virtual   void     ReadTString(TString   &s) = 0;
-   virtual   void     ReadStdString(std::string &s) = 0;
+   virtual   void     ReadStdString(std::string *s) = 0;
+   virtual   void     ReadCharStar(char* &s) = 0;
+
+   virtual inline void ReadStdString(std::string &s) { ReadStdString(&s); }
 
    virtual   void     WriteBool(Bool_t       b) = 0;
    virtual   void     WriteChar(Char_t       c) = 0;
@@ -294,7 +297,10 @@ public:
    virtual   void     WriteDouble(Double_t   d) = 0;
    virtual   void     WriteCharP(const Char_t *c) = 0;
    virtual   void     WriteTString(const TString &s) = 0;
-   virtual   void     WriteStdString(const std::string &s) = 0;
+   virtual   void     WriteStdString(const std::string *s) = 0;
+   virtual   void     WriteCharStar(char *s) = 0;
+
+   virtual inline void WriteStdString(std::string &s) { WriteStdString(&s); }
 
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const = 0;
@@ -319,7 +325,7 @@ public:
    virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection) = 0;
 
-   static TClass *GetClass(const type_info &typeinfo);
+   static TClass *GetClass(const std::type_info &typeinfo);
    static TClass *GetClass(const char *className);
 
    ClassDef(TBuffer,0)  //Buffer base class used for serializing objects

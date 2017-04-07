@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBranchElement                                                       //
-//                                                                      //
-// A Branch for the case of an object                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TBranchElement
+\ingroup tree
+
+A Branch for the case of an object.
+*/
 
 #include "TBranchElement.h"
 
@@ -52,19 +50,8 @@
 
 ClassImp(TBranchElement)
 
-#if (__GNUC__ >= 3) || defined(__INTEL_COMPILER)
-#if !defined(R__unlikely)
-#define R__unlikely(expr) __builtin_expect(!!(expr), 0)
-#endif
-#if !defined(R__likely)
-#define R__likely(expr) __builtin_expect(!!(expr), 1)
-#endif
-#else
-#define R__unlikely(expr) expr
-#define R__likely(expr) expr
-#endif
+////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
 namespace {
    void RemovePrefix(TString& str, const char* prefix) {
       // -- Remove a prefix from a string.
@@ -90,10 +77,10 @@ namespace {
    };
 }
 
-//______________________________________________________________________________
-void TBranchElement::SwitchContainer(TObjArray* branches) {
-   // -- Modify the container type of the branches
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the container type of the branches
 
+void TBranchElement::SwitchContainer(TObjArray* branches) {
    const Int_t nbranches = branches->GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranchElement* br = (TBranchElement*) branches->At(i);
@@ -112,7 +99,8 @@ void TBranchElement::SwitchContainer(TObjArray* branches) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 namespace {
    Bool_t CanSelfReference(TClass *cl) {
       if (cl) {
@@ -124,7 +112,7 @@ namespace {
                return kFALSE;
             }
          }
-         static TClassRef stringClass("std::string");
+         const static TClassRef stringClass("std::string");
          if (cl == stringClass || cl == TString::Class()) {
             return kFALSE;
          }
@@ -137,7 +125,9 @@ namespace {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default and I/O constructor.
+
 TBranchElement::TBranchElement()
 : TBranch()
 , fClassName()
@@ -172,13 +162,16 @@ TBranchElement::TBranchElement()
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Default and I/O constructor.
    fNleaves = 0;
    fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesImpl;
    fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesImpl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is not a TClonesArray nor an STL container.
+///
+/// If splitlevel > 0 this branch in turn is split into sub-branches.
+
 TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
 : TBranch()
 , fClassName(sinfo->GetName())
@@ -213,14 +206,14 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is not a TClonesArray nor an STL container.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub-branches.
-
    Init(tree, 0, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is not a TClonesArray nor an STL container.
+///
+/// If splitlevel > 0 this branch in turn is split into sub-branches.
+
 TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
 : TBranch()
 , fClassName(sinfo->GetName())
@@ -255,20 +248,16 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is not a TClonesArray nor an STL container.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub-branches.
-
    Init(parent ? parent->GetTree() : 0, parent, bname,sinfo,id,pointer,basketsize,splitlevel,btype);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init when the branch object is not a TClonesArray nor an STL container.
+///
+/// If splitlevel > 0 this branch in turn is split into sub-branches.
+
 void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStreamerInfo* sinfo, Int_t id, char* pointer, Int_t basketsize, Int_t splitlevel, Int_t btype)
 {
-   // -- Init when the branch object is not a TClonesArray nor an STL container.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub-branches.
-
    TString name(bname);
 
    // Set our TNamed attributes.
@@ -294,7 +283,8 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
    //---------------------------------------------------------------------------
    // Handling the splitting of the STL collections of pointers
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    Int_t splitSTLP = splitlevel - (splitlevel%TTree::kSplitCollectionOfPointers);
    splitlevel %= TTree::kSplitCollectionOfPointers;
 
@@ -337,7 +327,6 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
       basketsize = 100 + fEntryOffsetLen;
    }
    fBasketSize = basketsize;
-
 
    //
    // Allocate and initialize the basket control arrays.
@@ -425,8 +414,9 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
 
       if (splitlevel > 0) {
          // -- Create sub branches if requested by splitlevel.
-         const char* elem_type = element->GetTypeName();
-         fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(elem_type));
+         const char* elemType = element->GetTypeName();
+         TClass *elementClass = element->GetClassPointer();
+         fSTLtype = elementClass ? elementClass->GetCollectionType() : ROOT::kNotSTL;
          if (element->CannotSplit()) {
             fSplitLevel = 0;
          } else if (element->IsA() == TStreamerBase::Class()) {
@@ -436,7 +426,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             //        in that case is not the base streamer element it is the
             //        STL streamer element.
             fType = 1;
-            TClass* clOfElement = TClass::GetClass(element->GetName());
+            TClass* clOfElement = element->GetClassPointer();
             Int_t nbranches = fBranches.GetEntriesFast();
             // Note: The following code results in base class branches
             //       having two different cases for what their parent
@@ -552,7 +542,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             return;
          } else if (((fSTLtype >= ROOT::kSTLvector) && (fSTLtype < ROOT::kSTLend)) || ((fSTLtype > -ROOT::kSTLend) && (fSTLtype <= -ROOT::kSTLvector))) {
             // -- We are an STL container element.
-            TClass* contCl = TClass::GetClass(elem_type);
+            TClass* contCl = elementClass;
             fCollProxy = contCl->GetCollectionProxy()->Generate();
             TClass* valueClass = GetCollectionProxy()->GetValueClass();
             // Check to see if we can split the container.
@@ -603,14 +593,14 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
                SetFillLeavesPtr();
                return;
             }
-         } else if (!strchr(elem_type, '*') && ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kAny))) {
+         } else if (!strchr(elemType, '*') && ((fStreamerType == TVirtualStreamerInfo::kObject) || (fStreamerType == TVirtualStreamerInfo::kAny))) {
             // -- Create sub-branches for members that are classes.
             //
             // Note: This can only happen if we were called directly
             //       (usually by TClass::Bronch) because Unroll never
             //       calls us for an element of this type.
             fType = 2;
-            TClass* clm = TClass::GetClass(elem_type);
+            TClass* clm = elementClass;
             Int_t err = Unroll(name, clm, clm, pointer, basketsize, splitlevel+splitSTLP, 0);
             if (err >= 0) {
                // Return on success.
@@ -646,7 +636,11 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
    SetFillLeavesPtr();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is a TClonesArray.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName("TClonesArray")
@@ -663,14 +657,14 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TClonesArray* clo
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is a TClonesArray.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    Init(tree, 0, bname, clones, basketsize, splitlevel, compress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is a TClonesArray.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName("TClonesArray")
@@ -687,20 +681,16 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TClonesArray*
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is a TClonesArray.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    Init(parent ? parent->GetTree() : 0, parent, bname, clones, basketsize, splitlevel, compress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init when the branch object is a TClonesArray.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClonesArray* clones, Int_t basketsize, Int_t splitlevel, Int_t compress)
 {
-   // -- Init when the branch object is a TClonesArray.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    fCollProxy = 0;
    fSplitLevel    = splitlevel;
    fID            = 0;
@@ -790,7 +780,11 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    SetFillLeavesPtr();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is an STL collection.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName(cont->GetCollectionClass()->GetName())
@@ -806,14 +800,14 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TVirtualCollectio
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is an STL collection.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    Init(tree, 0, bname, cont, basketsize, splitlevel, compress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor when the branch object is an STL collection.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
 : TBranch()
 , fClassName(cont->GetCollectionClass()->GetName())
@@ -829,20 +823,16 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TVirtualColle
 , fWriteIterators(0)
 , fPtrIterators(0)
 {
-   // -- Constructor when the branch object is an STL collection.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    Init(parent ? parent->GetTree() : 0, parent, bname, cont, basketsize, splitlevel, compress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init when the branch object is an STL collection.
+///
+/// If splitlevel > 0 this branch in turn is split into sub branches.
+
 void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirtualCollectionProxy* cont, Int_t basketsize, Int_t splitlevel, Int_t compress)
 {
-   // -- Init when the branch object is an STL collection.
-   //
-   // If splitlevel > 0 this branch in turn is split into sub branches.
-
    fCollProxy = cont->Generate();
    TString name( bname );
    if (name[name.Length()-1]=='.') {
@@ -944,11 +934,11 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TVirt
    SetFillLeavesPtr();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TBranchElement::~TBranchElement()
 {
-   // -- Destructor.
-
    // Release any allocated I/O buffers.
    if (fOnfileObject && TestBit(kOwnOnfileObj)) {
       delete fOnfileObject;
@@ -980,11 +970,11 @@ TBranchElement::~TBranchElement()
 //
 // This function is located here to allow inlining by the optimizer.
 //
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get streamer info for the branch class.
+
 inline TStreamerInfo* TBranchElement::GetInfoImp() const
 {
-   // -- Get streamer info for the branch class.
-
    // Note: we need to find a way to reduce the complexity of
    // this often executed condition.
    if (!fInfo || (fInfo && (!fInit || !fInfo->IsCompiled()))) {
@@ -993,19 +983,19 @@ inline TStreamerInfo* TBranchElement::GetInfoImp() const
    return fInfo;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get streamer info for the branch class.
+
 TStreamerInfo* TBranchElement::GetInfo() const
 {
-   // -- Get streamer info for the branch class.
-
    return GetInfoImp();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Browse the branch content.
+
 void TBranchElement::Browse(TBrowser* b)
 {
-   // -- Browse the branch content.
-
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches > 0) {
       TList persistentBranches;
@@ -1113,11 +1103,11 @@ void TBranchElement::Browse(TBrowser* b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch and leaf name and title in the case of a container sub-branch.
+
 void TBranchElement::BuildTitle(const char* name)
 {
-   // -- Set branch and leaf name and title in the case of a container sub-branch.
-
    TString branchname;
 
    Int_t nbranches = fBranches.GetEntries();
@@ -1183,18 +1173,18 @@ void TBranchElement::BuildTitle(const char* name)
    }
 }
 
-//______________________________________________________________________________
-Int_t TBranchElement::Fill()
-{
-   // -- Loop on all leaves of this branch to fill the basket buffer.
-   //
-   // The function returns the number of bytes committed to the
-   // individual branches.  If a write error occurs, the number of
-   // bytes returned is -1.  If no data are written, because, e.g.,
-   // the branch is disabled, the number of bytes returned is 0.
-   //
-   // Note: We not not use any member functions from TLeafElement!
+////////////////////////////////////////////////////////////////////////////////
+/// Loop on all leaves of this branch to fill the basket buffer.
+///
+/// The function returns the number of bytes committed to the
+/// individual branches.  If a write error occurs, the number of
+/// bytes returned is -1.  If no data are written, because, e.g.,
+/// the branch is disabled, the number of bytes returned is 0.
+///
+/// Note: We not not use any member functions from TLeafElement!
 
+Int_t TBranchElement::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
+{
    Int_t nbytes = 0;
    Int_t nwrite = 0;
    Int_t nerror = 0;
@@ -1229,7 +1219,7 @@ Int_t TBranchElement::Fill()
    if (!nbranches) {
       // No sub-branches.
       if (!TestBit(kDoNotProcess)) {
-         nwrite = TBranch::Fill();
+         nwrite = TBranch::FillImpl(imtHelper);
          if (nwrite < 0) {
             Error("Fill", "Failed filling branch:%s, nbytes=%d", GetName(), nwrite);
             ++nerror;
@@ -1241,7 +1231,7 @@ Int_t TBranchElement::Fill()
       // We have sub-branches.
       if (fType == 3 || fType == 4) {
          // TClonesArray or STL container counter
-         nwrite = TBranch::Fill();
+         nwrite = TBranch::FillImpl(imtHelper);
          if (nwrite < 0) {
             Error("Fill", "Failed filling branch:%s, nbytes=%d", GetName(), nwrite);
             ++nerror;
@@ -1254,7 +1244,7 @@ Int_t TBranchElement::Fill()
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* branch = (TBranchElement*) fBranches[i];
          if (!branch->TestBit(kDoNotProcess)) {
-            nwrite = branch->Fill();
+            nwrite = branch->FillImpl(imtHelper);
             if (nwrite < 0) {
                Error("Fill", "Failed filling branch:%s.%s, nbytes=%d", GetName(), branch->GetName(), nwrite);
                nerror++;
@@ -1280,12 +1270,12 @@ Int_t TBranchElement::Fill()
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// For the case where the branch is set in MakeClass mode (decomposed object).
+
 void TBranchElement::FillLeavesMakeClass(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // For the case where the branch is set in MakeClass mode (decomposed object).
-
    ValidateAddress();
 
    //
@@ -1297,7 +1287,7 @@ void TBranchElement::FillLeavesMakeClass(TBuffer& b)
    }
 
    // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
-   if(fType ==3) {
+   if(fType == 3) {
       // fClonesClass can not be zero since we are of type 3, see TBranchElement::Init
       TVirtualStreamerInfo* si = fClonesClass->GetStreamerInfo();
       if (!si) {
@@ -1386,12 +1376,12 @@ void TBranchElement::FillLeavesMakeClass(TBuffer& b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a collection (fType == 4).
+
 void TBranchElement::FillLeavesCollection(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a collection (fType == 4).
-
    // -- STL container top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
    ValidateAddress();
 
@@ -1429,12 +1419,12 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::FillLeavesCollectionSplitVectorPtrMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
 
    //
@@ -1459,12 +1449,12 @@ void TBranchElement::FillLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    b.ApplySequenceVecPtr(*fFillActionSequence,iter->fBegin,iter->fEnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::FillLeavesCollectionSplitPtrMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
 
    //
@@ -1490,12 +1480,12 @@ void TBranchElement::FillLeavesCollectionSplitPtrMember(TBuffer& b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::FillLeavesCollectionMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
 
    //
@@ -1521,12 +1511,12 @@ void TBranchElement::FillLeavesCollectionMember(TBuffer& b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::FillLeavesAssociativeCollectionMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
 
    //
@@ -1552,12 +1542,12 @@ void TBranchElement::FillLeavesAssociativeCollectionMember(TBuffer& b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a TClonesArray (fType == 3).
+
 void TBranchElement::FillLeavesClones(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a TClonesArray (fType == 3).
-
    // -- TClonesArray top-level branch.  Write out number of entries, sub-branch writes the entries themselves.
    ValidateAddress();
 
@@ -1577,12 +1567,12 @@ void TBranchElement::FillLeavesClones(TBuffer& b)
    b << n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a data member within a TClonesArray (fType == 31).
+
 void TBranchElement::FillLeavesClonesMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a data member within a TClonesArray (fType == 31).
-
    ValidateAddress();
 
    //
@@ -1606,12 +1596,12 @@ void TBranchElement::FillLeavesClonesMember(TBuffer& b)
    b.ApplySequenceVecPtr(*fFillActionSequence,arr,end);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// Case of a non  TObject, non collection class with a custom streamer
+
 void TBranchElement::FillLeavesCustomStreamer(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // Case of a non  TObject, non collection class with a custom streamer
-
    ValidateAddress();
 
    //
@@ -1632,17 +1622,16 @@ void TBranchElement::FillLeavesCustomStreamer(TBuffer& b)
       b.MapObject(fObject, fBranchClass);
    }
 
-
    fBranchClass->Streamer(fObject,b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do have a branch count and are not a counter.
+
 void TBranchElement::FillLeavesMemberBranchCount(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do have a branch count and are not a counter.
-
    FillLeavesMember(b);
    /*
     ValidateAddress();
@@ -1657,13 +1646,13 @@ void TBranchElement::FillLeavesMemberBranchCount(TBuffer& b)
     */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do not have a branch count and are a counter.
+
 void TBranchElement::FillLeavesMemberCounter(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do not have a branch count and are a counter.
-
    ValidateAddress();
 
    //
@@ -1694,13 +1683,13 @@ void TBranchElement::FillLeavesMemberCounter(TBuffer& b)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do not have a branch count and are not a counter.
+
 void TBranchElement::FillLeavesMember(TBuffer& b)
 {
-   // -- Write leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do not have a branch count and are not a counter.
-
    ValidateAddress();
 
    //
@@ -1732,13 +1721,12 @@ void TBranchElement::FillLeavesMember(TBuffer& b)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Remove trailing dimensions and make sure
+/// there is a trailing dot.
 
-//______________________________________________________________________________
 static void R__CleanName(std::string &name)
 {
-   // Remove trailing dimensions and make sure
-   // there is a trailing dot.
-
    if (name[name.length()-1]==']') {
       std::size_t dim = name.find_first_of("[");
       if (dim != std::string::npos) {
@@ -1750,11 +1738,11 @@ static void R__CleanName(std::string &name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the immediate sub-branch with passed name.
+
 TBranch* TBranchElement::FindBranch(const char *name)
 {
-   // Find the immediate sub-branch with passed name.
-
    // The default behavior of TBranch::FindBranch is sometimes
    // incorrect if this branch represent a base class, since
    // the base class name might or might not be in the name
@@ -1835,11 +1823,11 @@ TBranch* TBranchElement::FindBranch(const char *name)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the leaf corresponding to the name 'searchname'.
+
 TLeaf* TBranchElement::FindLeaf(const char *name)
 {
-   // -- Find the leaf corresponding to the name 'searchname'.
-
    TLeaf *leaf = TBranch::FindLeaf(name);
 
    if (leaf==0 && GetListOfLeaves()->GetEntries()==1) {
@@ -1874,40 +1862,41 @@ TLeaf* TBranchElement::FindLeaf(const char *name)
    return leaf;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the branch address.
+///
+/// If we are *not* owned by a MakeClass() tree:
+///
+/// - If we are a top-level branch, return a pointer
+/// - to the pointer to our object.
+///
+///      If we are *not* a top-level branch, return a pointer
+///      to our object.
+///
+/// If we are owned by a MakeClass() tree:
+///
+/// - Return a pointer to our object.
+
 char* TBranchElement::GetAddress() const
 {
-   // -- Get the branch address.
-   //
-   // If we are *not* owned by a MakeClass() tree:
-   //
-   //      If we are a top-level branch, return a pointer
-   //      to the pointer to our object.
-   //
-   //      If we are *not* a top-level branch, return a pointer
-   //      to our object.
-   //
-   // If we are owned by a MakeClass() tree:
-   //
-   //      Return a pointer to our object.
-   //
-
    ValidateAddress();
    return fAddress;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the streamer info for the branch class, try to compensate for class
+/// code unload/reload and schema evolution.
+
 void TBranchElement::InitInfo()
 {
-   // -- Init the streamer info for the branch class, try to compensate for class code unload/reload and schema evolution.
-
    if (!fInfo) {
       // We did not already have streamer info, so now we must find it.
       TClass* cl = fBranchClass.GetClass();
 
       //------------------------------------------------------------------------
       // Check if we're dealing with the name change
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TClass* targetClass = 0;
       if( fTargetClass.GetClassName()[0] ) {
          targetClass = fTargetClass;
@@ -1928,7 +1917,8 @@ void TBranchElement::InitInfo()
       if (cl) {
          //---------------------------------------------------------------------
          // Get the streamer info for given version
-         //---------------------------------------------------------------------
+         ///////////////////////////////////////////////////////////////////////
+
          {
             if ( (cl->Property() & kIsAbstract) && cl == targetClass) {
                TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
@@ -2119,11 +2109,11 @@ void TBranchElement::InitInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the collection proxy describing the branch content, if any.
+
 TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
 {
-   // -- Return the collection proxy describing the branch content, if any.
-
    if (fCollProxy) {
       return fCollProxy;
    }
@@ -2131,18 +2121,18 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
    if (fType == 4) {
       // STL container top-level branch.
       const char* className = 0;
+      TClass* cl = nullptr;
       if (fID < 0) {
          // We are a top-level branch.
          if (fBranchClass.GetClass()) {
-            className = fBranchClass.GetClass()->GetName();
+            cl = fBranchClass.GetClass();
          }
       } else {
          // We are not a top-level branch.
          TVirtualStreamerInfo* si = thiscast->GetInfoImp();
          TStreamerElement* se = si->GetElement(fID);
-         className = se->GetTypeName();
+         cl = se->GetClassPointer();
       }
-      TClass* cl = TClass::GetClass(className);
       if (!cl) {
          // The TClass was not created but we do know (since it
          // is used as a collection) that it 'className' was a
@@ -2155,6 +2145,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          } else {
             cl = new TClass(className, fClassVersion);
             cl->SetBit(TClass::kIsEmulation);
+            className = cl->GetName();
          }
       }
       TVirtualCollectionProxy* proxy = cl->GetCollectionProxy();
@@ -2177,10 +2168,7 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          cl->CopyCollectionProxy( *proxy );
       }
       fCollProxy = proxy->Generate();
-      fSTLtype = className ? TClassEdit::IsSTLCont(className) : 0;
-      if (fSTLtype < 0) {
-         fSTLtype = -fSTLtype;
-      }
+      fSTLtype = proxy->GetCollectionType();
    } else if (fType == 41) {
       // STL container sub-branch.
       thiscast->fCollProxy = fBranchCount->GetCollectionProxy();
@@ -2188,11 +2176,11 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
    return fCollProxy;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the current type of the data member corresponding to branch element.
+
 TClass* TBranchElement::GetCurrentClass()
 {
-   // -- Return a pointer to the current type of the data member corresponding to branch element.
-
    TClass* cl = fCurrentClass;
    if (cl) {
       return cl;
@@ -2227,11 +2215,17 @@ TClass* TBranchElement::GetCurrentClass()
          if (newInfo != brInfo) {
             TStreamerElement* newElems = (TStreamerElement*) newInfo->GetElements()->FindObject(currentStreamerElement->GetName());
             if (newElems) {
-               newType = newElems->GetClassPointer()->GetName();
+               if (newElems->GetClassPointer())
+                  newType = newElems->GetClassPointer()->GetName();
+               else
+                  newType = newElems->GetTypeName();
             }
          }
          if (newType.Length()==0) {
-            newType = currentStreamerElement->GetClassPointer()->GetName();
+            if (currentStreamerElement->GetClassPointer())
+               newType = currentStreamerElement->GetClassPointer()->GetName();
+            else
+               newType = currentStreamerElement->GetTypeName();
          }
       }
    } else {
@@ -2244,21 +2238,20 @@ TClass* TBranchElement::GetCurrentClass()
    return cl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read all branches of a BranchElement and return total number of bytes.
+///
+/// - If entry = 0, then use current entry number + 1.
+/// - If entry < 0, then reset entry number to 0.
+///
+/// Returns the number of bytes read from the input buffer.
+/// - If entry does not exist, then returns 0.
+/// - If an I/O error occurs, then returns -1.
+///
+/// See IMPORTANT REMARKS in TTree::GetEntry.
+
 Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
 {
-   // -- Read all branches of a BranchElement and return total number of bytes.
-   //
-   // If entry = 0, then use current entry number + 1.
-   // If entry < 0, then reset entry number to 0.
-   //
-   // Returns the number of bytes read from the input buffer.
-   // If entry does not exist, then returns 0.
-   // If an I/O error occurs, then returns -1.
-   //
-   // See IMPORTANT REMARKS in TTree::GetEntry.
-   //
-
    // Remember which entry we are reading.
    fReadEntry = entry;
 
@@ -2269,6 +2262,7 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    // proper branch.
    TBranchRef* bref = fTree->GetBranchRef();
    if (R__unlikely(bref)) {
+      R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
       fBranchID = bref->SetParent(this, fBranchID);
       bref->SetRequestedEntry(entry);
    }
@@ -2279,7 +2273,8 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       SetBit(kDeleteObject);
       SetAddress(fAddress);
    } else {
-      if (R__unlikely(!fAddress && !fTree->GetMakeClass())) {
+      if (R__unlikely(!fAddress && !TestBit(kDecomposedObj))) {
+         R__LOCKGUARD_IMT2(gROOTMutex); // Lock for parallel TTree I/O
          SetupAddressesImpl();
       }
    }
@@ -2299,10 +2294,13 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
       }
       switch(fSTLtype) {
          case ROOT::kSTLset:
-         case ROOT::kSTLunorderedset:
          case ROOT::kSTLmultiset:
+         case ROOT::kSTLunorderedset:
+         case ROOT::kSTLunorderedmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
             break;
          default:
             ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
@@ -2340,14 +2338,14 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill expectedClass and expectedType with information on the data type of the
+/// object/values contained in this branch (and thus the type of pointers
+/// expected to be passed to Set[Branch]Address
+/// return 0 in case of success and > 0 in case of failure.
+
 Int_t TBranchElement::GetExpectedType(TClass *&expectedClass,EDataType &expectedType)
 {
-   // Fill expectedClass and expectedType with information on the data type of the
-   // object/values contained in this branch (and thus the type of pointers
-   // expected to be passed to Set[Branch]Address
-   // return 0 in case of success and > 0 in case of failure.
-
    expectedClass = 0;
    expectedType = kOther_t;
 
@@ -2378,11 +2376,11 @@ Int_t TBranchElement::GetExpectedType(TClass *&expectedClass,EDataType &expected
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return icon name depending on type of branch element.
+
 const char* TBranchElement::GetIconName() const
 {
-   // -- Return icon name depending on type of branch element.
-
    if (IsFolder()) {
       return "TBranchElement-folder";
    } else {
@@ -2390,47 +2388,48 @@ const char* TBranchElement::GetIconName() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return whether this branch is in a mode where the object are decomposed
+/// or not (Also known as MakeClass mode).
+
 Bool_t TBranchElement::GetMakeClass() const
 {
-   // Return whether this branch is in a mode where the object are decomposed
-   // or not (Also known as MakeClass mode).
-
    return TestBit(kDecomposedObj); // Same as TestBit(kMakeClass)
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return maximum count value of the branchcount if any.
+
 Int_t TBranchElement::GetMaximum() const
 {
-   // -- Return maximum count value of the branchcount if any.
-
    if (fBranchCount) {
       return fBranchCount->GetMaximum();
    }
    return fMaximum;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to our object.
+
 char* TBranchElement::GetObject() const
 {
-   // -- Return a pointer to our object.
-
    ValidateAddress();
    return fObject;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to the parent class of the branch element.
+
 TClass* TBranchElement::GetParentClass()
 {
-   // -- Return a pointer to the parent class of the branch element.
    return fParentClass.GetClass();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return type name of element in the branch.
+
 const char* TBranchElement::GetTypeName() const
 {
-   // -- Return type name of element in the branch.
-
    if (fType == 3  || fType == 4) {
       return "Int_t";
    }
@@ -2472,7 +2471,8 @@ const char* TBranchElement::GetTypeName() const
    return types[itype];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template Double_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
 template Long64_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
 template LongDouble_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
@@ -2514,7 +2514,7 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const
       }
    }
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return 0;
       }
@@ -2576,12 +2576,12 @@ T TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to first data element of this branch.
+/// Currently used only for members of type character.
+
 void* TBranchElement::GetValuePointer() const
 {
-   // -- Returns pointer to first data element of this branch.
-   // Currently used only for members of type character.
-
    ValidateAddress();
 
    Int_t prID = fID;
@@ -2599,7 +2599,7 @@ void* TBranchElement::GetValuePointer() const
       fBranchCount->TBranch::GetEntry(entry);
       if (fBranchCount2) fBranchCount2->TBranch::GetEntry(entry);
    }
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return 0;
       }
@@ -2646,25 +2646,25 @@ void* TBranchElement::GetValuePointer() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the base class subobjects offsets of our sub-branches and set fOffset if we are a container sub-branch.
+///
+/// Note: The offsets are zero for data members so that when
+///       SetAddress recursively sets their address, they will get the
+///       same address as their containing class because i/o is based
+///       on streamer info offsets from the addresss of the containing
+///       class.
+///
+///       Offsets are non-zero for base-class sub-branches that are
+///       not the leftmost direct base class.  They are laid out in
+///       memory sequentially and only the leftmost direct base class
+///       has the same address as the derived class.  The streamer
+///       offsets need to be added to the address of the base class
+///       subobject which is not the same as the address of the
+///       derived class for the non-leftmost direct base classes.
+
 void TBranchElement::InitializeOffsets()
 {
-   // -- Initialize the base class subobjects offsets of our sub-branches and set fOffset if we are a container sub-branch.
-   //
-   // Note: The offsets are zero for data members so that when
-   //       SetAddress recursively sets their address, they will get the
-   //       same address as their containing class because i/o is based
-   //       on streamer info offsets from the addresss of the containing
-   //       class.
-   //
-   //       Offsets are non-zero for base-class sub-branches that are
-   //       not the leftmost direct base class.  They are laid out in
-   //       memory sequentially and only the leftmost direct base class
-   //       has the same address as the derived class.  The streamer
-   //       offsets need to be added to the address of the base class
-   //       subobject which is not the same as the address of the
-   //       derived class for the non-leftmost direct base classes.
-
    Int_t nbranches = fBranches.GetEntriesFast();
 
    if (fID < 0) {
@@ -2749,7 +2749,8 @@ void TBranchElement::InitializeOffsets()
 
       //------------------------------------------------------------------------
       // Extract the name of the STL branch in case it has been split.
-      //------------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       TString stlParentName;
       Bool_t stlParentNameUpdated = kFALSE;
       if( fType == 4 )
@@ -3122,7 +3123,8 @@ void TBranchElement::InitializeOffsets()
             //------------------------------------------------------------------
             // If we have the are the sub-branch of the TBranchSTL, we need
             // to remove it's name to get the correct real data offsets
-            //-----------------------------------------------------------------
+            ////////////////////////////////////////////////////////////////////
+
             if( dynamic_cast<TBranchSTL*>(fParent) && stlParentName.Length() )
             {
                if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 )
@@ -3258,11 +3260,11 @@ void TBranchElement::InitializeOffsets()
    fInitOffsets = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if more than one leaf, kFALSE otherwise.
+
 Bool_t TBranchElement::IsFolder() const
 {
-   // -- Return kTRUE if more than one leaf, kFALSE otherwise.
-
    Int_t nbranches = fBranches.GetEntriesFast();
    if (nbranches >= 1) {
       return kTRUE;
@@ -3271,16 +3273,16 @@ Bool_t TBranchElement::IsFolder() const
    return browsables && browsables->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Detect a collection written using a zero pointer in old versions of root.
+/// In versions of ROOT older than 4.00/03, if a collection (TClonesArray
+/// or STL container) was split but the pointer to the collection was zeroed
+/// out, nothing was saved.  Hence there is no __easy__ way to detect the
+/// case.  In newer versions, a zero is written so that a 'missing' collection
+/// appears to be an empty collection.
+
 Bool_t TBranchElement::IsMissingCollection() const
 {
-   // -- Detect a collection written using a zero pointer in old versions of root.
-   // In versions of ROOT older than 4.00/03, if a collection (TClonesArray
-   // or STL container) was split but the pointer to the collection was zeroed
-   // out, nothing was saved.  Hence there is no __easy__ way to detect the
-   // case.  In newer versions, a zero is written so that a 'missing' collection
-   // appears to be an empty collection.
-
    Bool_t ismissing = kFALSE;
    TBasket* basket = (TBasket*) fBaskets.UncheckedAt(fReadBasket);
    if (basket && fTree) {
@@ -3316,11 +3318,11 @@ Bool_t TBranchElement::IsMissingCollection() const
    return ismissing;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print branch parameters.
+
 void TBranchElement::Print(Option_t* option) const
 {
-   // Print branch parameters.
-
    Int_t nbranches = fBranches.GetEntriesFast();
    if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
       if (strlen(option)==strlen("debugAddress")) {
@@ -3388,11 +3390,11 @@ void TBranchElement::Print(Option_t* option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints values of leaves.
+
 void TBranchElement::PrintValue(Int_t lenmax) const
 {
-   // -- Prints values of leaves.
-
    ValidateAddress();
 
    TStreamerInfo *info = GetInfoImp();
@@ -3406,7 +3408,7 @@ void TBranchElement::PrintValue(Int_t lenmax) const
       }
    }
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (!fAddress) {
          return;
       }
@@ -3474,20 +3476,20 @@ void TBranchElement::PrintValue(Int_t lenmax) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unconfiguration Read Leave function.
+
 void  TBranchElement::ReadLeavesImpl(TBuffer&)
 {
-   // -- Unconfiguration Read Leave function.
-
    Fatal("ReadLeaves","The ReadLeaves function has not been configured for %s",GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// For the case where the branch is set in MakeClass mode (decomposed object).
+
 void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // For the case where the branch is set in MakeClass mode (decomposed object).
-
    ValidateAddress();
 
    if (fType == 3 || fType == 4) {
@@ -3726,12 +3728,12 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a collection (fType == 4).
+
 void TBranchElement::ReadLeavesCollection(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a collection (fType == 4).
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -3776,9 +3778,12 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    switch (fSTLtype) {
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
+      case ROOT::kSTLunorderedmultiset:
       case ROOT::kSTLmultiset:
       case ROOT::kSTLmap:
       case ROOT::kSTLmultimap:
+      case ROOT::kSTLunorderedmap:
+      case ROOT::kSTLunorderedmultimap:
          for (Int_t i = 0; i < nbranches; ++i) {
             TBranch *branch = (TBranch*) fBranches[i];
             Int_t nb = branch->GetEntry(GetReadEntry(), 1);
@@ -3794,7 +3799,8 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    }
    //------------------------------------------------------------------------
    // We have split this stuff, so we need to create the the pointers
-   //-----------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    if( proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers )
    {
       TClass *elClass = proxy->GetValueClass();
@@ -3802,7 +3808,8 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
       //--------------------------------------------------------------------
       // The allocation is done in this strange way because ReadLeaves
       // is being called many times by TTreeFormula!!!
-      //--------------------------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       Int_t i = 0;
       // coverity[returned_null] the fNdata is check enough to prevent the use of null value of At(0)
       if( !fNdata || *(void**)proxy->At( 0 ) != 0 )
@@ -3819,12 +3826,12 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    proxy->Commit(alternate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -3861,12 +3868,12 @@ void TBranchElement::ReadLeavesCollectionSplitPtrMember(TBuffer& b)
    //   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -3892,12 +3899,12 @@ void TBranchElement::ReadLeavesCollectionSplitVectorPtrMember(TBuffer& b)
    b.ApplySequenceVecPtr(*fReadActionSequence,iter->fBegin,iter->fEnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a data member within a collection (fType == 41).
+
 void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a data member within a collection (fType == 41).
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -3925,12 +3932,12 @@ void TBranchElement::ReadLeavesCollectionMember(TBuffer& b)
    b.ApplySequence(*fReadActionSequence,iter->fBegin,iter->fEnd);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a TClonesArray (fType == 3).
+
 void TBranchElement::ReadLeavesClones(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a TClonesArray (fType == 3).
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -3962,12 +3969,12 @@ void TBranchElement::ReadLeavesClones(TBuffer& b)
    clones->ExpandCreateFast(fNdata);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Case of a data member within a TClonesArray (fType == 31).
+
 void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Case of a data member within a TClonesArray (fType == 31).
-
    // No need to validate the address here, if we are a member of a split ClonesArray,
    // fID is positive
    //   ValidateAddress();
@@ -3998,13 +4005,13 @@ void TBranchElement::ReadLeavesClonesMember(TBuffer& b)
    b.ApplySequenceVecPtr(*fReadActionSequence,arr,end);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do not have a branch count and are not a counter.
+
 void TBranchElement::ReadLeavesMember(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do not have a branch count and are not a counter.
-
    R__ASSERT(fBranchCount==0);
    R__ASSERT(fStreamerType != TVirtualStreamerInfo::kCounter);
 
@@ -4036,13 +4043,13 @@ void TBranchElement::ReadLeavesMember(TBuffer& b)
    b.ApplySequence(*fReadActionSequence, fObject);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do have a branch count and are not a counter.
+
 void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do have a branch count and are not a counter.
-
    R__ASSERT(fStreamerType != TVirtualStreamerInfo::kCounter);
 
    ValidateAddress();
@@ -4073,13 +4080,13 @@ void TBranchElement::ReadLeavesMemberBranchCount(TBuffer& b)
    b.ApplySequence(*fReadActionSequence, fObject);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// For split-class branch, base class branch, data member branch, or top-level branch.
+/// which do not have a branch count and are a counter.
+
 void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // For split-class branch, base class branch, data member branch, or top-level branch.
-   // which do not have a branch count and are a counter.
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -4110,12 +4117,12 @@ void TBranchElement::ReadLeavesMemberCounter(TBuffer& b)
    fNdata = (Int_t) GetValue(0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaves into i/o buffers for this branch.
+/// Non TObject, Non collection classes with a custom streamer.
+
 void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
 {
-   // -- Read leaves into i/o buffers for this branch.
-   // Non TObject, Non collection classes with a custom streamer.
-
    ValidateAddress();
    if (fObject == 0)
    {
@@ -4128,19 +4135,19 @@ void TBranchElement::ReadLeavesCustomStreamer(TBuffer& b)
    fBranchClass->Streamer(fObject,b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unconfiguration Fill Leave function.
+
 void  TBranchElement::FillLeavesImpl(TBuffer&)
 {
-   // -- Unconfiguration Fill Leave function.
-
    Fatal("FillLeaves","The FillLeaves function has not been configured for %s",GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete any object we may have allocated on a previous call to SetAddress.
+
 void TBranchElement::ReleaseObject()
 {
-   // -- Delete any object we may have allocated on a previous call to SetAddress.
-
    if (fObject && TestBit(kDeleteObject)) {
       if (IsAutoDelete() && fAddress != (char*)&fObject) {
          *((char**) fAddress) = 0;
@@ -4212,15 +4219,15 @@ void TBranchElement::ReleaseObject()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch.
+///
+/// Existing i/o buffers are deleted.
+/// Entries, max and min are reset.
+///
+
 void TBranchElement::Reset(Option_t* option)
 {
-   // Reset a Branch.
-   //
-   // Existing i/o buffers are deleted.
-   // Entries, max and min are reset.
-   //
-
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* branch = (TBranch*) fBranches[i];
@@ -4230,12 +4237,12 @@ void TBranchElement::Reset(Option_t* option)
    TBranch::Reset(option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch after a Merge operation (drop data but keep customizations)
+///
+
 void TBranchElement::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Reset a Branch after a Merge operation (drop data but keep customizations)
-   //
-
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
       TBranch* branch = (TBranch*) fBranches[i];
@@ -4244,11 +4251,11 @@ void TBranchElement::ResetAfterMerge(TFileMergeInfo *info)
    TBranch::ResetAfterMerge(info);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set branch address to zero and free all allocated memory.
+
 void TBranchElement::ResetAddress()
 {
-   // Set branch address to zero and free all allocated memory.
-
    for (Int_t i = 0; i < fNleaves; ++i) {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
       //if (leaf) leaf->SetAddress(0);
@@ -4275,14 +4282,14 @@ void TBranchElement::ResetAddress()
    fObject = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Release ownership of any allocated objects.
+///
+/// Note: This interface was added so that clone trees could
+///       be told they do not own the allocated objects.
+
 void TBranchElement::ResetDeleteObject()
 {
-   // -- Release ownership of any allocated objects.
-   //
-   // Note: This interface was added so that clone trees could
-   //       be told they do not own the allocated objects.
-
    ResetBit(kDeleteObject);
    Int_t nb = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nb; ++i)  {
@@ -4293,118 +4300,117 @@ void TBranchElement::ResetDeleteObject()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Point this branch at an object.
+///
+/// For a sub-branch, addr is a pointer to the branch object.
+///
+/// For a top-level branch the meaning of addr is as follows:
+///
+/// If addr is zero, then we allocate a branch object
+/// internally and the branch is the owner of the allocated
+/// object, not the caller.  However the caller may obtain
+/// a pointer to the branch object with GetObject().
+///
+/// Example:
+/// ~~~ {.cpp}
+///     branch->SetAddress(0);
+///     Event* event = branch->GetObject();
+///     ... Do some work.
+/// ~~~
+/// If addr is not zero, but the pointer addr points at is
+/// zero, then we allocate a branch object and set the passed
+/// pointer to point at the allocated object.  The caller
+/// owns the allocated object and is responsible for deleting
+/// it when it is no longer needed.
+///
+/// Example:
+/// ~~~ {.cpp}
+///     Event* event = 0;
+///     branch->SetAddress(&event);
+///     ... Do some work.
+///     delete event;
+///     event = 0;
+/// ~~~
+/// If addr is not zero and the pointer addr points at is
+/// also not zero, then the caller has allocated a branch
+/// object and is asking us to use it.  The caller owns it
+/// and must delete it when it is no longer needed.
+///
+/// Example:
+/// ~~~ {.cpp}
+///     Event* event = new Event();
+///     branch->SetAddress(&event);
+///     ... Do some work.
+///     delete event;
+///     event = 0;
+/// ~~~
+/// These rules affect users of TTree::Branch(),
+/// TTree::SetBranchAddress(), and TChain::SetBranchAddress()
+/// as well because those routines call this one.
+///
+/// An example of a tree with branches with objects allocated
+/// and owned by us:
+/// ~~~ {.cpp}
+///     TFile* f1 = new TFile("myfile_original.root");
+///     TTree* t1 = (TTree*) f->Get("MyTree");
+///     TFile* f2 = new TFile("myfile_copy.root", "recreate");
+///     TTree* t2 = t1->Clone(0);
+///     for (Int_t i = 0; i < 10; ++i) {
+///        t1->GetEntry(i);
+///        t2->Fill();
+///     }
+///     t2->Write()
+///     delete f2;
+///     f2 = 0;
+///     delete f1;
+///     f1 = 0;
+/// ~~~
+/// An example of a branch with an object allocated by us,
+/// but owned by the caller:
+/// ~~~ {.cpp}
+///     TFile* f = new TFile("myfile.root", "recreate");
+///     TTree* t = new TTree("t", "A test tree.")
+///     Event* event = 0;
+///     TBranchElement* br = t->Branch("event.", &event);
+///     for (Int_t i = 0; i < 10; ++i) {
+///        ... Fill event with meaningful data in some way.
+///        t->Fill();
+///     }
+///     t->Write();
+///     delete event;
+///     event = 0;
+///     delete f;
+///     f = 0;
+/// ~~~
+/// Notice that the only difference between this example
+/// and the following example is that the event pointer
+/// is zero when the branch is created.
+///
+/// An example of a branch with an object allocated and
+/// owned by the caller:
+/// ~~~ {.cpp}
+///     TFile* f = new TFile("myfile.root", "recreate");
+///     TTree* t = new TTree("t", "A test tree.")
+///     Event* event = new Event();
+///     TBranchElement* br = t->Branch("event.", &event);
+///     for (Int_t i = 0; i < 10; ++i) {
+///        ... Fill event with meaningful data in some way.
+///        t->Fill();
+///     }
+///     t->Write();
+///     delete event;
+///     event = 0;
+///     delete f;
+///     f = 0;
+/// ~~~
+/// If AutoDelete is on (see TBranch::SetAutoDelete),
+/// the top level objet will be deleted and recreate
+/// each time an entry is read, whether or not the
+/// TTree owns the object.
+
 void TBranchElement::SetAddress(void* addr)
 {
-   // -- Point this branch at an object.
-   //
-   // For a sub-branch, addr is a pointer to the branch object.
-   //
-   // For a top-level branch the meaning of addr is as follows:
-   //
-   // If addr is zero, then we allocate a branch object
-   // internally and the branch is the owner of the allocated
-   // object, not the caller.  However the caller may obtain
-   // a pointer to the branch object with GetObject().
-   //
-   // Example:
-   //
-   //    branch->SetAddress(0);
-   //    Event* event = branch->GetObject();
-   //    ... Do some work.
-   //
-   // If addr is not zero, but the pointer addr points at is
-   // zero, then we allocate a branch object and set the passed
-   // pointer to point at the allocated object.  The caller
-   // owns the allocated object and is responsible for deleting
-   // it when it is no longer needed.
-   //
-   // Example:
-   //
-   //    Event* event = 0;
-   //    branch->SetAddress(&event);
-   //    ... Do some work.
-   //    delete event;
-   //    event = 0;
-   //
-   // If addr is not zero and the pointer addr points at is
-   // also not zero, then the caller has allocated a branch
-   // object and is asking us to use it.  The caller owns it
-   // and must delete it when it is no longer needed.
-   //
-   // Example:
-   //
-   //    Event* event = new Event();
-   //    branch->SetAddress(&event);
-   //    ... Do some work.
-   //    delete event;
-   //    event = 0;
-   //
-   // These rules affect users of TTree::Branch(),
-   // TTree::SetBranchAddress(), and TChain::SetBranchAddress()
-   // as well because those routines call this one.
-   //
-   // An example of a tree with branches with objects allocated
-   // and owned by us:
-   //
-   //    TFile* f1 = new TFile("myfile_original.root");
-   //    TTree* t1 = (TTree*) f->Get("MyTree");
-   //    TFile* f2 = new TFile("myfile_copy.root", "recreate");
-   //    TTree* t2 = t1->Clone(0);
-   //    for (Int_t i = 0; i < 10; ++i) {
-   //       t1->GetEntry(i);
-   //       t2->Fill();
-   //    }
-   //    t2->Write()
-   //    delete f2;
-   //    f2 = 0;
-   //    delete f1;
-   //    f1 = 0;
-   //
-   // An example of a branch with an object allocated by us,
-   // but owned by the caller:
-   //
-   //    TFile* f = new TFile("myfile.root", "recreate");
-   //    TTree* t = new TTree("t", "A test tree.")
-   //    Event* event = 0;
-   //    TBranchElement* br = t->Branch("event.", &event);
-   //    for (Int_t i = 0; i < 10; ++i) {
-   //       ... Fill event with meaningful data in some way.
-   //       t->Fill();
-   //    }
-   //    t->Write();
-   //    delete event;
-   //    event = 0;
-   //    delete f;
-   //    f = 0;
-   //
-   // Notice that the only difference between this example
-   // and the following example is that the event pointer
-   // is zero when the branch is created.
-   //
-   // An example of a branch with an object allocated and
-   // owned by the caller:
-   //
-   //    TFile* f = new TFile("myfile.root", "recreate");
-   //    TTree* t = new TTree("t", "A test tree.")
-   //    Event* event = new Event();
-   //    TBranchElement* br = t->Branch("event.", &event);
-   //    for (Int_t i = 0; i < 10; ++i) {
-   //       ... Fill event with meaningful data in some way.
-   //       t->Fill();
-   //    }
-   //    t->Write();
-   //    delete event;
-   //    event = 0;
-   //    delete f;
-   //    f = 0;
-   //
-   // If AutoDelete is on (see TBranch::SetAutoDelete),
-   // the top level objet will be deleted and recreate
-   // each time an entry is read, whether or not the
-   // TTree owns the object.
-   //
-
    //
    //  Don't bother if we are disabled.
    //
@@ -4420,6 +4426,8 @@ void TBranchElement::SetAddress(void* addr)
    if (fType < -1) {
       return;
    }
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    //
    //  Special case when called from code generated by TTree::MakeClass.
@@ -4479,7 +4487,7 @@ void TBranchElement::SetAddress(void* addr)
    //  Allow sub-branches to have independently set addresses.
    //
 
-   if (fTree->GetMakeClass()) {
+   if (TestBit(kDecomposedObj)) {
       if (fID > -1) {
          // We are *not* a top-level branch.
          if (!info) {
@@ -4529,7 +4537,7 @@ void TBranchElement::SetAddress(void* addr)
             // Change from 3/31 to 4/41
             SetType(4);
             // Set the proxy.
-            fSTLtype = TMath::Abs(TClassEdit::IsSTLCont(newType->GetName()));
+            fSTLtype = newType->GetCollectionType();
             fCollProxy = newType->GetCollectionProxy()->Generate();
 
             SwitchContainer(GetListOfBranches());
@@ -4932,11 +4940,11 @@ void TBranchElement::SetAddress(void* addr)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the basket size for all sub-branches of this branch element.
+
 void TBranchElement::SetBasketSize(Int_t buffsize)
 {
-   // -- Reset the basket size for all sub-branches of this branch element.
-
    TBranch::SetBasketSize(buffsize);
    Int_t nbranches = fBranches.GetEntriesFast();
    for (Int_t i = 0; i < nbranches; ++i) {
@@ -4945,11 +4953,11 @@ void TBranchElement::SetBasketSize(Int_t buffsize)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the branch counter for this branch.
+
 void TBranchElement::SetBranchCount(TBranchElement* brOfCounter)
 {
-   // -- Set the branch counter for this branch.
-
    fBranchCount = brOfCounter;
    if (fBranchCount==0) return;
 
@@ -4967,14 +4975,14 @@ void TBranchElement::SetBranchCount(TBranchElement* brOfCounter)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the branch in a mode where the object are decomposed
+/// (Also known as MakeClass mode).
+/// Return whether the setting was possible (it is not possible for
+/// TBranch and TBranchObject).
+
 Bool_t TBranchElement::SetMakeClass(Bool_t decomposeObj)
 {
-   // Set the branch in a mode where the object are decomposed
-   // (Also known as MakeClass mode).
-   // Return whether the setting was possible (it is not possible for
-   // TBranch and TBranchObject).
-
    if (decomposeObj)
       SetBit(kDecomposedObj);   // Same as SetBit(kMakeClass)
    else
@@ -4991,11 +4999,11 @@ Bool_t TBranchElement::SetMakeClass(Bool_t decomposeObj)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set object this branch is pointing to.
+
 void TBranchElement::SetObject(void* obj)
 {
-   // Set object this branch is pointing to.
-
    if (TestBit(kDoNotProcess)) {
       return;
    }
@@ -5003,12 +5011,12 @@ void TBranchElement::SetObject(void* obj)
    SetAddress( &fObject );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set offset of the object (to which the data member represented by this
+/// branch belongs) inside its containing object (if any).
+
 void TBranchElement::SetOffset(Int_t offset)
 {
-   // Set offset of the object (to which the data member represented by this
-   // branch belongs) inside its containing object (if any).
-
    // We need to make sure that the Read and Write action's configuration
    // properly reflect this value.
 
@@ -5021,11 +5029,11 @@ void TBranchElement::SetOffset(Int_t offset)
    fOffset = offset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the sequence of actions needed to read the data out of the buffer.
+
 void TBranchElement::SetReadActionSequence()
 {
-   // Set the sequence of actions needed to read the data out of the buffer.
-
    if (fInfo == 0) {
       // We are called too soon.  We will be called again by InitInfo
       return;
@@ -5067,11 +5075,11 @@ void TBranchElement::SetReadActionSequence()
    delete transient;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the ReadLeaves pointer to execute the expected operations.
+
 void TBranchElement::SetReadLeavesPtr()
 {
-   // Set the ReadLeaves pointer to execute the expected operations.
-
    if (TestBit(kDecomposedObj)) {
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMakeClass;
    } else if (fType == 4) {
@@ -5092,8 +5100,19 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesClonesMember;
    } else if (fType < 0) {
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
-   } else if (fType <=2) {
-      // split-class branch, base class branch, data member branch, or top-level branch.
+   } else if (fType == 0 && fID == -1) {
+      // top-level branch.
+      Bool_t hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != 0 || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+      if (hasCustomStreamer) {
+         // We are in the case where the object did *not* have a custom
+         // Streamer when the TTree was written but now *does* have a custom
+         // Streamer thus we must use it.
+         fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
+      } else {
+         fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMember;
+      }
+   } else if (fType <= 2) {
+      // split-class branch, base class branch or data member branch.
       if (fBranchCount) {
          fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesMemberBranchCount;
       } else if (fStreamerType == TVirtualStreamerInfo::kCounter) {
@@ -5108,11 +5127,11 @@ void TBranchElement::SetReadLeavesPtr()
    SetReadActionSequence();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the sequence of actions needed to write the data out from the buffer.
+
 void TBranchElement::SetFillActionSequence()
 {
-   // Set the sequence of actions needed to write the data out from the buffer.
-
    if (fInfo == 0) {
       // We are called too soon.  We will be called again by InitInfo
       return;
@@ -5155,12 +5174,12 @@ void TBranchElement::SetFillActionSequence()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the FillLeaves pointer to execute the expected operations.
+
 void TBranchElement::SetFillLeavesPtr()
 {
-   // Set the FillLeaves pointer to execute the expected operations.
-
-   if (fTree->GetMakeClass() && ((fType==3)||(fType==31))) {
+   if (TestBit(kDecomposedObj) && ((fType==3)||(fType==31))) {
       fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesMakeClass;
    } else if (fType == 4) {
       fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollection;
@@ -5198,12 +5217,12 @@ void TBranchElement::SetFillLeavesPtr()
    SetFillActionSequence();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the name of the class of the in-memory object into which the data will
+/// loaded.
+
 void TBranchElement::SetTargetClass(const char *name)
 {
-   // Set the name of the class of the in-memory object into which the data will
-   // loaded.
-
    if (name == 0) return;
 
    if (strcmp(fTargetClass.GetClassName(),name) != 0 )
@@ -5234,30 +5253,30 @@ void TBranchElement::SetTargetClass(const char *name)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the branch address is not set,  we set all addresses starting with
+/// the top level parent branch.  This is required to be done in order for
+/// GetOffset to be correct and for GetEntry to run.
+
 void TBranchElement::SetupAddresses()
 {
-   // -- If the branch address is not set,  we set all addresses starting with
-   // the top level parent branch.  This is required to be done in order for
-   // GetOffset to be correct and for GetEntry to run.
-
    // Check to see if the user changed the branch address on us.
    ValidateAddress();
 
-   if (fAddress || fTree->GetMakeClass()) {
-      // -- Do nothing if already setup or if we are a MakeClass tree.
+   if (fAddress || TestBit(kDecomposedObj)) {
+      // -- Do nothing if already setup or if we are a MakeClass branch.
       return;
    }
    SetupAddressesImpl();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If the branch address is not set,  we set all addresses starting with
+/// the top level parent branch.  This is required to be done in order for
+/// GetOffset to be correct and for GetEntry to run.
+
 void TBranchElement::SetupAddressesImpl()
 {
-   // -- If the branch address is not set,  we set all addresses starting with
-   // the top level parent branch.  This is required to be done in order for
-   // GetOffset to be correct and for GetEntry to run.
-
    if (TestBit(kDoNotProcess|kAddressSet)) {
       // -- Do nothing if we have been told not to.
       // Or the data member in this branch is not longer part of the
@@ -5267,7 +5286,8 @@ void TBranchElement::SetupAddressesImpl()
 
    //--------------------------------------------------------------------------
    // Check if we are splited STL collection of pointers
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    if( fType == 41 && fSplitLevel >= TTree::kSplitCollectionOfPointers )
    {
       TBranchElement *parent = (TBranchElement *)GetMother()->GetSubBranch( this );
@@ -5282,7 +5302,8 @@ void TBranchElement::SetupAddressesImpl()
 
    //--------------------------------------------------------------------------
    // Any other case
-   //--------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    TBranchElement* mother = (TBranchElement*) GetMother();
    if (!mother) {
       return;
@@ -5306,10 +5327,11 @@ void TBranchElement::SetupAddressesImpl()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TBranchElement.
+
 void TBranchElement::Streamer(TBuffer& R__b)
 {
-   // -- Stream an object of class TBranchElement.
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(TBranchElement::Class(), this);
       fParentClass.SetName(fParentName);
@@ -5414,48 +5436,48 @@ void TBranchElement::Streamer(TBuffer& R__b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Split class cl into sub-branches of this branch.
+///
+/// Create a sub-branch of this branch for each non-empty,
+/// non-abstract base class of cl (unless we are a sub-branch
+/// of a TClonesArray or an STL container, in which case we
+/// do *not* create a sub-branch), and for each non-split data
+/// member of cl.
+///
+/// Note: We do *not* create sub-branches for base classes of cl
+///       if we are a sub-branch of a TClonesArray or an STL container.
+///
+/// Note: We do *not* create sub-branches for data members which
+///       have a class type and which we are splitting.
+///
+/// Note: The above rules imply that the branch heirarchy increases
+///       in depth only for base classes of cl (unless we are inside
+///       of a TClonesArray or STL container, in which case the depth
+///       does *not* increase, the base class is elided) and for
+///       TClonesArray or STL container data members (which have one
+///       additional level of sub-branches).  The only other way the
+///       depth increases is when the top-level branch has a split
+///       class data member, in that case the constructor will create
+///       a sub-branch for it.  In other words, the interior nodes of
+///       the branch tree are all either: base class nodes; split
+///       class nodes which are direct sub-branches of top-level nodes
+///       (created by TClass::Bronch usually); or TClonesArray or STL
+///       container master nodes.
+///
+/// Note: The exception to the above is for the top-level branches,
+///       Tree::Bronch creates nodes for everything in that case,
+///       except for a TObject base class of a class which has the
+///       can ignore tobject streamer flag set.
+
 Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, char* ptr, Int_t basketsize, Int_t splitlevel, Int_t btype)
 {
-   // -- Split class cl into sub-branches of this branch.
-   //
-   // Create a sub-branch of this branch for each non-empty,
-   // non-abstract base class of cl (unless we are a sub-branch
-   // of a TClonesArray or an STL container, in which case we
-   // do *not* create a sub-branch), and for each non-split data
-   // member of cl.
-   //
-   // Note: We do *not* create sub-branches for base classes of cl
-   //       if we are a sub-branch of a TClonesArray or an STL container.
-   //
-   // Note: We do *not* create sub-branches for data members which
-   //       have a class type and which we are splitting.
-   //
-   // Note: The above rules imply that the branch heirarchy increases
-   //       in depth only for base classes of cl (unless we are inside
-   //       of a TClonesArray or STL container, in which case the depth
-   //       does *not* increase, the base class is elided) and for
-   //       TClonesArray or STL container data members (which have one
-   //       additional level of sub-branches).  The only other way the
-   //       depth increases is when the top-level branch has a split
-   //       class data member, in that case the constructor will create
-   //       a sub-branch for it.  In other words, the interior nodes of
-   //       the branch tree are all either: base class nodes; split
-   //       class nodes which are direct sub-branches of top-level nodes
-   //       (created by TClass::Bronch usually); or TClonesArray or STL
-   //       container master nodes.
-   //
-   // Note: The exception to the above is for the top-level branches,
-   //       Tree::Bronch creates nodes for everything in that case,
-   //       except for a TObject base class of a class which has the
-   //       can ignore tobject streamer flag set.
-
    //----------------------------------------------------------------------------
    // Handling the case of STL collections of pointers
-   //----------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    Int_t splitSTLP = splitlevel - (splitlevel%TTree::kSplitCollectionOfPointers);
    splitlevel %= TTree::kSplitCollectionOfPointers;
-
 
    TString branchname;
 
@@ -5499,8 +5521,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
       // See InitializeOffsets() for the proper test.
       if (elem->IsA() == TStreamerBase::Class()) {
          // -- This is a base class of cl.
-         TClass* clOfBase = TClass::GetClass(elem->GetName());
-         if ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class())) {
+         TClass* clOfBase = elem->GetClassPointer();
+         if (!clOfBase || ((clOfBase->Property() & kIsAbstract) && cl->InheritsFrom(TCollection::Class()))) {
             // -- Do nothing if we are one of the abstract collection (we know they have no data).
             return -1;
          }
@@ -5564,8 +5586,8 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
             // Ignore an abstract class.
             // FIXME: How could an abstract class get here?
             //        Partial answer: It is a base class.  But this is a data member!
-            TClass* elemClass = TClass::GetClass(elem->GetTypeName());
-            if (elemClass->Property() & kIsAbstract) {
+            TClass* elemClass = elem->GetClassPointer();
+            if (!elemClass || elemClass->Property() & kIsAbstract) {
                return -1;
             }
             if (elem->CannotSplit()) {
@@ -5647,13 +5669,13 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
    return 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
+/// with the current value of fTree->GetCurrentFile unless this branch has been
+/// redirected to a different file.  Also update the sub-branches.
+
 void TBranchElement::UpdateFile()
 {
-   // Refresh the value of fDirectory (i.e. where this branch writes/reads its buffers)
-   // with the current value of fTree->GetCurrentFile unless this branch has been
-   // redirected to a different file.  Also update the sub-branches.
-
    // The BranchCount and BranchCount2 are part of higher level branches' list of
    // branches.
    // if (fBranchCount) fBranchCount->UpdateFile();

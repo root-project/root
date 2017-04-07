@@ -68,82 +68,100 @@ namespace Math {
 
    public:
 
-      bool Init(unsigned int ndata, const double *x, const double * y);
+      bool Init(unsigned int ndata, const double *x, const double *y);
 
-      double Eval( double x ) const
+      double Eval(double x) const
       {
          assert(fAccel);
          double y = 0;
          static unsigned int nErrors = 0;
-         if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y );
-         if (ierr){
+         int ierr = gsl_spline_eval_e(fSpline, x, fAccel, &y);
+
+         if (fResetNErrors)
+           nErrors = 0, fResetNErrors = false;
+
+         if (ierr) {
             ++nErrors;
-            if(nErrors < 5)
-                MATH_WARN_MSG("GSLInterpolator::Eval",gsl_strerror(ierr) ) //Trying to suppress errors B Zimmerman 11-11-11
-             else if(nErrors == 4)
-                MATH_WARN_MSG("GSLInterpolator::Eval","Suppressing additional warnings");
+            if(nErrors <= 4) {
+               MATH_WARN_MSG("GSLInterpolator::Eval", gsl_strerror(ierr));
+               if(nErrors == 4)
+                  MATH_WARN_MSG("GSLInterpolator::Eval", "Suppressing additional warnings");
+            }
          }
+
          return y;
       }
 
-      double Deriv( double x ) const
+      double Deriv(double x) const
       {
          assert(fAccel);
          double deriv = 0;
          static unsigned int nErrors = 0;
-         if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv );
-         if (ierr){
+         int ierr = gsl_spline_eval_deriv_e(fSpline, x, fAccel, &deriv);
+
+         if (fResetNErrors)
+           nErrors = 0, fResetNErrors = false;
+
+         if (ierr) {
             ++nErrors;
-            if(nErrors < 5)
-               MATH_WARN_MSG("GSLInterpolator::Deriv",gsl_strerror(ierr) )
-            else if(nErrors == 4)
-               MATH_WARN_MSG("GSLInterpolator::Deriv","Suppressing additional warnings");
+            if(nErrors <= 4) {
+               MATH_WARN_MSG("GSLInterpolator::Deriv", gsl_strerror(ierr));
+               if(nErrors == 4)
+                  MATH_WARN_MSG("GSLInterpolator::Deriv", "Suppressing additional warnings");
+            }
          }
+
          return deriv;
       }
 
-      double Deriv2( double x ) const {
+      double Deriv2(double x) const {
          assert(fAccel);
          double deriv2 = 0;
          static unsigned int nErrors = 0;
-         if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2 );
-         if (ierr){
+         int ierr = gsl_spline_eval_deriv2_e(fSpline, x, fAccel, &deriv2);
+
+         if (fResetNErrors)
+           nErrors = 0, fResetNErrors = false;
+
+         if (ierr) {
             ++nErrors;
-            if(nErrors < 5)
-               MATH_WARN_MSG("GSLInterpolator::Deriv2",gsl_strerror(ierr) )
-             else if(nErrors == 4)
-                MATH_WARN_MSG("GSLInterpolator::Deriv2","Suppressing additional warnings");
+            if(nErrors <= 4) {
+               MATH_WARN_MSG("GSLInterpolator::Deriv2", gsl_strerror(ierr));
+               if(nErrors == 4)
+                  MATH_WARN_MSG("GSLInterpolator::Deriv2", "Suppressing additional warnings");
+            }
          }
+
          return deriv2;
       }
 
-      double Integ( double a, double b) const {
-         if ( a > b) return -Integ(b,a);  // gsl will report an error in this case
+      double Integ(double a, double b) const {
+         if (a > b) // gsl will report an error in this case
+           return -Integ(b, a);
+
          assert(fAccel);
          double result = 0;
          static unsigned int nErrors = 0;
-         if (fResetNErrors) { nErrors = 0; fResetNErrors = false;}
-         int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result );
-         if (ierr){
+         int ierr = gsl_spline_eval_integ_e(fSpline, a, b, fAccel, &result);
+
+         if (fResetNErrors)
+           nErrors = 0, fResetNErrors = false;
+
+         if (ierr) {
             ++nErrors;
-            if(nErrors < 5)
-               MATH_WARN_MSG("GSLInterpolator::Integ",gsl_strerror(ierr) )
-            else if(nErrors == 4)
-               MATH_WARN_MSG("GSLInterpolator::Integ","Suppress additional warnings" )
+            if(nErrors <= 4) {
+               MATH_WARN_MSG("GSLInterpolator::Integ", gsl_strerror(ierr));
+               if(nErrors == 4)
+                  MATH_WARN_MSG("GSLInterpolator::Integ", "Suppressing additional warnings");
+            }
          }
+
          return result;
       }
 
       std::string Name() {
          return fInterpType->name;
       }
-
-
-   protected:
-
 
    private:
 
@@ -156,6 +174,5 @@ namespace Math {
 
 } // namespace Math
 } // namespace ROOT
-
 
 #endif /* ROOT_Math_GSLInterpolator */

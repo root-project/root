@@ -19,56 +19,52 @@
 ClassImp(TPavesText)
 
 
-//______________________________________________________________________________
-//  A PavesText is a PaveText (see TPaveText) with several stacked paves.
-//Begin_Html
-/*
-<img src="gif/pavestext.gif">
+/** \class TPavesText
+\ingroup BasicGraphics
+
+A PaveText (see TPaveText) with several stacked paves.
+
+\image html graf_pavestext.png
 */
-//End_Html
-//
 
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext default constructor.
 
-//______________________________________________________________________________
 TPavesText::TPavesText(): TPaveText()
 {
-   // Pavestext default constructor.
-
    fNpaves = 5;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext normal constructor.
+///
+/// The PavesText is by default defined both bordersize=1 and option ="br".
+///  - option = "T" Top frame
+///  - option = "B" Bottom frame
+///  - option = "R" Right frame
+///  - option = "L" Left frame
+///  - option = "NDC" x1,y1,x2,y2 are given in NDC
+///  - option = "ARC" corners are rounded
 
-//______________________________________________________________________________
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   // Pavestext normal constructor.
-   //
-   // The PavesText is by default defined bith bordersize=1 and option ="br".
-   //  option = "T" Top frame
-   //  option = "B" Bottom frame
-   //  option = "R" Right frame
-   //  option = "L" Left frame
-   //  option = "NDC" x1,y1,x2,y2 are given in NDC
-   //  option = "ARC" corners are rounded
-
    fNpaves = npaves;
    SetBorderSize(1);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext default destructor.
 
-//______________________________________________________________________________
 TPavesText::~TPavesText()
 {
-   // Pavestext default destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Pavestext copy constructor.
 
-//______________________________________________________________________________
 TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
 {
-   // Pavestext copy constructor.
-
    TBufferFile b(TBuffer::kWrite);
    TPavesText *p = (TPavesText*)(&pavestext);
    p->Streamer(b);
@@ -77,21 +73,19 @@ TPavesText::TPavesText(const TPavesText &pavestext) : TPaveText()
    Streamer(b);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavestext with its current attributes.
 
-//______________________________________________________________________________
 void TPavesText::Draw(Option_t *option)
 {
-   // Draw this pavestext with its current attributes.
-
    AppendPad(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this pavestext with its current attributes.
 
-//______________________________________________________________________________
 void TPavesText::Paint(Option_t *option)
 {
-   // Paint this pavestext with its current attributes.
-
    // Draw the fNpaves-1 stacked paves
    // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();
@@ -118,17 +112,17 @@ void TPavesText::Paint(Option_t *option)
    TPaveText::Paint(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    if (!strcmp(GetName(),"stats")) return;
    if (!strcmp(GetName(),"title")) return;
+   Bool_t saved = gROOT->ClassSaved(TPavesText::Class());
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TPavesText::Class())) {
+   if (saved) {
       out<<"   ";
    } else {
       out<<"   TPavesText *";
@@ -148,6 +142,6 @@ void TPavesText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"pst",0,1001);
    SaveLineAttributes(out,"pst",1,1,1);
    SaveTextAttributes(out,"pst",22,0,1,62,0);
-   TPaveText::SaveLines(out,"pst");
+   TPaveText::SaveLines(out,"pst",saved);
    out<<"   pst->Draw();"<<std::endl;
 }

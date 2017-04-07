@@ -38,6 +38,7 @@
 #include "clang/Lex/MacroArgs.h"
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/ModuleLoader.h"
+#include "clang/Lex/PTHManager.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Lex/PreprocessingRecord.h"
 #include "clang/Lex/PreprocessorOptions.h"
@@ -50,7 +51,10 @@
 #include "llvm/Support/ConvertUTF.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
+#include <utility>
 using namespace clang;
+
+template class llvm::Registry<clang::PragmaHandler>;
 
 //===----------------------------------------------------------------------===//
 ExternalPreprocessorSource::~ExternalPreprocessorSource() { }
@@ -61,20 +65,20 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
                            ModuleLoader &TheModuleLoader,
                            IdentifierInfoLookup *IILookup, bool OwnsHeaders,
                            TranslationUnitKind TUKind)
-    : PPOpts(PPOpts), Diags(&diags), LangOpts(opts), Target(nullptr),
-      FileMgr(Headers.getFileMgr()), SourceMgr(SM),
-      ScratchBuf(new ScratchBuffer(SourceMgr)),HeaderInfo(Headers),
+    : PPOpts(std::move(PPOpts)), Diags(&diags), LangOpts(opts), Target(nullptr),
+      AuxTarget(nullptr), FileMgr(Headers.getFileMgr()), SourceMgr(SM),
+      ScratchBuf(new ScratchBuffer(SourceMgr)), HeaderInfo(Headers),
       TheModuleLoader(TheModuleLoader), ExternalSource(nullptr),
       Identifiers(opts, IILookup),
       PragmaHandlers(new PragmaNamespace(StringRef())),
-      IncrementalProcessing(false), TUKind(TUKind),
-      CodeComplete(nullptr), CodeCompletionFile(nullptr),
-      CodeCompletionOffset(0), LastTokenWasAt(false),
-      ModuleImportExpectsIdentifier(false), CodeCompletionReached(0),
-      MainFileDir(nullptr), SkipMainFilePreamble(0, true), CurPPLexer(nullptr),
-      CurDirLookup(nullptr), CurLexerKind(CLK_Lexer), CurSubmodule(nullptr),
-      Callbacks(nullptr), MacroArgCache(nullptr), Record(nullptr),
-      MIChainHead(nullptr), DeserialMIChainHead(nullptr) {
+      IncrementalProcessing(false), TUKind(TUKind), CodeComplete(nullptr),
+      CodeCompletionFile(nullptr), CodeCompletionOffset(0),
+      LastTokenWasAt(false), ModuleImportExpectsIdentifier(false),
+      CodeCompletionReached(0), CodeCompletionII(nullptr), MainFileDir(nullptr),
+      SkipMainFilePreamble(0, true), CurPPLexer(nullptr), CurDirLookup(nullptr),
+      CurLexerKind(CLK_Lexer), CurSubmodule(nullptr), Callbacks(nullptr),
+      CurSubmoduleState(&NullSubmoduleState), MacroArgCache(nullptr),
+      Record(nullptr), MIChainHead(nullptr), DeserialMIChainHead(nullptr) {
   OwnsHeaderSearch = OwnsHeaders;
   
   CounterValue = 0; // __COUNTER__ starts at 0.
@@ -169,13 +173,18 @@ Preprocessor::~Preprocessor() {
     delete &HeaderInfo;
 }
 
-void Preprocessor::Initialize(const TargetInfo &Target) {
+void Preprocessor::Initialize(const TargetInfo &Target,
+                              const TargetInfo *AuxTarget) {
   assert((!this->Target || this->Target == &Target) &&
          "Invalid override of target information");
   this->Target = &Target;
-  
+
+  assert((!this->AuxTarget || this->AuxTarget == AuxTarget) &&
+         "Invalid override of aux target information.");
+  this->AuxTarget = AuxTarget;
+
   // Initialize information about built-ins.
-  BuiltinInfo.InitializeTarget(Target);
+  BuiltinInfo.InitializeTarget(Target, AuxTarget);
   HeaderInfo.setTarget(Target);
 }
 
@@ -241,7 +250,7 @@ void Preprocessor::DumpMacro(const MacroInfo &MI) const {
 
 void Preprocessor::printMacros(raw_ostream &OS) const {
   for (macro_iterator I = macro_begin(), E = macro_end(); I != E; ++I) {
-    Preprocessor::printMacro(I->first, I->second, OS);
+    Preprocessor::printMacro(I->first, I->second.getLatest(), OS);
   }
 }
 
@@ -303,7 +312,9 @@ void Preprocessor::PrintStats() {
   llvm::errs() << "\n  Macro Expanded Tokens: "
                << llvm::capacity_in_bytes(MacroExpandedTokens);
   llvm::errs() << "\n  Predefines Buffer: " << Predefines.capacity();
-  llvm::errs() << "\n  Macros: " << llvm::capacity_in_bytes(Macros);
+  // FIXME: List information for all submodules.
+  llvm::errs() << "\n  Macros: "
+               << llvm::capacity_in_bytes(CurSubmoduleState->Macros);
   llvm::errs() << "\n  #pragma push_macro Info: "
                << llvm::capacity_in_bytes(PragmaPushMacroInfo);
   llvm::errs() << "\n  Poison Reasons: "
@@ -320,14 +331,20 @@ Preprocessor::macro_begin(bool IncludeExternalMacros) const {
     ExternalSource->ReadDefinedMacros();
   }
 
-  return Macros.begin();
+  // Make sure we cover all macros in visible modules.
+  for (const ModuleMacro &Macro : ModuleMacros)
+    CurSubmoduleState->Macros.insert(std::make_pair(Macro.II, MacroState()));
+
+  return CurSubmoduleState->Macros.begin();
 }
 
 size_t Preprocessor::getTotalMemory() const {
   return BP.getTotalMemory()
     + llvm::capacity_in_bytes(MacroExpandedTokens)
     + Predefines.capacity() /* Predefines buffer. */
-    + llvm::capacity_in_bytes(Macros)
+    // FIXME: Include sizes from all submodules, and include MacroInfo sizes,
+    // and ModuleMacros.
+    + llvm::capacity_in_bytes(CurSubmoduleState->Macros)
     + llvm::capacity_in_bytes(PragmaPushMacroInfo)
     + llvm::capacity_in_bytes(PoisonReasons)
     + llvm::capacity_in_bytes(CommentHandlers);
@@ -341,7 +358,7 @@ Preprocessor::macro_end(bool IncludeExternalMacros) const {
     ExternalSource->ReadDefinedMacros();
   }
 
-  return Macros.end();
+  return CurSubmoduleState->Macros.end();
 }
 
 /// \brief Compares macro tokens with a specified token value sequence.
@@ -358,11 +375,11 @@ StringRef Preprocessor::getLastMacroWithSpelling(
   StringRef BestSpelling;
   for (Preprocessor::macro_iterator I = macro_begin(), E = macro_end();
        I != E; ++I) {
-    if (!I->second->getMacroInfo()->isObjectLike())
-      continue;
     const MacroDirective::DefInfo
-      Def = I->second->findDirectiveAtLoc(Loc, SourceMgr);
-    if (!Def)
+      Def = I->second.findDirectiveAtLoc(Loc, SourceMgr);
+    if (!Def || !Def.getMacroInfo())
+      continue;
+    if (!Def.getMacroInfo()->isObjectLike())
       continue;
     if (!MacroDefinitionEquals(Def.getMacroInfo(), Tokens))
       continue;
@@ -500,7 +517,7 @@ void Preprocessor::CreateString(StringRef Str, Token &Tok,
 }
 
 Module *Preprocessor::getCurrentModule() {
-  if (getLangOpts().CurrentModule.empty())
+  if (!getLangOpts().CompilingModule)
     return nullptr;
 
   return getHeaderSearchInfo().lookupModule(getLangOpts().CurrentModule);
@@ -543,7 +560,7 @@ void Preprocessor::EnterMainSourceFile() {
     llvm::MemoryBuffer::getMemBufferCopy(Predefines, "<built-in>");
   assert(SB && "Cannot create predefined source buffer");
   FileID FID = SourceMgr.createFileID(std::move(SB));
-  assert(!FID.isInvalid() && "Could not create FileID for predefines?");
+  assert(FID.isValid() && "Could not create FileID for predefines?");
   setPredefinesFileID(FID);
 
   // Start parsing the predefines.
@@ -621,6 +638,23 @@ void Preprocessor::HandlePoisonedIdentifier(Token & Identifier) {
     Diag(Identifier,it->second) << Identifier.getIdentifierInfo();
 }
 
+/// \brief Returns a diagnostic message kind for reporting a future keyword as
+/// appropriate for the identifier and specified language.
+static diag::kind getFutureCompatDiagKind(const IdentifierInfo &II,
+                                          const LangOptions &LangOpts) {
+  assert(II.isFutureCompatKeyword() && "diagnostic should not be needed");
+
+  if (LangOpts.CPlusPlus)
+    return llvm::StringSwitch<diag::kind>(II.getName())
+#define CXX11_KEYWORD(NAME, FLAGS)                                             \
+        .Case(#NAME, diag::warn_cxx11_keyword)
+#include "clang/Basic/TokenKinds.def"
+        ;
+
+  llvm_unreachable(
+      "Keyword not known to come from a newer Standard or proposed Standard");
+}
+
 /// HandleIdentifier - This callback is invoked when the lexer reads an
 /// identifier.  This callback looks up the identifier in the map and/or
 /// potentially macro expands it or turns it into a named token (like 'for').
@@ -659,8 +693,9 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
   }
 
   // If this is a macro to be expanded, do it.
-  if (MacroDirective *MD = getMacroDirective(&II)) {
-    MacroInfo *MI = MD->getMacroInfo();
+  if (MacroDefinition MD = getMacroDefinition(&II)) {
+    auto *MI = MD.getMacroInfo();
+    assert(MI && "macro definition with no macro info?");
     if (!DisableMacroExpansion) {
       if (!Identifier.isExpandDisabled() && MI->isEnabled()) {
         // C99 6.10.3p10: If the preprocessing token immediately after the
@@ -678,15 +713,16 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
     }
   }
 
-  // If this identifier is a keyword in C++11, produce a warning. Don't warn if
-  // we're not considering macro expansion, since this identifier might be the
-  // name of a macro.
+  // If this identifier is a keyword in a newer Standard or proposed Standard,
+  // produce a warning. Don't warn if we're not considering macro expansion,
+  // since this identifier might be the name of a macro.
   // FIXME: This warning is disabled in cases where it shouldn't be, like
   //   "#define constexpr constexpr", "int constexpr;"
-  if (II.isCXX11CompatKeyword() && !DisableMacroExpansion) {
-    Diag(Identifier, diag::warn_cxx11_keyword) << II.getName();
+  if (II.isFutureCompatKeyword() && !DisableMacroExpansion) {
+    Diag(Identifier, getFutureCompatDiagKind(II, getLangOpts()))
+        << II.getName();
     // Don't diagnose this keyword again in this translation unit.
-    II.setIsCXX11CompatKeyword(false);
+    II.setIsFutureCompatKeyword(false);
   }
 
   // C++ 2.11p2: If this is an alternative representation of a C++ operator,
@@ -721,7 +757,7 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
 }
 
 void Preprocessor::Lex(Token &Result) {
-  // We loop here until a lex function retuns a token; this avoids recursion.
+  // We loop here until a lex function returns a token; this avoids recursion.
   bool ReturnedToken;
   do {
     switch (CurLexerKind) {
@@ -744,6 +780,9 @@ void Preprocessor::Lex(Token &Result) {
       break;
     }
   } while (!ReturnedToken);
+
+  if (Result.is(tok::code_completion))
+      setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
 
   LastTokenWasAt = Result.is(tok::at);
 }
@@ -785,14 +824,34 @@ void Preprocessor::LexAfterModuleImport(Token &Result) {
   // If we have a non-empty module path, load the named module.
   if (!ModuleImportPath.empty()) {
     Module *Imported = nullptr;
-    if (getLangOpts().Modules)
+    if (getLangOpts().Modules) {
       Imported = TheModuleLoader.loadModule(ModuleImportLoc,
                                             ModuleImportPath,
-                                            Module::MacrosVisible,
+                                            Module::Hidden,
                                             /*IsIncludeDirective=*/false);
+      if (Imported)
+        makeModuleVisible(Imported, ModuleImportLoc);
+    }
     if (Callbacks && (getLangOpts().Modules || getLangOpts().DebuggerSupport))
       Callbacks->moduleImport(ModuleImportLoc, ModuleImportPath, Imported);
   }
+}
+
+void Preprocessor::makeModuleVisible(Module *M, SourceLocation Loc) {
+  CurSubmoduleState->VisibleModules.setVisible(
+      M, Loc, [](Module *) {},
+      [&](ArrayRef<Module *> Path, Module *Conflict, StringRef Message) {
+        // FIXME: Include the path in the diagnostic.
+        // FIXME: Include the import location for the conflicting module.
+        Diag(ModuleImportLoc, diag::warn_module_conflict)
+            << Path[0]->getFullModuleName()
+            << Conflict->getFullModuleName()
+            << Message;
+      });
+
+  // Add this module to the imports list of the currently-built submodule.
+  if (!BuildingSubmoduleStack.empty() && M != BuildingSubmoduleStack.back().M)
+    BuildingSubmoduleStack.back().M->Imports.insert(M);
 }
 
 bool Preprocessor::FinishLexStringLiteral(Token &Result, std::string &String,

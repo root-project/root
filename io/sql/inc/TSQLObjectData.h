@@ -12,21 +12,9 @@
 #ifndef ROOT_TSQLObjectData
 #define ROOT_TSQLObjectData
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TSQLObjectData keeps data, requested from SQL server for object     //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TObjArray;
 class TList;
@@ -103,15 +91,15 @@ protected:
    Bool_t            fOwner;          //!
    TSQLResult*       fClassData;      //!
    TSQLResult*       fBlobData;       //!
-   TSQLStatement*    fBlobStmt;      //!
+   TSQLStatement*    fBlobStmt;       //!
    Int_t             fLocatedColumn;  //!
    TSQLRow*          fClassRow;       //!
    TSQLRow*          fBlobRow;        //!
    const char*       fLocatedField;   //!
    const char*       fLocatedValue;   //!
    Bool_t            fCurrentBlob;    //!
-   const char*       fBlobPrefixName; //! name prefix in current blob row
-   const char*       fBlobTypeName;   //! name type (without prefix) in current blob row
+   const char*       fBlobPrefixName; ///<! name prefix in current blob row
+   const char*       fBlobTypeName;   ///<! name type (without prefix) in current blob row
    TObjArray*        fUnpack;         //!
 
    ClassDef(TSQLObjectData, 1) // Keeps the data requested from the SQL server for an object.
@@ -119,6 +107,11 @@ protected:
 };
 
 // ======================================================================
+/**
+\class TSQLObjectDataPool
+\ingroup IO
+XML object keeper class
+*/
 
 class TSQLObjectDataPool : public TObject {
 
@@ -133,10 +126,10 @@ public:
 
 protected:
 
-   TSQLClassInfo*    fInfo;          //!  classinfo, for which pool is created
-   TSQLResult*       fClassData;     //!  results with request to selected table
-   Bool_t            fIsMoreRows;    //!  indicates if class data has not yet read rows
-   TList*            fRowsPool;      //!  pool of extrcted, but didnot used rows
+   TSQLClassInfo*    fInfo;          ///<!  classinfo, for which pool is created
+   TSQLResult*       fClassData;     ///<!  results with request to selected table
+   Bool_t            fIsMoreRows;    ///<!  indicates if class data has not yet read rows
+   TList*            fRowsPool;      ///<!  pool of extrcted, but didnot used rows
 
    ClassDef(TSQLObjectDataPool,1) // XML object keeper class
 

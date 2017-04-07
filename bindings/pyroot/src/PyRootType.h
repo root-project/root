@@ -6,7 +6,6 @@
 
 // ROOT
 #include "DllImport.h"
-#include "TClassRef.h"
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 2
 
@@ -38,7 +37,7 @@ namespace PyROOT {
    class PyRootClass {
    public:
       PyHeapTypeObject fType;      // placeholder, in a single block with the TClassRef
-      TClassRef fClass;
+      Cppyy::TCppType_t fCppType;
 
    private:
       PyRootClass() {}

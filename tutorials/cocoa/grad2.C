@@ -1,6 +1,11 @@
-//Author: Timur Pocheptsov, 25/09/2012.
-//Gradient fill with transparency and "SAME" option.
-//Requires OS X and ROOT configured with --enable-cocoa.
+/// \file
+/// \ingroup tutorial_cocoa
+/// Gradient fill with transparency and "SAME" option.
+/// Requires OS X and ROOT configured with --enable-cocoa.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
@@ -30,7 +35,7 @@ void grad2()
    const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
 
    //2. Check that we are ROOT with Cocoa back-end enabled.
-   TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
+   TCanvas * const cnv = new TCanvas("gradient demo 2", "gradient demo 2", 100, 100, 800, 600);
    //After canvas was created, gVirtualX should be non-null.
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("grad2", "This macro works only on OS X with --enable-cocoa");

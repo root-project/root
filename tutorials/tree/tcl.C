@@ -1,17 +1,26 @@
-// Example of macro illustrating how to write a TClonesArray to a TTree
-// the following tests can be run
-//    Interactive tests
-// Root > .x tcl.C        //no-split interpreted
-// Root > .x tcl.C(1)     //split    interpreted
-// Root > .x tcl.C++      //no-split compiled
-// Root > .x tcl.C++(1)   //split    compiled
-//    batch tests: same as above but with no graphics
-// root -b -q tcl.C
-// root -b -q tcl.C++
-// root -b -q "tcl.C(1)"
-// root -b -q "tcl.C++(1)"
-//
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// How to write a TClonesArray to a TTree
+///
+/// The following tests can be run
+/// Interactive tests
+/// ~~~
+/// Root > .x tcl.C        //no-split interpreted
+/// Root > .x tcl.C(1)     //split    interpreted
+/// Root > .x tcl.C++      //no-split compiled
+/// Root > .x tcl.C++(1)   //split    compiled
+/// ~~~
+/// Batch tests: same as above but with no graphics
+/// ~~~{.bash}
+/// root -b -q tcl.C
+/// root -b -q tcl.C++
+/// root -b -q "tcl.C(1)"
+/// root -b -q "tcl.C++(1)"
+/// ~~~
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TFile.h"
 #include "TClonesArray.h"

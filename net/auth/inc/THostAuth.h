@@ -23,23 +23,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TRootSecContext
 #include "TRootSecContext.h"
-#endif
-#ifndef ROOT_AuthConst
 #include "AuthConst.h"
-#endif
 
-
+#include "TSecContext.h" // for kROOTTZERO.
 
 class THostAuth : public TObject {
 

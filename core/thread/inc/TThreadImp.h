@@ -24,12 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TThread
 #include "TThread.h"
-#endif
 
 class TThreadImp : public TObject {
 public:

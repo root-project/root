@@ -12,17 +12,11 @@
 #ifndef ROOSTATS_RooStatsUtils
 #define ROOSTATS_RooStatsUtils
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
-#ifndef ROOT_Math_DistFuncMathCore
-#include"Math/DistFuncMathCore.h"
-#endif
+#include "Math/DistFuncMathCore.h"
 
 #include "RooArgSet.h"
 #include "RooRealVar.h"
@@ -33,12 +27,22 @@
 #include "RooDataSet.h"
 
 
+/** \namespace RooStats
+    \ingroup Roostats
+
+Namespace for the RooStats classes
+
+All the classes of the %RooStats package are in the RooStats namespace.
+In addition the namespace contain a set of utility functions.
+
+*/
+
 namespace RooStats {
 
 
   // returns one-sided significance corresponding to a p-value
   inline Double_t PValueToSignificance(Double_t pvalue){
-     return ::ROOT::Math::normal_quantile_c(pvalue,1); 
+     return ::ROOT::Math::normal_quantile_c(pvalue,1);
   }
 
   // returns p-value corresponding to a 1-sided significance
@@ -54,8 +58,8 @@ namespace RooStats {
   inline void RemoveConstantParameters(RooArgSet* set){
     RooArgSet constSet;
     RooLinkedListIter it = set->iterator();
-    RooRealVar *myarg; 
-    while ((myarg = (RooRealVar *)it.Next())) { 
+    RooRealVar *myarg;
+    while ((myarg = (RooRealVar *)it.Next())) {
       if(myarg->isConstant()) constSet.add(*myarg);
     }
     set->remove(constSet);
@@ -64,8 +68,8 @@ namespace RooStats {
   inline void RemoveConstantParameters(RooArgList& set){
     RooArgSet constSet;
     RooLinkedListIter it = set.iterator();
-    RooRealVar *myarg; 
-    while ((myarg = (RooRealVar *)it.Next())) { 
+    RooRealVar *myarg;
+    while ((myarg = (RooRealVar *)it.Next())) {
       if(myarg->isConstant()) constSet.add(*myarg);
     }
     set.remove(constSet);
@@ -94,8 +98,8 @@ namespace RooStats {
     RooLinkedListIter it = set.iterator();
     RooRealVar* var;
 
-    // repeat loop tpo avoid calling isConstant for nothing 
-    if (randomizeConstants) { 
+    // repeat loop to avoid calling isConstant for nothing
+    if (randomizeConstants) {
        while ((var = (RooRealVar*)it.Next()) != NULL)
          var->randomize();
     }
@@ -119,11 +123,11 @@ namespace RooStats {
    // remove constraints from pdf and return the unconstrained pdf
    RooAbsPdf * MakeUnconstrainedPdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name = NULL);
    RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name = NULL);
-   
+
    // Create a TTree with the given name and description. All RooRealVars in the RooDataSet are represented as branches that contain values of type Double_t.
    TTree* GetAsTTree(TString name, TString desc, const RooDataSet& data);
 
-   // useful function to print in one line the content of a set with their values 
+   // useful function to print in one line the content of a set with their values
    void PrintListContent(const RooArgList & l, std::ostream & os = std::cout);
 
    // function to set a global flag in RooStats to use NLL offset when performing nll computations
@@ -132,7 +136,7 @@ namespace RooStats {
 
    // function returning if the flag to check if the flag to use  NLLOffset is set
    bool IsNLLOffset();
-   
+
 
 
 }

@@ -1,11 +1,14 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// How to use EVE without the standard window.
-
-// Type
-//   gEve->GetBrowser()->MapWindow()
-// to bring it up for object interaction, debugging, etc.
+/// \file
+/// \ingroup tutorial_eve
+/// How to use EVE without the standard window.
+/// Type
+///   `gEve->GetBrowser()->MapWindow()`
+/// to bring it up for object interaction, debugging, etc.
+///
+/// \image html eve_arrow_standalone.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void arrow_standalone()
 {

@@ -142,18 +142,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TFormula
 #include "TFormula.h"
-#endif
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
 
 class TLinearFitter: public TVirtualFitter {
@@ -173,6 +165,7 @@ private:
    TVectorD     fAtbTemp2;       //!
    TVectorD     fAtbTemp3;       //!
 
+   static std::map<TString,TFormula*>   fgFormulaMap;  //! map of basis functions and formula
    TObjArray    fFunctions;      //array of basis functions
    TVectorD     fY;              //the values being fit
    Double_t     fY2;             //sum of square of y, used for chisquare
@@ -199,6 +192,7 @@ private:
    TBits        fFitsample;      //indices of points, used in the robust fit
 
    Bool_t       *fFixedParams;   //[fNfixed] array of fixed/released params
+   
 
    void  AddToDesign(Double_t *x, Double_t y, Double_t e);
    void  ComputeTValues();

@@ -9,20 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFileMerger                                                          //
-//                                                                      //
-// This class provides file copy and merging services.                  //
-//                                                                      //
-// It can be used to copy files (not only ROOT files), using TFile or   //
-// any of its remote file access plugins. It is therefore usefull in    //
-// a Grid environment where the files might be accessable via Castor,   //
-// rfio, dcap, etc.                                                     //
-// The merging interface allows files containing histograms and trees   //
-// to be merged, like the standalone hadd program.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TFileMerger TFileMerger.cxx
+\ingroup IO
+
+This class provides file copy and merging services.
+
+It can be used to copy files (not only ROOT files), using TFile or
+any of its remote file access plugins. It is therefore usefull in
+a Grid environment where the files might be accessable via Castor,
+rfio, dcap, etc.
+The merging interface allows files containing histograms and trees
+to be merged, like the standalone hadd program.
+*/
 
 #include "TFileMerger.h"
 #include "TDirectory.h"
@@ -57,11 +56,12 @@ TClassRef R__TTree_Class("TTree");
 
 static const Int_t kCpProgress = BIT(14);
 static const Int_t kCintFileNumber = 100;
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the maximum number of allowed opened files minus some wiggle room
+/// for CINT or at least of the standard library (stdio).
+
 static Int_t R__GetSystemMaxOpenedFiles()
 {
-   // Return the maximum number of allowed opened files minus some wiggle room
-   // for CINT or at least of the standard library (stdio).
    int maxfiles;
 #ifdef WIN32
    maxfiles = _getmaxstdio();
@@ -83,14 +83,14 @@ static Int_t R__GetSystemMaxOpenedFiles()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create file merger object.
+
 TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
             : fOutputFile(0), fFastMethod(kTRUE), fNoTrees(kFALSE), fExplicitCompLevel(kFALSE), fCompressionChange(kFALSE),
               fPrintLevel(0), fMsgPrefix("TFileMerger"), fMaxOpenedFiles( R__GetSystemMaxOpenedFiles() ),
               fLocal(isLocal), fHistoOneGo(histoOneGo), fObjectNames()
 {
-   // Create file merger object.
-
    fFileList = new TList;
 
    fMergeList = new TList;
@@ -102,11 +102,11 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
    gROOT->GetListOfCleanups()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TFileMerger::~TFileMerger()
 {
-   // Cleanup.
-
    gROOT->GetListOfCleanups()->Remove(this);
    SafeDelete(fFileList);
    SafeDelete(fMergeList);
@@ -114,22 +114,22 @@ TFileMerger::~TFileMerger()
    SafeDelete(fExcessFiles);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset merger file list.
+
 void TFileMerger::Reset()
 {
-   // Reset merger file list.
-
    fFileList->Clear();
    fMergeList->Clear();
    fExcessFiles->Clear();
    fObjectNames.Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add file to file merger.
+
 Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
 {
-   // Add file to file merger.
-
    if (fPrintLevel > 0) {
       Printf("%s Source file %d: %s",fMsgPrefix.Data(),fFileList->GetEntries()+fExcessFiles->GetEntries()+1,url);
    }
@@ -149,7 +149,7 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    }
 
    // We want gDirectory untouched by anything going on here
-   TDirectory::TContext ctx(0);
+   TDirectory::TContext ctxt;
 
    if (fLocal) {
       TUUID uuid;
@@ -161,6 +161,12 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
       newfile = TFile::Open(localcopy, "READ");
    } else {
       newfile = TFile::Open(url, "READ");
+   }
+
+   // Zombie files should also be skipped
+   if (newfile && newfile->IsZombie()) {
+      delete newfile;
+      newfile = 0;
    }
 
    if (!newfile) {
@@ -183,36 +189,36 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the TFile to this file merger and *do not* give ownership of the TFile to this
+/// object.
+///
+/// Return kTRUE if the addition was successful.
+
 Bool_t TFileMerger::AddFile(TFile *source, Bool_t cpProgress)
 {
-   // Add the TFile to this file merger and *do not* give ownership of the TFile to this
-   // object.
-   //
-   // Return kTRUE if the addition was successful.
-
    return AddFile(source,kFALSE,cpProgress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the TFile to this file merger and give ownership of the TFile to this
+/// object (unless kFALSE is returned).
+///
+/// Return kTRUE if the addition was successful.
+
 Bool_t TFileMerger::AddAdoptFile(TFile *source, Bool_t cpProgress)
 {
-   // Add the TFile to this file merger and give ownership of the TFile to this
-   // object (unless kFALSE is returned).
-   //
-   // Return kTRUE if the addition was successful.
-
    return AddFile(source,kTRUE,cpProgress);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the TFile to this file merger and give ownership of the TFile to this
+/// object (unless kFALSE is returned).
+///
+/// Return kTRUE if the addition was successful.
+
 Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
 {
-   // Add the TFile to this file merger and give ownership of the TFile to this
-   // object (unless kFALSE is returned).
-   //
-   // Return kTRUE if the addition was successful.
-
    if (source == 0) {
       return kFALSE;
    }
@@ -225,7 +231,7 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
    TString localcopy;
 
    // We want gDirectory untouched by anything going on here
-   TDirectory::TContext ctx(0);
+   TDirectory::TContext ctxt;
    if (fLocal && !source->InheritsFrom(TMemFile::Class())) {
       TUUID uuid;
       localcopy.Form("file:%s/ROOTMERGE-%s.root", gSystem->TempDirectory(), uuid.AsString());
@@ -236,6 +242,12 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
       newfile = TFile::Open(localcopy, "READ");
    } else {
       newfile = source;
+   }
+
+   // Zombie files should also be skipped 
+   if (newfile && newfile->IsZombie()) {
+      delete newfile;
+      newfile = 0;
    }
 
    if (!newfile) {
@@ -268,31 +280,33 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open merger output file.
+
 Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force, Int_t compressionLevel)
 {
-   // Open merger output file.
-
    return OutputFile(outputfile,(force?"RECREATE":"CREATE"),compressionLevel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open merger output file.
+
 Bool_t TFileMerger::OutputFile(const char *outputfile, Bool_t force)
 {
-   // Open merger output file.
-
    Bool_t res = OutputFile(outputfile,(force?"RECREATE":"CREATE"),1); // 1 is the same as the default from the TFile constructor.
    fExplicitCompLevel = kFALSE;
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open merger output file.
+///
+/// The 'mode' parameter is passed to the TFile constructor as the option, it
+/// should be one of 'NEW','CREATE','RECREATE','UPDATE'
+/// 'UPDATE' is usually used in conjunction with IncrementalMerge.
+
 Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t compressionLevel)
 {
-   // Open merger output file.  'mode' is passed to the TFile constructor as the option, it should
-   // be one of 'NEW','CREATE','RECREATE','UPDATE'
-   // 'UPDATE' is usually used in conjunction with IncrementalMerge.
-
    fExplicitCompLevel = kTRUE;
 
    TFile *oldfile = fOutputFile;
@@ -302,7 +316,7 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t c
    fOutputFilename = outputfile;
 
    // We want gDirectory untouched by anything going on here
-   TDirectory::TContext ctx(0);
+   TDirectory::TContext ctxt;
    if (!(fOutputFile = TFile::Open(outputfile, mode, "", compressionLevel)) || fOutputFile->IsZombie()) {
       Error("OutputFile", "cannot open the MERGER output file %s", fOutputFilename.Data());
       return kFALSE;
@@ -310,49 +324,46 @@ Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode, Int_t c
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open merger output file.  'mode' is passed to the TFile constructor as the option, it should
+/// be one of 'NEW','CREATE','RECREATE','UPDATE'
+/// 'UPDATE' is usually used in conjunction with IncrementalMerge.
+
 Bool_t TFileMerger::OutputFile(const char *outputfile, const char *mode /* = "RECREATE" */)
 {
-   // Open merger output file.  'mode' is passed to the TFile constructor as the option, it should
-   // be one of 'NEW','CREATE','RECREATE','UPDATE'
-   // 'UPDATE' is usually used in conjunction with IncrementalMerge.
-
    Bool_t res = OutputFile(outputfile,mode,1); // 1 is the same as the default from the TFile constructor.
    fExplicitCompLevel = kFALSE;
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print list of files being merged.
+
 void TFileMerger::PrintFiles(Option_t *options)
 {
-   // Print list of files being merged.
-
    fFileList->Print(options);
    fExcessFiles->Print(options);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge the files.
+///
+/// If no output file was specified it will write into
+/// the file "FileMerger.root" in the working directory. Returns true
+/// on success, false in case of error.
+
 Bool_t TFileMerger::Merge(Bool_t)
 {
-   // Merge the files. If no output file was specified it will write into
-   // the file "FileMerger.root" in the working directory. Returns true
-   // on success, false in case of error.
-
    return PartialMerge(kAll | kRegular);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge all objects in a directory
+///
+/// The type is defined by the bit values in TFileMerger::EPartialMergeType.
+
 Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t type /* = kRegular | kAll */)
 {
-   // Merge all objects in a directory
-   // The type is defined by the bit values in EPartialMergeType:
-   //   kRegular      : normal merge, overwritting the output file (default)
-   //   kIncremental  : merge the input file with the (existing) content of the output file (if already exising)
-   //   kAll          : merge all type of objects (default)
-   //   kResetable    : merge only the objects with a MergeAfterReset member function.
-   //   kNonResetable : merge only the objects without a MergeAfterReset member function.
-   //   kOnlyListed   : merge only objects listed in fObjectNames
-   //   kSkipListed   : skip merging of objects listed in fObjectNames
    Bool_t status = kTRUE;
    Bool_t onlyListed = kFALSE;
    if (fPrintLevel > 0) {
@@ -379,8 +390,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
 
    TFileMergeInfo info(target);
-
-   if ((fFastMethod && !fCompressionChange)) {
+   info.fOptions = fMergeOptions;
+   if (fFastMethod && ((type&kKeepCompression) || !fCompressionChange) ) {
       info.fOptions.Append(" fast");
    }
 
@@ -759,22 +770,22 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge the files. If no output file was specified it will write into
+/// the file "FileMerger.root" in the working directory. Returns true
+/// on success, false in case of error.
+/// The type is defined by the bit values in EPartialMergeType:
+///   kRegular      : normal merge, overwritting the output file
+///   kIncremental  : merge the input file with the content of the output file (if already exising) (default)
+///   kAll          : merge all type of objects (default)
+///   kResetable    : merge only the objects with a MergeAfterReset member function.
+///   kNonResetable : merge only the objects without a MergeAfterReset member function.
+///
+/// If the type is set to kIncremental the output file is done deleted at the end of
+/// this operation.  If the type is not set to kIncremental, the output file is closed.
+
 Bool_t TFileMerger::PartialMerge(Int_t in_type)
 {
-   // Merge the files. If no output file was specified it will write into
-   // the file "FileMerger.root" in the working directory. Returns true
-   // on success, false in case of error.
-   // The type is defined by the bit values in EPartialMergeType:
-   //   kRegular      : normal merge, overwritting the output file
-   //   kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-   //   kAll          : merge all type of objects (default)
-   //   kResetable    : merge only the objects with a MergeAfterReset member function.
-   //   kNonResetable : merge only the objects without a MergeAfterReset member function.
-   //
-   // If the type is set to kIncremental the output file is done deleted at the end of
-   // this operation.  If the type is not set to kIncremental, the output file is closed.
-
    if (!fOutputFile) {
       TString outf(fOutputFilename);
       if (outf.IsNull()) {
@@ -819,7 +830,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
 
    fOutputFile->SetBit(kMustCleanup);
 
-   TDirectory::TContext ctxt(0);
+   TDirectory::TContext ctxt;
 
    Bool_t result = kTRUE;
    Int_t type = in_type;
@@ -841,13 +852,13 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          }
       }
       fFileList->Clear();
-      if (fExcessFiles->GetEntries() > 0) {
+      if (result && fExcessFiles->GetEntries() > 0) {
          // We merge the first set of files in the output,
          // we now need to open the next set and make
          // sure we accumulate into the output, so we
          // switch to incremental merging (if not already set)
          type = type | kIncremental;
-         OpenExcessFiles();
+         result = OpenExcessFiles();
       }
    }
    if (!result) {
@@ -871,11 +882,11 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open up to fMaxOpenedFiles of the excess files.
+
 Bool_t TFileMerger::OpenExcessFiles()
 {
-   // Open up to fMaxOpenedFiles of the excess files.
-
    if (fPrintLevel > 0) {
       Printf("%s Opening the next %d files",fMsgPrefix.Data(),TMath::Min(fExcessFiles->GetEntries(),(fMaxOpenedFiles-1)));
    }
@@ -884,7 +895,7 @@ Bool_t TFileMerger::OpenExcessFiles()
    TObjString *url = 0;
    TString localcopy;
    // We want gDirectory untouched by anything going on here
-   TDirectory::TContext ctx(0);
+   TDirectory::TContext ctxt;
    while( nfiles < (fMaxOpenedFiles-1) && ( url = (TObjString*)next() ) ) {
       TFile *newfile = 0;
       if (fLocal) {
@@ -918,24 +929,25 @@ Bool_t TFileMerger::OpenExcessFiles()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Intercept the case where the output TFile is deleted!
+
 void TFileMerger::RecursiveRemove(TObject *obj)
 {
-   // Intercept the case where the output TFile is deleted!
-
    if (obj == fOutputFile) {
       Fatal("RecursiveRemove","Output file of the TFile Merger (targeting %s) has been deleted (likely due to a TTree larger than 100Gb)", fOutputFilename.Data());
    }
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a limit to the number file that TFileMerger will opened at one time.
+///
+/// If the request is higher than the system limit, we reset it to the system limit.
+/// If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
+
 void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
 {
-   // Set a limit to the number file that TFileMerger will opened at one time.
-   // If the request is higher than the system limit, we reset it to the system limit.
-   // If the request is less than two, we reset it to 2 (one for the output file and one for the input file).
-
    Int_t sysmax = R__GetSystemMaxOpenedFiles();
    if (newmax < sysmax) {
       fMaxOpenedFiles = newmax;
@@ -947,11 +959,11 @@ void TFileMerger::SetMaxOpenedFiles(Int_t newmax)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the prefix to be used when printing informational message.
+
 void TFileMerger::SetMsgPrefix(const char *prefix)
 {
-   // Set the prefix to be used when printing informational message.
-
    fMsgPrefix = prefix;
 }
 

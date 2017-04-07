@@ -13,29 +13,19 @@
 #define ROOT_TSVG
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSVG                                                                 //
-//                                                                      //
-// SVG driver.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TPoints;
 
 class TSVG : public TVirtualPS {
 
 protected:
-   Float_t      fXsize;           //Page size along X
-   Float_t      fYsize;           //Page size along Y
-   Int_t        fType;            //Workstation type used to know if the SVG is open
-   Bool_t       fBoundingBox;     //True when the SVG header is printed
-   Bool_t       fRange;           //True when a range has been defined
-   Double_t     fYsizeSVG;        //Page's Y size in SVG units
+   Float_t      fXsize;           ///< Page size along X
+   Float_t      fYsize;           ///< Page size along Y
+   Int_t        fType;            ///< Workstation type used to know if the SVG is open
+   Bool_t       fBoundingBox;     ///< True when the SVG header is printed
+   Bool_t       fRange;           ///< True when a range has been defined
+   Double_t     fYsizeSVG;        ///< Page's Y size in SVG units
 
 public:
    TSVG();
@@ -81,7 +71,7 @@ public:
    Double_t XtoSVG(Double_t x);
    Double_t YtoSVG(Double_t y);
 
-   ClassDef(TSVG,1)  //SVG driver
+   ClassDef(TSVG, 0);  //SVG driver
 };
 
 #endif

@@ -15,7 +15,7 @@
 namespace PyROOT {
 
    struct TParameter;
-   struct TCallContext;  
+   struct TCallContext;
 
    class TConverter {
    public:
@@ -68,6 +68,12 @@ namespace PyROOT {
       virtual Bool_t ToMemory( PyObject*, void* );                            \
    private:                                                                   \
       Py_ssize_t fSize;                                                       \
+   };                                                                         \
+                                                                              \
+   class T##name##RefConverter : public T##name##Converter {                  \
+   public:                                                                    \
+      using T##name##Converter::T##name##Converter;                           \
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );\
    }
 
 // converters for built-ins
@@ -75,16 +81,16 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER( Bool );
    PYROOT_DECLARE_BASIC_CONVERTER( Char );
    PYROOT_DECLARE_BASIC_CONVERTER( UChar );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Short, Long );
-   PYROOT_DECLARE_BASIC_CONVERTER2( UShort, Long );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Int, Long );
+   PYROOT_DECLARE_BASIC_CONVERTER( Short );
+   PYROOT_DECLARE_BASIC_CONVERTER( UShort );
+   PYROOT_DECLARE_BASIC_CONVERTER( Int );
    PYROOT_DECLARE_BASIC_CONVERTER( ULong );
    PYROOT_DECLARE_BASIC_CONVERTER2( UInt, ULong );
    PYROOT_DECLARE_BASIC_CONVERTER( LongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( ULongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( Double );
-   PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
-   PYROOT_DECLARE_BASIC_CONVERTER2( LongDouble, Double );
+   PYROOT_DECLARE_BASIC_CONVERTER( Float );
+   PYROOT_DECLARE_BASIC_CONVERTER( LongDouble );
 
    PYROOT_DECLARE_REF_CONVERTER( Int );
    PYROOT_DECLARE_REF_CONVERTER( Long );
@@ -182,6 +188,26 @@ namespace PyROOT {
       virtual Bool_t GetAddressSpecialCase( PyObject*, void*& ) { return kFALSE; }
    };
 
+   class TValueCppObjectConverter : public TStrictCppObjectConverter {
+   public:
+      using TStrictCppObjectConverter::TStrictCppObjectConverter;
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+   };
+
+   class TRefCppObjectConverter : public TConverter  {
+   public:
+      TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ) {}
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+
+   protected:
+      Cppyy::TCppType_t fClass;
+   };
+
+   template <bool ISREFERENCE>
    class TCppObjectPtrConverter : public TCppObjectConverter {
    public:
       using TCppObjectConverter::TCppObjectConverter;
@@ -191,6 +217,9 @@ namespace PyROOT {
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
    };
+
+   extern template class TCppObjectPtrConverter<true>;
+   extern template class TCppObjectPtrConverter<false>;
 
    class TCppObjectArrayConverter : public TCppObjectConverter {
    public:
@@ -232,7 +261,7 @@ namespace PyROOT {
    public:                                                                    \
       T##name##Converter( Bool_t keepControl = kTRUE );                       \
    public:                                                                    \
-   virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );   \
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );\
       virtual PyObject* FromMemory( void* address );                          \
       virtual Bool_t ToMemory( PyObject* value, void* address );              \
    private:                                                                   \
@@ -245,6 +274,32 @@ namespace PyROOT {
    class TNotImplementedConverter : public TConverter {
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* = 0 );
+   };
+
+// smart pointer converter
+   class TSmartPtrCppObjectConverter : public TConverter  {
+   public:
+      TSmartPtrCppObjectConverter( Cppyy::TCppType_t klass,
+                                   Cppyy::TCppType_t rawPtrType,
+                                   Cppyy::TCppMethod_t deref,
+                                   Bool_t keepControl = kFALSE,
+                                   Bool_t handlePtr = kFALSE )
+         : fClass( klass ), fRawPtrType( rawPtrType ), fDereferencer( deref ),
+           fKeepControl( keepControl ), fHandlePtr( handlePtr ) {}
+
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
+      virtual PyObject* FromMemory( void* address );
+      //virtual Bool_t ToMemory( PyObject* value, void* address );
+
+   protected:
+      virtual Bool_t GetAddressSpecialCase( PyObject*, void*& ) { return kFALSE; }
+
+      Cppyy::TCppType_t   fClass;
+      Cppyy::TCppType_t   fRawPtrType;
+      Cppyy::TCppMethod_t fDereferencer;
+      Bool_t              fKeepControl;
+      Bool_t              fHandlePtr;
    };
 
 // create converter from fully qualified type

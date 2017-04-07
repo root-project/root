@@ -16,29 +16,18 @@
 #include "Rtypes.h" // necessary for TNamed
 #endif
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
-#ifndef ROOSTATS_TestStatSampler
 #include "RooStats/TestStatSampler.h"
-#endif
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestResult
 #include "RooStats/HypoTestResult.h"
-#endif
+
 
 namespace RooStats {
 
@@ -76,11 +65,11 @@ namespace RooStats {
       // TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) const { return fTestStatSampler; }
 
-      // set this for re-using always the same toys for alternate hypothesis in 
-      // case of calls at dofferent null parameter points
+      // set this for re-using always the same toys for alternate hypothesis in
+      // case of calls at different null parameter points
       // This is useful to get more stable bands when running the HypoTest inversion
-      void UseSameAltToys(); 
-      
+      void UseSameAltToys();
+
 
    protected:
       // should return zero (to be used later for conditional flow)
@@ -98,7 +87,7 @@ namespace RooStats {
       TestStatSampler *fDefaultSampler;
       TestStatistic *fDefaultTestStat;
 
-      unsigned int fAltToysSeed;   // to have same toys for alternate 
+      unsigned int fAltToysSeed;   // to have same toys for alternate
 
    private:
       void SetupSampler(const ModelConfig& model) const;

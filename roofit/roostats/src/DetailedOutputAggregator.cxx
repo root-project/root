@@ -8,7 +8,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// implementation file of DetailedOutputAggregator
+/** \class RooStats::DetailedOutputAggregator
+   \ingroup Roostats
+
+This class is designed to aid in the construction of RooDataSets and RooArgSets,
+particularly those naturally arising in fitting operations. Typically, the usage
+of this class is as follows:
+
+1.  create DetailedOutputAggregator instance
+2.  use AppendArgSet to add value sets to be stored as one row of the dataset
+3.  call CommitSet when an entire row's worth of values has been added
+4.  repeat steps 2 and 3 until all rows have been added
+5.  call GetAsDataSet to extract result RooDataSet
+
+*/
 
 #include <limits>
 
@@ -28,12 +41,14 @@ namespace RooStats {
       if (fBuiltSet != NULL) delete fBuiltSet;
    }
 
+////////////////////////////////////////////////////////////////////////////////
+/// static function to translate the given fit result to a RooArgSet in a generic way.
+/// Prefix is prepended to all variable names.
+/// LM: caller is responsible to delete the returned list and eventually also the content of the list
+///    Note that the returned list is not owning the returned content
 
    RooArgSet * DetailedOutputAggregator::GetAsArgSet(RooFitResult *result, TString prefix, bool withErrorsAndPulls) {
-      // static function to translate the given fit result to a RooArgSet in a generic way.
-      // Prefix is prepended to all variable names.
-      // LM: caller is responsible to delete the returned list and eventually also the content of the list
-      //    Note that the returned list is not owning the returned content
+
       RooArgSet *detailedOutput = new RooArgSet;
       const RooArgList &detOut = result->floatParsFinal();
       const RooArgList &truthSet = result->floatParsInit();
@@ -44,7 +59,7 @@ namespace RooStats {
          RooRealVar* var = dynamic_cast<RooRealVar*>(v);
          if (var) clone->setAttribute("StoreError");
          detailedOutput->add(*clone);
-         
+
          if( withErrorsAndPulls && var ) {
             clone->setAttribute("StoreAsymError");
 
@@ -66,10 +81,12 @@ namespace RooStats {
       return detailedOutput;
    }
 
+////////////////////////////////////////////////////////////////////////////////
+/// For each variable in aset, prepend prefix to its name and add
+/// to the internal store. Note this will not appear in the produced
+/// dataset unless CommitSet is called.
+
    void DetailedOutputAggregator::AppendArgSet(const RooAbsCollection *aset, TString prefix) {
-      // For each variable in aset, prepend prefix to its name and add
-      // to the internal store. Note this will not appear in the produced
-      // dataset unless CommitSet is called.
 
       if (aset == NULL) {
          // silently ignore
@@ -83,7 +100,7 @@ namespace RooStats {
       while(RooAbsArg* v = dynamic_cast<RooAbsArg*>( iter->Next() ) ) {
          TString renamed(TString::Format("%s%s", prefix.Data(), v->GetName()));
          if (fResult == NULL) {
-            // we never commited, so by default all columns are expected to not exist
+            // we never committed, so by default all columns are expected to not exist
             RooAbsArg* var = v->createFundamental();
             assert(var != NULL);
             (RooArgSet(*var)) = RooArgSet(*v);
@@ -97,7 +114,7 @@ namespace RooStats {
             if (fBuiltSet->addOwned(*var)) continue;  // OK - can skip past setting value
          }
          if (RooAbsArg* var = fBuiltSet->find(renamed)) {
-            // we already commited an argset once, so we expect all columns to already be in the set
+            // we already committed an argset once, so we expect all columns to already be in the set
             var->SetName(v->GetName());
             (RooArgSet(*var)) = RooArgSet(*v); // copy values and errors
             var->SetName(renamed);
@@ -106,7 +123,9 @@ namespace RooStats {
       delete iter;
    }
 
-   // Commit to the result RooDataSet.
+////////////////////////////////////////////////////////////////////////////////
+/// Commit to the result RooDataSet.
+
    void DetailedOutputAggregator::CommitSet(double weight) {
       if (fResult == NULL) {
          // Store dataset as a tree - problem with VectorStore and StoreError (bug #94908)
@@ -126,10 +145,11 @@ namespace RooStats {
       delete iter;
    }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns all detailed output as a dataset.
+/// Ownership of the dataset is transferred to the caller.
 
    RooDataSet * DetailedOutputAggregator::GetAsDataSet(TString name, TString title) {
-      // Returns all detailed output as a dataset.
-      // Ownership of the dataset is transferred to the caller.
       RooDataSet* temp = NULL;
       if( fResult ) {
          temp = fResult;

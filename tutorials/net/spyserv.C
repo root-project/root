@@ -1,13 +1,17 @@
-// Server program which allows clients, "spies", to connect and snoop objects.
-// To run this demo do the following:
-//   - open two or more windows
-//   - start root in all windows
-//   - execute in the first window:    .x spyserv.C  (or spyserv.C++)
-//   - execute in the other window(s): .x spy.C      (or spy.C++)
-//   - in the "spy" client windows click the "Connect" button and snoop
-//     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
-//     buttons
-//Author: Fons Rademakers
+/// \file
+/// \ingroup tutorial_net
+/// Server program which allows clients, "spies", to connect and snoop objects.
+/// To run this demo do the following:
+///   - open two or more windows
+///   - start root in all windows
+///   - execute in the first window:    .x spyserv.C  (or spyserv.C++)
+///   - execute in the other window(s): .x spy.C      (or spy.C++)
+///   - in the "spy" client windows click the "Connect" button and snoop
+///     the histograms by clicking on the "hpx", "hpxpy" and "hprof"
+///     buttons
+/// \macro_code
+///
+/// \author Fons Rademakers
 
 #include "TH1.h"
 #include "TH2.h"
@@ -20,9 +24,7 @@
 #include "TMessage.h"
 #include "TRandom.h"
 #include "TList.h"
-#ifndef __CINT__
 #include "TError.h"
-#endif
 
 
 class SpyServ {
@@ -79,7 +81,7 @@ SpyServ::SpyServ()
 {
    // Create the server process to fills a number of histograms.
    // A spy process can connect to it and ask for the histograms.
-   // There is no apriory limit for the number of concurrent spy processes.
+   // There is no apriori limit for the number of concurrent spy processes.
 
    // Open a server socket looking for connections on a named service or
    // on a specified port

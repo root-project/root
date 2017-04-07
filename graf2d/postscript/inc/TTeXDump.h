@@ -13,32 +13,24 @@
 #define ROOT_TTeXDump
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTeXDump                                                             //
-//                                                                      //
-// Tex driver.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TPoints;
 
 class TTeXDump : public TVirtualPS {
 
 protected:
-   Float_t      fXsize;           //Page size along X
-   Float_t      fYsize;           //Page size along Y
-   Int_t        fType;            //Workstation type used to know if the Tex is open
-   Bool_t       fBoundingBox;     //True when the Tex header is printed
-   Bool_t       fRange;           //True when a range has been defined
-   Float_t      fCurrentRed;      //Current Red component
-   Float_t      fCurrentGreen;    //Current Green component
-   Float_t      fCurrentBlue;     //Current Blue component
-   Float_t      fCurrentAlpha;    //Current Alpha value
+   Float_t      fXsize;           ///< Page size along X
+   Float_t      fYsize;           ///< Page size along Y
+   Int_t        fType;            ///< Workstation type used to know if the Tex is open
+   Bool_t       fBoundingBox;     ///< True when the Tex header is printed
+   Bool_t       fRange;           ///< True when a range has been defined
+   Float_t      fCurrentRed;      ///< Current Red component
+   Float_t      fCurrentGreen;    ///< Current Green component
+   Float_t      fCurrentBlue;     ///< Current Blue component
+   Float_t      fCurrentAlpha;    ///< Current Alpha value
+   Float_t      fLineScale;       ///< Line width scale factor
+
 
 public:
    TTeXDump();
@@ -71,7 +63,7 @@ public:
    void    SetLineColor( Color_t cindex=1);
    void    SetLineStyle(Style_t linestyle = 1);
    void    SetLineWidth(Width_t linewidth = 1);
-   void    SetLineScale(Float_t =3) { }
+   void    SetLineScale(Float_t scale=1) {fLineScale = scale;}
    void    SetMarkerSize( Size_t msize=1);
    void    SetMarkerColor( Color_t cindex=1);
    void    SetTextColor( Color_t cindex=1);
@@ -84,7 +76,7 @@ public:
    Float_t XtoTeX(Double_t x);
    Float_t YtoTeX(Double_t y);
 
-   ClassDef(TTeXDump,1)  //Tex driver
+   ClassDef(TTeXDump, 0);  //Tex driver
 };
 
 #endif

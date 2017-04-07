@@ -12,25 +12,13 @@
 #ifndef ROOT_TGeoNode
 #define ROOT_TGeoNode
 
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
 
-#ifndef ROOT_TGeoPatternFinder
 #include "TGeoPatternFinder.h"
-#endif
 
 // forward declarations
 class TString;
@@ -52,13 +40,13 @@ class TGeoNode : public TNamed,
                  public TGeoAtt
 {
 protected:
-   TGeoVolume       *fVolume;         // volume associated with this
-   TGeoVolume       *fMother;         // mother volume
-   Int_t             fNumber;         // copy number
-   Int_t             fNovlp;          // number of overlaps
-   Int_t            *fOverlaps;       //[fNovlp] list of indices for overlapping brothers
-   TGeoExtension    *fUserExtension;  //! Transient user-defined extension to volumes
-   TGeoExtension    *fFWExtension;    //! Transient framework-defined extension to volumes
+   TGeoVolume       *fVolume = nullptr;        // volume associated with this
+   TGeoVolume       *fMother = nullptr;        // mother volume
+   Int_t             fNumber = 0;              // copy number
+   Int_t             fNovlp = 0;               // number of overlaps
+   Int_t            *fOverlaps = nullptr;      //[fNovlp] list of indices for overlapping brothers
+   TGeoExtension    *fUserExtension = nullptr; //! Transient user-defined extension to volumes
+   TGeoExtension    *fFWExtension = nullptr;   //! Transient framework-defined extension to volumes
 
    TGeoNode(const TGeoNode&);
    TGeoNode& operator=(const TGeoNode&);
@@ -161,7 +149,7 @@ public:
 class TGeoNodeMatrix : public TGeoNode
 {
 private:
-   TGeoMatrix       *fMatrix;         // transf. matrix of fNode in fMother system
+   TGeoMatrix       *fMatrix = nullptr; // transf. matrix of fNode in fMother system
 
 protected:
    TGeoNodeMatrix(const TGeoNodeMatrix& gnm);
@@ -193,9 +181,9 @@ public:
 class TGeoNodeOffset : public TGeoNode
 {
 private:
-   Double_t          fOffset; // X offset for this node with respect to its mother
-   Int_t             fIndex;  // index of this node in the division
-   TGeoPatternFinder *fFinder; // finder for this node
+   Double_t          fOffset = 0.;       // X offset for this node with respect to its mother
+   Int_t             fIndex = 0;         // index of this node in the division
+   TGeoPatternFinder *fFinder = nullptr; // finder for this node
 
 protected:
    TGeoNodeOffset(const TGeoNodeOffset&);
@@ -231,7 +219,7 @@ class TGeoIterator;
 class TGeoIteratorPlugin : public TObject
 {
 protected:
-   const TGeoIterator *fIterator;           // Caller iterator
+   const TGeoIterator *fIterator = nullptr; // Caller iterator
 private:
    // No copy
    TGeoIteratorPlugin(const TGeoIteratorPlugin &);
@@ -255,17 +243,17 @@ public:
 class TGeoIterator
 {
 private:
-   TGeoVolume       *fTop;                  // Top volume of the iterated branch
-   Bool_t            fMustResume;           // Private flag to resume from current node.
-   Bool_t            fMustStop;             // Private flag to signal that the iterator has finished.
-   Int_t             fLevel;                // Current level in the tree
-   Int_t             fType;                 // Type of iteration
-   Int_t            *fArray;                // Array of node indices for the current path
-   TGeoHMatrix      *fMatrix;               // Current global matrix
+   TGeoVolume       *fTop = nullptr;        // Top volume of the iterated branch
+   Bool_t            fMustResume = kFALSE;  // Private flag to resume from current node.
+   Bool_t            fMustStop = kFALSE;    // Private flag to signal that the iterator has finished.
+   Int_t             fLevel = 0;            // Current level in the tree
+   Int_t             fType = 0;             // Type of iteration
+   Int_t            *fArray = nullptr;      // Array of node indices for the current path
+   TGeoHMatrix      *fMatrix = nullptr;     // Current global matrix
    TString           fTopName;              // User name for top
    TGeoIteratorPlugin
-                    *fPlugin;               // User iterator plugin
-   Bool_t            fPluginAutoexec;       // Plugin automatically executed during next()
+                    *fPlugin = nullptr;     // User iterator plugin
+   Bool_t            fPluginAutoexec = kFALSE; // Plugin automatically executed during next()
 
    void            IncreaseArray();
 protected:

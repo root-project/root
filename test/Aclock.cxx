@@ -5,18 +5,15 @@
 //  ROOT implementation of the X11 xclock.
 //
 //  To run this example do the following:
+//
 //  $ root
-//  root [0] gSystem.Load("libGpad")
-//  root [1] gSystem.Load("Aclock")
+//  root [0] gSystem->Load("libGpad")
+//  root [1] gSystem->Load("Aclock")
 //  root [1] Aclock a
 //  <enjoy>
 //  root [2] .q
 //
 //  Other ROOT fun examples: Tetris, Hello ...
-//
-//  Begin_Html
-// <img src="http://emcal06.rhic.bnl.gov/~onuchin/root/gif/hello_clock.gif">
-//  End_Html
 //
 ///////////////////////////////////////////////////////////////////
 
@@ -40,7 +37,7 @@ Float_t SecondHand::fgSecondHandY[] = { 0.78, 0.73, 0.68, 0.73 };
 TDatime *ClockHand::fgTime = new TDatime;
 
 
-TPolygon::TPolygon(Int_t n, Float_t *x, Float_t *y) : TPolyLine(n+1,x,y)
+TPolygon::TPolygon(Int_t n, Float_t *x, Float_t *y) : TPolyLine(n+1,x,y), fPad(0)
 {
    // Create filled polygon. Polygon will be added to current pad.
 

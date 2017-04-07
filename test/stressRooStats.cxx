@@ -53,18 +53,20 @@ using namespace RooFit ;
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
 {
-   // Print test program number and its title
    TString header = TString::Format("Test %d : %s ", id, title.Data());
    cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// width of lines when printing test results
+
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
-   // width of lines when printing test results
    const Int_t lineWidth = 120;
 
    // Save memory directory location
@@ -374,11 +376,6 @@ int main(int argc, const char *argv[])
 //            << refFileName << endl;
 //    }
 
-   // Disable caching of complex error function calculation, as we don't
-   // want to write out the cache file as part of the validation procedure
-   RooMath::cacheCERF(kFALSE) ;
-
-
    // set minimizer
     // use Minut2 if available
    std::string minimizerType = minimizerName;
@@ -393,6 +390,22 @@ int main(int argc, const char *argv[])
 
 
    gBenchmark = new TBenchmark();
+   return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t stressRooStats()
+{
+   Bool_t doWrite     = kFALSE;
+   Int_t  verbose     =      0;
+   Bool_t allTests    = kFALSE;
+   Bool_t oneTest     = kFALSE;
+   Int_t testNumber   =      0;
+   Bool_t dryRun      = kFALSE;
+   Bool_t doDump      = kFALSE;
+   Bool_t doTreeStore = kFALSE;
+   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root";
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 

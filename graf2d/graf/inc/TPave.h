@@ -13,39 +13,27 @@
 #define ROOT_TPave
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPave                                                                //
-//                                                                      //
-// Pave class.                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TBox
 #include "TBox.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TPave : public TBox {
 
 protected:
-   Double_t     fX1NDC;         //X1 point in NDC coordinates
-   Double_t     fY1NDC;         //Y1 point in NDC coordinates
-   Double_t     fX2NDC;         //X2 point in NDC coordinates
-   Double_t     fY2NDC;         //Y2 point in NDC coordinates
-   Int_t        fBorderSize;    //window box bordersize in pixels
-   Int_t        fInit;          //(=0 if transformation to NDC not yet done)
-   Int_t        fShadowColor;   //Color of the pave's shadow
-   Double_t     fCornerRadius;  //Corner radius in case of option arc
-   TString      fOption;        //Pave style
-   TString      fName;          //Pave name
+   Double_t     fX1NDC;         ///< X1 point in NDC coordinates
+   Double_t     fY1NDC;         ///< Y1 point in NDC coordinates
+   Double_t     fX2NDC;         ///< X2 point in NDC coordinates
+   Double_t     fY2NDC;         ///< Y2 point in NDC coordinates
+   Int_t        fBorderSize;    ///< window box bordersize in pixels
+   Int_t        fInit;          ///< (=0 if transformation to NDC not yet done)
+   Int_t        fShadowColor;   ///< Color of the pave's shadow
+   Double_t     fCornerRadius;  ///< Corner radius in case of option arc
+   TString      fOption;        ///< Pave style
+   TString      fName;          ///< Pave name
 
 public:
    // TPave status bits
    enum {
-      kNameIsAction = BIT(11)   // double clicking on TPave will execute action
+      kNameIsAction = BIT(11)   ///< double clicking on TPave will execute action
    };
 
    TPave();

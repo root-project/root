@@ -8,29 +8,39 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeoGlobalMagField.h"
 #include "TVirtualMagField.h"
 
-//______________________________________________________________________________
-// TVirtualMagField - ABC for magnetic field. Derived classes are encouraged to
-// use the TVirtualMagField named constructor and must implement the method:
-//    Field(const Double_t *x, Double_t *B)
-//
-// A field object can be made global via:
-//    TGlobalMagField::Instance()->SetField(field)         [1]
-// A field which is made global is owned by the field manager. The used is not
-// allowed to delete it directly anymore (otherwise a Fatal() is issued). Global
-// field can be deleted by calling [1] with a different argument (which can be
-// NULL). Otherwise the global field is deleted together with the field manager.
-//
-//______________________________________________________________________________
+#include "TGeoGlobalMagField.h"
+#include "Rtypes.h"
+
+/** \class TVirtualMagField
+\ingroup Geometry_classes
+Abstract class for magnetic field. Derived classes are encouraged to
+use the TVirtualMagField named constructor and must implement the method:
+
+~~~ {.cpp}
+   Field(const Double_t *x, Double_t *B)
+~~~
+
+A field object can be made global via:
+
+~~~ {.cpp}
+   TGlobalMagField::Instance()->SetField(field)         [1]
+~~~
+
+A field which is made global is owned by the field manager. The used is not
+allowed to delete it directly anymore (otherwise a Fatal() is issued). Global
+field can be deleted by calling [1] with a different argument (which can be
+NULL). Otherwise the global field is deleted together with the field manager.
+*/
 
 ClassImp(TVirtualMagField)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Unregisters the field.
+
 TVirtualMagField::~TVirtualMagField()
 {
-// Destructor. Unregisters the field.
    if (TGeoGlobalMagField::GetInstance()) {
       TVirtualMagField *global_field = TGeoGlobalMagField::GetInstance()->GetField();
       if (global_field == this)
@@ -39,27 +49,31 @@ TVirtualMagField::~TVirtualMagField()
    }
 }
 
-//______________________________________________________________________________
-// TGeoUniformMagField - Implementation for uniform magnetic field.
-//______________________________________________________________________________
+/** \class TGeoUniformMagField
+\ingroup Geometry_classes
+
+Implementation for uniform magnetic field.
+*/
 
 ClassImp(TGeoUniformMagField)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor;
+
 TGeoUniformMagField::TGeoUniformMagField()
                     :TVirtualMagField()
 {
-// Default constructor;
    fB[0] = 0.;
    fB[1] = 0.;
    fB[2] = 0.;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor;
+
 TGeoUniformMagField::TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz)
                     :TVirtualMagField("Uniform magnetic field")
 {
-// Default constructor;
    fB[0] = Bx;
    fB[1] = By;
    fB[2] = Bz;

@@ -30,8 +30,52 @@ gCling->process("\"Root\"", &V);
 V
 // CHECK: (cling::Value &) boxes [(const char [5]) "Root"]
 // End PR #98146
-typedef enum {k1,k2} enumName;
-enumName var
-// CHECK: (enumName) (::k1) : (int) 0
+
+.rawInput 1
+typedef enum {k1 = 0, k2} enumName;
+enumName var = k1;
+.rawInput 0
+var
+// CHECK: (enumName) (k1) : ({{(unsigned )?}}int) 0
 const enumName constVar = (enumName) 1 // k2 is invisible!
-// CHECK: (const enumName) (::k2) : (int) 1
+// CHECK: (const enumName) (k2) : ({{(unsigned )?}}int) 1
+
+// ROOT-8036: check that library symbols do not override interpreter symbols
+int step = 10 // CHECK: (int) 10
+step // CHECK: (int) 10
+
+gCling->process("#ifdef __UNDEFINED__\n42\n#endif")
+//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::CompilationResult::kSuccess) : ({{(unsigned )?}}int) 0
+
+// User input variants of above:
+#ifdef NOTDEFINED
+ gCling->echo("9")
+#else
+ gCling->echo("12")
+#endif
+//CHECK: (int) 12
+//CHECK: (cling::Interpreter::CompilationResult) (cling::Interpreter::CompilationResult::kSuccess) : ({{(unsigned )?}}int) 0
+
+#ifdef __CLING__
+ gCling->echo("19");
+#else
+ gCling->echo("156")
+#endif
+//CHECK: (int) 19
+
+// ROOT-8300
+struct B { static void *fgStaticVar; B(){ printf("B::B()\n"); } };
+B b; // CHECK: B::B()
+
+// ROOT-7857
+template <class T> void tfunc(T) {}
+struct ROOT7857{
+  void func() { tfunc((ROOT7857*)0); }
+};
+ROOT7857* root7857;
+
+// ROOT-5248
+class MyClass;
+extern MyClass* my;
+class MyClass {public: MyClass* getMyClass() {return 0;}} cl;
+MyClass* my = cl.getMyClass();

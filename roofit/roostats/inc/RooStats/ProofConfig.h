@@ -11,35 +11,10 @@
 #ifndef ROOSTATS_ProofConfig
 #define ROOSTATS_ProofConfig
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-Holds configuration options for proof and proof-lite.
-
-This class will be expanded in the future to hold more specific configuration
-options for the tools in RooStats.
-</p>
 
 
-<p>
-Access to TProof::Mgr for configuration is still possible as usual
-(e.g. to set Root Version to be used on workers). You can do:</p>
-<ul>
-  <li>TProof::Mgr("my.server.url")->ShowROOTVersions()</li>
-  <li>TProof::Mgr("my.server.url")->SetROOTVersion("v5-27-06_dbg")</li>
-</ul>
 
-<p>
-See doc: http://root.cern.ch/drupal/content/changing-default-root-version
-</p>
-END_HTML
-*/
-//
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "RooWorkspace.h"
 #include "RooStudyManager.h"
@@ -48,12 +23,32 @@ END_HTML
 
 namespace RooStats {
 
+/** \class ProofConfig
+    \ingroup Roostats
+
+Holds configuration options for proof and proof-lite.
+
+This class will be expanded in the future to hold more specific configuration
+options for the tools in RooStats.
+
+Access to TProof::Mgr for configuration is still possible as usual
+(e.g. to set Root Version to be used on workers). You can do:
+
+~~~ {.cpp}
+   TProof::Mgr("my.server.url")->ShowROOTVersions()
+   TProof::Mgr("my.server.url")->SetROOTVersion("v5-27-06_dbg")
+~~~
+
+See doc: http://root.cern.ch/drupal/content/changing-default-root-version
+*/
+
+
 class ProofConfig {
 
    public:
-      
+
       // configure proof with number of experiments and host session
-      //  in case of Prooflite, it is better to define the number of workers as "worker=n" in the host string 
+      //  in case of Prooflite, it is better to define the number of workers as "worker=n" in the host string
 
       ProofConfig(RooWorkspace &w, Int_t nExperiments = 0, const char *host = "", Bool_t showGui = kFALSE) :
          fWorkspace(w),
@@ -63,28 +58,28 @@ class ProofConfig {
       {
 
             // case of ProofLite
-         if (fHost == "" || fHost.Contains("lite") ) { 
-            fLite = true; 
+         if (fHost == "" || fHost.Contains("lite") ) {
+            fLite = true;
 
 
-            // get the default value of the machine - use CINT inetrface until we have a poper PROOF interface that we can call 
+            // get the default value of the machine - use CINT interface until we have a poper PROOF interface that we can call
             int nMaxWorkers = gROOT->ProcessLineFast("TProofLite::GetNumberOfWorkers()");
 
             if (nExperiments == 0) {
                fNExperiments = nMaxWorkers;
             }
 
-            if (nExperiments > nMaxWorkers) 
-               std::cout << "ProofConfig - Warning: using a number of workers = " << nExperiments << " which is larger than the number of cores in the machine " 
+            if (nExperiments > nMaxWorkers)
+               std::cout << "ProofConfig - Warning: using a number of workers = " << nExperiments << " which is larger than the number of cores in the machine "
                          << nMaxWorkers << std::endl;
-            
-            // set the number of workers in the Host string 
+
+            // set the number of workers in the Host string
             fHost = TString::Format("workers=%d",fNExperiments);
-         } 
-         else { 
-            fLite = false; 
+         }
+         else {
+            fLite = false;
             // have always a default number of experiments
-            if (nExperiments == 0) fNExperiments = 8;  
+            if (nExperiments == 0) fNExperiments = 8;
          }
       }
 
@@ -104,7 +99,7 @@ class ProofConfig {
       Int_t GetNExperiments(void) const { return fNExperiments; }
       // return fShowGui
       Bool_t GetShowGui(void) const { return fShowGui; }
-      // return true if it is a Lite session (ProofLite) 
+      // return true if it is a Lite session (ProofLite)
       Bool_t IsLite() const { return fLite; }
 
    protected:

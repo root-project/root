@@ -1,45 +1,48 @@
 // @(#)root/physics:$Id$
 // Author: Rene Brun , Valerio Filippini  06/09/2000
 
-//_____________________________________________________________________________________
-//
-//  Utility class to generate n-body event,
-//  with constant cross-section (default)
-//  or with Fermi energy dependence (opt="Fermi").
-//  The event is generated in the center-of-mass frame,
-//  but the decay products are finally boosted
-//  using the betas of the original particle.
-//
-//  The code is based on the GENBOD function (W515 from CERNLIB)
-//  using the Raubold and Lynch method
-//      F. James, Monte Carlo Phase Space, CERN 68-15 (1968)
-//
-// see example of use in $ROOTSYS/tutorials/physics/PhaseSpace.C
-//
-// Note that Momentum, Energy units are Gev/C, GeV
+/** \class TGenPhaseSpace
+    \ingroup Physics
+
+ Utility class to generate n-body event,
+ with constant cross-section (default)
+ or with Fermi energy dependence (opt="Fermi").
+ The event is generated in the center-of-mass frame,
+ but the decay products are finally boosted
+ using the betas of the original particle.
+
+ The code is based on the GENBOD function (W515 from CERNLIB)
+ using the Raubold and Lynch method
+     F. James, Monte Carlo Phase Space, CERN 68-15 (1968)
+
+see example of use in PhaseSpace.C
+
+Note that Momentum, Energy units are Gev/C, GeV
+*/
 
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
 #include "TMath.h"
-#include <stdlib.h>
 
 const Int_t kMAXP = 18;
 
 ClassImp(TGenPhaseSpace)
 
-//_____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The PDK function.
+
 Double_t TGenPhaseSpace::PDK(Double_t a, Double_t b, Double_t c)
 {
-   //the PDK function
    Double_t x = (a-b-c)*(a+b+c)*(a-b+c)*(a+b-c);
    x = TMath::Sqrt(x)/(2*a);
    return x;
 }
 
-//_____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Special max function
+
 Int_t DoubleMax(const void *a, const void *b)
 {
-   //special max function
    Double_t aa = * ((Double_t *) a);
    Double_t bb = * ((Double_t *) b);
    if (aa > bb) return  1;
@@ -48,10 +51,11 @@ Int_t DoubleMax(const void *a, const void *b)
 
 }
 
-//__________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen) : TObject(gen)
 {
-   //copy constructor
    fNt      = gen.fNt;
    fWtMax   = gen.fWtMax;
    fTeCmTm  = gen.fTeCmTm;
@@ -65,10 +69,11 @@ TGenPhaseSpace::TGenPhaseSpace(const TGenPhaseSpace &gen) : TObject(gen)
 }
 
 
-//__________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TGenPhaseSpace& TGenPhaseSpace::operator=(const TGenPhaseSpace &gen)
 {
-   // Assignment operator
    TObject::operator=(gen);
    fNt      = gen.fNt;
    fWtMax   = gen.fWtMax;
@@ -83,15 +88,15 @@ TGenPhaseSpace& TGenPhaseSpace::operator=(const TGenPhaseSpace &gen)
    return *this;
 }
 
-//__________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Generate a random final state.
+///  The function returns the weight of the current event.
+///  The TLorentzVector of each decay product can be obtained using GetDecay(n).
+///
+/// Note that Momentum, Energy units are Gev/C, GeV
+
 Double_t TGenPhaseSpace::Generate()
 {
-   //  Generate a random final state.
-   //  The function returns the weigth of the current event.
-   //  The TLorentzVector of each decay product can be obtained using GetDecay(n).
-   //
-   // Note that Momentum, Energy units are Gev/C, GeV
-
    Double_t rno[kMAXP];
    rno[0] = 0;
    Int_t n;
@@ -157,35 +162,36 @@ Double_t TGenPhaseSpace::Generate()
    for (n=0;n<fNt;n++) fDecPro[n].Boost(fBeta[0],fBeta[1],fBeta[2]);
 
    //
-   //---> return the weigth of event
+   //---> return the weight of event
    //
    return wt;
 }
 
-//__________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return Lorentz vector corresponding to decay n
+
 TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n)
 {
-   //return Lorentz vector corresponding to decay n
    if (n>fNt) return 0;
    return fDecPro+n;
 }
 
 
-//_____________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Input:
+///  - TLorentzVector &P:    decay particle (Momentum, Energy units are Gev/C, GeV)
+///  - Int_t nt:             number of decay products
+///  - Double_t *mass:       array of decay product masses
+///  - Option_t *opt:        default -> constant cross section
+///                       "Fermi" -> Fermi energy dependence
+/// Return value:
+///  - kTRUE:      the decay is permitted by kinematics
+///  - kFALSE:     the decay is forbidden by kinematics
+///
+
 Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
    const Double_t *mass, Option_t *opt)
 {
-   // input:
-   // TLorentzVector &P:    decay particle (Momentum, Energy units are Gev/C, GeV)
-   // Int_t nt:             number of decay products
-   // Double_t *mass:       array of decay product masses
-   // Option_t *opt:        default -> constant cross section
-   //                       "Fermi" -> Fermi energy dependece
-   // return value:
-   // kTRUE:      the decay is permitted by kinematics
-   // kFALSE:     the decay is forbidden by kinematics
-   //
-
    Int_t n;
    fNt = nt;
    if (fNt<2 || fNt>18) return kFALSE;  // no more then 18 particle
@@ -202,7 +208,7 @@ Bool_t TGenPhaseSpace::SetDecay(TLorentzVector &P, Int_t nt,
    if (fTeCmTm<=0) return kFALSE;    // not enough energy for this decay
 
    //
-   //------> the max weigth depends on opt:
+   //------> the max weight depends on opt:
    //   opt == "Fermi"  --> fermi energy dependence for cross section
    //   else            --> constant cross section as function of TECM (default)
    //

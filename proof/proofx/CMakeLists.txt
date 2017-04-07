@@ -1,11 +1,7 @@
-
 ############################################################################
 # CMakeLists.txt file for building ROOT proof/proofx package
 # @author Pere Mato, CERN
 ############################################################################
-
-ROOT_USE_PACKAGE(proof/proofd)
-ROOT_USE_PACKAGE(proof/proofplayer)
 
 if(WIN32)
   set(headers TXProofMgr.h TXSlave.h TXSocket.h TXSocketHandler.h TXHandler.h)
@@ -17,6 +13,7 @@ else()
 endif()
 
 include_directories(${XROOTD_INCLUDE_DIRS})
+include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/../proofd/inc)
 link_directories(${XROOTD_LIBRARY_DIR})
 add_definitions(${XROOTD_CFLAGS})
 

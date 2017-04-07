@@ -59,13 +59,13 @@ enum EPieWid {
    kFONT_STYLE
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of graph editor.
+
 TPieEditor::TPieEditor(const TGWindow *p, Int_t width,
                          Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of graph editor.
-
    fPie = 0;
    // TextEntry to change the title
    MakeTitle("Pie Chart");
@@ -135,18 +135,19 @@ TPieEditor::TPieEditor(const TGWindow *p, Int_t width,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of pie editor.
+
 TPieEditor::~TPieEditor()
 {
-   // Destructor of pie editor.
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TPieEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fTitle->Connect("TextChanged(const char *)","TPieEditor",this,"DoTitle(const char *)");
    fgr->Connect("Clicked(Int_t)","TPieEditor",this,"DoShape()");
    fOutlineOnOff->Connect("Toggled(Bool_t)","TPieEditor",this,"DoMarkerOnOff(Bool_t)");
@@ -163,22 +164,22 @@ void TPieEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exclude TAttTextEditor from this interface.
+
 void TPieEditor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Exclude TAttTextEditor from this interface.
-
    TGedEditor *gedEditor = GetGedEditor();
    gedEditor->ExcludeClassEditor(TAttText::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used values of graph attributes.
+
 void TPieEditor::SetModel(TObject* obj)
 {
-   // Pick up the used values of graph attributes.
-
    fPie = (TPie *)obj;
    fAvoidSignal = kTRUE;
 
@@ -271,22 +272,22 @@ void TPieEditor::SetModel(TObject* obj)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the graph title.
+
 void TPieEditor::DoTitle(const char *text)
 {
-   // Slot for setting the graph title.
-
    if (fAvoidSignal) return;
    fPie->SetTitle(text);
    Update();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the draw options.
+
 void TPieEditor::DoShape()
 {
-   // Slot connected to the draw options.
-
    if (fAvoidSignal) return;
 
    TString opt = GetDrawOption();
@@ -310,11 +311,11 @@ void TPieEditor::DoShape()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting markers as visible/invisible.
+
 void TPieEditor::DoMarkerOnOff(Bool_t)
 {
-   // Slot for setting markers as visible/invisible.
-
    if (fAvoidSignal) return;
    TString t = GetDrawOption();
 
@@ -329,10 +330,11 @@ void TPieEditor::DoMarkerOnOff(Bool_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the 3D angle
+
 void TPieEditor::DoChange3DAngle()
 {
-   // Slot for setting the 3D angle
    if (fAvoidSignal) return;
 
    fPie->SetAngle3D(static_cast<Int_t>(f3DAngle->GetNumber()));
@@ -343,11 +345,11 @@ void TPieEditor::DoChange3DAngle()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the graph line width.
+
 void TPieEditor::DoGraphLineWidth()
 {
-   // Slot connected to the graph line width.
-
    if (fAvoidSignal) return;
 
    TString opt = GetDrawOption();
@@ -363,11 +365,11 @@ void TPieEditor::DoGraphLineWidth()
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change text.
+
 void TPieEditor::DoTextChange()
 {
-   // Change text.
-
    if (fAvoidSignal) return;
 
    // font color
@@ -400,11 +402,11 @@ void TPieEditor::DoTextChange()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create text size combo box.
+
 TGComboBox* TPieEditor::BuildFontSizeComboBox(TGFrame* parent, Int_t id)
 {
-   // Create text size combo box.
-
    char a[100];
    TGComboBox *c = new TGComboBox(parent, id);
 

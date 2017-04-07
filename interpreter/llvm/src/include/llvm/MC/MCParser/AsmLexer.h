@@ -29,10 +29,11 @@ class AsmLexer : public MCAsmLexer {
 
   const char *CurPtr;
   StringRef CurBuf;
-  bool isAtStartOfLine;
+  bool IsAtStartOfLine;
+  bool IsAtStartOfStatement;
 
-  void operator=(const AsmLexer&) LLVM_DELETED_FUNCTION;
-  AsmLexer(const AsmLexer&) LLVM_DELETED_FUNCTION;
+  void operator=(const AsmLexer&) = delete;
+  AsmLexer(const AsmLexer&) = delete;
 
 protected:
   /// LexToken - Read the next token and return its code.
@@ -40,21 +41,20 @@ protected:
 
 public:
   AsmLexer(const MCAsmInfo &MAI);
-  ~AsmLexer();
+  ~AsmLexer() override;
 
   void setBuffer(StringRef Buf, const char *ptr = nullptr);
 
   StringRef LexUntilEndOfStatement() override;
-  StringRef LexUntilEndOfLine();
 
-  const AsmToken peekTok(bool ShouldSkipSpace = true) override;
-
-  bool isAtStartOfComment(const char *Ptr);
-  bool isAtStatementSeparator(const char *Ptr);
+  size_t peekTokens(MutableArrayRef<AsmToken> Buf,
+                    bool ShouldSkipSpace = true) override;
 
   const MCAsmInfo &getMAI() const { return MAI; }
 
 private:
+  bool isAtStartOfComment(const char *Ptr);
+  bool isAtStatementSeparator(const char *Ptr);
   int getNextChar();
   AsmToken ReturnError(const char *Loc, const std::string &Msg);
 
@@ -66,6 +66,8 @@ private:
   AsmToken LexQuote();
   AsmToken LexFloatLiteral();
   AsmToken LexHexFloatLiteral(bool NoIntDigits);
+
+  StringRef LexUntilEndOfLine();
 };
 
 } // end namespace llvm

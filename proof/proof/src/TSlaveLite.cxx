@@ -9,6 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TSlaveLite
+\ingroup proofkernel
+
+Version of TSlave for local worker servers.
+See TSlave for details.
+
+*/
+
+
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TSlaveLite                                                           //
@@ -32,7 +42,6 @@
 #include "TSocket.h"
 #include "TSysEvtHandler.h"
 #include "TVirtualMutex.h"
-#include "TThread.h"
 
 ClassImp(TSlaveLite)
 
@@ -40,21 +49,22 @@ ClassImp(TSlaveLite)
 //---- error handling ----------------------------------------------------------
 //---- Needed to avoid blocking on the CINT mutex in printouts -----------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to ErrorHandler (protected).
+
 void TSlaveLite::DoError(int level, const char *location,
                                     const char *fmt, va_list va) const
 {
-   // Interface to ErrorHandler (protected).
-
    ::ErrorHandler(level, Form("TSlaveLite::%s", location), fmt, va);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a PROOF slave object. Called via the TProof ctor.
+
 TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
                const char *image, TProof *proof, Int_t stype,
                const char *workdir, const char *msd, Int_t) : TSlave()
 {
-   // Create a PROOF slave object. Called via the TProof ctor.
    fName = ord;  // Need this during the setup phase; see end of SetupServ
    fImage = image;
    fProofWorkDir = workdir;
@@ -71,20 +81,15 @@ TSlaveLite::TSlaveLite(const char *ord, Int_t perf,
    if (fPerfIdx > 0) Init();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF worker object. Called via the TSlaveLite ctor.
+
 void TSlaveLite::Init()
 {
-   // Init a PROOF worker object. Called via the TSlaveLite ctor.
-
    // Command to be executed
    TString cmd;
-#ifdef R__HAVE_CONFIG
    cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s\"; %s/proofserv proofslave lite %d %d 0&",
-            fWorkDir.Data(), fOrdinal.Data(), ROOTBINDIR, ROOTBINDIR,
-#else
-   cmd.Form(". %s/worker-%s.env; export ROOTBINDIR=\"%s/bin\"; %s/bin/proofserv proofslave lite %d %d 0&",
-            fWorkDir.Data(), fOrdinal.Data(), gSystem->Getenv("ROOTSYS"), gSystem->Getenv("ROOTSYS"),
-#endif
+            fWorkDir.Data(), fOrdinal.Data(), TROOT::GetBinDir().Data(), TROOT::GetBinDir().Data(),
             gSystem->GetPid(), gDebug);
    // Execute
    if (gSystem->Exec(cmd) != 0) {
@@ -94,13 +99,13 @@ void TSlaveLite::Init()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a PROOF slave object. Called via the TSlaveLite ctor.
+/// The Init method is technology specific and is overwritten by derived
+/// classes.
+
 Int_t TSlaveLite::SetupServ(Int_t, const char *)
 {
-   // Init a PROOF slave object. Called via the TSlaveLite ctor.
-   // The Init method is technology specific and is overwritten by derived
-   // classes.
-
    // Get back startup message of proofserv (we are now talking with
    // the real proofserver and not anymore with the proofd front-end)
    Int_t what;
@@ -138,19 +143,19 @@ Int_t TSlaveLite::SetupServ(Int_t, const char *)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy slave.
+
 TSlaveLite::~TSlaveLite()
 {
-   // Destroy slave.
-
    Close();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close slave socket.
+
 void TSlaveLite::Close(Option_t *opt)
 {
-   // Close slave socket.
-
    if (fSocket)
       // Closing socket ...
       fSocket->Close(opt);
@@ -159,11 +164,11 @@ void TSlaveLite::Close(Option_t *opt)
    SafeDelete(fSocket);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printf info about slave.
+
 void TSlaveLite::Print(Option_t *) const
 {
-   // Printf info about slave.
-
    const char *sst[] = { "invalid" , "valid", "inactive" };
    Int_t st = fSocket ? ((fStatus == kInactive) ? 2 : 1) : 0;
 

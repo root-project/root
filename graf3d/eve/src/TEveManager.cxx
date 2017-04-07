@@ -49,15 +49,16 @@
 
 TEveManager* gEve = 0;
 
-//______________________________________________________________________________
-// TEveManager
-//
-// Central aplication manager for Eve.
-// Manages elements, GUI, GL scenes and GL viewers.
+/** \class TEveManager
+\ingroup TEve
+Central application manager for Eve.
+Manages elements, GUI, GL scenes and GL viewers.
+*/
 
 ClassImp(TEveManager);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
    fExcHandler  (0),
    fVizDB       (0), fVizDBReplace(kTRUE), fVizDBUpdate(kTRUE),
@@ -183,17 +184,14 @@ TEveManager::TEveManager(UInt_t w, UInt_t h, Bool_t map_window, Option_t* opt) :
       EditElement(GetDefaultViewer());
    }
 
-   /**************************************************************************/
-   /**************************************************************************/
-
    gSystem->ProcessEvents();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveManager::~TEveManager()
 {
-   // Destructor.
-
    // Stop timer and deny further redraw requests.
    fRedrawTimer.Stop();
    fTimerActive = kTRUE;
@@ -237,67 +235,63 @@ TEveManager::~TEveManager()
    fBrowser->TRootBrowser::CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the orphanage.
+
 void TEveManager::ClearOrphanage()
 {
-   // Clear the orphanage.
-
    Bool_t old_state = fUseOrphanage;
    fUseOrphanage = kFALSE;
    fOrphanage->DestroyElements();
    fUseOrphanage = old_state;
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Get the main window, i.e. EVE-browser.
 
-//______________________________________________________________________________
 TGWindow* TEveManager::GetMainWindow() const
 {
-   // Get the main window, i.e. EVE-browser.
-
    return fBrowser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the default viewer - the first one in the fViewers list.
+
 TEveViewer* TEveManager::GetDefaultViewer() const
 {
-   // Returns the default viewer - the first one in the fViewers list.
-
    return dynamic_cast<TEveViewer*>(fViewers->FirstChild());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get TGLViewer of the default TEveViewer.
+
 TGLViewer* TEveManager::GetDefaultGLViewer() const
 {
-   // Get TGLViewer of the default TEveViewer.
-
    TEveViewer *ev = GetDefaultViewer();
    return ev ? ev->GetGLViewer() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns main object editor.
+
 TEveGedEditor* TEveManager::GetEditor() const
 {
-   // Returns main object editor.
-
    return fLTEFrame->GetEditor();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns main window status bar.
+
 TGStatusBar* TEveManager::GetStatusBar() const
 {
-   // Returns main window status bar.
-
    return fBrowser->GetStatusBar();
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new canvas tab.
 
-//______________________________________________________________________________
 TCanvas* TEveManager::AddCanvasTab(const char* name)
 {
-   // Add a new canvas tab.
-
    fBrowser->StartEmbedding(1, -1);
    TCanvas* c = new TCanvas;
    fBrowser->StopEmbedding(name);
@@ -305,12 +299,12 @@ TCanvas* TEveManager::AddCanvasTab(const char* name)
    return c;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new GL viewer.
+
 TEveViewer* TEveManager::SpawnNewViewer(const char* name, const char* title,
                                         Bool_t embed)
 {
-   // Create a new GL viewer.
-
    TEveWindowSlot* slot = 0;
    if (embed)
    {
@@ -339,61 +333,49 @@ TEveViewer* TEveManager::SpawnNewViewer(const char* name, const char* title,
    return v;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new scene.
+
 TEveScene* TEveManager::SpawnNewScene(const char* name, const char* title)
 {
-   // Create a new scene.
-
    TEveScene* s = new TEveScene(name, title);
    AddElement(s, fScenes);
    return s;
 }
 
-/******************************************************************************/
-// Macro management
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Find macro in fMacroFolder by name.
 
-//______________________________________________________________________________
 TMacro* TEveManager::GetMacro(const char* name) const
 {
-   // Find macro in fMacroFolder by name.
-
    return dynamic_cast<TMacro*>(fMacroFolder->FindObject(name));
 }
 
-/******************************************************************************/
-// Editor
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Show element in default editor.
 
-//______________________________________________________________________________
 void TEveManager::EditElement(TEveElement* element)
 {
-   // Show element in default editor.
-
    static const TEveException eh("TEveManager::EditElement ");
 
    GetEditor()->DisplayElement(element);
 }
 
-/******************************************************************************/
-// 3D TEvePad management
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Register a request for 3D redraw.
 
-//______________________________________________________________________________
 void TEveManager::RegisterRedraw3D()
 {
-   // Register a request for 3D redraw.
-
    fRedrawTimer.Start(0, kTRUE);
    fTimerActive = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform 3D redraw of scenes and viewers whose contents has
+/// changed.
+
 void TEveManager::DoRedraw3D()
 {
-   // Perform 3D redraw of scenes and viewers whose contents has
-   // changed.
-
    static const TEveException eh("TEveManager::DoRedraw3D ");
 
    // printf("TEveManager::DoRedraw3D redraw triggered\n");
@@ -442,23 +424,21 @@ void TEveManager::DoRedraw3D()
    fTimerActive = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform 3D redraw of all scenes and viewers.
+
 void TEveManager::FullRedraw3D(Bool_t resetCameras, Bool_t dropLogicals)
 {
-   // Perform 3D redraw of all scenes and viewers.
-
    fScenes ->RepaintAllScenes (dropLogicals);
    fViewers->RepaintAllViewers(resetCameras, dropLogicals);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Element was changed, perform framework side action.
+/// Called from TEveElement::ElementChanged().
 
-//______________________________________________________________________________
 void TEveManager::ElementChanged(TEveElement* element, Bool_t update_scenes, Bool_t redraw)
 {
-   // Element was changed, perform framework side action.
-   // Called from TEveElement::ElementChanged().
-
    static const TEveException eh("TEveElement::ElementChanged ");
 
    if (GetEditor()->GetModel() == element->GetEditorObject(eh))
@@ -475,20 +455,20 @@ void TEveManager::ElementChanged(TEveElement* element, Bool_t update_scenes, Boo
       Redraw3D();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark all scenes from the given list as changed.
+
 void TEveManager::ScenesChanged(TEveElement::List_t& scenes)
 {
-   // Mark all scenes from the given list as changed.
-
    for (TEveElement::List_i s=scenes.begin(); s!=scenes.end(); ++s)
       ((TEveScene*)*s)->Changed();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark element as changed -- it will be processed on next redraw.
+
 void TEveManager::ElementStamped(TEveElement* element)
 {
-   // Mark element as changed -- it will be processed on next redraw.
-
    UInt_t slot;
    if (fStampedElements->GetValue((ULong64_t) element, (Long64_t) element, slot) == 0)
    {
@@ -496,16 +476,11 @@ void TEveManager::ElementStamped(TEveElement* element)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get default list-tree widget.
 
-/******************************************************************************/
-// GUI interface
-/******************************************************************************/
-
-//______________________________________________________________________________
 TGListTree* TEveManager::GetListTree() const
 {
-   // Get default list-tree widget.
-
    return fLTEFrame->fListTree;
 }
 
@@ -521,12 +496,12 @@ TEveManager::AddToListTree(TEveElement* re, Bool_t open, TGListTree* lt)
    return lti;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove top-level element from list-tree with specified tree-item.
+
 void TEveManager::RemoveFromListTree(TEveElement* element,
                                      TGListTree* lt, TGListTreeItem* lti)
 {
-   // Remove top-level element from list-tree with specified tree-item.
-
    static const TEveException eh("TEveManager::RemoveFromListTree ");
 
    if (lti->GetParent())
@@ -535,27 +510,25 @@ void TEveManager::RemoveFromListTree(TEveElement* element,
    element->RemoveFromListTree(lt, 0);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new event and make it the current event.
+/// It is added into the event-scene and as a top-level list-tree
+/// item.
 
-//______________________________________________________________________________
 TGListTreeItem* TEveManager::AddEvent(TEveEventManager* event)
 {
-   // Add a new event and make it the current event.
-   // It is added into the event-scene and as a top-level list-tree
-   // item.
-
    fCurrentEvent = event;
    fCurrentEvent->IncDenyDestroy();
    AddElement(fCurrentEvent, fEventScene);
    return AddToListTree(event, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an element. If parent is not specified it is added into
+/// current event (which is created if does not exist).
+
 void TEveManager::AddElement(TEveElement* element, TEveElement* parent)
 {
-   // Add an element. If parent is not specified it is added into
-   // current event (which is created if does not exist).
-
    if (parent == 0) {
       if (fCurrentEvent == 0)
          AddEvent(new TEveEventManager("Event", "Auto-created event directory"));
@@ -565,36 +538,34 @@ void TEveManager::AddElement(TEveElement* element, TEveElement* parent)
    parent->AddElement(element);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a global element, i.e. one that does not change on each
+/// event, like geometry or projection manager.
+/// If parent is not specified it is added to a global scene.
+
 void TEveManager::AddGlobalElement(TEveElement* element, TEveElement* parent)
 {
-   // Add a global element, i.e. one that does not change on each
-   // event, like geometry or projection manager.
-   // If parent is not specified it is added to a global scene.
-
    if (parent == 0)
       parent = fGlobalScene;
 
    parent->AddElement(element);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element from parent.
 
-//______________________________________________________________________________
 void TEveManager::RemoveElement(TEveElement* element,
                                 TEveElement* parent)
 {
-   // Remove element from parent.
-
    parent->RemoveElement(element);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called from TEveElement prior to its destruction so the
+/// framework components (like object editor) can unreference it.
+
 void TEveManager::PreDeleteElement(TEveElement* element)
 {
-   // Called from TEveElement prior to its destruction so the
-   // framework components (like object editor) can unreference it.
-
    if (GetEditor()->GetEveElement() == element)
       EditElement(0);
    TEveGedEditor::ElementDeleted(element);
@@ -611,23 +582,21 @@ void TEveManager::PreDeleteElement(TEveElement* element)
       fHighlight->RemoveImpliedSelected(element);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Select an element.
+/// Now it only calls EditElement() - should also update selection state.
 
-//______________________________________________________________________________
 void TEveManager::ElementSelect(TEveElement* element)
 {
-   // Select an element.
-   // Now it only calls EditElement() - should also update selection state.
-
    if (element != 0)
       EditElement(element);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paste has been called.
+
 Bool_t TEveManager::ElementPaste(TEveElement* element)
 {
-   // Paste has been called.
-
    // The object to paste is taken from the editor (this is not
    // exactly right) and handed to 'element' for pasting.
 
@@ -637,28 +606,23 @@ Bool_t TEveManager::ElementPaste(TEveElement* element)
    return kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a new visualization-parameter database entry. Returns
+/// true if the element is inserted successfully.
+/// If entry with the same key already exists the behaviour depends on the
+/// 'replace' flag:
+///  - true  - The old model is deleted and new one is inserted (default).
+///            Clients of the old model are transferred to the new one and
+///            if 'update' flag is true (default), the new model's parameters
+///            are assigned to all clients.
+///  - false - The old model is kept, false is returned.
+///
+/// If insert is successful, the ownership of the model-element is
+/// transferred to the manager.
 
-//==============================================================================
-// VizDB interface
-//==============================================================================
-
-//______________________________________________________________________________
 Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
                                      Bool_t replace, Bool_t update)
 {
-   // Insert a new visualization-parameter database entry. Returns
-   // true if the element is inserted successfully.
-   // If entry with the same key already exists the behaviour depends on the
-   // 'replace' flag:
-   //   true  - The old model is deleted and new one is inserted (default).
-   //           Clients of the old model are transferred to the new one and
-   //           if 'update' flag is true (default), the new model's parameters
-   //           are assigned to all clients.
-   //   false - The old model is kept, false is returned.
-   //
-   // If insert is successful, the ownership of the model-element is
-   // transferred to the manager.
-
    TPair* pair = (TPair*) fVizDB->FindObject(tag);
    if (pair)
    {
@@ -699,34 +663,34 @@ Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a new visualization-parameter database entry with the default
+/// parameters for replace and update, as specified by members
+/// fVizDBReplace(default=kTRUE) and fVizDBUpdate(default=kTRUE).
+/// See docs of the above function.
+
 Bool_t TEveManager::InsertVizDBEntry(const TString& tag, TEveElement* model)
 {
-   // Insert a new visualization-parameter database entry with the default
-   // parameters for replace and update, as specified by members
-   // fVizDBReplace(default=kTRUE) and fVizDBUpdate(default=kTRUE).
-   // See docs of the above function.
-
    return InsertVizDBEntry(tag, model, fVizDBReplace, fVizDBUpdate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a visualization-parameter database entry corresponding to tag.
+/// If the entry is not found 0 is returned.
+
 TEveElement* TEveManager::FindVizDBEntry(const TString& tag)
 {
-   // Find a visualization-parameter database entry corresponding to tag.
-   // If the entry is not found 0 is returned.
-
    return dynamic_cast<TEveElement*>(fVizDB->GetValue(tag));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load visualization-parameter database from file filename. The
+/// replace, update arguments replace the values of fVizDBReplace
+/// and fVizDBUpdate members for the duration of the macro
+/// execution.
+
 void TEveManager::LoadVizDB(const TString& filename, Bool_t replace, Bool_t update)
 {
-   // Load visualization-parameter database from file filename. The
-   // replace, update arguments replace the values of fVizDBReplace
-   // and fVizDBUpdate members for the duration of the macro
-   // execution.
-
    Bool_t ex_replace = fVizDBReplace;
    Bool_t ex_update  = fVizDBUpdate;
    fVizDBReplace = replace;
@@ -738,22 +702,22 @@ void TEveManager::LoadVizDB(const TString& filename, Bool_t replace, Bool_t upda
    fVizDBUpdate  = ex_update;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load visualization-parameter database from file filename.
+/// State of data-members fVizDBReplace and fVizDBUpdate determine
+/// how the registered entries are handled.
+
 void TEveManager::LoadVizDB(const TString& filename)
 {
-   // Load visualization-parameter database from file filename.
-   // State of data-members fVizDBReplace and fVizDBUpdate determine
-   // how the registered entries are handled.
-
    TEveUtil::Macro(filename);
    Redraw3D();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save visualization-parameter database to file filename.
+
 void TEveManager::SaveVizDB(const TString& filename)
 {
-   // Save visualization-parameter database to file filename.
-
    TPMERegexp re("(.+)\\.\\w+");
    if (re.Match(filename) != 2) {
       Error("SaveVizDB", "filename does not match required format '(.+)\\.\\w+'.");
@@ -792,18 +756,14 @@ void TEveManager::SaveVizDB(const TString& filename)
    out.close();
 }
 
-//==============================================================================
-// GeoManager, geometry-alias registration
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Get geometry with given filename.
+/// This is cached internally so the second time this function is
+/// called with the same argument the same geo-manager is returned.
+/// gGeoManager is set to the return value.
 
-//______________________________________________________________________________
 TGeoManager* TEveManager::GetGeometry(const TString& filename)
 {
-   // Get geometry with given filename.
-   // This is cached internally so the second time this function is
-   // called with the same argument the same geo-manager is returned.
-   // gGeoManager is set to the return value.
-
    static const TEveException eh("TEveManager::GetGeometry ");
 
    TString exp_filename = filename;
@@ -857,12 +817,12 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
    return gGeoManager;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get geometry with given alias.
+/// The alias must be registered via RegisterGeometryAlias().
+
 TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
 {
-   // Get geometry with given alias.
-   // The alias must be registered via RegisterGeometryAlias().
-
    static const TEveException eh("TEveManager::GetGeometry ");
 
    TObjString* full_name = (TObjString*) fGeometryAliases->GetValue(alias);
@@ -871,41 +831,39 @@ TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
    return GetGeometry(full_name->String());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the default geometry.
+/// It should be registered via RegisterGeometryName("Default", <URL>).
+
 TGeoManager* TEveManager::GetDefaultGeometry()
 {
-   // Get the default geometry.
-   // It should be registered via RegisterGeometryName("Default", <URL>).
-
    return GetGeometryByAlias("Default");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register 'name' as an alias for geometry file 'filename'.
+/// The old aliases are silently overwritten.
+/// After that the geometry can be retrieved also by calling:
+///   gEve->GetGeometryByName(name);
+
 void TEveManager::RegisterGeometryAlias(const TString& alias, const TString& filename)
 {
-   // Register 'name' as an alias for geometry file 'filename'.
-   // The old aliases are silently overwritten.
-   // After that the geometry can be retrieved also by calling:
-   //   gEve->GetGeometryByName(name);
-
    fGeometryAliases->Add(new TObjString(alias), new TObjString(filename));
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text in the right side of browser's status bar.
 
-//______________________________________________________________________________
 void TEveManager::SetStatusLine(const char* text)
 {
-   // Set the text in the right side of browser's status bar.
-
    fBrowser->SetStatusText(text, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Work-around uber ugly hack used in SavePrimitive and co.
+
 void TEveManager::ClearROOTClassSaved()
 {
-   // Work-around uber ugly hack used in SavePrimitive and co.
-
    TIter   nextcl(gROOT->GetListOfClasses());
    TClass *cls;
    while((cls = (TClass *)nextcl()))
@@ -914,12 +872,12 @@ void TEveManager::ClearROOTClassSaved()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close button has been clicked on EVE main window (browser).
+/// Cleanup and terminate application.
+
 void TEveManager::CloseEveWindow()
 {
-   // Close button has been clicked on EVE main window (browser).
-   // Cleanup and terminate application.
-
    TGMainFrame *mf = (TGMainFrame*) gTQSender;
    TEveBrowser *eb = dynamic_cast<TEveBrowser*>(mf);
    if (eb == fBrowser)
@@ -930,17 +888,12 @@ void TEveManager::CloseEveWindow()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// If global TEveManager* gEve is not set initialize it.
+/// Returns gEve.
 
-/******************************************************************************/
-// Static initialization.
-/******************************************************************************/
-
-//______________________________________________________________________________
 TEveManager* TEveManager::Create(Bool_t map_window, Option_t* opt)
 {
-   // If global TEveManager* gEve is not set initialize it.
-   // Returns gEve.
-
    static const TEveException eh("TEveManager::Create ");
 
    if (gEve == 0)
@@ -967,11 +920,11 @@ TEveManager* TEveManager::Create(Bool_t map_window, Option_t* opt)
    return gEve;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Properly terminate global TEveManager.
+
 void TEveManager::Terminate()
 {
-   // Properly terminate global TEveManager.
-
    if (!gEve) return;
 
    TEveGedEditor::DestroyEditors();
@@ -980,23 +933,19 @@ void TEveManager::Terminate()
    gEve = 0;
 }
 
-//==============================================================================
-//==============================================================================
-// TEveManager::TExceptionHandler
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Exception handler for Eve exceptions.
+/** \class TEveManager::TExceptionHandler
+\ingroup TEve
+Exception handler for Eve exceptions.
+*/
 
 ClassImp(TEveManager::TExceptionHandler);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle exceptions deriving from TEveException.
+
 TStdExceptionHandler::EStatus
 TEveManager::TExceptionHandler::Handle(std::exception& exc)
 {
-   // Handle exceptions deriving from TEveException.
-
    TEveException* ex = dynamic_cast<TEveException*>(&exc);
    if (ex) {
       Info("Handle", "%s", ex->Data());

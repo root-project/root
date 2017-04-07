@@ -32,17 +32,14 @@
 #define ROOT_Math_RootFinder
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IRootFinderMethod
 #include "Math/IRootFinderMethod.h"
-#endif
 
 
 /**
-   @defgroup RootFinders One-dimensional Root-Finding algorithms
+   @defgroup RootFinders One-dimensional Root-Finding
+   Classes implementing algorithms for finding the roots of a one-dimensional function.
    Various implementation esists in MathCore and MathMore
    The user interacts with a proxy class ROOT::Math::RootFinder which creates behing
    the chosen algorithms which are implemented using the ROOT::Math::IRootFinderMethod interface
@@ -220,13 +217,9 @@ namespace ROOT {
 } // namespace ROOT
 
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
-#ifndef ROOT_Math_Functor
 #include "Math/Functor.h"
-#endif
 
 template<class Function, class Derivative>
 bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,

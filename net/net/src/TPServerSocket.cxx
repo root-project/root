@@ -28,73 +28,73 @@
 
 ClassImp(TPServerSocket)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel server socket object on a specified port. Set reuse
+/// to true to force reuse of the server socket (i.e. do not wait for the
+/// time out to pass). Using backlog one can set the desirable queue length
+/// for pending connections.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Use IsValid() to check the validity of the
+/// server socket. In case server socket is not valid use GetErrorCode()
+/// to obtain the specific error value. These values are:
+///  0 = no error (socket is valid)
+/// -1 = low level socket() call failed
+/// -2 = low level bind() call failed
+/// -3 = low level listen() call failed
+/// Every valid server socket is added to the TROOT sockets list which
+/// will make sure that any open sockets are properly closed on
+/// program termination.
+
 TPServerSocket::TPServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
                                Int_t tcpwindowsize) :
    TServerSocket(port, reuse, backlog, tcpwindowsize)
 {
-   // Create a parallel server socket object on a specified port. Set reuse
-   // to true to force reuse of the server socket (i.e. do not wait for the
-   // time out to pass). Using backlog one can set the desirable queue length
-   // for pending connections.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Use IsValid() to check the validity of the
-   // server socket. In case server socket is not valid use GetErrorCode()
-   // to obtain the specific error value. These values are:
-   //  0 = no error (socket is valid)
-   // -1 = low level socket() call failed
-   // -2 = low level bind() call failed
-   // -3 = low level listen() call failed
-   // Every valid server socket is added to the TROOT sockets list which
-   // will make sure that any open sockets are properly closed on
-   // program termination.
-
    fTcpWindowSize = tcpwindowsize;
    SetName("PServerSocket");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel server socket object for a named service. Set reuse
+/// to true to force reuse of the server socket (i.e. do not wait for the
+/// time out to pass). Using backlog one can set the desirable queue length
+/// for pending connections.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Use IsValid() to check the validity of the
+/// server socket. In case server socket is not valid use GetErrorCode()
+/// to obtain the specific error value. These values are:
+///  0 = no error (socket is valid)
+/// -1 = low level socket() call failed
+/// -2 = low level bind() call failed
+/// -3 = low level listen() call failed
+/// Every valid server socket is added to the TROOT sockets list which
+/// will make sure that any open sockets are properly closed on
+/// program termination.
+
 TPServerSocket::TPServerSocket(const char *service, Bool_t reuse, Int_t backlog,
                                Int_t tcpwindowsize) :
    TServerSocket(service, reuse, backlog, tcpwindowsize)
 {
-   // Create a parallel server socket object for a named service. Set reuse
-   // to true to force reuse of the server socket (i.e. do not wait for the
-   // time out to pass). Using backlog one can set the desirable queue length
-   // for pending connections.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Use IsValid() to check the validity of the
-   // server socket. In case server socket is not valid use GetErrorCode()
-   // to obtain the specific error value. These values are:
-   //  0 = no error (socket is valid)
-   // -1 = low level socket() call failed
-   // -2 = low level bind() call failed
-   // -3 = low level listen() call failed
-   // Every valid server socket is added to the TROOT sockets list which
-   // will make sure that any open sockets are properly closed on
-   // program termination.
-
    fTcpWindowSize = tcpwindowsize;
    SetName("PServerSocket");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept a connection on a parallel server socket. Returns a full-duplex
+/// parallel communication TPSocket object. If no pending connections are
+/// present on the queue and nonblocking mode has not been enabled
+/// with SetOption(kNoBlock,1) the call blocks until a connection is
+/// present. The returned socket must be deleted by the user. The socket
+/// is also added to the TROOT sockets list which will make sure that
+/// any open sockets are properly closed on program termination.
+/// In case of error 0 is returned and in case non-blocking I/O is
+/// enabled and no connections are available -1 is returned.
+
 TSocket *TPServerSocket::Accept(UChar_t Opt)
 {
-   // Accept a connection on a parallel server socket. Returns a full-duplex
-   // parallel communication TPSocket object. If no pending connections are
-   // present on the queue and nonblocking mode has not been enabled
-   // with SetOption(kNoBlock,1) the call blocks until a connection is
-   // present. The returned socket must be deleted by the user. The socket
-   // is also added to the TROOT sockets list which will make sure that
-   // any open sockets are properly closed on program termination.
-   // In case of error 0 is returned and in case non-blocking I/O is
-   // enabled and no connections are available -1 is returned.
-
    TSocket  *setupSocket = 0;
    TSocket  **pSockets;
    TPSocket *newPSocket = 0;

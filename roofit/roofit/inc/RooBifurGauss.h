@@ -24,8 +24,8 @@ class RooRealVar;
 class RooBifurGauss : public RooAbsPdf {
 public:
   RooBifurGauss() {} ;
-  RooBifurGauss(const char *name, const char *title, RooAbsReal& _x, 
-		RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
+  RooBifurGauss(const char *name, const char *title, RooAbsReal& _x,
+      RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
 
   RooBifurGauss(const RooBifurGauss& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooBifurGauss(*this,newname); }

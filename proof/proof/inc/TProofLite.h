@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProof
 #include "TProof.h"
-#endif
 
 class TDSet;
 class TList;
@@ -88,7 +86,6 @@ private:
 protected:
    TProofLite() : TProof() { } // For derived classes to use
 
-   Int_t CreateSymLinks(TList *files, TList *wrks = 0);
    Int_t Init(const char *masterurl, const char *conffile,
                const char *confdir, Int_t loglevel,
                const char *alias = 0);

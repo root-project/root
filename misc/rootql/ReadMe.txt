@@ -23,9 +23,10 @@ You may have to create that folder if it does not exist. Once installed
 you may have to refresh the QL plugin cache by executing:
    /usr/bin/qlmanage -r
 
-To build from source, get it from svn using:
+To build from source, get it from git using:
 
-   svn co http://root.cern.ch/svn/root/trunk/misc/rootql rootql
+   git clone http://root.cern.ch/git/root.git root
+   cd root/misc/rootql
 
 Open the ROOTQL project in Xcode and click on "Build" (make sure the Active
 Build Configuration is set to "Release"). A command line short cut to open

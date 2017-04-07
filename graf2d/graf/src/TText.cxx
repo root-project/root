@@ -9,10 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TText.h"
+
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
-#include "TText.h"
 #  include <ft2build.h>
 #  include FT_FREETYPE_H
 #  include FT_GLYPH_H
@@ -27,43 +28,55 @@
 ClassImp(TText)
 
 
-//______________________________________________________________________________
-//
-//   TText is the base class for several text objects.
-//   See TAttText for a list of text attributes or fonts,
-//   and also for a discussion on text speed and font quality.
-//
-//  By default, the text is drawn in the pad coordinates system.
-//  One can draw in NDC coordinates [0,1] if the function SetNDC
-//  is called for a TText object.
-//
+/** \class TText
+\ingroup BasicGraphics
 
+Base class for several text objects.
 
-//______________________________________________________________________________
+See TAttText for a list of text attributes or fonts,
+and also for a discussion on text speed and font quality.
+
+By default, the text is drawn in the pad coordinates system.
+One can draw in NDC coordinates [0,1] if the function SetNDC
+is called for a TText object.
+
+Example:
+Begin_Macro(source)
+{
+   TText *t = new TText(.5,.5,"Hello World !");
+   t->SetTextAlign(22);
+   t->SetTextColor(kRed+2);
+   t->SetTextFont(43);
+   t->SetTextSize(40);
+   t->SetTextAngle(45);
+   t->Draw();
+}
+End_Macro
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Text default constructor.
+
 TText::TText(): TNamed(), TAttText(), fWcsTitle(NULL)
 {
-   // Text default constructor.
-
    fX = 0.;
    fY = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Text normal constructor.
 
-//______________________________________________________________________________
 TText::TText(Double_t x, Double_t y, const char *text) : TNamed("",text), TAttText(), fWcsTitle(NULL)
 {
-   // Text normal constructor.
-
    fX = x;
    fY = y;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Text normal constructor.
 
-//______________________________________________________________________________
 TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
 {
-   // Text normal constructor.
-
    fX = x;
    fY = y;
    fWcsTitle = new std::wstring(text);
@@ -71,52 +84,52 @@ TText::TText(Double_t x, Double_t y, const wchar_t *text) : TAttText()
    SetMbTitle(text);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Text default destructor.
 
-//______________________________________________________________________________
 TText::~TText()
 {
-   // Text default destructor.
-
    if (fWcsTitle != NULL) delete reinterpret_cast<std::wstring *>(fWcsTitle);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
 
-//______________________________________________________________________________
-TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text)
+TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text), fWcsTitle(NULL)
 {
-   // Copy constructor.
-
    fX = 0.;
    fY = 0.;
    ((TText&)text).Copy(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this text to text.
 
-//______________________________________________________________________________
 void TText::Copy(TObject &obj) const
 {
-   // Copy this text to text.
-
    ((TText&)obj).fX = fX;
    ((TText&)obj).fY = fY;
    TNamed::Copy(obj);
    TAttText::Copy(((TText&)obj));
-   if (fWcsTitle != NULL) {
-      *reinterpret_cast<std::wstring *>(fWcsTitle) =
-         *reinterpret_cast<std::wstring *>(((TText&)obj).fWcsTitle);
+   if (((TText&)obj).fWcsTitle != NULL) {
+      if (fWcsTitle != NULL) {
+         *reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(&fWcsTitle);
+      } else {
+        delete reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle);
+        ((TText&)obj).fWcsTitle = NULL;
+      }
    } else {
-      dynamic_cast<TText &>(obj).fWcsTitle =
-         new std::wstring(*reinterpret_cast<std::wstring *>(
-         dynamic_cast<TText &>(obj).fWcsTitle));
+      if (fWcsTitle != NULL) {
+         ((TText&)(obj)).fWcsTitle = new std::wstring(*reinterpret_cast<const std::wstring*>(fWcsTitle));
+      }
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the text as UNICODE.
 
-//______________________________________________________________________________
 const void *TText::GetWcsTitle(void) const
 {
-   // Returns the text as UNICODE.
-
    if (fWcsTitle != NULL) {
       return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
    } else {
@@ -124,14 +137,13 @@ const void *TText::GetWcsTitle(void) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a string.
+/// The rectangle surrounding this string is evaluated.
+/// If the point (px,py) is in the rectangle, the distance is set to zero.
 
-//______________________________________________________________________________
 Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a string.
-   // The rectangle surrounding this string is evaluated.
-   // If the point (px,py) is in the rectangle, the distance is set to zero.
-
    Int_t ptx, pty;
 
    TAttText::Modify();  // change text attributes only if necessary
@@ -158,12 +170,11 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
 
-//______________________________________________________________________________
 TText *TText::DrawText(Double_t x, Double_t y, const char *text)
 {
-   // Draw this text with new coordinates.
-
    TText *newtext = new TText(x, y, text);
    TAttText::Copy(*newtext);
    newtext->SetBit(kCanDelete);
@@ -172,12 +183,11 @@ TText *TText::DrawText(Double_t x, Double_t y, const char *text)
    return newtext;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
 
-//______________________________________________________________________________
 TText *TText::DrawText(Double_t x, Double_t y, const wchar_t *text)
 {
-   // Draw this text with new coordinates.
-
    TText *newtext = new TText(x, y, text);
    TAttText::Copy(*newtext);
    newtext->SetBit(kCanDelete);
@@ -186,36 +196,35 @@ TText *TText::DrawText(Double_t x, Double_t y, const wchar_t *text)
    return newtext;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
 
-//______________________________________________________________________________
 TText *TText::DrawTextNDC(Double_t x, Double_t y, const char *text)
 {
-   // Draw this text with new coordinates in NDC.
-
    TText *newtext = DrawText(x, y, text);
    newtext->SetNDC();
    return newtext;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
 
-//______________________________________________________________________________
 TText *TText::DrawTextNDC(Double_t x, Double_t y, const wchar_t *text)
 {
-   // Draw this text with new coordinates in NDC.
-
    TText *newtext = DrawText(x, y, text);
    newtext->SetNDC();
    return newtext;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function must be implemented to realize the action
+///  corresponding to the mouse click on the object in the window
 
-//______________________________________________________________________________
 void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function must be implemented to realize the action
-   //  corresponding to the mouse click on the object in the window
+   if (!gPad) return;
 
    static Int_t px1, py1, pxold, pyold, Size, height, width;
    static Bool_t resize,turn;
@@ -229,7 +238,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    Double_t co, si, dtheta, norm;
-   static Bool_t right;
+   static Bool_t right, ndcsav;
    static Double_t theta;
    Int_t ax, ay, bx, by, cx, cy;
    ax = ay = 0;
@@ -244,6 +253,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
+      ndcsav = TestBit(kTextNDC);
       // No break !!!
 
    case kMouseMotion:
@@ -309,8 +319,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (theta<0) theta += 360;
             if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
-      }
-      else if (resize) {
+      } else if (resize) {
 
          co = TMath::Cos(fTextAngle*0.017453293);
          si = TMath::Sin(fTextAngle*0.017453293);
@@ -346,12 +355,12 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
          SetTextSize(Size/sizetowin);
          TAttText::Modify();
-      }
-      else {
+      } else {
          dx = px - pxold;  px1 += dx;
          dy = py - pyold;  py1 += dy;
       }
       if (opaque) {
+         if (ndcsav) this->SetNDC(kFALSE);
          this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
          this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
          if (resize) gPad->ShowGuidelines(this, event, 't', false);
@@ -367,6 +376,11 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (opaque) {
+         if (ndcsav && !this->TestBit(kTextNDC)) {
+            this->SetX((fX - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1()));
+            this->SetY((fY - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1()));
+            this->SetNDC();
+         }
          gPad->ShowGuidelines(this, event, !resize&!turn);
       } else {
          if (TestBit(kTextNDC)) {
@@ -402,15 +416,14 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the text control box. The text position coordinates is (x,y) and
+/// the text angle is theta. The control box coordinates are returned in cBoxX
+/// and cBoxY.
 
-//______________________________________________________________________________
 void TText::GetControlBox(Int_t x, Int_t y, Double_t theta,
                           Int_t cBoxX[4], Int_t cBoxY[4])
 {
-   // Return the text control box. The text position coordinates is (x,y) and
-   // the text angle is theta. The control box coordinates are returned in cBoxX
-   // and cBoxY.
-
    Short_t halign = fTextAlign/10;          // horizontal alignment
    Short_t valign = fTextAlign - 10*halign; // vertical alignment
    UInt_t cBoxW, cBoxH;                     // control box width and heigh
@@ -453,14 +466,13 @@ void TText::GetControlBox(Int_t x, Int_t y, Double_t theta,
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return text size in pixels. By default the size returned does not take
+/// into account the text angle (angle = kFALSE). If angle is set to kTRUE
+/// w and h take the angle into account.
 
-//______________________________________________________________________________
 void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
-   // Return text size in pixels. By default the size returned does not take
-   // into account the text angle (angle = kFALSE). If angle is set to kTRUE
-   // w and h take the angle into account.
-
    const char *text = GetTitle();
    if (!text[0]) {
       w = h = 0;
@@ -504,14 +516,13 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return text ascent and descent for string text
+///  - in a return total text ascent
+///  - in d return text descent
 
-//______________________________________________________________________________
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
-   // Return text ascent and descent for string text
-   //  in a return total text ascent
-   //  in d return text descent
-
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -540,13 +551,13 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return text ascent and descent for string text
+///  - in a return total text ascent
+///  - in d return text descent
+
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
-   // Return text ascent and descent for string text
-   //  in a return total text ascent
-   //  in d return text descent
-
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -569,14 +580,13 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return text extent for string text
+///  - in w return total text width
+///  - in h return text height
 
-//______________________________________________________________________________
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
-   // Return text extent for string text
-   //  in w return total text width
-   //  in h return text height
-
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -598,14 +608,13 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return text advance for string text
+/// if kern is true (default) kerning is taken into account. If it is false
+/// the kerning is not taken into account.
 
-//______________________________________________________________________________
 void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 {
-   // Return text advance for string text
-   // if kern is true (default) kerning is taken into account. If it is false
-   // the kerning is not taken into account.
-
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -634,14 +643,13 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return text extent for string text
+///  - in w return total text width
+///  - in h return text height
 
-//______________________________________________________________________________
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
-   // Return text extent for string text
-   //  in w return total text width
-   //  in h return text height
-
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -658,34 +666,31 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List this text with its attributes.
 
-//______________________________________________________________________________
 void TText::ls(Option_t *) const
 {
-   // List this text with its attributes.
-
    TROOT::IndentLevel();
    printf("Text  X=%f Y=%f Text=%s\n",fX,fY,GetTitle());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this text with its current attributes.
 
-//______________________________________________________________________________
 void TText::Paint(Option_t *)
 {
-   // Paint this text with its current attributes.
-
    TAttText::Modify();  //Change text attributes only if necessary
    if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
    else                   gPad->PaintText(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTitle());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the text control box. (x,y) are the coordinates where the control
+/// box should be painted and theta is the angle of the box.
 
-//______________________________________________________________________________
 void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
 {
-   // Paint the text control box. (x,y) are the coordinates where the control
-   // box should be painted and theta is the angle of the box.
-
    Int_t cBoxX[4], cBoxY[4];
    Short_t halign = fTextAlign/10;               // horizontal alignment
    Short_t valign = fTextAlign - 10*halign;      // vertical alignment
@@ -734,52 +739,47 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
    gVirtualX->DrawPolyMarker(1, &p);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
 
-//______________________________________________________________________________
 void TText::PaintText(Double_t x, Double_t y, const char *text)
 {
-   // Draw this text with new coordinates.
-
    TAttText::Modify();  //Change text attributes only if necessary
    gPad->PaintText(x,y,text);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates.
 
-//______________________________________________________________________________
 void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
-   // Draw this text with new coordinates.
-
    TAttText::Modify();  //Change text attributes only if necessary
    gPad->PaintText(x,y,text);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
 
-//______________________________________________________________________________
 void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
-   // Draw this text with new coordinates in NDC.
-
    TAttText::Modify();  //Change text attributes only if necessary
    gPad->PaintTextNDC(u,v,text);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this text with new coordinates in NDC.
 
-//______________________________________________________________________________
 void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
-   // Draw this text with new coordinates in NDC.
-
    TAttText::Modify();  //Change text attributes only if necessary
    gPad->PaintTextNDC(u,v,text);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Dump this text with its attributes.
 
-//______________________________________________________________________________
 void TText::Print(Option_t *) const
 {
-   // Dump this text with its attributes.
-
    printf("Text  X=%f Y=%f Text=%s Font=%d Size=%f",fX,fY,GetTitle(),GetTextFont(),GetTextSize());
    if (GetTextColor() != 1 ) printf(" Color=%d",GetTextColor());
    if (GetTextAlign() != 10) printf(" Align=%d",GetTextAlign());
@@ -787,12 +787,11 @@ void TText::Print(Option_t *) const
    printf("\n");
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    if (gROOT->ClassSaved(TText::Class())) {
        out<<"   ";
@@ -809,22 +808,20 @@ void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   text->Draw();"<<std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set NDC mode on if isNDC = kTRUE, off otherwise
 
-//______________________________________________________________________________
 void TText::SetNDC(Bool_t isNDC)
 {
-   // Set NDC mode on if isNDC = kTRUE, off otherwise
-
    ResetBit(kTextNDC);
    if (isNDC) SetBit(kTextNDC);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change (i.e. set) the title of the TNamed.
 
-//______________________________________________________________________________
 void TText::SetMbTitle(const wchar_t *title)
 {
-   // Change (i.e. set) the title of the TNamed.
-
    char *mb_title = new char[MB_CUR_MAX * wcslen(title) + 1]();
    char *p = mb_title;
    size_t length = wcslen(title);
@@ -837,12 +834,11 @@ void TText::SetMbTitle(const wchar_t *title)
    if (gPad && TestBit(kMustCleanup)) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TText.
 
-//______________________________________________________________________________
 void TText::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TText.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -862,12 +858,11 @@ void TText::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TText::Class(),this);
    }
 }
+////////////////////////////////////////////////////////////////////////////////
+/// Return the "bounding Box" of the Box
 
-//______________________________________________________________________________
 Rectangle_t TText::GetBBox()
 {
-   // Return the "bounding Box" of the Box
-
    UInt_t w, h;
    Int_t Dx, Dy;
    Dx = Dy = 0;
@@ -895,73 +890,73 @@ Rectangle_t TText::GetBBox()
    return (BBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the point given by Alignment as 'center'
+
 TPoint TText::GetBBoxCenter()
 {
-   // Return the point given by Alignment as 'center'
-
    TPoint p;
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));
    return(p);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the point given by Alignment as 'center'
+
 void TText::SetBBoxCenter(const TPoint &p)
 {
-   // Set the point given by Alignment as 'center'
-
    this->SetX(gPad->PixeltoX(p.GetX()));
    this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set X coordinate of the point given by Alignment as 'center'
+
 void TText::SetBBoxCenterX(const Int_t x)
 {
-   // Set X coordinate of the point given by Alignment as 'center'
-
    this->SetX(gPad->PixeltoX(x));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Y coordinate of the point given by Alignment as 'center'
+
 void TText::SetBBoxCenterY(const Int_t y)
 {
-   // Set Y coordinate of the point given by Alignment as 'center'
-
    this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set left hand side of BoundingBox to a value
+/// (resize in x direction on left)
+
 void TText::SetBBoxX1(const Int_t /*x*/)
 {
-   // Set lefthandside of BoundingBox to a value
-   // (resize in x direction on left)
-
    //NOT IMPLEMENTED
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set right hand side of BoundingBox to a value
+/// (resize in x direction on right)
+
 void TText::SetBBoxX2(const Int_t /*x*/)
 {
-   // Set righthandside of BoundingBox to a value
-   // (resize in x direction on right)
-
    //NOT IMPLEMENTED
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set top of BoundingBox to a value (resize in y direction on top)
+
 void TText::SetBBoxY1(const Int_t /*y*/)
 {
-   // Set top of BoundingBox to a value (resize in y direction on top)
-
    //NOT IMPLEMENTED
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bottom of BoundingBox to a value
+/// (resize in y direction on bottom)
+
 void TText::SetBBoxY2(const Int_t /*y*/)
 {
-   // Set bottom of BoundingBox to a value
-   // (resize in y direction on bottom)
-
    //NOT IMPLEMENTED
 }

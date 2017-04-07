@@ -12,9 +12,7 @@
 #ifndef ROOT_Math_MinimizerVariable
 #define ROOT_Math_MinimizerVariable
 
-#ifndef ROOT_Math_MinimizerVariableTransformation
 #include "MinimizerVariableTransformation.h"
-#endif
 
 #include <memory>
 
@@ -56,13 +54,13 @@ public:
    */
    MinimTransformVariable () :
       fFix(false), fLowBound(false), fUpBound(false), fBounds(false),
-      fTransform(0), fLower(1), fUpper(0)
+      fLower(1), fUpper(0)
    {}
 
    // constructor for fixed variable
    MinimTransformVariable (double value) :
       fFix(true), fLowBound(false), fUpBound(false), fBounds(false),
-      fTransform(0), fLower(value), fUpper(value)
+      fLower(value), fUpper(value)
    {}
 
    // constructor for double bound variable
@@ -90,7 +88,7 @@ public:
       fLower(rhs.fLower), fUpper(rhs.fUpper)
    {
       // swap auto_ptr
-      fTransform.reset( const_cast<MinimTransformVariable &>( rhs).fTransform.release() ) ;
+      fTransform.swap( const_cast<MinimTransformVariable &>( rhs).fTransform) ;
    }
 
    // assignment
@@ -103,7 +101,7 @@ public:
       fLower = rhs.fLower;  fUpper = rhs.fUpper;
 
       // swap auto_ptr
-      fTransform.reset( const_cast<MinimTransformVariable &>( rhs).fTransform.release() ) ;
+      fTransform.swap( const_cast<MinimTransformVariable &>( rhs).fTransform) ;
       return *this;
    }
 
@@ -143,7 +141,7 @@ private:
    bool fLowBound;    // has lower bound
    bool fUpBound;     // has uppper bound param
    bool fBounds;      // has double bound
-   std::auto_ptr< MinimizerVariableTransformation> fTransform; // pointer to the minimizer transformation
+   std::unique_ptr< MinimizerVariableTransformation> fTransform; // pointer to the minimizer transformation
    double fLower;   // lower parameter limit
    double fUpper;   // upper parameter limit
 

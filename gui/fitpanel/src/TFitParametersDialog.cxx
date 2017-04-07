@@ -28,6 +28,7 @@
 #include "TGNumberEntry.h"
 #include "TGTripleSlider.h"
 #include "TVirtualPad.h"
+#include "TMath.h"
 
 #include <limits>
 
@@ -49,11 +50,10 @@ enum EParametersDialogWid {
    kCANCEL
 };
 
-const Double_t kUnlimit = std::numeric_limits<double>::max();
-
 ClassImp(TFitParametersDialog)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
                                            const TGWindow *main,
                                            TF1 *func,
@@ -83,10 +83,15 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fFunc->GetParLimits(i, fPmin[i], fPmax[i]);
       fPval[i] = fFunc->GetParameter(i);
       fPerr[i] = fFunc->GetParError(i);
-      if (TMath::Abs(fPval[i]) > 1E-16)
-         fPstp[i] = 0.3*TMath::Abs(fPval[i]);
-      else
-         fPstp[i] = 0.1;
+      if (fPerr[i] > 1E-16)
+         fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPerr[i])));
+      else { 
+         if (TMath::Abs(fPval[i]) > 1.)
+            // if error is zero use as step approx 10% of current value
+            fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPval[i])) - 1);
+         else
+            fPstp[i] = 0.1;
+      }
    }
    fParNam = new TGTextEntry*[fNP];
    fParFix = new TGCheckButton*[fNP];
@@ -302,7 +307,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    f3->AddFrame(fCancel, new TGLayoutHints(kLHintsTop | kLHintsLeft | kLHintsExpandX,2,2,5,5));
    fCancel->SetToolTipText("Close this dialog with no parameter changes");
    fCancel->Connect("Clicked()", "TFitParametersDialog", this, "DoCancel()");
-   *fRetCode = kFPDNoneBounded; // default setting
+   *fRetCode = kFPDNoChange; // default setting
 
    MapSubwindows();
    Resize(GetDefaultSize());
@@ -318,13 +323,19 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
          fParSld[i]->UnmapWindow();
       } else {
          if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
-            if (!fPval[i]) {
-               fParMin[i]->SetNumber(-10);
-               fParMax[i]->SetNumber(10);
-            } else {
-               fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
-               fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
-            }
+            // round again the values on the percent level
+            Double_t u = TMath::Power(10, TMath::Floor(TMath::Log10(TMath::Abs(fPval[i])) )-2 );
+            Double_t roundVal = int(fPval[i]/ u) * u; 
+            // set min at +/- 100 step size 
+            fParMin[i]->SetNumber( roundVal - 100* fPstp[i]); 
+            fParMax[i]->SetNumber( roundVal + 100* fPstp[i]); 
+            // if (!fPval[i]) {
+            //    fParMin[i]->SetNumber(-10);
+            //    fParMax[i]->SetNumber(10);
+            // } else {
+            //    fParMin[i]->SetNumber(-3*TMath::Abs(fPval[i]));
+            //    fParMax[i]->SetNumber(3*TMath::Abs(fPval[i]));
+            // }
          }
          fParSld[i]->SetRange(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
          fParSld[i]->SetPosition(fParMin[i]->GetNumber(), fParMax[i]->GetNumber());
@@ -339,11 +350,11 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
    gClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TFitParametersDialog::~TFitParametersDialog()
 {
-   // Destructor.
-
    DisconnectSlots();
    fTextEntries.Clear();
    Cleanup();
@@ -364,11 +375,11 @@ TFitParametersDialog::~TFitParametersDialog()
    delete [] fParErr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close parameters' dialog.
+
 void TFitParametersDialog::CloseWindow()
 {
-   // Close parameters' dialog.
-
    if (fHasChanges) {
       Int_t ret;
       const char *txt;
@@ -376,8 +387,10 @@ void TFitParametersDialog::CloseWindow()
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
                    "Parameters Have Been Changed", txt, kMBIconExclamation,
                    kMBYes | kMBNo | kMBCancel, &ret);
-      if (ret == kMBYes)
+      if (ret == kMBYes) {
          SetParameters();
+         *fRetCode = kFPDChange;
+      }
       else if (ret == kMBNo)
          DoReset();
       else return;
@@ -387,25 +400,25 @@ void TFitParametersDialog::CloseWindow()
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Cancel button.
+
 void TFitParametersDialog::DoCancel()
 {
-   // Slot related to the Cancel button.
-
    if (fHasChanges)
       DoReset();
-   for (Int_t i = 0; i < fNP; i++ ) {
-      if (fParBnd[i]->GetState() == kButtonDown)
-         *fRetCode = kFPDBounded;
-   }
+   // for (Int_t i = 0; i < fNP; i++ ) {
+   //    if (fParBnd[i]->GetState() == kButtonDown)
+   //       *fRetCode = kFPDBounded;
+   // }
    CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Bound check button.
+
 void TFitParametersDialog::DoParBound(Bool_t on)
 {
-   // Slot related to the Bound check button.
-
    TGButton *bt = (TGButton *) gTQSender;
    Int_t id = bt->WidgetId();
    fHasChanges = kTRUE;
@@ -460,21 +473,20 @@ void TFitParametersDialog::DoParBound(Bool_t on)
       DrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
-   *fRetCode = kFPDBounded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to parameter step setting.
+
 void TFitParametersDialog::DoParStep()
 {
-   // Slot related to parameter step setting.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Fix check button.
+
 void TFitParametersDialog::DoParFix(Bool_t on)
 {
-   // Slot related to the Fix check button.
-
    fReset->SetState(kButtonUp);
 
    TGButton *bt = (TGButton *) gTQSender;
@@ -562,12 +574,15 @@ void TFitParametersDialog::DoParFix(Bool_t on)
       fApply->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the parameter values inside the function
+
 void TFitParametersDialog::SetParameters()
 {
-   // Set the parameter values inside the function
    fFunc->SetRange(fRangexmin, fRangexmax);
    for (Int_t i = 0; i < fNP; i++ ) {
+      // first make sure the current value is up to date
+      fParVal[i]->GetNumberEntry()->ReturnPressed();
       if (fParFix[i]->GetState() == kButtonDown) {
          fFunc->SetParameter(i, fParVal[i]->GetNumber());
          fFunc->FixParameter(i, fParVal[i]->GetNumber());
@@ -584,35 +599,40 @@ void TFitParametersDialog::SetParameters()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the OK button.
+
 void TFitParametersDialog::DoOK()
 {
-   // Slot related to the OK button.
-
-   if (fHasChanges)
+   if (fHasChanges) 
       DrawFunction();
 
    SetParameters();
 
+   // we want here to confirm the parameters settings so
+   // it is like having changed them
+   *fRetCode = kFPDChange;
+
+   
    CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Preview button.
+
 void TFitParametersDialog::DoApply()
 {
-   // Slot related to the Preview button.
-
    DrawFunction();
    fApply->SetState(kButtonDisabled);
    if (fReset->GetState() == kButtonDisabled)
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the Reset button.
+
 void TFitParametersDialog::DoReset()
 {
-   // Slot related to the Reset button.
-
    fHasChanges = kTRUE;
    Int_t k = fNP;
    for (Int_t i = 0; i < fNP; i++) {
@@ -685,7 +705,7 @@ void TFitParametersDialog::DoReset()
                                 this, "DoSlider()");
             fParBnd[i]->SetEnabled(kTRUE);
             fParBnd[i]->Connect("Toggled(Bool_t)", "TFitParametersDialog",
-                                this, "DoParBound()");
+                                this, "DoParBound(Bool_t)");
          }
       }
       fParVal[i]->SetNumber(fPval[i]);
@@ -700,15 +720,15 @@ void TFitParametersDialog::DoReset()
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges)
       fApply->SetState(kButtonUp);
    fHasChanges = kFALSE;
-   *fRetCode = kFPDBounded;
+   *fRetCode = kFPDNoChange;
    fReset->SetState(kButtonDisabled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the parameters' value settings.
+
 void TFitParametersDialog::DoSlider()
 {
-   // Slot related to the parameters' value settings.
-
    TGTripleHSlider *sl = (TGTripleHSlider *) gTQSender;
    Int_t id = sl->WidgetId();
 
@@ -731,11 +751,11 @@ void TFitParametersDialog::DoSlider()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the parameter value settings.
+
 void TFitParametersDialog::DoParValue()
 {
-   // Slot related to the parameter value settings.
-
    TGNumberEntry *ne = (TGNumberEntry *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -778,11 +798,11 @@ void TFitParametersDialog::DoParValue()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the minumum parameter limit settings.
+
 void TFitParametersDialog::DoParMinLimit()
 {
-   // Slot related to the minumum parameter limit settings.
-
    TGNumberEntryField *ne = (TGNumberEntryField *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -821,11 +841,11 @@ void TFitParametersDialog::DoParMinLimit()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot related to the maximum parameter limit settings.
+
 void TFitParametersDialog::DoParMaxLimit()
 {
-   // Slot related to the maximum parameter limit settings.
-
    TGNumberEntryField *ne = (TGNumberEntryField *) gTQSender;
    Int_t id = ne->WidgetId();
 
@@ -864,11 +884,11 @@ void TFitParametersDialog::DoParMaxLimit()
       fReset->SetState(kButtonUp);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw function graphics.
+
 void TFitParametersDialog::DrawFunction()
 {
-   // Redraw function graphics.
-
    if ( !fFpad ) return;
    TVirtualPad *save = 0;
    save = gPad;
@@ -893,11 +913,11 @@ void TFitParametersDialog::DrawFunction()
    *fRetCode = kFPDBounded;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle the button dependent states in this dialog.
+
 void TFitParametersDialog::HandleButtons(Bool_t update)
 {
-   // Handle the button dependent states in this dialog.
-
    if (update && fHasChanges)
       DrawFunction();
    else if ((fApply->GetState() == kButtonDisabled) && fHasChanges) {
@@ -905,11 +925,11 @@ void TFitParametersDialog::HandleButtons(Bool_t update)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect signals from slot methods.
+
 void TFitParametersDialog::DisconnectSlots()
 {
-   // Disconnect signals from slot methods.
-
    for (Int_t i = 0; i < fNP; i++ ) {
       fParFix[i]->Disconnect("Toggled(Bool_t)");
       fParBnd[i]->Disconnect("Toggled(Bool_t)");
@@ -935,11 +955,11 @@ void TFitParametersDialog::DisconnectSlots()
    fCancel->Disconnect("Clicked()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Shift+Tab key event (set focus to the previous number entry field)
+
 void TFitParametersDialog::HandleShiftTab()
 {
-   // Handle Shift+Tab key event (set focus to the previous number entry field)
-
    TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
    next = (TGNumberEntryField *)fTextEntries.Before((TObject *)sender);
    if (next == 0)
@@ -950,11 +970,11 @@ void TFitParametersDialog::HandleShiftTab()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Tab key event (set focus to the next number entry field)
+
 void TFitParametersDialog::HandleTab()
 {
-   // Handle Tab key event (set focus to the next number entry field)
-
    TGNumberEntryField *next, *sender = (TGNumberEntryField *)gTQSender;
    next = (TGNumberEntryField *)fTextEntries.After((TObject *)sender);
    if (next == 0)

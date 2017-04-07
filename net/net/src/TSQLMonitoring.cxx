@@ -25,13 +25,13 @@
 #include "TSQLServer.h"
 #include "TSQLResult.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TSQLMonitoringWriter::TSQLMonitoringWriter(const char *serv, const char *user,
                                            const char *pass, const char *table)
   : TVirtualMonitoringWriter("SQL", 0.0), fTable(table), fVerbose(kFALSE)
 {
-   // Constructor.
-
    // Open connection to SQL server
    fDB = TSQLServer::Connect(serv, user, pass);
    if (!fDB || fDB->IsZombie()) {
@@ -58,34 +58,34 @@ TSQLMonitoringWriter::TSQLMonitoringWriter(const char *serv, const char *user,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TSQLMonitoringWriter::~TSQLMonitoringWriter()
 {
-   // Destructor
-
    SafeDelete(fDB);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register query log using the information in the list which is in the form
+/// TParameter(<par>,<value>) or TNamed(<name>,<string>). For bulk sending,
+/// the first entry in the list is an TObjString defining the variable names
+/// in the format
+///                    VARname1,VARname2,...
+/// while the other entries are TObjStrings with the multiplets to be sent
+///                    VARvalue1,VARvalue2,...
+///
+/// The string 'opt' allows the following additional control:
+///      table=[<db>.]<table>  allows to insert to a different table from the
+///                            one defined at construction (change is not
+///                            persistent); if <db> is not specified, the same
+///                            db defined at cinstruction is used.
+///      bulk                  Do a bulk insert
+/// More options can be given concurrently, comma-separated .
+/// The specified table must already have been created in the DB.
+
 Bool_t TSQLMonitoringWriter::SendParameters(TList *values, const char *opt)
 {
-   // Register query log using the information in the list which is in the form
-   // TParameter(<par>,<value>) or TNamed(<name>,<string>). For bulk sending,
-   // the first entry in the list is an TObjString defining the variable names
-   // in the format
-   //                    VARname1,VARname2,...
-   // while the other entries are TObjStrings with the multiplets to be sent
-   //                    VARvalue1,VARvalue2,...
-   //
-   // The string 'opt' allows the following additional control:
-   //      table=[<db>.]<table>  allows to insert to a different table from the
-   //                            one defined at construction (change is not
-   //                            persistent); if <db> is not specified, the same
-   //                            db defined at cinstruction is used.
-   //      bulk                  Do a bulk insert
-   // More options can be given concurrently, comma-separated .
-   // The specified table must already have been created in the DB.
-
    if (!fDB) {
       // Invalid instance
       return kFALSE;

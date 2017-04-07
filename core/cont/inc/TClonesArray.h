@@ -22,9 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObjArray
+#include "Rtypes.h"
+
 #include "TObjArray.h"
-#endif
 
 class TClass;
 

@@ -30,6 +30,7 @@
 
 // need to be included later
 #include <time.h>
+#include <vector>
 #include <stdlib.h>
 #include <cassert>
 
@@ -134,7 +135,8 @@ namespace Math {
 
 
    std::string GSLQuasiRandomEngine::Name() const {
-      //----------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       assert (fQRng != 0);
       assert(fQRng->Rng() != 0);
       const char * name = gsl_qrng_name( fQRng->Rng() );
@@ -143,13 +145,15 @@ namespace Math {
    }
 
    unsigned int GSLQuasiRandomEngine::Size() const {
-      //----------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       assert (fQRng != 0);
       return gsl_qrng_size( fQRng->Rng() );
    }
 
    unsigned int GSLQuasiRandomEngine::NDim() const {
-      //----------------------------------------------------
+      //////////////////////////////////////////////////////////////////////////
+
       assert (fQRng != 0);
       return fQRng->Dimension();
    }

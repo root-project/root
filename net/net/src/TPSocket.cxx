@@ -34,71 +34,71 @@
 
 ClassImp(TPSocket)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket. Connect to the named service at address addr.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TPSocket::TPSocket(TInetAddress addr, const char *service, Int_t size,
                    Int_t tcpwindowsize) : TSocket(addr, service)
 {
-   // Create a parallel socket. Connect to the named service at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    fSize = size;
    Init(tcpwindowsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket. Connect to the specified port # at address addr.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TPSocket::TPSocket(TInetAddress addr, Int_t port, Int_t size,
                    Int_t tcpwindowsize) : TSocket(addr, port)
 {
-   // Create a parallel socket. Connect to the specified port # at address addr.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    fSize = size;
    Init(tcpwindowsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket. Connect to named service on the remote host.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TPSocket::TPSocket(const char *host, const char *service, Int_t size,
                    Int_t tcpwindowsize) : TSocket(host, service)
 {
-   // Create a parallel socket. Connect to named service on the remote host.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    fSize = size;
    Init(tcpwindowsize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket. Connect to specified port # on the remote host.
+/// Use tcpwindowsize to specify the size of the receive buffer, it has
+/// to be specified here to make sure the window scale option is set (for
+/// tcpwindowsize > 65KB and for platforms supporting window scaling).
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                    Int_t tcpwindowsize)
                   : TSocket(host, port, (Int_t)(size > 1 ? -1 : tcpwindowsize))
 {
-   // Create a parallel socket. Connect to specified port # on the remote host.
-   // Use tcpwindowsize to specify the size of the receive buffer, it has
-   // to be specified here to make sure the window scale option is set (for
-   // tcpwindowsize > 65KB and for platforms supporting window scaling).
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    // To avoid uninitialization problems when Init is not called ...
    fSockets        = 0;
    fWriteMonitor   = 0;
@@ -167,18 +167,18 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket on a connection already opened via
+/// TSocket sock.
+/// This constructor is provided to optimize TNetFile opening when
+/// instatiated via a call to TXNetFile.
+/// Returns when connection has been accepted by remote side. Use IsValid()
+/// to check the validity of the socket. Every socket is added to the TROOT
+/// sockets list which will make sure that any open sockets are properly
+/// closed on program termination.
+
 TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
 {
-   // Create a parallel socket on a connection already opened via
-   // TSocket sock.
-   // This constructor is provided to optimize TNetFile opening when
-   // instatiated via a call to TXNetFile.
-   // Returns when connection has been accepted by remote side. Use IsValid()
-   // to check the validity of the socket. Every socket is added to the TROOT
-   // sockets list which will make sure that any open sockets are properly
-   // closed on program termination.
-
    // To avoid uninitialization problems when Init is not called ...
    fSockets        = 0;
    fWriteMonitor   = 0;
@@ -269,11 +269,11 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size, TSocket *sock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket. This ctor is called by TPServerSocket.
+
 TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
 {
-   // Create a parallel socket. This ctor is called by TPServerSocket.
-
    fSockets = pSockets;
    fSize    = size;
 
@@ -311,11 +311,11 @@ TPSocket::TPSocket(TSocket *pSockets[], Int_t size)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the parallel socket.
+
 TPSocket::~TPSocket()
 {
-   // Cleanup the parallel socket.
-
    Close();
 
    delete fWriteMonitor;
@@ -326,14 +326,14 @@ TPSocket::~TPSocket()
    delete [] fReadPtr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a parallel socket. If option is "force", calls shutdown(id,2) to
+/// shut down the connection. This will close the connection also
+/// for the parent of this process. Also called via the dtor (without
+/// option "force", call explicitly Close("force") if this is desired).
+
 void TPSocket::Close(Option_t *option)
 {
-   // Close a parallel socket. If option is "force", calls shutdown(id,2) to
-   // shut down the connection. This will close the connection also
-   // for the parent of this process. Also called via the dtor (without
-   // option "force", call explicitly Close("force") if this is desired).
-
 
    if (!IsValid()) {
       // if closing happens too early (e.g. timeout) the underlying
@@ -359,11 +359,11 @@ void TPSocket::Close(Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a parallel socket to the specified host.
+
 void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
 {
-   // Create a parallel socket to the specified host.
-
    fSockets        = 0;
    fWriteMonitor   = 0;
    fReadMonitor    = 0;
@@ -453,12 +453,12 @@ void TPSocket::Init(Int_t tcpwindowsize, TSocket *sock)
    fReadMonitor->DeActivateAll();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return internet address of local host to which the socket is bound.
+/// In case of error TInetAddress::IsValid() returns kFALSE.
+
 TInetAddress TPSocket::GetLocalInetAddress()
 {
-   // Return internet address of local host to which the socket is bound.
-   // In case of error TInetAddress::IsValid() returns kFALSE.
-
    if (fSize<= 1)
       return TSocket::GetLocalInetAddress();
 
@@ -470,11 +470,11 @@ TInetAddress TPSocket::GetLocalInetAddress()
    return TInetAddress();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return socket descriptor
+
 Int_t TPSocket::GetDescriptor() const
 {
-   // Return socket descriptor
-
    if (fSize <= 1)
       return TSocket::GetDescriptor();
 
@@ -482,15 +482,15 @@ Int_t TPSocket::GetDescriptor() const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a TMessage object. Returns the number of bytes in the TMessage
+/// that were sent and -1 in case of error. In case the TMessage::What
+/// has been or'ed with kMESS_ACK, the call will only return after having
+/// received an acknowledgement, making the sending process synchronous.
+/// Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
+
 Int_t TPSocket::Send(const TMessage &mess)
 {
-   // Send a TMessage object. Returns the number of bytes in the TMessage
-   // that were sent and -1 in case of error. In case the TMessage::What
-   // has been or'ed with kMESS_ACK, the call will only return after having
-   // received an acknowledgement, making the sending process synchronous.
-   // Returns -4 in case of kNoBlock and errno == EWOULDBLOCK.
-
    if (!fSockets || fSize <= 1)
       return TSocket::Send(mess);  // only the case when called via Init()
 
@@ -547,12 +547,12 @@ Int_t TPSocket::Send(const TMessage &mess)
    return nsent;  //length - length header
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a raw buffer of specified length. Returns the number of bytes
+/// send and -1 in case of error.
+
 Int_t TPSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Send a raw buffer of specified length. Returns the number of bytes
-   // send and -1 in case of error.
-
    if (fSize == 1)
       return TSocket::SendRaw(buffer,length,opt);
 
@@ -626,14 +626,14 @@ again:
    return length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a TMessage object. The user must delete the TMessage object.
+/// Returns length of message in bytes (can be 0 if other side of connection
+/// is closed) or -1 in case of error or -4 in case a non-blocking socket would
+/// block (i.e. there is nothing to be read). In those case mess == 0.
+
 Int_t TPSocket::Recv(TMessage *&mess)
 {
-   // Receive a TMessage object. The user must delete the TMessage object.
-   // Returns length of message in bytes (can be 0 if other side of connection
-   // is closed) or -1 in case of error or -4 in case a non-blocking socket would
-   // block (i.e. there is nothing to be read). In those case mess == 0.
-
    if (fSize <= 1)
       return TSocket::Recv(mess);
 
@@ -681,12 +681,12 @@ oncemore:
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send a raw buffer of specified length. Returns the number of bytes
+/// sent or -1 in case of error.
+
 Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
-   // Send a raw buffer of specified length. Returns the number of bytes
-   // sent or -1 in case of error.
-
    if (fSize <= 1)
       return TSocket::RecvRaw(buffer,length,opt);
 
@@ -757,11 +757,11 @@ Int_t TPSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    return length;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set socket options.
+
 Int_t TPSocket::SetOption(ESockOptions opt, Int_t val)
 {
-   // Set socket options.
-
    if (fSize <= 1)
       return TSocket::SetOption(opt,val);
 
@@ -771,11 +771,11 @@ Int_t TPSocket::SetOption(ESockOptions opt, Int_t val)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get socket options. Returns -1 in case of error.
+
 Int_t TPSocket::GetOption(ESockOptions opt, Int_t &val)
 {
-   // Get socket options. Returns -1 in case of error.
-
    if (fSize <= 1)
       return TSocket::GetOption(opt,val);
 
@@ -785,12 +785,12 @@ Int_t TPSocket::GetOption(ESockOptions opt, Int_t &val)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns error code. Meaning depends on context where it is called.
+/// If no error condition returns 0 else a value < 0.
+
 Int_t TPSocket::GetErrorCode() const
 {
-   // Returns error code. Meaning depends on context where it is called.
-   // If no error condition returns 0 else a value < 0.
-
    if (fSize <= 1)
       return TSocket::GetErrorCode();
 

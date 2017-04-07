@@ -13,27 +13,10 @@
 #define ROOT_TPad
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPad                                                                 //
-//                                                                      //
-// A Graphics pad.                                                      //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
@@ -46,92 +29,94 @@ class TArrow;
 class TPad : public TVirtualPad, public TAttBBox2D {
 
 private:
-   TObject      *fTip;             //! tool tip associated with box
+   TObject      *fTip;              ///<! tool tip associated with box
 
 protected:
-   Double_t      fX1;              //  X of lower X coordinate
-   Double_t      fY1;              //  Y of lower Y coordinate
-   Double_t      fX2;              //  X of upper X coordinate
-   Double_t      fY2;              //  Y of upper Y coordinate
+   Double_t      fX1;               ///<  X of lower X coordinate
+   Double_t      fY1;               ///<  Y of lower Y coordinate
+   Double_t      fX2;               ///<  X of upper X coordinate
+   Double_t      fY2;               ///<  Y of upper Y coordinate
 
-   Double_t      fXtoAbsPixelk;    //  Conversion coefficient for X World to absolute pixel
-   Double_t      fXtoPixelk;       //  Conversion coefficient for X World to pixel
-   Double_t      fXtoPixel;        //    xpixel = fXtoPixelk + fXtoPixel*xworld
-   Double_t      fYtoAbsPixelk;    //  Conversion coefficient for Y World to absolute pixel
-   Double_t      fYtoPixelk;       //  Conversion coefficient for Y World to pixel
-   Double_t      fYtoPixel;        //    ypixel = fYtoPixelk + fYtoPixel*yworld
+   Double_t      fXtoAbsPixelk;     ///<  Conversion coefficient for X World to absolute pixel
+   Double_t      fXtoPixelk;        ///<  Conversion coefficient for X World to pixel
+   Double_t      fXtoPixel;         ///<    xpixel = fXtoPixelk + fXtoPixel*xworld
+   Double_t      fYtoAbsPixelk;     ///<  Conversion coefficient for Y World to absolute pixel
+   Double_t      fYtoPixelk;        ///<  Conversion coefficient for Y World to pixel
+   Double_t      fYtoPixel;         ///<    ypixel = fYtoPixelk + fYtoPixel*yworld
 
-   Double_t      fUtoAbsPixelk;    //  Conversion coefficient for U NDC to absolute pixel
-   Double_t      fUtoPixelk;       //  Conversion coefficient for U NDC to pixel
-   Double_t      fUtoPixel;        //    xpixel = fUtoPixelk + fUtoPixel*undc
-   Double_t      fVtoAbsPixelk;    //  Conversion coefficient for V NDC to absolute pixel
-   Double_t      fVtoPixelk;       //  Conversion coefficient for V NDC to pixel
-   Double_t      fVtoPixel;        //    ypixel = fVtoPixelk + fVtoPixel*vndc
+   Double_t      fUtoAbsPixelk;     ///<  Conversion coefficient for U NDC to absolute pixel
+   Double_t      fUtoPixelk;        ///<  Conversion coefficient for U NDC to pixel
+   Double_t      fUtoPixel;         ///<    xpixel = fUtoPixelk + fUtoPixel*undc
+   Double_t      fVtoAbsPixelk;     ///<  Conversion coefficient for V NDC to absolute pixel
+   Double_t      fVtoPixelk;        ///<  Conversion coefficient for V NDC to pixel
+   Double_t      fVtoPixel;         ///<    ypixel = fVtoPixelk + fVtoPixel*vndc
 
-   Double_t      fAbsPixeltoXk;    //  Conversion coefficient for absolute pixel to X World
-   Double_t      fPixeltoXk;       //  Conversion coefficient for pixel to X World
-   Double_t      fPixeltoX;        //     xworld = fPixeltoXk + fPixeltoX*xpixel
-   Double_t      fAbsPixeltoYk;    //  Conversion coefficient for absolute pixel to Y World
-   Double_t      fPixeltoYk;       //  Conversion coefficient for pixel to Y World
-   Double_t      fPixeltoY;        //     yworld = fPixeltoYk + fPixeltoY*ypixel
+   Double_t      fAbsPixeltoXk;     ///<  Conversion coefficient for absolute pixel to X World
+   Double_t      fPixeltoXk;        ///<  Conversion coefficient for pixel to X World
+   Double_t      fPixeltoX;         ///<     xworld = fPixeltoXk + fPixeltoX*xpixel
+   Double_t      fAbsPixeltoYk;     ///<  Conversion coefficient for absolute pixel to Y World
+   Double_t      fPixeltoYk;        ///<  Conversion coefficient for pixel to Y World
+   Double_t      fPixeltoY;         ///<     yworld = fPixeltoYk + fPixeltoY*ypixel
 
-   Double_t      fXlowNDC;         //  X bottom left corner of pad in NDC [0,1]
-   Double_t      fYlowNDC;         //  Y bottom left corner of pad in NDC [0,1]
+   Double_t      fXlowNDC;          ///<  X bottom left corner of pad in NDC [0,1]
+   Double_t      fYlowNDC;          ///<  Y bottom left corner of pad in NDC [0,1]
    Double_t      fXUpNDC;
    Double_t      fYUpNDC;
-   Double_t      fWNDC;            //  Width of pad along X in NDC
-   Double_t      fHNDC;            //  Height of pad along Y in NDC
+   Double_t      fWNDC;             ///<  Width of pad along X in NDC
+   Double_t      fHNDC;             ///<  Height of pad along Y in NDC
 
-   Double_t      fAbsXlowNDC;      //  Absolute X top left corner of pad in NDC [0,1]
-   Double_t      fAbsYlowNDC;      //  Absolute Y top left corner of pad in NDC [0,1]
-   Double_t      fAbsWNDC;         //  Absolute Width of pad along X in NDC
-   Double_t      fAbsHNDC;         //  Absolute Height of pad along Y in NDC
+   Double_t      fAbsXlowNDC;       ///<  Absolute X top left corner of pad in NDC [0,1]
+   Double_t      fAbsYlowNDC;       ///<  Absolute Y top left corner of pad in NDC [0,1]
+   Double_t      fAbsWNDC;          ///<  Absolute Width of pad along X in NDC
+   Double_t      fAbsHNDC;          ///<  Absolute Height of pad along Y in NDC
 
-   Double_t      fUxmin;           //  Minimum value on the X axis
-   Double_t      fUymin;           //  Minimum value on the Y axis
-   Double_t      fUxmax;           //  Maximum value on the X axis
-   Double_t      fUymax;           //  Maximum value on the Y axis
+   Double_t      fUxmin;            ///<  Minimum value on the X axis
+   Double_t      fUymin;            ///<  Minimum value on the Y axis
+   Double_t      fUxmax;            ///<  Maximum value on the X axis
+   Double_t      fUymax;            ///<  Maximum value on the Y axis
 
-   Double_t      fTheta;           //  theta angle to view as lego/surface
-   Double_t      fPhi;             //  phi angle   to view as lego/surface
+   Double_t      fTheta;            ///<  theta angle to view as lego/surface
+   Double_t      fPhi;              ///<  phi angle   to view as lego/surface
 
-   Double_t      fAspectRatio;     //  ratio of w/h in case of fixed ratio
+   Double_t      fAspectRatio;      ///<  ratio of w/h in case of fixed ratio
 
-   Int_t         fPixmapID;        //! Off-screen pixmap identifier
-   Int_t         fGLDevice;        //! OpenGL off-screen pixmap identifier
-   Bool_t        fCopyGLDevice;    //!
-   Bool_t        fEmbeddedGL;      //!
-   Int_t         fNumber;          //  pad number identifier
-   Int_t         fTickx;           //  Set to 1 if tick marks along X
-   Int_t         fTicky;           //  Set to 1 if tick marks along Y
-   Int_t         fLogx;            //  (=0 if X linear scale, =1 if log scale)
-   Int_t         fLogy;            //  (=0 if Y linear scale, =1 if log scale)
-   Int_t         fLogz;            //  (=0 if Z linear scale, =1 if log scale)
-   Int_t         fPadPaint;        //  Set to 1 while painting the pad
-   Int_t         fCrosshair;       //  Crosshair type (0 if no crosshair requested)
-   Int_t         fCrosshairPos;    //  Position of crosshair
-   Short_t       fBorderSize;      //  pad bordersize in pixels
-   Short_t       fBorderMode;      //  Bordermode (-1=down, 0 = no border, 1=up)
-   Bool_t        fModified;        //  Set to true when pad is modified
-   Bool_t        fGridx;           //  Set to true if grid along X
-   Bool_t        fGridy;           //  Set to true if grid along Y
-   Bool_t        fAbsCoord;        //  Use absolute coordinates
-   Bool_t        fEditable;        //  True if canvas is editable
-   Bool_t        fFixedAspectRatio; //  True if fixed aspect ratio
-   TPad         *fMother;          //! pointer to mother of the list
-   TCanvas      *fCanvas;          //! Pointer to mother canvas
-   TList        *fPrimitives;      //->List of primitives (subpads)
-   TList        *fExecs;           //  List of commands to be executed when a pad event occurs
-   TString       fName;            //  Pad name
-   TString       fTitle;           //  Pad title
-   TFrame       *fFrame;           //! Pointer to 2-D frame (if one exists)
-   TView        *fView;            //! Pointer to 3-D view (if one exists)
-   TObject      *fPadPointer;      //! free pointer
-   TObject      *fPadView3D;       //! 3D View of this TPad
-   static Int_t  fgMaxPickDistance;//  Maximum Pick Distance
+   Int_t         fPixmapID;         ///<! Off-screen pixmap identifier
+   Int_t         fGLDevice;         ///<! OpenGL off-screen pixmap identifier
+   Bool_t        fCopyGLDevice;     ///<!
+   Bool_t        fEmbeddedGL;       ///<!
+   Int_t         fNumber;           ///<  pad number identifier
+   Int_t         fTickx;            ///<  Set to 1 if tick marks along X
+   Int_t         fTicky;            ///<  Set to 1 if tick marks along Y
+   Int_t         fLogx;             ///<  (=0 if X linear scale, =1 if log scale)
+   Int_t         fLogy;             ///<  (=0 if Y linear scale, =1 if log scale)
+   Int_t         fLogz;             ///<  (=0 if Z linear scale, =1 if log scale)
+   Int_t         fPadPaint;         ///<  Set to 1 while painting the pad
+   Int_t         fCrosshair;        ///<  Crosshair type (0 if no crosshair requested)
+   Int_t         fCrosshairPos;     ///<  Position of crosshair
+   Short_t       fBorderSize;       ///<  pad bordersize in pixels
+   Short_t       fBorderMode;       ///<  Bordermode (-1=down, 0 = no border, 1=up)
+   Bool_t        fModified;         ///<  Set to true when pad is modified
+   Bool_t        fGridx;            ///<  Set to true if grid along X
+   Bool_t        fGridy;            ///<  Set to true if grid along Y
+   Bool_t        fAbsCoord;         ///<  Use absolute coordinates
+   Bool_t        fEditable;         ///<  True if canvas is editable
+   Bool_t        fFixedAspectRatio; ///<  True if fixed aspect ratio
+   TPad         *fMother;           ///<! pointer to mother of the list
+   TCanvas      *fCanvas;           ///<! Pointer to mother canvas
+   TList        *fPrimitives;       ///<->List of primitives (subpads)
+   TList        *fExecs;            ///<  List of commands to be executed when a pad event occurs
+   TString       fName;             ///<  Pad name
+   TString       fTitle;            ///<  Pad title
+   TFrame       *fFrame;            ///<! Pointer to 2-D frame (if one exists)
+   TView        *fView;             ///<! Pointer to 3-D view (if one exists)
+   TObject      *fPadPointer;       ///<! free pointer
+   TObject      *fPadView3D;        ///<! 3D View of this TPad
+   static Int_t  fgMaxPickDistance; ///<  Maximum Pick Distance
+   Int_t         fNumPaletteColor;     ///< Number of objects with an automatic color
+   Int_t         fNextPaletteColor;    ///< Next automatic color
 
    // 3D Viewer support
-   TVirtualViewer3D *fViewer3D;    //! Current 3D viewer
+   TVirtualViewer3D *fViewer3D;     ///<! Current 3D viewer
 
    void          DestroyExternalViewer3D();
    virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
@@ -154,12 +139,12 @@ private:
 public:
    // TPad status bits
    enum {
-      kFraming      = BIT(6),
-      kHori         = BIT(9),
-      kClipFrame    = BIT(10),
-      kPrintingPS   = BIT(11),
-      kCannotMove   = BIT(12),
-      kClearAfterCR = BIT(14)
+      kFraming      = BIT(6),  ///< Frame is requested
+      kHori         = BIT(9),  ///< Pad is horizontal
+      kClipFrame    = BIT(10), ///< Clip on frame
+      kPrintingPS   = BIT(11), ///< PS Printing
+      kCannotMove   = BIT(12), ///< Fixed position
+      kClearAfterCR = BIT(14)  ///< Clear after CR
    };
 
    TPad();
@@ -174,7 +159,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title=""); // *MENU*
+   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="", Option_t *option = ""); // *MENU*
    TVirtualPad*      cd(Int_t subpadnumber=0); // *MENU*
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
@@ -277,7 +262,7 @@ public:
    Double_t          PadtoY(Double_t y) const;
    virtual void      Paint(Option_t *option="");
    void              PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option="");
-   void              PaintFillArea(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
+   void              PaintFillArea(Int_t n, Float_t *x, Float_t *y, Option_t *option=""); // Obsolete
    void              PaintFillArea(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    void              PaintFillAreaHatches(Int_t n, Double_t *x, Double_t *y, Int_t FillStyle);
    void              PaintHatches(Double_t dy, Double_t angle, Int_t nn, Double_t *xx, Double_t *yy);
@@ -312,6 +297,7 @@ public:
    virtual void      RedrawAxis(Option_t *option="");
    virtual void      ResetView3D(TObject *view=0){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
+   virtual void      Resized() { Emit("Resized()"); } // *SIGNAL*
    virtual void      SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
    virtual void      SetBorderMode(Short_t bordermode) {fBorderMode = bordermode; Modified();} // *MENU*
    virtual void      SetBorderSize(Short_t bordersize) {fBorderSize = bordersize; Modified();} // *MENU*
@@ -378,6 +364,9 @@ public:
    virtual void      ResetToolTip(TObject *tip);
    virtual void      CloseToolTip(TObject *tip);
 
+   Int_t             IncrementPaletteColor(Int_t i, TString opt);
+   Int_t             NextPaletteColor();
+
    virtual void      x3d(Option_t *type=""); // Depreciated
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
@@ -399,7 +388,7 @@ public:
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
    virtual void      StartEditing() { Emit("StartEditing()"); }   // *SIGNAL*
 
-   ClassDef(TPad,11)  //A Graphics pad
+   ClassDef(TPad,12)  //A Graphics pad
 };
 
 

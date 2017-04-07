@@ -15,7 +15,8 @@
 #include "RSVersion.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
                        UInt_t w, UInt_t h, UInt_t options) :
      TGTransientFrame(p, main, w, h, options)
@@ -111,7 +112,8 @@ RootShowerAbout::RootShowerAbout(const TGWindow *p, const TGWindow *main,
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RootShowerAbout::~RootShowerAbout()
 {
    delete fOkButton;
@@ -123,19 +125,20 @@ RootShowerAbout::~RootShowerAbout()
    delete fBly;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close dialog in response to window manager close.
+
 void RootShowerAbout::CloseWindow()
 {
-   // Close dialog in response to window manager close.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages sent to this dialog.
+
 Bool_t RootShowerAbout::ProcessMessage(Long_t msg, Long_t /*parm1*/,
                                        Long_t /*parm2*/)
 {
-   // Process messages sent to this dialog.
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {

@@ -24,7 +24,7 @@ namespace PyROOT {
       virtual Int_t GetPriority() = 0;
 
       virtual Int_t GetMaxArgs() = 0;
-      virtual PyObject* GetArgSpec( Int_t /* iarg */ ) = 0;
+      virtual PyObject* GetCoVarNames() = 0;
       virtual PyObject* GetArgDefault( Int_t /* iarg */ )  = 0;
 
       virtual PyObject* GetScopeProxy()  = 0;
@@ -33,7 +33,7 @@ namespace PyROOT {
 
    public:
       virtual PyObject* Call(
-         ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
+         ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt = 0 ) = 0;
    };
 
 } // namespace PyROOT

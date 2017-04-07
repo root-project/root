@@ -31,26 +31,20 @@
 #ifndef ROOT_Math_ChebyshevApprox
 #define ROOT_Math_ChebyshevApprox
 
-/**
-   @defgroup NumAlgo Numerical Algorithms
-   Numerical Algorithm mainly from the \ref MathMore and implemented using the
-   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/">GSL</A> library
- */
 
 
 /**
    @defgroup FuncApprox Function Approximation (ChebyshevApprox)
+   Numerical algorithm from the \ref MathMore library and implemented using the
+   <A HREF="http://www.gnu.org/software/gsl/manual/html_node/">GSL</A> library
+ 
    @ingroup NumAlgo
  */
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
-#endif
 
 #include <memory>
 #include <cstddef>

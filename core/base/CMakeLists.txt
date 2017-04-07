@@ -2,22 +2,33 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
-ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx)
+if(testing)
+  # FIXME: The tests in core should require only libCore. OTOH, TQObjectTests uses the interpreter to register the class.
+  # This means that if we run make CoreBaseTests the executable wouldn't be runnable because it requires libCling and
+  # onepcm targets to be built.
+  ROOT_ADD_UNITTEST_SUBDIRECTORY(test LIBRARIES Core Cling RIO)
+endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
-include_directories(${CMAKE_SOURCE_DIR}/gui/gui/inc)
-include_directories(${CMAKE_SOURCE_DIR}/io/io/inc)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../textinput/src)
+ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h 
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h 
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h)
+if(root7)
+    set(root7src v7/src/*.cxx)
+    ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+endif()
+ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 
 ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_dict_headers}
+                         ${Base_v7_dict_headers}
                          ${Clib_dict_headers}
                          ${Cont_dict_headers}
+                         ${Foundation_dict_headers}
                          ${Macosx_dict_headers}
                          ${Unix_dict_headers}
                          ${Winnt_dict_headers}
-                         ${MetaUtils_dict_headers}
+                         ${ClingUtils_dict_headers}
                          ${Meta_dict_headers}
                          ${TextInput_dict_headers}
                          STAGE1
@@ -27,10 +38,6 @@ ROOT_GENERATE_DICTIONARY(G__Core
 
 list(REMOVE_ITEM sources TROOT.cxx roota.cxx)
 ROOT_OBJECT_LIBRARY(Base G__Core.cxx ${sources})
-
-if(builtin_pcre)
-  add_dependencies(Base PCRE)
-endif()
 
 ROOT_INSTALL_HEADERS()
 

@@ -131,11 +131,11 @@ TString  gRootSys;
 
 FILE    *sgref = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Application main entry point.
+
 int main(int argc, char *argv[])
 {
-   // Application main entry point.
-
    // use $ROOTSYS/etc/system.rootrc default values
    gEnv->ReadFile(TString::Format("%s/etc/system.rootrc",
                   gSystem->Getenv("ROOTSYS")), kEnvAll);
@@ -172,11 +172,11 @@ int main(int argc, char *argv[])
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run all stress GUI tests.
+
 void stressGUI()
 {
-   // Run all stress GUI tests.
-
    if (gOptionRef) {
       sgref = fopen("stressGUI.ref", "wt");
    }
@@ -354,21 +354,22 @@ void stressGUI()
 //                                Utilities
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the size of the file "filename".
+
 Int_t FileSize(const char *filename)
 {
-   // Return the size of the file "filename".
-
    FileStat_t fs;
-   gSystem->GetPathInfo(filename, fs);
-   return (Int_t)fs.fSize;
+   if (gSystem->GetPathInfo(filename, fs) == 0)
+      return (Int_t)fs.fSize;
+   return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify the file size.
+
 Bool_t VerifySize(const char *filename, const char *title)
 {
-   // Verify the file size.
-
    Int_t  ftol = 0;
    Bool_t success = kFALSE;
    Int_t fsize = FileSize(filename);
@@ -406,11 +407,11 @@ Bool_t VerifySize(const char *filename, const char *title)
    return success;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a capture of frame f in a png file.
+
 void ProcessFrame(TGFrame *f, const char *title)
 {
-   // Save a capture of frame f in a png file.
-
    gSystem->ProcessEvents();
    gSystem->Sleep(250);
    gSystem->ProcessEvents();
@@ -442,11 +443,11 @@ void ProcessFrame(TGFrame *f, const char *title)
    gTestNum++;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Verify the size of a png file generated from a root macro.
+
 void ProcessMacro(const char *macro, const char *title)
 {
-   // Verify the size of a png file generated from a root macro.
-
    Int_t   nbpass = 1, npass = 0;
    TString capture = macro;
    capture.ReplaceAll(".C", "_0.png");
@@ -462,7 +463,8 @@ void ProcessMacro(const char *macro, const char *title)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void CloseMainframes()
 {
    TClass* clGMainFrame = TClass::GetClass("TGMainFrame");
@@ -496,12 +498,12 @@ public:
 
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a container frames containing buttons
+
 ButtonLayoutWindow::ButtonLayoutWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
-   // Create a container frames containing buttons
-
    SetCleanup(kDeepCleanup);
    // one button is resized up to the parent width. Note! this width should be fixed!
    TGVerticalFrame *hframe1 = new TGVerticalFrame(this, 170, 50, kFixedWidth);
@@ -557,11 +559,11 @@ ButtonLayoutWindow::ButtonLayoutWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test layout and different states of some buttons.
+
 void testLayout()
 {
-   // Test layout and different states of some buttons.
-
    ButtonLayoutWindow *f = new ButtonLayoutWindow(gClient->GetRoot(), 100, 100);
    ProcessFrame((TGMainFrame*)f, "Buttons 1 (layout)");
    f->CloseWindow();
@@ -597,11 +599,11 @@ public:
 
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set text position (alignment).
+
 void TextAlignWindow::SetTextPosition(Int_t hid, Int_t vid)
 {
-   // Set text position (alignment).
-
    Int_t tj = fButton->GetTextJustify();
    tj &= ~kTextCenterX;
    tj &= ~kTextLeft;
@@ -614,11 +616,11 @@ void TextAlignWindow::SetTextPosition(Int_t hid, Int_t vid)
    fButton->SetTextJustify(tj);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main test window.
+
 TextAlignWindow::TextAlignWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHorizontalFrame)
 {
-   // Main test window.
-
    SetCleanup(kDeepCleanup);
 
    // Controls on right
@@ -695,11 +697,11 @@ TextAlignWindow::TextAlignWindow() : TGMainFrame(gClient->GetRoot(), 10, 10, kHo
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test different text alignments in a TGTextButton.
+
 void testTextAlign()
 {
-   // Test different text alignments in a TGTextButton.
-
    TextAlignWindow *f = new TextAlignWindow();
    ProcessFrame((TGMainFrame*)f, "Buttons 2 (text alignment)");
    f->SetTextPosition(kTextLeft, kTextTop);
@@ -735,12 +737,12 @@ public:
    GroupStateWindow(const TGWindow *p, UInt_t w, UInt_t h);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 GroupStateWindow::GroupStateWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
-   // Main window constructor.
-
    SetCleanup(kDeepCleanup);
 
    TGHorizontalFrame *fHL2 = new TGHorizontalFrame(this, 70, 100);
@@ -778,11 +780,11 @@ GroupStateWindow::GroupStateWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    fRadiob[1]->SetOn();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test enabled/disabled state of button group.
+
 void testGroupState()
 {
-   // Test enabled/disabled state of button group.
-
    GroupStateWindow *f = new GroupStateWindow(gClient->GetRoot(), 100, 100);
    ProcessFrame((TGMainFrame*)f, "Buttons 11 (group state)");
    f->fCheckb[0]->SetOn(kFALSE);
@@ -803,12 +805,12 @@ public:
    void SwitchState();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 LabelsWindow::LabelsWindow(const TGWindow *p, UInt_t w, UInt_t h) :
   TGMainFrame(p, w, h)
 {
-   // Main window constructor.
-
    SetCleanup(kDeepCleanup);
    // label + horizontal line
    TGGC *fTextGC;
@@ -861,11 +863,11 @@ LabelsWindow::LabelsWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch state of the labels.
+
 void LabelsWindow::SwitchState()
 {
-   // Switch state of the labels.
-
    if (fLbl1->IsDisabled()) {
       fLbl1->Enable();
       fLbl2->Enable();
@@ -879,11 +881,11 @@ void LabelsWindow::SwitchState()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test different styles and the enabled/disabled state of labels.
+
 void testLabels()
 {
-   // Test different styles and the enabled/disabled state of labels.
-
    LabelsWindow *f = new LabelsWindow(gClient->GetRoot(), 200, 200);
    ProcessFrame((TGMainFrame*)f, "Labels 1");
    f->SwitchState();
@@ -906,12 +908,12 @@ public:
 
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 SplitButtonWindow::SplitButtonWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
-   // Main window constructor.
-
    SetCleanup(kDeepCleanup);
 
    TGVerticalFrame *fVL = new TGVerticalFrame(this, 100, 100);
@@ -957,11 +959,11 @@ SplitButtonWindow::SplitButtonWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the different configurations/states of a split button.
+
 void testSplitButton()
 {
-   // Test the different configurations/states of a split button.
-
    SplitButtonWindow *f = new SplitButtonWindow(gClient->GetRoot(),100,100);
    f->fCButton->SetState(kButtonDown);
    f->fEButton->SetState(kButtonDown);
@@ -999,12 +1001,12 @@ public:
    TGComboBox  *GetCombo() const { return fCombo; }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Group frame containing combobox and text entry.
+
 GroupBox::GroupBox(const TGWindow *p, const char *name, const char *title) :
    TGGroupFrame(p, name)
 {
-   // Group frame containing combobox and text entry.
-
    TGHorizontalFrame *horz = new TGHorizontalFrame(this);
    AddFrame(horz, new TGLayoutHints(kLHintsExpandX | kLHintsCenterY));
    TGLabel *label = new TGLabel(horz, title);
@@ -1033,12 +1035,12 @@ public:
    TextEntryWindow();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 TextEntryWindow::TextEntryWindow() : TGMainFrame(gClient->GetRoot(), 10, 10,
                                                  kVerticalFrame)
 {
-   // Main window constructor.
-
    TGComboBox  *combo;
    TGTextEntry *entry;
 
@@ -1095,11 +1097,11 @@ TextEntryWindow::TextEntryWindow() : TGMainFrame(gClient->GetRoot(), 10, 10,
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the different modes available for text entries.
+
 void testTextEntries()
 {
-   // Test the different modes available for text entries.
-
    TGComboBox  *combo;
    TGTextEntry *entry;
 
@@ -1170,12 +1172,12 @@ public:
    void SwitchState();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 ListTreeWindow::ListTreeWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h, kVerticalFrame)
 {
-   // Main window constructor.
-
    SetCleanup(kDeepCleanup);
 
    // canvas widget
@@ -1234,11 +1236,11 @@ ListTreeWindow::ListTreeWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the list tree with some hierarchical structures.
+
 void ListTreeWindow::FillListTree()
 {
-   // Fill the list tree with some hierarchical structures.
-
    TString *listItem = 0;
    TGListTreeItem *node = 0, *histoNode = 0;
 
@@ -1274,12 +1276,12 @@ void ListTreeWindow::FillListTree()
    fListTree->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch status of a couple of entries, to verify the propagation to
+/// parent/children list tree items.
+
 void ListTreeWindow::SwitchState()
 {
-   // Switch status of a couple of entries, to verify the propagation to
-   // parent/children list tree items.
-
    TGListTreeItem *root = 0, *node = 0;
    root = fListTree->GetFirstItem();
    node = fListTree->FindChildByName(root, "P1D");
@@ -1302,11 +1304,11 @@ void ListTreeWindow::SwitchState()
    fListTree->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TGListTree and TGListTreeItems.
+
 void testListTree()
 {
-   // Test TGListTree and TGListTreeItems.
-
    ListTreeWindow *f = new ListTreeWindow(gClient->GetRoot(), 100, 100);
    ProcessFrame((TGMainFrame*)f, "List Tree 1");
    f->SwitchState();
@@ -1359,12 +1361,12 @@ public:
    void ToggleShutterItem(const char *name);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create transient frame containing a shutter widget.
+
 ShutterWindow::ShutterWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h, kVerticalFrame)
 {
-   // Create transient frame containing a shutter widget.
-
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -1386,11 +1388,11 @@ ShutterWindow::ShutterWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add item in the shutter.
+
 void ShutterWindow::AddShutterItem(const char *name, shutterData_t *data)
 {
-   // Add item in the shutter.
-
    TGShutterItem    *item;
    TGCompositeFrame *container;
    TGPictureButton  *button;
@@ -1429,10 +1431,10 @@ void ShutterWindow::AddShutterItem(const char *name, shutterData_t *data)
    fShutter->AddItem(item);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ShutterWindow::ToggleShutterItem(const char *name)
 {
-
    Long_t id = fShutter->GetItem(name)->WidgetId();
    SendMessage(fShutter, MK_MSG(kC_COMMAND, kCM_BUTTON), id, 0);
    for (int i=0; i<20;i++) {
@@ -1441,11 +1443,11 @@ void ShutterWindow::ToggleShutterItem(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TGShutter widget.
+
 void testShutter()
 {
-   // Test TGShutter widget.
-
    ShutterWindow *f = new ShutterWindow(gClient->GetRoot(), 400, 200);
    ProcessFrame((TGMainFrame*)f, "Shutter 1");
    f->ToggleShutterItem("Functions");
@@ -1473,12 +1475,12 @@ public:
    void SetValues(Int_t ver);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 ProgressbarWindow::ProgressbarWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h, kHorizontalFrame)
 {
-   // Main window constructor.
-
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -1531,11 +1533,11 @@ ProgressbarWindow::ProgressbarWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set some values to our progress bars.
+
 void ProgressbarWindow::SetValues(Int_t ver)
 {
-   // Set some values to our progress bars.
-
    fVProg1->Reset(); fVProg2->Reset();
    fHProg1->Reset(); fHProg2->Reset(); fHProg3->Reset();
    if (ver == 0) {
@@ -1556,11 +1558,11 @@ void ProgressbarWindow::SetValues(Int_t ver)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test several styles of progress bar.
+
 void testProgressBar()
 {
-   // Test several styles of progress bar.
-
    ProgressbarWindow *f = new ProgressbarWindow(gClient->GetRoot(), 600, 300);
    f->SetValues(0);
    ProcessFrame((TGMainFrame*)f, "Progress Bars 1");
@@ -1616,12 +1618,12 @@ const Double_t numinit[] = {
    19991121, 19991121, (Double_t) 0xDEADFACEU
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 NumberEntryWindow::NumberEntryWindow(const TGWindow *p) :
    TGMainFrame(p, 10, 10, kHorizontalFrame)
 {
-   // Main window constructor.
-
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -1673,11 +1675,11 @@ NumberEntryWindow::NumberEntryWindow(const TGWindow *p) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test number entries in different formats.
+
 void testNumberEntry()
 {
-   // Test number entries in different formats.
-
    NumberEntryWindow *f = new NumberEntryWindow(gClient->GetRoot());
    ProcessFrame((TGMainFrame*)f, "Number Entries");
    f->CloseWindow();
@@ -1740,12 +1742,12 @@ public:
 
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main window constructor.
+
 EditorWindow::EditorWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
-   // Main window constructor.
-
    // use hierarchical cleaning
    SetCleanup(kDeepCleanup);
 
@@ -1774,29 +1776,29 @@ EditorWindow::EditorWindow(const TGWindow *p, UInt_t w, UInt_t h) :
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Load a text buffer in the editor.
+
 void EditorWindow::LoadBuffer(const char *buffer)
 {
-   // Load a text buffer in the editor.
-
    fEdit->LoadBuffer(buffer);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add text to the editor.
+
 void EditorWindow::AddBuffer(const  char *buffer)
 {
-   // Add text to the editor.
-
    TGText txt;
    txt.LoadBuffer(buffer);
    fEdit->AddText(&txt);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Very simple test of the TGTextEdit widget.
+
 void testEditor()
 {
-   // Very simple test of the TGTextEdit widget.
-
    EditorWindow *f = new EditorWindow(gClient->GetRoot(), 550, 400);
    ProcessFrame((TGMainFrame*)f, "Text Editor");
    f->CloseWindow();
@@ -1804,11 +1806,11 @@ void testEditor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test Simple Canvas...
+
 void testCanvas()
 {
-   // Test Simple Canvas...
-
    TCanvas *c = new TCanvas("c", "Test Canvas", 0, 0, 800, 600);
    TRootCanvas *rc = (TRootCanvas *)c->GetCanvasImp();
    ProcessFrame((TGMainFrame*)rc, "ROOT Canvas");
@@ -1828,28 +1830,29 @@ public:
    void   SwitchTab(Int_t pos);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 MyColorDialog::MyColorDialog(const TGWindow *p, const TGWindow *m, Int_t *retc,
                              ULong_t *color) : TGColorDialog(p, m, retc, color,
                              kFALSE)
 {
-   // Constructor.
-
    SetWMPosition(0, 0);
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void MyColorDialog::SwitchTab(Int_t pos)
 {
    fTab->SetTab(pos, kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test Color Selection Dialog.
+
 void testColorDlg()
 {
-   // Test Color Selection Dialog.
-
    Int_t retc = 0;
    ULong_t color = 0xcfcfcf;
    MyColorDialog *dlg = new MyColorDialog(gClient->GetDefaultRoot(),
@@ -1864,11 +1867,11 @@ void testColorDlg()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test Font Selection Dialog.
+
 void testFontDlg()
 {
-   // Test Font Selection Dialog.
-
    TGFontDialog::FontProp_t prop;
    TGFontDialog *dlg = new TGFontDialog(gClient->GetDefaultRoot(),
                                         gClient->GetDefaultRoot(),
@@ -1882,11 +1885,11 @@ void testFontDlg()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test Search Dialog.
+
 void testSearchDlg()
 {
-   // Test Search Dialog.
-
    Int_t retc = 0;
    TGSearchType sstruct;
    sstruct.fClose = kFALSE;
@@ -1912,11 +1915,11 @@ public:
    LabelEntry(const TGWindow * parent, Int_t Width, Int_t Height);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 LabelEntry::LabelEntry(const TGWindow * parent, Int_t Width, Int_t Height) :
    TGCompositeFrame(parent, Width, Height)
 {
-
    tabLayout=new TGTableLayout(this, 2,5, kFALSE);
    SetLayoutManager(tabLayout);
 
@@ -1952,11 +1955,11 @@ LabelEntry::LabelEntry(const TGWindow * parent, Int_t Width, Int_t Height) :
    ChangeOptions(GetOptions() | kFixedWidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test table layout.
+
 void testTableLayout()
 {
-   // Test table layout.
-
    LabelEntry *l1, *l2;
    TGMainFrame *mf = new TGMainFrame (gClient->GetRoot(), 700, 200);
    mf->SetCleanup(kDeepCleanup);
@@ -1977,11 +1980,11 @@ void testTableLayout()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the TGPack widget.
+
 void testPack()
 {
-   // Test the TGPack widget.
-
    TGPack *hp = 0;
    TGPack *vp = 0;
    TGTextButton* b = 0;
@@ -2127,11 +2130,11 @@ SliderWindow::SliderWindow(const TGWindow *p, UInt_t w, UInt_t h) :
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test horizontal and vertical sliders.
+
 void testSliders()
 {
-   // Test horizontal and vertical sliders.
-
    SliderWindow *f = new SliderWindow(gClient->GetRoot(), 400, 200);
    ProcessFrame((TGMainFrame*)f, "Sliders 1");
    f->CloseWindow();
@@ -2139,10 +2142,11 @@ void testSliders()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup the GUI...
+
 void testBrowsers()
 {
-   // Popup the GUI...
    gSystem->RedirectOutput(gTmpfilename.Data(), "w", &gRH);
    gEnv->SetValue("Browser.Name", "TRootBrowserLite");
    TBrowser *b = new TBrowser();
@@ -2165,11 +2169,11 @@ void testBrowsers()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test TGSplitFrame.
+
 void testSplitFrame()
 {
-   // Test TGSplitFrame.
-
    TGMainFrame *mf = new TGMainFrame(gClient->GetDefaultRoot(), 200, 200);
    mf->SetCleanup(kDeepCleanup);
    TGSplitFrame *first = new TGSplitFrame(mf, 200, 200);
@@ -2190,11 +2194,11 @@ void testSplitFrame()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the ROOT control bar.
+
 void testControlBars()
 {
-   // Test the ROOT control bar.
-
    TControlBar *bar = new TControlBar("vertical", "Demos",10,10);
    bar->AddButton("Help Demos",".x demoshelp.C",        "Click Here For Help on Running the Demos");
    bar->AddButton("browser",   "new TBrowser;",         "Start the ROOT Browser");
@@ -2231,11 +2235,11 @@ void testControlBars()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Very simple test of the ROOT help dialog.
+
 void testHelpDialog()
 {
-   // Very simple test of the ROOT help dialog.
-
    TRootHelpDialog *hd = new TRootHelpDialog(gClient->GetRoot(), "About ROOT...", 600, 400);
    hd->SetText(gHelpAbout);
    hd->Popup();
@@ -2245,11 +2249,11 @@ void testHelpDialog()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the ASImage palette editor.
+
 void testPaletteEditor()
 {
-   // Test the ASImage palette editor.
-
    const char *fname = "galaxy.root";
    TFile *gal = 0;
    if (!gSystem->AccessPathName(fname)) {
@@ -2270,11 +2274,11 @@ void testPaletteEditor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test the HTML Browser.
+
 void testHtmlBrowser()
 {
-   // Test the HTML Browser.
-
    TGHtmlBrowser *b = new TGHtmlBrowser("http://bellenot.web.cern.ch/bellenot/Public/html_test/html_test.html");
    ProcessFrame((TGMainFrame*)b, "HTML Browser 1");
    b->Selected("http://bellenot.web.cern.ch/bellenot/Public/html_test/gallery/");
@@ -2300,11 +2304,11 @@ const char *excluded[] = {
    0
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// start a new ROOT process for the execution of the macro.
+
 Int_t bexec(TString &dir, const char *macro)
 {
-   // start a new ROOT process for the execution of the macro.
-
 #ifdef WIN32
    return gSystem->Exec(TString::Format("set ROOT_HIST=0 & root.exe -l -q exec_macro.C(\\\"%s/%s\\\") >nul 2>&1", dir.Data(), macro));
 #else
@@ -2312,11 +2316,11 @@ Int_t bexec(TString &dir, const char *macro)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run the macros available in $ROOTSYS/tutorials/gui
+
 void run_tutorials()
 {
-   // Run the macros available in $ROOTSYS/tutorials/gui
-
    gClient->HandleInput();
    gSystem->Sleep(50);
    gSystem->ProcessEvents();
@@ -2373,10 +2377,11 @@ void run_tutorials()
 //                             Recorder sessions
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// count characters in the file, skipping cr/lf
+
 Int_t file_size(const char *filename)
 {
-   // count characters in the file, skipping cr/lf
    FILE *lunin;
    Int_t c, wc = 0;
 
@@ -2391,7 +2396,8 @@ Int_t file_size(const char *filename)
    return wc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void guitest_playback()
 {
    Int_t i;
@@ -2462,7 +2468,8 @@ void guitest_playback()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void dnd_playback()
 {
    Bool_t ret;
@@ -2502,7 +2509,8 @@ void dnd_playback()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void mditest_playback()
 {
    Bool_t ret;
@@ -2536,7 +2544,8 @@ void mditest_playback()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void graph_edit_playback()
 {
    Bool_t ret;
@@ -2570,7 +2579,8 @@ void graph_edit_playback()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void fitpanel_playback()
 {
    Bool_t ret;

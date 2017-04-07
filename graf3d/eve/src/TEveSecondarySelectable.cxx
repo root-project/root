@@ -14,49 +14,54 @@
 
 #include "TGLSelectRecord.h"
 
-//______________________________________________________________________________
-//
-// Semi-abstract interface for classes supporting secondary-selection.
-//
-// Element class that inherits from this, should also implement the
-// following virtuals from TEveElement:
-//    virtual void UnSelected();
-//    virtual void UnHighlighted();
-// and clear corresponding selection-set from there.
-//
-// To support tooltips for sub-elements, implement:
-//    virtual TString TEveElement::GetHighlightTooltip();
-// and return tooltip for the entry in the fHighlightedSet.
-// There should always be a single entry there.
-// See TEveDigitSet for an example.
+/** \class TEveSecondarySelectable
+\ingroup TEve
+Semi-abstract interface for classes supporting secondary-selection.
 
+Element class that inherits from this, should also implement the
+following virtual methods from TEveElement:
+~~~ {.cpp}
+    virtual void UnSelected();
+    virtual void UnHighlighted();
+~~~
+and clear corresponding selection-set from there.
+
+To support tooltips for sub-elements, implement:
+~~~ {.cpp}
+    virtual TString TEveElement::GetHighlightTooltip();
+~~~
+and return tooltip for the entry in the fHighlightedSet.
+There should always be a single entry there.
+See TEveDigitSet for an example.
+*/
 
 ClassImp(TEveSecondarySelectable);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveSecondarySelectable::TEveSecondarySelectable() :
    fAlwaysSecSelect(kFALSE)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process secondary GL selection and populate selected set accordingly.
+
 void TEveSecondarySelectable::ProcessGLSelection(TGLSelectRecord& rec)
 {
-   // Process secondary GL selection and populate selected set accordingly.
-
    if (rec.GetHighlight())
       ProcessGLSelectionInternal(rec, fHighlightedSet);
    else
       ProcessGLSelectionInternal(rec, fSelectedSet);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process secondary GL selection and populate given set accordingly.
+
 void TEveSecondarySelectable::ProcessGLSelectionInternal(TGLSelectRecord& rec,
                                                          SelectionSet_t& sset)
 {
-   // Process secondary GL selection and populate given set accordingly.
-
    Int_t id = (rec.GetN() > 1) ? (Int_t) rec.GetItem(1) : -1;
 
    if (sset.empty())

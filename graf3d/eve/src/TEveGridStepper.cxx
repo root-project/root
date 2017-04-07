@@ -12,22 +12,22 @@
 #include "TEveGridStepper.h"
 #include "TEveTrans.h"
 
-//______________________________________________________________________________
-// TEveGridStepper
-//
-// Provide discrete position coordinates for placement of objects on
-// regular grids.
+/** \class TEveGridStepper
+\ingroup TEve
+Provide discrete position coordinates for placement of objects on
+regular grids.
+*/
 
 ClassImp(TEveGridStepper)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveGridStepper::TEveGridStepper(Int_t sm) :
    fMode(EStepMode_e(sm)),
    fCx(0), fCy(0), fCz(0), fNx(0), fNy(0), fNz(0),
    fDx(0), fDy(0), fDz(0), fOx(0), fOy(0), fOz(0)
 {
-   // Constructor.
-
    switch(fMode) {
       default:
       case kSM_XYZ:
@@ -50,31 +50,29 @@ TEveGridStepper::TEveGridStepper(Int_t sm) :
    fOx = fOy = fOz = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset position to origin.
+
 void TEveGridStepper::Reset()
 {
-   // Reset position to origin.
-
    fCx = fCy = fCz = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract current position of 's' from origin of this.
+
 void TEveGridStepper::Subtract(TEveGridStepper& s)
 {
-   // Subtract current position of 's' from origin of this.
-
    fOx = -(s.fOx + s.fCx*s.fDx);
    fOy = -(s.fOy + s.fCy*s.fDy);
    fOz = -(s.fOz + s.fCz*s.fDz);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Move to the next grid position.
 
-//______________________________________________________________________________
 Bool_t TEveGridStepper::Step()
 {
-   // Move to the next grid position.
-
    (*fValueArr[0])++;
    if (*fValueArr[0] >= *fLimitArr[0]) {
       *fValueArr[0] = 0; (*fValueArr[1])++;
@@ -88,32 +86,30 @@ Bool_t TEveGridStepper::Step()
    return kTRUE;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Get current position.
 
-//______________________________________________________________________________
 void TEveGridStepper::GetPosition(Float_t* p)
 {
-   // Get current position.
-
    p[0] = fOx + fCx*fDx;
    p[1] = fOy + fCy*fDy;
    p[2] = fOz + fCz*fDz;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position into the translation part of mx.
+
 void TEveGridStepper::SetTrans(TEveTrans* mx)
 {
-   // Set position into the translation part of mx.
-
    mx->SetPos(fOx + fCx*fDx, fOy + fCy*fDy, fOz + fCz*fDz);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set position into the translation part of mx and advance to the
+/// next grid position.
+
 void TEveGridStepper::SetTransAdvance(TEveTrans* mx)
 {
-   // Set position into the translation part of mx and advance to the
-   // next grid position.
-
    SetTrans(mx);
    Step();
 }

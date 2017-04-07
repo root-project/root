@@ -13,12 +13,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Chebychev polynomial p.d.f. of the first kind
-// END_HTML
-//
+/** \class RooChebychev
+   \ingroup Roofit
+
+Chebychev polynomial p.d.f. of the first kind
+**/
 
 #include <cmath>
 #include <iostream>
@@ -45,30 +44,30 @@
 #endif
 
 ClassImp(RooChebychev)
-;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooChebychev::RooChebychev() : _refRangeName(0)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
 
-//_____________________________________________________________________________
-RooChebychev::RooChebychev(const char* name, const char* title, 
-                           RooAbsReal& x, const RooArgList& coefList): 
+RooChebychev::RooChebychev(const char* name, const char* title,
+                           RooAbsReal& x, const RooArgList& coefList):
   RooAbsPdf(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this),
   _refRangeName(0)
 {
-  // Constructor
   TIterator* coefIter = coefList.createIterator() ;
   RooAbsArg* coef ;
   while((coef = (RooAbsArg*)coefIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
-	std::cerr << "RooChebychev::ctor(" << GetName() <<
-	    ") ERROR: coefficient " << coef->GetName() <<
-	    " is not of type RooAbsReal" << std::endl ;
+   std::cerr << "RooChebychev::ctor(" << GetName() <<
+       ") ERROR: coefficient " << coef->GetName() <<
+       " is not of type RooAbsReal" << std::endl ;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
@@ -77,12 +76,11 @@ RooChebychev::RooChebychev(const char* name, const char* title,
   delete coefIter ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-//_____________________________________________________________________________
 RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
-  RooAbsPdf(other, name), 
-  _x("x", this, other._x), 
+  RooAbsPdf(other, name),
+  _x("x", this, other._x),
   _coefList("coefList",this,other._coefList),
   _refRangeName(other._refRangeName)
 {
@@ -94,9 +92,9 @@ inline static double p2(double t,double a,double b,double c) { return p1(t,p1(t,
 inline static double p3(double t,double a,double b,double c,double d) { return p2(t,p1(t,a,b),c,d); }
 //inline static double p4(double t,double a,double b,double c,double d,double e) { return p3(t,p1(t,a,b),c,d,e); }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
-void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force) 
+void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
 {
   if (rangeName && (force || !_refRangeName)) {
     _refRangeName = (TNamed*) RooNameReg::instance().constPtr(rangeName) ;
@@ -106,11 +104,10 @@ void RooChebychev::selectNormalizationRange(const char* rangeName, Bool_t force)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
-Double_t RooChebychev::evaluate() const 
+Double_t RooChebychev::evaluate() const
 {
-  
   Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName():0) ; Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
   Double_t x(-1+2*(_x-xmin)/(xmax-xmin));
   Double_t x2(x*x);
@@ -125,26 +122,25 @@ Double_t RooChebychev::evaluate() const
   case  1: sum+=((RooAbsReal&)_coefList[0]).getVal()*x;
   case  0: sum+=1; break;
   default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
-	       __LINE__ << "): Higher order Chebychev polynomials currently "
-	       "unimplemented." << std::endl;
-	   R__ASSERT(false);
+          __LINE__ << "): Higher order Chebychev polynomials currently "
+          "unimplemented." << std::endl;
+      R__ASSERT(false);
   }
   return sum;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
-Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const 
+Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /* rangeName */) const
 {
   if (matchArgs(allVars, analVars, _x)) return 1;
   return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-//_____________________________________________________________________________
-Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-
   R__ASSERT(1 == code);
 
   // the full range of the function is mapped to the normalised [-1, 1] range
@@ -167,6 +163,8 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
   return val;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Double_t RooChebychev::evalAnaInt(const Double_t x) const
 {
   const Double_t x2 = x * x;
@@ -180,11 +178,11 @@ Double_t RooChebychev::evalAnaInt(const Double_t x) const
     case  2: sum+=((RooAbsReal&)_coefList[1]).getVal()*x*p1(x2,2./3.,-1.);
     case  1: sum+=((RooAbsReal&)_coefList[0]).getVal()*x2*.5;
     case  0: sum+=x; break;
-	     
+
     default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
-	     __LINE__ << "): Higher order Chebychev polynomials currently "
-		 "unimplemented." << std::endl;
-	     R__ASSERT(false);
+        __LINE__ << "): Higher order Chebychev polynomials currently "
+       "unimplemented." << std::endl;
+        R__ASSERT(false);
   }
   return sum;
 }

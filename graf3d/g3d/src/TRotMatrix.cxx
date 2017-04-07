@@ -9,25 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGeometry.h"
 #include "TRotMatrix.h"
+#include "TBuffer.h"
 #include "TClass.h"
+#include "TGeometry.h"
 #include "TMath.h"
 
 ClassImp(TRotMatrix)
 
+/** \class TRotMatrix
+\ingroup g3d
+Manages a detector rotation matrix. See class TGeometry.
+*/
 
-//______________________________________________________________________________
-//
-// Manages a detector rotation matrix. See class TGeometry.
-//
+////////////////////////////////////////////////////////////////////////////////
+/// RotMatrix default constructor.
 
-
-//______________________________________________________________________________
 TRotMatrix::TRotMatrix()
 {
-   // RotMatrix default constructor.
-
    for (int i=0;i<9;i++) fMatrix[i] = 0;
    fNumber = 0;
    fPhi    = 0;
@@ -36,12 +35,17 @@ TRotMatrix::TRotMatrix()
    fType   = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// RotMatrix normal constructor.
 
-//______________________________________________________________________________
 TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t *matrix)
            :TNamed(name,title)
 {
-   // RotMatrix normal constructor.
+   fNumber = 0;
+   fPhi    = 0;
+   fPsi    = 0;
+   fTheta  = 0;
+   fType   = 0;
 
    if (!matrix) { Error("ctor","No rotation is supplied"); return; }
 
@@ -51,13 +55,12 @@ TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t *matrix)
    gGeometry->GetListOfMatrices()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// RotMatrix normal constructor.
 
-//______________________________________________________________________________
 TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t theta, Double_t phi, Double_t psi)
            :TNamed(name,title)
 {
-   // RotMatrix normal constructor.
-
    printf("ERROR: This form of TRotMatrix constructor not implemented yet\n");
 
    Int_t i;
@@ -73,31 +76,31 @@ TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t theta, Doub
    gGeometry->GetListOfMatrices()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// RotMatrix normal constructor defined a la GEANT.
+///
+/// The TRotMatrix constructor with six angles uses the GEANT convention:
+///
+/// theta1 is the polar angle of the x-prim axis in the main reference system
+/// (MRS), theta2 and theta3 have the same meaning for the y-prim and z-prim
+/// axis.
+///
+/// Phi1 is the azimuthal angle of the x-prim in the MRS and phi2 and phi3
+/// have the same meaning for y-prim and z-prim.
+///
+///
+/// for example, the unit matrix is defined in the following way.
+/// ~~~ {.cpp}
+///     x-prim || x, y-prim || y, z-prim || z
+///
+///     means:  theta1=90, theta2=90, theta3=0, phi1=0, phi2=90, phi3=0
+/// ~~~
 
-//______________________________________________________________________________
 TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t theta1, Double_t phi1
                                                   , Double_t theta2, Double_t phi2
                                                   , Double_t theta3, Double_t phi3)
                 :TNamed(name,title)
 {
-   // RotMatrix normal constructor defined a la GEANT.
-   //
-   // The TRotMatrix constructor with six angles uses the GEANT convention:
-   //
-   // theta1 is the polar angle of the x-prim axis in the main reference system
-   // (MRS), theta2 and theta3 have the same meaning for the y-prim and z-prim
-   // axis.
-   //
-   // Phi1 is the azimuthal angle of the x-prim in the MRS and phi2 and phi3
-   // have the same meaning for y-prim and z-prim.
-   //
-   //
-   // for example, the unit matrix is defined in the following way.
-   //
-   //     x-prim || x, y-prim || y, z-prim || z
-   //
-   //     means:  theta1=90, theta2=90, theta3=0, phi1=0, phi2=90, phi3=0
-
    SetAngles(theta1,phi1,theta2,phi2,theta3,phi3);
 
    if (!gGeometry) gGeometry = new TGeometry();
@@ -105,46 +108,45 @@ TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t theta1, Dou
    gGeometry->GetListOfMatrices()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// RotMatrix default destructor.
 
-//______________________________________________________________________________
 TRotMatrix::~TRotMatrix()
 {
-   // RotMatrix default destructor.
-
    if (gGeometry) gGeometry->GetListOfMatrices()->Remove(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the value of the determinant of this matrix
 
-//______________________________________________________________________________
 Double_t  TRotMatrix::Determinant() const
 {
-   // Determinant() returns the value of the determiant of this matrix
-
    return
       fMatrix[0] * (fMatrix[4]*fMatrix[8] - fMatrix[7]*fMatrix[5])
     - fMatrix[3] * (fMatrix[1]*fMatrix[8] - fMatrix[7]*fMatrix[2])
     + fMatrix[6] * (fMatrix[1]*fMatrix[5] - fMatrix[4]*fMatrix[2]);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///  Convert this matrix to the OpenGL [4x4]
+///
+/// ~~~ {.cpp}
+///  [  fMatrix[0]   fMatrix[1]   fMatrix[2]    0  ]
+///  [  fMatrix[3]   fMatrix[4]   fMatrix[5]    0  ]
+///  [  fMatrix[6]   fMatrix[7]   fMatrix[8]    0  ]
+///  [     0             0           0          1  ]
+/// ~~~
+///
+///  Input:
+///
+///  Double_t *rGLMatrix: pointer to Double_t 4x4 buffer array
+///
+///  Return:
+///
+///  Double_t*: pointer to the input buffer
 
-//______________________________________________________________________________
 Double_t* TRotMatrix::GetGLMatrix(Double_t *rGLMatrix) const
 {
-   //  Convert this matrix to the OpenGL [4x4]
-   //
-   //  [  fMatrix[0]   fMatrix[1]   fMatrix[2]    0  ]
-   //  [  fMatrix[3]   fMatrix[4]   fMatrix[5]    0  ]
-   //  [  fMatrix[6]   fMatrix[7]   fMatrix[8]    0  ]
-   //  [     0             0           0          1  ]
-   //
-   //  Input:
-   //  -----
-   //  Double_t *rGLMatrix - pointer to Double_t 4x4 buffer array
-   //
-   //  Return:
-   //  ------
-   //  Double_t pointer to the input buffer
-
    Double_t *glmatrix = rGLMatrix;
    const Double_t *matrix   = fMatrix;
    if (rGLMatrix)
@@ -165,25 +167,26 @@ Double_t* TRotMatrix::GetGLMatrix(Double_t *rGLMatrix) const
    return rGLMatrix;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// theta1 is the polar angle of the x-prim axis in the main reference system
+/// (MRS), theta2 and theta3 have the same meaning for the y-prim and z-prim
+/// axis.
+///
+/// Phi1 is the azimuthal angle of the x-prim in the MRS and phi2 and phi3
+/// have the same meaning for y-prim and z-prim.
+///
+///
+/// for example, the unit matrix is defined in the following way.
+///
+/// ~~~ {.cpp}
+///     x-prim || x, y-prim || y, z-prim || z
+///
+///     means:  theta1=90, theta2=90, theta3=0, phi1=0, phi2=90, phi3=0
+/// ~~~
 
-//______________________________________________________________________________
 const Double_t* TRotMatrix::SetAngles(Double_t theta1, Double_t phi1,
                 Double_t theta2, Double_t phi2,Double_t theta3, Double_t phi3)
 {
-   // theta1 is the polar angle of the x-prim axis in the main reference system
-   // (MRS), theta2 and theta3 have the same meaning for the y-prim and z-prim
-   // axis.
-   //
-   // Phi1 is the azimuthal angle of the x-prim in the MRS and phi2 and phi3
-   // have the same meaning for y-prim and z-prim.
-   //
-   //
-   // for example, the unit matrix is defined in the following way.
-   //
-   //     x-prim || x, y-prim || y, z-prim || z
-   //
-   //     means:  theta1=90, theta2=90, theta3=0, phi1=0, phi2=90, phi3=0
-
    const Double_t degrad = 0.0174532925199432958;
 
    fTheta  = theta1;
@@ -207,12 +210,11 @@ const Double_t* TRotMatrix::SetAngles(Double_t theta1, Double_t phi1,
    return fMatrix;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// copy predefined 3x3 matrix into TRotMatrix object
 
-//______________________________________________________________________________
 void TRotMatrix::SetMatrix(const Double_t *matrix)
 {
-   // copy predefined 3x3 matrix into TRotMatrix object
-
    fTheta  = 0;
    fPhi    = 0;
    fPsi    = 0;
@@ -223,24 +225,22 @@ void TRotMatrix::SetMatrix(const Double_t *matrix)
    SetReflection();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Checks whether the determinant of this
+/// matrix defines the reflection transformation
+/// and set the "reflection" flag if any
 
-//______________________________________________________________________________
 void TRotMatrix::SetReflection()
 {
-   // SetReflection() -  checks whether the determinant of this
-   //                    matrix defines the reflection transformation
-   //                    and set the "reflection" flag if any
-
    ResetBit(kReflection);
    if (Determinant() < 0) { fType=1; SetBit(kReflection);}
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TRotMatrix.
 
-//______________________________________________________________________________
 void TRotMatrix::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TRotMatrix.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

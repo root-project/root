@@ -1,5 +1,12 @@
-// example of TGraphTime
-//Author: Rene Brun 14/07/2009
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// Example of TGraphTime.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TCanvas.h"
 #include "TRandom3.h"

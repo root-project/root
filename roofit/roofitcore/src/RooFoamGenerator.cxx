@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Class RooFoamGenerator is a generic toy monte carlo generator that implement
-// the TFOAM sampling technique on any positively valued function.
-// The RooFoamGenerator generator is used by the various generator context
-// classes to take care of generation of observables for which p.d.fs
-// do not define internal methods
-// END_HTML
-//
+/**
+\file RooFoamGenerator.cxx
+\class RooFoamGenerator
+\ingroup Roofitcore
+
+Class RooFoamGenerator is a generic toy monte carlo generator that implement
+the TFOAM sampling technique on any positively valued function.
+The RooFoamGenerator generator is used by the various generator context
+classes to take care of generation of observables for which p.d.fs
+do not define internal methods
+**/
 
 
 #include "RooFit.h"
@@ -54,11 +55,11 @@ ClassImp(RooFoamGenerator)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
+
 void RooFoamGenerator::registerSampler(RooNumGenFactory& fact)
 {
-  // Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
-
   // Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
   RooRealVar nSample("nSample","Number of samples per cell",200,0,1e6) ;
   RooRealVar nCell1D("nCell1D","Number of cells for 1-dim generation",30,0,1e6) ;
@@ -74,7 +75,8 @@ void RooFoamGenerator::registerSampler(RooNumGenFactory& fact)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
@@ -113,10 +115,11 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooFoamGenerator::~RooFoamGenerator() 
 {
-  // Destructor
   delete[] _vec ;
   delete[] _xmin ;
   delete[] _range ;
@@ -127,10 +130,11 @@ RooFoamGenerator::~RooFoamGenerator()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// are we actually generating anything? (the cache always contains at least our function value)
+
 const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/) 
 {
-  // are we actually generating anything? (the cache always contains at least our function value)
   const RooArgSet *event= _cache->get();
   if(event->getSize() == 1) return event;
 

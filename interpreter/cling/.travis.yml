@@ -1,56 +1,356 @@
+sudo: false
+
 language: cpp
 
-compiler:
-  - gcc
+addons: &addons
+  apt:
+    packages: timeout
+    sources: &sources
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.5
+      - llvm-toolchain-precise-3.6
+      - llvm-toolchain-precise-3.7
+      - llvm-toolchain-precise-3.8
+      - llvm-toolchain-precise
 
-before_install:
-  - echo $LANG
-  - echo $LC_ALL
-  - sudo apt-get install python-software-properties
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update
-  - sudo apt-get install gcc-4.8
-  - sudo apt-get install g++-4.8
-  - sudo apt-get install binutils-gold
-  - sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 50
-  - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 50
+cache:
+  apt: true
+  ccache: true
+  directories:
+    - $HOME/.ccache
+    - $CLING_BUILD_DEPS
 
-before_script:
-  - mkdir src inst obj
-  - git clone https://github.com/vgvassilev/llvm.git src
-  - (cd src && git checkout cling-patches)
-  - git clone https://github.com/vgvassilev/clang.git src/tools/clang
-  - (cd src/tools/clang && git checkout cling-patches)
-  - git clone https://github.com/vgvassilev/cling.git src/tools/cling
-  - cd src
-  - cd ../obj
-  - travis_retry ../src/configure --prefix=`pwd`/../inst --disable-docs --disable-bindings --disable-visibility-inlines-hidden --disable-clang-rewriter --disable-clang-static-analyzer --disable-clang-arcmt --disable-compiler-version-checks --enable-targets=host
+env:
+  global:
+    - USE_CCACHE=1
+    - CCACHE_COMPRESS=1
+    - CCACHE_MAXSIZE=500M
+    - CCACHE_CPP2=1
+    - TIMEOUT=0
+    - secure: "DQSDJnYWR7kb2ylcE1e4GIfP9KJadHjG696HelK09zmsTJiRoxg2HhDnm3gHkrPh18AxYJAMW1rZHm0ZsnBKpS09NxOcPVseL+z3iWfBFpgCa2ueUMKHy/YBhNghmLOXVeQzGwol6iCU5xbO4ZMJHpytmQCH6Vm9ws7sg8kiatY="
 
-script:
-  - travis_retry make -j4 -k
-  - travis_retry make -j4 -k
-  - travis_retry make install
-  - cd tools/cling
-  - make test LIT_ARGS=--no-progress-bar
-
+# Do not build our sync branch.
 branches:
+  except:
+    - /^__internal.*$/
   only:
     - master
+    - cling-nightlies
+
+matrix:
+  # Abort all builds on a single failing matrix entry.
+  fast_finish: true
+
+  exclude:
+    # Note: Workaround travis-ci/travis-ci#4681
+    # Exclude default job which lacks our included environment variables.
+    - os: osx
+    - os: linux
+
+  include:
+    # There seems to be a hard limit to how many machines a Travis build will
+    # across all platforms. By interleaving OS X, the hope is to get in the
+    # queue faster while not blocking Linux builds from occuring.
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-4.7 CCOMPILER=gcc-4.7 NIGHTLY_CRON_SYNC=1
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.7
+      compiler: gcc-4.7
+
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-4.8 CCOMPILER=gcc-4.8
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.8
+      compiler: gcc-4.8
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode6.4
+      compiler: clang
+
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-4.9 CCOMPILER=gcc-4.9
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.9
+      compiler: gcc-4.9
+
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-5 CCOMPILER=gcc-5
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-5
+      compiler: gcc-5
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode7
+      compiler: clang
+
+    - os: linux
+      env: DIST=pangolin COMPILER=g++-6 CCOMPILER=gcc-6
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-6
+      compiler: gcc-6
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-4.7 CCOMPILER=gcc-4.7
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.7
+      compiler: gcc-4.7
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode7.1
+      compiler: clang
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-4.8 CCOMPILER=gcc-4.8
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.8
+      compiler: gcc-4.8
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-4.9 CCOMPILER=gcc-4.9
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-4.9
+      compiler: gcc-4.9
+
+    - os: osx
+      env: COMPILER=g++-6 CCOMPILER=gcc-6
+      osx_image: xcode7.2
+      compiler: g++-6
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-5 CCOMPILER=gcc-5
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-5
+      compiler: gcc-5
+
+    - os: linux
+      env: DIST=trusty COMPILER=g++-6 CCOMPILER=gcc-6
+      sudo: required
+      dist: trusty
+      addons:
+        apt:
+          sources: *sources
+          packages: g++-6
+      compiler: gcc-6
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode7.3
+      compiler: clang
+
+    - os: linux
+      env: CXXLIB=libstdc++ COMPILER=clang++-3.7 CCOMPILER=clang-3.7
+      addons:
+        apt:
+          sources: *sources
+          packages: ['clang-3.7', 'libstdc++-5-dev']
+      compiler: clang-3.7
+
+    - os: linux
+      env: CXXLIB=libstdc++ COMPILER=clang++-3.8 CCOMPILER=clang-3.8
+      addons:
+        apt:
+          sources: *sources
+          packages: ['clang-3.8', 'libstdc++-6-dev']
+      compiler: clang-3.8
+
+    - os: osx
+      env: COMPILER=clang++ CCOMPILER=clang
+      osx_image: xcode8
+      compiler: clang
+
+  allow_failures:
+    # clang-3.5 crashes compiling clang-3.9 with libc++-3.9
+    - env: CXXLIB=libc++ COMPILER=clang++-3.5 CCOMPILER=clang-3.5
+
+install:
+# If cmake is not in the cache, download it.
+- |
+  CLING_USER_ROOT=`dirname $TRAVIS_BUILD_DIR`
+  export CLING_BUILD_DEPS="$CLING_USER_ROOT/deps"
+  export CLING_LOCAL_BIN="$CLING_USER_ROOT/bin"
+  if [ $TRAVIS_OS_NAME == 'linux' ]; then
+    CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
+    export CMAKE=$CLING_BUILD_DEPS/cmake/bin/cmake
+  elif [ $TRAVIS_OS_NAME == 'osx' ] ; then
+    brew install ccache python coreutils
+    if [[ "$COMPILER" == g++-* ]]; then
+      brew install "gcc${COMPILER##*++-}"
+      export CXXFLAGS="-D__builtin_unreachable=__builtin_trap"
+      export CFLAGS="-D__builtin_unreachable=__builtin_trap"
+    fi
+    CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Darwin-x86_64.tar.gz"
+    export CMAKE=$CLING_BUILD_DEPS/cmake/CMake.app/Contents/bin/cmake
+    PATH="/usr/local/opt/ccache/libexec:$PATH"
+    # This is where timeout is hiding now, is the above still neccessary?
+    PATH="$PATH:/usr/local/opt/coreutils/libexec/gnubin"
+  fi
+
+  # Containers need to timeout before the buildscript exists
+  if [ $TRAVIS_OS_NAME == 'osx' ] || [ "$DIST" == "trusty" ]; then
+    TIMEOUT='40m' # Any more and Travis might cancel
+  fi
+
+  # If we timeout, objects can be corrupted in the cache, causing link errors
+  # Turn this on to get the mapping to the cache.o to delete
+  # export CCACHE_LOGFILE="$CLING_USER_ROOT/ccache.log"
+
+  if [ ! -f $CMAKE ]; then
+    mkdir -pv $CLING_BUILD_DEPS/cmake
+    travis_retry curl -k $CMAKE_URL | tar --strip-components=1 -xz -C $CLING_BUILD_DEPS/cmake
+  fi
+
+before_script:
+ - $CMAKE --version
+ - export CXX="ccache $COMPILER"
+ - export CC="ccache $CCOMPILER"
+ - |
+   # If we are running our nightly cron job, sync.
+   if [ -n "$NIGHTLY_CRON_SYNC" ] && [ "$TRAVIS_EVENT_TYPE" = "cron" ] \
+      && [ "$TRAVIS_BRANCH" == "master" ] && [ "$TRAVIS_PULL_REQUEST" == "false" ] \
+      && [ "$TRAVIS_REPO_SLUG" == "vgvassilev/cling" ] ; then
+      echo "Syncing repository."
+      git remote add alt http://root.cern.ch/git/cling.git
+      git pull alt master
+      git remote remove origin
+      git remote add origin https://$OAUTH_TOKEN@github.com/${TRAVIS_REPO_SLUG}
+      git push --verbose origin master
+
+      # Move the tag to newest master
+      git tag --force cling-nightlies HEAD
+      git push --verbose --force origin cling-nightlies
+   fi
+
+script:
+- |
+  if [ -z $TRAVIS_TAG ]; then
+    timeout -s SIGTERM $TIMEOUT tools/packaging/cpt.py \
+      --current-dev=tar \
+      --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
+      --with-clang-url=http://root.cern.ch/git/clang.git \
+      --with-llvm-url=http://root.cern.ch/git/llvm.git \
+      --skip-cleanup
+  else
+    tools/packaging/cpt.py \
+      --tarball-tag=$TRAVIS_TAG \
+      --with-cling-url=https://github.com/$TRAVIS_REPO_SLUG \
+      --with-clang-url=http://root.cern.ch/git/clang.git \
+      --with-llvm-url=http://root.cern.ch/git/llvm.git
+  fi
+
+  RESULT="$?"
+  echo "Build Result: $RESULT"
+  ccache -s
+  if [ $RESULT -ne 124 ]; then
+    return $RESULT
+  fi
+
+  # Timout occured, pass that on to after_failure so as not to dump logs
+  export CLING_BUILD_TIMEOUT=1
+  TRAVIS_TEST_RESULT=124
+  return $TRAVIS_TEST_RESULT
 
 notifications:
-  recipients:
-    - vvasilev@cern.ch
-    #- cling-dev@cern.ch
-
   email:
+    recipients:
+      #- cling-dev@cern.ch
     on_success: change
     on_failure: always
-  #irc:
-  #channels:
-    #- "chat.freenode.net#rubinius"
-  template:
-    - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+    template:
+      - "%{repository}/%{branch} (%{commit} - %{author}): %{message}"
+      - "Build details: %{build_url}"
+      - "Change view : %{compare_url}"
 
-os:
-  - linux
-#  - osx
+
+before_deploy:
+- |
+  export RELEASE_TARBALL=$(ls $HOME/ci/build/cling*.tar.bz2)
+  if [[ $TRAVIS_TAG -eq "cling-nightlies" ]]; then
+    NIGHTLY="`dirname $RELEASE_TARBALL`/`date "+%Y-%b-%d-"``basename $RELEASE_TARBALL`"
+    echo "Renaming $RELEASE_TARBALL to $NIGHTLY"
+    mv $RELEASE_TARBALL $NIGHTLY
+    export RELEASE_TARBALL=$NIGHTLY
+  fi
+  echo "Deploying $RELEASE_TARBALL to GitHub releases"
+
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key: $OAUTH_TOKEN
+  file: '${RELEASE_TARBALL}'
+  on:
+    tags: true
+    all_branches: true
+    repo: $TRAVIS_REPO_SLUG
+
+after_failure:
+- |
+  if [ -n "$CCACHE_LOGFILE" ]; then
+    echo "ccache log stored to:"
+    cat "$CCACHE_LOGFILE" | curl -sT - chunk.io
+  fi
+- |
+  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
+    echo "Dumping env."
+    find $CLING_LOCAL_BIN -type f -print0 -exec cat {} \;
+    $CMAKE --version
+    $CC --version
+    $CXX --version
+    ls -al `which ld` && ld -v
+    export
+  fi
+- |
+  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
+    echo "Dumping CMakeOutput.log"
+    cat /home/travis/ci/build/builddir/CMakeFiles/CMakeOutput.log
+  fi
+- |
+  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
+    echo "Dumping CMakeError.log"
+    cat /home/travis/ci/build/builddir/CMakeFiles/CMakeError.log
+  fi
+- |
+  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
+    echo "Dumping cling-compiledata.h..."
+    COMPILE_DATA_H=$HOME/ci/build/builddir/tools/cling/lib/Interpreter/cling-compiledata.h
+    cat $COMPILE_DATA_H
+
+    echo "Running cling-compiledata compiler..."
+    COMPDATA_CXX=$(cat $COMPILE_DATA_H | cut -c 18- | sed "s,\",,g")
+    eval echo | LC_ALL=C $COMPDATA_CXX -xc++ -E -v -
+  fi
+- |
+  if [ "$CLING_BUILD_TIMEOUT" != "1" ]; then  
+    echo "Dumping `which ccache`"
+    ccache -s
+    ls -la /usr/lib/ccache/ || ls -la /usr/local/opt/ccache/libexec
+  fi

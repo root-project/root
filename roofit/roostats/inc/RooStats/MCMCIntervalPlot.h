@@ -15,27 +15,13 @@
 #ifndef ROOSTATS_MCMCIntervalPlot
 #define ROOSTATS_MCMCIntervalPlot
 
-#ifndef ROO_PRINTABLE
 #include "RooPrintable.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
-#ifndef ROO_KEYS_PDF
 #include "RooNDKeysPdf.h"
-#endif
-#ifndef ROO_PRODUCT
 #include "RooProduct.h"
-#endif
 
 namespace RooStats {
 
@@ -45,7 +31,7 @@ namespace RooStats {
       MCMCIntervalPlot();
       MCMCIntervalPlot(MCMCInterval& interval);
 
-      // Destructor of SamplingDistribution
+      /// Destructor of SamplingDistribution
       virtual ~MCMCIntervalPlot();
 
       void SetMCMCInterval(MCMCInterval& interval);
@@ -97,7 +83,7 @@ namespace RooStats {
       void DrawKeysPdfInterval(const Option_t* options = NULL);
       void DrawTailFractionInterval(const Option_t* options = NULL);
 
-      ClassDef(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
+      ClassDef(MCMCIntervalPlot,1)  /// Class containing the results of the MCMCCalculator
    };
 }
 

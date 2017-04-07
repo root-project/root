@@ -12,8 +12,6 @@
 
 // ROOT
 #include "TClassEdit.h"           // for ShortType and CleanType
-#include "TInterpreter.h"         // for by-value returns
-#include "TInterpreterValue.h"    // id.
 
 // Standard
 #include <cstring>
@@ -38,7 +36,7 @@ namespace {
    class GILControl {
    public:
       GILControl( PyROOT::TCallContext* ctxt ) :
-         fRelease( ReleasesGIL( ctxt ) ), fSave( nullptr ) {
+         fSave( nullptr ), fRelease( ReleasesGIL( ctxt ) ) {
 #ifdef WITH_THREAD
          if ( fRelease ) fSave = PyEval_SaveThread();
 #endif
@@ -49,35 +47,31 @@ namespace {
 #endif
       }
    private:
-      Bool_t fRelease;
       PyThreadState* fSave;
+      Bool_t fRelease;
    };
 
 } // unnamed namespace
 
-static inline void GILCallV(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt ) {
-   GILControl gc( ctxt ); 
-   Cppyy::CallV( method, self, &ctxt->fArgs );
+#define PYROOT_IMPL_GILCALL( rtype, tcode )                                   \
+static inline rtype GILCall##tcode(                                           \
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt ) {\
+   GILControl gc( ctxt );                                                     \
+   return Cppyy::Call##tcode( method, self, &ctxt->fArgs );                   \
 }
 
-static inline Long_t GILCallL(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt ) {
-   GILControl gc( ctxt );
-   return Cppyy::CallL( method, self, &ctxt->fArgs );
-}
-
-static inline Double_t GILCallD(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt ) {
-   GILControl gc( ctxt ); 
-   return Cppyy::CallD( method, self, &ctxt->fArgs );
-}
-
-static inline Char_t* GILCallS(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt ) {
-   GILControl gc( ctxt );
-   return Cppyy::CallS( method, self, &ctxt->fArgs );
-}
+PYROOT_IMPL_GILCALL( void,         V )
+PYROOT_IMPL_GILCALL( UChar_t,      B )
+PYROOT_IMPL_GILCALL( Char_t,       C )
+PYROOT_IMPL_GILCALL( Short_t,      H )
+PYROOT_IMPL_GILCALL( Int_t,        I )
+PYROOT_IMPL_GILCALL( Long_t,       L )
+PYROOT_IMPL_GILCALL( Long64_t,     LL )
+PYROOT_IMPL_GILCALL( Float_t,      F )
+PYROOT_IMPL_GILCALL( Double_t,     D )
+PYROOT_IMPL_GILCALL( LongDouble_t, LD )
+PYROOT_IMPL_GILCALL( void*,        R )
+PYROOT_IMPL_GILCALL( Char_t*,      S )
 
 static inline Cppyy::TCppObject_t GILCallO( Cppyy::TCppMethod_t method,
       Cppyy::TCppObject_t self, PyROOT::TCallContext* ctxt, Cppyy::TCppType_t klass ) {
@@ -92,7 +86,8 @@ static inline Cppyy::TCppObject_t GILCallConstructor(
 }
 
 static inline PyObject* PyROOT_PyUnicode_FromInt( Int_t c ) {
-   if ( c < 0 ) return PyInt_FromLong( c ); // python chars are range(256)
+   // python chars are range(256)
+   if ( c < 0 ) return PyROOT_PyUnicode_FromFormat( "%c", 256 - std::abs(c));
    return PyROOT_PyUnicode_FromFormat( "%c", c );
 }
 
@@ -102,118 +97,155 @@ static inline PyObject* PyROOT_PyBool_FromInt( Int_t b ) {
    return result;
 }
 
+
 //- executors for built-ins ---------------------------------------------------
 PyObject* PyROOT::TBoolExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
 // execute <method> with argument <self, ctxt>, construct python bool return value
-   Bool_t retval;
-   { GILControl gc( ctxt ); retval = (Bool_t)Cppyy::CallB( method, self, &ctxt->fArgs ); }
+   Bool_t retval = GILCallB( method, self, ctxt );
    PyObject* result = retval ? Py_True : Py_False;
    Py_INCREF( result );
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python bool return value
+
 PyObject* PyROOT::TBoolConstRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python bool return value
-   return PyROOT_PyBool_FromInt( *((Bool_t*)GILCallL( method, self, ctxt )) );
+   return PyROOT_PyBool_FromInt( *((Bool_t*)GILCallR( method, self, ctxt )) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method with argument <self, ctxt>, construct python string return value
+/// with the single char
+
 PyObject* PyROOT::TCharExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method with argument <self, ctxt>, construct python string return value
-// with the single char
-   return PyROOT_PyUnicode_FromInt( (Int_t)GILCallL( method, self, ctxt ) );
+   return PyROOT_PyUnicode_FromInt( (Int_t)GILCallC( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python string return value
+/// with the single char
+
 PyObject* PyROOT::TCharConstRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python string return value
-// with the single char
-   return PyROOT_PyUnicode_FromInt( *((Char_t*)GILCallL( method, self, ctxt )) );
+   return PyROOT_PyUnicode_FromInt( *((Char_t*)GILCallR( method, self, ctxt )) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, args>, construct python string return value
+/// with the single char
+
 PyObject* PyROOT::TUCharExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, args>, construct python string return value
-// with the single char
-   return PyROOT_PyUnicode_FromInt( (UChar_t)GILCallL( method, self, ctxt ) );
+   return PyROOT_PyUnicode_FromInt( (UChar_t)GILCallB( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python string return value
+///  with the single char from the pointer return
+
 PyObject* PyROOT::TUCharConstRefExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python string return value
-//  with the single char from the pointer return
-   return PyROOT_PyUnicode_FromInt( *((UChar_t*)GILCallL( method, self, ctxt )) );
+   return PyROOT_PyUnicode_FromInt( *((UChar_t*)GILCallR( method, self, ctxt )) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python int return value
+
 PyObject* PyROOT::TIntExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python int return value
-   return PyInt_FromLong( (Int_t)GILCallL( method, self, ctxt ) );
+   return PyInt_FromLong( (Int_t)GILCallI( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python int return value
+
+PyObject* PyROOT::TShortExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   return PyInt_FromLong( (Short_t)GILCallH( method, self, ctxt ) );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python long return value
+
 PyObject* PyROOT::TLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python long return value
    return PyLong_FromLong( (Long_t)GILCallL( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python unsigned long return value
+
 PyObject* PyROOT::TULongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python unsigned long return value
-   return PyLong_FromUnsignedLong( (ULong_t)GILCallL( method, self, ctxt ) );
+   return PyLong_FromUnsignedLong( (ULong_t)GILCallLL( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python long long return value
+
 PyObject* PyROOT::TLongLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python long long return value
-   Long64_t result;
-   { GILControl gc( ctxt ); result = Cppyy::CallLL( method, self, &ctxt->fArgs ); }
+   Long64_t result = GILCallLL( method, self, ctxt );
    return PyLong_FromLongLong( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python unsigned long long return value
+
 PyObject* PyROOT::TULongLongExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python unsigned long long return value
-   ULong64_t result;
-   { GILControl gc( ctxt ); result = Cppyy::CallLL( method, self, &ctxt->fArgs ); }
+   ULong64_t result = (ULong64_t)GILCallLL( method, self, ctxt );
    return PyLong_FromUnsignedLongLong( result );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python float return value
+
+PyObject* PyROOT::TFloatExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   return PyFloat_FromDouble( (Double_t)GILCallF( method, self, ctxt ) );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python float return value
+
 PyObject* PyROOT::TDoubleExecutor::Execute(
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python float return value
    return PyFloat_FromDouble( (Double_t)GILCallD( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python float return value
+
+PyObject* PyROOT::TLongDoubleExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   return PyFloat_FromDouble( (Double_t)GILCallLD( method, self, ctxt ) );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// prepare "buffer" for by-ref returns, used with __setitem__
+
 Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
 {
-// prepare "buffer" for by-ref returns, used with __setitem__
    if ( pyobject != 0 ) {
       Py_INCREF( pyobject );
       fAssignable = pyobject;
@@ -224,12 +256,13 @@ Bool_t PyROOT::TRefExecutor::SetAssignable( PyObject* pyobject )
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( name, type, stype, F1, F2 )      \
 PyObject* PyROOT::T##name##RefExecutor::Execute(                             \
        Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )\
 {                                                                            \
-   type* ref = (type*)GILCallL( method, self, ctxt );                        \
+   type* ref = (type*)GILCallR( method, self, ctxt );                        \
    if ( ! fAssignable )                                                      \
       return F1( (stype)*ref );                                              \
    else {                                                                    \
@@ -259,16 +292,17 @@ PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDoub
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
    LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, return python string return value
+
 PyObject* PyROOT::TSTLStringRefExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, return python string return value
    if ( ! fAssignable ) {
-      std::string* result = (std::string*)GILCallL( method, self, ctxt );
+      std::string* result = (std::string*)GILCallR( method, self, ctxt );
       return PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
    } else {
-      std::string* result = (std::string*)GILCallL( method, self, ctxt );
+      std::string* result = (std::string*)GILCallR( method, self, ctxt );
       *result = std::string(
          PyROOT_PyUnicode_AsString( fAssignable ), PyROOT_PyUnicode_GET_SIZE( fAssignable ) );
 
@@ -280,21 +314,23 @@ PyObject* PyROOT::TSTLStringRefExecutor::Execute(
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, return None
+
 PyObject* PyROOT::TVoidExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, return None
    GILCallV( method, self, ctxt );
    Py_INCREF( Py_None );
    return Py_None;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python string return value
+
 PyObject* PyROOT::TCStringExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python string return value
    char* result = (char*)GILCallS( method, self, ctxt );
    if ( ! result ) {
       Py_INCREF( PyStrings::gEmptyString );
@@ -307,10 +343,10 @@ PyObject* PyROOT::TCStringExecutor::Execute(
 
 //- pointer/array executors ---------------------------------------------------
 PyObject* PyROOT::TVoidArrayExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
 // execute <method> with argument <self, ctxt>, construct python long return value
-   Long_t* result = (Long_t*)GILCallL( method, self, ctxt );
+   Long_t* result = (Long_t*)GILCallR( method, self, ctxt );
    if ( ! result ) {
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
@@ -318,12 +354,13 @@ PyObject* PyROOT::TVoidArrayExecutor::Execute(
    return BufFac_t::Instance()->PyBuffer_FromMemory( result, 1 );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_IMPLEMENT_ARRAY_EXECUTOR( name, type )                        \
 PyObject* PyROOT::T##name##ArrayExecutor::Execute(                           \
       Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )\
 {                                                                            \
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (type*)GILCallL( method, self, ctxt ) );\
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (type*)GILCallR( method, self, ctxt ) );\
 }
 
 PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Bool,   Bool_t )
@@ -339,49 +376,48 @@ PYROOT_IMPLEMENT_ARRAY_EXECUTOR( Double, Double_t )
 
 //- special cases ------------------------------------------------------------
 PyObject* PyROOT::TSTLStringExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
 // execute <method> with argument <self, ctxt>, construct python string return value
 
    static Cppyy::TCppScope_t sSTLStringScope = Cppyy::GetScope( "std::string" );
-   TInterpreterValue* value = (TInterpreterValue*)GILCallO( method, self, ctxt, sSTLStringScope );
-   if ( ! value || ! value->GetAsPointer() ) {
+   std::string* result = (std::string*)GILCallO( method, self, ctxt, sSTLStringScope );
+   if ( ! result ) {
       Py_INCREF( PyStrings::gEmptyString );
       return PyStrings::gEmptyString;
    }
 
-   std::string* result = (std::string*)value->GetAsPointer();
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
-   delete value;
-
-// last time I checked, this was a no-op, but by convention it is required
-   gInterpreter->ClearStack();
+   free(result); // GILCallO calls Cppyy::CallO which calls malloc.
 
    return pyresult;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python proxy object return value
+
 PyObject* PyROOT::TTGlobalExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python proxy object return value
-   return BindCppGlobal( (TGlobal*)GILCallL( method, self, ctxt ) );
+   return BindCppGlobal( (TGlobal*)GILCallR( method, self, ctxt ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python proxy object return value
+
 PyObject* PyROOT::TCppObjectExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python proxy object return value
-   return BindCppObject( (void*)GILCallL( method, self, ctxt ), fClass );
+   return BindCppObject( (void*)GILCallR( method, self, ctxt ), fClass );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execution will bring a temporary in existence
+
 PyObject* PyROOT::TCppObjectByValueExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execution will bring a temporary in existence
    Cppyy::TCppObject_t value = GILCallO( method, self, ctxt, fClass );
 
    if ( ! value ) {
@@ -400,12 +436,14 @@ PyObject* PyROOT::TCppObjectByValueExecutor::Execute(
    return (PyObject*)pyobj;
 }
 
-//____________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// executor binds the result to the left-hand side, overwriting if an old object
+
 PyObject* PyROOT::TCppObjectRefExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// executor binds the result to the left-hand side, overwriting if an old object
-   PyObject* result = BindCppObject( (void*)GILCallL( method, self, ctxt ), fClass );
+   PyObject* result = BindCppObject( (void*)GILCallR( method, self, ctxt ), fClass );
    if ( ! result || ! fAssignable )
       return result;
    else {
@@ -442,51 +480,160 @@ PyObject* PyROOT::TCppObjectRefExecutor::Execute(
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python ROOT object return ptr value
+
 PyObject* PyROOT::TCppObjectPtrPtrExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python ROOT object return ptr value
-   return BindCppObject( (void*)GILCallL( method, self, ctxt ), fClass, kTRUE );
+   return BindCppObject( (void*)GILCallR( method, self, ctxt ), fClass, kTRUE );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct python ROOT object (ignoring ref) return ptr value
+
 PyObject* PyROOT::TCppObjectPtrRefExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct python ROOT object (ignoring ref) return ptr value
-   return BindCppObject( *(void**)GILCallL( method, self, ctxt ), fClass, kFALSE );
+   return BindCppObject( *(void**)GILCallR( method, self, ctxt ), fClass, kFALSE );
 }
 
-//____________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// smart pointer excutor
+
+PyObject* PyROOT::TCppObjectBySmartPtrExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallO( method, self, ctxt, fClass );
+
+   if ( ! value ) {
+      if ( ! PyErr_Occurred() )         // callee may have set a python error itself
+         PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
+      return 0;
+   }
+
+// fixme? - why doesn't this do the same as `self._get_smart_ptr().get()'
+   ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+      (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+   if ( pyobj ) {
+      pyobj->SetSmartPtr( (void*)value, fClass );
+      pyobj->HoldOn();  // life-time control by python ref-counting
+   }
+
+   return (PyObject*)pyobj;
+}
+
+PyObject* PyROOT::TCppObjectBySmartPtrPtrExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallR( method, self, ctxt );
+   if ( ! value )
+      return nullptr;
+
+// todo: why doesn't this do the same as `self._get_smart_ptr().get()'
+   ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+      (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+   if ( pyobj )
+      pyobj->SetSmartPtr( (void*)value, fClass );
+
+   return (PyObject*)pyobj;
+}
+
+PyObject* PyROOT::TCppObjectBySmartPtrRefExecutor::Execute(
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
+{
+   Cppyy::TCppObject_t value = GILCallR( method, self, ctxt );
+   if ( ! value )
+      return nullptr;
+
+   //if ( ! fAssignable ) {
+
+     // fixme? - why doesn't this do the same as `self._get_smart_ptr().get()'
+     ObjectProxy* pyobj = (ObjectProxy*) BindCppObject(
+        (void*)GILCallR( (Cppyy::TCppMethod_t)fDereferencer, value, ctxt ), fRawPtrType );
+
+     if ( pyobj )
+        pyobj->SetSmartPtr( (void*)value, fClass );
+
+     return (PyObject*)pyobj;
+
+   // todo: assignment not done yet
+   //
+   /*} else {
+
+     PyObject* result = BindCppObject( (void*)value, fClass );
+
+   // this generic code is quite slow compared to its C++ equivalent ...
+      PyObject* assign = PyObject_GetAttrString( result, const_cast< char* >( "__assign__" ) );
+      if ( ! assign ) {
+         PyErr_Clear();
+         PyObject* descr = PyObject_Str( result );
+         if ( descr && PyBytes_CheckExact( descr ) ) {
+            PyErr_Format( PyExc_TypeError, "can not assign to return object (%s)",
+                          PyBytes_AS_STRING( descr ) );
+         } else {
+            PyErr_SetString( PyExc_TypeError, "can not assign to result" );
+         }
+         Py_XDECREF( descr );
+         Py_DECREF( result );
+         Py_DECREF( fAssignable ); fAssignable = 0;
+         return 0;
+      }
+
+      PyObject* res2 = PyObject_CallFunction( assign, const_cast< char* >( "O" ), fAssignable );
+
+
+      Py_DECREF( assign );
+      Py_DECREF( result );
+      Py_DECREF( fAssignable ); fAssignable = 0;
+
+      if ( res2 ) {
+         Py_DECREF( res2 );             // typically, *this from operator=()
+         Py_INCREF( Py_None );
+         return Py_None;
+      }
+
+      return 0;
+   }
+   */
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, construct TTupleOfInstances from return value
+
 PyObject* PyROOT::TCppObjectArrayExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, construct TTupleOfInstances from return value
-   return BindCppObjectArray( (void*)GILCallL( method, self, ctxt ), fClass, fArraySize );
+   return BindCppObjectArray( (void*)GILCallR( method, self, ctxt ), fClass, fArraySize );
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// package return address in PyObject* for caller to handle appropriately (see
+/// TConstructorHolder for the actual build of the PyObject)
 
-//____________________________________________________________________________
 PyObject* PyROOT::TConstructorExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t klass, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t klass, TCallContext* ctxt )
 {
-// package return address in PyObject* for caller to handle appropriately (see
-// TConstructorHolder for the actual build of the PyObject)
    return (PyObject*)GILCallConstructor( method, (Cppyy::TCppType_t)klass, ctxt );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// execute <method> with argument <self, ctxt>, return python object
+
 PyObject* PyROOT::TPyObjectExecutor::Execute(
-      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt ) 
+      Cppyy::TCppMethod_t method, Cppyy::TCppObject_t self, TCallContext* ctxt )
 {
-// execute <method> with argument <self, ctxt>, return python object
-   return (PyObject*)GILCallL( method, self, ctxt );
+   return (PyObject*)GILCallR( method, self, ctxt );
 }
 
 
 //- factories -----------------------------------------------------------------
-PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
+PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType,
+                                           Bool_t manage_smart_ptr )
 {
 // The matching of the fulltype to an executor factory goes through up to 4 levels:
 //   1) full, qualified match
@@ -533,23 +680,45 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
    if ( Cppyy::TCppType_t klass = Cppyy::GetScope( realType ) ) {
-      if ( cpd == "" )
-         result = new TCppObjectByValueExecutor( klass );
-      else if ( cpd == "&" )
-         result = new TCppObjectRefExecutor( klass );
-      else if ( cpd == "**" )
-         result = new TCppObjectPtrPtrExecutor( klass );
-      else if ( cpd == "*&" || cpd == "&*" )
-         result = new TCppObjectPtrRefExecutor( klass );
-      else if ( cpd == "[]" ) {
-         Py_ssize_t asize = Utility::ArraySize( resolvedType );
-         if ( 0 < asize )
-            result = new TCppObjectArrayExecutor( klass, asize );
-         else
-            result = new TCppObjectPtrRefExecutor( klass );
+      if ( manage_smart_ptr && Cppyy::IsSmartPtr( realType ) ) {
+         const std::vector< Cppyy::TCppMethod_t > methods = Cppyy::GetMethodsFromName( klass, "operator->" );
+         if ( ! methods.empty() ) {
+            Cppyy::TCppType_t rawPtrType = Cppyy::GetScope(
+               TClassEdit::ShortType( Cppyy::GetMethodResultType( methods[0] ).c_str(), 1 ) );
+            if ( rawPtrType ) {
+               if ( cpd == "" ) {
+                  result = new TCppObjectBySmartPtrExecutor( klass, rawPtrType, methods[0] );
+               } else if ( cpd == "*" ) {
+                  result = new TCppObjectBySmartPtrPtrExecutor( klass, rawPtrType, methods[0] );
+               } else if ( cpd == "&" ) {
+                  result = new TCppObjectBySmartPtrRefExecutor( klass, rawPtrType, methods[0] );
+               } /* else if ( cpd == "**" ) {
+               } else if ( cpd == "*&" || cpd == "&*" ) {
+               } else if ( cpd == "[]" ) {
+               } else {
+               } */
+            }
+         }
       }
-      else
-         result = new TCppObjectExecutor( klass );
+
+      if ( ! result ) {
+         if ( cpd == "" )
+            result = new TCppObjectByValueExecutor( klass );
+         else if ( cpd == "&" )
+            result = new TCppObjectRefExecutor( klass );
+         else if ( cpd == "**" )
+            result = new TCppObjectPtrPtrExecutor( klass );
+         else if ( cpd == "*&" || cpd == "&*" )
+            result = new TCppObjectPtrRefExecutor( klass );
+         else if ( cpd == "[]" ) {
+            Py_ssize_t asize = Utility::ArraySize( resolvedType );
+            if ( 0 < asize )
+              result = new TCppObjectArrayExecutor( klass, asize );
+            else
+              result = new TCppObjectPtrRefExecutor( klass );
+         } else
+            result = new TCppObjectExecutor( klass );
+      }
    } else if ( Cppyy::IsEnum( realType ) ) {
    // enums don't resolve to unsigned ints, but that's what they are ...
       h = gExecFactories.find( "UInt_t" + cpd );
@@ -569,7 +738,8 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
    return result;                  // may still be null
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 #define PYROOT_EXECUTOR_FACTORY( name )                \
 TExecutor* Create##name##Executor()                    \
 {                                                      \
@@ -590,6 +760,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( UChar )
    PYROOT_EXECUTOR_FACTORY( UCharRef )
    PYROOT_EXECUTOR_FACTORY( UCharConstRef )
+   PYROOT_EXECUTOR_FACTORY( Short )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
    PYROOT_EXECUTOR_FACTORY( Int )
@@ -599,9 +770,11 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( ULongRef )
    PYROOT_EXECUTOR_FACTORY( Long )
    PYROOT_EXECUTOR_FACTORY( LongRef )
+   PYROOT_EXECUTOR_FACTORY( Float )
    PYROOT_EXECUTOR_FACTORY( FloatRef )
    PYROOT_EXECUTOR_FACTORY( Double )
    PYROOT_EXECUTOR_FACTORY( DoubleRef )
+   PYROOT_EXECUTOR_FACTORY( LongDouble )
    PYROOT_EXECUTOR_FACTORY( LongDoubleRef )
    PYROOT_EXECUTOR_FACTORY( Void )
    PYROOT_EXECUTOR_FACTORY( LongLong )
@@ -642,7 +815,7 @@ namespace {
       NFp_t( "const char&",        &CreateCharConstRefExecutor        ),
       NFp_t( "const signed char&", &CreateCharConstRefExecutor        ),
       NFp_t( "const unsigned char&", &CreateUCharConstRefExecutor     ),
-      NFp_t( "short",              &CreateIntExecutor                 ),
+      NFp_t( "short",              &CreateShortExecutor               ),
       NFp_t( "short&",             &CreateShortRefExecutor            ),
       NFp_t( "unsigned short",     &CreateIntExecutor                 ),
       NFp_t( "unsigned short&",    &CreateUShortRefExecutor           ),
@@ -665,11 +838,11 @@ namespace {
       NFp_t( "unsigned long long&", &CreateULongLongRefExecutor       ),
       NFp_t( "ULong64_t&",         &CreateULongLongRefExecutor        ),
 
-      NFp_t( "float",              &CreateDoubleExecutor              ),
+      NFp_t( "float",              &CreateFloatExecutor               ),
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
-      NFp_t( "long double",        &CreateDoubleExecutor              ),   // TODO: lost precision
+      NFp_t( "long double",        &CreateLongDoubleExecutor          ),   // TODO: lost precision
       NFp_t( "long double&",       &CreateLongDoubleRefExecutor       ),
       NFp_t( "void",               &CreateVoidExecutor                ),
 
@@ -680,6 +853,7 @@ namespace {
       NFp_t( "unsigned short*",    &CreateUShortArrayExecutor         ),
       NFp_t( "int*",               &CreateIntArrayExecutor            ),
       NFp_t( "unsigned int*",      &CreateUIntArrayExecutor           ),
+      NFp_t( "UInt_t*", /* enum */ &CreateUIntArrayExecutor           ),
       NFp_t( "long*",              &CreateLongArrayExecutor           ),
       NFp_t( "unsigned long*",     &CreateULongArrayExecutor          ),
       NFp_t( "float*",             &CreateFloatArrayExecutor          ),

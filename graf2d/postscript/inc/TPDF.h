@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 #include <vector>
 
 
@@ -32,25 +30,27 @@ class TPoints;
 class TPDF : public TVirtualPS {
 
 protected:
-   Float_t            fRed;             //Per cent of red
-   Float_t            fGreen;           //Per cent of green
-   Float_t            fBlue;            //Per cent of blue
-   Float_t            fAlpha;           //Per cent of transparency
-   std::vector<float> fAlphas;          //List of alpha values used
-   Float_t            fXsize;           //Page size along X
-   Float_t            fYsize;           //Page size along Y
-   Int_t              fType;            //Workstation type used to know if the PDF is open
-   Int_t              fPageFormat;      //Page format (A4, Letter etc ...)
-   Int_t              fPageOrientation; //Page orientation (Portrait, Landscape)
-   Int_t              fStartStream;     //
-   Float_t            fLineScale;       //Line width scale factor
-   Int_t             *fObjPos;          //Objets position
-   Int_t              fObjPosSize;      //Real size of fObjPos
-   Int_t              fNbObj;           //Number of objects
-   Int_t              fNbPage;          //Number of pages
-   Bool_t             fPageNotEmpty;    //True if the current page is not empty
-   Bool_t             fCompress;        //True when fBuffer must be compressed
-   Bool_t             fRange;           //True when a range has been defined
+   Float_t            fRed;             ///< Per cent of red
+   Float_t            fGreen;           ///< Per cent of green
+   Float_t            fBlue;            ///< Per cent of blue
+   Float_t            fAlpha;           ///< Per cent of transparency
+   std::vector<float> fAlphas;          ///< List of alpha values used
+   Float_t            fXsize;           ///< Page size along X
+   Float_t            fYsize;           ///< Page size along Y
+   Int_t              fType;            ///< Workstation type used to know if the PDF is open
+   Int_t              fPageFormat;      ///< Page format (A4, Letter etc ...)
+   Int_t              fPageOrientation; ///< Page orientation (Portrait, Landscape)
+   Int_t              fStartStream;     ///<
+   Float_t            fLineScale;       ///< Line width scale factor
+   Int_t             *fObjPos;          ///< Objets position
+   Int_t              fObjPosSize;      ///< Real size of fObjPos
+   Int_t              fNbObj;           ///< Number of objects
+   Int_t              fNbPage;          ///< Number of pages
+   Bool_t             fPageNotEmpty;    ///< True if the current page is not empty
+   Bool_t             fCompress;        ///< True when fBuffer must be compressed
+   Bool_t             fRange;           ///< True when a range has been defined
+
+   static Int_t       fgLineJoin;       ///< Appearance of joining lines
 
 public:
    TPDF();
@@ -91,6 +91,7 @@ public:
    void     SetFillColor( Color_t cindex=1);
    void     SetFillPatterns(Int_t ipat, Int_t color);
    void     SetLineColor( Color_t cindex=1);
+   void     SetLineJoin(Int_t linejoin=0);
    void     SetLineScale(Float_t scale=1) {fLineScale = scale;}
    void     SetLineStyle(Style_t linestyle = 1);
    void     SetLineWidth(Width_t linewidth = 1);
@@ -107,7 +108,7 @@ public:
    Double_t XtoPDF(Double_t x);
    Double_t YtoPDF(Double_t y);
 
-   ClassDef(TPDF,0)  //PDF driver
+   ClassDef(TPDF, 0);  //PDF driver
 };
 
 #endif

@@ -52,6 +52,7 @@
 #pragma link C++ class std::list<RooAbsData*>+ ;
 #pragma link C++ class RooProfileLL+ ;
 #pragma link C++ class RooAbsCachedPdf+ ;
+#pragma link C++ class RooAbsCachedPdf::PdfCacheElem+ ;
 #pragma link C++ class RooAbsSelfCachedPdf+ ;
 #pragma link C++ class RooHistPdf- ;
 #pragma link C++ class RooCachedPdf+ ;

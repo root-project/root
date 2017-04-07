@@ -48,9 +48,18 @@ EVELIB    := $(LPATH)/libEve.$(SOEXT)
 EVEMAP    := $(EVELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(EVEH))
+EVEH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(EVEH))
+ALLHDRS     += $(EVEH_REL)
 ALLLIBS     += $(EVELIB)
 ALLMAPS     += $(EVEMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(EVEH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graf3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(EVELIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(EVEDEP)

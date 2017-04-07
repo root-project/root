@@ -11,6 +11,7 @@
 // Implementation file for class MinimTransformFunction
 
 #include "Math/MinimTransformFunction.h"
+#include "Math/IFunctionfwd.h"
 
 //#include <iostream>
 #include <cmath>

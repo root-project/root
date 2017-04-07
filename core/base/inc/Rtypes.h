@@ -20,21 +20,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_RtypesCore
 #include "RtypesCore.h"
-#endif
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
 
-#include <stdio.h>
-#include <string.h>
 #include "snprintf.h"   // part of stdio.h on systems that have it
 #include "strlcpy.h"    // part of string.h on systems that have it
+
 #include <atomic>
+#include <stdio.h>
+#include <string.h>
+#include <typeinfo>
 
 
 //---- forward declared class types --------------------------------------------
@@ -65,6 +60,7 @@ enum EColor { kWhite =0,   kBlack =1,   kGray=920,
 class TClassStreamer;   // Streamer functor for a class
 class TMemberStreamer;  // Streamer functor for a data member
 typedef void (*ClassStreamerFunc_t)(TBuffer&, void*);  // Streamer function for a class
+typedef void (*ClassConvStreamerFunc_t)(TBuffer&, void*, const TClass*);  // Streamer function for a class with conversion.
 typedef void (*MemberStreamerFunc_t)(TBuffer&, void*, Int_t); // Streamer function for a data member
 
 // This class is used to implement proxy around collection classes.
@@ -73,46 +69,6 @@ class TVirtualCollectionProxy;
 typedef void    (*VoidFuncPtr_t)();  //pointer to void function
 typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
 // NOTE: the previous name must be changed.
-
-
-//---- constants ---------------------------------------------------------------
-
-#ifndef NULL
-#define NULL 0
-#endif
-
-#ifndef R__NULLPTR
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
-const Bool_t kTRUE  = true;
-const Bool_t kFALSE = false;
-
-const Int_t     kMaxUChar    = 256;
-const Int_t     kMaxChar     = kMaxUChar >> 1;
-const Int_t     kMinChar     = -kMaxChar - 1;
-
-const Int_t     kMaxUShort   = 65534;
-const Int_t     kMaxShort    = kMaxUShort >> 1;
-const Int_t     kMinShort    = -kMaxShort - 1;
-
-const UInt_t    kMaxUInt     = UInt_t(~0);
-const Int_t     kMaxInt      = Int_t(kMaxUInt >> 1);
-const Int_t     kMinInt      = -kMaxInt - 1;
-
-const ULong_t   kMaxULong    = ULong_t(~0);
-const Long_t    kMaxLong     = Long_t(kMaxULong >> 1);
-const Long_t    kMinLong     = -kMaxLong - 1;
-
-const ULong64_t kMaxULong64  = ULong64_t(~0LL);
-const Long64_t  kMaxLong64   = Long64_t(kMaxULong64 >> 1);
-const Long64_t  kMinLong64   = -kMaxLong64 - 1;
-
-const size_t    kBitsPerByte = 8;
-const Ssiz_t    kNPOS        = ~(Ssiz_t)0;
-
 
 //--- bit manipulation ---------------------------------------------------------
 
@@ -155,10 +111,10 @@ namespace ROOT {
    template <class RootClass> Short_t SetClassVersion(RootClass *);
 
    extern TClass *CreateClass(const char *cname, Version_t id,
-                              const type_info &info, TVirtualIsAProxy *isa,
+                              const std::type_info &info, TVirtualIsAProxy *isa,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
-   extern void AddClass(const char *cname, Version_t id, const type_info &info,
+   extern void AddClass(const char *cname, Version_t id, const std::type_info &info,
                         DictFuncPtr_t dict, Int_t pragmabits);
    extern void RemoveClass(const char *cname);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
@@ -179,6 +135,7 @@ namespace ROOT {
    };
 #endif
 
+   namespace Internal {
    class TInitBehavior {
       // This class defines the interface for the class registration and
       // the TClass creation. To modify the default behavior, one would
@@ -186,26 +143,31 @@ namespace ROOT {
       // See TQObject.h and table/inc/Ttypes.h for examples.
    public:
       virtual ~TInitBehavior() { }
-      virtual void Register(const char *cname, Version_t id, const type_info &info,
+
+      virtual void Register(const char *cname, Version_t id,
+                            const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const = 0;
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const = 0;
    };
 
-   class TDefaultInitBehavior : public TInitBehavior {
+   class TDefaultInitBehavior: public TInitBehavior {
    public:
-      virtual void Register(const char *cname, Version_t id, const type_info &info,
+      virtual void Register(const char *cname, Version_t id,
+                            const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
+
       virtual void Unregister(const char *classname) const {
          ROOT::RemoveClass(classname);
       }
+
       virtual TClass *CreateClass(const char *cname, Version_t id,
-                                  const type_info &info, TVirtualIsAProxy *isa,
+                                  const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {
          return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
@@ -214,61 +176,149 @@ namespace ROOT {
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/);
+   } // namespace Internal
 
-} // End of namespace ROOT
+} // namespace ROOT
 
-// The macros below use TGenericClassInfo, so let's ensure it is included
-#ifndef ROOT_TGenericClassInfo
+// The macros below use TGenericClassInfo and TInstrumentedIsAProxy, so let's
+// ensure they are included.
 #include "TGenericClassInfo.h"
-#endif
 
 typedef std::atomic<TClass*> atomic_TClass_ptr;
+
+#include "TIsAProxy.h"
+
+namespace ROOT { namespace Internal {
+struct TTypeNameExtractionBase {
+   // Implemented in TGenericClassInfo.cxx
+   static std::string GetImpl(const char* derived_funcname);
+};
+/// \class TypeNameExtraction
+/// Extracts the fully qualified type name by checking for the name of a
+/// member function as determined by the __PRETTY_FUNCTION__ macro.
+template <class T>
+   struct TTypeNameExtraction: TTypeNameExtractionBase {
+      static std::string Get() {
+#ifdef _MSC_VER // Visual Studio
+# define R__TNE_PRETTY_FUNCTION __FUNCTION__
+#else
+# define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#endif
+         return GetImpl(R__TNE_PRETTY_FUNCTION);
+#undef R__TNE_PRETTY_FUNCTION
+      }
+   };
+
+
+class TCDGIILIBase {
+public:
+   // All implemented in TGenericClassInfo.cxx.
+   static void SetInstance(::ROOT::TGenericClassInfo& R__instance,
+                    NewFunc_t, NewArrFunc_t, DelFunc_t, DelArrFunc_t, DesFunc_t);
+   static void SetName(const std::string& name, std::string& nameMember);
+   static void SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)());
+};
+
+template <typename T>
+class ClassDefGenerateInitInstanceLocalInjector:
+   public TCDGIILIBase {
+      static atomic_TClass_ptr fgIsA;
+      static std::string fgName;
+   public:
+      static void *New(void *p) { return p ? new(p) T : new T; };
+      static void *NewArray(Long_t nElements, void *p) {
+         return p ? new(p) T[nElements] : new T[nElements]; }
+      static void Delete(void *p) { delete ((T*)p); }
+      static void DeleteArray(void *p) { delete[] ((T*)p); }
+      static void Destruct(void *p) { ((T*)p)->~T();  }
+      static ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal() {
+         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(0);
+         static ::ROOT::TGenericClassInfo
+            R__instance(T::Class_Name(), T::Class_Version(),
+                        T::DeclFileName(), T::DeclFileLine(),
+                        typeid(T), ROOT::Internal::DefineBehavior((T*)0, (T*)0),
+                        &T::Dictionary, isa_proxy, 0, sizeof(T) );
+         SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
+         return &R__instance;
+      }
+      static TClass *Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); return fgIsA; }
+      static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
+      static const char* Name() {
+         if (fgName.empty())
+            SetName(TTypeNameExtraction<T>::Get(), fgName);
+         return fgName.c_str();
+      }
+   };
+
+   template<typename T>
+   atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
+   template<typename T>
+   std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
+
+}} // namespace ROOT::Internal
+
 
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
-#define _ClassDef_(name,id, virtual_keyword, overrd) \
+#define _ClassDefBase_(name,id, virtual_keyword, overrd) \
+public: \
+   static Version_t Class_Version() { return id; } \
+   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
+   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
+   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+   static const char *DeclFileName() { return __FILE__; }
+
+
+#define _ClassDefOutline_(name,id, virtual_keyword, overrd) \
+   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
 private: \
    static atomic_TClass_ptr fgIsA; \
 public: \
-   static TClass *Class(); \
-   static const char *Class_Name(); \
-   static Version_t Class_Version() { return id; } \
-   static TClass *Dictionary(); \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
-   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   virtual_keyword void Streamer(TBuffer&) overrd; \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   static const char *DeclFileName() { return __FILE__; } \
    static int ImplFileLine(); \
-   static const char *ImplFileName();
+   static const char *ImplFileName(); \
+   static const char *Class_Name(); \
+   static TClass *Dictionary(); \
+   static TClass *Class(); \
+   virtual_keyword void Streamer(TBuffer&) overrd;
 
-#define _ClassDefInterp_(name,id) \
-private: \
+#define _ClassDefInline_(name,id, virtual_keyword, overrd) \
+   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
 public: \
-   static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
-   static const char *Class_Name() { return #name; } \
-   static Version_t Class_Version() { return id; } \
-   static TClass *Dictionary() { return 0; } \
-   virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   virtual void Streamer(TBuffer&) { Error ("Streamer", "Cannot stream interpreted class."); } \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   static const char *DeclFileName() { return __FILE__; } \
-   static int ImplFileLine() { return 0; } \
-   static const char *ImplFileName() { return __FILE__; }
+   static int ImplFileLine() { return -1; }     \
+   static const char *ImplFileName() { return 0; }      \
+   static const char *Class_Name() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Name(); } \
+   static TClass *Dictionary() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
+   static TClass *Class() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
+   virtual_keyword void Streamer(TBuffer& R__b) overrd {                \
+      if (R__b.IsReading()) R__b.ReadClassBuffer(name::Class(),this);   \
+      else R__b.WriteClassBuffer(name::Class(),this);}
 
 #define ClassDef(name,id) \
-   _ClassDef_(name,id,virtual,)   \
+   _ClassDefOutline_(name,id,virtual,)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefOverride(name,id) \
-   _ClassDef_(name,id,,override)   \
+   _ClassDefOutline_(name,id,,override)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
-   _ClassDef_(name,id,,) \
+   _ClassDefOutline_(name,id,,) \
    static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInline(name,id) \
+   _ClassDefInline_(name,id,virtual,)                   \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInlineOverride(name,id)                       \
+   _ClassDefInline_(name,id,,override)                        \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInlineNV(name,id) \
+   _ClassDefInline_(name,id,,)                         \
+   static int DeclFileLine() { return __LINE__; }
+
+//#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
 
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
@@ -311,11 +361,11 @@ public: \
 // backward compatibility.
 
 #define ClassDefT(name,id) \
-   _ClassDef_(name,id,virtual,) \
+   _ClassDefOutline_(name,id,virtual,) \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefTNV(name,id) \
-   _ClassDef_(name,id,virtual,) \
+   _ClassDefOutline_(name,id,virtual,) \
    static int DeclFileLine() { return __LINE__; }
 
 
@@ -378,8 +428,12 @@ namespace ROOT {                                                     \
 #define _R_PragmaStr(x) _Pragma(#x)
 #ifdef __CLING__
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
+# define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(cling add_include_path ( #PATH ))
+# define R__ADD_LIBRARY_PATH(PATH) _R_PragmaStr(cling add_library_path ( #PATH ))
 #elif defined(R__WIN32)
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(comment(lib, #LIBRARY))
+# define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(comment(path, #PATH))
+# define R__ADD_LIBRARY_PATH(PATH) _R_PragmaStr(comment(path, #PATH))
 #else
 // No way to inform linker though preprocessor :-(
 // We could even inform the user:
@@ -389,6 +443,8 @@ namespace ROOT {                                                     \
                 ". Use -L and -l instead.")
 */
 # define R__LOAD_LIBRARY(LIBRARY)
+# define R__ADD_INCLUDE_PATH(PATH)
+# define R__ADD_LIBRARY_PATH(PATH)
 #endif
 
 #endif

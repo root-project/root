@@ -2,7 +2,19 @@
 
 /**
 
-\page MathCore MathCore library
+
+
+@defgroup MathCore  MathCore
+
+The Core Mathematical Library of %ROOT. See the \ref MathCorePage description page.
+
+@ingroup Math
+
+*/
+
+/**
+
+\page MathCorePage MathCore Library
 
 
 @b MathCore provides a collection of functions and C++ classes for HEP numerical computing. This library provides only  the basic mathematical functions and algorithms and not all the functionality required by the HEP community. More advanced mathematical functionalities is provided by the \ref MathMore.
@@ -42,20 +54,13 @@ MathCore contains instead now classes which were originally part of <em>libCore<
 
 MathCore and its CINT dictionary is normally built by default in %ROOT. Alternatively MathCore can be built as a stand-alone library (excluding classes like <tt>TComplex</tt> or <tt>TRandom</tt>  having
  a direct dependency of %ROOT <em>libCore</em>), downloading the current version from <A HREF="../MathCore.tar.gz">here</A>.
-Note, that the stand-alone library, in contrast to the one distributed by %ROOT,  <strong>does not</strong> contain the dictionary information and therefore cannot be used interactivly.
+Note, that the stand-alone library, in contrast to the one distributed by %ROOT,  <strong>does not</strong> contain the dictionary information and therefore cannot be used interactively.
 
  To build the stand-alone MathCore library run first the <em>configure</em> script and then <em>make</em>. Do <em>configure --help</em> to see options available in configuring, like defining the installation directory. Run also <em>make install</em> to install the library and include files and <em>make check</em> to build the tests.
 <br>
 
 
 
-
-
-<hr>
-<p>
-@authors The %ROOT Math Library Team
-<p>
-@b Contact:   <Lorenzo.Moneta@cern.ch>
 
 */
 

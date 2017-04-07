@@ -1,23 +1,35 @@
-// Illustrates how to use Tree friends:
-//   - create a simple TTree
-//   - Copy a subset of this TTree to a new TTree
-//   - Create a Tree Index
-//   - Make a friend TTree
-//   - compare two TTrees
-//   - Draw a variable from the first tree versus a variable
-//     in the friend Tree
-//
-// You can run this tutorial with:
-//  root > .x treefriend.C  (interpreted via CINT)
-//  root > .x treefriend.C+ (executed via ACLIC & the native compiler)
-// or, variants like:
-//  root > .L treefriend.C+
-//  root > CreateParentTree();
-//  root > CreateFriendTree();
-//  root > CompareTrees();
-//  root > DrawFriend();
-//
-//  Author: Rene Brun
+/// \file
+/// \ingroup tutorial_tree
+/// \notebook
+/// Illustrates how to use Tree friends:
+///   - create a simple TTree
+///   - Copy a subset of this TTree to a new TTree
+///   - Create a Tree Index
+///   - Make a friend TTree
+///   - compare two TTrees
+///   - Draw a variable from the first tree versus a variable
+///     in the friend Tree
+///
+/// You can run this tutorial with:
+/// ~~~
+///  root > .x treefriend.C  (interpreted via Cling)
+///  root > .x treefriend.C+ (executed via ACLIC & the native compiler)
+/// ~~~
+/// or, variants like:
+/// ~~~
+///  root > .L treefriend.C+
+///  root > CreateParentTree();
+///  root > CreateFriendTree();
+///  root > CompareTrees();
+///  root > DrawFriend();
+/// ~~~
+///
+/// \macro_output
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 
 #include "TTree.h"
 #include "TFile.h"

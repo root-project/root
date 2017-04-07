@@ -12,52 +12,21 @@
 #ifndef ROOT_TColor
 #define ROOT_TColor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TColor                                                               //
-//                                                                      //
-// Color defined by RGB or HLS.                                         //
-// At initialization time, a table of colors is generated. This linked  //
-// list can be accessed from the ROOT object                            //
-// (see TROOT::GetListOfColors()). When a color is defined in the range //
-// of [1,50], two "companion" colors are also defined:                  //
-//    - the dark version (color_index + 100)                            //
-//    - the bright version (color_index + 150)                          //
-// The dark and bright color are used to give 3-D effects when drawing  //
-// various boxes (see TWbox, TPave, TPaveText, TPaveLabel,etc).         //
-//                                                                      //
-// This is the list of currently supported basic colors (here dark and  //
-// bright colors are not shown).                                        //
-//Begin_Html
-/*
-<img src="gif/colors.gif">
-*/
-//End_Html
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 
 class TColor : public TNamed {
 protected:
-   Int_t          fNumber;        //Color number identifier
+   Int_t          fNumber;        ///< Color number identifier
 private:
-   Float_t        fRed;           //Fraction of Red
-   Float_t        fGreen;         //Fraction of Green
-   Float_t        fBlue;          //Fraction of Blue
-   Float_t        fHue;           //Hue
-   Float_t        fLight;         //Light
-   Float_t        fSaturation;    //Saturation
-   Float_t        fAlpha;         //Alpha (transparency)
-   static Bool_t  fgGrayscaleMode;//if set, GetColor will return grayscale
-   static Bool_t  fgInitDone;     //kTRUE once ROOT colors have been initialized
-   static TArrayI fgPalette;      //Color palette
+   Float_t        fRed;           ///< Fraction of Red
+   Float_t        fGreen;         ///< Fraction of Green
+   Float_t        fBlue;          ///< Fraction of Blue
+   Float_t        fHue;           ///< Hue
+   Float_t        fLight;         ///< Light
+   Float_t        fSaturation;    ///< Saturation
+   Float_t        fAlpha;         ///< Alpha (transparency)
 
    void           Allocate();
    static Float_t HLStoRGB1(Float_t rn1, Float_t rn2, Float_t huei);
@@ -65,6 +34,7 @@ private:
 public:
    TColor();
    TColor(Int_t color, Float_t r, Float_t g, Float_t b, const char *name="", Float_t a = 1);
+   TColor(Float_t r, Float_t g, Float_t b, Float_t a = 1);
    TColor(const TColor &color);
    virtual ~TColor();
    const char   *AsHexString() const;
@@ -114,6 +84,7 @@ public:
    static Int_t   GetColorBright(Int_t color);
    static Int_t   GetColorDark(Int_t color);
    static Int_t   GetColorTransparent(Int_t color, Float_t a);
+   static Int_t   GetFreeColorIndex();
    static ULong_t Number2Pixel(Int_t ci);
    static ULong_t RGB2Pixel(Int_t r, Int_t g, Int_t b);
    static ULong_t RGB2Pixel(Float_t r, Float_t g, Float_t b);
@@ -128,5 +99,26 @@ public:
    ClassDef(TColor,2)  //Color defined by RGB or HLS
 };
 
+   enum EColorPalette {kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,
+                       kBlueYellow= 54,      kRainBow=55,      kInvertedDarkBodyRadiator=56,
+                       kBird=57,             kCubehelix=58,    kGreenRedViolet=59,
+                       kBlueRedYellow=60,    kOcean=61,        kColorPrintableOnGrey=62,
+                       kAlpine=63,           kAquamarine=64,   kArmy=65,
+                       kAtlantic=66,         kAurora=67,       kAvocado=68,
+                       kBeach=69,            kBlackBody=70,    kBlueGreenYellow=71,
+                       kBrownCyan=72,        kCMYK=73,         kCandy=74,
+                       kCherry=75,           kCoffee=76,       kDarkRainBow=77,
+                       kDarkTerrain=78,      kFall=79,         kFruitPunch=80,
+                       kFuchsia=81,          kGreyYellow=82,   kGreenBrownTerrain=83,
+                       kGreenPink=84,        kIsland=85,       kLake=86,
+                       kLightTemperature=87, kLightTerrain=88, kMint=89,
+                       kNeon=90,             kPastel=91,       kPearl=92,
+                       kPigeon=93,           kPlum=94,         kRedBlue=95,
+                       kRose=96,             kRust=97,         kSandyTerrain=98,
+                       kSienna=99,           kSolar=100,       kSouthWest=101,
+                       kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
+                       kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
+                       kWaterMelon=108,      kCool=109,        kCopper=110,
+                       kGistEarth=111,       kViridis=112};
 #endif
 

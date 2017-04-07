@@ -9,24 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TLeaf for a 32 bit floating point data type.                       //
-//////////////////////////////////////////////////////////////////////////
+/** \class TLeafF
+\ingroup tree
+
+A TLeaf for a 32 bit floating point data type.
+*/
 
 #include "TLeafF.h"
 #include "TBranch.h"
+#include "TBuffer.h"
 #include "TClonesArray.h"
 #include "Riostream.h"
 
 ClassImp(TLeafF)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor for LeafF.
+
 TLeafF::TLeafF(): TLeaf()
 {
-//*-*-*-*-*-*Default constructor for LeafF*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ============================
-
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
@@ -34,14 +35,12 @@ TLeafF::TLeafF(): TLeaf()
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a LeafF.
+
 TLeafF::TLeafF(TBranch *parent, const char *name, const char *type)
    :TLeaf(parent, name,type)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Create a LeafF*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============
-//*-*
-
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
@@ -49,23 +48,19 @@ TLeafF::TLeafF(TBranch *parent, const char *name, const char *type)
    fPointer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default destructor for a LeafF.
+
 TLeafF::~TLeafF()
 {
-//*-*-*-*-*-*Default destructor for a LeafF*-*-*-*-*-*-*-*-*-*-*-*
-//*-*        ===============================
-
    if (ResetAddress(0,kTRUE)) delete [] fValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Export element from local leaf buffer to ClonesArray.
 
-
-//______________________________________________________________________________
 void TLeafF::Export(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Export element from local leaf buffer to ClonesArray*-*-*-*-*
-//*-*        ====================================================
-
    Float_t *value = fValue;
    for (Int_t i=0;i<n;i++) {
       char *first = (char*)list->UncheckedAt(i);
@@ -77,24 +72,21 @@ void TLeafF::Export(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pack leaf elements in Basket output buffer.
+
 void TLeafF::FillBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Pack leaf elements in Basket output buffer*-*-*-*-*-*-*
-//*-*                  ==========================================
-
    Int_t len = GetLen();
    if (fPointer) fValue = *fPointer;
    b.WriteFastArray(fValue,len);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Import element from ClonesArray into local leaf buffer.
 
-//______________________________________________________________________________
 void TLeafF::Import(TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*Import element from ClonesArray into local leaf buffer*-*-*-*-*
-//*-*        ======================================================
-
    const Float_t kFloatUndefined = -9999.;
    Int_t j = 0;
    char *clone;
@@ -106,21 +98,20 @@ void TLeafF::Import(TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints leaf value.
+
 void TLeafF::PrintValue(Int_t l) const
 {
-// Prints leaf value
-
    Float_t *value = (Float_t *)GetValuePointer();
    printf("%g",value[l]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaf elements from Basket input buffer.
+
 void TLeafF::ReadBasket(TBuffer &b)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//*-*                  ===========================================
-
    if (!fLeafCount && fNdata == 1) {
       b.ReadFloat(fValue[0]);
    }else {
@@ -142,12 +133,12 @@ void TLeafF::ReadBasket(TBuffer &b)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read leaf elements from Basket input buffer and export buffer to
+/// TClonesArray objects.
+
 void TLeafF::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
 {
-//*-*-*-*-*-*-*-*-*-*-*Read leaf elements from Basket input buffer*-*-*-*-*-*
-//  and export buffer to TClonesArray objects
-
    if (n*fLen == 1) {
       b >> fValue[0];
    } else {
@@ -165,20 +156,20 @@ void TLeafF::ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a float from std::istream s and store it into the branch buffer.
+
 void TLeafF::ReadValue(std::istream &s, Char_t /*delim = ' '*/)
 {
-// read a float from std::istream s and store it into the branch buffer
    Float_t *value = (Float_t*)GetValuePointer();
    for (Int_t i=0;i<fLen;i++) s >> value[i];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set leaf buffer data address.
+
 void TLeafF::SetAddress(void *add)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set leaf buffer data address*-*-*-*-*-*
-//*-*                  ============================
-
    if (ResetAddress(add) && (add!= fValue)) {
       delete [] fValue;
    }

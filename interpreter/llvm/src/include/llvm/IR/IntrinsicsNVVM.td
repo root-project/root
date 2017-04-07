@@ -720,25 +720,25 @@ def llvm_anyi64ptr_ty     : LLVMAnyPointerType<llvm_i64_ty>;     // (space)i64*
 // Atomic not available as an llvm intrinsic.
   def int_nvvm_atomic_load_add_f32 : Intrinsic<[llvm_float_ty],
           [LLVMAnyPointerType<llvm_float_ty>, llvm_float_ty],
-                                      [IntrReadWriteArgMem, NoCapture<0>]>;
+                                      [IntrArgMemOnly, NoCapture<0>]>;
   def int_nvvm_atomic_load_inc_32 : Intrinsic<[llvm_i32_ty],
           [LLVMAnyPointerType<llvm_i32_ty>, llvm_i32_ty],
-                                      [IntrReadWriteArgMem, NoCapture<0>]>;
+                                      [IntrArgMemOnly, NoCapture<0>]>;
   def int_nvvm_atomic_load_dec_32 : Intrinsic<[llvm_i32_ty],
           [LLVMAnyPointerType<llvm_i32_ty>, llvm_i32_ty],
-                                      [IntrReadWriteArgMem, NoCapture<0>]>;
+                                      [IntrArgMemOnly, NoCapture<0>]>;
 
 // Bar.Sync
   def int_cuda_syncthreads : GCCBuiltin<"__syncthreads">,
-      Intrinsic<[], [], [IntrNoDuplicate]>;
+      Intrinsic<[], [], [IntrConvergent]>;
   def int_nvvm_barrier0 : GCCBuiltin<"__nvvm_bar0">,
-      Intrinsic<[], [], [IntrNoDuplicate]>;
+      Intrinsic<[], [], [IntrConvergent]>;
   def int_nvvm_barrier0_popc : GCCBuiltin<"__nvvm_bar0_popc">,
-      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrNoDuplicate]>;
+      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrConvergent]>;
   def int_nvvm_barrier0_and : GCCBuiltin<"__nvvm_bar0_and">,
-      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrNoDuplicate]>;
+      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrConvergent]>;
   def int_nvvm_barrier0_or : GCCBuiltin<"__nvvm_bar0_or">,
-      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrNoDuplicate]>;
+      Intrinsic<[llvm_i32_ty], [llvm_i32_ty], [IntrConvergent]>;
 
   // Membar
   def int_nvvm_membar_cta : GCCBuiltin<"__nvvm_membar_cta">,
@@ -795,32 +795,34 @@ def llvm_anyi64ptr_ty     : LLVMAnyPointerType<llvm_i64_ty>;     // (space)i64*
       GCCBuiltin<"__nvvm_read_ptx_sreg_warpsize">;
 
 
-// Generated within nvvm. Use for ldu on sm_20 or later
+// Generated within nvvm. Use for ldu on sm_20 or later.  Second arg is the
+// pointer's alignment.
 def int_nvvm_ldu_global_i : Intrinsic<[llvm_anyint_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldu.global.i">;
 def int_nvvm_ldu_global_f : Intrinsic<[llvm_anyfloat_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldu.global.f">;
 def int_nvvm_ldu_global_p : Intrinsic<[llvm_anyptr_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldu.global.p">;
 
-// Generated within nvvm. Use for ldg on sm_35 or later
+// Generated within nvvm. Use for ldg on sm_35 or later.  Second arg is the
+// pointer's alignment.
 def int_nvvm_ldg_global_i : Intrinsic<[llvm_anyint_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldg.global.i">;
 def int_nvvm_ldg_global_f : Intrinsic<[llvm_anyfloat_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldg.global.f">;
 def int_nvvm_ldg_global_p : Intrinsic<[llvm_anyptr_ty],
   [LLVMAnyPointerType<LLVMMatchType<0>>, llvm_i32_ty],
-  [IntrReadMem, NoCapture<0>],
+  [IntrReadMem, IntrArgMemOnly, NoCapture<0>],
   "llvm.nvvm.ldg.global.p">;
 
 // Use for generic pointers
@@ -3742,5 +3744,49 @@ def int_ptx_read_pm2         : PTXReadSpecialRegisterIntrinsic_r32
 def int_ptx_read_pm3         : PTXReadSpecialRegisterIntrinsic_r32
                                <"__builtin_ptx_read_pm3">;
 
-def int_ptx_bar_sync : Intrinsic<[], [llvm_i32_ty], []>,
+def int_ptx_bar_sync : Intrinsic<[], [llvm_i32_ty], [IntrConvergent]>,
                        GCCBuiltin<"__builtin_ptx_bar_sync">;
+
+//
+// SHUFFLE
+//
+
+// shfl.down.b32 dest, val, offset, mask_and_clamp
+def int_ptx_shfl_down_i32 :
+  Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.down.i32">,
+  GCCBuiltin<"__builtin_ptx_shfl_down_i32">;
+def int_ptx_shfl_down_f32 :
+  Intrinsic<[llvm_float_ty], [llvm_float_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.down.f32">,
+  GCCBuiltin<"__builtin_ptx_shfl_down_f32">;
+
+// shfl.up.b32 dest, val, offset, mask_and_clamp
+def int_ptx_shfl_up_i32 :
+  Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.up.i32">,
+  GCCBuiltin<"__builtin_ptx_shfl_up_i32">;
+def int_ptx_shfl_up_f32 :
+  Intrinsic<[llvm_float_ty], [llvm_float_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.up.f32">,
+  GCCBuiltin<"__builtin_ptx_shfl_up_f32">;
+
+// shfl.bfly.b32 dest, val, offset, mask_and_clamp
+def int_ptx_shfl_bfly_i32 :
+  Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.bfly.i32">,
+  GCCBuiltin<"__builtin_ptx_shfl_bfly_i32">;
+def int_ptx_shfl_bfly_f32 :
+  Intrinsic<[llvm_float_ty], [llvm_float_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.bfly.f32">,
+  GCCBuiltin<"__builtin_ptx_shfl_bfly_f32">;
+
+// shfl.idx.b32 dest, val, lane, mask_and_clamp
+def int_ptx_shfl_idx_i32 :
+  Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.idx.i32">,
+  GCCBuiltin<"__builtin_ptx_shfl_idx_i32">;
+def int_ptx_shfl_idx_f32 :
+  Intrinsic<[llvm_float_ty], [llvm_float_ty, llvm_i32_ty, llvm_i32_ty],
+            [IntrNoMem, IntrConvergent], "llvm.nvvm.shfl.idx.f32">,
+  GCCBuiltin<"__builtin_ptx_shfl_idx_f32">;

@@ -10,13 +10,12 @@
 
 #include "Math/BrentMethods.h"
 #include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
 
 #include <cmath>
 #include <algorithm>
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 #include <iostream>
 

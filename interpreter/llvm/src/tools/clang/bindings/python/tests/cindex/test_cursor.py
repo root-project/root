@@ -97,6 +97,118 @@ def test_canonical():
     assert len(cursors) == 3
     assert cursors[1].canonical == cursors[2].canonical
 
+def test_is_const_method():
+    """Ensure Cursor.is_const_method works."""
+    source = 'class X { void foo() const; void bar(); };'
+    tu = get_tu(source, lang='cpp')
+
+    cls = get_cursor(tu, 'X')
+    foo = get_cursor(tu, 'foo')
+    bar = get_cursor(tu, 'bar')
+    assert cls is not None
+    assert foo is not None
+    assert bar is not None
+
+    assert foo.is_const_method()
+    assert not bar.is_const_method()
+
+def test_is_converting_constructor():
+    """Ensure Cursor.is_converting_constructor works."""
+    source = 'class X { explicit X(int); X(double); X(); };'
+    tu = get_tu(source, lang='cpp')
+
+    xs = get_cursors(tu, 'X')
+
+    assert len(xs) == 4
+    assert xs[0].kind == CursorKind.CLASS_DECL
+    cs = xs[1:]
+    assert cs[0].kind == CursorKind.CONSTRUCTOR
+    assert cs[1].kind == CursorKind.CONSTRUCTOR
+    assert cs[2].kind == CursorKind.CONSTRUCTOR
+
+    assert not cs[0].is_converting_constructor()
+    assert cs[1].is_converting_constructor()
+    assert not cs[2].is_converting_constructor()
+
+
+def test_is_copy_constructor():
+    """Ensure Cursor.is_copy_constructor works."""
+    source = 'class X { X(); X(const X&); X(X&&); };'
+    tu = get_tu(source, lang='cpp')
+
+    xs = get_cursors(tu, 'X')
+    assert xs[0].kind == CursorKind.CLASS_DECL
+    cs = xs[1:]
+    assert cs[0].kind == CursorKind.CONSTRUCTOR
+    assert cs[1].kind == CursorKind.CONSTRUCTOR
+    assert cs[2].kind == CursorKind.CONSTRUCTOR
+
+    assert not cs[0].is_copy_constructor()
+    assert cs[1].is_copy_constructor()
+    assert not cs[2].is_copy_constructor()
+
+def test_is_default_constructor():
+    """Ensure Cursor.is_default_constructor works."""
+    source = 'class X { X(); X(int); };'
+    tu = get_tu(source, lang='cpp')
+
+    xs = get_cursors(tu, 'X')
+    assert xs[0].kind == CursorKind.CLASS_DECL
+    cs = xs[1:]
+    assert cs[0].kind == CursorKind.CONSTRUCTOR
+    assert cs[1].kind == CursorKind.CONSTRUCTOR
+
+    assert cs[0].is_default_constructor()
+    assert not cs[1].is_default_constructor()
+
+def test_is_move_constructor():
+    """Ensure Cursor.is_move_constructor works."""
+    source = 'class X { X(); X(const X&); X(X&&); };'
+    tu = get_tu(source, lang='cpp')
+
+    xs = get_cursors(tu, 'X')
+    assert xs[0].kind == CursorKind.CLASS_DECL
+    cs = xs[1:]
+    assert cs[0].kind == CursorKind.CONSTRUCTOR
+    assert cs[1].kind == CursorKind.CONSTRUCTOR
+    assert cs[2].kind == CursorKind.CONSTRUCTOR
+
+    assert not cs[0].is_move_constructor()
+    assert not cs[1].is_move_constructor()
+    assert cs[2].is_move_constructor()
+
+def test_is_default_method():
+    """Ensure Cursor.is_default_method works."""
+    source = 'class X { X() = default; }; class Y { Y(); };'
+    tu = get_tu(source, lang='cpp')
+
+    xs = get_cursors(tu, 'X')
+    ys = get_cursors(tu, 'Y')
+
+    assert len(xs) == 2
+    assert len(ys) == 2
+
+    xc = xs[1]
+    yc = ys[1]
+
+    assert xc.is_default_method()
+    assert not yc.is_default_method()
+
+def test_is_mutable_field():
+    """Ensure Cursor.is_mutable_field works."""
+    source = 'class X { int x_; mutable int y_; };'
+    tu = get_tu(source, lang='cpp')
+
+    cls = get_cursor(tu, 'X')
+    x_ = get_cursor(tu, 'x_')
+    y_ = get_cursor(tu, 'y_')
+    assert cls is not None
+    assert x_ is not None
+    assert y_ is not None
+
+    assert not x_.is_mutable_field()
+    assert y_.is_mutable_field()
+
 def test_is_static_method():
     """Ensure Cursor.is_static_method works."""
 
@@ -112,6 +224,36 @@ def test_is_static_method():
 
     assert foo.is_static_method()
     assert not bar.is_static_method()
+
+def test_is_pure_virtual_method():
+    """Ensure Cursor.is_pure_virtual_method works."""
+    source = 'class X { virtual void foo() = 0; virtual void bar(); };'
+    tu = get_tu(source, lang='cpp')
+
+    cls = get_cursor(tu, 'X')
+    foo = get_cursor(tu, 'foo')
+    bar = get_cursor(tu, 'bar')
+    assert cls is not None
+    assert foo is not None
+    assert bar is not None
+
+    assert foo.is_pure_virtual_method()
+    assert not bar.is_pure_virtual_method()
+
+def test_is_virtual_method():
+    """Ensure Cursor.is_virtual_method works."""
+    source = 'class X { virtual void foo(); void bar(); };'
+    tu = get_tu(source, lang='cpp')
+
+    cls = get_cursor(tu, 'X')
+    foo = get_cursor(tu, 'foo')
+    bar = get_cursor(tu, 'bar')
+    assert cls is not None
+    assert foo is not None
+    assert bar is not None
+
+    assert foo.is_virtual_method()
+    assert not bar.is_virtual_method()
 
 def test_underlying_type():
     tu = get_tu('typedef int foo;')

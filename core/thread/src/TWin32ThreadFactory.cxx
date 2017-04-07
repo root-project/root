@@ -28,35 +28,35 @@ static TWin32ThreadFactory gWin32ThreadFactoryCreator;
 
 ClassImp(TWin32ThreadFactory)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Win32 thread factory. Also sets global gThreadFactory to this.
+
 TWin32ThreadFactory::TWin32ThreadFactory(const char *name, const char *title) :
                      TThreadFactory(name, title)
 {
-   // Create Win32 thread factory. Also sets global gThreadFactory to this.
-
    gThreadFactory = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Win32 Mutex.
+
 TMutexImp *TWin32ThreadFactory::CreateMutexImp(Bool_t recursive)
 {
-   // Return a Win32 Mutex.
-
    return new TWin32Mutex(recursive);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Win32 thread.
+
 TThreadImp *TWin32ThreadFactory::CreateThreadImp()
 {
-   // Return a Win32 thread.
-
    return new TWin32Thread;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a Win32 condition variable.
+
 TConditionImp *TWin32ThreadFactory::CreateConditionImp(TMutexImp *m)
 {
-   // Return a Win32 condition variable.
-
    return new TWin32Condition(m);
 }

@@ -9,15 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>TGraphPolar : to draw a polar graph</h2></center>
+/** \class TGraphPolar
+\ingroup BasicGraphics
+
+To draw a polar graph.
+
 TGraphPolar creates a polar graph (including error bars). A TGraphPolar is
 a TGraphErrors represented in polar coordinates.
 It uses the class TGraphPolargram to draw the polar axis.
-<p>
+
 Example:
-End_Html
+
 Begin_Macro(source)
 {
    TCanvas * CPol = new TCanvas("CPol","TGraphPolar Example",500,500);
@@ -50,58 +52,55 @@ Begin_Macro(source)
 
    return CPol;
 }
-End_Macro */
+End_Macro
+*/
 
 #include "TROOT.h"
 #include "TGraphPolar.h"
 #include "TGraphPolargram.h"
 #include "TVirtualPad.h"
 
-
 ClassImp(TGraphPolar);
 
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphPolar default constructor.
 
-//______________________________________________________________________________
 TGraphPolar::TGraphPolar() : TGraphErrors(),
              fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
 {
-   // TGraphPolar default constructor.
-
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphPolar constructor.
+///
+/// \param[in] n         number of points.
+/// \param[in] theta     angular values.
+/// \param[in] r         radial values.
+/// \param[in] etheta    errors on angular values.
+/// \param[in] er        errors on radial values.
 
-//______________________________________________________________________________
 TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
                                   const Double_t *etheta, const Double_t* er)
   : TGraphErrors(n,theta,r,etheta,er),
              fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
 {
-   // TGraphPolar constructor.
-   //
-   // n      : number of points.
-   // theta  : angular values.
-   // r      : radial values.
-   // etheta : errors on angular values.
-   // er     : errors on radial values.
-
    SetEditable(kFALSE);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TGraphPolar destructor.
 
-//______________________________________________________________________________
 TGraphPolar::~TGraphPolar()
 {
-   // TGraphPolar destructor.
    delete []fXpol;
    delete []fYpol;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TGraphPolar.
 
-//______________________________________________________________________________
 void TGraphPolar::Draw(Option_t* options)
 {
-   // Draw TGraphPolar.
-
    // Process options
    TString opt = options;
    opt.ToUpper();
@@ -116,59 +115,53 @@ void TGraphPolar::Draw(Option_t* options)
    AppendPad(opt);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return points in polar coordinates.
 
-//______________________________________________________________________________
 Double_t *TGraphPolar::GetXpol()
 {
-   // Return points in polar coordinates.
-
    if (!fXpol) fXpol = new Double_t[fNpoints];
    return fXpol;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return points in polar coordinates.
 
-//______________________________________________________________________________
 Double_t *TGraphPolar::GetYpol()
 {
-   // Return points in polar coordinates.
-
    if (!fYpol) fYpol = new Double_t[fNpoints];
    return fYpol;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum Polar.
 
-//______________________________________________________________________________
 void TGraphPolar::SetMaxPolar(Double_t maximum)
 {
-   // Set maximum Polar.
-
    if (fPolargram) fPolargram->ChangeRangePolar(fPolargram->GetTMin(),maximum);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set maximum radial at the intersection of the positive X axis part and
+/// the circle.
 
-//______________________________________________________________________________
 void TGraphPolar::SetMaxRadial(Double_t maximum)
 {
-   // Set maximum radial at the intersection of the positive X axis part and
-   // the circle.
-
    if (fPolargram) fPolargram->SetRangeRadial(fPolargram->GetRMin(),maximum);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set minimum Polar.
 
-//______________________________________________________________________________
 void TGraphPolar::SetMinPolar(Double_t minimum)
 {
-   // Set minimum Polar.
-
    if (fPolargram) fPolargram->ChangeRangePolar(minimum, fPolargram->GetTMax());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set minimum radial in the center of the circle.
 
-//______________________________________________________________________________
 void TGraphPolar::SetMinRadial(Double_t minimum)
 {
-   // Set minimum radial in the center of the circle.
-
    if (fPolargram) fPolargram->SetRangeRadial(minimum, fPolargram->GetRMax());
 }

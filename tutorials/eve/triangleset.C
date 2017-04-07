@@ -1,7 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of class TEveTriangleSet.
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of class TEveTriangleSet.
+///
+/// \image html eve_triangleset.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 #include "TCanvas.h"
 #include "TStyle.h"
@@ -45,7 +49,6 @@ void triangleset()
       ts3 = TEveTriangleSet::ReadTrivialFile("broken_torus.tring");
       ts3->SetName("Spectrum");
       ts3->GenerateTriangleNormals();
-      gStyle->SetPalette(1, 0);
       ts3->GenerateZNormalColors(50, -50, 50, kTRUE, kTRUE);
       ts3->SetMainColor(0);
       TGeoHMatrix m;

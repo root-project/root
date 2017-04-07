@@ -22,6 +22,16 @@ etc/allDict.h
 *_dictUmbrella.h
 *_rdict.pcm
 
+# MacOS Xcode
+xcuserdata
+project.xcworkspace
+
+# Visual Code
+.vscode/*
+
+# Vim
+*.swp
+
 # Other Stuff
 *.d
 
@@ -46,6 +56,7 @@ etc/allDict.h
 /roottest
 /*.mk
 /.project
+/files
 
 # /README/
 /README/ChangeLog
@@ -58,10 +69,10 @@ etc/allDict.h
 /config/Makefile.comp
 
 # /core/base/src/
-core/base/src/RGitCommit.h
+/core/base/src/RGitCommit.h
 
 # /core/lzma/src/
-/core/lzma/src/xz-5.0.3
+/core/lzma/src/xz-5.2.1
 
 # /core/metautils/src/
 /core/metautils/src/stlLoader_set.cc
@@ -77,19 +88,10 @@ core/base/src/RGitCommit.h
 /core/metautils/src/stlLoader_complex.cc
 
 # /core/pcre/src/
-/core/pcre/src/pcre-7.8
+/core/pcre/src/pcre-8.37
 
-# /core/utils/src/
-/core/utils/src/rootcint_tmp
-/core/utils/src/rootcint_tmp.exp
-/core/utils/src/rootcint_tmp.lib
-/core/utils/src/rootcint_tmp.pdb
-/core/utils/src/rootcint_tmp.cxx
-/core/utils/src/rootcint_tmp.exe
-/core/utils/src/rootcling_tmp
-/core/utils/src/rootcling_tmp.cxx
-/core/utils/src/RStl_tmp.cxx
-/core/utils/src/RConversionRuleParser_tmp.cxx
+# /core/rootcling_stage1/src/
+/core/rootcling_stage1/src/rootcling_stage1
 
 # /documentation/primer/
 /documentation/primer/ROOTPrimer.tex
@@ -158,7 +160,7 @@ core/base/src/RGitCommit.h
 /graf2d/asimage/src/libAfterImage/libAfterImage.a
 
 # /graf2d/freetype/src/
-/graf2d/freetype/src/freetype-2.3.12
+/graf2d/freetype/src/freetype-2.6.1
 
 # /graf2d/qt/src/
 /graf2d/qt/src/moc_*.cxx
@@ -183,6 +185,19 @@ core/base/src/RGitCommit.h
 
 # /interpreter/cling/lib/Interpreter/
 /interpreter/cling/lib/Interpreter/cling-compiledata.h
+/interpreter/cling/lib/Interpreter/cling-compiledata.h.in
+
+# /interpreter/cling/...
+/interpreter/cling/CMakeFiles
+/interpreter/cling/Makefile
+/interpreter/cling/cmake_install.cmake
+/interpreter/cling/*/CMakeFiles
+/interpreter/cling/*/Makefile
+/interpreter/cling/*/cmake_install.cmake
+/interpreter/cling/lib/*/CMakeFiles
+/interpreter/cling/lib/*/Makefile
+/interpreter/cling/lib/*/cmake_install.cmake
+/interpreter/cling/lib/cmake
 
 # /interpreter/llvm/
 /interpreter/llvm/obj
@@ -207,6 +222,7 @@ core/base/src/RGitCommit.h
 # /main/src/
 /main/src/roots.sh
 /main/src/proofserv.sh
+/main/src/xproofd.sh
 
 # /math/genetic/test/
 /math/genetic/test/testGAMinimizer

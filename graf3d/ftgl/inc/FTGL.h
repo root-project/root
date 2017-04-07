@@ -18,35 +18,9 @@ typedef float    FTGL_FLOAT;
     #define FT_RENDER_MODE_NORMAL ft_render_mode_normal
 #endif
 
+#include "TGLIncludes.h"
 
-#ifdef WIN32
-
-    // Under windows avoid including <windows.h> is overrated.
-    // Sure, it can be avoided and "name space pollution" can be
-    // avoided, but why? It really doesn't make that much difference
-    // these days.
-    #define  WIN32_LEAN_AND_MEAN
-    #include <windows.h>
-
-    #ifndef __gl_h_
-        #include <GL/gl.h>
-        #include <GL/glu.h>
-    #endif
-
-#else
-
-    // Non windows platforms - don't require nonsense as seen above :-)
-    #ifndef __gl_h_
-        #ifdef __APPLE_CC__
-            #include <OpenGL/gl.h>
-            #include <OpenGL/glu.h>
-        #else
-            #include <GL/gl.h>
-            #include <GL/glu.h>
-        #endif
-
-    #endif
-
+#ifndef WIN32
     // Required for compatibility with glext.h style function definitions of
     // OpenGL extensions, such as in src/osg/Point.cpp.
     #ifndef APIENTRY

@@ -47,19 +47,19 @@
 #include "TGTextView.h"
 #include "TSystem.h"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create output redirection guard.
+/// The TGTextView instance should be initialized outside.
+/// Text is added to the existing text in the frame.
+/// If defined, 'flog' is interpreted as the path of a file
+/// where to save the output; in such a case 'mode' if the
+/// opening mode of the file (either "w" or "a").
+/// By default a temporary file is used.
+
 TGRedirectOutputGuard::TGRedirectOutputGuard(TGTextView *tv,
                                              const char *flog,
                                              const char *mode)
 {
-   // Create output redirection guard.
-   // The TGTextView instance should be initialized outside.
-   // Text is added to the existing text in the frame.
-   // If defined, 'flog' is interpreted as the path of a file
-   // where to save the output; in such a case 'mode' if the
-   // opening mode of the file (either "w" or "a").
-   // By default a temporary file is used.
-
    fTextView = tv;
    fLogFile = flog;
    fTmpFile = kFALSE;
@@ -107,11 +107,11 @@ TGRedirectOutputGuard::TGRedirectOutputGuard(TGTextView *tv,
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGRedirectOutputGuard::~TGRedirectOutputGuard()
 {
-   // Destructor.
-
    // Display last info
    Update();
 
@@ -127,11 +127,11 @@ TGRedirectOutputGuard::~TGRedirectOutputGuard()
    gSystem->RedirectOutput(0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send to text frame the undisplayed content of the file.
+
 void TGRedirectOutputGuard::Update()
 {
-   // Send to text frame the undisplayed content of the file.
-
    if (!fTextView) {
       Warning("Update","no TGTextView defined");
       return;

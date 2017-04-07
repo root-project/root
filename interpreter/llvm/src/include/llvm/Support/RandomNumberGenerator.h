@@ -16,12 +16,12 @@
 #ifndef LLVM_SUPPORT_RANDOMNUMBERGENERATOR_H_
 #define LLVM_SUPPORT_RANDOMNUMBERGENERATOR_H_
 
-#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/DataTypes.h" // Needed for uint64_t on Windows.
 #include <random>
 
 namespace llvm {
+class StringRef;
 
 /// A random number generator.
 ///
@@ -48,10 +48,8 @@ private:
   std::mt19937_64 Generator;
 
   // Noncopyable.
-  RandomNumberGenerator(const RandomNumberGenerator &other)
-      LLVM_DELETED_FUNCTION;
-  RandomNumberGenerator &
-  operator=(const RandomNumberGenerator &other) LLVM_DELETED_FUNCTION;
+  RandomNumberGenerator(const RandomNumberGenerator &other) = delete;
+  RandomNumberGenerator &operator=(const RandomNumberGenerator &other) = delete;
 
   friend class Module;
 };

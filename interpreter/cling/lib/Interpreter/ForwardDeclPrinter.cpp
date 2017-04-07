@@ -3,17 +3,18 @@
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Type.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 
 namespace cling {
 
@@ -22,13 +23,15 @@ namespace cling {
 
   ForwardDeclPrinter::ForwardDeclPrinter(llvm::raw_ostream& OutS,
                                          llvm::raw_ostream& LogS,
-                                         Sema& S,
+                                         Preprocessor& P,
+                                         ASTContext& Ctx,
                                          const Transaction& T,
                                          unsigned Indentation,
-                                         bool printMacros)
+                                         bool printMacros,
+                                         IgnoreFilesFunc_t ignoreFiles)
     : m_Policy(clang::PrintingPolicy(clang::LangOptions())), m_Log(LogS),
-      m_Indentation(Indentation), m_SMgr(S.getSourceManager()),
-      m_Ctx(S.getASTContext()), m_SkipFlag(false) {
+      m_Indentation(Indentation), m_PP(P), m_SMgr(P.getSourceManager()),
+      m_Ctx(Ctx), m_SkipFlag(false), m_IgnoreFile(ignoreFiles) {
     m_PrintInstantiation = false;
     m_Policy.SuppressTagKeyword = true;
 
@@ -36,10 +39,14 @@ namespace cling {
 
     m_StreamStack.push(&OutS);
 
-    llvm::SmallVector<const char*, 1024> builtinNames;
-    m_Ctx.BuiltinInfo.GetBuiltinNames(builtinNames);
+    const clang::Builtin::Context& BuiltinCtx = m_Ctx.BuiltinInfo;
+    for (unsigned i = clang::Builtin::NotBuiltin+1;
+         i != clang::Builtin::FirstTSBuiltin; ++i)
+      m_BuiltinNames.insert(BuiltinCtx.getName(i));
 
-    m_BuiltinNames.insert(builtinNames.begin(), builtinNames.end());
+    for (auto&& BuiltinInfo: m_Ctx.getTargetInfo().getTargetBuiltins())
+        m_BuiltinNames.insert(BuiltinInfo.Name);
+
 
     // Suppress some unfixable warnings.
     // TODO: Find proper fix for these issues
@@ -149,7 +156,7 @@ namespace cling {
     return Out();
   }
 
-  void ForwardDeclPrinter::prettyPrintAttributes(Decl *D, std::string extra) {
+  void ForwardDeclPrinter::prettyPrintAttributes(Decl *D) {
 
     if (D->getSourceRange().isInvalid())
       return;
@@ -168,40 +175,101 @@ namespace cling {
       }
     }
 
+     auto &smgr = m_SMgr;
+     auto getIncludeFileName = [&smgr](PresumedLoc loc) {
+        clang::SourceLocation includeLoc = smgr.getSpellingLoc(loc.getIncludeLoc());
+        bool invalid = true;
+        const char* includeText = smgr.getCharacterData(includeLoc, &invalid);
+        assert(!invalid && "Invalid source data");
+        assert(includeText && "Cannot find #include location");
+        assert((includeText[0] == '<' || includeText[0] == '"')
+               && "Unexpected #include delimiter");
+        char endMarker = includeText[0] == '<' ? '>' : '"';
+        ++includeText;
+        const char* includeEnd = includeText;
+        while (*includeEnd != endMarker && *includeEnd) {
+           ++includeEnd;
+        }
+        assert(includeEnd && "Cannot find end of #include file name");
+        return llvm::StringRef(includeText, includeEnd - includeText);
+    };
+
+    auto &PP = m_PP;
+    auto isDirectlyReacheable = [&PP](llvm::StringRef FileName) {
+      const FileEntry* FE = nullptr;
+      SourceLocation fileNameLoc;
+      bool isAngled = false;
+      const DirectoryLookup* FromDir = nullptr;
+      const FileEntry* FromFile = nullptr;
+      const DirectoryLookup* CurDir = nullptr;
+
+      FE = PP.LookupFile(fileNameLoc, FileName, isAngled,
+                          FromDir, FromFile, CurDir, /*SearchPath*/0,
+                          /*RelativePath*/ 0, /*suggestedModule*/0,
+                          /*SkipCache*/ false, /*OpenFile*/ false,
+                          /*CacheFail*/ true);
+      // Return true if we can '#include' the given filename
+      return FE != nullptr;
+    };
+
     SourceLocation spellingLoc = m_SMgr.getSpellingLoc(D->getLocStart());
     // Walk up the include chain.
     PresumedLoc PLoc = m_SMgr.getPresumedLoc(spellingLoc);
     llvm::SmallVector<PresumedLoc, 16> PLocs;
-    while (true) {
+    llvm::SmallVector<StringRef, 16> PLocNames;
+    while (!m_IgnoreFile(PLoc)) {
       if (!m_SMgr.getPresumedLoc(PLoc.getIncludeLoc()).isValid())
         break;
       PLocs.push_back(PLoc);
+      StringRef name( getIncludeFileName(PLoc) );
+
+      // We record in PLocNames only the include file names that can be
+      // reached directly.  Whenever a #include is parsed in addition to
+      // the record include path, the directory where the file containing
+      // the #include is located is also added implicitly and temporarily
+      // to the include path.  So if the include path is empty and a file
+      // is include via a full pathname it can still #include file in its
+      // (sub)directory using their relative path.
+      // Similarly a file included via a sub-directory of the include path
+      // (eg. #include "Product/mainheader.h") can include header files in
+      // the same subdirectory without mentioning it
+      // (eg. #include "otherheader_in_Product.h")
+      // Since we do not (want to) record the actual directory in which is
+      // located the header with the #include we are looking at, if the
+      // #include is relative to that directory we will not be able to find
+      // it back and thus there is no point in recording it.
+      if (isDirectlyReacheable(name)) {
+        PLocNames.push_back(name);
+      }
       PLoc = m_SMgr.getPresumedLoc(PLoc.getIncludeLoc());
     }
 
     if (PLocs.empty() /* declared in dictionary payload*/)
        return;
-
-    clang::SourceLocation includeLoc = m_SMgr.getSpellingLoc(PLocs[PLocs.size() - 1].getIncludeLoc());
-    bool invalid = true;
-    const char* includeText = m_SMgr.getCharacterData(includeLoc, &invalid);
-    assert(!invalid && "Invalid source data");
-    assert(includeText && "Cannot find #include location");
-    assert((includeText[0] == '<' || includeText[0] == '"')
-           && "Unexpected #include delimiter");
-    char endMarker = includeText[0] == '<' ? '>' : '"';
-    ++includeText;
-    const char* includeEnd = includeText;
-    while (*includeEnd != endMarker && *includeEnd) {
-      ++includeEnd;
+    else if (PLocNames.empty()) {
+      // In this case, all the header file name are of the 'unreacheable' type,
+      // most likely because the first one was related to the linkdef file and
+      // the linkdef file was pass using a full path name.
+      // We are not (easy) to find it back, nonetheless record it as is, just
+      // in case the user add the missing include path at run-time.
+      if (PLocs.size() > 1) {
+        Out() << " __attribute__((annotate(\"$clingAutoload$";
+        Out() << getIncludeFileName(PLocs[0]);
+        Out() << "\"))) ";
+      }
+      Out() << " __attribute__((annotate(\"$clingAutoload$";
+      Out() << getIncludeFileName(PLocs[PLocs.size() - 1]);
+      Out() << "\"))) ";
+      return;
     }
-    assert(includeEnd && "Cannot find end of #include file name");
 
-//    assert ( file.length() != 0 && "Filename Should not be blank");
-    Out() << " __attribute__((annotate(\"$clingAutoload$"
-          << llvm::StringRef(includeText, includeEnd - includeText);
-    if (!extra.empty())
-      Out() << " " << extra;
+    if (PLocNames.size() > 1) {
+      Out() << " __attribute__((annotate(\"$clingAutoload$";
+      Out() << PLocNames[0];
+      Out() << "\"))) ";
+    }
+    Out() << " __attribute__((annotate(\"$clingAutoload$";
+    Out() << PLocNames[PLocNames.size()-1];
     Out() << "\"))) ";
   }
 
@@ -265,7 +333,7 @@ namespace cling {
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
     Out() << "enum ";
-    prettyPrintAttributes(D,std::to_string(D->isFixed()));
+    prettyPrintAttributes(D);
     if (D->isScoped()) {
       if (D->isScopedUsingClassTag())
         Out() << "class ";
@@ -323,7 +391,7 @@ namespace cling {
       case SC_Extern: Out() << "extern "; break;
       case SC_Static: Out() << "static "; break;
       case SC_PrivateExtern: Out() << "__private_extern__ "; break;
-      case SC_Auto: case SC_Register: case SC_OpenCLWorkGroupLocal:
+      case SC_Auto: case SC_Register:
         llvm_unreachable("invalid for functions");
       }
 
@@ -625,7 +693,7 @@ namespace cling {
     T.removeLocalRestrict();
 //    T.print(Out(), m_Policy, D->getName());
     printDeclType(Out(), T,D->getName());
-    //    llvm::outs()<<D->getName()<<"\n";
+    //    cling::outs()<<D->getName()<<"\n";
     T.addRestrict();
 
     Expr *Init = D->getInit();
@@ -892,8 +960,7 @@ namespace cling {
         D = RD;
     }
 
-    std::string Output;
-    llvm::raw_string_ostream Stream(Output);
+    stdstrstream Stream;
 
     std::string closeBraces;
     if (!isa<TemplateTemplateParmDecl>(D))
@@ -921,8 +988,7 @@ namespace cling {
       }
       Stream << SubStream.take(true);
     }
-    Stream.flush();
-    Out() << Output << closeBraces << '\n';
+    Out() << Stream.str() << closeBraces << '\n';
   }
 
   void ForwardDeclPrinter::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
@@ -1094,15 +1160,23 @@ namespace cling {
     case clang::TemplateArgument::Declaration:
       Visit(TA.getAsDecl());
       break;
-    case clang::TemplateArgument::Template: // intentional fall-through:
-    case clang::TemplateArgument::Pack:
+    case clang::TemplateArgument::Template:
       VisitTemplateName(TA.getAsTemplateOrTemplatePattern());
       break;
+    case clang::TemplateArgument::Pack:
+      for (const auto& arg : TA.pack_elements())
+        VisitTemplateArgument(arg);
+      break;
     case clang::TemplateArgument::Expression:
-      if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(TA.getAsExpr())) {
-        Visit(DRE->getFoundDecl());
-        if (m_SkipFlag) {
-          return;
+      {
+        Expr* TAExpr = TA.getAsExpr();
+        if (CastExpr* CastExpr = dyn_cast<clang::CastExpr>(TAExpr))
+          TAExpr = CastExpr->getSubExpr();
+        if (DeclRefExpr* DRE = dyn_cast<DeclRefExpr>(TAExpr)) {
+          Visit(DRE->getFoundDecl());
+          if (m_SkipFlag) {
+            return;
+          }
         }
       }
       break;

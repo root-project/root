@@ -18,41 +18,46 @@
 
 #include "TVirtualX.h"
 
-//______________________________________________________________________________
-//
-// Abstract base class for viewer manipulators, which allow direct in
-// viewer manipulation of a (TGlPhysicalShape) object - currently
-// translation, scaling and rotation along/round objects local axes.
-// See derived classes for these implementations.
-//
-// This class provides binding to the zero or one manipulated physical,
-// hit testing (selection) for manipulator sub component (widget), and
-// some common mouse action handling/tracking.
+/** \class TGLManip
+\ingroup opengl
+Abstract base class for viewer manipulators, which allow direct in
+viewer manipulation of a (TGlPhysicalShape) object - currently
+translation, scaling and rotation along/round objects local axes.
+See derived classes for these implementations.
+
+This class provides binding to the zero or one manipulated physical,
+hit testing (selection) for manipulator sub component (widget), and
+some common mouse action handling/tracking.
+*/
 
 ClassImp(TGLManip);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a manipulator object, bound to supplied viewer, and no
+/// physical shape.
+
 TGLManip::TGLManip() :
    fShape(0),
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
-   // Construct a manipulator object, bound to supplied viewer, and no
-   // physical shape.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a manipulator object, bound to supplied physical shape.
+
 TGLManip::TGLManip(TGLPhysicalShape* shape) :
    fShape(shape),
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0),
    fLastMouse(0, 0)
 {
-   // Construct a manipulator object, bound to supplied physical shape.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TGLManip::TGLManip(const TGLManip& gm) :
   TVirtualGLManip(gm),
   fShape(gm.fShape),
@@ -61,14 +66,13 @@ TGLManip::TGLManip(const TGLManip& gm) :
   fFirstMouse(gm.fFirstMouse),
   fLastMouse(gm.fLastMouse)
 {
-   // Copy constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TGLManip& TGLManip::operator=(const TGLManip& gm)
 {
-   // Assignement operator.
-
    if(this!=&gm) {
       TVirtualGLManip::operator=(gm);
       fShape=gm.fShape;
@@ -80,17 +84,18 @@ TGLManip& TGLManip::operator=(const TGLManip& gm)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy manipulator object.
+
 TGLManip::~TGLManip()
 {
-   // Destroy manipulator object.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns color to be used for given widget.
+
 const UChar_t* TGLManip::ColorFor(UInt_t widget) const
 {
-   // Returns color to be used for given widget.
-
    if (widget == fSelectedWidget)
    {
       return TGLUtil::fgYellow;
@@ -107,11 +112,11 @@ const UChar_t* TGLManip::ColorFor(UInt_t widget) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a mouse button event - return kTRUE if processed, kFALSE otherwise
+
 Bool_t TGLManip::HandleButton(const Event_t& event, const TGLCamera& /*camera*/)
 {
-   // Handle a mouse button event - return kTRUE if processed, kFALSE otherwise
-
    // Only interested in Left mouse button actions
    if (event.fCode != kButton1) {
       return kFALSE;
@@ -133,31 +138,31 @@ Bool_t TGLManip::HandleButton(const Event_t& event, const TGLCamera& /*camera*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a mouse button event - return kTRUE if widget selection change
+/// kFALSE otherwise
+
 Bool_t TGLManip::HandleMotion(const Event_t&   /*event*/,
                               const TGLCamera& /*camera*/)
 {
-   // Handle a mouse button event - return kTRUE if widget selection change
-   // kFALSE otherwise
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates base and axis scale factor (in world units) for
+/// drawing manipulators with reasonable size range in current
+/// camera.
+
 void TGLManip::CalcDrawScale(const TGLBoundingBox& box,
                              const TGLCamera&      camera,
                              Double_t&             base,
                              TGLVector3            axis[3]) const
 {
-   // Calculates base and axis scale factor (in world units) for
-   // drawing manipulators with reasonable size range in current
-   // camera.
-
    // Calculate a base scale
    base = box.Extents().Mag() / 100.0;
 
    // Clamp this base scale to a viewport pixel range
-   // Allow some variation so zooming is noticable
+   // Allow some variation so zooming is noticeable
    TGLVector3 pixelInWorld = camera.ViewportDeltaToWorld(box.Center(), 1, 1);
    Double_t pixelScale = pixelInWorld.Mag();
    if (base < pixelScale * 3.0) {

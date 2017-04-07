@@ -20,7 +20,8 @@ namespace Browser {
 
 namespace {
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FillVisibleTypes(std::set<TString> &types)
 {
    types.insert("TH1C");
@@ -47,7 +48,8 @@ void FillVisibleTypes(std::set<TString> &types)
 
 const char *errorOptionToString[] = {"", "E", "E1", "E2", "E3", "E4"};
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RemoveErrorDrawOption(TString &options)
 {
    const Ssiz_t pos = options.Index("E");
@@ -64,7 +66,8 @@ void RemoveErrorDrawOption(TString &options)
    }
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RemoveMarkerDrawOption(TString &options)
 {
    const Ssiz_t pos = options.Index("P");
@@ -72,7 +75,8 @@ void RemoveMarkerDrawOption(TString &options)
       options.Remove(pos, 1);
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &option)
 {
    option = "";
@@ -105,14 +109,16 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
 
 }//Unnamed namespace
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FileContainer::FileContainer(const std::string &fileName)
                   : fFileName(fileName)
 {
 }
 
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FileContainer::~FileContainer()
 {
    for (auto dir : fDirectories)
@@ -123,34 +129,39 @@ FileContainer::~FileContainer()
       delete pad;
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 auto FileContainer::GetNumberOfObjects()const -> size_type
 {
    return fObjects.size();
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TObject *FileContainer::GetObject(size_type ind)const
 {
    return fObjects[ind];
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *FileContainer::GetDrawOption(size_type ind)const
 {
    return fOptions[ind].Data();
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Pad *FileContainer::GetPadAttached(size_type ind)const
 {
    return fAttachedPads[ind];
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Nothing to change.
+
 void FileContainer::SetErrorDrawOption(size_type ind, EHistogramErrorOption opt)
 {
-   //Nothing to change.
    if (GetErrorDrawOption(ind) == opt)
       return;
 
@@ -160,7 +171,8 @@ void FileContainer::SetErrorDrawOption(size_type ind, EHistogramErrorOption opt)
    fOptions[ind] += errorOptionToString[opt];
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 EHistogramErrorOption FileContainer::GetErrorDrawOption(size_type ind)const
 {
    const TString &options = fOptions[ind];
@@ -183,7 +195,8 @@ EHistogramErrorOption FileContainer::GetErrorDrawOption(size_type ind)const
    return hetE;
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FileContainer::SetMarkerDrawOption(size_type ind, bool on)
 {
    if (GetMarkerDrawOption(ind) == on)
@@ -195,31 +208,36 @@ void FileContainer::SetMarkerDrawOption(size_type ind, bool on)
       fOptions[ind] += "P";
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 bool FileContainer::GetMarkerDrawOption(size_type ind)const
 {
    return fOptions[ind].Index("P") != kNPOS;
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 auto FileContainer::GetNumberOfDirectories()const -> size_type
 {
    return fDirectories.size();
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FileContainer *FileContainer::GetDirectory(size_type ind)const
 {
    return fDirectories[ind];
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 const char *FileContainer::GetFileName()const
 {
    return fFileName.c_str();
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FileContainer::AttachPads()
 {
    if (!fObjects.size())
@@ -234,19 +252,22 @@ void FileContainer::AttachPads()
    }
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 auto FileContainer::GetNumberOfDescriptors()const -> size_type
 {
    return fContentDescriptors.size();
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 auto FileContainer::GetElementDescriptor(size_type index)const -> const FileContainerElement &
 {
    return fContentDescriptors[index];
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &visibleTypes, FileContainer *currentContainer)
 {
    const TList *objKeys = dir->GetListOfKeys();
@@ -308,7 +329,8 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
    currentContainer->fContentDescriptors.swap(descriptors);
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
 {
    try {
@@ -334,7 +356,8 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
    }
 }
 
-//__________________________________________________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void FileContainer::DeleteFileContainer(FileContainer *container)
 {
    delete container;

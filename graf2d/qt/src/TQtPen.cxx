@@ -27,67 +27,72 @@
 #include <QtGui/QFontMetrics>
 #include <QDebug>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TQtPen default ctor
+
 TQtPen::TQtPen(): QPen(),TAttLine()
 {
-   // TQtPen default ctor
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor to copy ROOT TAttLine object
+
 TQtPen::TQtPen(const TAttLine &line) : QPen()
 {
-   // Copy ctor to copy ROOT TAttLine object
    SetLineAttributes(line);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assigns the  Qt pen attributes from ROOT TAttLine object
+
 TQtPen &TQtPen::operator=(const TAttLine &line)
 {
-   // Assigns the  Qt pen attributes from ROOT TAttLine object
    SetLineAttributes(line);
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Maps the ROOT TAttLine attributes to QPen attributes
+
 void  TQtPen::SetLineAttributes(const TAttLine &lineAttributes)
 {
-   // Maps the ROOT TAttLine attributes to QPen attributes
    SetLineColor(lineAttributes.GetLineColor());
    SetLineStyle(lineAttributes.GetLineStyle());
    SetLineWidth(lineAttributes.GetLineWidth());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set color index for lines*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  =========================
+///*-*  cindex    : color index
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void  TQtPen::SetLineColor(Color_t cindex)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set color index for lines*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  =========================
-//*-*  cindex    : color index
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
   if (fLineColor != cindex) {
     fLineColor = cindex;
     if (fLineColor >= 0)  setColor(gQt->ColorIndex(gQt->UpdateColor(fLineColor)));
   }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==============
+///*-*    Set line style:
+///*-*    if n < 0 use pre-defined Windows style:
+///*-*         0 - solid lines
+///*-*        -1 - solid lines
+///*-*        -2 - dash line
+///*-*        -3 - dot  line
+///*-*        -4 - dash-dot line
+///*-*        -5 - dash-dot-dot line
+///*-*     < -6 - solid line
+///*-*
+///*-*    if n > 0 use dashed lines described by DASH(N)
+///*-*    e.g. n=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
+///*-*    and a gap of 7 between dashes
+///*-*
+
 void  TQtPen::SetLineType(int n, int*dash)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============
-//*-*    Set line style:
-//*-*    if n < 0 use pre-defined Windows style:
-//*-*         0 - solid lines
-//*-*        -1 - solid lines
-//*-*        -2 - dash line
-//*-*        -3 - dot  line
-//*-*        -4 - dash-dot line
-//*-*        -5 - dash-dot-dot line
-//*-*     < -6 - solid line
-//*-*
-//*-*    if n > 0 use dashed lines described by DASH(N)
-//*-*    e.g. n=4,DASH=(6,3,1,3) gives a dashed-dotted line with dash length 6
-//*-*    and a gap of 7 between dashes
-//*-*
 /*
    SetLineStyleString(1," ");
    SetLineStyleString(2,"12 12");
@@ -123,25 +128,25 @@ void  TQtPen::SetLineType(int n, int*dash)
      setDashPattern(dashes);
   }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==============
+///*-*    Use pre-defined Windows style:
+///*-*    linestyle =
+///*-*         0 - solid lines
+///*-*        -1 - solid lines
+///*-*        -2 - dash line
+///*-*        -3 - dot  line
+///*-*        -4 - dash-dot line
+///*-*        -5 - dash-dot-dot line
+///*-*      < -6 - solid line
+///*-*
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Copy/Paste from TGX11::SetLineStyle (it is called "subclassing" ;-)
+/// Set line style.
+
 void  TQtPen::SetLineStyle(Style_t linestyle)
 {
-//*-*-*-*-*-*-*-*-*-*-*Set line style-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                  ==============
-//*-*    Use pre-defined Windows style:
-//*-*    linestyle =
-//*-*         0 - solid lines
-//*-*        -1 - solid lines
-//*-*        -2 - dash line
-//*-*        -3 - dot  line
-//*-*        -4 - dash-dot line
-//*-*        -5 - dash-dot-dot line
-//*-*      < -6 - solid line
-//*-*
-//*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   // Copy/Paste from TGX11::SetLineStyle (it is called "subclassing" ;-)
-   // Set line style.
-
    if (fLineStyle != linestyle) { //set style index only if different
       fLineStyle = linestyle;
       if (linestyle > 0 && linestyle <= 5 ) {
@@ -164,13 +169,14 @@ void  TQtPen::SetLineStyle(Style_t linestyle)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*Set line width*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                  ==============
+///*-*  w   : line width in pixels
+///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
 void  TQtPen::SetLineWidth(Width_t w)
 {
-   //*-*-*-*-*-*-*-*-*-*-*Set line width*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-   //*-*                  ==============
-   //*-*  w   : line width in pixels
-   //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    if (w==1) w =0;
    if (fLineWidth != w) {
       fLineWidth = w;

@@ -10,19 +10,20 @@
 #ifndef CLING_CHECK_EMPTY_TRANSACTION_TRANSFORMER
 #define CLING_CHECK_EMPTY_TRANSACTION_TRANSFORMER
 
-#include "TransactionTransformer.h"
+#include "ASTTransformer.h"
 
 namespace clang {
+  class Decl;
   class Sema;
 }
 
 namespace cling {
 
-  class CheckEmptyTransactionTransformer : public TransactionTransformer {
+  class CheckEmptyTransactionTransformer : public WrapperTransformer {
   public:
     CheckEmptyTransactionTransformer(clang::Sema* S)
-      : TransactionTransformer(S) { }
-    virtual void Transform();
+      : WrapperTransformer(S) { }
+    Result Transform(clang::Decl* D) override;
   };
 } // end namespace cling
 

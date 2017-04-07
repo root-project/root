@@ -8,7 +8,8 @@ ClassImp(TUsrHit)
     ClassImp(TUsrSevtData2)
     ClassImp(TMrbSubevent_Caen)
 
-//______________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    TUsrHit::TUsrHit(Int_t ev) {
    fEventNumber = ev;
    fModuleNumber = ev%4;

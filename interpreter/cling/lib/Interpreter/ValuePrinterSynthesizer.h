@@ -10,16 +10,18 @@
 #ifndef CLING_VALUE_PRINTER_SYNTHESIZER_H
 #define CLING_VALUE_PRINTER_SYNTHESIZER_H
 
-#include "TransactionTransformer.h"
+#include "ASTTransformer.h"
 
 #include <memory>
 
 namespace clang {
   class ASTContext;
   class CompoundStmt;
+  class Decl;
   class FunctionDecl;
   class Expr;
   class Sema;
+  class LookupResult;
 }
 
 namespace llvm {
@@ -28,28 +30,26 @@ namespace llvm {
 
 namespace cling {
 
-  class ValuePrinterSynthesizer : public TransactionTransformer {
+  class ValuePrinterSynthesizer : public WrapperTransformer {
 
   private:
     ///\brief Needed for the AST transformations, owned by Sema.
     ///
     clang::ASTContext* m_Context;
 
-    ///\brief Stream to dump values into.
+    ///\brief cling runtime "Cannot find cling_PrintValue(...)" cache.
     ///
-    std::unique_ptr<llvm::raw_ostream> m_ValuePrinterStream;
+    clang::LookupResult* m_LookupResult;
 
 public:
     ///\ brief Constructs the value printer synthesizer.
     ///
     ///\param[in] S - The semantic analysis object
-    ///\param[in] Stream - The output stream where the value printer will write
-    ///                    to. Defaults to std::cout. Owns the stream.
-    ValuePrinterSynthesizer(clang::Sema* S, llvm::raw_ostream* Stream);
+    ValuePrinterSynthesizer(clang::Sema* S);
 
     virtual ~ValuePrinterSynthesizer();
 
-    virtual void Transform();
+    Result Transform(clang::Decl* D) override;
 
   private:
     ///\brief Tries to attach a value printing mechanism to the given decl group
@@ -64,6 +64,9 @@ public:
     bool tryAttachVP(clang::FunctionDecl* FD);
     clang::Expr* SynthesizeVP(clang::Expr* E);
     unsigned ClearNullStmts(clang::CompoundStmt* CS);
+
+    // Find and cache cling::runtime on first request.
+    void FindAndCacheRuntimeLookupResult(clang::SourceLocation SourceLoc);
   };
 
 } // namespace cling

@@ -84,15 +84,20 @@ double comp_ellint_2(double k) {
 // [5.2.1.6] (complete) elliptic integral of the third kind
 // (26.x.17.2)
 /**
+Complete elliptic integral of the third kind.
 
 There are two different definitions used for the elliptic
 integral of the third kind:
 
-P(\phi,k,n) = \int_0^\phi dt 1/((1 + nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+\f[
+P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 + n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
+\f]
 
 and
 
-P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+\f[
+P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 - n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
+\f]
 
 the former is adopted by
 
@@ -103,7 +108,7 @@ the former is adopted by
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
 - CERNLIB
-     http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
+     https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html
 
    while the latter is used by
 
@@ -221,14 +226,20 @@ double ellint_2(double k, double phi) {
 // (26.x.17.1)
 /**
 
+Incomplete elliptic integral of the third kind.
+
 There are two different definitions used for the elliptic
 integral of the third kind:
 
-P(\phi,k,n) = \int_0^\phi dt 1/((1 + nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+\f[
+P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 + n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
+\f]
 
 and
 
-P(\phi,k,n) = \int_0^\phi dt 1/((1 - nu \sin^2(t))\sqrt(1 - k^2 \sin^2(t)))
+\f[
+P(\phi,k,n) = \int_0^\phi \frac{dt}{(1 - n \sin^2{t})\sqrt{1 - k^2 \sin^2{t}}}
+\f]
 
 the former is adopted by
 
@@ -239,7 +250,7 @@ the former is adopted by
      http://planetmath.org/encyclopedia/EllipticIntegralsAndJacobiEllipticFunctions.html
 
 - CERNLIB
-     http://wwwasdoc.web.cern.ch/wwwasdoc/shortwrupsdir/c346/top.html
+     https://cern-tex.web.cern.ch/cern-tex/shortwrupsdir/c346/top.html
 
    while the latter is used by
 
@@ -270,6 +281,15 @@ double ellint_3(double n, double k, double phi) {
 double expint(double x) {
 
    return gsl_sf_expint_Ei(x);
+
+}
+
+
+// Generalization of expint(x)
+//
+double expint_n(int n, double x) {
+
+   return gsl_sf_expint_En(n, x);
 
 }
 

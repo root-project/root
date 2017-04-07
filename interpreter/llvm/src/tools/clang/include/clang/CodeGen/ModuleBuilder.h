@@ -15,9 +15,9 @@
 #define LLVM_CLANG_CODEGEN_MODULEBUILDER_H
 
 #include "clang/AST/ASTConsumer.h"
-#include <string>
 
 namespace llvm {
+  class Constant;
   class GlobalValue;
   class LLVMContext;
   class Module;
@@ -25,32 +25,82 @@ namespace llvm {
 }
 
 namespace clang {
-  class DiagnosticsEngine;
-  class CoverageSourceInfo;
-  class LangOptions;
   class CodeGenOptions;
+  class CoverageSourceInfo;
   class Decl;
+  class DiagnosticsEngine;
+  class GlobalDecl;
+  class HeaderSearchOptions;
+  class LangOptions;
+  class PreprocessorOptions;
 
-  class CodeGenerator : public ASTConsumer {
-    virtual void anchor();
-  public:
-    virtual llvm::Module* GetModule() = 0;
-    virtual llvm::Module* ReleaseModule() = 0;
-    virtual llvm::Module* StartModule(const std::string& ModuleName,
-                                      llvm::LLVMContext& C) = 0;
-    virtual const Decl *GetDeclForMangledName(llvm::StringRef MangledName) = 0;
-    virtual void print(llvm::raw_ostream& out) = 0;
-    virtual void forgetGlobal(llvm::GlobalValue* GV) = 0;
-  };
-
-  /// CreateLLVMCodeGen - Create a CodeGenerator instance.
-  /// It is the responsibility of the caller to call delete on
-  /// the allocated CodeGenerator instance.
-  CodeGenerator *CreateLLVMCodeGen(DiagnosticsEngine &Diags,
-                                   const std::string &ModuleName,
-                                   const CodeGenOptions &CGO,
-                                   llvm::LLVMContext& C,
-                                   CoverageSourceInfo *CoverageInfo = nullptr);
+namespace CodeGen {
+  class CodeGenModule;
 }
+
+/// The primary public interface to the Clang code generator.
+///
+/// This is not really an abstract interface.
+class CodeGenerator : public ASTConsumer {
+  virtual void anchor();
+
+public:
+  /// Return an opaque reference to the CodeGenModule object, which can
+  /// be used in various secondary APIs.  It is valid as long as the
+  /// CodeGenerator exists.
+  CodeGen::CodeGenModule &CGM();
+
+  /// Return the module that this code generator is building into.
+  ///
+  /// This may return null after HandleTranslationUnit is called;
+  /// this signifies that there was an error generating code.  A
+  /// diagnostic will have been generated in this case, and the module
+  /// will be deleted.
+  ///
+  /// It will also return null if the module is released.
+  llvm::Module *GetModule();
+
+  /// Release ownership of the module to the caller.
+  ///
+  /// It is illegal to call methods other than GetModule on the
+  /// CodeGenerator after releasing its module.
+  llvm::Module *ReleaseModule();
+
+  /// Given a mangled name, return a declaration which mangles that way
+  /// which has been added to this code generator via a Handle method.
+  ///
+  /// This may return null if there was no matching declaration.
+  const Decl *GetDeclForMangledName(llvm::StringRef MangledName);
+
+  /// Return the LLVM address of the given global entity.
+  ///
+  /// \param isForDefinition If true, the caller intends to define the
+  ///   entity; the object returned will be an llvm::GlobalValue of
+  ///   some sort.  If false, the caller just intends to use the entity;
+  ///   the object returned may be any sort of constant value, and the
+  ///   code generator will schedule the entity for emission if a
+  ///   definition has been registered with this code generator.
+  llvm::Constant *GetAddrOfGlobal(GlobalDecl decl, bool isForDefinition);
+
+  void print(llvm::raw_ostream& out);
+  void forgetGlobal(llvm::GlobalValue* GV);
+  void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName);
+  llvm::Module* StartModule(const std::string& ModuleName,
+                            llvm::LLVMContext& C,
+                            const CodeGenOptions& CGO);
+};
+
+/// CreateLLVMCodeGen - Create a CodeGenerator instance.
+/// It is the responsibility of the caller to call delete on
+/// the allocated CodeGenerator instance.
+CodeGenerator *CreateLLVMCodeGen(DiagnosticsEngine &Diags,
+                                 llvm::StringRef ModuleName,
+                                 const HeaderSearchOptions &HeaderSearchOpts,
+                                 const PreprocessorOptions &PreprocessorOpts,
+                                 const CodeGenOptions &CGO,
+                                 llvm::LLVMContext& C,
+                                 CoverageSourceInfo *CoverageInfo = nullptr);
+
+} // end namespace clang
 
 #endif

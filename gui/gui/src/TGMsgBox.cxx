@@ -39,42 +39,42 @@
 ClassImp(TGMsgBox)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a message dialog box.
+
 TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
                    const char *title, const char *msg, const TGPicture *icon,
                    Int_t buttons, Int_t *ret_code, UInt_t options,
                    Int_t text_align) :
    TGTransientFrame(p, main, 10, 10, options)
 {
-   // Create a message dialog box.
-
    if (p)
       PMsgBox(title, msg, icon, buttons, ret_code, text_align);
    else
       MakeZombie();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a message dialog box with the following parameters:.
+///       title: Window title
+///         msg: Message to be shown ('\n' may be used to split it in lines)
+///        icon: Picture to be shown at the left on the dialog window.
+///              It might take any of the following values:
+///              kMBIconStop, kMBIconQuestion,
+///              kMBIconExclamation, kMBIconAsterisk
+///     buttons: Buttons to be shown at the botton of the dialgo window.
+///              Look at EMsgBoxButton for the different possible values.
+///    ret_code: It will hold the value of the button pressed when the
+///              dialog is closed
+///     options: Frame options of this dialog window.
+///  text_align: Align options for 'msg'. See ETextJustification for the values.
+
 TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
                    const char *title, const char *msg, EMsgBoxIcon icon,
                    Int_t buttons, Int_t *ret_code, UInt_t options,
                    Int_t text_align) :
    TGTransientFrame(p, main, 10, 10, options)
 {
-   // Create a message dialog box with the following parameters:.
-   //       title: Window title
-   //         msg: Message to be shown ('\n' may be used to split it in lines)
-   //        icon: Picture to be shown at the left on the dialog window.
-   //              It might take any of the following values:
-   //              kMBIconStop, kMBIconQuestion,
-   //              kMBIconExclamation, kMBIconAsterisk
-   //     buttons: Buttons to be shown at the botton of the dialgo window.
-   //              Look at EMsgBoxButton for the different possible values.
-   //    ret_code: It will hold the value of the button pressed when the
-   //              dialog is closed
-   //     options: Frame options of this dialog window.
-   //  text_align: Align options for 'msg'. See ETextJustification for the values.
-
    const TGPicture *icon_pic;
 
    switch (icon) {
@@ -109,13 +109,13 @@ TGMsgBox::TGMsgBox(const TGWindow *p, const TGWindow *main,
       MakeZombie();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Protected, common message dialog box initialization.
+
 void TGMsgBox::PMsgBox(const char *title, const char *msg,
                        const TGPicture *icon, Int_t buttons, Int_t *ret_code,
                        Int_t text_align)
 {
-   // Protected, common message dialog box initialization.
-
    UInt_t nb, width, height;
 
    fYes = fNo = fOK = fApply = fRetry = fIgnore = fCancel = fClose =
@@ -313,11 +313,11 @@ void TGMsgBox::PMsgBox(const char *title, const char *msg,
    fClient->WaitFor(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy message dialog box.
+
 TGMsgBox::~TGMsgBox()
 {
-   // Destroy message dialog box.
-
    if (IsZombie()) return;
    if (fYes)     delete fYes;
    if (fNo)      delete fNo;
@@ -342,21 +342,21 @@ TGMsgBox::~TGMsgBox()
    delete fL1; delete fL2; delete fL3; delete fL4; delete fL5;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close dialog box. Before deleting itself it sets the return code
+/// to kMBClose.
+
 void TGMsgBox::CloseWindow()
 {
-   // Close dialog box. Before deleting itself it sets the return code
-   // to kMBClose.
-
    if (fRetCode) *fRetCode = kMBClose;
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process message dialog box event.
+
 Bool_t TGMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process message dialog box event.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -375,11 +375,11 @@ Bool_t TGMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle enter and escape keys (used as Ok and Cancel for now).
+
 Bool_t TGMsgBox::HandleKey(Event_t* event)
 {
-   // Handle enter and escape keys (used as Ok and Cancel for now).
-
    if (event->fType == kGKeyPress) {
       UInt_t keysym;
       char input[10];

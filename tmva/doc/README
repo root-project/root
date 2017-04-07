@@ -2,6 +2,7 @@
          T M V A   ---   Toolkit for Multivariate Data Analysis with ROOT
 ========================================================================================
 
+
 TMVA Users Guide    : http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf
 TMVA home page      : http://tmva.sourceforge.net/
 TMVA download page  : http://sourceforge.net/projects/tmva
@@ -9,6 +10,17 @@ TMVA mailing list   : http://sourceforge.net/mailarchive/forum.php?forum_name=tm
 TMVA license (BSD)  : http://tmva.sourceforge.net/LICENSE
 
 ========================================================================================
+
+!!!!!
+From release 4.2.1 the integration of TMVA into root has been improved, such that
+there is no need for a particular "setup.sh" script, setting of 'macropath' or
+copying of 'evaluation macros' necessary anymore !
+
+All the evaluation macros are now part of the TMVA library libTMVA.so
+
+Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/tmva/
+!!!!!
+ 
 
 System requirements:
 --------------------
@@ -19,42 +31,19 @@ System requirements:
   (type "root-config --version" to see the version installed)
 
 ========================================================================================
-
 Getting Started: 
 ----------------
-
-  How to compile the code (as standalone TMVA, outside the general ROOT built) :
-  -------------------------------------------------------------------------------
-  /home> cd TMVA
-  /home/TMVA> make                   # compile and build the library lib/libTMVA.1.so
-  then, in order to pick up THIS TMVA libraries, and not those that are probably 
-  included in your ROOT distribution, you have to go into your working directory and
-  do:
-
-  /home/YOURWORKDIR> cp /home/TMVA/test/setup.(c)sh  .    
-  /home/YOURWORKDIR> source setup.(c)sh /home/TMVA  (or whatever the path of your TMVA installation is) 
-
-  (where /home/TMVA shuld be replaced by whatever directory your TMVA installation might be in)
-
-  How to run the code as ROOT macro: # training/testing of an academic example
-  In the directory /home/TMVA/test  
-  you find a number of example macros  AND utility macros that are used by TMVA
-  (like the TMVAGui.C  etc) As these macros are needed for everything including
-  the 'evaluation macros' called by the TMVAGui.C, make sure the path to this
-  directory is included in your ROOT macro paths:
-  i.e. you find a line in the .rootrc like:
-       Unix.*.Root.MacroPath:   .:$TMVASYS/test
-  (this will be done by running the 'setup.sh' .. unless you already have a
-  different .rootrc in your workig directory)
-  ----------------------------------------------------------------------------
-
+  Example scripts of how to run TMVA are availabe in $ROOTSYS/tutorials/tmva/
+  
+  please simply copy one of those scripts to you 'work' directory  
+  
   --- For classification:
-  /home/TMVA/test> root -l TMVAClassification.C                       # run all standard classifiers (takes a while)
-  /home/TMVA/test> root -l TMVAClassification.C\(\"LD,Likelihood\"\)  # run LD and Likelihood classifiers
+  ~/myTMVAwork> root -l TMVAClassification.C                       # run all standard classifiers (takes a while)
+  ~/myTMVAWork> root -l TMVAClassification.C\(\"LD,Likelihood\"\)  # run LD and Likelihood classifiers
 
   --- For regression:
-  /home/TMVA/test> root -l TMVARegression.C                           # run all regression algorithms n(takes a while)
-  /home/TMVA/test> root -l TMVARegression.C\(\"LD,KNN\"\)             # run LD and k-NN regression algorithms
+  ~/myTMVAwork> root -l TMVARegression.C                           # run all regression algorithms n(takes a while)
+  ~/myTMVAwork> root -l TMVARegression.C\(\"LD,KNN\"\)             # run LD and k-NN regression algorithms
 
   --> at the end of the jobs, a GUI will pop up: try to click through all the buttons;
       some of the lower buttons are method-specific, and will only work when the
@@ -63,36 +52,27 @@ Getting Started:
 
   How to run the code as an executable: 
   -------------------------------------
-  /home/TMVA/test> make
-  /home/TMVA/test> ./TMVAClassification                              # run all standard classifiers 
-  /home/TMVA/test> ./TMVAClassification LD Likelihood                # run LD and Likelihood classifiers 
+  Get an example code/makefile from $ROOTSYS/tuturial/tmva
+  ~/myTMVAwork> make TMVAClassification
+  ~/myTMVAwork> ./TMVAClassification                              # run all standard classifiers 
+  ~/myTMVAwork> ./TMVAClassification LD Likelihood                # run LD and Likelihood classifiers 
 
   ... and similarly for regression
 
-  /home/TMVA/test> root -l TMVAGui.C   # start the GUI
-
-  How to run the code as an python script using PyROOT: 
-  -------------------------------------
-  /home/TMVA/test> make
-  /home/TMVA/test> python ./TMVAClassification.py --method LD,Likelihood
+  ~/myTMVAwork> root -l 
+  ~/myTMVAwork> TMVA::Tools::Instance()  #setup TMVA (loads the library)           
+  ~/myTMVAwork> TMVA::TMVAGui()   #starts the Gui on the 'default tmva ouput file' TMVA.root   
+  ~/myTMVAwork> TMVA::TMVAGui("TheFileCreatedByYourTraining.root"   # start the GUI
 
   How to apply the TMVA methods:
   -------------------------------------
-  /home/TMVA> cd test
 
   --- For classification:
-  /home/TMVA/test> root -l TMVAClassificationApplication.C                
-  /home/TMVA/test> root -l TMVAClassificationApplication.C\(\"LD,Likelihood\"\) 
+  ~/myTMVAwork> root -l TMVAClassificationApplication.C                
+  ~/myTMVAwork> root -l TMVAClassificationApplication.C\(\"LD,Likelihood\"\) 
 
   ... and similar for regression.
   ... and similar for executables.
-
-  The directory structure:
-  ------------------------
-  inc/          : the TMVA class headers
-  src/          : the TMVA class source
-  lib/          : here you'll find the TMVA library (libTMVA.1.so) after compilation
-  test/         : example code for analysis macros and executables, the GUI and analysis scripts.
 
 ========================================================================================
 

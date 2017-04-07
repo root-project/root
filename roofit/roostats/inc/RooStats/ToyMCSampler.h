@@ -13,27 +13,8 @@
 #ifndef ROOSTATS_ToyMCSampler
 #define ROOSTATS_ToyMCSampler
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-ToyMCSampler is an implementation of the TestStatSampler interface.
-It generates Toy Monte Carlo for a given parameter point and evaluates a
-TestStatistic.
-</p>
 
-<p>
-For parallel runs, ToyMCSampler can be given an instance of ProofConfig
-and then run in parallel using proof or proof-lite. Internally, it uses
-ToyMCStudy with the RooStudyManager.
-</p>
-END_HTML
-*/
-//
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 #include <sstream>
@@ -55,11 +36,7 @@ namespace RooStats {
 
   class DetailedOutputAggregator;
 
-// only used inside ToyMCSampler, ie "private" in the cxx file
 class NuisanceParametersSampler {
-   // Helper for ToyMCSampler. Handles all of the nuisance parameter related
-   // functions. Once instantiated, it gives a new nuisance parameter point
-   // at each call to nextPoint(...).
 
    public:
       NuisanceParametersSampler(RooAbsPdf *prior=NULL, const RooArgSet *parameters=NULL, Int_t nToys=1000, Bool_t asimov=kFALSE) :
@@ -98,7 +75,7 @@ class ToyMCSampler: public TestStatSampler {
       ToyMCSampler();
       ToyMCSampler(TestStatistic &ts, Int_t ntoys);
       virtual ~ToyMCSampler();
-   
+
       static void SetAlwaysUseMultiGen(Bool_t flag);
 
       void SetUseMultiGen(Bool_t flag) { fUseMultiGen = flag ; }
@@ -109,10 +86,10 @@ class ToyMCSampler: public TestStatSampler {
       virtual RooDataSet* GetSamplingDistributionsSingleWorker(RooArgSet& paramPoint);
 
       virtual SamplingDistribution* AppendSamplingDistribution(
-         RooArgSet& allParameters, 
-         SamplingDistribution* last, 
-			Int_t additionalMC
-		);
+         RooArgSet& allParameters,
+         SamplingDistribution* last,
+         Int_t additionalMC
+      );
 
 
       // The pdf can be NULL in which case the density from SetPdf()
@@ -124,11 +101,9 @@ class ToyMCSampler: public TestStatSampler {
          }
 
          //if( t == NULL && fTestStatistics.size() >= 1 ) t = fTestStatistics[0];
-         
+
          fTestStatistics.push_back( t );
-      }      
-
-
+      }
 
       // generates toy data
       //   without weight
@@ -159,7 +134,7 @@ class ToyMCSampler: public TestStatSampler {
          return fTestStatistics[i];
       }
       virtual TestStatistic* GetTestStatistic(void) const { return GetTestStatistic(0); }
-      
+
       virtual Double_t ConfidenceLevel() const { return 1. - fSize; }
       virtual void Initialize(
          RooAbsArg& /*testStatistic*/,
@@ -185,11 +160,11 @@ class ToyMCSampler: public TestStatSampler {
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; ClearCache(); }
 
       // How to randomize the prior. Set to NULL to deactivate randomization.
-      virtual void SetPriorNuisance(RooAbsPdf* pdf) { 
-         fPriorNuisance = pdf; 
-         if (fNuisanceParametersSampler) { 
-            delete fNuisanceParametersSampler; 
-            fNuisanceParametersSampler = NULL; 
+      virtual void SetPriorNuisance(RooAbsPdf* pdf) {
+         fPriorNuisance = pdf;
+         if (fNuisanceParametersSampler) {
+            delete fNuisanceParametersSampler;
+            fNuisanceParametersSampler = NULL;
          }
       }
       // specify the nuisance parameters (eg. the rest of the parameters)
@@ -211,10 +186,10 @@ class ToyMCSampler: public TestStatSampler {
             oocoutE((TObject*)NULL,InputArguments) << "Cannot set test statistic for this index." << std::endl;
             return;
          }
-	 if( fTestStatistics.size() == i)
-		 fTestStatistics.push_back(testStatistic);
-	 else
-		 fTestStatistics[i] = testStatistic;
+    if( fTestStatistics.size() == i)
+       fTestStatistics.push_back(testStatistic);
+    else
+       fTestStatistics[i] = testStatistic;
       }
       virtual void SetTestStatistic(TestStatistic *t) { return SetTestStatistic(t,0); }
 
@@ -258,7 +233,7 @@ class ToyMCSampler: public TestStatSampler {
       void SetProofConfig(ProofConfig *pc = NULL) { fProofConfig = pc; }
 
       void SetProtoData(const RooDataSet* d) { fProtoData = d; }
-      
+
    protected:
 
       const RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg);
@@ -300,21 +275,21 @@ class ToyMCSampler: public TestStatSampler {
       Double_t fAdaptiveHighLimit;
 
       const RooDataSet *fProtoData; // in dev
-      
+
       ProofConfig *fProofConfig;   //!
-      
+
       mutable NuisanceParametersSampler *fNuisanceParametersSampler; //!
 
       // objects below cache information and are mutable and non-persistent
-      mutable RooArgSet* _allVars ; //! 
+      mutable RooArgSet* _allVars ; //!
       mutable std::list<RooAbsPdf*> _pdfList ; //!
       mutable std::list<RooArgSet*> _obsList ; //!
-      mutable std::list<RooAbsPdf::GenSpec*> _gsList ; //!      
-      mutable RooAbsPdf::GenSpec* _gs1 ; //! GenSpec #1 
+      mutable std::list<RooAbsPdf::GenSpec*> _gsList ; //!
+      mutable RooAbsPdf::GenSpec* _gs1 ; //! GenSpec #1
       mutable RooAbsPdf::GenSpec* _gs2 ; //! GenSpec #2
       mutable RooAbsPdf::GenSpec* _gs3 ; //! GenSpec #3
       mutable RooAbsPdf::GenSpec* _gs4 ; //! GenSpec #4
-      
+
       static Bool_t fgAlwaysUseMultiGen ;  // Use PrepareMultiGen always
       Bool_t fUseMultiGen ; // Use PrepareMultiGen?
 

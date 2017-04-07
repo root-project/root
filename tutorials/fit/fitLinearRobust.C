@@ -1,3 +1,20 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -js
+/// This tutorial shows how the least trimmed squares regression,
+/// included in the TLinearFitter class, can be used for fitting
+/// in cases when the data contains outliers.
+/// Here the fitting is done via the TGraph::Fit function with option "rob":
+/// If you want to use the linear fitter directly for computing
+/// the robust fitting coefficients, just use the TLinearFitter::EvalRobust
+/// function instead of TLinearFitter::Eval
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Anna Kreshuk
+
 #include "TRandom.h"
 #include "TGraphErrors.h"
 #include "TF1.h"
@@ -6,15 +23,6 @@
 
 void fitLinearRobust()
 {
-//This tutorial shows how the least trimmed squares regression,
-//included in the TLinearFitter class, can be used for fitting
-//in cases when the data contains outliers.
-//Here the fitting is done via the TGraph::Fit function with option "rob":
-//If you want to use the linear fitter directly for computing
-//the robust fitting coefficients, just use the TLinearFitter::EvalRobust
-//function instead of TLinearFitter::Eval
-//Author: Anna Kreshuk
-
    //First generate a dataset, where 20% of points are spoiled by large
    //errors
    Int_t npoints = 250;
@@ -45,7 +53,6 @@ void fitLinearRobust()
    ffit1->SetLineColor(kBlue);
    ffit2->SetLineColor(kRed);
    TCanvas *myc = new TCanvas("myc", "Linear and robust linear fitting");
-   myc->SetFillColor(42);
    myc->SetGrid();
    grr->Draw("ap");
    //first, let's try to see the result sof ordinary least-squares fit:
@@ -66,7 +73,6 @@ void fitLinearRobust()
    TLegend *leg = new TLegend(0.6, 0.8, 0.89, 0.89);
    leg->AddEntry(ffit1, "Ordinary least squares", "l");
    leg->AddEntry(ffit2, "LTS regression", "l");
-   leg->SetFillColor(42);
    leg->Draw();
 
    delete [] x;

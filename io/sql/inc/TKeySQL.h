@@ -13,17 +13,7 @@
 #ifndef ROOT_TKeySQL
 #define ROOT_TKeySQL
 
-
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TKeySQL is TKey class from TSQLFile                                 //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TKey
 #include "TKey.h"
-#endif
 
 class TSQLFile;
 
@@ -40,8 +30,8 @@ protected:
    void              StoreKeyObject(const void* obj, const TClass* cl);
    void*             ReadKeyObject(void* obj, const TClass* expectedClass);
 
-   Long64_t          fKeyId;    //!  key identifier in KeysTables
-   Long64_t          fObjId;    //!  stored object identifer
+   Long64_t          fKeyId;    ///<!  key identifier in KeysTables
+   Long64_t          fObjId;    ///<!  stored object identifer
 
 public:
    TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const char* title = 0);

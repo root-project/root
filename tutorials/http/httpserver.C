@@ -1,3 +1,21 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program creates :
+///    - a one dimensional histogram
+///    - a two dimensional histogram
+///    - a profile histogram
+///    - a memory-resident ntuple
+///
+///  These objects are filled with some random numbers and saved on a in-memory file.
+///  All objects can be seen in web browser is open url:
+/// ~~~
+///      http://localhost:8080
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 #include <TFile.h>
 #include <TMemFile.h>
 #include <TNtuple.h>
@@ -14,14 +32,6 @@
 
 void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
 {
-//  This program creates :
-//    - a one dimensional histogram
-//    - a two dimensional histogram
-//    - a profile histogram
-//    - a memory-resident ntuple
-//
-//  These objects are filled with some random numbers and saved on a in-memory file.
-
    TString filename = Form("%s.root", jobname);
    TFile *hfile = new TMemFile(filename,"RECREATE","Demo ROOT file with histograms");
 
@@ -35,13 +45,20 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
 
 
    // http server with port 8080, use jobname as top-folder name
-   THttpServer* serv = new THttpServer(Form("http:8080/none?top=%s", jobname));
+   THttpServer* serv = new THttpServer(Form("http:8080?top=%s", jobname));
 
    // fastcgi server with port 9000, use jobname as top-folder name
-   // THttpServer* serv = new THttpServer(Form("fastcgi:9000/none?top=%s_fastcgi", jobname));
+   // THttpServer* serv = new THttpServer(Form("fastcgi:9000?top=%s_fastcgi", jobname));
 
    // dabc agent, connects to DABC master_host:1237, works only when DABC configured
-   // THttpServer* serv = new THttpServer(Form("dabc:master_host:1237/none?top=%s_dabc", jobname));
+   // THttpServer* serv = new THttpServer(Form("dabc:master_host:1237?top=%s_dabc", jobname));
+
+   // when read-only mode disabled one could execute object methods like TTree::Draw()
+   serv->SetReadOnly(kFALSE);
+
+   // One could specify location of newer version of JSROOT
+   // serv->SetJSROOT("https://root.cern.ch/js/latest/");
+   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
 
    gBenchmark->Start(jobname);
 

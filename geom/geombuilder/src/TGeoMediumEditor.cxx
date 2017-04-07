@@ -1,5 +1,5 @@
 // @(#):$Id: c816a00a89512fcc6cd4a75fb1343c76ebaa3c24 $
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,9 +10,9 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoMediumEditor - Editor class for TGeo tracking media
-//                                                                      
+//
 //______________________________________________________________________________
 
 #include "TGeoMediumEditor.h"
@@ -39,18 +39,19 @@ enum ETGeoMediumWid {
    kMED_APPLY, kMED_CANCEL, kMED_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for medium editor
+
 TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for medium editor   
    fMedium   = 0;
    fIsEditable = kFALSE;
    fIsModified = kFALSE;
    Pixel_t color;
    TGLabel *label;
-      
+
    // TextEntry for medium name
    MakeTitle("Name");
    fMedName = new TGTextEntry(this, "", kMED_NAME);
@@ -95,9 +96,9 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fEditMaterial = new TGTextButton(f1, "Edit");
    f1->AddFrame(fEditMaterial, new TGLayoutHints(kLHintsLeft, 1, 1, 2, 2));
    fEditMaterial->SetToolTipText("Edit selected material");
-   fEditMaterial->Associate(this);   
+   fEditMaterial->Associate(this);
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
-   
+
 // Combo box for magnetic field option
    f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Mag. field option"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
@@ -142,7 +143,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fMedTmaxfd->Resize(90, fMedTmaxfd->GetDefaultHeight());
    f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    // Number entry for stemax
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -190,7 +191,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fMedStmin->Resize(90, fMedStmin->GetDefaultHeight());
    f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
    compxyz->AddFrame(f6, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
-   
+
    compxyz->Resize(160,50);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
 
@@ -202,28 +203,30 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMediumEditor::~TGeoMediumEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsA() == TGCompositeFrame::Class()  ||
           el->fFrame->IsA() == TGHorizontalFrame::Class() ||
-          el->fFrame->IsA() == TGVerticalFrame::Class()) 
+          el->fFrame->IsA() == TGVerticalFrame::Class())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoMediumEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoMediumEditor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoMediumEditor", this, "DoUndo()");
    fMedName->Connect("TextChanged(const char *)", "TGeoMediumEditor", this, "DoMedName()");
@@ -241,14 +244,15 @@ void TGeoMediumEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoMediumEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || !(obj->IsA()==TGeoMedium::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fMedium = (TGeoMedium*)obj;
    const char *sname = fMedium->GetName();
    if (!strcmp(sname, fMedium->ClassName())) fMedName->SetText("");
@@ -266,8 +270,8 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       fMagfldOption->AddEntry("User decision", 1);
       fMagfldOption->AddEntry("Runge-Kutta", 2);
       fMagfldOption->AddEntry("Helix", 3);
-      fMagfldOption->AddEntry("Helix3", 4);      
-      fMagfldOption->AddEntry("Unknown option", 5);      
+      fMagfldOption->AddEntry("Helix3", 4);
+      fMagfldOption->AddEntry("Unknown option", 5);
    }
    Int_t ifld = (Int_t)fMedium->GetParam(1);
    switch (ifld) {
@@ -277,7 +281,7 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       case -1:
          fMagfldOption->Select(1);
          break;
-      case 1:      
+      case 1:
          fMagfldOption->Select(2);
          break;
       case 2:
@@ -289,7 +293,7 @@ void TGeoMediumEditor::SetModel(TObject* obj)
       default:
          fMagfldOption->Select(5);
          break;
-   }         
+   }
 
    fMedFieldm->SetNumber(fMedium->GetParam(2));
    fMedTmaxfd->SetNumber(fMedium->GetParam(3));
@@ -297,137 +301,151 @@ void TGeoMediumEditor::SetModel(TObject* obj)
    fMedDeemax->SetNumber(fMedium->GetParam(5));
    fMedEpsil->SetNumber(fMedium->GetParam(6));
    fMedStmin->SetNumber(fMedium->GetParam(7));
-   
+
    fUndo->SetEnabled(kFALSE);
    fIsModified = kFALSE;
-   
-   
+
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Edit selected material.
+
 void TGeoMediumEditor::DoEditMaterial()
 {
-// Edit selected material.
    fTabMgr->GetMaterialEditor(fMedium->GetMaterial());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for medium name.
+
 void TGeoMediumEditor::DoMedName()
 {
-// Slot for medium name.
    const char *name = fMedName->GetText();
    if (!name[0] || !strcmp(name, fMedium->GetName())) return;
    fMedium->SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for medium id.
+
 void TGeoMediumEditor::DoMedId()
 {
-// Slot for medium id.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the material component.
+
 void TGeoMediumEditor::DoSelectMaterial()
 {
-// Select the material component.
    TGeoMaterial *material = fSelectedMaterial;
-   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);  
+   new TGeoMaterialDialog(fBSelMaterial, gClient->GetRoot(), 200,300);
    fSelectedMaterial = (TGeoMaterial*)TGeoMaterialDialog::GetSelected();
    if (fSelectedMaterial) fLSelMaterial->SetText(fSelectedMaterial->GetName());
    else fSelectedMaterial = material;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for sensitivity.
+
 void TGeoMediumEditor::DoToggleSensitive()
 {
-// Slot for sensitivity.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for mag. field.
+
 void TGeoMediumEditor::DoMagfldSelect(Int_t)
 {
-// Slot for mag. field.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for max field.
+
 void TGeoMediumEditor::DoFieldm()
 {
-// Slot for max field.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for tmaxfd.
+
 void TGeoMediumEditor::DoTmaxfd()
 {
-// Slot for tmaxfd.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for the max allowed step.
+
 void TGeoMediumEditor::DoStemax()
 {
-// Slot for the max allowed step.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for the maximum allowed dedx.
+
 void TGeoMediumEditor::DoDeemax()
 {
-// Slot for the maximum allowed dedx.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for tracking precision.
+
 void TGeoMediumEditor::DoEpsil()
 {
-// Slot for tracking precision.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for min. step.
+
 void TGeoMediumEditor::DoStmin()
 {
-// Slot for min. step.
    fIsModified = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoMediumEditor::DoApply()
 {
-// Slot for applying modifications.
    if (!fIsModified) return;
    Double_t isvol = (fMedSensitive->IsOn())?1:0;
    Double_t ifield = fMagfldOption->GetSelected();
    if (ifield>0) {
       ifield -= 1.;
       if (ifield < 1.) ifield -= 1.;
-   }   
+   }
    Double_t fieldm = fMedFieldm->GetNumber();
    Double_t tmaxfd = fMedTmaxfd->GetNumber();
    Double_t stemax = fMedStemax->GetNumber();
    Double_t deemax = fMedDeemax->GetNumber();
    Double_t epsil = fMedEpsil->GetNumber();
    Double_t stmin = fMedStmin->GetNumber();
-   
-   fMedium->SetParam(0,isvol); 
-   fMedium->SetParam(1,ifield); 
-   fMedium->SetParam(2,fieldm); 
-   fMedium->SetParam(3,tmaxfd); 
-   fMedium->SetParam(4,stemax); 
-   fMedium->SetParam(5,deemax); 
-   fMedium->SetParam(6,epsil); 
-   fMedium->SetParam(7,stmin); 
+
+   fMedium->SetParam(0,isvol);
+   fMedium->SetParam(1,ifield);
+   fMedium->SetParam(2,fieldm);
+   fMedium->SetParam(3,tmaxfd);
+   fMedium->SetParam(4,stemax);
+   fMedium->SetParam(5,deemax);
+   fMedium->SetParam(6,epsil);
+   fMedium->SetParam(7,stmin);
    if (strcmp(fMedium->GetName(), fMedName->GetText())) fMedium->SetName(fMedName->GetText());
    if (fMedium->GetId() != fMedId->GetIntNumber()) fMedium->SetId(fMedId->GetIntNumber());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoMediumEditor::DoUndo()
 {
-// Slot for undoing last operation.
 }
-   
+

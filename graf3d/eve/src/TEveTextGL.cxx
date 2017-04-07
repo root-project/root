@@ -18,49 +18,47 @@
 #include "TGLIncludes.h"
 #include "TGLBoundingBox.h"
 
-//______________________________________________________________________________
-//
-// OpenGL renderer class for TEveText.
-//
+/** \class TEveTextGL
+\ingroup TEve
+OpenGL renderer class for TEveText.
+*/
 
 ClassImp(TEveTextGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveTextGL::TEveTextGL() :
    TGLObject(),
    fM(0),
    fFont()
 {
-   // Constructor.
-
    fDLCache = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveTextGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveText>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveTextGL::SetBBox()
 {
-   // Set bounding box.
-
    fBoundingBox.SetEmpty();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Actual rendering code.
+/// Virtual from TGLLogicalShape.
 
-//______________________________________________________________________________
 void TEveTextGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Actual rendering code.
-   // Virtual from TGLLogicalShape.
-
    static const TEveException eH("TEveTextGL::DirectDraw ");
 
    Int_t fm = fM->GetFontMode();

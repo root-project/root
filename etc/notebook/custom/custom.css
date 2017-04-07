@@ -1,0 +1,36 @@
+/* JupyROOT CSS */
+
+div#ipython_notebook img {
+display:block;
+background: url(root-banner_99x33.jpg) no-repeat;
+width: 99px;
+height: 33px;
+padding-left: 99px;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+}
+
+span#login_widget {
+padding-left: 2px;
+}
+
+span#kernel_logo_widget img {
+display: block;
+background: url(root-logo-darkblue_33x33.png) no-repeat;
+width: 33px;
+height: 33px;
+padding-left: 33px;
+-moz-box-sizing: border-box;
+box-sizing: border-box;
+}
+
+div#root_banner {
+padding-top: 15px;
+padding-bottom: 10px;
+}
+
+div#root_banner img {
+display: block;
+margin: 0 auto;
+}
+

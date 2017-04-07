@@ -18,35 +18,25 @@
 #define ROOT_Math_DistFunc
 
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 
 
 
 // pdf functions from MathCore
-#ifndef ROOT_Math_PdfFuncMathCore
 #include "Math/PdfFuncMathCore.h"
-#endif
 
 // all cdf are in MathCore now
-#ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
-#endif
 
 //quantiles functions from mathcore
-#ifndef ROOT_Math_QuantFuncMathCore
 #include "Math/QuantFuncMathCore.h"
-#endif
 
 // include distributions from MathMore when is there
 #ifdef R__HAS_MATHMORE
 
 // // extra pdf functions from MathMore
-#ifndef ROOT_Math_PdfFuncMathMore
 #include "Math/PdfFuncMathMore.h"
-#endif
 
 // no -more extra cdf in MathMore
 // #ifndef ROOT_Math_ProbFuncMathMore
@@ -54,9 +44,7 @@
 // #endif
 
 // inverse (quantiles) are all in mathmore
-#ifndef ROOT_Math_QuantFuncMathMore
 #include "Math/QuantFuncMathMore.h"
-#endif
 
 #endif
 

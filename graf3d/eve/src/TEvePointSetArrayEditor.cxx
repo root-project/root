@@ -22,13 +22,16 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-//
-// Editor for TEvePointSetArray class.
+/** \class TEvePointSetArrayEditor
+\ingroup TEve
+Editor for TEvePointSetArray class.
+*/
 
 ClassImp(TEvePointSetArrayEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
                                                  Int_t width, Int_t height,
                                                  UInt_t options, Pixel_t back) :
@@ -36,8 +39,6 @@ TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
    fM(0),
    fRange(0)
 {
-   // Constructor.
-
    fM = 0;
    MakeTitle("TEvePointSetArray");
 
@@ -50,19 +51,18 @@ TEvePointSetArrayEditor::TEvePointSetArrayEditor(const TGWindow *p,
    AddFrame(fRange, new TGLayoutHints(kLHintsTop, 1, 1, 2, 1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEvePointSetArrayEditor::~TEvePointSetArrayEditor()
 {
-   // Destructor.
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEvePointSetArrayEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEvePointSetArray*>(obj);
 
    // printf("FullRange(%f, %f) Selected(%f,%f)\n",
@@ -72,13 +72,11 @@ void TEvePointSetArrayEditor::SetModel(TObject* obj)
    fRange->SetValues(fM->fCurMin, fM->fCurMax);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting the range of the separating quantity.
 
-//______________________________________________________________________________
 void TEvePointSetArrayEditor::DoRange()
 {
-   // Slot for setting the range of the separating quantity.
-
    fM->SetRange(fRange->GetMin(), fRange->GetMax());
    Update();
 }

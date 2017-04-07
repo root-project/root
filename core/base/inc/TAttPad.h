@@ -13,38 +13,28 @@
 #define ROOT_TAttPad
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttPad                                                              //
-//                                                                      //
-// Pad attributes.                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TAttPad {
 protected:
-   Float_t     fLeftMargin;      //LeftMargin
-   Float_t     fRightMargin;     //RightMargin
-   Float_t     fBottomMargin;    //BottomMargin
-   Float_t     fTopMargin;       //TopMargin
-   Float_t     fXfile;           //X position where to draw the file name
-   Float_t     fYfile;           //Y position where to draw the file name
-   Float_t     fAfile;           //Alignment for the file name
-   Float_t     fXstat;           //X position where to draw the statistics
-   Float_t     fYstat;           //Y position where to draw the statistics
-   Float_t     fAstat;           //Alignment for the statistics
-   Color_t     fFrameFillColor;  //pad frame fill color
-   Color_t     fFrameLineColor;  //pad frame line color
-   Style_t     fFrameFillStyle;  //pad frame fill style
-   Style_t     fFrameLineStyle;  //pad frame line style
-   Width_t     fFrameLineWidth;  //pad frame line width
-   Width_t     fFrameBorderSize; //pad frame border size
-   Int_t       fFrameBorderMode; //pad frame border mode
+   Float_t     fLeftMargin;      ///< LeftMargin
+   Float_t     fRightMargin;     ///< RightMargin
+   Float_t     fBottomMargin;    ///< BottomMargin
+   Float_t     fTopMargin;       ///< TopMargin
+   Float_t     fXfile;           ///< X position where to draw the file name
+   Float_t     fYfile;           ///< Y position where to draw the file name
+   Float_t     fAfile;           ///< Alignment for the file name
+   Float_t     fXstat;           ///< X position where to draw the statistics
+   Float_t     fYstat;           ///< Y position where to draw the statistics
+   Float_t     fAstat;           ///< Alignment for the statistics
+   Color_t     fFrameFillColor;  ///< Pad frame fill color
+   Color_t     fFrameLineColor;  ///< Pad frame line color
+   Style_t     fFrameFillStyle;  ///< Pad frame fill style
+   Style_t     fFrameLineStyle;  ///< Pad frame line style
+   Width_t     fFrameLineWidth;  ///< Pad frame line width
+   Width_t     fFrameBorderSize; ///< Pad frame border size
+   Int_t       fFrameBorderMode; ///< Pad frame border mode
 
 public:
    TAttPad();

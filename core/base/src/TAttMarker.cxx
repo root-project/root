@@ -20,67 +20,66 @@
 
 ClassImp(TAttMarker)
 
+/** \class TAttMarker
+\ingroup Base
+\ingroup GraphicsAtt
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Marker Attributes class</h2></center>
+Marker Attributes class.
 
 This class is used (in general by secondary inheritance)
 by many other classes (graphics, histograms). It holds all the markers
 attributes.
 
-<h3>Marker attributes</h3>
+## Marker attributes
 The marker attributes are:
-<ul>
-<li><a href="#M1">Marker color.</a></li>
-<li><a href="#M2">Marker style.</a></li>
-<li><a href="#M3">Marker size.</a></li>
-</ul>
 
-<a name="M1"></a><h3>Marker color</h3>
+  - [Marker color](#M1)
+  - [Marker style](#M2)
+  - [Marker size](#M3)
+
+## <a name="M1"></a> Marker color
 The marker color is a color index (integer) pointing in the ROOT color
 table.
-The marker color of any class inheriting from <tt>TAttMarker</tt> can
-be changed using the method <tt>SetMarkerColor</tt> and retrieved using the
-method <tt>GetMarkerColor</tt>.
+The marker color of any class inheriting from `TAttMarker` can
+be changed using the method `SetMarkerColor` and retrieved using the
+method `GetMarkerColor`.
 The following table shows the first 50 default colors.
-End_Html
-Begin_Macro(source)
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker colors",0,0,500,200);
    c->DrawColorTable();
-   return c;
 }
 End_Macro
 
-Begin_Html
+### Color transparency
 
-<h4>Color transparency</h4>
-<tt>SetMarkerColorAlpha()</tt>, allows to set a transparent color.
-In the following example the marker color of the histogram <tt>histo</tt>
-is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+`SetMarkerColorAlpha()`, allows to set a transparent color.
+In the following example the marker color of the histogram `histo`
+is set to blue with a transparency of 35%. The color `kBlue`
 itself remains fully opaque.
-<p>
-<pre>
+
+~~~ {.cpp}
 histo->SetMarkerColorAlpha(kBlue, 0.35);
-</pre>
-<p>
-The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
-in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+~~~
+
+The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
 
+## <a name="M2"></a> Marker style
 
-<a name="M2"></a><h3>Marker style</h3>
 The Marker style defines the markers' shape.
-The marker style of any class inheriting from <tt>TAttMarker</tt> can
-be changed using the method <tt>SetMarkerStyle</tt> and retrieved using the
-method <tt>GetMarkerStyle</tt>.
+The marker style of any class inheriting from `TAttMarker` can
+be changed using the method `SetMarkerStyle` and retrieved using the
+method `GetMarkerStyle`.
+
 The following list gives the currently supported markers (screen
 and PostScript) style. Each marker style is identified by an integer number
 (first column) corresponding to a marker shape (second column) and can be also
 accessed via a global name (third column).
-<p>
-<pre>
+
+~~~ {.cpp}
    Marker number         Marker shape          Marker name
         1                    dot                  kDot
         2                    +                    kPlus
@@ -103,34 +102,34 @@ accessed via a global name (third column).
        29                    full star            kFullStar
        30                    open star            kOpenStar
        31                    *
-       32                    open triangle down
-       33                    full diamond
-       34                    full cross
-</pre>
-End_Html
-Begin_Macro(source)
+       32                    open triangle down   kOpenTriangleDown
+       33                    full diamond         kFullDiamond
+       34                    full cross           kFullCross
+~~~
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Marker types",0,0,500,200);
    TMarker marker;
    marker.DisplayMarkerTypes();
-   return c;
 }
 End_Macro
 
-Begin_Html
-<a name="M3"></a><h3>Marker size</h3>
+## <a name="M3"></a> Marker size
+
 Various marker sizes are shown in the figure below. The default marker size=1
 is shown in the top left corner. Marker sizes smaller than 1 can be
 specified. The marker size does not refer to any coordinate systems, it is an
 absolute value. Therefore the marker size is not affected by any change
-in TPad's scale. A marker size equl to 1 correspond to 8 pixels.
+in TPad's scale. A marker size equal to 1 correspond to 8 pixels.
 That is, a square marker with size 1 will be drawn with a side equal to 8
 pixels on the screen.
-The marker size of any class inheriting from <tt>TAttMarker</tt> can
-be changed using the method <tt>SetMarkerSize</tt> and retrieved using the
-method <tt>GetMarkerSize</tt>.
-End_Html
-Begin_Macro(source)
+
+The marker size of any class inheriting from `TAttMarker` can
+be changed using the method `SetMarkerSize` and retrieved using the
+method `GetMarkerSize`.
+
+Begin_Macro
 {
    c = new TCanvas("c","Marker sizes",0,0,500,200);
    TMarker marker;
@@ -143,73 +142,67 @@ Begin_Macro(source)
       marker.SetMarkerSize(i*0.8); marker.DrawMarker(x,.495);
       marker.SetMarkerSize(i*1.0); marker.DrawMarker(x,.835);
    }
-   return c;
 }
 End_Macro
 
-Begin_Html
 Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled. They
 are meant to be very fast to draw and are always drawn with the same number of
-pixels; therefore <tt>SetMarkerSize</tt> does not apply on them. To have a
+pixels; therefore `SetMarkerSize` does not apply on them. To have a
 "scalable dot" a filled circle should be used instead, i.e. the marker style
-number 20. By default (if <tt>SetMarkerStyle</tt> is not specified), the marker
+number 20. By default (if `SetMarkerStyle` is not specified), the marker
 style used is 1. That's the most common one to draw scatter plots.
-End_Html */
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker default constructor.
+///
+/// Default text attributes are taking from the current style.
 
-//______________________________________________________________________________
 TAttMarker::TAttMarker()
 {
-   // TAttMarker default constructor.
-   //
-   // Default text attributes are taking from the current style.
-
    if (!gStyle) {fMarkerColor=1; fMarkerStyle=1; fMarkerSize=1; return;}
    fMarkerColor = gStyle->GetMarkerColor();
    fMarkerStyle = gStyle->GetMarkerStyle();
    fMarkerSize  = gStyle->GetMarkerSize();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker normal constructor.
+///
+/// Text attributes are taking from the argument list
+///  - color : Marker Color Index
+///  - style : Marker style (from 1 to 30)
+///  - size  : marker size (float)
 
-//______________________________________________________________________________
 TAttMarker::TAttMarker(Color_t color, Style_t style, Size_t msize)
 {
-   // TAttMarker normal constructor.
-   //
-   // Text attributes are taking from the argument list
-   //    color : Marker Color Index
-   //    style : Marker style (from 1 to 30)
-   //    size  : marker size (float)
-
    fMarkerColor = color;
    fMarkerSize  = msize;
    fMarkerStyle = style;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TAttMarker destructor.
 
-//______________________________________________________________________________
 TAttMarker::~TAttMarker()
 {
-   // TAttMarker destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this marker attributes to a new TAttMarker.
 
-//______________________________________________________________________________
 void TAttMarker::Copy(TAttMarker &attmarker) const
 {
-   // Copy this marker attributes to a new TAttMarker.
-
    attmarker.fMarkerColor  = fMarkerColor;
    attmarker.fMarkerStyle  = fMarkerStyle;
    attmarker.fMarkerSize   = fMarkerSize;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change current marker attributes if necessary.
 
-//______________________________________________________________________________
 void TAttMarker::Modify()
 {
-   // Change current marker attributes if necessary.
-
    if (!gPad) return;
    if (!gPad->IsBatch()) {
       gVirtualX->SetMarkerColor(fMarkerColor);
@@ -220,23 +213,21 @@ void TAttMarker::Modify()
    gPad->SetAttMarkerPS(fMarkerColor,fMarkerStyle,fMarkerSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this marker attributes to the default values.
 
-//______________________________________________________________________________
 void TAttMarker::ResetAttMarker(Option_t *)
 {
-   // Reset this marker attributes to the default values.
-
    fMarkerColor  = 1;
    fMarkerStyle  = 1;
    fMarkerSize   = 1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save line attributes as C++ statement(s) on output stream out.
 
-//______________________________________________________________________________
 void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
-   // Save line attributes as C++ statement(s) on output stream out.
-
    if (fMarkerColor != coldef) {
       if (fMarkerColor > 228) {
          TColor::SaveColor(out, fMarkerColor);
@@ -252,21 +243,19 @@ void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the DialogCanvas Marker attributes.
 
-//______________________________________________________________________________
 void TAttMarker::SetMarkerAttributes()
 {
-   // Invoke the DialogCanvas Marker attributes.
-
    TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set a transparent marker color. malpha defines the percentage of
+/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
 
-//______________________________________________________________________________
 void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
 {
-   // Set a transparent marker color. malpha defines the percentage of
-   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
-
    fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
 }

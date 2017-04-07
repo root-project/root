@@ -9,16 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofSuperMaster                                                    //
-//                                                                      //
-// This class controls a Parallel ROOT Facility, PROOF, cluster.        //
-// It fires the slave servers, it keeps track of how many slaves are    //
-// running, it keeps track of the slaves running status, it broadcasts  //
-// messages to all slaves, it collects results, etc.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofSuperMaster
+\ingroup proofkernel
+
+Implementation of TProof controlling PROOF federated clusters.
+
+*/
 
 #include "TProofSuperMaster.h"
 #include "TString.h"
@@ -31,7 +27,6 @@
 #include "TProofServ.h"
 #include "TSocket.h"
 #include "TMonitor.h"
-#include "TSemaphore.h"
 #include "TDSet.h"
 #include "TPluginManager.h"
 #include "TVirtualProofPlayer.h"
@@ -43,13 +38,13 @@
 
 ClassImp(TProofSuperMaster)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start super master PROOF session.
+
 TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile,
                                      const char *confdir, Int_t loglevel,
                                      const char *alias, TProofMgr *mgr)
 {
-   // Start super master PROOF session.
-
    // Default initializations
    InitMembers();
 
@@ -77,11 +72,11 @@ TProofSuperMaster::TProofSuperMaster(const char *masterurl, const char *conffile
    gROOT->GetListOfProofs()->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start up PROOF submasters.
+
 Bool_t TProofSuperMaster::StartSlaves(Bool_t)
 {
-   // Start up PROOF submasters.
-
    // If this is a supermaster server, find the config file and start
    // submaster servers as specified in the config file.
    // There is a difference in startup between a slave and a submaster
@@ -224,16 +219,16 @@ Bool_t TProofSuperMaster::StartSlaves(Bool_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a data set (TDSet) using the specified selector (.C) file.
+/// Entry- or event-lists should be set in the data set object using
+/// TDSet::SetEntryList.
+/// The return value is -1 in case of error and TSelector::GetStatus() in
+/// in case of success.
+
 Long64_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *option,
                                     Long64_t nentries, Long64_t first)
 {
-   // Process a data set (TDSet) using the specified selector (.C) file.
-   // Entry- or event-lists should be set in the data set object using
-   // TDSet::SetEntryList.
-   // The return value is -1 in case of error and TSelector::GetStatus() in
-   // in case of success.
-
    if (!IsValid()) return -1;
 
    R__ASSERT(GetPlayer());
@@ -245,11 +240,11 @@ Long64_t TProofSuperMaster::Process(TDSet *set, const char *selector, Option_t *
    return GetPlayer()->Process(set, selector, option, nentries, first);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Validate a TDSet.
+
 void TProofSuperMaster::ValidateDSet(TDSet *dset)
 {
-   // Validate a TDSet.
-
    if (dset->ElementsValid()) return;
 
    // We need to recheck after this
@@ -352,13 +347,13 @@ void TProofSuperMaster::ValidateDSet(TDSet *dset)
    SetDSet(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a TProofPlayer object. The player string specifies which
+/// player should be created: remote, slave, sm (supermaster) or base.
+/// Default is sm. Socket is needed in case a slave player is created.
+
 TVirtualProofPlayer *TProofSuperMaster::MakePlayer(const char *player, TSocket *s)
 {
-   // Construct a TProofPlayer object. The player string specifies which
-   // player should be created: remote, slave, sm (supermaster) or base.
-   // Default is sm. Socket is needed in case a slave player is created.
-
    if (!player)
       player = "sm";
 

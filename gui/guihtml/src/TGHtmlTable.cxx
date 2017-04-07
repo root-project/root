@@ -47,11 +47,11 @@
 #define MAX(A,B)     ((A) < (B) ? (B) : (A))
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the appropriate cell spacing for the given table.
+
 int TGHtml::CellSpacing(TGHtmlElement *pTable)
 {
-   // Return the appropriate cell spacing for the given table.
-
    const char *z;
    int relief;
    int cellSpacing;
@@ -71,11 +71,11 @@ int TGHtml::CellSpacing(TGHtmlElement *pTable)
    return cellSpacing;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the height and width of string.
+
 void TGHtml::StringHW(const char *str, int *h, int *w)
 {
-   // Return the height and width of string.
-
    const char *cp = str;
    int nw = 0, nh = 1, mw = 0;
    *h = 0; *w =0;
@@ -97,16 +97,16 @@ void TGHtml::StringHW(const char *str, int *h, int *w)
    *h = nh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return text and images from a table as lists.
+/// The first list is a list of rows (which is a list of cells).
+/// An optional second list is a list of images: row col charoffset tokenid.
+/// Note: weve added the option to store data/attrs in array var directly.
+///
+/// flag - include images
+
 TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
 {
-   // Return text and images from a table as lists.
-   // The first list is a list of rows (which is a list of cells).
-   // An optional second list is a list of images: row col charoffset tokenid.
-   // Note: weve added the option to store data/attrs in array var directly.
-   //
-   // flag - include images
-
    int j, h, w,
       nest = 0,
  //     intext = 0,
@@ -253,7 +253,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
             break;
 
          case Html_Text:
-            substr.Append(((TGHtmlTextElement *)p)->fZText, -1);
+            substr.Append(((TGHtmlTextElement *)p)->fZText);
             break;
 
          case Html_Space:
@@ -305,16 +305,16 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
    return str;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find End tag en, but ignore intervening begin/end tag pairs.
+///
+/// sp -- Pointer to start from
+/// en -- End tag to search for
+/// lp -- Last pointer to try
+
 TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
                                   TGHtmlElement *lp)
 {
-   // Find End tag en, but ignore intervening begin/end tag pairs.
-   //
-   // sp -- Pointer to start from
-   // en -- End tag to search for
-   // lp -- Last pointer to try
-
    TGHtmlElement *p;
    int lvl, n;
 
@@ -349,30 +349,30 @@ TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// pStart points to a <table>.  Compute the number of columns, the
+/// minimum and maximum size for each column and the overall minimum
+/// and maximum size for this table and store these value in the
+/// pStart structure.  Return a pointer to the </table> element,
+/// or to NULL if there is no </table>.
+///
+/// The min and max size for column N (where the leftmost column has
+/// N==1) is pStart->fMinW[1] and pStart->fMaxW[1].  The pStart->fMinW[0]
+/// and pStart->fMaxW[0] entries contain the minimum and maximum widths
+/// of the whole table, including any cell padding, cell spacing,
+/// border width and "hspace".  The values of pStart->fMinW[I] for I>=1
+/// do not contain any cell padding, cell spacing or border width.
+/// Only pStart->fMinW[0] contains these extra spaces.
+///
+/// The back references from </table>, </tr>, </td> and </th> back to
+/// the <table> markup are also filled in.  And for each <td> and <th>
+/// markup, the pTable and pEnd fields are set to their proper values.
+///
+/// pStart    - The <table> markup
+/// lineWidth - Total width available to the table
+
 TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 {
-   // pStart points to a <table>.  Compute the number of columns, the
-   // minimum and maximum size for each column and the overall minimum
-   // and maximum size for this table and store these value in the
-   // pStart structure.  Return a pointer to the </table> element,
-   // or to NULL if there is no </table>.
-   //
-   // The min and max size for column N (where the leftmost column has
-   // N==1) is pStart->fMinW[1] and pStart->fMaxW[1].  The pStart->fMinW[0]
-   // and pStart->fMaxW[0] entries contain the minimum and maximum widths
-   // of the whole table, including any cell padding, cell spacing,
-   // border width and "hspace".  The values of pStart->fMinW[I] for I>=1
-   // do not contain any cell padding, cell spacing or border width.
-   // Only pStart->fMinW[0] contains these extra spaces.
-   //
-   // The back references from </table>, </tr>, </td> and </th> back to
-   // the <table> markup are also filled in.  And for each <td> and <th>
-   // markup, the pTable and pEnd fields are set to their proper values.
-   //
-   // pStart    - The <table> markup
-   // lineWidth - Total width available to the table
-
    TGHtmlElement *p;                  // Element being processed
    TGHtmlElement *fPNext;              // Next element to process
    int iCol1 = 0;                     // Current column number.  1..N
@@ -394,10 +394,10 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    int margin;                        // Space between left margin and 1st col
    int availWidth=0;                  // Part of lineWidth still available
    int maxTableWidth;                 // Amount of lineWidth available to table
-   int fromAbove[HTML_MAX_COLUMNS+1]; // Cell above extends thru this row
-   int min0span[HTML_MAX_COLUMNS+1];  // Min for colspan=0 cells
-   int max0span[HTML_MAX_COLUMNS+1];  // Max for colspan=0 cells
-   int reqW[HTML_MAX_COLUMNS+1];      // Requested width for each column
+   int fromAbove[HTML_MAX_COLUMNS+1]={0}; // Cell above extends thru this row
+   int min0span[HTML_MAX_COLUMNS+1]={0}; // Min for colspan=0 cells
+   int max0span[HTML_MAX_COLUMNS+1]={0}; // Max for colspan=0 cells
+   int reqW[HTML_MAX_COLUMNS+1]={0};   // Requested width for each column
    int hasbg;
 
    // colMin[A][B] is the absolute minimum width of all columns between
@@ -856,28 +856,28 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a list of elements, compute the minimum and maximum width needed
+/// to render the list.  Stop the search at the first element seen that is
+/// in the following set:
+///
+///       <tr>  <td>  <th>  </tr>  </td>  </th>  </table>
+///
+/// Return a pointer to the element that stopped the search, or to NULL
+/// if we ran out of data.
+///
+/// Sometimes the value returned for both min and max will be larger than
+/// the true minimum and maximum.  This is rare, and only occurs if the
+/// element string contains figures with flow-around text.
+///
+///  p         - Start the search here
+///  pMin      - Return the minimum width here
+///  pMax      - Return the maximum width here
+///  lineWidth - Total width available
+
 TGHtmlElement *TGHtml::MinMax(TGHtmlElement *p, int *pMin, int *pMax,
                              int /*lineWidth*/, int hasbg)
 {
-   // Given a list of elements, compute the minimum and maximum width needed
-   // to render the list.  Stop the search at the first element seen that is
-   // in the following set:
-   //
-   //       <tr>  <td>  <th>  </tr>  </td>  </th>  </table>
-   //
-   // Return a pointer to the element that stopped the search, or to NULL
-   // if we ran out of data.
-   //
-   // Sometimes the value returned for both min and max will be larger than
-   // the true minimum and maximum.  This is rare, and only occurs if the
-   // element string contains figures with flow-around text.
-   //
-   //  p         - Start the search here
-   //  pMin      - Return the minimum width here
-   //  pMax      - Return the maximum width here
-   //  lineWidth - Total width available
-
    int min = 0;             // Minimum width so far
    int max = 0;             // Maximum width so far
    int indent = 0;          // Amount of indentation (minimum)
@@ -1085,11 +1085,11 @@ TGHtmlElement *TGHtml::MinMax(TGHtmlElement *p, int *pMin, int *pMax,
 #define VAlign_Baseline   4
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the vertical alignment specified by the given element.
+
 int TGHtmlMarkupElement::GetVerticalAlignment(int dflt)
 {
-   // Return the vertical alignment specified by the given element.
-
    const char *z;
    int rc;
 
@@ -1111,12 +1111,12 @@ int TGHtmlMarkupElement::GetVerticalAlignment(int dflt)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do all layout for a single table.  Return the </table> element or
+/// NULL if the table is unterminated.
+
 TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
 {
-   // Do all layout for a single table.  Return the </table> element or
-   // NULL if the table is unterminated.
-
    TGHtmlElement *pEnd1;       // The </table> element
    TGHtmlElement *p;           // For looping thru elements of the table
    TGHtmlElement *fPNext;       // Next element in the loop
@@ -1145,14 +1145,14 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    int defaultVAlign;       // Default vertical alignment for the current row
    const char *zAlign;      // Value of the ALIGN= attribute of the <TABLE>
 #define N (HTML_MAX_COLUMNS+1)
-   int y[N];                // Top edge of each cell's content
-   int x[N];                // Left edge of each cell's content
-   int w[N];                // Width of each cell's content
-   int ymax[N];             // Bottom edge of cell's content if valign=top
-   TGHtmlElement *apElem[N]; // The <td> or <th> for each cell in a row
-   // int firstRow[N];         // First row on which a cell appears
-   int lastRow[N];          // Row to which each cell span's
-   int valign[N];           // Vertical alignment for each cell
+   int y[N]={0};            // Top edge of each cell's content
+   int x[N]={0};            // Left edge of each cell's content
+   int w[N]={0};            // Width of each cell's content
+   int ymax[N]={0};         // Bottom edge of cell's content if valign=top
+   TGHtmlElement *apElem[N]={0}; // The <td> or <th> for each cell in a row
+   // int firstRow[N]={0};     // First row on which a cell appears
+   int lastRow[N]={0};      // Row to which each cell span's
+   int valign[N]={0};       // Vertical alignment for each cell
    TGHtmlLayoutContext savedContext;  // Saved copy of the original pLC
    TGHtmlLayoutContext cellContext;   // Used to render a single cell
 #ifdef TABLE_TRIM_BLANK
@@ -1532,15 +1532,15 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    return pEnd1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move all elements in the given list vertically by the amount dy
+///
+/// p     - First element to move
+/// pLast1 - Last element.  Do move this one
+/// dy    - Amount by which to move
+
 void TGHtml::MoveVertically(TGHtmlElement *p, TGHtmlElement *pLast1, int dy)
 {
-   // Move all elements in the given list vertically by the amount dy
-   //
-   // p     - First element to move
-   // pLast1 - Last element.  Do move this one
-   // dy    - Amount by which to move
-
    if (dy == 0) return;
 
    while (p && p != pLast1) {

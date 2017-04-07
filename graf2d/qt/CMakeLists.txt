@@ -3,18 +3,15 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(gui/gui)
 include(${QT_USE_FILE})
 
-set(headers TGQt.h TQtTimer.h TQtApplication.h TQtBrush.h
+set(headers TGQt.h TQtApplication.h TQtBrush.h
             TQMimeTypes.h TQtClientFilter.h TQtClientWidget.h TQtWidget.h
             TQtMarker.h TQtTimer.h TQtRootSlot.h TQtPadFont.h)
 
-if(CMAKE_COMPILER_IS_GNUCXX)
-  add_definitions(-Wno-deprecated-register -Wno-uninitialized)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-  add_definitions(-Wno-deprecated -Wno-uninitialized)
-endif()
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-register)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated)
+ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-uninitialized)
 
 QT4_WRAP_CPP(mocfiles inc/TQtWidget.h inc/TQtEmitter.h inc/TQtClientFilter.h
                       inc/TQtClientGuard.h inc/TQtClientWidget.h inc/TQtTimer.h

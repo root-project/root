@@ -23,24 +23,26 @@
 #include "TROOT.h"
 #include "TRandom.h"
 
-//______________________________________________________________________________
-// TEveQuadSet
-//
-// Supports various internal formats that result in rendering of a
-// set of planar (lines, rectangles, hegagons with shared normal) objects.
-//
-// Names of internal structures and their variables use A, B and C as
-// names for coordinate value-holders. Typical assignment is A->X,
-// B->Y, C->Z but each render mode can override this convention and
-// impose y or x as a fixed (third or C) coordinate. Alphabetic order
-// is obeyed in this correspondence.
-//
-// For quad modes the deltas are expected to be positive.
-// For line modes negative deltas are ok.
+/** \class TEveQuadSet
+\ingroup TEve
+Supports various internal formats that result in rendering of a
+set of planar (lines, rectangles, hexagons with shared normal) objects.
+
+Names of internal structures and their variables use A, B and C as
+names for coordinate value-holders. Typical assignment is A->X,
+B->Y, C->Z but each render mode can override this convention and
+impose y or x as a fixed (third or C) coordinate. Alphabetic order
+is obeyed in this correspondence.
+
+For quad modes the deltas are expected to be positive.
+For line modes negative deltas are ok.
+*/
 
 ClassImp(TEveQuadSet);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    TEveDigitSet   (n, t),
 
@@ -49,10 +51,11 @@ TEveQuadSet::TEveQuadSet(const char* n, const char* t) :
    fDefHeight (1),
    fDefCoord  (0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                          const char* n, const char* t) :
    TEveDigitSet   (n, t),
@@ -62,18 +65,14 @@ TEveQuadSet::TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
    fDefHeight (1),
    fDefCoord  (0)
 {
-   // Constructor.
-
    Reset(quadType, valIsCol, chunkSize);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of given atom type.
 
-//______________________________________________________________________________
 Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::EQuadType_e qt)
 {
-   // Return size of given atom type.
-
    static const TEveException eH("TEveQuadSet::SizeofAtom ");
 
    switch (qt) {
@@ -98,14 +97,12 @@ Int_t TEveQuadSet::SizeofAtom(TEveQuadSet::EQuadType_e qt)
    return 0;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Clear the quad-set and reset the basic parameters.
 
-//______________________________________________________________________________
 void TEveQuadSet::Reset(TEveQuadSet::EQuadType_e quadType, Bool_t valIsCol,
                         Int_t chunkSize)
 {
-   // Clear the quad-set and reset the basic parameters.
-
    fQuadType     = quadType;
    fValueIsColor = valIsCol;
    fDefaultValue = valIsCol ? 0 : kMinInt;
@@ -114,13 +111,11 @@ void TEveQuadSet::Reset(TEveQuadSet::EQuadType_e quadType, Bool_t valIsCol,
    fPlex.Reset(SizeofAtom(fQuadType), chunkSize);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Add a quad specified with 4 vertices.
 
-//______________________________________________________________________________
 void TEveQuadSet::AddQuad(Float_t verts[12])
 {
-   // Add a quad specified with 4 vertices.
-
    static const TEveException eH("TEveQuadSet::AddQuad ");
 
    if (fQuadType != kQT_FreeQuad)
@@ -131,38 +126,38 @@ void TEveQuadSet::AddQuad(Float_t verts[12])
      memcpy(fq->fVertices, verts, sizeof(fq->fVertices));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a quad with a and b coordinates. Defaults are applied for
+/// c coordinate and sizes.
+
 void TEveQuadSet::AddQuad(Float_t a, Float_t b)
 {
-   // Add a quad with a and b coordinates. Defaults are applied for
-   // c coordinate and sizes.
-
    AddQuad(a, b, fDefCoord, fDefWidth, fDefHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a quad with a, b and c coordinates. Defaults are applied
+/// for sizes.
+
 void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t c)
 {
-   // Add a quad with a, b and c coordinates. Defaults are applied
-   // for sizes.
-
    AddQuad(a, b, c, fDefWidth, fDefHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a quad with a and b coordinates and sizes. Default is applied
+/// for c coordinate.
+
 void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t w, Float_t h)
 {
-   // Add a quad with a and b coordinates and sizes. Default is applied
-   // for c coordinate.
-
    AddQuad(a, b, fDefCoord, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a quad with a, b and c coordinates and sizes.
+
 void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h)
 {
-   // Add a quad with a, b and c coordinates and sizes.
-
    static const TEveException eH("TEveQuadSet::AddAAQuad ");
 
    QOrigin_t& fq = * (QOrigin_t*) NewDigit();
@@ -206,11 +201,11 @@ void TEveQuadSet::AddQuad(Float_t a, Float_t b, Float_t c, Float_t w, Float_t h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a line with starting coordinates and displacements.
+
 void TEveQuadSet::AddLine(Float_t a, Float_t b, Float_t w, Float_t h)
 {
-   // Add a line with starting coordinates and displacements.
-
    static const TEveException eH("TEveQuadSet::AddLine ");
 
    QOrigin_t& fq = * (QOrigin_t*) NewDigit();
@@ -228,11 +223,11 @@ void TEveQuadSet::AddLine(Float_t a, Float_t b, Float_t w, Float_t h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a hexagon with given center (a,b,c) and radius.
+
 void TEveQuadSet::AddHexagon(Float_t a, Float_t b, Float_t c, Float_t r)
 {
-   // Add a hexagon with given center (a,b,c) and radius.
-
    static const TEveException eH("TEveQuadSet::AddHexagon ");
 
    QOrigin_t& fq = * (QOrigin_t*) NewDigit();
@@ -250,15 +245,13 @@ void TEveQuadSet::AddHexagon(Float_t a, Float_t b, Float_t c, Float_t r)
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Fill bounding-box information. Virtual from TAttBBox.
+/// If member 'TEveFrameBox* fFrame' is set, frame's corners are
+/// used as bbox.
 
-//______________________________________________________________________________
 void TEveQuadSet::ComputeBBox()
 {
-   // Fill bounding-box information. Virtual from TAttBBox.
-   // If member 'TEveFrameBox* fFrame' is set, frame's corners are
-   // used as bbox.
-
    static const TEveException eH("TEveQuadSet::ComputeBBox ");
 
    if (fFrame != 0)

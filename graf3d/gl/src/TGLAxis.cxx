@@ -20,28 +20,28 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>GL Axis</h2></center>
+/** \class TGLAxis
+\ingroup opengl
+GL Axis.
+
 To draw a 3D axis in a GL window. The labels are drawn using FTGL.
-End_Html */
+*/
 
 ClassImp(TGLAxis)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLAxis::TGLAxis(): TAttLine(1,1,1), TAttText(20,0.,1,42,0.04)
 {
-   // Constructor.
-
    Init();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Default initialization.
 
-//______________________________________________________________________________
 void TGLAxis::Init()
 {
-   // Default initialization.
-
    fNDiv = fNDiv1 = fNDiv2 = fNDiv3 = 0;
    fNTicks1 = fNTicks2 = 0;
    fTicks1          = 0;
@@ -60,37 +60,35 @@ void TGLAxis::Init()
    fGridLength      = 0.;   // 0 means no grid
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
-//______________________________________________________________________________
 TGLAxis::~TGLAxis()
 {
-   // Destructor.
-
    if (fTicks1) delete [] fTicks1;
    if (fTicks2) delete [] fTicks2;
    if (fLabels) delete [] fLabels;
    if (fText)   delete fText;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint GL Axis.
+///
+///  - p1, p2     : Axis position in the 3D space.
+///  - wmin, wmax : Minimum and maximum values along the axis. wmin < wmax.
+///  - ndiv       : Number of axis divisions. It is an integer in the form
+///                 "ttsspp" where "tt" is the number of tertiary divisions,
+///                 "ss" is the number of secondary divisions and "pp" the
+///                 number of primary divisions.
+///  - opt        : Options.
+///                 "N" - By default the number of divisions is optimized to
+///                 get a nice labeling. When option "N" is given, the
+///                 number of divisions is not optimized.
 
-//______________________________________________________________________________
 void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
                           Double_t wmin,  Double_t wmax, Int_t ndiv,
                           Option_t *opt)
 {
-   // Paint GL Axis.
-   //
-   // p1, p2     : Axis position in the 3D space.
-   // wmin, wmax : Minimum and maximum values along the axis. wmin < wmax.
-   // ndiv       : Number of axis divisions. It is an integer in the form
-   //              "ttsspp" where "tt" is the number of tertiary divisions,
-   //              "ss" is the number of secondary divisions and "pp" the
-   //              number of primary divisions.
-   // opt        : Options.
-   //              "N" - By default the number of divisions is optimized to
-   //                    get a nice labeling. When option "N" is given, the
-   //                    number of divisions is not optimized.
-
    fNDiv = ndiv;
    if (wmax<=wmin) {
       fWmax = wmin;
@@ -164,12 +162,11 @@ void TGLAxis::PaintGLAxis(const Double_t p1[3], const Double_t p2[3],
    glPopMatrix();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint horizontal axis body at position (0,0,0)
 
-//______________________________________________________________________________
 void TGLAxis::PaintGLAxisBody()
 {
-   // Paint horizontal axis body at position (0,0,0)
-
    TColor *col;
    Float_t red = 1.f, green = 1.f, blue = 1.f;
    if ((col = gROOT->GetColor(GetLineColor())))
@@ -182,12 +179,11 @@ void TGLAxis::PaintGLAxisBody()
    glEnd();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint axis tick marks.
 
-//______________________________________________________________________________
 void TGLAxis::PaintGLAxisTickMarks()
 {
-   // Paint axis tick marks.
-
    Int_t i;
 
    // Ticks marks orientation;
@@ -253,12 +249,11 @@ void TGLAxis::PaintGLAxisTickMarks()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint axis labels on the main tick marks.
 
-//______________________________________________________________________________
 void TGLAxis::PaintGLAxisLabels()
 {
-   // Paint axis labels on the main tick marks.
-
    if (!fLabelsSize) return;
 
    Double_t x=0,y=0,z=0;
@@ -297,12 +292,11 @@ void TGLAxis::PaintGLAxisLabels()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute ticks positions.
 
-//______________________________________________________________________________
 void TGLAxis::TicksPositions(Option_t *opt)
 {
-   // Compute ticks positions.
-
    Bool_t optionNoopt /* , optionLog */;
 
    if (strchr(opt,'N')) optionNoopt = kTRUE;  else optionNoopt = kFALSE;
@@ -331,12 +325,11 @@ void TGLAxis::TicksPositions(Option_t *opt)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute ticks positions. Linear and not optimized.
 
-//______________________________________________________________________________
 void TGLAxis::TicksPositionsNoOpt()
 {
-   // Compute ticks positions. Linear and not optimized.
-
    Int_t i, j, k;
    Double_t step1 = fAxisLength/(fNDiv1);
 
@@ -364,12 +357,11 @@ void TGLAxis::TicksPositionsNoOpt()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute ticks positions. Linear and optimized.
 
-//______________________________________________________________________________
 void TGLAxis::TicksPositionsOpt()
 {
-   // Compute ticks positions. Linear and optimized.
-
    Int_t i, j, k, nDivOpt;
    Double_t step1=0, step2=0, wmin2=0, wmax2=0;
    Double_t wmin = fWmin;
@@ -432,12 +424,11 @@ void TGLAxis::TicksPositionsOpt()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Do labels.
 
-//______________________________________________________________________________
 void TGLAxis::DoLabels()
 {
-   // Do labels.
-
    if (fLabels) delete [] fLabels;
    fLabels = new TString[fNTicks1];
    Int_t i;
@@ -449,12 +440,11 @@ void TGLAxis::DoLabels()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set labels' angles.
 
-//______________________________________________________________________________
 void TGLAxis::SetLabelsAngles(Double_t a1, Double_t a2, Double_t a3)
 {
-   // Set labels' angles.
-
    fAngle1 = a1;
    fAngle2 = a2;
    fAngle3 = a3;

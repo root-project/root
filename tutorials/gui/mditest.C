@@ -1,5 +1,10 @@
-// GUI MDI features
-// Author: Fons Rademakers   2/9/2004
+/// \file
+/// \ingroup tutorial_gui
+/// GUI MDI features
+///
+/// \macro_code
+///
+/// \authors Ilka Antcheva, Fons Rademakers
 
 #include <stdio.h>
 #include <stdlib.h>

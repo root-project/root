@@ -22,163 +22,170 @@
 
 ClassImp(TAttText)
 
+/** \class TAttText
+\ingroup Base
+\ingroup GraphicsAtt
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>Text Attributes class</h2></center>
+Text Attributes class.
 
 This class is used (in general by secondary inheritance)
 by many other classes (graphics, histograms). It holds all the text attributes.
 
-<h3>Text attributes</h3>
+## Text attributes
 Text attributes are:
-<ul>
-<li><a href="#T1">Text Alignment.</a></li>
-<li><a href="#T2">Text Angle.</a></li>
-<li><a href="#T3">Text Color.</a></li>
-<li><a href="#T4">Text Size.</a></li>
-<li><a href="#T5">Text Font and Precision.</a></li>
-<ul>
-   <li><a href="#T51">Font quality and speed.</a></li>
-   <li><a href="#T52">How to use True Type Fonts.</a></li>
-   <li><a href="#T53">List of the currently supported fonts.</a></li>
-</ul>
-</ul>
 
-<a name="T1"></a><h3>Text Alignment</h3>
-The text alignment is an integer number (<tt>align</tt>) allowing to control
+  - [Text Alignment](#T1)
+  - [Text Angle](#T2)
+  - [Text Color](#T3)
+  - [Text Size](#T4)
+  - [Text Font and Precision](#T5)
+     - [Font quality and speed](#T51)
+     - [How to use True Type Fonts](#T52)
+     - [List of the currently supported fonts](#T53)
+
+## <a name="T1"></a> Text Alignment
+
+The text alignment is an integer number (`align`) allowing to control
 the horizontal and vertical position of the text string with respect
 to the text position.
-The text alignment of any class inheriting from <tt>TAttText</tt> can
-be changed using the method <tt>SetTextAlign</tt> and retrieved using the
-method <tt>GetTextAlign</tt>.
-<pre>
+The text alignment of any class inheriting from `TAttText` can
+be changed using the method `SetTextAlign` and retrieved using the
+method `GetTextAlign`.
+
+~~~ {.cpp}
    align = 10*HorizontalAlign + VerticalAlign
-</pre>
+~~~
+
 For horizontal alignment the following convention applies:
-<pre>
+
+~~~ {.cpp}
    1=left adjusted, 2=centered, 3=right adjusted
-</pre>
+~~~
+
 For vertical alignment the following convention applies:
-<pre>
+
+~~~ {.cpp}
    1=bottom adjusted, 2=centered, 3=top adjusted
-</pre>
+~~~
+
 For example:
-<pre>
+
+~~~ {.cpp}
    align = 11 = left adjusted and bottom adjusted
    align = 32 = right adjusted and vertically centered
-</pre>
-End_Html
+~~~
+
 Begin_Macro(source)
 textalign.C
 End_Macro
 
-Begin_Html
-<a name="T2"></a><h3>Text Angle</h3>
+## <a name="T2"></a> Text Angle
+
 Text angle in degrees.
-The text angle of any class inheriting from <tt>TAttText</tt> can
-be changed using the method <tt>SetTextAngle</tt> and retrieved using the
-method <tt>GetTextAngle</tt>.
+The text angle of any class inheriting from `TAttText` can
+be changed using the method `SetTextAngle` and retrieved using the
+method `GetTextAngle`.
 The following picture shows the text angle:
-End_Html
-Begin_Macro(source)
+
+Begin_Macro
 textangle.C
 End_Macro
 
 Mnemonic constants are available:
-<pre>
+
+~~~ {.cpp}
 kHAlignLeft   = 10, kHAlignCenter = 20, kHAlignRight = 30,
 kVAlignBottom = 1,  kVAlignCenter = 2,  kVAlignTop   = 3
-</pre>
-They allow to write:
-<pre>
-object->SetTextAlign(kHAlignLeft+kVAlignTop);
-</pre>
+~~~
 
-Begin_Html
-<a name="T3"></a><h3>Text Color</h3>
+They allow to write:
+
+~~~ {.cpp}
+object->SetTextAlign(kHAlignLeft+kVAlignTop);
+~~~
+
+## <a name="T3"></a> Text Color
+
 The text color is a color index (integer) pointing in the ROOT
 color table.
-The text color of any class inheriting from <tt>TAttText</tt> can
-be changed using the method <tt>SetTextColor</tt> and retrieved using the
-method <tt>GetTextColor</tt>.
+The text color of any class inheriting from `TAttText` can
+be changed using the method `SetTextColor` and retrieved using the
+method `GetTextColor`.
 The following table shows the first 50 default colors.
-End_Html
-Begin_Macro(source)
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c","Text colors",0,0,500,200);
    c->DrawColorTable();
-   return c;
 }
 End_Macro
 
-Begin_Html
-
-<h4>Color transparency</h4>
-<tt>SetTextColorAlpha()</tt>, allows to set a transparent color.
-In the following example the text color of the text <tt>text</tt>
-is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+### Color transparency
+`SetTextColorAlpha()`, allows to set a transparent color.
+In the following example the text color of the text `text`
+is set to blue with a transparency of 35%. The color `kBlue`
 itself remains fully opaque.
-<p>
-<pre>
+
+~~~ {.cpp}
 text->SetTextColorAlpha(kBlue, 0.35);
-</pre>
-<p>
-The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
-in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+~~~
+
+The transparency is available on all platforms when the `flagOpenGL.CanvasPreferGL` is set to `1`
+in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
 
+## <a name="T4"></a> Text Size
 
-
-<a name="T4"></a><h3>Text Size</h3>
 If the text precision (see next paragraph) is smaller than 3, the text
-size (<tt>textsize</tt>) is a fraction of the current pad size. Therefore the
-same <tt>textsize</tt> value can generate text outputs with different absolute
+size (`textsize`) is a fraction of the current pad size. Therefore the
+same `textsize` value can generate text outputs with different absolute
 sizes in two different pads.
-The text size in pixels (<tt>charheight</tt>) is computed the following way:
-<p>
-<pre>
+The text size in pixels (`charheight`) is computed the following way:
+
+~~~ {.cpp}
    pad_width  = gPad->XtoPixel(gPad->GetX2());
    pad_height = gPad->YtoPixel(gPad->GetY1());
    if (pad_width < pad_height)  charheight = textsize*pad_width;
    else                         charheight = textsize*pad_height;
-</pre>
-<p>
+~~~
+
 If the text precision is equal to 3, the text size doesn't depend on the pad's
-dimensions. A given <tt>textsize</tt> value always generates the same absolute
-size. The text size (<tt>charheight</tt>) is given in pixels:
-<pre>
+dimensions. A given `textsize` value always generates the same absolute
+size. The text size (`charheight`) is given in pixels:
+
+~~~ {.cpp}
    charheight = textsize;
-</pre>
-<p>
+~~~
+
 Note that to scale fonts to the same size as the old True Type package a
-scale factor of <tt>0.93376068</tt> is apply to the text size before drawing.
-<p>
-The text size of any class inheriting from <tt>TAttText</tt> can
-be changed using the method <tt>SetTextSize</tt> and retrieved using the
-method <tt>GetTextSize</tt>.
+scale factor of `0.93376068` is apply to the text size before drawing.
 
+The text size of any class inheriting from `TAttText` can
+be changed using the method `SetTextSize` and retrieved using the
+method `GetTextSize`.
 
-<a name="T5"></a><h3>Text Font and Precision</h3>
+## <a name="T5"></a> Text Font and Precision
+
 The text font code is combination of the font number and the precision.
-<pre>
+~~~ {.cpp}
    Text font code = 10*fontnumber + precision
-</pre>
+~~~
 Font numbers must be between 1 and 14.
-<p>
+
 The precision can be:
 
-<br><tt>precision = 0</tt> fast hardware fonts (steps in the size)
-<br><tt>precision = 1</tt> scalable and rotatable hardware fonts (see below)
-<br><tt>precision = 2</tt> scalable and rotatable hardware fonts
-<br><tt>precision = 3</tt> scalable and rotatable hardware fonts. Text size
+  - `precision = 0` fast hardware fonts (steps in the size)
+  - `precision = 1` scalable and rotatable hardware fonts (see below)
+  - `precision = 2` scalable and rotatable hardware fonts
+  - `precision = 3` scalable and rotatable hardware fonts. Text size
                            is given in pixels.
-<p>
-The text font and precision of any class inheriting from <tt>TAttText</tt> can
-be changed using the method <tt>SetTextFont</tt> and retrieved using the
-method <tt>GetTextFont</tt>.
 
-<a name="T51"></a><h4>Font quality and speed</h4>
+The text font and precision of any class inheriting from `TAttText` can
+be changed using the method `SetTextFont` and retrieved using the
+method `GetTextFont`.
+
+### <a name="T51"></a> Font quality and speed
+
 When precision 0 is used, only the original non-scaled system fonts are
 used. The fonts have a minimum (4) and maximum (37) size in pixels. These
 fonts are fast and are of good quality. Their size varies with large steps
@@ -187,26 +194,32 @@ Precision 1 and 2 fonts have a different behaviour depending if the
 True Type Fonts (TTF) are used or not. If TTF are used, you always get very good
 quality scalable and rotatable fonts. However TTF are slow.
 
-<a name="T52"></a><h4>How to use True Type Fonts</h4>
+### <a name="T52"></a> How to use True Type Fonts
+
 One can activate the TTF by adding (or activating) the following line
-in the <tt>.rootrc</tt> file:
-<pre>
+in the `.rootrc` file:
+
+~~~ {.cpp}
    Unix.*.Root.UseTTFonts:     true
-</pre>
+~~~
+
 It is possible to check the TTF are in use in a Root session
 with the command:
-<pre>
+
+~~~ {.cpp}
    gEnv->Print();
-</pre>
+~~~
+
 If the TTF are in use the following line will appear at the beginning of the
 printout given by this command:
-<pre>
+
+~~~ {.cpp}
    Unix.*.Root.UseTTFonts:   true                           [Global]
-</pre>
+~~~
 
+### <a name="T53"></a> List of the currently supported fonts
 
-<a name="T53"></a><h4>List of the currently supported fonts</h4>
-<pre>
+~~~ {.cpp}
    Font number         X11 Names             Win32/TTF Names
        1 :       times-medium-i-normal      "Times New Roman"
        2 :       times-bold-r-normal        "Times New Roman"
@@ -223,23 +236,23 @@ printout given by this command:
       13 :       times-medium-r-normal      "Times New Roman"
       14 :                                  "Wingdings"
       15 :       Symbol italic (derived from Symbol)
-</pre>
-<br>
- The following picture shows how each font looks. The number on the left
- is the "text font code". In this picture precision 2 was selected.
-End_Html
-Begin_Macro(source)
+~~~
+
+The following picture shows how each font looks. The number on the left
+is the "text font code". In this picture precision 2 was selected.
+
+Begin_Macro
 fonts.C
-End_Macro */
+End_Macro
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// AttText default constructor.
+///
+/// Default text attributes are taken from the current style.
 
-//______________________________________________________________________________
 TAttText::TAttText()
 {
-   // AttText default constructor.
-   //
-   // Default text attributes are taken from the current style.
-
    if (!gStyle) {
       ResetAttText();
       return;
@@ -251,14 +264,13 @@ TAttText::TAttText()
    fTextSize  = gStyle->GetTextSize();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// AttText normal constructor.
+///
+/// Text attributes are taken from the argument list.
 
-//______________________________________________________________________________
 TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Float_t tsize)
 {
-   // AttText normal constructor.
-   //
-   // Text attributes are taken from the argument list.
-
    fTextAlign = align;
    fTextAngle = angle;
    fTextColor = color;
@@ -266,19 +278,18 @@ TAttText::TAttText(Int_t align, Float_t angle, Color_t color, Style_t font, Floa
    fTextSize  = tsize;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// AttText destructor.
 
-//______________________________________________________________________________
 TAttText::~TAttText()
 {
-   // AttText destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this text attributes to a new TAttText.
 
-//______________________________________________________________________________
 void TAttText::Copy(TAttText &atttext) const
 {
-   // Copy this text attributes to a new TAttText.
-
    atttext.fTextAlign  = fTextAlign;
    atttext.fTextAngle  = fTextAngle;
    atttext.fTextColor  = fTextColor;
@@ -286,12 +297,11 @@ void TAttText::Copy(TAttText &atttext) const
    atttext.fTextSize   = fTextSize;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change current text attributes if necessary.
 
-//______________________________________________________________________________
 void TAttText::Modify()
 {
-   // Change current text attributes if necessary.
-
    if (!gPad) return;
 
    // Do we need to change font?
@@ -316,12 +326,11 @@ void TAttText::Modify()
    gPad->SetAttTextPS(fTextAlign,fTextAngle,fTextColor,fTextFont,fTextSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this text attributes to default values.
 
-//______________________________________________________________________________
 void TAttText::ResetAttText(Option_t *)
 {
-   // Reset this text attributes to default values.
-
    fTextAlign  = 11;
    fTextAngle  = 0;
    fTextColor  = 1;
@@ -329,14 +338,13 @@ void TAttText::ResetAttText(Option_t *)
    fTextSize   = 0.05;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save text attributes as C++ statement(s) on output stream out.
 
-//______________________________________________________________________________
 void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t alidef,
                                   Float_t angdef, Int_t coldef, Int_t fondef,
                                   Float_t sizdef)
 {
-   // Save text attributes as C++ statement(s) on output stream out.
-
    if (fTextAlign != alidef) {
       out<<"   "<<name<<"->SetTextAlign("<<fTextAlign<<");"<<std::endl;
    }
@@ -358,34 +366,32 @@ void TAttText::SaveTextAttributes(std::ostream &out, const char *name, Int_t ali
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the DialogCanvas Text attributes.
 
-//______________________________________________________________________________
 void TAttText::SetTextAttributes()
 {
-   // Invoke the DialogCanvas Text attributes.
-
    TVirtualPadEditor::UpdateTextAttributes(fTextAlign,fTextAngle,fTextColor,
                                            fTextFont,fTextSize);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set a transparent marker color. talpha defines the percentage of
+/// the color opacity from 0. (fully transparent) to 1. (fully opaque).
 
-//______________________________________________________________________________
 void TAttText::SetTextColorAlpha(Color_t tcolor, Float_t talpha)
 {
-   // Set a transparent marker color. talpha defines the percentage of
-   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
-
    fTextColor = TColor::GetColorTransparent(tcolor, talpha);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text size in pixels.
+///
+/// If the font precision is greater than 2, the text size is set to npixels,
+/// otherwise the text size is computed as a percent of the pad size.
 
-//______________________________________________________________________________
 void TAttText::SetTextSizePixels(Int_t npixels)
 {
-   // Set the text size in pixels.
-   // If the font precision is greater than 2, the text size is set to npixels,
-   // otherwise the text size is computed as a percent of the pad size.
-
    if (fTextFont%10 > 2) {
       fTextSize = Float_t(npixels);
    } else {

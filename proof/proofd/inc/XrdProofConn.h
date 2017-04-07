@@ -24,21 +24,11 @@
 
 #define DFLT_CONNECTMAXTRY           10
 
-#ifndef ROOT_XrdSysToOuc
 #include "XrdSysToOuc.h"
-#endif
-#ifndef ROOT_XProofProtocol
 #include "XProofProtocol.h"
-#endif
-#ifndef ROOT_XProofProtUtils
 #include "XProofProtUtils.h"
-#endif
-#ifndef XRC_UNSOLMSG_H
 #include "XrdClient/XrdClientUnsolMsg.hh"
-#endif
-#ifndef _XRC_URLINFO_H
 #include "XrdClient/XrdClientUrlInfo.hh"
-#endif
 #ifndef __OUC_STRING_H__
 #include "XrdOuc/XrdOucString.hh"
 #endif

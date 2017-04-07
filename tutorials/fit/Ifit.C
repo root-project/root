@@ -1,15 +1,26 @@
-//
-//   Example of a program to fit non-equidistant data points
-//   =======================================================
-//
-//   The fitting function fcn is a simple chisquare function
-//   The data consists of 5 data points (arrays x,y,z) + the errors in errorsz
-//   More details on the various functions or parameters for these functions
-//   can be obtained in an interactive ROOT session with:
-//    Root > TMinuit *minuit = new TMinuit(10);
-//    Root > minuit->mnhelp("*")  to see the list of possible keywords
-//    Root > minuit->mnhelp("SET") explains most parameters
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook -nodraw
+///   Example of a program to fit non-equidistant data points
+///
+///   The fitting function fcn is a simple chisquare function
+///   The data consists of 5 data points (arrays x,y,z) + the errors in errorsz
+///   More details on the various functions or parameters for these functions
+///   can be obtained in an interactive ROOT session with:
+///
+/// ~~~{.cpp}
+///    Root > TMinuit *minuit = new TMinuit(10);
+/// ~~~
+///
+/// ~~~{.cpp}
+///    Root > minuit->mnhelp("*")  to see the list of possible keywords
+///    Root > minuit->mnhelp("SET") explains most parameters
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
 
 #include "TMinuit.h"
 

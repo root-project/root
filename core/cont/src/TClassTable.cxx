@@ -9,24 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// This class registers for all classes their name, id and dictionary   //
-// function in a hash table. Classes are automatically added by the     //
-// ctor of a special init class when a global of this init class is     //
-// initialized when the program starts (see the ClassImp macro).        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#include "RConfig.h"
-#include <stdlib.h>
-#include <string>
-#include <map>
-#include <typeinfo>
-#include "Riostream.h"
-#include <memory>
+/** \class TClassTable
+\ingroup Containers
+This class registers for all classes their name, id and dictionary
+function in a hash table. Classes are automatically added by the
+ctor of a special init class when a global of this init class is
+initialized when the program starts (see the ClassImp macro).
+*/
 
 #include "TClassTable.h"
+
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TProtoClass.h"
@@ -39,6 +31,14 @@
 #include "TMap.h"
 
 #include "TInterpreter.h"
+
+#include <map>
+#include <memory>
+#include "Riostream.h"
+#include <typeinfo>
+#include <stdlib.h>
+#include <string>
+
 using namespace ROOT;
 
 TClassTable *gClassTable;
@@ -54,9 +54,9 @@ TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable)
 
-//______________________________________________________________________________
-namespace ROOT {
+////////////////////////////////////////////////////////////////////////////////
 
+namespace ROOT {
    class TClassRec {
    public:
       TClassRec(TClassRec *next) :
@@ -74,7 +74,7 @@ namespace ROOT {
       Version_t        fId;
       Int_t            fBits;
       DictFuncPtr_t    fDict;
-      const type_info *fInfo;
+      const std::type_info *fInfo;
       TProtoClass     *fProto;
       TClassRec       *fNext;
    };
@@ -94,7 +94,7 @@ namespace ROOT {
       std::unique_ptr<TClassAlt> fNext;
    };
 
-
+#define R__USE_STD_MAP
    class TMapTypeToClassRec {
 #if defined R__USE_STD_MAP
      // This wrapper class allow to avoid putting #include <map> in the
@@ -136,7 +136,7 @@ namespace ROOT {
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
-            printf("Key: %40s 0x%lx\n", iter->first.c_str(), iter->second);
+            printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
          }
       }
 #else
@@ -195,7 +195,7 @@ namespace ROOT {
 
    static UInt_t ClassTableHash(const char *name, UInt_t size)
    {
-      const char *p = name;
+      auto p = reinterpret_cast<const unsigned char*>( name );
       UInt_t slot = 0;
 
       while (*p) slot = slot<<1 ^ *p++;
@@ -205,11 +205,11 @@ namespace ROOT {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassTable is a singleton (i.e. only one can exist per application).
+
 TClassTable::TClassTable()
 {
-   // TClassTable is a singleton (i.e. only one can exist per application).
-
    if (gClassTable) return;
 
    fgSize  = 1009;  //this is the result of (int)TMath::NextPrime(1000);
@@ -221,12 +221,12 @@ TClassTable::TClassTable()
    gClassTable = this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassTable singleton is deleted in Terminate().
+
 TClassTable::~TClassTable()
 {
-   // TClassTable singleton is deleted in Terminate().
-
-   // Try to avoid spurrious warning from memory leak checkers.
+   // Try to avoid spurious warning from memory leak checkers.
    if (gClassTable != this) return;
 
    for (UInt_t i = 0; i < fgSize; i++) {
@@ -237,14 +237,14 @@ TClassTable::~TClassTable()
    delete fgIdMap; fgIdMap = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class table. Before printing the table is sorted
+/// alphabetically. Only classes specified in option are listed.
+/// The default is to list all classes.
+/// Standard wildcarding notation supported.
+
 void TClassTable::Print(Option_t *option) const
 {
-   // Print the class table. Before printing the table is sorted
-   // alphabetically. Only classes specified in option are listed.
-   // The default is to list all classes.
-   // Standard wilcarding notation supported.
-
    if (fgTally == 0 || !fgTable)
       return;
 
@@ -278,14 +278,14 @@ void TClassTable::Print(Option_t *option) const
 
 //---- static members --------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns class at index from sorted class table. Don't use this iterator
+/// while modifying the class table. The class table can be modified
+/// when making calls like TClass::GetClass(), etc.
+/// Returns 0 if index points beyond last class name.
+
 char *TClassTable::At(UInt_t index)
 {
-    // Returns class at index from sorted class table. Don't use this iterator
-    // while modifying the class table. The class table can be modified
-    // when making calls like TClass::GetClass(), etc.
-    // Returns 0 if index points beyond last class name.
-
    SortTable();
    if (index < fgTally) {
       TClassRec *r = fgSortedTable[index];
@@ -301,13 +301,13 @@ void  TClassTable::Init() { fgCursor = 0; SortTable(); }
 
 namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to namespace (see also TGenericClassInfo)
 
-//______________________________________________________________________________
-void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
+////////////////////////////////////////////////////////////////////////////////
+/// Add a class to the class table (this is a static function).
+/// Note that the given cname *must* be already normalized.
+
+void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &info,
                       DictFuncPtr_t dict, Int_t pragmabits)
 {
-   // Add a class to the class table (this is a static function).
-   // Note that the given cname *must* be already normalized.
-
    if (!gClassTable)
       new TClassTable;
 
@@ -326,7 +326,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
-   } else if (ROOT::gROOTLocal && gCling) {
+   } else if (ROOT::Internal::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
          // As a work-around to ROOT-6012, we need to register the class even if
@@ -354,11 +354,11 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    fgSorted = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a class to the class table (this is a static function).
+
 void TClassTable::Add(TProtoClass *proto)
 {
-   // Add a class to the class table (this is a static function).
-
    if (!gClassTable)
       new TClassTable;
 
@@ -371,7 +371,7 @@ void TClassTable::Add(TProtoClass *proto)
    if (r->fName) {
       r->fProto = proto;
       return;
-   } else if (ROOT::gROOTLocal && gCling) {
+   } else if (ROOT::Internal::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
       if (oldcl) { //  && oldcl->GetClassInfo()) {
                    // As a work-around to ROOT-6012, we need to register the class even if
@@ -393,7 +393,8 @@ void TClassTable::Add(TProtoClass *proto)
    fgSorted = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TClassTable::AddAlternate(const char *normName, const char *alternate)
 {
    if (!gClassTable)
@@ -415,7 +416,8 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
    fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t TClassTable::Check(const char *cname, std::string &normname)
 {
    if (!gClassTable || !fgTable) return kFALSE;
@@ -437,12 +439,12 @@ Bool_t TClassTable::Check(const char *cname, std::string &normname)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a class from the class table. This happens when a shared library
+/// is unloaded (i.e. the dtor's of the global init objects are called).
+
 void TClassTable::Remove(const char *cname)
 {
-   // Remove a class from the class table. This happens when a shared library
-   // is unloaded (i.e. the dtor's of the global init objects are called).
-
    if (!gClassTable || !fgTable) return;
 
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
@@ -466,13 +468,13 @@ void TClassTable::Remove(const char *cname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a class by name in the class table (using hash of name). Returns
+/// 0 if the class is not in the table. Unless arguments insert is true in
+/// which case a new entry is created and returned.
+
 TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 {
-   // Find a class by name in the class table (using hash of name). Returns
-   // 0 if the class is not in the table. Unless arguments insert is true in
-   // which case a new entry is created and returned.
-
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
    for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
@@ -486,15 +488,15 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    return fgTable[slot];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find a class by name in the class table (using hash of name). Returns
+/// 0 if the class is not in the table. Unless arguments insert is true in
+/// which case a new entry is created and returned.
+/// cname can be any spelling of the class name.  See FindElementImpl if the
+/// name is already normalized.
+
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
-   // Find a class by name in the class table (using hash of name). Returns
-   // 0 if the class is not in the table. Unless arguments insert is true in
-   // which case a new entry is created and returned.
-   // cname can be any spelling of the class name.  See FindElementImpl if the
-   // name is already normalized.
-
    if (!fgTable) return 0;
 
    // The recorded name is normalized, let's make sure we convert the
@@ -505,32 +507,32 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
    return FindElementImpl(normalized.c_str(), insert);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the ID of a class.
+
 Version_t TClassTable::GetID(const char *cname)
 {
-   // Returns the ID of a class.
-
    TClassRec *r = FindElement(cname);
    if (r) return r->fId;
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the pragma bits as specified in the LinkDef.h file.
+
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
-   // Returns the pragma bits as specified in the LinkDef.h file.
-
    TClassRec *r = FindElement(cname);
    if (r) return r->fBits;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given the class name returns the Dictionary() function of a class
+/// (uses hash of name).
+
 DictFuncPtr_t TClassTable::GetDict(const char *cname)
 {
-   // Given the class name returns the Dictionary() function of a class
-   // (uses hash of name).
-
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -541,12 +543,12 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
    return 0;
 }
 
-//______________________________________________________________________________
-DictFuncPtr_t TClassTable::GetDict(const type_info& info)
-{
-   // Given the type_info returns the Dictionary() function of a class
-   // (uses hash of type_info::name()).
+////////////////////////////////////////////////////////////////////////////////
+/// Given the std::type_info returns the Dictionary() function of a class
+/// (uses hash of std::type_info::name()).
 
+DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
+{
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
       fgIdMap->Print();
@@ -557,12 +559,12 @@ DictFuncPtr_t TClassTable::GetDict(const type_info& info)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given the normalized class name returns the Dictionary() function of a class
+/// (uses hash of name).
+
 DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
-   // Given the normalized class name returns the Dictionary() function of a class
-   // (uses hash of name).
-
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -573,12 +575,12 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given the class name returns the TClassProto object for the class.
+/// (uses hash of name).
+
 TProtoClass *TClassTable::GetProto(const char *cname)
 {
-   // Given the class name returns the TClassProto object for the class.
-   // (uses hash of name).
-
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -589,12 +591,12 @@ TProtoClass *TClassTable::GetProto(const char *cname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given the class normalized name returns the TClassProto object for the class.
+/// (uses hash of name).
+
 TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 {
-   // Given the class normalized name returns the TClassProto object for the class.
-   // (uses hash of name).
-
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -605,7 +607,8 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 extern "C" {
    static int ClassComp(const void *a, const void *b)
    {
@@ -615,13 +618,13 @@ extern "C" {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns next class from sorted class table. Don't use this iterator
+/// while modifying the class table. The class table can be modified
+/// when making calls like TClass::GetClass(), etc.
+
 char *TClassTable::Next()
 {
-    // Returns next class from sorted class table. Don't use this iterator
-    // while modifying the class table. The class table can be modified
-    // when making calls like TClass::GetClass(), etc.
-
    if (fgCursor < fgTally) {
       TClassRec *r = fgSortedTable[fgCursor++];
       return r->fName;
@@ -629,12 +632,12 @@ char *TClassTable::Next()
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print the class table. Before printing the table is sorted
+/// alphabetically.
+
 void TClassTable::PrintTable()
 {
-   // Print the class table. Before printing the table is sorted
-   // alphabetically.
-
    if (fgTally == 0 || !fgTable)
       return;
 
@@ -662,11 +665,11 @@ void TClassTable::PrintTable()
    Printf("================================================================\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort the class table by ascending class ID's.
+
 void TClassTable::SortTable()
 {
-   // Sort the class table by ascending class ID's.
-
    if (!fgSorted) {
       delete [] fgSortedTable;
       fgSortedTable = new TClassRec* [fgTally];
@@ -681,11 +684,11 @@ void TClassTable::SortTable()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deletes the class table (this static class function calls the dtor).
+
 void TClassTable::Terminate()
 {
-   // Deletes the class table (this static class function calls the dtor).
-
    if (gClassTable) {
       for (UInt_t i = 0; i < fgSize; i++)
          delete fgTable[i]; // Will delete all the elements in the chain.
@@ -698,43 +701,43 @@ void TClassTable::Terminate()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global function called by the ctor of a class's init class
+/// (see the ClassImp macro).
+
 void ROOT::AddClass(const char *cname, Version_t id,
-                    const type_info& info,
+                    const std::type_info& info,
                     DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
-   // Global function called by the ctor of a class's init class
-   // (see the ClassImp macro).
-
    TClassTable::Add(cname, id, info, dict, pragmabits);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global function called by GenerateInitInstance.
+/// (see the ClassImp macro).
+
 void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
-   // Global function called by GenerateInitInstance.
-   // (see the ClassImp macro).
-
    TClassTable::AddAlternate(normName,alternate);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global function to update the version number.
+/// This is called via the RootClassVersion macro.
+///
+/// if cl!=0 and cname==-1, set the new class version if and only is
+/// greater than the existing one and greater or equal to 2;
+/// and also ignore the request if fVersionUsed is true.
+///
+/// Note on class version number:
+///  - If no class has been specified, TClass::GetVersion will return -1
+///  - The Class Version 0 request the whole object to be transient
+///  - The Class Version 1, unless specify via ClassDef indicates that the
+///    I/O should use the TClass checksum to distinguish the layout of the class
+
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
-   // Global function to update the version number.
-   // This is called via the RootClassVersion macro.
-   //
-   // if cl!=0 and cname==-1, set the new class version if and only is
-   // greater than the existing one and greater or equal to 2;
-   // and also ignore the request if fVersionUsed is true.
-   //
-   // Note on class version number:
-   //   If no class has been specified, TClass::GetVersion will return -1
-   //   The Class Version 0 request the whole object to be transient
-   //   The Class Version 1, unless specify via ClassDef indicates that the
-   //      I/O should use the TClass checksum to distinguish the layout of the class
-
    if (cname && cname!=(void*)-1) {
       TClassRec *r = TClassTable::FindElement(cname,kFALSE);
       if (r) r->fId = newid;
@@ -761,12 +764,12 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global function called by the dtor of a class's init class
+/// (see the ClassImp macro).
+
 void ROOT::RemoveClass(const char *cname)
 {
-   // Global function called by the dtor of a class's init class
-   // (see the ClassImp macro).
-
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
    if (cname) {
@@ -786,13 +789,13 @@ void ROOT::RemoveClass(const char *cname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Global function to register the implementation file and line of
+/// a class template (i.e. NOT a concrete class).
+
 TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
                                     Int_t line)
 {
-   // Global function to register the implementation file and line of
-   // a class template (i.e. NOT a concrete class).
-
    static TList table;
    static Bool_t isInit = kFALSE;
    if (!isInit) {

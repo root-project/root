@@ -12,23 +12,21 @@
 #ifndef ROOT_TGeoPatternFinder
 #define ROOT_TGeoPatternFinder
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
+#include <mutex>
 
-#ifndef ROOT_TGeoVolume
+#include "TObject.h"
+
 #include "TGeoVolume.h"
-#endif
 
 
 class TGeoMatrix;
 
-////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TGeoPatternFinder - base finder class for patterns. A pattern is specifying
-//   a division type                                                          //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+//                                                                             //
+// TGeoPatternFinder - base finder class for patterns. A pattern is specifying //
+// a division type                                                             //
+//                                                                             //
+/////////////////////////////////////////////////////////////////////////////////
 
 class TGeoPatternFinder : public TObject
 {
@@ -63,7 +61,8 @@ protected :
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Vector of thread private transient data
    mutable Int_t                      fThreadSize; //! Size of the thread vector
-
+   mutable std::mutex                 fMutex;      //! Mutex for thread data
+   
 protected:
    TGeoPatternFinder(const TGeoPatternFinder&);
    TGeoPatternFinder& operator=(const TGeoPatternFinder&);
@@ -252,7 +251,7 @@ class TGeoPatternParaY : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t         fTxy;      // tangent of alpha
+   Double_t         fTxy = 0.;      // tangent of alpha
 public:
    // constructors
    TGeoPatternParaY();
@@ -288,8 +287,8 @@ class TGeoPatternParaZ : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t            fTxz;  // tangent of alpha xz
-   Double_t            fTyz;  // tangent of alpha yz
+   Double_t            fTxz = 0.;  // tangent of alpha xz
+   Double_t            fTyz = 0.;  // tangent of alpha yz
 public:
    // constructors
    TGeoPatternParaZ();
@@ -325,8 +324,8 @@ class TGeoPatternTrapZ : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t            fTxz;  // tangent of alpha xz
-   Double_t            fTyz;  // tangent of alpha yz
+   Double_t            fTxz = 0.;  // tangent of alpha xz
+   Double_t            fTyz = 0.;  // tangent of alpha yz
 public:
    // constructors
    TGeoPatternTrapZ();
@@ -397,7 +396,7 @@ class TGeoPatternCylPhi : public TGeoPatternFinder
 {
 private :
 // data members
-   Double_t           *fSinCos;          //![2*fNdivisions] table of sines/cosines
+   Double_t           *fSinCos = nullptr;   //![2*fNdivisions] table of sines/cosines
 
 protected:
    TGeoPatternCylPhi(const TGeoPatternCylPhi& pfc)
@@ -499,7 +498,7 @@ public:
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
 private:
-   Double_t           *fSinCos;         //! Sincos table
+   Double_t           *fSinCos = nullptr;         //! Sincos table
 
 protected:
    TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc); // Not implemented

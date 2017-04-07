@@ -1,9 +1,15 @@
-//Author: Timur Pocheptsov, 19/03/2014.
-//This macro is based on labels1.C by Rene Brun.
-//Updated by Timur Pocheptsov to use transparent text.
-//The macro requires OpenGL - either enable by
-//gStyle->SetCanvasPreferGL(kTRUE); or by setting
-//OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc.
+/// \file
+/// \ingroup tutorial_gl
+/// This macro is based on labels1.C by Rene Brun.
+/// Updated by Timur Pocheptsov to use transparent text.
+/// The macro requires OpenGL - either enable by
+/// `gStyle->SetCanvasPreferGL(kTRUE);` or by setting
+/// `OpenGL.CanvasPreferGL` to 1 in `$ROOTSYS/etc/system.rootrc`.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TPaveText.h"

@@ -22,16 +22,17 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsProxy is the abstact interface for proxy classes.
-// Proxy classes hold pointers to other Roofit objects 
-// and process serverRedirect changes so that the proxied
-// pointers are updated accordingly on a clone or copy of
-// of the owning class
-// END_HTML
-//
+/**
+\file RooAbsProxy.cxx
+\class RooAbsProxy
+\ingroup Roofitcore
+
+RooAbsProxy is the abstact interface for proxy classes.
+Proxy classes hold pointers to other Roofit objects 
+and process serverRedirect changes so that the proxied
+pointers are updated accordingly on a clone or copy of
+of the owning class
+**/
 
 
 using namespace std;
@@ -40,34 +41,38 @@ ClassImp(RooAbsProxy)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsProxy::RooAbsProxy() : _nset(0)
 {
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsProxy::RooAbsProxy(const char* /*name*/, const RooAbsProxy& other) : 
   _nset(other._nset)
 {
-  // Copy constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 void RooAbsProxy::changeNormSet(const RooArgSet* newNormSet) 
 {
-  // Destructor
   _nset = (RooArgSet*) newNormSet ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print proxy name
+
 void RooAbsProxy::print(ostream& os, Bool_t /*addContents*/) const 
 { 
-  // Print proxy name
   os << name() << endl ; 
 }

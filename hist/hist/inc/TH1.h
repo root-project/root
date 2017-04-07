@@ -21,49 +21,25 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAxis
 #include "TAxis.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
-#ifndef ROOT_TArrayC
 #include "TArrayC.h"
-#endif
-#ifndef ROOT_TArrayS
 #include "TArrayS.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 #include "Foption.h"
 
-#ifndef ROOT_TVectorFfwd
 #include "TVectorFfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
 
 #include <float.h>
 
@@ -83,50 +59,52 @@ public:
 
    // enumeration specifying type of statistics for bin errors
    enum  EBinErrorOpt {
-         kNormal = 0,    // errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
-         kPoisson = 1 ,  // errors from Poisson interval at 68.3% (1 sigma)
-         kPoisson2 = 2   // errors from Poisson interval at 95% CL (~ 2 sigma)
+         kNormal = 0,    ///< errors with Normal (Wald) approximation: errorUp=errorLow= sqrt(N)
+         kPoisson = 1 ,  ///< errors from Poisson interval at 68.3% (1 sigma)
+         kPoisson2 = 2   ///< errors from Poisson interval at 95% CL (~ 2 sigma)
    };
 
    // enumeration specifying which axes can be extended
    enum {
-      kNoAxis  = 0, // NOTE: Must always be 0 !!!
+      kNoAxis  = 0,      ///< NOTE: Must always be 0 !!!
       kXaxis = BIT(0),
       kYaxis = BIT(1),
       kZaxis = BIT(2),
       kAllAxes = kXaxis | kYaxis | kZaxis
    };
 
+   friend class TH1Merger;
+
 protected:
-    Int_t         fNcells;          //number of bins(1D), cells (2D) +U/Overflows
-    TAxis         fXaxis;           //X axis descriptor
-    TAxis         fYaxis;           //Y axis descriptor
-    TAxis         fZaxis;           //Z axis descriptor
-    Short_t       fBarOffset;       //(1000*offset) for bar charts or legos
-    Short_t       fBarWidth;        //(1000*width) for bar charts or legos
-    Double_t      fEntries;         //Number of entries
-    Double_t      fTsumw;           //Total Sum of weights
-    Double_t      fTsumw2;          //Total Sum of squares of weights
-    Double_t      fTsumwx;          //Total Sum of weight*X
-    Double_t      fTsumwx2;         //Total Sum of weight*X*X
-    Double_t      fMaximum;         //Maximum value for plotting
-    Double_t      fMinimum;         //Minimum value for plotting
-    Double_t      fNormFactor;      //Normalization factor
-    TArrayD       fContour;         //Array to display contour levels
-    TArrayD       fSumw2;           //Array of sum of squares of weights
-    TString       fOption;          //histogram options
-    TList        *fFunctions;       //->Pointer to list of functions (fits and user)
-    Int_t         fBufferSize;      //fBuffer size
-    Double_t     *fBuffer;          //[fBufferSize] entry buffer
-    TDirectory   *fDirectory;       //!Pointer to directory holding this histogram
-    Int_t         fDimension;       //!Histogram dimension (1, 2 or 3 dim)
-    Double_t     *fIntegral;        //!Integral of bins used by GetRandom
-    TVirtualHistPainter *fPainter;  //!pointer to histogram painter
-    EBinErrorOpt  fBinStatErrOpt;   //option for bin statistical errors
-    static Int_t  fgBufferSize;     //!default buffer size for automatic histograms
-    static Bool_t fgAddDirectory;   //!flag to add histograms to the directory
-    static Bool_t fgStatOverflows;  //!flag to use under/overflows in statistics
-    static Bool_t fgDefaultSumw2;   //!flag to call TH1::Sumw2 automatically at histogram creation time
+    Int_t         fNcells;          ///< number of bins(1D), cells (2D) +U/Overflows
+    TAxis         fXaxis;           ///< X axis descriptor
+    TAxis         fYaxis;           ///< Y axis descriptor
+    TAxis         fZaxis;           ///< Z axis descriptor
+    Short_t       fBarOffset;       ///< (1000*offset) for bar charts or legos
+    Short_t       fBarWidth;        ///< (1000*width) for bar charts or legos
+    Double_t      fEntries;         ///< Number of entries
+    Double_t      fTsumw;           ///< Total Sum of weights
+    Double_t      fTsumw2;          ///< Total Sum of squares of weights
+    Double_t      fTsumwx;          ///< Total Sum of weight*X
+    Double_t      fTsumwx2;         ///< Total Sum of weight*X*X
+    Double_t      fMaximum;         ///< Maximum value for plotting
+    Double_t      fMinimum;         ///< Minimum value for plotting
+    Double_t      fNormFactor;      ///< Normalization factor
+    TArrayD       fContour;         ///< Array to display contour levels
+    TArrayD       fSumw2;           ///< Array of sum of squares of weights
+    TString       fOption;          ///< histogram options
+    TList        *fFunctions;       ///<->Pointer to list of functions (fits and user)
+    Int_t         fBufferSize;      ///< fBuffer size
+    Double_t     *fBuffer;          ///<[fBufferSize] entry buffer
+    TDirectory   *fDirectory;       ///<!Pointer to directory holding this histogram
+    Int_t         fDimension;       ///<!Histogram dimension (1, 2 or 3 dim)
+    Double_t     *fIntegral;        ///<!Integral of bins used by GetRandom
+    TVirtualHistPainter *fPainter;  ///<!pointer to histogram painter
+    EBinErrorOpt  fBinStatErrOpt;   ///< option for bin statistical errors
+    static Int_t  fgBufferSize;     ///<!default buffer size for automatic histograms
+    static Bool_t fgAddDirectory;   ///<!flag to add histograms to the directory
+    static Bool_t fgStatOverflows;  ///<!flag to use under/overflows in statistics
+    static Bool_t fgDefaultSumw2;   ///<!flag to call TH1::Sumw2 automatically at histogram creation time
 
 public:
    static Int_t FitOptionsMake(Option_t *option, Foption_t &Foption);
@@ -149,6 +127,8 @@ protected:
    virtual void     SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *option = "");
    static Bool_t    RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis);
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
+   Bool_t   IsEmpty() const { return fTsumw == 0 && GetEntries() == 0; } //need to use GetEntries() in case of buffer histograms
+
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
                                Option_t * opt, Bool_t doerr = kFALSE) const;
@@ -165,13 +145,14 @@ protected:
 public:
    // TH1 status bits
    enum {
-      kNoStats     = BIT(9),  // don't draw stats box
-      kUserContour = BIT(10), // user specified contour levels
-      kCanRebin    = BIT(11), // FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
-      kLogX        = BIT(15), // X-axis in log scale
-      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
-      kNoTitle     = BIT(17), // don't draw the histogram title
-      kIsAverage   = BIT(18)  // Bin contents are average (used by Add)
+      kNoStats     = BIT(9),  ///< don't draw stats box
+      kUserContour = BIT(10), ///< user specified contour levels
+    //kCanRebin    = BIT(11), ///< FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
+      kLogX        = BIT(15), ///< X-axis in log scale
+      kIsZoomed    = BIT(16), ///< bit set when zooming on Y axis
+      kNoTitle     = BIT(17), ///< don't draw the histogram title
+      kIsAverage   = BIT(18), ///< Bin contents are average (used by Add)
+      kIsNotW      = BIT(19)  ///< Histogram is forced to be not weighted even when the histogram is filled with weighted different than 1.
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
@@ -290,6 +271,7 @@ public:
    virtual Int_t    GetMinimumBin() const;
    virtual Int_t    GetMinimumBin(Int_t &locmix, Int_t &locmiy, Int_t &locmiz) const;
    virtual Double_t GetMinimumStored() const {return fMinimum;}
+   virtual void     GetMinimumAndMaximum(Double_t& min, Double_t& max) const;
    virtual Double_t GetMean(Int_t axis=1) const;
    virtual Double_t GetMeanError(Int_t axis=1) const;
    virtual Int_t    GetNbinsX() const {return fXaxis.GetNbins();}
@@ -305,14 +287,15 @@ public:
    virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
    virtual Double_t GetRandom() const;
    virtual void     GetStats(Double_t *stats) const;
-           Double_t GetStdDev(Int_t axis=1) const { return GetRMS(axis); }
-           Double_t GetStdDevError(Int_t axis=1) const { return GetRMSError(axis); }
+   virtual Double_t GetStdDev(Int_t axis=1) const;
+   virtual Double_t GetStdDevError(Int_t axis=1) const;
    virtual Double_t GetSumOfWeights() const;
    virtual TArrayD *GetSumw2() {return &fSumw2;}
    virtual const TArrayD *GetSumw2() const {return &fSumw2;}
    virtual Int_t    GetSumw2N() const {return fSumw2.fN;}
-   virtual Double_t GetRMS(Int_t axis=1) const;
-   virtual Double_t GetRMSError(Int_t axis=1) const;
+           Double_t GetRMS(Int_t axis=1) const { return GetStdDev(axis); }
+           Double_t GetRMSError(Int_t axis=1) const { return GetStdDevError(axis); }
+
    virtual Double_t GetSkewness(Int_t axis=1) const;
            TAxis*   GetXaxis()  { return &fXaxis; }
            TAxis*   GetYaxis()  { return &fYaxis; }
@@ -326,8 +309,8 @@ public:
    virtual Double_t Interpolate(Double_t x);
    virtual Double_t Interpolate(Double_t x, Double_t y);
    virtual Double_t Interpolate(Double_t x, Double_t y, Double_t z);
-           Bool_t   IsBinOverflow(Int_t bin) const;
-           Bool_t   IsBinUnderflow(Int_t bin) const;
+           Bool_t   IsBinOverflow(Int_t bin, Int_t axis = 0) const;
+           Bool_t   IsBinUnderflow(Int_t bin, Int_t axis = 0) const;
    virtual Double_t AndersonDarlingTest(const TH1 *h2, Option_t *option="") const;
    virtual Double_t AndersonDarlingTest(const TH1 *h2, Double_t &advalue) const;
    virtual Double_t KolmogorovTest(const TH1 *h2, Option_t *option="") const;
@@ -436,6 +419,10 @@ protected:
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
 };
 
+namespace cling {
+  std::string printValue(TH1 *val);
+}
+
 //________________________________________________________________________
 
 class TH1C : public TH1, public TArrayC {
@@ -455,7 +442,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1C,1)  //1-Dim histograms (one char per channel)
+   ClassDef(TH1C,2)  //1-Dim histograms (one char per channel)
 
    friend  TH1C     operator*(Double_t c1, const TH1C &h1);
    friend  TH1C     operator*(const TH1C &h1, Double_t c1);
@@ -496,7 +483,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1S,1)  //1-Dim histograms (one short per channel)
+   ClassDef(TH1S,2)  //1-Dim histograms (one short per channel)
 
    friend  TH1S     operator*(Double_t c1, const TH1S &h1);
    friend  TH1S     operator*(const TH1S &h1, Double_t c1);
@@ -537,7 +524,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1I,1)  //1-Dim histograms (one 32 bits integer per channel)
+   ClassDef(TH1I,2)  //1-Dim histograms (one 32 bits integer per channel)
 
    friend  TH1I     operator*(Double_t c1, const TH1I &h1);
    friend  TH1I     operator*(const TH1I &h1, Double_t c1);
@@ -568,7 +555,7 @@ public:
    TH1F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1F(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   TH1F(const TVectorF &v);
+   explicit TH1F(const TVectorF &v);
    TH1F(const TH1F &h1f);
    TH1F& operator=(const TH1F &h1);
    virtual ~TH1F();
@@ -580,7 +567,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1F,1)  //1-Dim histograms (one float per channel)
+   ClassDef(TH1F,2)  //1-Dim histograms (one float per channel)
 
    friend  TH1F     operator*(Double_t c1, const TH1F &h1);
    friend  TH1F     operator*(const TH1F &h1, Double_t c1);
@@ -611,7 +598,7 @@ public:
    TH1D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1D(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
    TH1D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   TH1D(const TVectorD &v);
+   explicit TH1D(const TVectorD &v);
    TH1D(const TH1D &h1d);
    TH1D& operator=(const TH1D &h1);
    virtual ~TH1D();
@@ -623,7 +610,7 @@ public:
    virtual void     Reset(Option_t *option="");
    virtual void     SetBinsLength(Int_t n=-1);
 
-   ClassDef(TH1D,1)  //1-Dim histograms (one double per channel)
+   ClassDef(TH1D,2)  //1-Dim histograms (one double per channel)
 
    friend  TH1D     operator*(Double_t c1, const TH1D &h1);
    friend  TH1D     operator*(const TH1D &h1, Double_t c1);

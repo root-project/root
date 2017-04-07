@@ -60,13 +60,15 @@ Regression_BDTG2 [4/4]...........................................OK
 *  CPUTIME   =  90.2   *  Root5.27/07   20100929/1318
 ******************************************************************
 */
-#include "TThread.h"
 // including file tmvaut/UnitTest.h
 #ifndef UNITTEST_H
 #define UNITTEST_H
 
 // Author: Christoph Rosemann   Dec. 2009
 // TMVA unit tests
+
+#include "TMVA/IMethod.h"
+#include "TMVA/Types.h"
 
 #include <string>
 #include <iostream>
@@ -821,9 +823,7 @@ void utDataSet::testMethods()
 
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 
@@ -1270,14 +1270,14 @@ void utReader::run()
          reader[iTest]->AddVariable( "var0" ,&testvar[0]);
          reader[iTest]->AddVariable( "var1" ,&testvar[1]);
          reader[iTest]->AddSpectator( "ievt" ,&ievt);
-         reader[iTest]->BookMVA( "LD method", "weights/TMVATest_LD.weights.xml") ;
+         reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest_LD.weights.xml") ;
       }
       if (iTest==1){
          reader[iTest]->AddVariable( "var0" ,&testvar[0]);
          reader[iTest]->AddVariable( "var1" ,&testvar[1]);
          reader[iTest]->AddVariable( "var2" ,&testvar[2]);
          reader[iTest]->AddSpectator( "ievt" ,&ievt);
-         reader[iTest]->BookMVA( "LD method", "weights/TMVATest3Var_LD.weights.xml") ;
+         reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest3Var_LD.weights.xml") ;
       }
       if (iTest==2){
          reader[iTest]->AddVariable( "var0" ,&testvar[0]);
@@ -1286,7 +1286,7 @@ void utReader::run()
          reader[iTest]->AddVariable( "ivar0" ,&testvar[3]);
          reader[iTest]->AddVariable( "ivar1" ,&testvar[4]);
          reader[iTest]->AddSpectator( "ievt" ,&ievt);
-         reader[iTest]->BookMVA( "LD method", "weights/TMVATest3VarF2VarI_LD.weights.xml") ;
+         reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest3VarF2VarI_LD.weights.xml") ;
       }
    }
    reader[0]->EvaluateMVA( "LD method");
@@ -1384,14 +1384,14 @@ void utReaderMT::run()
             reader[iTest]->AddVariable( "var0" ,&testvar[0]);
             reader[iTest]->AddVariable( "var1" ,&testvar[1]);
             reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest_LD.weights.xml") ;
+            reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest_LD.weights.xml") ;
          }
          if (iTest==1){
             reader[iTest]->AddVariable( "var0" ,&testvar[0]);
             reader[iTest]->AddVariable( "var1" ,&testvar[1]);
             reader[iTest]->AddVariable( "var2" ,&testvar[2]);
             reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest3Var_LD.weights.xml") ;
+            reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest3Var_LD.weights.xml") ;
          }
          if (iTest==2){
             reader[iTest]->AddVariable( "var0" ,&testvar[0]);
@@ -1400,7 +1400,7 @@ void utReaderMT::run()
             reader[iTest]->AddVariable( "ivar0" ,&testvar[3]);
             reader[iTest]->AddVariable( "ivar1" ,&testvar[4]);
             reader[iTest]->AddSpectator( "ievt" ,&ievt);
-            reader[iTest]->BookMVA( "LD method", "weights/TMVATest3VarF2VarI_LD.weights.xml") ;
+            reader[iTest]->BookMVA( "LD method", "dataset/weights/TMVATest3VarF2VarI_LD.weights.xml") ;
          }
       }
       reader[0]->EvaluateMVA( "LD method");
@@ -1434,6 +1434,7 @@ void utReaderMT::run()
 #include "TString.h"
 
 #include "TMVA/Factory.h"
+#include "TMVA/DataLoader.h"
 #include "TMVA/Types.h"
 
 
@@ -1547,8 +1548,9 @@ bool utFactory::addEventsToFactoryByHand(const char* factoryname, const char* op
    TString outfileName( "weights/ByHand.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
    Factory* factory = new Factory(factoryname,outputFile,factoryOptions);
-   factory->AddVariable( "var0",  "Variable 0", 'F' );
-   factory->AddVariable( "var1",  "Variable 1", 'F' );
+   DataLoader * dataloader = new DataLoader("dataset"); 
+   dataloader->AddVariable( "var0",  "Variable 0", 'F' );
+   dataloader->AddVariable( "var1",  "Variable 1", 'F' );
 
    vector <double> vars(2);
    TRandom3 r(99);
@@ -1564,26 +1566,27 @@ bool utFactory::addEventsToFactoryByHand(const char* factoryname, const char* op
          vars[0]=r.Gaus(1.,1.);
          vars[1]=r.Gaus(0.,1.);
       }
-      factory->AddSignalTrainingEvent( vars, weight );
-      factory->AddSignalTestEvent( vars, weight );
+      dataloader->AddSignalTrainingEvent( vars, weight );
+      dataloader->AddSignalTestEvent( vars, weight );
    }
    for (int i=0;i<100;i++){
       vars[0]= 4. * (r.Rndm()-0.5);
       vars[1]= 4. * (r.Rndm()-0.5);
       weight = 1.;
-      factory->AddBackgroundTrainingEvent( vars, weight);
-      factory->AddBackgroundTestEvent( vars, weight);
+      dataloader->AddBackgroundTrainingEvent( vars, weight);
+      dataloader->AddBackgroundTestEvent( vars, weight);
    }
    if (prepareString=="") prepareString = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ;
-   factory->PrepareTrainingAndTestTree( "", "", prepareString);
+   dataloader->PrepareTrainingAndTestTree( "", "", prepareString);
 
-   factory->BookMethod(_methodTitle,_methodTitle, "!H:!V");
+   factory->BookMethod(dataloader, _methodTitle,_methodTitle, "!H:!V");
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
-   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(_methodTitle));
+   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
    double ROCValue = theMethod->GetROCIntegral();
    //cout << "ROC="<<ROCValue<<endl;
+   delete dataloader; 
    delete factory;
    outputFile->Close();
    if (outputFile) delete outputFile;
@@ -1618,30 +1621,32 @@ bool utFactory::operateSingleFactory(const char* factoryname, const char* opt)
    if (option.Contains("LateTreeBooking") && option.Contains("MemoryResidentTree")) tree = create_Tree();
 
    Factory* factory = new Factory(factoryname,outputFile,factoryOptions);
-   factory->AddVariable( "var0",  "Variable 0", 'F' );
-   factory->AddVariable( "var1",  "Variable 1", 'F' );
-   if (option.Contains("var2"))  factory->AddVariable( "var2",  "Var 2", 'F' );
-   if (option.Contains("ivar0")) factory->AddVariable( "ivar0",  "Var i0", 'I' );
-   if (option.Contains("ivar1")) factory->AddVariable( "ivar1",  "Var i1", 'I' );
+   DataLoader * dataloader = new DataLoader("dataset");
+   dataloader->AddVariable( "var0",  "Variable 0", 'F' );
+   dataloader->AddVariable( "var1",  "Variable 1", 'F' );
+   if (option.Contains("var2"))  dataloader->AddVariable( "var2",  "Var 2", 'F' );
+   if (option.Contains("ivar0")) dataloader->AddVariable( "ivar0",  "Var i0", 'I' );
+   if (option.Contains("ivar1")) dataloader->AddVariable( "ivar1",  "Var i1", 'I' );
 
-   factory->AddSpectator( "ievt", 'I' );
-   factory->AddSignalTree(tree);
-   factory->AddBackgroundTree(tree);
+   dataloader->AddSpectator( "ievt", 'I' );
+   dataloader->AddSignalTree(tree);
+   dataloader->AddBackgroundTree(tree);
    if (prepareString=="") prepareString = "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ;
    // this crashes "nTrain_Signal=0:nTrain_Background=0:SplitMode=Random:NormMode=NumEvents:!V" ;
-   factory->PrepareTrainingAndTestTree( "iclass==0", "iclass==1", prepareString);
+   dataloader->PrepareTrainingAndTestTree( "iclass==0", "iclass==1", prepareString);
 
-   if (option.Contains("StringMethodBooking")) factory->BookMethod("LD","LD","!H:!V");
-   else factory->BookMethod(TMVA::Types::kLD,"LD","!H:!V");
+   if (option.Contains("StringMethodBooking")) factory->BookMethod(dataloader,"LD","LD","!H:!V");
+   else factory->BookMethod(dataloader,TMVA::Types::kLD,"LD","!H:!V");
 
    //factory->BookMethod(_methodType, _methodTitle, _methodOption);
 
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
-   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(_methodTitle));
+   MethodBase* theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
    double ROCValue = theMethod->GetROCIntegral();
    delete tree;
+   delete dataloader; 
    delete factory;
    outputFile->Close();
    if (option.Contains("InputFile")){
@@ -1776,6 +1781,9 @@ utVariableInfo::utVariableInfo() :
 
    mean       = 42.;
    rms        = 47.11;
+   _varinfoC1 = nullptr;
+   _varinfoC2 = nullptr;
+   _varinfoC3 = nullptr;
 }
 
 
@@ -1817,7 +1825,7 @@ void utVariableInfo::_testConstructor2()
    test_(_varinfoC2->GetExpression()  == "");
    //  test_(_varinfoC2->GetInternalName() == );
    //  test_(_varinfoC2->GetLabel()
-   test_(_varinfoC2->GetTitle()   == "");
+   test_(_varinfoC2->GetTitle()   == TString(""));
    test_(_varinfoC2->GetUnit()    == "");
    test_(_varinfoC2->GetVarType() == '\0');
 
@@ -2004,29 +2012,24 @@ void MethodUnitTestWithROCLimits::run()
 
   if (_methodOption.Contains("VarTransform")) factoryOptions+=":Transformations=I;D;P;G";
   Factory* factory = new Factory( "TMVAUnitTesting", outputFile, factoryOptions );
+  DataLoader * dataloader = new DataLoader("dataset");
   // factory->AddVariable( "myvar1 := var1+var2", 'F' );
   // factory->AddVariable( "myvar2 := var1-var2", "Expression 2", "", 'F' );
-  factory->AddVariable( Form("%s  := %s",_TreeVariableNames->at(0).Data(), _VariableNames->at(0).Data()), 'F' );
-  factory->AddVariable( Form("%s  := %s",_TreeVariableNames->at(1).Data(), _VariableNames->at(1).Data()), "Expression 2", "",'F' );
-  factory->AddVariable( _VariableNames->at(2),                "Variable 3", "units", 'F' );
-  factory->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
+  dataloader->AddVariable( Form("%s  := %s",_TreeVariableNames->at(0).Data(), _VariableNames->at(0).Data()), 'F' );
+  dataloader->AddVariable( Form("%s  := %s",_TreeVariableNames->at(1).Data(), _VariableNames->at(1).Data()), "Expression 2", "",'F' );
+  dataloader->AddVariable( _VariableNames->at(2),                "Variable 3", "units", 'F' );
+  dataloader->AddVariable( _VariableNames->at(3),                "Variable 4", "units", 'F' );
 
   TFile* input(0);
-
   FileStat_t stat;
 
-  TString fname = "../tmva/test/data/toy_sigbkg.root"; //tmva_example.root";
-  const char *fcname = gSystem->ExpandPathName("$ROOTSYS/tmva/test/data/toy_sigbkg.root");
+  TString fname = "./tmva_class_example.root";
   if(!gSystem->GetPathInfo(fname,stat)) {
      input = TFile::Open( fname );
-  } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-     input = TFile::Open( "../"+fname );
-  } else if(fcname && !gSystem->GetPathInfo(fcname,stat)) {
-     input = TFile::Open( fcname );
   } else {
-     input = TFile::Open( "http://root.cern.ch/files/tmva_class_example.root" );
+     TFile::SetCacheFileDir(".");
+     input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
   }
-  delete [] fcname;
   if (input == NULL) {
      cerr << "broken/inaccessible input file" << endl;
   }
@@ -2034,19 +2037,19 @@ void MethodUnitTestWithROCLimits::run()
   TTree *signal     = (TTree*)input->Get("TreeS");
   TTree *background = (TTree*)input->Get("TreeB");
 
-  factory->AddSignalTree(signal);
-  factory->AddBackgroundTree(background);
+  dataloader->AddSignalTree(signal);
+  dataloader->AddBackgroundTree(background);
 
-  factory->SetBackgroundWeightExpression("weight");
+  dataloader->SetBackgroundWeightExpression("weight");
 
   TCut mycuts = "";
   TCut mycutb = "";
 
   // FIXME:: make options string mutable?
-  factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+  dataloader->PrepareTrainingAndTestTree( mycuts, mycutb,
                                       "nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=5000:nTest_Background=5000:SplitMode=Random:NormMode=NumEvents:!V" );
 
-  factory->BookMethod(_methodType, _methodTitle, _methodOption);
+  factory->BookMethod(dataloader, _methodType, _methodTitle, _methodOption);
 
   factory->TrainAllMethods();
 
@@ -2054,7 +2057,7 @@ void MethodUnitTestWithROCLimits::run()
 
   factory->EvaluateAllMethods();
 
-  _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(_methodTitle));
+  _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
 
   if (_methodType == TMVA::Types::kCuts) {
      // ToDo make class variable _theEffi
@@ -2076,6 +2079,7 @@ void MethodUnitTestWithROCLimits::run()
      test_(ROCIntegralWithinInterval());
   }
   outputFile->Close();
+  delete dataloader; 
   delete factory;
 
   if (outputFile) delete outputFile;
@@ -2091,7 +2095,7 @@ void MethodUnitTestWithROCLimits::run()
 
   // setup test tree access
   TFile* testFile = new TFile("weights/TMVA.root");
-  TTree* testTree = (TTree*)(testFile->Get("TestTree"));
+  TTree* testTree = (TTree*)(testFile->GetDirectory("dataset")->Get("TestTree"));
   for (UInt_t i=0;i<_VariableNames->size();i++)
      testTree->SetBranchAddress(_TreeVariableNames->at(i),&testvar[i]);
   testTree->SetBranchAddress(_methodTitle.Data(),&testTreeVal);
@@ -2100,15 +2104,15 @@ void MethodUnitTestWithROCLimits::run()
   variableNames2.push_back("var0");
   variableNames2.push_back("var1");
   TFile* testFile2 = new TFile("weights/ByHand.root");
-  TTree* testTree2 = (TTree*)(testFile2->Get("TestTree"));
+  TTree* testTree2 = (TTree*)(testFile2->GetDirectory("dataset")->Get("TestTree"));
   testTree2->SetBranchAddress("var0",&dummy[0]);
   testTree2->SetBranchAddress("var1",&dummy[1]);
 
   TString readerName = _methodTitle + TString(" method");
   TString readerOption="!Color:Silent";
-  TString dir    = "weights/TMVAUnitTesting_";
+  TString dir    = "dataset/weights/TMVAUnitTesting_";
   TString weightfile=dir+_methodTitle+".weights.xml";
-  TString weightfile2="weights/ByHand_BDT.weights.xml"; //TMVATest3VarF2VarI_BDT.weights.xml
+  TString weightfile2="dataset/weights/ByHand_BDT.weights.xml"; //TMVATest3VarF2VarI_BDT.weights.xml
   TString readerName2 = "BDT method";
   double diff, maxdiff = 0., sumdiff=0., previousVal=0.;
   int stuckCount=0, nevt= TMath::Min((int) testTree->GetEntries(),100);
@@ -2432,23 +2436,22 @@ void RegressionUnitTestWithDeviation::run()
    string factoryOptions( "!V:Silent:Transformations=I;D;P;G,D:AnalysisType=Regression:!Color:!DrawProgressBar" );
 
    Factory* factory = new Factory( "TMVARegressionUnitTesting", outputFile, factoryOptions );
+   DataLoader * dataloader = new DataLoader("dataset"); 
 
-   factory->AddVariable( "var1", "Variable 1", "units", 'F' ); // fix me
-   factory->AddVariable( "var2", "Variable 2", "units", 'F' ); // fix me
+   dataloader->AddVariable( "var1", "Variable 1", "units", 'F' ); // fix me
+   dataloader->AddVariable( "var2", "Variable 2", "units", 'F' ); // fix me
    TString _targetname="fvalue";
-   factory->AddTarget  ( _targetname.Data() ); // fix me _targetname.Data()
+   dataloader->AddTarget  ( _targetname.Data() ); // fix me _targetname.Data()
 
    TFile* input(0);
    FileStat_t stat;
 
-   // FIXME:: give the filename of the sample somewhere else?
-   TString fname = "../tmva/test/tmva_reg_example.root";
+   TString fname = "./tmva_reg_example.root";
    if(!gSystem->GetPathInfo(fname,stat)) {
       input = TFile::Open( fname );
-   } else if(!gSystem->GetPathInfo("../"+fname,stat)) {
-      input = TFile::Open( "../"+fname );
    } else {
-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" );
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD");
    }
    if (input == NULL) {
       cerr << "broken/inaccessible input file" << endl;
@@ -2457,19 +2460,19 @@ void RegressionUnitTestWithDeviation::run()
    TTree *regTree = (TTree*)input->Get("TreeR");
 
    Double_t regWeight  = 1.0;
-   factory->AddRegressionTree( regTree, regWeight );
-   factory->SetWeightExpression( "var1", "Regression" );
+   dataloader->AddRegressionTree( regTree, regWeight );
+   dataloader->SetWeightExpression( "var1", "Regression" );
    TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
 
-   factory->PrepareTrainingAndTestTree( mycut, "nTrain_Regression=500:nTest_Regression=500:SplitMode=Random:NormMode=NumEvents:!V" );
+   dataloader->PrepareTrainingAndTestTree( mycut, "nTrain_Regression=500:nTest_Regression=500:SplitMode=Random:NormMode=NumEvents:!V" );
 
-   factory->BookMethod(_methodType, _methodTitle, _methodOption);
+   factory->BookMethod(dataloader, _methodType, _methodTitle, _methodOption);
 
    factory->TrainAllMethods();
    factory->TestAllMethods();
    factory->EvaluateAllMethods();
 
-   _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(_methodTitle));
+   _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
 
    _theMethod->GetRegressionDeviation(0,TMVA::Types::kTesting, _theFullDeviation,_the90PercentDeviation);
    if (DeviationWithinLimits()){
@@ -2491,13 +2494,14 @@ void RegressionUnitTestWithDeviation::run()
    test_(DeviationWithinLimits());
 
    outputFile->Close();
+   delete dataloader; 
    delete factory;
 
    // reader tests
 
    // setup test tree access
    TFile* testFile = new TFile("weights/TMVARegUT.root"); // fix me hardcoded file name
-   TTree* testTree = (TTree*)(testFile->Get("TestTree"));
+   TTree* testTree = (TTree*)(testFile->GetDirectory("dataset")->Get("TestTree"));
    const int nTest=3; // 3 reader usages
    float testTarget,readerVal=0.;
 
@@ -2515,7 +2519,7 @@ void RegressionUnitTestWithDeviation::run()
    testTree->SetBranchAddress(_methodTitle.Data(),&testTarget);
 
    TString readerName = _methodTitle + TString(" method");
-   TString dir    = "weights/TMVARegressionUnitTesting_";
+   TString dir    = "dataset/weights/TMVARegressionUnitTesting_";
    TString weightfile=dir+_methodTitle+".weights.xml";
    double diff, maxdiff = 0., sumdiff=0., previousVal=0.;
    int stuckCount=0, nevt= TMath::Min((int) testTree->GetEntries(),50);
@@ -2646,6 +2650,10 @@ MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& tree
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
    UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
+    theTree = nullptr;
+    _theMethod = nullptr;
+    _factory = nullptr;
+    _ROCValue = 0.;
 }
 
 
@@ -2673,13 +2681,14 @@ void MethodUnitTestWithComplexData::run()
   string factoryOptions( "!V:Silent:Transformations=I;D;P;G,D:AnalysisType=Classification:!Color:!DrawProgressBar" );
 
   Factory* factory = new Factory( "TMVAUnitTesting", outputFile, factoryOptions );
+  DataLoader * dataloader = new DataLoader("dataset"); 
 
-  factory->AddVariable( "var0",  "Variable 0", 'F' );
-  factory->AddVariable( "var1",  "Variable 1", 'F' );
-  factory->AddVariable( "var2",  "Variable 2", 'F' );
-  factory->AddVariable( "var3",  "Variable 3", 'F' );
-  factory->AddSpectator( "is1", 'I' );
-  factory->AddSpectator( "evtno", 'I' );
+  dataloader->AddVariable( "var0",  "Variable 0", 'F' );
+  dataloader->AddVariable( "var1",  "Variable 1", 'F' );
+  dataloader->AddVariable( "var2",  "Variable 2", 'F' );
+  dataloader->AddVariable( "var3",  "Variable 3", 'F' );
+  dataloader->AddSpectator( "is1", 'I' );
+  dataloader->AddSpectator( "evtno", 'I' );
 
   TFile* input(0);
 // FIXME:: give the filename of the sample somewhere else?
@@ -2699,28 +2708,28 @@ void MethodUnitTestWithComplexData::run()
   TTree *bgd2     = (TTree*)input->Get("TreeB2");
   TTree *bgdfull  = (TTree*)input->Get("TreeBFull");
 
-  if (_treeString.Contains("sig1"))    factory->AddSignalTree(sig1);
-  if (_treeString.Contains("sig2"))    factory->AddSignalTree(sig2);
-  if (_treeString.Contains("sigfull")) factory->AddSignalTree(sigfull);
-  if (_treeString.Contains("bgd1"))    factory->AddBackgroundTree(bgd1);
-  if (_treeString.Contains("bgd2"))    factory->AddBackgroundTree(bgd2);
-  if (_treeString.Contains("bgdfull")) factory->AddBackgroundTree(bgdfull);
+  if (_treeString.Contains("sig1"))    dataloader->AddSignalTree(sig1);
+  if (_treeString.Contains("sig2"))    dataloader->AddSignalTree(sig2);
+  if (_treeString.Contains("sigfull")) dataloader->AddSignalTree(sigfull);
+  if (_treeString.Contains("bgd1"))    dataloader->AddBackgroundTree(bgd1);
+  if (_treeString.Contains("bgd2"))    dataloader->AddBackgroundTree(bgd2);
+  if (_treeString.Contains("bgdfull")) dataloader->AddBackgroundTree(bgdfull);
 
-  factory->SetSignalWeightExpression("weight");
-  factory->SetBackgroundWeightExpression("weight");
+  dataloader->SetSignalWeightExpression("weight");
+  dataloader->SetBackgroundWeightExpression("weight");
 
   TCut mycuts = "";
   TCut mycutb = "";
   if (_prepareString=="") _prepareString = "nTrain_Signal=200:nTrain_Background=200:SplitMode=Random:NormMode=NumEvents:!V" ;
-  factory->PrepareTrainingAndTestTree( mycuts, mycutb, _prepareString);
+  dataloader->PrepareTrainingAndTestTree( mycuts, mycutb, _prepareString);
 
-  factory->BookMethod(_methodType, _methodTitle, _methodOption);
+  factory->BookMethod(dataloader, _methodType, _methodTitle, _methodOption);
 
   factory->TrainAllMethods();
   factory->TestAllMethods();
   factory->EvaluateAllMethods();
 
-  _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(_methodTitle));
+  _theMethod = dynamic_cast<TMVA::MethodBase*> (factory->GetMethod(dataloader->GetName(), _methodTitle));
 
   if (_methodType == TMVA::Types::kCuts) {
      // ToDo make class variable _theEffi
@@ -2739,6 +2748,7 @@ void MethodUnitTestWithComplexData::run()
      test_(ROCIntegralWithinInterval());
   }
   outputFile->Close();
+  delete dataloader; 
   delete factory;
 }
 
@@ -2817,6 +2827,105 @@ bool MethodUnitTestWithComplexData::create_data(const char* filename, int nmax)
    dataFile->Close();
    return true;
 }
+
+
+
+//Author: Attila Bagoly <battila93@gmail.com>
+
+#ifndef UTIPythonInteractive_H
+#define UTIPythonInteractive_H
+
+#include <vector>
+#include "TMVA/MethodBase.h"
+
+/**
+Unit test for TMVA::IPythonInteractive located in TMVA/MethodBase.h
+*/
+class utIPythonInteractive : public UnitTesting::UnitTest{
+public:
+  utIPythonInteractive();
+  void run();
+private:
+  void testInit();
+  void testMethods();
+  
+  TMVA::IPythonInteractive * ipyi;
+  std::vector<TString> titles;
+  std::vector<Double_t> xvec;
+  std::vector<Double_t> y1vec, y2vec;
+  int N;
+};
+
+#endif
+
+
+#include <random>
+#include "TGraph.h"
+#include "TMultiGraph.h"
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Standard constructor
+utIPythonInteractive::utIPythonInteractive() : UnitTesting::UnitTest("IPythonInteractive", __FILE__)
+{
+  ipyi = nullptr;
+  N = 1000;
+  titles.push_back("Training Error");
+  titles.push_back("Testing Error");
+  std::uniform_real_distribution<double> unif(0, 1);
+  std::default_random_engine re;
+  for(int i=0;i<N;i++){
+    xvec.push_back(i);
+    y1vec.push_back(unif(re));
+    y2vec.push_back(unif(re));
+  }
+  
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Run tests
+void utIPythonInteractive::run()
+{
+  testInit();
+  testMethods();
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Testing creating IPythonInteractive object and initialization.
+void utIPythonInteractive::testInit()
+{
+  ipyi = new TMVA::IPythonInteractive();
+  test_(ipyi->Get() != NULL);
+  
+  ipyi->Init(titles);
+  test_(!ipyi->NotInitialized());
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///// Adding datas to IPythonInteractive and testing if it got all of them correctly.
+void utIPythonInteractive::testMethods()
+{
+  for(int i=0;i<N;i++){
+    ipyi->AddPoint(xvec[i], y1vec[i], y2vec[i]);
+    TList * graphs = ipyi->Get()->GetListOfFunctions();
+    TIter next(graphs);
+    int j=0;
+  	TObject *obj;
+    while ((obj = (TObject*)next())){
+      TGraph * gr = dynamic_cast<TGraph*>(obj);
+      test_(gr!=nullptr);
+      if (gr==nullptr) continue;
+      test_(gr->GetN()==(i+1));
+      Double_t x, y;
+      test_(gr->GetPoint(i, x, y)!=-1);
+      test_(x==xvec[i]);
+      test_(j==0 ? y==y1vec[i] : y==y2vec[i]);
+      j++;
+	  }
+  }
+}
+
+
+
 // including file stressTMVA.cxx
 // Authors: Christoph Rosemann, Eckhard von Toerne   July 2010
 // TMVA unit tests
@@ -2911,6 +3020,36 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
                                                                 "!H:!V:NTrees=400:nEventsMin=200:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning:VarTransform=Decorrelate" , 0.88, 0.98) );
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kRuleFit, "RuleFit",
                                                                 "H:!V:RuleFitModule=RFTMVA:Model=ModRuleLinear:MinImp=0.001:RuleMinDist=0.001:NTrees=20:fEventsMin=0.01:fEventsMax=0.5:GDTau=-1.0:GDTauPrec=0.01:GDStep=0.01:GDNSteps=10000:GDErrScale=1.02" , 0.88, 0.98) );
+
+   TString config = "!H:V:VarTransform=N:ErrorStrategy=CROSSENTROPY"
+      ":WeightInitialization=XAVIER"
+      ":Layout=LINEAR|64,LINEAR|64,LINEAR|64,LINEAR"
+      ":TrainingStrategy=LearningRate=0.1,Momentum=0.9, ConvergenceSteps=20,"
+      "BatchSize=256,Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.01,Momentum=0.5,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.003,Momentum=0.5,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True"
+      "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
+      "Regularization=None,TestRepetitions=5, Multithreading=True";
+   TString configStandard = "Architecture=STANDARD:" + config;
+   TString configCpu      = "Architecture=CPU:" + config;
+   TString configGpu      = "Architecture=GPU:" + config;
+
+
+    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                          TMVA::Types::kDNN, "DNN Standard",
+                          configStandard, 0.85, 0.98));
+#ifdef DNNCPU
+   TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                         TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)
+                     );
+#endif
+#ifdef DNNCUDA
+   TMVA_test.addTest(new MethodUnitTestWithROCLimits(
+                         TMVA::Types::kDNN, "DNN GPU", configGpu, 0.85, 0.98)
+                     );
+#endif
 }
 
 void addRegressionTests( UnitTestSuite& TMVA_test, bool full=true)
@@ -3013,9 +3152,11 @@ int main(int argc, char **argv)
    addRegressionTests(TMVA_test, full);
    addDataInputTests(TMVA_test, full);
    addComplexClassificationTests(TMVA_test, full);
+   
+   TMVA_test.addTest(new utIPythonInteractive);
 
    // run all
-   TThread::Initialize();
+   ROOT::EnableThreadSafety();
    TMVA_test.run();
 
 #ifdef COUTDEBUG

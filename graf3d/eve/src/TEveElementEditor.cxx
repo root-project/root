@@ -22,18 +22,16 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//==============================================================================
-//==============================================================================
-// TEveElementEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Editor for TEveElement class.
+/** \class TEveElementEditor
+\ingroup TEve
+Editor for TEveElement class.
+*/
 
 ClassImp(TEveElementEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveElementEditor::TEveElementEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
@@ -49,8 +47,6 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    fTransparency (0),
    fTrans        (0)
 {
-   // Constructor.
-
    MakeTitle("TEveElement");
    fPriority = 0;
 
@@ -100,13 +96,11 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
    AddFrame(fTrans, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 0, 0));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveElementEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fRE = dynamic_cast<TEveElement*>(obj);
 
    fPreLabel   ->UnmapWindow();
@@ -148,49 +142,47 @@ void TEveElementEditor::SetModel(TObject* obj)
    fHFrame->Layout();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrSelf.
 
-//______________________________________________________________________________
 void TEveElementEditor::DoRnrSelf()
 {
-   // Slot for RnrSelf.
-
    fRE->SetRnrSelf(fRnrSelf->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrChildren.
+
 void TEveElementEditor::DoRnrChildren()
 {
-   // Slot for RnrChildren.
-
    fRE->SetRnrChildren(fRnrChildren->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrState.
+
 void TEveElementEditor::DoRnrState()
 {
-   // Slot for RnrState.
-
    fRE->SetRnrState(fRnrState->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for MainColor.
+
 void TEveElementEditor::DoMainColor(Pixel_t color)
 {
-   // Slot for MainColor.
-
    fRE->SetMainColorPixel(color);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Transparency.
+
 void TEveElementEditor::DoTransparency()
 {
-   // Slot for Transparency.
-
    fRE->SetMainTransparency((Char_t)(fTransparency->GetNumber()));
    Update();
 }

@@ -9,16 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofServ                                                           //
-//                                                                      //
-// TProofServ is the PROOF server. It can act either as the master      //
-// server or as a slave server, depending on its startup arguments. It  //
-// receives and handles message coming from the client or from the      //
-// master server.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofServ
+\ingroup proofkernel
+
+Class providing the PROOF server. It can act either as the master
+server or as a slave server, depending on its startup arguments. It
+receives and handles message coming from the client or from the
+master server.
+
+*/
 
 #include "RConfigure.h"
 #include "RConfig.h"
@@ -90,7 +89,6 @@ using namespace std;
 #include "TProofResourcesStatic.h"
 #include "TProofNodeInfo.h"
 #include "TFileInfo.h"
-#include "TMutex.h"
 #include "TClass.h"
 #include "TSQLServer.h"
 #include "TSQLResult.h"
@@ -111,6 +109,7 @@ using namespace std;
 #include "TMethodCall.h"
 #include "TProofOutputFile.h"
 #include "TSelector.h"
+#include "TPackMgr.h"
 
 // global proofserv handle
 TProofServ *gProofServ = 0;
@@ -147,8 +146,14 @@ Long_t TProofServ::fgResMemMax = -1;
 Float_t TProofServ::fgMemHWM = 0.80;
 Float_t TProofServ::fgMemStop = 0.95;
 
+// Async Logger
+static void SendAsynMsg(const char *msg) {
+  if (gProofServ) gProofServ->SendAsynMessage(msg, kTRUE);
+}
+
 //----- Termination signal handler ---------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServTerminationHandler : public TSignalHandler {
    TProofServ  *fServ;
 public:
@@ -157,18 +162,19 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this interrupt
+
 Bool_t TProofServTerminationHandler::Notify()
 {
-   // Handle this interrupt
-
    Printf("Received SIGTERM: terminating");
    fServ->HandleTermination();
    return kTRUE;
 }
 
 //----- Interrupt signal handler -----------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServInterruptHandler : public TSignalHandler {
    TProofServ  *fServ;
 public:
@@ -177,11 +183,11 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this interrupt
+
 Bool_t TProofServInterruptHandler::Notify()
 {
-   // Handle this interrupt
-
    fServ->HandleUrgentData();
    if (TROOT::Initialized()) {
       Throw(GetSignal());
@@ -190,7 +196,8 @@ Bool_t TProofServInterruptHandler::Notify()
 }
 
 //----- SigPipe signal handler -------------------------------------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServSigPipeHandler : public TSignalHandler {
    TProofServ  *fServ;
 public:
@@ -199,17 +206,18 @@ public:
    Bool_t  Notify();
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this signal
+
 Bool_t TProofServSigPipeHandler::Notify()
 {
-   // Handle this signal
-
    fServ->HandleSigPipe();
    return kTRUE;
 }
 
 //----- Input handler for messages from parent or master -----------------------
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 class TProofServInputHandler : public TFileHandler {
    TProofServ  *fServ;
 public:
@@ -219,11 +227,11 @@ public:
    Bool_t ReadNotify() { return Notify(); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle this input
+
 Bool_t TProofServInputHandler::Notify()
 {
-   // Handle this input
-
    fServ->HandleSocketInput();
    return kTRUE;
 }
@@ -231,13 +239,13 @@ Bool_t TProofServInputHandler::Notify()
 TString TProofServLogHandler::fgPfx = ""; // Default prefix to be prepended to messages
 Int_t TProofServLogHandler::fgCmdRtn = 0; // Return code of the command execution (available only
                                           // after closing the pipe)
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute 'cmd' in a pipe and handle output messages from the related file
+
 TProofServLogHandler::TProofServLogHandler(const char *cmd,
                                              TSocket *s, const char *pfx)
                      : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
-   // Execute 'cmd' in a pipe and handle output messages from the related file
-
    ResetBit(kFileIsPipe);
    fgCmdRtn = 0;
    fFile = 0;
@@ -259,12 +267,12 @@ TProofServLogHandler::TProofServLogHandler(const char *cmd,
             "undefined command (%p) or socket (%p)", (int *)cmd, s);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message from the open file 'f'
+
 TProofServLogHandler::TProofServLogHandler(FILE *f, TSocket *s, const char *pfx)
                      : TFileHandler(-1, 1), fSocket(s), fPfx(pfx)
 {
-   // Handle available message from the open file 'f'
-
    ResetBit(kFileIsPipe);
    fgCmdRtn = 0;
    fFile = 0;
@@ -277,11 +285,11 @@ TProofServLogHandler::TProofServLogHandler(FILE *f, TSocket *s, const char *pfx)
       Error("TProofServLogHandler", "undefined file (%p) or socket (%p)", f, s);
    }
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message in the open file
+
 TProofServLogHandler::~TProofServLogHandler()
 {
-   // Handle available message in the open file
-
    if (TestBit(kFileIsPipe) && fFile) {
       Int_t rc = gSystem->ClosePipe(fFile);
 #ifdef WIN32
@@ -294,11 +302,11 @@ TProofServLogHandler::~TProofServLogHandler()
    fSocket = 0;
    ResetBit(kFileIsPipe);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle available message in the open file
+
 Bool_t TProofServLogHandler::Notify()
 {
-   // Handle available message in the open file
-
    if (IsValid()) {
       TMessage m(kPROOF_MESSAGE);
       // Read buffer
@@ -327,28 +335,28 @@ Bool_t TProofServLogHandler::Notify()
    }
    return kTRUE;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to set the default prefix
+
 void TProofServLogHandler::SetDefaultPrefix(const char *pfx)
 {
-   // Static method to set the default prefix
-
    fgPfx = pfx;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to get the return code from the execution of a command via
+/// the pipe. This is always 0 when the log handler is not used with a pipe
+
 Int_t TProofServLogHandler::GetCmdRtn()
 {
-   // Static method to get the return code from the execution of a command via
-   // the pipe. This is always 0 when the log handler is not used with a pipe
-
    return fgCmdRtn;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a guard for executing a command in a pipe
+
 TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s,
                                                      const char *pfx, Bool_t on)
 {
-   // Init a guard for executing a command in a pipe
-
    fExecHandler = 0;
    if (cmd && on) {
       fExecHandler = new TProofServLogHandler(cmd, s, pfx);
@@ -363,12 +371,12 @@ TProofServLogHandlerGuard::TProofServLogHandlerGuard(const char *cmd, TSocket *s
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init a guard for executing a command in a pipe
+
 TProofServLogHandlerGuard::TProofServLogHandlerGuard(FILE *f, TSocket *s,
                                                      const char *pfx, Bool_t on)
 {
-   // Init a guard for executing a command in a pipe
-
    fExecHandler = 0;
    if (f && on) {
       fExecHandler = new TProofServLogHandler(f, s, pfx);
@@ -383,11 +391,11 @@ TProofServLogHandlerGuard::TProofServLogHandlerGuard(FILE *f, TSocket *s,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close a guard for executing a command in a pipe
+
 TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
 {
-   // Close a guard for executing a command in a pipe
-
    if (fExecHandler && fExecHandler->IsValid()) {
       gSystem->RemoveFileHandler(fExecHandler);
       SafeDelete(fExecHandler);
@@ -395,23 +403,23 @@ TProofServLogHandlerGuard::~TProofServLogHandlerGuard()
 }
 
 //--- Special timer to control delayed shutdowns ----------------------------//
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construtor
+
 TShutdownTimer::TShutdownTimer(TProofServ *p, Int_t delay)
                : TTimer(delay, kFALSE), fProofServ(p)
 {
-   // Construtor
-
    fTimeout = gEnv->GetValue("ProofServ.ShutdownTimeout", 20);
    // Backward compaitibility: until 5.32 the variable was called ProofServ.ShutdonwTimeout
    fTimeout = gEnv->GetValue("ProofServ.ShutdonwTimeout", fTimeout);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expiration of the shutdown timer. In the case of low activity the
+/// process will be aborted.
+
 Bool_t TShutdownTimer::Notify()
 {
-   // Handle expiration of the shutdown timer. In the case of low activity the
-   // process will be aborted.
-
    if (gDebug > 0)
       printf("TShutdownTimer::Notify: checking activity on the input socket\n");
 
@@ -440,11 +448,11 @@ Bool_t TShutdownTimer::Notify()
 }
 
 //--- Synchronous timer used to reap children processes change of state ------//
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TReaperTimer::~TReaperTimer()
 {
-   // Destructor
-
    if (fChildren) {
       fChildren->SetOwner(kTRUE);
       delete fChildren;
@@ -452,11 +460,11 @@ TReaperTimer::~TReaperTimer()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an entry for 'pid' in the internal list
+
 void TReaperTimer::AddPid(Int_t pid)
 {
-   // Add an entry for 'pid' in the internal list
-
    if (pid > 0) {
       if (!fChildren)
          fChildren = new TList;
@@ -467,12 +475,12 @@ void TReaperTimer::AddPid(Int_t pid)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if any of the registered children has changed its state.
+/// Unregister those that are gone.
+
 Bool_t TReaperTimer::Notify()
 {
-   // Check if any of the registered children has changed its state.
-   // Unregister those that are gone.
-
    if (fChildren) {
       TIter nxp(fChildren);
       TParameter<Int_t> *p = 0;
@@ -506,11 +514,11 @@ Bool_t TReaperTimer::Notify()
 }
 
 //--- Special timer to terminate idle sessions ----------------------------//
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expiration of the idle timer. The session will just be terminated.
+
 Bool_t TIdleTOTimer::Notify()
 {
-   // Handle expiration of the idle timer. The session will just be terminated.
-
    Info ("Notify", "session idle for more then %lld secs: terminating", Long64_t(fTime)/1000);
 
    if (fProofServ) {
@@ -548,15 +556,15 @@ extern "C" {
    { return new TProofServ(argc, argv, flog); }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main constructor. Create an application environment. The TProofServ
+/// environment provides an eventloop via inheritance of TApplication.
+/// Actual server creation work is done in CreateServer() to allow
+/// overloading.
+
 TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
        : TApplication("proofserv", argc, argv, 0, -1)
 {
-   // Main constructor. Create an application environment. The TProofServ
-   // environment provides an eventloop via inheritance of TApplication.
-   // Actual server creation work is done in CreateServer() to allow
-   // overloading.
-
    // If test and tty, we are done
    Bool_t xtest = (argc && *argc == 1) ? kTRUE : kFALSE;
    if (xtest) {
@@ -648,26 +656,21 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    fProof           = 0;
    fPlayer          = 0;
    fSocket          = 0;
-   fEnabledPackages = new TList;
-   fEnabledPackages->SetOwner();
 
    fTotSessions     = -1;
    fActSessions     = -1;
    fEffSessions     = -1.;
-
-   fGlobalPackageDirList = 0;
+   fPackMgr         = 0;
 
    fLogFile         = flog;
    fLogFileDes      = -1;
 
    fArchivePath     = "";
    // Init lockers
-   fPackageLock     = 0;
    fCacheLock       = 0;
    fQueryLock       = 0;
 
    fQMgr            = 0;
-   fQMtx            = new TMutex(kTRUE);
    fWaitingQueries  = new TList;
    fIdle            = kTRUE;
    fQuerySeqNum     = -1;
@@ -784,13 +787,13 @@ TProofServ::TProofServ(Int_t *argc, char **argv, FILE *flog)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Finalize the server setup. If master, create the TProof instance to talk
+/// to the worker or submaster nodes.
+/// Return 0 on success, -1 on error
+
 Int_t TProofServ::CreateServer()
 {
-   // Finalize the server setup. If master, create the TProof instance to talk
-   // to the worker or submaster nodes.
-   // Return 0 on success, -1 on error
-
    // Get socket to be used (setup in proofd)
    TString opensock = gSystem->Getenv("ROOTOPENSOCK");
    if (opensock.Length() <= 0)
@@ -995,34 +998,31 @@ Int_t TProofServ::CreateServer()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup. Not really necessary since after this dtor there is no
+/// live anyway.
+
 TProofServ::~TProofServ()
 {
-   // Cleanup. Not really necessary since after this dtor there is no
-   // live anyway.
-
    SafeDelete(fWaitingQueries);
-   SafeDelete(fQMtx);
-   SafeDelete(fEnabledPackages);
    SafeDelete(fSocket);
-   SafeDelete(fPackageLock);
+   SafeDelete(fPackMgr);
    SafeDelete(fCacheLock);
    SafeDelete(fQueryLock);
-   SafeDelete(fGlobalPackageDirList);
    SafeDelete(fDataSetManager);
    SafeDelete(fDataSetStgRepo);
    close(fLogFileDes);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print message of the day (in the file pointed by the env PROOFMOTD
+/// or from fConfDir/etc/proof/motd). The motd is not shown more than
+/// once a day. If the file pointed by env PROOFNOPROOF exists (or the
+/// file fConfDir/etc/proof/noproof exists), show its contents and close
+/// the connection.
+
 Int_t TProofServ::CatMotd()
 {
-   // Print message of the day (in the file pointed by the env PROOFMOTD
-   // or from fConfDir/etc/proof/motd). The motd is not shown more than
-   // once a day. If the file pointed by env PROOFNOPROOF exists (or the
-   // file fConfDir/etc/proof/noproof exists), show its contents and close
-   // the connection.
-
    TString lastname;
    FILE   *motd;
    Bool_t  show = kFALSE;
@@ -1089,13 +1089,13 @@ Int_t TProofServ::CatMotd()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get object with name "name;cycle" (e.g. "aap;2") from master or client.
+/// This method is called by TDirectory::Get() in case the object can not
+/// be found locally.
+
 TObject *TProofServ::Get(const char *namecycle)
 {
-   // Get object with name "name;cycle" (e.g. "aap;2") from master or client.
-   // This method is called by TDirectory::Get() in case the object can not
-   // be found locally.
-
    if (fSocket->Send(namecycle, kPROOF_GETOBJECT) < 0) {
       Error("Get", "problems sending request");
       return (TObject *)0;
@@ -1126,11 +1126,11 @@ TObject *TProofServ::Get(const char *namecycle)
    return idcur;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the compute time
+
 void TProofServ::RestartComputeTime()
 {
-   // Reset the compute time
-
    fCompute.Stop();
    if (fPlayer) {
       TProofProgressStatus *status = fPlayer->GetProgressStatus();
@@ -1141,11 +1141,11 @@ void TProofServ::RestartComputeTime()
    fCompute.Start(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next range of entries to be processed on this server.
+
 TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 {
-   // Get next range of entries to be processed on this server.
-
    Long64_t bytesRead = 0;
 
    if (gPerfStats) bytesRead = gPerfStats->GetBytesRead();
@@ -1279,12 +1279,12 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
    return e;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get and handle command line options. Fixed format:
+/// "proofserv"|"proofslave" <confdir>
+
 void TProofServ::GetOptions(Int_t *argc, char **argv)
 {
-   // Get and handle command line options. Fixed format:
-   // "proofserv"|"proofslave" <confdir>
-
    Bool_t xtest = (argc && *argc > 3 && !strcmp(argv[3], "test")) ? kTRUE : kFALSE;
 
    // If test and tty
@@ -1319,11 +1319,11 @@ void TProofServ::GetOptions(Int_t *argc, char **argv)
    fConfDir = gSystem->Getenv("ROOTCONFDIR");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle input coming from the client or from the master server.
+
 void TProofServ::HandleSocketInput()
 {
-   // Handle input coming from the client or from the master server.
-
    // The idle timeout guard: stops the timer and restarts when we return from here
    TIdleTOTimerGuard itg(fIdleTOTimer);
 
@@ -1461,17 +1461,17 @@ void TProofServ::HandleSocketInput()
    SafeDelete(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process input coming from the client or from the master server.
+/// If 'all' is kFALSE, process only those messages that can be handled
+/// during query processing.
+/// Returns -1 if the message could not be processed, <-1 if something went
+/// wrong. Returns 1 if the action may have changed the parallel state.
+/// Returns 2 if the message has to be enqueued.
+/// Returns 0 otherwise
+
 Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
 {
-   // Process input coming from the client or from the master server.
-   // If 'all' is kFALSE, process only those messages that can be handled
-   // during query processing.
-   // Returns -1 if the message could not be processed, <-1 if something went
-   // wrong. Returns 1 if the action may have changed the parallel state.
-   // Returns 2 if the message has to be enqueued.
-   // Returns 0 otherwise
-
    static TStopwatch timer;
    char str[2048];
    Bool_t aborted = kFALSE;
@@ -1496,15 +1496,27 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             mess->ReadString(str, sizeof(str));
             // Make sure that the relevant files are available
             TString fn;
-            if (TProof::GetFileInCmd(str, fn))
-               CopyFromCache(fn, 1);
+
+            Bool_t hasfn = TProof::GetFileInCmd(str, fn);
+
             if (IsParallel() && fProof && !fProof->UseDynamicStartup()) {
                fProof->SendCommand(str);
             } else {
                PDB(kGlobal, 1)
                   Info("HandleSocketInput:kMESS_CINT", "processing: %s...", str);
+               TString ocwd;
+               if (hasfn) {
+                  fCacheLock->Lock();
+                  ocwd = gSystem->WorkingDirectory();
+                  gSystem->ChangeDirectory(fCacheDir.Data());
+               }
                ProcessLine(str);
+               if (hasfn) {
+                  gSystem->ChangeDirectory(ocwd);
+                  fCacheLock->Unlock();                 
+               }
             }
+
             LogToMaster();
          } else {
             rc = -1;
@@ -1758,6 +1770,7 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
          } else {
             // Handle file checking request
             HandleCheckFile(mess, pslb);
+            FlushLogFile(); // Avoid sending (error) messages at next action
          }
          break;
 
@@ -1793,9 +1806,8 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
             }
             if (rfrc == 0) {
                // copy file to cache if not a PAR file
-               if (copytocache && size > 0 &&
-                  strncmp(fPackageDir, name, fPackageDir.Length()))
-                  CopyToCache(name, 0);
+               if (copytocache && size > 0 && !fPackMgr->IsInDir(name))
+                  gSystem->Exec(TString::Format("%s %s %s", kCP, fnam.Data(), fCacheDir.Data()));
                if (IsMaster() && fw == 1) {
                   Int_t opt = TProof::kForward | TProof::kCp;
                   if (bin)
@@ -2225,11 +2237,11 @@ Int_t TProofServ::HandleSocketInput(TMessage *mess, Bool_t all)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Accept and merge results from a set of workers
+
 Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerPlayer)
 {
-   // Accept and merge results from a set of workers
-
    TMessage *mess = new TMessage();
    Int_t mergedWorkers = 0;
 
@@ -2319,11 +2331,11 @@ Bool_t TProofServ::AcceptResults(Int_t connections, TVirtualProofPlayer *mergerP
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle Out-Of-Band data sent by the master or client.
+
 void TProofServ::HandleUrgentData()
 {
-   // Handle Out-Of-Band data sent by the master or client.
-
    char  oob_byte;
    Int_t n, nch, wasted = 0;
 
@@ -2453,12 +2465,12 @@ void TProofServ::HandleUrgentData()
    if (fProof) fProof->SetActive(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when the client is not alive anymore (i.e. when kKeepAlive
+/// has failed).
+
 void TProofServ::HandleSigPipe()
 {
-   // Called when the client is not alive anymore (i.e. when kKeepAlive
-   // has failed).
-
    // Real-time notification of messages
    TProofServLogHandlerGuard hg(fLogFile, fSocket, "", fRealTimeLog);
 
@@ -2480,11 +2492,11 @@ void TProofServ::HandleSigPipe()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// True if in parallel mode.
+
 Bool_t TProofServ::IsParallel() const
 {
-   // True if in parallel mode.
-
    if (IsMaster() && fProof)
       return fProof->IsParallel() || fProof->UseDynamicStartup() ;
 
@@ -2492,23 +2504,23 @@ Bool_t TProofServ::IsParallel() const
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print status of slave server.
+
 void TProofServ::Print(Option_t *option) const
 {
-   // Print status of slave server.
-
    if (IsMaster() && fProof)
       fProof->Print(option);
    else
       Printf("This is worker %s", gSystem->HostName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redirect stdout to a log file. This log file will be flushed to the
+/// client or master after each command.
+
 void TProofServ::RedirectOutput(const char *dir, const char *mode)
 {
-   // Redirect stdout to a log file. This log file will be flushed to the
-   // client or master after each command.
-
    char logfile[512];
 
    TString sdir = (dir && strlen(dir) > 0) ? dir : fSessionDir.Data();
@@ -2534,11 +2546,11 @@ void TProofServ::RedirectOutput(const char *dir, const char *mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset PROOF environment to be ready for execution of next command.
+
 void TProofServ::Reset(const char *dir)
 {
-   // Reset PROOF environment to be ready for execution of next command.
-
    // First go to new directory. Check first that we got a reasonable path;
    // in PROOF-Lite it may not be the case
    TString dd(dir);
@@ -2561,14 +2573,14 @@ void TProofServ::Reset(const char *dir)
    if (IsMaster()) fProof->SendCurrentState();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a file, either sent by a client or a master server.
+/// If bin is true it is a binary file, other wise it is an ASCII
+/// file and we need to check for Windows \r tokens. Returns -1 in
+/// case of error, 0 otherwise.
+
 Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
 {
-   // Receive a file, either sent by a client or a master server.
-   // If bin is true it is a binary file, other wise it is an ASCII
-   // file and we need to check for Windows \r tokens. Returns -1 in
-   // case of error, 0 otherwise.
-
    if (size <= 0) return 0;
 
    // open file, overwrite already existing file
@@ -2636,11 +2648,11 @@ Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Main server eventloop.
+
 void TProofServ::Run(Bool_t retrn)
 {
-   // Main server eventloop.
-
    // Setup the server
    if (CreateServer() == 0) {
 
@@ -2649,13 +2661,13 @@ void TProofServ::Run(Bool_t retrn)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send log file to master.
+/// If start > -1 send only bytes in the range from start to end,
+/// if end <= start send everything from start.
+
 void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
 {
-   // Send log file to master.
-   // If start > -1 send only bytes in the range from start to end,
-   // if end <= start send everything from start.
-
    // Determine the number of bytes left to be read from the log file.
    fflush(stdout);
 
@@ -2746,11 +2758,11 @@ void TProofServ::SendLogFile(Int_t status, Int_t start, Int_t end)
    PDB(kGlobal, 1) Info("SendLogFile", "kPROOF_LOGDONE sent");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send statistics of slave server to master or client.
+
 void TProofServ::SendStatistics()
 {
-   // Send statistics of slave server to master or client.
-
    Long64_t bytesread = TFile::GetFileBytesRead();
    Float_t cputime = fCpuTime, realtime = fRealTime;
    if (IsMaster()) {
@@ -2766,11 +2778,11 @@ void TProofServ::SendStatistics()
    fSocket->Send(mess);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send number of parallel nodes to master or client.
+
 void TProofServ::SendParallel(Bool_t async)
 {
-   // Send number of parallel nodes to master or client.
-
    Int_t nparallel = 0;
    if (IsMaster()) {
       PDB(kGlobal, 2)
@@ -2788,69 +2800,12 @@ void TProofServ::SendParallel(Bool_t async)
    fSocket->Send(mess);
 }
 
-//______________________________________________________________________________
-Int_t TProofServ::UnloadPackage(const char *package)
-{
-   // Removes link to package in working directory,
-   // removes entry from include path,
-   // removes entry from enabled package list,
-   // does not currently remove entry from interpreter include path.
-   // Returns -1 in case of error, 0 otherwise.
+////////////////////////////////////////////////////////////////////////////////
+/// Print the ProofServ logo on standard output.
+/// Return 0 on success, -1 on failure
 
-   TPair *pack = (TPair *) fEnabledPackages->FindObject(package);
-   if (pack) {
-
-      // Remove entry from include path
-      TString aclicincpath = gSystem->GetIncludePath();
-      TString cintincpath = gInterpreter->GetIncludePath();
-      // remove interpreter part of gSystem->GetIncludePath()
-      aclicincpath.Remove(aclicincpath.Length() - cintincpath.Length() - 1);
-      // remove package's include path
-      aclicincpath.ReplaceAll(TString(" -I") + package, "");
-      gSystem->SetIncludePath(aclicincpath);
-
-      //TODO reset interpreter include path
-
-      // remove entry from enabled packages list
-      delete fEnabledPackages->Remove(pack);
-      PDB(kPackage, 1)
-         Info("UnloadPackage",
-              "package %s successfully unloaded", package);
-   }
-
-   // Cleanup the link, if there
-   if (!gSystem->AccessPathName(package))
-      if (gSystem->Unlink(package) != 0)
-         Warning("UnloadPackage", "unable to remove symlink to %s", package);
-
-   // We are done
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::UnloadPackages()
-{
-   // Unloads all enabled packages. Returns -1 in case of error, 0 otherwise.
-
-   // Iterate over packages and remove each package
-   TIter nextpackage(fEnabledPackages);
-   while (TPair *pck = dynamic_cast<TPair *>(nextpackage()))
-      if (UnloadPackage(pck->GetName()) != 0)
-         return -1;
-
-   PDB(kPackage, 1)
-      Info("UnloadPackages",
-           "packages successfully unloaded");
-
-   return 0;
-}
-
-//______________________________________________________________________________
 Int_t TProofServ::Setup()
 {
-   // Print the ProofServ logo on standard output.
-   // Return 0 on success, -1 on failure
-
    char str[512];
 
    if (IsMaster()) {
@@ -2997,25 +2952,19 @@ Int_t TProofServ::Setup()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Common part (between TProofServ and TXProofServ) of the setup phase.
+/// Return 0 on success, -1 on error
+
 Int_t TProofServ::SetupCommon()
 {
-   // Common part (between TProofServ and TXProofServ) of the setup phase.
-   // Return 0 on success, -1 on error
-
    // deny write access for group and world
    gSystem->Umask(022);
 
 #ifdef R__UNIX
    // Add bindir to PATH
    TString path(gSystem->Getenv("PATH"));
-   TString bindir;
-# ifdef ROOTBINDIR
-   bindir = ROOTBINDIR;
-# else
-   bindir = gSystem->Getenv("ROOTSYS");
-   if (!bindir.IsNull()) bindir += "/bin";
-# endif
+   TString bindir(TROOT::GetBinDir());
    // Augment PATH, if required
    // ^<compiler>, <compiler>, ^<sysbin>, <sysbin>
    TString paths = gEnv->GetValue("ProofServ.BinPaths", "");
@@ -3095,19 +3044,24 @@ Int_t TProofServ::SetupCommon()
       new TProofLockPath(TString::Format("%s/%s%s",
                          gSystem->TempDirectory(), kPROOF_CacheLockFile,
                          TString(fCacheDir).ReplaceAll("/","%").Data()));
+   // Make also sure the cache path is in the macro path
+   TProof::AssertMacroPath(TString::Format("%s/.", fCacheDir.Data()));
 
    // Check and make sure "packages" directory exists
-   fPackageDir = gEnv->GetValue("ProofServ.PackageDir",
-                                 TString::Format("%s/%s", fWorkDir.Data(), kPROOF_PackDir));
-   ResolveKeywords(fPackageDir);
-   if (gSystem->AccessPathName(fPackageDir))
-      gSystem->mkdir(fPackageDir, kTRUE);
+   TString packdir = gEnv->GetValue("ProofServ.PackageDir",
+                                    TString::Format("%s/%s", fWorkDir.Data(), kPROOF_PackDir));
+   ResolveKeywords(packdir);
+   if (gSystem->AccessPathName(packdir))
+      gSystem->mkdir(packdir, kTRUE);
+   fPackMgr = new TPackMgr(packdir);
+   fPackMgr->SetLogger(SendAsynMsg);
+   // Notification message
+   TString noth;
+   const char *k = (IsMaster()) ? "Mst" : "Wrk";
+   noth.Form("%s-%s", k, fOrdinal.Data());
+   fPackMgr->SetPrefix(noth.Data());
    if (gProofDebugLevel > 0)
-      Info("SetupCommon", "package directory set to %s", fPackageDir.Data());
-   fPackageLock =
-      new TProofLockPath(TString::Format("%s/%s%s",
-                         gSystem->TempDirectory(), kPROOF_PackageLockFile,
-                         TString(fPackageDir).ReplaceAll("/","%").Data()));
+      Info("SetupCommon", "package directory set to %s", packdir.Data());
 
    // Check and make sure "data" directory exists
    fDataDir = gEnv->GetValue("ProofServ.DataDir","");
@@ -3171,30 +3125,11 @@ Int_t TProofServ::SetupCommon()
 
    // List of directories where to look for global packages
    TString globpack = gEnv->GetValue("Proof.GlobalPackageDirs","");
-   if (globpack.Length() > 0) {
-      Int_t ng = 0;
-      Int_t from = 0;
-      TString ldir;
-      while (globpack.Tokenize(ldir, from, ":")) {
-         if (gSystem->AccessPathName(ldir, kReadPermission)) {
-            Warning("SetupCommon", "directory for global packages %s does not"
-                             " exist or is not readable", ldir.Data());
-         } else {
-            // Add to the list, key will be "G<ng>", i.e. "G0", "G1", ...
-            TString key;
-            key.Form("G%d", ng++);
-            if (!fGlobalPackageDirList) {
-               fGlobalPackageDirList = new THashList();
-               fGlobalPackageDirList->SetOwner();
-            }
-            ResolveKeywords(ldir);
-            fGlobalPackageDirList->Add(new TNamed(key,ldir));
-            Info("SetupCommon", "directory for global packages %s added to the list",
-                          ldir.Data());
-            FlushLogFile();
-         }
-      }
-   }
+
+   ResolveKeywords(globpack);
+   Int_t nglb = TPackMgr::RegisterGlobalPath(globpack);
+   Info("SetupCommon", " %d global package directories registered", nglb);
+   FlushLogFile();
 
    // Check the session dir
    if (fSessionDir != gSystem->WorkingDirectory()) {
@@ -3361,12 +3296,12 @@ Int_t TProofServ::SetupCommon()
                   // Parse (k, m, g)
                   tok.ToLower();
                   const char *s[3] = {"k", "m", "g"};
-                  Int_t i = 0, k = 1024;
+                  Int_t i = 0, ki = 1024;
                   while (fact < 0) {
-                     if (tok.EndsWith(s[i]))
-                        fact = k;
+                     if (tok.EndsWith(s[i++]))
+                        fact = ki;
                      else
-                        k *= 1024;
+                        ki *= 1024;
                   }
                   tok.Remove(tok.Length()-1);
                }
@@ -3435,11 +3370,11 @@ Int_t TProofServ::SetupCommon()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Terminate the proof server.
+
 void TProofServ::Terminate(Int_t status)
 {
-   // Terminate the proof server.
-
    if (fgLogToSysLog > 0) {
       TString s;
       s.Form("%s -1 %.3f %.3f %d", fgSysLogEntity.Data(), fRealTime, fCpuTime, status);
@@ -3502,12 +3437,12 @@ void TProofServ::Terminate(Int_t status)
    // Exit() is called in pmain
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan recursively the datadir and unlink it if empty
+/// Return kTRUE if it can be unlinked, kFALSE otherwise
+
 Bool_t TProofServ::UnlinkDataDir(const char *path)
 {
-   // Scan recursively the datadir and unlink it if empty
-   // Return kTRUE if it can be unlinked, kFALSE otherwise
-
    if (!path || strlen(path) <= 0) return kFALSE;
 
    Bool_t dorm = kTRUE;
@@ -3539,30 +3474,30 @@ Bool_t TProofServ::UnlinkDataDir(const char *path)
    return dorm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function that returns kTRUE in case we are a PROOF server.
+
 Bool_t TProofServ::IsActive()
 {
-   // Static function that returns kTRUE in case we are a PROOF server.
-
    return gProofServ ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning pointer to global object gProofServ.
+/// Mainly for use via CINT, where the gProofServ symbol might be
+/// deleted from the symbol table.
+
 TProofServ *TProofServ::This()
 {
-   // Static function returning pointer to global object gProofServ.
-   // Mainly for use via CINT, where the gProofServ symbol might be
-   // deleted from the symbol table.
-
    return gProofServ;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup authentication related stuff for old versions.
+/// Provided for backward compatibility.
+
 Int_t TProofServ::OldAuthSetup(TString &conf)
 {
-   // Setup authentication related stuff for old versions.
-   // Provided for backward compatibility.
-
    OldProofServAuthSetup_t oldAuthSetupHook = 0;
 
    if (!oldAuthSetupHook) {
@@ -3596,15 +3531,15 @@ Int_t TProofServ::OldAuthSetup(TString &conf)
                               fUser, fOrdinal, conf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TProofQueryResult instance for this query.
+
 TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
                                                const char *opt,
                                                TList *inlist, Long64_t fst,
                                                TDSet *dset, const char *selec,
                                                TObject *elist)
 {
-   // Create a TProofQueryResult instance for this query.
-
    // Increment sequential number
    Int_t seqnum = -1;
    if (fQMgr) {
@@ -3630,11 +3565,11 @@ TProofQueryResult *TProofServ::MakeQueryResult(Long64_t nent,
    return pqr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set query in running state.
+
 void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 {
-   // Set query in running state.
-
    // Record current position in the log file at start
    fflush(stdout);
    Int_t startlog = lseek(fileno(stdout), (off_t) 0, SEEK_END);
@@ -3645,14 +3580,7 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
 
    // Build the list of loaded PAR packages
    TString parlist = "";
-   TIter nxp(fEnabledPackages);
-   TPair *pck= 0;
-   while ((pck = (TPair *)nxp())) {
-      if (parlist.Length() <= 0)
-         parlist = pck->GetName();
-      else
-         parlist += TString::Format(";%s", pck->GetName());
-   }
+   fPackMgr->GetEnabledPackages(parlist);
 
    if (fProof) {
       // Set in running state
@@ -3670,11 +3598,11 @@ void TProofServ::SetQueryRunning(TProofQueryResult *pq)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle archive request.
+
 void TProofServ::HandleArchive(TMessage *mess, TString *slb)
 {
-   // Handle archive request.
-
    PDB(kGlobal, 1)
       Info("HandleArchive", "Enter");
 
@@ -3780,13 +3708,13 @@ void TProofServ::HandleArchive(TMessage *mess, TString *slb)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get a map {server-name, list-of-files} for collection 'fc' to be used in
+/// TPacketizerFile. Returns a pointer to the map (ownership of the caller).
+/// Or (TMap *)0 and an error message in emsg.
+
 TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
 {
-   // Get a map {server-name, list-of-files} for collection 'fc' to be used in
-   // TPacketizerFile. Returns a pointer to the map (ownership of the caller).
-   // Or (TMap *)0 and an error message in emsg.
-
    TMap *fcmap = 0;
    emsg = "";
 
@@ -3829,11 +3757,11 @@ TMap *TProofServ::GetDataSetNodeMap(TFileCollection *fc, TString &emsg)
    return fcmap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle processing request.
+
 void TProofServ::HandleProcess(TMessage *mess, TString *slb)
 {
-   // Handle processing request.
-
    PDB(kGlobal, 1)
       Info("HandleProcess", "Enter");
 
@@ -4156,10 +4084,21 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
       Bool_t outok = (fPlayer->GetExitStatus() != TVirtualProofPlayer::kAborted &&
                         fPlayer->GetOutputList()) ? kTRUE : kFALSE;
       if (outok) {
-         // Check if in controlled output sending mode
-         Int_t cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
-         if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+         // Check if in controlled output sending mode or submerging
+         Int_t cso = 0;
+         Bool_t isSubMerging = kFALSE;
+
+         // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
+         Int_t nm = 0;
+         if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
+            isSubMerging = (nm >= 0) ? kTRUE : kFALSE;
+         }
+         if (!isSubMerging) {
             cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+            if (TProof::GetParameter(input, "PROOF_ControlSendOutput", cso) != 0)
+               cso = gEnv->GetValue("Proof.ControlSendOutput", 1);
+         }
+
          if (cso > 0) {
 
             // Control output sending mode: wait for the master to ask for the objects.
@@ -4178,18 +4117,16 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
                                      " sizes sent to master", fOrdinal.Data());
          } else {
 
-
             // Check if we are in merging mode (i.e. parameter PROOF_UseMergers exists)
-            Bool_t isInMergingMode = kFALSE;
-            if (!(TestBit(TProofServ::kHighMemory))) {
-               Int_t nm = 0;
-               if (TProof::GetParameter(input, "PROOF_UseMergers", nm) == 0) {
-                  isInMergingMode = (nm >= 0) ? kTRUE : kFALSE;
-               }
+            if (TestBit(TProofServ::kHighMemory)) {
+               if (isSubMerging)
+                  Info("HandleProcess", "submerging disabled because of high-memory case");
+               isSubMerging = kFALSE;
+            } else {
+               PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isSubMerging);
             }
-            PDB(kGlobal, 2) Info("HandleProcess", "merging mode check: %d", isInMergingMode);
 
-            if (!IsMaster() && isInMergingMode) {
+            if (!IsMaster() && isSubMerging) {
                // Worker in merging mode.
                //----------------------------
                // First, it reports only the size of its output to the master
@@ -4305,11 +4242,11 @@ void TProofServ::HandleProcess(TMessage *mess, TString *slb)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sends all objects from the given list to the specified socket
+
 Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
 {
-   // Sends all objects from the given list to the specified socket
-
    PDB(kOutput, 2) Info("SendResults", "enter");
 
    TString msg;
@@ -4476,12 +4413,12 @@ Int_t TProofServ::SendResults(TSocket *sock, TList *outlist, TQueryResult *pq)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// process the next query from the queue of submitted jobs.
+/// to be called on the top master only.
+
 void TProofServ::ProcessNext(TString *slb)
 {
-   // process the next query from the queue of submitted jobs.
-   // to be called on the top master only.
-
    TDSet *dset = 0;
    TString filename, opt;
    TList *input = 0;
@@ -4641,6 +4578,9 @@ void TProofServ::ProcessNext(TString *slb)
       fPlayer->Process(dset, filename, opt, nentries, first);
    }
 
+   // This is the end of merging
+   fPlayer->SetMerging(kFALSE);
+
    // Return number of events processed
    Bool_t abort =
       (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) ? kTRUE : kFALSE;
@@ -4731,7 +4671,7 @@ void TProofServ::ProcessNext(TString *slb)
 
    // Remove aborted queries from the list
    if (fPlayer->GetExitStatus() == TVirtualProofPlayer::kAborted) {
-      if (pqr) SafeDelete(pqr);
+      SafeDelete(pqr);
       if (fQMgr) fQMgr->RemoveQuery(pq);
    } else {
       // Keep in memory only light infor about a query
@@ -4755,12 +4695,12 @@ void TProofServ::ProcessNext(TString *slb)
       fProof->RemoveWorkers(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register TFileCollections in 'out' as datasets according to the rules in 'in'
+
 Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
                                    TDataSetManager *dsm, TString &msg)
 {
-   // Register TFileCollections in 'out' as datasets according to the rules in 'in'
-
    PDB(kDataset, 1)
       ::Info("TProofServ::RegisterDataSets",
              "enter: %d objs in the output list", (out ? out->GetSize() : -1));
@@ -4853,11 +4793,11 @@ Int_t TProofServ::RegisterDataSets(TList *in, TList *out,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle request for list of queries.
+
 void TProofServ::HandleQueryList(TMessage *mess)
 {
-   // Handle request for list of queries.
-
    PDB(kGlobal, 1)
       Info("HandleQueryList", "Enter");
 
@@ -4916,11 +4856,11 @@ void TProofServ::HandleQueryList(TMessage *mess)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle remove request.
+
 void TProofServ::HandleRemove(TMessage *mess, TString *slb)
 {
-   // Handle remove request.
-
    PDB(kGlobal, 1)
       Info("HandleRemove", "Enter");
 
@@ -4980,11 +4920,11 @@ void TProofServ::HandleRemove(TMessage *mess, TString *slb)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle retrieve request.
+
 void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
 {
-   // Handle retrieve request.
-
    PDB(kGlobal, 1)
       Info("HandleRetrieve", "Enter");
 
@@ -5057,11 +4997,11 @@ void TProofServ::HandleRetrieve(TMessage *mess, TString *slb)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle lib, inc search paths modification request
+
 Int_t TProofServ::HandleLibIncPath(TMessage *mess)
 {
-   // Handle lib, inc search paths modification request
-
    TString type;
    Bool_t add;
    TString path;
@@ -5187,11 +5127,11 @@ Int_t TProofServ::HandleLibIncPath(TMessage *mess)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle file checking request.
+
 void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
 {
-   // Handle file checking request.
-
    TString filenam;
    TMD5    md5;
    UInt_t  opt = TProof::kUntar;
@@ -5214,56 +5154,38 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       TString packnam = filenam;
       packnam.Remove(packnam.Length() - 4);  // strip off ".par"
       // compare md5's to check if transmission was ok
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::FileChecksum(fPackageDir + "/" + filenam);
+      TMD5 *md5local = fPackMgr->GetMD5(packnam);
       if (md5local && md5 == (*md5local)) {
          if ((opt & TProof::kRemoveOld)) {
-            // remove any previous package directory with same name
-            st = gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                               packnam.Data()));
-            if (st)
-               Error("HandleCheckFile", "failure executing: %s %s/%s",
-                     kRM, fPackageDir.Data(), packnam.Data());
+            if ((st = fPackMgr->Clean(packnam)))
+               Error("HandleCheckFile", "failure cleaning %s", packnam.Data());
          }
-         // find gunzip...
-         char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
-                                       kExecutePermission);
-         if (gunzip) {
-            // untar package
-            st = gSystem->Exec(TString::Format(kUNTAR, gunzip, fPackageDir.Data(),
-                               filenam.Data(), fPackageDir.Data()));
-            if (st)
-               Error("HandleCheckFile", "failure executing: %s",
-                     TString::Format(kUNTAR, gunzip, fPackageDir.Data(),
-                          filenam.Data(), fPackageDir.Data()).Data());
-            delete [] gunzip;
-         } else
-            Error("HandleCheckFile", "%s not found", kGUNZIP);
-         // check that fPackageDir/packnam now exists
-         if (gSystem->AccessPathName(fPackageDir + "/" + packnam, kWritePermission)) {
-            // par file did not unpack itself in the expected directory, failure
-            reply << (Int_t)0;
-            if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
-            err = kTRUE;
-            Error("HandleCheckFile", "package %s did not unpack into %s",
-                                     filenam.Data(), packnam.Data());
-         } else {
-            // store md5 in package/PROOF-INF/md5.txt
-            TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-            TMD5::WriteChecksum(md5f, md5local);
+         // Unpack
+         st = fPackMgr->Unpack(packnam, md5local);
+         if (st == 0) {
             // Notify the client
             reply << (Int_t)1;
             PDB(kPackage, 1)
                Info("HandleCheckFile",
                     "package %s installed on node", filenam.Data());
+         } else {
+            if (st == -2) {
+               Error("HandleCheckFile", "gunzip not found");
+            } else {
+               Error("HandleCheckFile", "package %s did not unpack into %s",
+                                        filenam.Data(), packnam.Data());
+            }
+            reply << (Int_t)0;
+            if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
+            err = kTRUE;
          }
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
          err = kTRUE;
          PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s not yet on node", filenam.Data());
+            Error("HandleCheckFile",
+                  "package %s not yet on node", filenam.Data());
       }
 
       // Note: Originally an fPackageLock->Unlock() call was made
@@ -5274,72 +5196,56 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       // be released below before the call to fProof->UploadPackage().
       if (err) {
          // delete par file in case of error
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                       filenam.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove(filenam);
       } else if (IsMaster()) {
          // forward to workers
-         fPackageLock->Unlock();
-         if (fProof->UploadPackage(fPackageDir + "/" + filenam,
+         TString parpath;
+         fPackMgr->GetParPath(filenam, parpath);
+         if (fProof->UploadPackage(parpath,
                                   (TProof::EUploadPackageOpt)opt) != 0)
             Info("HandleCheckFile",
-                  "problems uploading package %s", filenam.Data());
-      } else {
-         // Unlock in all cases
-         fPackageLock->Unlock();
+                  "problems uploading package %s", parpath.Data());
       }
       delete md5local;
       fSocket->Send(reply);
 
-   } else if (filenam.BeginsWith("+")) {
+   } else if (filenam.BeginsWith("+") || filenam.BeginsWith("=")) {
+      filenam.Remove(0,1);
+
+      TString parname = filenam;
+      // If remote install it from there
+      TFile::EFileType ft = TFile::GetType(filenam);
+      if (ft == TFile::kWeb || ft == TFile::kNet) {
+         parname = gSystem->BaseName(filenam);
+         if (fPackMgr->Install(filenam) < 0) {
+            Warning("HandleCheckFile",
+                     "problems installing package %s", filenam.Data());
+
+         }
+      }
+
       // check file in package directory
-      filenam = filenam.Strip(TString::kLeading, '+');
-      TString packnam = filenam;
-      packnam.Remove(packnam.Length() - 4);  // strip off ".par"
-      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::ReadChecksum(md5f);
-      fPackageLock->Unlock();
+      TMD5 *md5local = fPackMgr->ReadMD5(parname);
+
       if (md5local && md5 == (*md5local)) {
          // package already on server, unlock directory
          reply << (Int_t)1;
          PDB(kPackage, 1)
             Info("HandleCheckFile",
-                 "package %s already on node", filenam.Data());
-         if (IsMaster())
-            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
-               Info("HandleCheckFile",
-                    "problems uploading package %s", filenam.Data());
+                 "package %s already on node", parname.Data());
+         if (IsMaster()) {
+            Int_t xrc = 0;
+            TString par = filenam;
+            if (ft != TFile::kWeb && ft != TFile::kNet) {
+               xrc = fPackMgr->GetParPath(filenam, par);
+            }
+            if (xrc == 0) {
+               if (fProof->UploadPackage(par) != 0)
+                  Warning("HandleCheckFile",
+                          "problems uploading package %s", par.Data());
+            }
+         }
 
-      } else {
-         reply << (Int_t)0;
-         if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
-         PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s not yet on node", filenam.Data());
-      }
-      delete md5local;
-      fSocket->Send(reply);
-
-   } else if (filenam.BeginsWith("=")) {
-      // check file in package directory, do not lock if it is the wrong file
-      filenam = filenam.Strip(TString::kLeading, '=');
-      TString packnam = filenam;
-      packnam.Remove(packnam.Length() - 4);  // strip off ".par"
-      TString md5f = fPackageDir + "/" + packnam + "/PROOF-INF/md5.txt";
-      fPackageLock->Lock();
-      TMD5 *md5local = TMD5::ReadChecksum(md5f);
-      fPackageLock->Unlock();
-      if (md5local && md5 == (*md5local)) {
-         // package already on server, unlock directory
-         reply << (Int_t)1;
-         PDB(kPackage, 1)
-            Info("HandleCheckFile",
-                 "package %s already on node", filenam.Data());
-         if (IsMaster())
-            if (fProof->UploadPackage(fPackageDir + "/" + filenam) != 0)
-               Info("HandleCheckFile",
-                    "problems with uploading package %s", filenam.Data());
       } else {
          reply << (Int_t)0;
          if (fProtocol <= 19) reply.Reset(kPROOF_FATAL);
@@ -5357,12 +5263,6 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
       TMD5 *md5local = TMD5::FileChecksum(cachef);
 
       if (md5local && md5 == (*md5local)) {
-         // copy file from cache to working directory
-         Bool_t cp = ((opt & TProof::kCp || opt & TProof::kCpBin) || (fProtocol <= 19)) ? kTRUE : kFALSE;
-         if (cp) {
-            Bool_t cpbin = (opt & TProof::kCpBin) ? kTRUE : kFALSE;
-            CopyFromCache(filenam, cpbin);
-         }
          reply << (Int_t)1;
          PDB(kCache, 1)
             Info("HandleCheckFile", "file %s already on node", filenam.Data());
@@ -5378,11 +5278,11 @@ void TProofServ::HandleCheckFile(TMessage *mess, TString *slb)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle here all cache and package requests.
+
 Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
 {
-   // Handle here all cache and package requests.
-
    PDB(kGlobal, 1)
       Info("HandleCache", "Enter");
 
@@ -5391,7 +5291,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    Bool_t all = kFALSE;
    TMessage msg;
    Bool_t fromglobal = kFALSE;
-   Int_t chkveropt = TProof::kCheckROOT;  // Default: check ROOT version
+   Int_t chkveropt = TPackMgr::kCheckROOT;  // Default: check ROOT version
+   TPackMgr *packmgr = 0;
 
    // Notification message
    TString noth;
@@ -5399,7 +5300,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    noth.Form("%s-%s", k, fOrdinal.Data());
 
    TList *optls = 0;
-   TString packagedir(fPackageDir), package, pdir, ocwd, file;
+   TString packagedir, package, pdir, ocwd, file;
    (*mess) >> type;
    switch (type) {
       case TProof::kShowCache:
@@ -5433,34 +5334,15 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kShowPackages:
          (*mess) >> all;
-         if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-            // Scan the list of global packages dirs
-            TIter nxd(fGlobalPackageDirList);
-            TNamed *nm = 0;
-            while ((nm = (TNamed *)nxd())) {
-               printf("*** Global Package cache %s %s:%s ***\n",
-                      nm->GetName(), gSystem->HostName(), nm->GetTitle());
-               fflush(stdout);
-               gSystem->Exec(TString::Format("%s %s", kLS, nm->GetTitle()));
-               printf("\n");
-               fflush(stdout);
-            }
-         }
-         printf("*** Package cache %s:%s ***\n", gSystem->HostName(),
-                fPackageDir.Data());
-         fflush(stdout);
-         gSystem->Exec(TString::Format("%s %s", kLS, fPackageDir.Data()));
+         fPackMgr->Show();
          if (IsMaster() && all)
             fProof->ShowPackages(all);
          LogToMaster();
          if (slb) slb->Form("%d %d", type, all);
          break;
       case TProof::kClearPackages:
-         status = UnloadPackages();
-         if (status == 0) {
-            fPackageLock->Lock();
-            gSystem->Exec(TString::Format("%s %s/*", kRM, fPackageDir.Data()));
-            fPackageLock->Unlock();
+         if ((status = fPackMgr->Unload(0)) == 0) {
+            fPackMgr->Remove();
             if (IsMaster())
                status = fProof->ClearPackages();
          }
@@ -5468,16 +5350,8 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kClearPackage:
          (*mess) >> package;
-         status = UnloadPackage(package);
-         if (status == 0) {
-            fPackageLock->Lock();
-            // remove package directory and par file
-            gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                          package.Data()));
-            if (IsMaster())
-               gSystem->Exec(TString::Format("%s %s/%s.par", kRM, fPackageDir.Data(),
-                             package.Data()));
-            fPackageLock->Unlock();
+         if ((status = fPackMgr->Unload(package)) == 0) {
+            fPackMgr->Remove(package);
             if (IsMaster())
                status = fProof->ClearPackage(package);
          }
@@ -5487,48 +5361,27 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          (*mess) >> package;
          if ((mess->BufferSize() > mess->Length())) (*mess) >> chkveropt;
 
-         // always follows BuildPackage so no need to check for PROOF-INF
-         pdir = fPackageDir + "/" + package;
-
-         fromglobal = kFALSE;
-         if (gSystem->AccessPathName(pdir, kReadPermission) ||
-             gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-            // Is there a global package with this name?
-            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-               // Scan the list of global packages dirs
-               TIter nxd(fGlobalPackageDirList);
-               TNamed *nm = 0;
-               while ((nm = (TNamed *)nxd())) {
-                  pdir.Form("%s/%s", nm->GetTitle(), package.Data());
-                  if (!gSystem->AccessPathName(pdir, kReadPermission) &&
-                      !gSystem->AccessPathName(pdir + "/PROOF-INF", kReadPermission)) {
-                     // Package found, stop searching
-                     fromglobal = kTRUE;
-                     packagedir = nm->GetTitle();
-                     break;
-                  }
-                  pdir = "";
-               }
-               if (pdir.Length() <= 0) {
-                  // Package not found
-                  SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
-                                       noth.Data(), package.Data()));
-                  status = -1;
-                  break;
-               }
-            }
+         if (!(packmgr = TPackMgr::GetPackMgr(package.Data(), fPackMgr))) {
+            // Package not found
+            SendAsynMessage(TString::Format("%s: kBuildPackage: failure locating %s ...",
+                            noth.Data(), package.Data()));
+            status = -1;
+            break;
          }
+         fromglobal = (packmgr == fPackMgr) ? kFALSE : kTRUE;
+         packagedir = packmgr->GetTitle();
 
          if (IsMaster() && !fromglobal) {
             // Make sure package is available on all slaves, even new ones
-            if (fProof->UploadPackage(pdir + ".par") != 0) {
+            TString par;
+            Int_t xrc = packmgr->GetParPath(package, par);
+            if (xrc != 0 || fProof->UploadPackage(par) != 0) {
                Warning("HandleCache",
                        "kBuildPackage: problems forwarding package %s to workers", package.Data());
                SendAsynMessage(TString::Format("%s: kBuildPackage: problems forwarding package %s to workers ...",
                                        noth.Data(), package.Data()));
             }
          }
-         fPackageLock->Lock();
 
          if (!status) {
 
@@ -5536,118 +5389,13 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
                Info("HandleCache",
                     "kBuildPackage: package %s exists and has PROOF-INF directory", package.Data());
 
-            ocwd = gSystem->WorkingDirectory();
-            gSystem->ChangeDirectory(pdir);
-
-            // forward build command to slaves, but don't wait for results
+            // Forward build command to slaves, but don't wait for results
             if (IsMaster())
                fProof->BuildPackage(package, TProof::kBuildOnSlavesNoWait);
 
-            // check for BUILD.sh and execute
-            if (!gSystem->AccessPathName("PROOF-INF/BUILD.sh")) {
-               // Notify the upper level
-               SendAsynMessage(TString::Format("%s: building %s ...", noth.Data(), package.Data()));
-
-               // read version from file proofvers.txt, and if current version is
-               // not the same do a "BUILD.sh clean"
-               Bool_t goodver = kTRUE;
-               Bool_t savever = kFALSE;
-               TString v, r;
-               FILE *f = fopen("PROOF-INF/proofvers.txt", "r");
-               if (f) {
-                  v.Gets(f);
-                  r.Gets(f);
-                  fclose(f);
-                  if (chkveropt == TProof::kCheckROOT || chkveropt == TProof::kCheckSVN) {
-                     if (v != gROOT->GetVersion()) goodver = kFALSE;
-                     if (goodver && chkveropt == TProof::kCheckSVN)
-                        if (r != gROOT->GetGitCommit()) goodver = kFALSE;
-                  }
-               }
-               if (!f || !goodver) {
-                  if (!fromglobal || !gSystem->AccessPathName(pdir, kWritePermission)) {
-                     savever = kTRUE;
-                     SendAsynMessage(TString::Format("%s: %s: version change (current: %s:%s,"
-                                          " build: %s:%s): cleaning ... ",
-                                          noth.Data(), package.Data(), gROOT->GetVersion(),
-                                          gROOT->GetGitCommit(), v.Data(), r.Data()));
-                     // Hard cleanup: go up the dir tree
-                     gSystem->ChangeDirectory(packagedir);
-                     // remove package directory
-                     gSystem->Exec(TString::Format("%s %s", kRM, pdir.Data()));
-                     // find gunzip...
-                     char *gunzip = gSystem->Which(gSystem->Getenv("PATH"), kGUNZIP,
-                                                   kExecutePermission);
-                     if (gunzip) {
-                        TString par;
-                        par.Form("%s.par", pdir.Data());
-                        // untar package
-                        TString cmd;
-                        cmd.Form(kUNTAR3, gunzip, par.Data());
-                        status = gSystem->Exec(cmd);
-                        if (status) {
-                           Error("HandleCache", "kBuildPackage: failure executing: %s", cmd.Data());
-                        } else {
-                           // Store md5 in package/PROOF-INF/md5.txt
-                           TMD5 *md5local = TMD5::FileChecksum(par);
-                           if (md5local) {
-                              TString md5f = packagedir + "/" + package + "/PROOF-INF/md5.txt";
-                              TMD5::WriteChecksum(md5f, md5local);
-                              // Go down to the package directory
-                              gSystem->ChangeDirectory(pdir);
-                              // Cleanup
-                              SafeDelete(md5local);
-                           } else {
-                              Warning("HandleCache", "kBuildPackage: failure calculating/saving MD5sum for '%s'", par.Data());
-                           }
-                        }
-                        delete [] gunzip;
-                     } else {
-                        Error("HandleCache", "kBuildPackage: %s not found", kGUNZIP);
-                        status = -1;
-                     }
-                  } else {
-                     SendAsynMessage(TString::Format("%s: %s: ROOT version inconsistency (current: %s, build: %s):"
-                                          " global package: cannot re-build!!! ",
-                                          noth.Data(), package.Data(), gROOT->GetVersion(), v.Data()));
-                     status = -1;
-                  }
-               }
-
-               if (!status) {
-                  // To build the package we execute PROOF-INF/BUILD.sh via a pipe
-                  // so that we can send back the log in (almost) real-time to the
-                  // (impatient) client. Note that this operation will block, so
-                  // the messages from builds on the workers will reach the client
-                  // shortly after the master ones.
-                  TString ipath(gSystem->GetIncludePath());
-                  ipath.ReplaceAll("\"","");
-                  TString cmd;
-                  cmd.Form("export ROOTINCLUDEPATH=\"%s\" ; PROOF-INF/BUILD.sh", ipath.Data());
-                  {
-                     TProofServLogHandlerGuard hg(cmd, fSocket);
-                  }
-                  if (!(status = TProofServLogHandler::GetCmdRtn())) {
-                     // Success: write version file
-                     if (savever) {
-                        f = fopen("PROOF-INF/proofvers.txt", "w");
-                        if (f) {
-                           fputs(gROOT->GetVersion(), f);
-                           fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
-                           fclose(f);
-                        }
-                     }
-                  }
-               }
-            } else {
-               // Notify the user
-               PDB(kPackage, 1)
-                  Info("HandleCache", "no PROOF-INF/BUILD.sh found for package %s", package.Data());
-            }
-            gSystem->ChangeDirectory(ocwd);
+            // Build here
+            status = packmgr->Build(package.Data(), chkveropt);
          }
-
-         fPackageLock->Unlock();
 
          if (status) {
             // Notify the upper level
@@ -5661,179 +5409,22 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          }
          if (slb) slb->Form("%d %s %d %d", type, package.Data(), status, chkveropt);
          break;
+
       case TProof::kLoadPackage:
          (*mess) >> package;
 
-         // If already loaded don't do it again
-         if (fEnabledPackages->FindObject(package)) {
-            Info("HandleCache",
-                 "package %s already loaded", package.Data());
-            break;
-         }
-
-         // always follows BuildPackage so no need to check for PROOF-INF
-         pdir = fPackageDir + "/" + package;
-
-         if (gSystem->AccessPathName(pdir, kReadPermission)) {
-            // Is there a global package with this name?
-            if (fGlobalPackageDirList && fGlobalPackageDirList->GetSize() > 0) {
-               // Scan the list of global packages dirs
-               TIter nxd(fGlobalPackageDirList);
-               TNamed *nm = 0;
-               while ((nm = (TNamed *)nxd())) {
-                  pdir.Form("%s/%s", nm->GetTitle(), package.Data());
-                  if (!gSystem->AccessPathName(pdir, kReadPermission)) {
-                     // Package found, stop searching
-                     break;
-                  }
-                  pdir = "";
-               }
-               if (pdir.Length() <= 0) {
-                  // Package not found
-                  SendAsynMessage(TString::Format("%s: kLoadPackage: failure locating %s ...",
-                                       noth.Data(), package.Data()));
-                  status = -1;
-                  break;
-               }
-            }
-         }
-
-         ocwd = gSystem->WorkingDirectory();
-         gSystem->ChangeDirectory(pdir);
-
-         // We have to be atomic here
-         fPackageLock->Lock();
-
-         // Check for SETUP.C and execute
-         if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
-            // We need to change the name of the function to avoid problems when we load more packages
-            TString setup, setupfn;
-            setup.Form("SETUP_ganis_%d_%x", gSystem->GetPid(), package.Hash());
-            // Remove special characters
-            const char *tmpDir = gSystem->TempDirectory();
-            if (tmpDir[strlen(tmpDir)-1] == '/') {
-               setupfn.Form("%s%s.C", tmpDir, setup.Data());
-            } else {
-               setupfn.Form("%s/%s.C", tmpDir, setup.Data());
-            }
-            TMacro setupmc("PROOF-INF/SETUP.C");
-            TObjString *setupline = setupmc.GetLineWith("SETUP(");
-            if (setupline) {
-               TString setupstring(setupline->GetString());
-               setupstring.ReplaceAll("SETUP(", TString::Format("%s(", setup.Data()));
-               setupline->SetString(setupstring);
-            } else {
-               // Macro does not contain SETUP()
-               SendAsynMessage(TString::Format("%s: warning: macro '%s/PROOF-INF/SETUP.C' does not contain a SETUP()"
-                                               " function", noth.Data(), package.Data()));
-            }
-            setupmc.SaveSource(setupfn.Data());
-            // Load the macro
-            if (gROOT->LoadMacro(setupfn.Data()) != 0) {
-               // Macro could not be loaded
-               SendAsynMessage(TString::Format("%s: error: macro '%s/PROOF-INF/SETUP.C' could not be loaded:"
-                                                " cannot continue",
-                                                noth.Data(), package.Data()));
-               status = -1;
-            } else {
-               // Check the signature
-               TFunction *fun = (TFunction *) gROOT->GetListOfGlobalFunctions()->FindObject(setup);
-               if (!fun) {
-                  // Notify the upper level
-                  SendAsynMessage(TString::Format("%s: error: function SETUP() not found in macro '%s/PROOF-INF/SETUP.C':"
-                                                   " cannot continue",
-                                                   noth.Data(), package.Data()));
-                  status = -1;
-               } else {
-                  TMethodCall callEnv;
-                  // Check the number of arguments
-                  if (fun->GetNargs() == 0) {
-                     // No arguments (basic signature)
-                     callEnv.Init(fun);
-                     if ((mess->BufferSize() > mess->Length())) {
-                        (*mess) >> optls;
-                        SendAsynMessage(TString::Format("%s: warning: loaded SETUP() does not take any argument:"
-                                                        " the specified argument will be ignored", noth.Data()));
-                     }
-                  } else if (fun->GetNargs() == 1) {
-                     TMethodArg *arg = (TMethodArg *) fun->GetListOfMethodArgs()->First();
-                     if (arg) {
-                        callEnv.Init(fun);
-                        // Get argument
-                        if ((mess->BufferSize() > mess->Length())) (*mess) >> optls;
-                        // Check argument type
-                        TString argsig(arg->GetTitle());
-                        if (argsig.BeginsWith("TList")) {
-                           callEnv.ResetParam();
-                           callEnv.SetParam((Long_t) optls);
-                        } else if (argsig.BeginsWith("const char")) {
-                           callEnv.ResetParam();
-                           TObjString *os = optls ? dynamic_cast<TObjString *>(optls->First()) : 0;
-                           if (os) {
-                              callEnv.SetParam((Long_t) os->GetName());
-                           } else {
-                              if (optls && optls->First()) {
-                                 SendAsynMessage(TString::Format("%s: warning: found object argument of type %s:"
-                                                                 " SETUP expects 'const char *': ignoring",
-                                                                 noth.Data(), optls->First()->ClassName()));
-                              }
-                              callEnv.SetParam((Long_t) 0);
-                           }
-                        } else {
-                           // Notify the upper level
-                           SendAsynMessage(TString::Format("%s: error: unsupported SETUP signature: SETUP(%s)"
-                                                            " cannot continue", noth.Data(), arg->GetTitle()));
-                           status = -1;
-                        }
-                     } else {
-                        // Notify the upper level
-                        SendAsynMessage(TString::Format("%s: error: cannot get information about the SETUP() argument:"
-                                                         " cannot continue", noth.Data()));
-                        status = -1;
-                     }
-                  } else if (fun->GetNargs() > 1) {
-                     // Notify the upper level
-                     SendAsynMessage(TString::Format("%s: error: function SETUP() can have at most a 'TList *' argument:"
-                                                      " cannot continue", noth.Data()));
-                     status = -1;
-                  }
-                  // Execute
-                  Long_t setuprc = (status == 0) ? 0 : -1;
-                  if (status == 0) {
-                     callEnv.Execute(setuprc);
-                     if (setuprc < 0) status = -1;
-                  }
-               }
-            }
-            if (!gSystem->AccessPathName(setupfn.Data())) gSystem->Unlink(setupfn.Data());
-         }
-
-         // End of atomicity
-         fPackageLock->Unlock();
-
-         gSystem->ChangeDirectory(ocwd);
-
-         if (status < 0) {
+         // Get argument, if any
+         if ((mess->BufferSize() > mess->Length())) (*mess) >> optls;
+         // Load the package
+         if ((status = fPackMgr->Load(package.Data(), optls)) < 0) {
 
             // Notify the upper level
-            SendAsynMessage(TString::Format("%s: failure loading %s ...", noth.Data(), package.Data()));
+            SendAsynMessage(TString::Format("%s: failure loading %s, args: %p (%d) ...",
+                                                 noth.Data(), package.Data(), optls,
+                                                 (optls && optls->GetSize() > 0) ? optls->GetSize() : 0));
 
          } else {
 
-            // create link to package in working directory
-            gSystem->Symlink(pdir, package);
-
-            // add package to list of include directories to be searched
-            // by ACliC
-            gSystem->AddIncludePath(TString("-I") + package);
-
-            // add package to list of include directories to be searched by CINT
-            gROOT->ProcessLine(TString(".I ") + package);
-
-            // if successful add to list and propagate to slaves
-            TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(package), optls->Clone())
-                                                         : new TPair(new TObjString(package), 0);
-            fEnabledPackages->Add(pck);
             if (IsMaster()) {
                if (optls && optls->GetSize() > 0) {
                   // List argument
@@ -5847,24 +5438,19 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             PDB(kPackage, 1)
                Info("HandleCache", "package %s successfully loaded", package.Data());
          }
+
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
+
       case TProof::kShowEnabledPackages:
          (*mess) >> all;
-         if (IsMaster()) {
-            if (all)
-               printf("*** Enabled packages on master %s on %s\n",
-                      fOrdinal.Data(), gSystem->HostName());
-            else
-               printf("*** Enabled packages ***\n");
-         } else {
-            printf("*** Enabled packages on slave %s on %s\n",
-                   fOrdinal.Data(), gSystem->HostName());
-         }
-         {
-            TIter next(fEnabledPackages);
-            while (TPair *pck = (TPair *) next())
-               printf("%s\n", pck->GetName());
+         {  TString title("*** Enabled packages ***");
+            if (!IsMaster() || all) {
+               title.Form("*** Enabled packages on %s %s on %s",
+                          (IsMaster()) ? "master" : "worker",
+                          fOrdinal.Data(), gSystem->HostName());
+            }
+            fPackMgr->ShowEnabled(title);
          }
          if (IsMaster() && all)
             fProof->ShowEnabledPackages(all);
@@ -5912,46 +5498,33 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kUnloadPackage:
          (*mess) >> package;
-         status = UnloadPackage(package);
+         status = fPackMgr->Unload(package);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackage(package);
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackage:
          (*mess) >> package;
-         fPackageLock->Lock();
-         // remove package directory and par file
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fPackageDir.Data(),
-                       package.Data()));
-         gSystem->Exec(TString::Format("%s %s/%s.par", kRM, fPackageDir.Data(),
-                       package.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove(package);
          if (IsMaster())
             fProof->DisablePackage(package);
          if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kUnloadPackages:
-         status = UnloadPackages();
+         status = fPackMgr->Unload(0);
          if (IsMaster() && status == 0)
             status = fProof->UnloadPackages();
          if (slb) slb->Form("%d %s %d", type, package.Data(), status);
          break;
       case TProof::kDisablePackages:
-         fPackageLock->Lock();
-         gSystem->Exec(TString::Format("%s %s/*", kRM, fPackageDir.Data()));
-         fPackageLock->Unlock();
+         fPackMgr->Remove();
          if (IsMaster())
             fProof->DisablePackages();
          if (slb) slb->Form("%d %s", type, package.Data());
          break;
       case TProof::kListEnabledPackages:
          msg.Reset(kPROOF_PACKAGE_LIST);
-         { TList *epl = new TList;
-           if (fEnabledPackages->GetSize() > 0) {
-              TIter nxp(fEnabledPackages);
-              TObject *o = 0;
-              while ((o = nxp())) { epl->Add(new TObjString(o->GetName()));}
-           }
+         { TList *epl = fPackMgr->GetListOfEnabled();
            msg << type << epl;
            fSocket->Send(msg);
            epl->SetOwner();
@@ -5961,22 +5534,12 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          break;
       case TProof::kListPackages:
          {
-            TList *pack = new TList;
-            void *dir = gSystem->OpenDirectory(fPackageDir);
-            if (dir) {
-               TString pac(gSystem->GetDirEntry(dir));
-               while (pac.Length() > 0) {
-                  if (pac.EndsWith(".par")) {
-                     pac.ReplaceAll(".par","");
-                     pack->Add(new TObjString(pac.Data()));
-                  }
-                  pac = gSystem->GetDirEntry(dir);
-               }
-            }
-            gSystem->FreeDirectory(dir);
+            TList *pack = fPackMgr->GetList();
             msg.Reset(kPROOF_PACKAGE_LIST);
             msg << type << pack;
             fSocket->Send(msg);
+            pack->SetOwner(kTRUE);
+            delete pack;
          }
          if (slb) slb->Form("%d", type);
          break;
@@ -5992,25 +5555,18 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             // Atomic action
             fCacheLock->Lock();
 
-            // Load locally; the implementation and header files (and perhaps
-            // the binaries) are already in the cache
-            TString fn;
-            Ssiz_t from = 0;
-            while ((package.Tokenize(fn, from, ",")))
-               CopyFromCache(fn, kTRUE);
+            TString originalCwd = gSystem->WorkingDirectory();
+            gSystem->ChangeDirectory(fCacheDir.Data());
 
             // Load the macro
             TString pack(package);
+            Ssiz_t from = 0;
             if ((from = pack.Index(",")) != kNPOS) pack.Remove(from);
             Info("HandleCache", "loading macro %s ...", pack.Data());
             gROOT->ProcessLine(TString::Format(".L %s", pack.Data()));
 
-            // Cache binaries, if any new
-            from = 0;
-            while ((package.Tokenize(fn, from, ",")))
-               CopyToCache(fn, 1);
-
             // Release atomicity
+            gSystem->ChangeDirectory(originalCwd.Data());
             fCacheLock->Unlock();
 
             // Now we collect the result from the unique workers and send the load request
@@ -6033,11 +5589,11 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
    return status;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle here all requests to modify worker lists
+
 Int_t TProofServ::HandleWorkerLists(TMessage *mess)
 {
-   // Handle here all requests to modify worker lists
-
    PDB(kGlobal, 1)
       Info("HandleWorkerLists", "Enter");
 
@@ -6133,14 +5689,14 @@ Int_t TProofServ::HandleWorkerLists(TMessage *mess)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of workers to be used from now on.
+/// The list must be provided by the caller.
+
 TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
                                                 Int_t & /* prioritychange */,
                                                 Bool_t /* resume */)
 {
-   // Get list of workers to be used from now on.
-   // The list must be provided by the caller.
-
    // Parse the config file
    TProofResourcesStatic *resources =
       new TProofResourcesStatic(fConfDir, fConfFile);
@@ -6184,25 +5740,25 @@ TProofServ::EQueryAction TProofServ::GetWorkers(TList *workers,
    return kQueryOK;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the file stream where to log (default stderr).
+/// If ferr == 0 the default is restored.
+/// Returns current setting.
+
 FILE *TProofServ::SetErrorHandlerFile(FILE *ferr)
 {
-   // Set the file stream where to log (default stderr).
-   // If ferr == 0 the default is restored.
-   // Returns current setting.
-
    FILE *oldferr = fgErrorHandlerFile;
    fgErrorHandlerFile = (ferr) ? ferr : stderr;
    return oldferr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The PROOF error handler function. It prints the message on fgErrorHandlerFile and
+/// if abort is set it aborts the application.
+
 void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
                               const char *msg)
 {
-   // The PROOF error handler function. It prints the message on fgErrorHandlerFile and
-   // if abort is set it aborts the application.
-
    if (gErrorIgnoreLevel == kUnset) {
       gErrorIgnoreLevel = 0;
       if (gEnv) {
@@ -6325,280 +5881,11 @@ void TProofServ::ErrorHandler(Int_t level, Bool_t abort, const char *location,
    }
 }
 
-//______________________________________________________________________________
-Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
-{
-   // Retrieve any files related to 'macro' from the cache directory.
-   // If 'cpbin' is true, the associated binaries are retrieved as well.
-   // Returns 0 on success, -1 otherwise
+////////////////////////////////////////////////////////////////////////////////
+/// Make player instance.
 
-   if (!macro || strlen(macro) <= 0)
-      // Invalid inputs
-      return -1;
-
-   // Split out the aclic mode, if any
-   TString name = macro;
-   TString acmode, args, io;
-   name = gSystem->SplitAclicMode(name, acmode, args, io);
-
-   PDB(kGlobal,1)
-      Info("CopyFromCache","enter: names: %s, %s", macro, name.Data());
-
-   // Atomic action
-   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
-   if (!locked) fCacheLock->Lock();
-
-   // Get source from the cache
-   Bool_t assertfile = kFALSE;
-   TString srcname(name);
-   Int_t dot = srcname.Last('.');
-   if (dot != kNPOS) {
-      srcname.Remove(dot);
-      srcname += "*";
-   } else {
-      assertfile = kTRUE;
-   }
-   srcname.Insert(0, TString::Format("%s/",fCacheDir.Data()));
-   dot = (dot != kNPOS) ? srcname.Last('.') : dot;
-   // Assert the file if asked (to silence warnings from 'cp')
-   if (assertfile) {
-      if (gSystem->AccessPathName(srcname)) {
-         PDB(kCache,1)
-            Info("CopyFromCache", "file %s not in cache", srcname.Data());
-         if (!locked) fCacheLock->Unlock();
-         return 0;
-      }
-   }
-   PDB(kCache,1)
-      Info("CopyFromCache", "retrieving %s from cache", srcname.Data());
-   gSystem->Exec(TString::Format("%s %s .", kCP, srcname.Data()));
-
-   // Check if we are done
-   if (!cpbin) {
-      // End of atomicity
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Create binary name template
-   TString binname = name;
-   dot = binname.Last('.');
-   if (dot != kNPOS) {
-      binname.Replace(dot,1,"_");
-      binname += ".";
-   } else {
-      PDB(kCache,1)
-         Info("CopyFromCache",
-              "non-standard name structure: %s ('.' missing)", name.Data());
-      // Done
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Binary version file name
-   TString vername;
-   vername.Form(".%s", name.Data());
-   Int_t dotv = vername.Last('.');
-   if (dotv != kNPOS)
-      vername.Remove(dotv);
-   vername += ".binversion";
-
-   // Check binary version
-   TString v, r;
-   Bool_t okfil = kFALSE;
-   FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "r");
-   if (f) {
-      v.Gets(f);
-      r.Gets(f);
-      fclose(f);
-      okfil = kTRUE;
-   }
-
-   Bool_t okver = (v != gROOT->GetVersion()) ? kFALSE : kTRUE;
-   Bool_t okrev = (r != gROOT->GetGitCommit()) ? kFALSE : kTRUE;
-   if (!okfil || !okver || !okrev) {
-   PDB(kCache,1)
-      Info("CopyFromCache",
-           "removing binaries: 'file': %s, 'ROOT version': %s, 'ROOT revision': %s",
-           (okfil ? "OK" : "not OK"), (okver ? "OK" : "not OK"), (okrev ? "OK" : "not OK") );
-      // Remove all existing binaries
-      binname += "*";
-      gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
-      // ... and the binary version file
-      gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
-      // Done
-      if (!locked) fCacheLock->Unlock();
-      return 0;
-   }
-
-   // Retrieve existing binaries, if any
-   void *dirp = gSystem->OpenDirectory(fCacheDir);
-   if (dirp) {
-      const char *e = 0;
-      while ((e = gSystem->GetDirEntry(dirp))) {
-         if (!strncmp(e, binname.Data(), binname.Length())) {
-            TString fncache;
-            fncache.Form("%s/%s", fCacheDir.Data(), e);
-            Bool_t docp = kTRUE;
-            FileStat_t stlocal, stcache;
-            if (!gSystem->GetPathInfo(fncache, stcache)) {
-               Int_t rc = gSystem->GetPathInfo(e, stlocal);
-               if (rc == 0 && (stlocal.fMtime >= stcache.fMtime))
-                  docp = kFALSE;
-               // If a copy candidate, check also the MD5
-               if (docp) {
-                  TMD5 *md5local = TMD5::FileChecksum(e);
-                  TMD5 *md5cache = TMD5::FileChecksum(fncache);
-                  if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
-                  SafeDelete(md5local);
-                  SafeDelete(md5cache);
-               }
-               // Copy the file, if needed
-               if (docp) {
-                  gSystem->Exec(TString::Format("%s %s", kRM, e));
-                  PDB(kCache,1)
-                     Info("CopyFromCache",
-                          "retrieving %s from cache", fncache.Data());
-                  gSystem->Exec(TString::Format("%s %s %s", kCP, fncache.Data(), e));
-               }
-            }
-         }
-      }
-      gSystem->FreeDirectory(dirp);
-   }
-
-   // End of atomicity
-   if (!locked) fCacheLock->Unlock();
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
-Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
-{
-   // Copy files related to 'macro' to the cache directory.
-   // Action depends on 'opt':
-   //
-   //    opt = 0         copy 'macro' to cache and delete from cache any binary
-   //                    related to name; e.g. if macro = bla.C, the binaries are
-   //                    bla_C.so, bla_C.rootmap, ...
-   //    opt = 1         copy the binaries related to macro to the cache
-   //
-   // Returns 0 on success, -1 otherwise
-
-   if (!macro || strlen(macro) <= 0 || opt < 0 || opt > 1)
-      // Invalid inputs
-      return -1;
-
-   // Split out the aclic mode, if any
-   TString name = macro;
-   TString acmode, args, io;
-   name = gSystem->SplitAclicMode(name, acmode, args, io);
-
-   PDB(kGlobal,1)
-      Info("CopyToCache","enter: opt: %d, names: %s, %s", opt, macro, name.Data());
-
-   // Create binary name template
-   TString binname = name;
-   Int_t dot = binname.Last('.');
-   if (dot != kNPOS)
-      binname.Replace(dot,1,"_");
-
-   // Create version file name template
-   TString vername;
-   vername.Form(".%s", name.Data());
-   dot = vername.Last('.');
-   if (dot != kNPOS)
-      vername.Remove(dot);
-   vername += ".binversion";
-   Bool_t savever = kFALSE;
-
-   // Atomic action
-   Bool_t locked = (fCacheLock->IsLocked()) ? kTRUE : kFALSE;
-   if (!locked) fCacheLock->Lock();
-
-   // Action depends on 'opt'
-   if (opt == 0) {
-      // Save name to cache
-      PDB(kCache,1)
-         Info("CopyToCache",
-              "caching %s/%s ...", fCacheDir.Data(), name.Data());
-      gSystem->Exec(TString::Format("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
-      // If needed, remove from the cache any existing binary related to 'name'
-      if (dot != kNPOS) {
-         binname += "*";
-         PDB(kCache,1)
-            Info("CopyToCache", "opt = 0: removing binaries '%s'", binname.Data());
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
-         gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), vername.Data()));
-      }
-   } else if (opt == 1) {
-      // If needed, copy to the cache any existing binary related to 'name'.
-      if (dot != kNPOS) {
-         void *dirp = gSystem->OpenDirectory(".");
-         if (dirp) {
-            const char *e = 0;
-            while ((e = gSystem->GetDirEntry(dirp))) {
-               if (!strncmp(e, binname.Data(), binname.Length())) {
-                  Bool_t docp = kTRUE;
-                  FileStat_t stlocal, stcache;
-                  if (!gSystem->GetPathInfo(e, stlocal)) {
-                     TString fncache;
-                     fncache.Form("%s/%s", fCacheDir.Data(), e);
-                     Int_t rc = gSystem->GetPathInfo(fncache, stcache);
-                     if (rc == 0 && (stlocal.fMtime <= stcache.fMtime)) {
-                        docp = kFALSE;
-                        if (rc == 0) rc = -1;
-                     }
-                     // If a copy candidate, check also the MD5
-                     if (docp) {
-                        TMD5 *md5local = TMD5::FileChecksum(e);
-                        TMD5 *md5cache = TMD5::FileChecksum(fncache);
-                        if (md5local && md5cache && md5local == md5cache) docp = kFALSE;
-                        SafeDelete(md5local);
-                        SafeDelete(md5cache);
-                        if (!docp) rc = -2;
-                     }
-                     // Copy the file, if needed
-                     if (docp) {
-                        gSystem->Exec(TString::Format("%s %s", kRM, fncache.Data()));
-                        PDB(kCache,1)
-                           Info("CopyToCache","caching %s ... (reason: %d)", e, rc);
-                        gSystem->Exec(TString::Format("%s %s %s", kCP, e, fncache.Data()));
-                        savever = kTRUE;
-                     }
-                  }
-               }
-            }
-            gSystem->FreeDirectory(dirp);
-         }
-         // Save binary version if requested
-         if (savever) {
-            PDB(kCache,1)
-               Info("CopyToCache","updating version file %s ...", vername.Data());
-            FILE *f = fopen(TString::Format("%s/%s", fCacheDir.Data(), vername.Data()), "w");
-            if (f) {
-               fputs(gROOT->GetVersion(), f);
-               fputs(TString::Format("\n%s", gROOT->GetGitCommit()), f);
-               fclose(f);
-            }
-         }
-      }
-   }
-
-   // End of atomicity
-   if (!locked) fCacheLock->Unlock();
-
-   // Done
-   return 0;
-}
-
-//______________________________________________________________________________
 void TProofServ::MakePlayer()
 {
-   // Make player instance.
-
    TVirtualProofPlayer *p = 0;
 
    // Cleanup first
@@ -6618,11 +5905,11 @@ void TProofServ::MakePlayer()
    fPlayer = p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete player instance.
+
 void TProofServ::DeletePlayer()
 {
-   // Delete player instance.
-
    if (IsMaster()) {
       PDB(kGlobal, 1) {
          fCompute.Stop();
@@ -6636,25 +5923,25 @@ void TProofServ::DeletePlayer()
    fPlayer = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the processing priority for the group the user belongs too. This
+/// priority is a number (0 - 100) determined by a scheduler (third
+/// party process) based on some basic priority the group has, e.g.
+/// we might want to give users in a specific group (e.g. promptana)
+/// a higher priority than users in other groups, and on the analysis
+/// of historical logging data (i.e. usage of CPU by the group in a
+/// previous time slot, as recorded in TPerfStats::WriteQueryLog()).
+///
+/// Currently the group priority is obtained by a query in a SQL DB
+/// table proofpriority, which has the format:
+/// CREATE TABLE proofpriority (
+///   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+///   group         VARCHAR(32) NOT NULL,
+///   priority      INT
+///)
+
 Int_t TProofServ::GetPriority()
 {
-   // Get the processing priority for the group the user belongs too. This
-   // priority is a number (0 - 100) determined by a scheduler (third
-   // party process) based on some basic priority the group has, e.g.
-   // we might want to give users in a specific group (e.g. promptana)
-   // a higher priority than users in other groups, and on the analysis
-   // of historical logging data (i.e. usage of CPU by the group in a
-   // previous time slot, as recorded in TPerfStats::WriteQueryLog()).
-   //
-   // Currently the group priority is obtained by a query in a SQL DB
-   // table proofpriority, which has the format:
-   // CREATE TABLE proofpriority (
-   //   id            INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-   //   group         VARCHAR(32) NOT NULL,
-   //   priority      INT
-   //)
-
    TString sqlserv = gEnv->GetValue("ProofServ.QueryLogDB","");
    TString sqluser = gEnv->GetValue("ProofServ.QueryLogUser","");
    TString sqlpass = gEnv->GetValue("ProofServ.QueryLogPasswd","");
@@ -6696,14 +5983,15 @@ Int_t TProofServ::GetPriority()
    return priority;
 }
 
-//______________________________________________________________________________
-Int_t TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
+////////////////////////////////////////////////////////////////////////////////
+/// Send an asychronous message to the master / client .
+/// Masters will forward up the message to the client.
+/// The client prints 'msg' of stderr and adds a '\n'/'\r' depending on
+/// 'lf' being kTRUE (default) or kFALSE.
+/// Returns the return value from TSocket::Send(TMessage &) .
+
+void TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
 {
-   // Send an asychronous message to the master / client .
-   // Masters will forward up the message to the client.
-   // The client prints 'msg' of stderr and adds a '\n'/'\r' depending on
-   // 'lf' being kTRUE (default) or kFALSE.
-   // Returns the return value from TSocket::Send(TMessage &) .
    static TMessage m(kPROOF_MESSAGE);
 
    // To leave a track in the output file ... if requested
@@ -6714,29 +6002,30 @@ Int_t TProofServ::SendAsynMessage(const char *msg, Bool_t lf)
    if (fSocket && msg) {
       m.Reset(kPROOF_MESSAGE);
       m << TString(msg) << lf;
-      return fSocket->Send(m);
+      if (fSocket->Send(m) <= 0)
+         Warning("SendAsynMessage", "could not send message '%s'", msg);
    }
 
-   // No message
-   return -1;
+   return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition the read pointer in the log file to the very end.
+/// This allows to "hide" useful debug messages during normal operations
+/// while preserving the possibility to have them in case of problems.
+
 void TProofServ::FlushLogFile()
 {
-   // Reposition the read pointer in the log file to the very end.
-   // This allows to "hide" useful debug messages during normal operations
-   // while preserving the possibility to have them in case of problems.
-
    off_t lend = lseek(fileno(stdout), (off_t)0, SEEK_END);
    if (lend >= 0) lseek(fLogFileDes, lend, SEEK_SET);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Truncate the log file to the 80% of the required max size if this
+/// is set.
+
 void TProofServ::TruncateLogFile()
 {
-   // Truncate the log file to the 80% of the required max size if this
-   // is set.
 #ifndef WIN32
    TString emsg;
    if (fLogFileMaxSize > 0 && fLogFileDes > 0) {
@@ -6779,11 +6068,11 @@ void TProofServ::TruncateLogFile()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exception handler: we do not try to recover here, just exit.
+
 void TProofServ::HandleException(Int_t sig)
 {
-   // Exception handler: we do not try to recover here, just exit.
-
    Error("HandleException", "caugth exception triggered by signal '%d' %s %lld",
                             sig, fgLastMsg.Data(), fgLastEntry);
    // Description
@@ -6796,11 +6085,11 @@ void TProofServ::HandleException(Int_t sig)
    gSystem->Exit(sig);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle here requests about datasets.
+
 Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
 {
-   // Handle here requests about datasets.
-
    if (gDebug > 0)
       Info("HandleDataSets", "enter");
 
@@ -7141,11 +6430,11 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a message of type kPROOF_SUBMERGER
+
 void TProofServ::HandleSubmerger(TMessage *mess)
 {
-   // Handle a message of type kPROOF_SUBMERGER
-
    // Message type
    Int_t type = 0;
    (*mess) >> type;
@@ -7231,7 +6520,7 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      deleteplayer = kFALSE;
                   }
 
-                  if (t) SafeDelete(t);
+                  SafeDelete(t);
 
                }
 
@@ -7298,9 +6587,9 @@ void TProofServ::HandleSubmerger(TMessage *mess)
                      PDB(kSubmerger, 2) Info("HandleSubmerger","starting delayed merging on %s", fOrdinal.Data());
 
                      // Delayed merging if neccessary
-                     mergerPlayer->MergeOutput();
+                     mergerPlayer->MergeOutput(kTRUE);
 
-                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print();
+                     PDB(kSubmerger, 2) mergerPlayer->GetOutputList()->Print("all");
 
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "delayed merging on %s finished ", fOrdinal.Data());
                      PDB(kSubmerger, 2) Info("HandleSubmerger", "%s sending results to master ", fOrdinal.Data());
@@ -7363,22 +6652,22 @@ void TProofServ::HandleSubmerger(TMessage *mess)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cloning itself via fork. Not implemented
+
 void TProofServ::HandleFork(TMessage *)
 {
-   // Cloning itself via fork. Not implemented
-
    Info("HandleFork", "fork cloning not implemented");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fork a child.
+/// If successful, return 0 in the child process and the child pid in the parent
+/// process. The child pid is registered for reaping.
+/// Return <0 in the parent process in case of failure.
+
 Int_t TProofServ::Fork()
 {
-   // Fork a child.
-   // If successful, return 0 in the child process and the child pid in the parent
-   // process. The child pid is registered for reaping.
-   // Return <0 in the parent process in case of failure.
-
 #ifndef WIN32
    // Fork
    pid_t pid;
@@ -7407,15 +6696,15 @@ Int_t TProofServ::Fork()
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace <ord>, <user>, <u>, <group>, <stag>, <qnum>, <file>, <rver> and
+/// <build> placeholders in fname.
+/// Here, <rver> is the root version in integer form, e.g. 53403, and <build> a
+/// string includign version, architecture and compiler version, e.g.
+/// '53403_linuxx8664gcc_gcc46' .
+
 void TProofServ::ResolveKeywords(TString &fname, const char *path)
 {
-   // Replace <ord>, <user>, <u>, <group>, <stag>, <qnum>, <file>, <rver> and
-   // <build> placeholders in fname.
-   // Here, <rver> is the root version in integer form, e.g. 53403, and <build> a
-   // string includign version, architecture and compiler version, e.g.
-   // '53403_linuxx8664gcc_gcc46' .
-
    // Replace <user>, if any
    if (fname.Contains("<user>")) {
       if (gProofServ && gProofServ->GetUser() && strlen(gProofServ->GetUser())) {
@@ -7489,30 +6778,30 @@ void TProofServ::ResolveKeywords(TString &fname, const char *path)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the status of this session:
+///     0     idle
+///     1     running
+///     2     being terminated  (currently unused)
+///     3     queued
+///     4     idle timed-out (not set in here but in TIdleTOTimer::Notify)
+/// This is typically run in the reader thread, so access needs to be protected
+
 Int_t TProofServ::GetSessionStatus()
 {
-   // Return the status of this session:
-   //     0     idle
-   //     1     running
-   //     2     being terminated  (currently unused)
-   //     3     queued
-   //     4     idle timed-out (not set in here but in TIdleTOTimer::Notify)
-   // This is typically run in the reader thread, so access needs to be protected
-
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    Int_t st = (fIdle) ? 0 : 1;
    if (fIdle && fWaitingQueries->GetSize() > 0) st = 3;
    return st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the session status in the relevant file. The status is taken from
+/// GetSessionStatus() unless xst >= 0, in which case xst is used.
+/// Return 0 on success, -errno if the file could not be opened.
+
 Int_t TProofServ::UpdateSessionStatus(Int_t xst)
 {
-   // Update the session status in the relevant file. The status is taken from
-   // GetSessionStatus() unless xst >= 0, in which case xst is used.
-   // Return 0 on success, -errno if the file could not be opened.
-
    FILE *fs = fopen(fAdminPath.Data(), "w");
    if (fs) {
       Int_t st = (xst < 0) ? GetSessionStatus() : xst;
@@ -7527,67 +6816,74 @@ Int_t TProofServ::UpdateSessionStatus(Int_t xst)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the idle status
+
 Bool_t TProofServ::IsIdle()
 {
-   // Return the idle status
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    return fIdle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the idle status
+
 void TProofServ::SetIdle(Bool_t st)
 {
-   // Change the idle status
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    fIdle = st;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if the session is waiting for the OK to start processing
+
 Bool_t TProofServ::IsWaiting()
 {
-   // Return kTRUE if the session is waiting for the OK to start processing
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    if (fIdle && fWaitingQueries->GetSize() > 0) return kTRUE;
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of waiting queries
+
 Int_t TProofServ::WaitingQueries()
 {
-   // Return the number of waiting queries
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    return fWaitingQueries->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a query to the waiting list
+/// Returns the number of queries in the list
+
 Int_t TProofServ::QueueQuery(TProofQueryResult *pq)
 {
-   // Add a query to the waiting list
-   // Returns the number of queries in the list
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    fWaitingQueries->Add(pq);
    return fWaitingQueries->GetSize();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get the next query from the waiting list.
+/// The query is removed from the list.
+
 TProofQueryResult *TProofServ::NextQuery()
 {
-   // Get the next query from the waiting list.
-   // The query is removed from the list.
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    TProofQueryResult *pq = (TProofQueryResult *) fWaitingQueries->First();
    fWaitingQueries->Remove(pq);
    return pq;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the waiting queries list. The objects are deleted if 'del' is true.
+/// If 'qls' is non null, only objects in 'qls' are removed.
+/// Returns the number of cleanup queries
+
 Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
 {
-   // Cleanup the waiting queries list. The objects are deleted if 'del' is true.
-   // If 'qls' is non null, only objects in 'qls' are removed.
-   // Returns the number of cleanup queries
-   R__LOCKGUARD(fQMtx);
+   std::lock_guard<std::recursive_mutex> lock(fQMtx);
    Int_t ncq = 0;
    if (qls) {
       TIter nxq(qls);
@@ -7606,52 +6902,56 @@ Int_t TProofServ::CleanupWaitingQueries(Bool_t del, TList *qls)
    return ncq;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the message to be sent back in case of exceptions
+
 void TProofServ::SetLastMsg(const char *lastmsg)
 {
-   // Set the message to be sent back in case of exceptions
-
    fgLastMsg = lastmsg;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the last entry before exception
+
 void TProofServ::SetLastEntry(Long64_t entry)
 {
-   // Set the last entry before exception
-
    fgLastEntry = entry;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// VirtMemMax getter
+
 Long_t TProofServ::GetVirtMemMax()
 {
-   // VirtMemMax getter
    return fgVirtMemMax;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ResMemMax getter
+
 Long_t TProofServ::GetResMemMax()
 {
-   // ResMemMax getter
    return fgResMemMax;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MemHWM getter
+
 Float_t TProofServ::GetMemHWM()
 {
-   // MemHWM getter
    return fgMemHWM;
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// MemStop getter
+
 Float_t TProofServ::GetMemStop()
 {
-   // MemStop getter
    return fgMemStop;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract LOCALDATASERVER info in 'dsrv'
+
 void TProofServ::GetLocalServer(TString &dsrv)
 {
-   // Extract LOCALDATASERVER info in 'dsrv'
-
    // Check if a local data server has been specified
    if (gSystem->Getenv("LOCALDATASERVER")) {
       dsrv = gSystem->Getenv("LOCALDATASERVER");
@@ -7662,13 +6962,13 @@ void TProofServ::GetLocalServer(TString &dsrv)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If 'path' is local and 'dsrv' is Xrootd, apply 'path.Localroot' settings,
+/// if any.
+/// The final path via the server is dsrv+path.
+
 void TProofServ::FilterLocalroot(TString &path, const char *dsrv)
 {
-   // If 'path' is local and 'dsrv' is Xrootd, apply 'path.Localroot' settings,
-   // if any.
-   // The final path via the server is dsrv+path.
-
    TUrl u(path, kTRUE);
    if (!strcmp(u.GetProtocol(), "file")) {
       // Remove prefix, if any, if included and if Xrootd
@@ -7683,12 +6983,12 @@ void TProofServ::FilterLocalroot(TString &path, const char *dsrv)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Locks the directory. Waits if lock is hold by an other process.
+/// Returns 0 on success, -1 in case of error.
+
 Int_t TProofLockPath::Lock()
 {
-   // Locks the directory. Waits if lock is hold by an other process.
-   // Returns 0 on success, -1 in case of error.
-
    const char *pname = GetName();
 
    if (gSystem->AccessPathName(pname))
@@ -7719,12 +7019,12 @@ Int_t TProofLockPath::Lock()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unlock the directory. Returns 0 in case of success,
+/// -1 in case of error.
+
 Int_t TProofLockPath::Unlock()
 {
-   // Unlock the directory. Returns 0 in case of success,
-   // -1 in case of error.
-
    if (!IsLocked())
       return 0;
 

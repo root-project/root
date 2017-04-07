@@ -27,6 +27,8 @@
 #include "RooAbsReal.h"
 #include "RooChangeTracker.h"
 
+#define VECTOR_BUFFER_SIZE 1024
+
 class RooAbsArg ;
 class RooArgList ;
 class TTree ;
@@ -132,12 +134,12 @@ public:
 
   class RealVector {
   public:
-    RealVector(UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
+    RealVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(Double_t))) : 
       _nativeReal(0), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
       _vec.reserve(initialCapacity);
     }
 
-    RealVector(RooAbsReal* arg, UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
+    RealVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(Double_t))) : 
       _nativeReal(arg), _real(0), _buf(0), _nativeBuf(0), _vec0(0), _tracker(0), _nset(0) { 
       _vec.reserve(initialCapacity);
     }
@@ -166,9 +168,9 @@ public:
       _real = other._real;
       _buf = other._buf;
       _nativeBuf = other._nativeBuf;
-      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (4096 / sizeof(Double_t))) {
+      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(Double_t))) {
 	std::vector<Double_t> tmp;
-	tmp.reserve(std::max(other._vec.size(), 4096 / sizeof(Double_t)));
+	tmp.reserve(std::max(other._vec.size(), VECTOR_BUFFER_SIZE / sizeof(Double_t)));
 	tmp.assign(other._vec.begin(), other._vec.end());
 	_vec.swap(tmp);
       } else {
@@ -237,10 +239,10 @@ public:
     Int_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
-      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (4096 / sizeof(Double_t))) {
+      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(Double_t))) {
 	// do an expensive copy, if we save at least a factor 2 in size
 	std::vector<Double_t> tmp;
-	tmp.reserve(std::max(siz, Int_t(4096 / sizeof(Double_t))));
+	tmp.reserve(std::max(siz, Int_t(VECTOR_BUFFER_SIZE / sizeof(Double_t))));
 	if (!_vec.empty())
 	    tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
 	if (Int_t(tmp.size()) != siz) 
@@ -275,13 +277,13 @@ public:
 
   class RealFullVector : public RealVector {
   public:
-    RealFullVector(UInt_t initialCapacity=(4096 / sizeof(Double_t))) : RealVector(initialCapacity),
+    RealFullVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(Double_t))) : RealVector(initialCapacity),
       _bufE(0), _bufEL(0), _bufEH(0), 
       _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0), 
       _vecE(0), _vecEL(0), _vecEH(0) { 
     }
 
-    RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=(4096 / sizeof(Double_t))) : 
+    RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(Double_t))) : 
       RealVector(arg,initialCapacity), 
       _bufE(0), _bufEL(0), _bufEH(0), 
       _nativeBufE(0), _nativeBufEL(0), _nativeBufEH(0), 
@@ -325,9 +327,9 @@ public:
 	if (src[i]) {
 	  if (dst[i]) {
 	    if (dst[i]->size() <= src[i]->capacity() / 2 &&
-		src[i]->capacity() > (4096 / sizeof(Double_t))) {
+		src[i]->capacity() > (VECTOR_BUFFER_SIZE / sizeof(Double_t))) {
 	      std::vector<Double_t> tmp;
-	      tmp.reserve(std::max(src[i]->size(), 4096 / sizeof(Double_t)));
+	      tmp.reserve(std::max(src[i]->size(), VECTOR_BUFFER_SIZE / sizeof(Double_t)));
 	      tmp.assign(src[i]->begin(), src[i]->end());
 	      dst[i]->swap(tmp);
 	    } else {
@@ -419,10 +421,10 @@ public:
       for (unsigned i = 0; i < 3; ++i) {
 	if (!vlist[i]) continue;
 	if (vlist[i]) {
-	  if (siz < Int_t(vlist[i]->capacity()) / 2 && vlist[i]->capacity() > (4096 / sizeof(Double_t))) {
+	  if (siz < Int_t(vlist[i]->capacity()) / 2 && vlist[i]->capacity() > (VECTOR_BUFFER_SIZE / sizeof(Double_t))) {
 	    // if we gain a factor of 2 in memory, we copy and swap
 	    std::vector<Double_t> tmp;
-	    tmp.reserve(std::max(siz, Int_t(4096 / sizeof(Double_t))));
+	    tmp.reserve(std::max(siz, Int_t(VECTOR_BUFFER_SIZE / sizeof(Double_t))));
 	    if (!vlist[i]->empty())
 		tmp.assign(vlist[i]->begin(),
 			std::min(_vec.end(), _vec.begin() + siz));
@@ -458,13 +460,13 @@ public:
 
   class CatVector {
   public:
-    CatVector(UInt_t initialCapacity=(4096 / sizeof(RooCatType))) : 
+    CatVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(RooCatType))) : 
       _cat(0), _buf(0), _nativeBuf(0), _vec0(0)
     {
       _vec.reserve(initialCapacity);
     }
 
-    CatVector(RooAbsCategory* cat, UInt_t initialCapacity=(4096 / sizeof(RooCatType))) : 
+    CatVector(RooAbsCategory* cat, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(RooCatType))) : 
       _cat(cat), _buf(0), _nativeBuf(0), _vec0(0)
     {
       _vec.reserve(initialCapacity);
@@ -484,9 +486,9 @@ public:
       _cat = other._cat;
       _buf = other._buf;
       _nativeBuf = other._nativeBuf;
-      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (4096 / sizeof(RooCatType))) {
+      if (other._vec.size() <= _vec.capacity() / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(RooCatType))) {
 	std::vector<RooCatType> tmp;
-	tmp.reserve(std::max(other._vec.size(), 4096 / sizeof(RooCatType)));
+	tmp.reserve(std::max(other._vec.size(), VECTOR_BUFFER_SIZE / sizeof(RooCatType)));
 	tmp.assign(other._vec.begin(), other._vec.end());
 	_vec.swap(tmp);
       } else {
@@ -527,10 +529,10 @@ public:
     Int_t size() const { return _vec.size() ; }
 
     void resize(Int_t siz) {
-      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (4096 / sizeof(RooCatType))) {
+      if (siz < Int_t(_vec.capacity()) / 2 && _vec.capacity() > (VECTOR_BUFFER_SIZE / sizeof(RooCatType))) {
 	// do an expensive copy, if we save at least a factor 2 in size
 	std::vector<RooCatType> tmp;
-	tmp.reserve(std::max(siz, Int_t(4096 / sizeof(RooCatType))));
+	tmp.reserve(std::max(siz, Int_t(VECTOR_BUFFER_SIZE / sizeof(RooCatType))));
 	if (!_vec.empty())
 	    tmp.assign(_vec.begin(), std::min(_vec.end(), _vec.begin() + siz));
 	if (Int_t(tmp.size()) != siz) 

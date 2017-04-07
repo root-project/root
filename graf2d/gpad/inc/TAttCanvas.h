@@ -12,27 +12,16 @@
 #ifndef ROOT_TAttCanvas
 #define ROOT_TAttCanvas
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttCanvas                                                           //
-//                                                                      //
-// Canvas attributes.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttCanvas {
 private:
-   Float_t    fXBetween;        //X distance between pads
-   Float_t    fYBetween;        //Y distance between pads
-   Float_t    fTitleFromTop;    //Y distance of Global Title from top
-   Float_t    fXdate;           //X position where to draw the date
-   Float_t    fYdate;           //X position where to draw the date
-   Float_t    fAdate;           //Alignment for the date
+   Float_t    fXBetween;        ///< X distance between pads
+   Float_t    fYBetween;        ///< Y distance between pads
+   Float_t    fTitleFromTop;    ///< Y distance of Global Title from top
+   Float_t    fXdate;           ///< X position where to draw the date
+   Float_t    fYdate;           ///< X position where to draw the date
+   Float_t    fAdate;           ///< Alignment for the date
 
 public:
    TAttCanvas();

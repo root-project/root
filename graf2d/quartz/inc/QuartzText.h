@@ -64,6 +64,10 @@ private:
 //Aux. function which extracts glyphs, calculates their positions, draws glyphs with manual layout (GUI text).
 void DrawTextLineNoKerning(CGContextRef ctx, CTFontRef font, const std::vector<UniChar> &text, Int_t x, Int_t y);
 
+const extern CTFontOrientation defaultFontOrientation;
+const extern CTFontOrientation horizontalFontOrientation;
+const extern CTFontOrientation verticalFontOrientation;
+
 }
 }
 

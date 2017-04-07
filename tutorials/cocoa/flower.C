@@ -1,16 +1,14 @@
-//Author: Timur Pocheptsov, 4/02/2014
-
-//A demo to show transparency with TMultiGraph
-//(and a really interesting curve/equation). + point compression in
-//TPadPainter :))
-//You can see all three flowers ONLY with Cococa (transparency).
-
-//The equation by Paul Burke: http://paulbourke.net/geometry/
-
-//Point compression (before you resize):
-//polygon 1 from 500000 to 61071 points;
-//polygon 2 from 100000 to 44600 points.
-//OpenGL died :)))
+/// \file
+/// \ingroup tutorial_cocoa
+/// A demo to show transparency with TMultiGraph
+/// (and a really interesting curve/equation). Point compression in TPadPainter.
+/// You can see all three flowers ONLY with Cocoa (transparency).
+///
+/// The equation by Paul Burke: http://paulbourke.net/geometry/
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 #include <cassert>
 #include <vector>

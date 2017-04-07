@@ -96,7 +96,19 @@ void         *XrdProofConn::fgSecGetProtocol = 0;  // Sec protocol getter
 
 #define URLTAG "["<<fUrl.Host<<":"<<fUrl.Port<<"]"
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Open the connection to a remote XrdProofd instance.
+/// The mode 'm' indicates the role of this connection:
+///     'a'      Administrator; used by an XPD to contact the head XPD
+///     'i'      Internal; used by a TXProofServ to call back its creator
+///              (see XrdProofUnixConn)
+///     'M'      Client contacting a top master
+///     'm'      Top master contacting a submaster
+///     's'      Master contacting a slave
+/// The buffer 'logbuf' is a null terminated string to be sent over at
+/// login. In case of need, internally it is overwritten with a token
+/// needed during redirection.
+
 XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
                            XrdClientAbsUnsolMsgHandler *uh, const char *logbuf)
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
@@ -105,17 +117,6 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
      fConnectInterruptMtx(0), fConnectInterrupt(0), fPhyConn(0),
      fOpenSockFD(-1), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
-   // Constructor. Open the connection to a remote XrdProofd instance.
-   // The mode 'm' indicates the role of this connection:
-   //     'a'      Administrator; used by an XPD to contact the head XPD
-   //     'i'      Internal; used by a TXProofServ to call back its creator
-   //              (see XrdProofUnixConn)
-   //     'M'      Client contacting a top master
-   //     'm'      Top master contacting a submaster
-   //     's'      Master contacting a slave
-   // The buffer 'logbuf' is a null terminated string to be sent over at
-   // login. In case of need, internally it is overwritten with a token
-   // needed during redirection.
    XPDLOC(ALL, "XrdProofConn")
 
    // Mutex
@@ -132,30 +133,31 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve current values of the retry control parameters, numer of retries
+/// and wait time between attempts (in seconds).
+
 void XrdProofConn::GetRetryParam(int &maxtry, int &timewait)
 {
-   // Retrieve current values of the retry control parameters, numer of retries
-   // and wait time between attempts (in seconds).
-
    maxtry = fgMaxTry;
    timewait = fgTimeWait;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change values of the retry control parameters, numer of retries
+/// and wait time between attempts (in seconds).
+
 void XrdProofConn::SetRetryParam(int maxtry, int timewait)
 {
-   // Change values of the retry control parameters, numer of retries
-   // and wait time between attempts (in seconds).
-
    fgMaxTry = maxtry;
    fgTimeWait = timewait;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization
+
 bool XrdProofConn::Init(const char *url, int)
 {
-   // Initialization
    XPDLOC(ALL, "Conn::Init")
 
    // Init connection manager (only once)
@@ -193,10 +195,11 @@ bool XrdProofConn::Init(const char *url, int)
    return fConnected;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Run the connection attempts: the result is stored in fConnected
+
 void XrdProofConn::Connect(int)
 {
-   // Run the connection attempts: the result is stored in fConnected
    XPDLOC(ALL, "Conn::Connect")
 
    // Max number of tries and timeout
@@ -283,11 +286,11 @@ void XrdProofConn::Connect(int)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 XrdProofConn::~XrdProofConn()
 {
-   // Destructor
-
    // Disconnect from remote server (the connection manager is
    // responsible of the underlying physical connection, so we do not
    // force its closing)
@@ -307,10 +310,11 @@ XrdProofConn::~XrdProofConn()
    SafeDel(fConnectInterruptMtx);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform a reconnection attempt when a connection is not valid any more
+
 void XrdProofConn::ReConnect()
 {
-   // Perform a reconnection attempt when a connection is not valid any more
    XPDLOC(ALL, "Conn::ReConnect")
 
    if (!IsValid()) {
@@ -333,10 +337,11 @@ void XrdProofConn::ReConnect()
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to remote server
+
 int XrdProofConn::TryConnect(int)
 {
-   // Connect to remote server
    XPDLOC(ALL, "Conn::TryConnect")
 
    int logid;
@@ -411,10 +416,11 @@ int XrdProofConn::TryConnect(int)
    return logid;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection.
+
 void XrdProofConn::Close(const char *opt)
 {
-   // Close connection.
    XPDLOC(ALL, "Conn::Close")
 
    // Make sure we are connected
@@ -436,15 +442,16 @@ void XrdProofConn::Close(const char *opt)
    return;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// We are here if an unsolicited response comes from a logical conn
+/// The response comes in the form of an XrdClientMessage *, that must NOT be
+/// destroyed after processing. It is destroyed by the first sender.
+/// Remember that we are in a separate thread, since unsolicited
+/// responses are asynchronous by nature.
+
 UnsolRespProcResult XrdProofConn::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender *,
                                                         XrdClientMessage *m)
 {
-   // We are here if an unsolicited response comes from a logical conn
-   // The response comes in the form of an XrdClientMessage *, that must NOT be
-   // destroyed after processing. It is destroyed by the first sender.
-   // Remember that we are in a separate thread, since unsolicited
-   // responses are asynchronous by nature.
    XPDLOC(ALL, "Conn::ProcessUnsolicitedMsg")
 
    TRACE(DBG,"processing unsolicited response");
@@ -488,12 +495,12 @@ UnsolRespProcResult XrdProofConn::ProcessUnsolicitedMsg(XrdClientUnsolMsgSender 
    return kUNSOL_KEEP;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set handler of unsolicited responses
+
 void XrdProofConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh,
                             XrdProofConnSender_t sender, void *arg)
 {
-   // Set handler of unsolicited responses
-
    if (fgConnMgr && (fLogConnID > -1)  && fgConnMgr->GetConnection(fLogConnID))
       fgConnMgr->GetConnection(fLogConnID)->UnsolicitedMsgHandler = uh;
 
@@ -502,24 +509,25 @@ void XrdProofConn::SetAsync(XrdClientAbsUnsolMsgHandler *uh,
    fSenderArg = arg;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pickup message from the queue
+
 XrdClientMessage *XrdProofConn::ReadMsg()
 {
-   // Pickup message from the queue
-
    return (fgConnMgr ? fgConnMgr->ReadMsg(fLogConnID) : (XrdClientMessage *)0);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SendRecv sends a command to the server and to get a response.
+/// The header of the last response is returned as pointer to a XrdClientMessage.
+/// The data, if any, are returned in *answData; if *answData == 0 in input,
+/// the buffer is internally allocated and must be freed by the caller.
+/// If (*answData != 0) the program assumes that the caller has allocated
+/// enough bytes to contain the reply.
+
 XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqData,
                                          char **answData)
 {
-   // SendRecv sends a command to the server and to get a response.
-   // The header of the last response is returned as pointer to a XrdClientMessage.
-   // The data, if any, are returned in *answData; if *answData == 0 in input,
-   // the buffer is internally allocated and must be freed by the caller.
-   // If (*answData != 0) the program assumes that the caller has allocated
-   // enough bytes to contain the reply.
    XPDLOC(ALL, "Conn::SendRecv")
 
    XrdClientMessage *xmsg = 0;
@@ -622,12 +630,13 @@ XrdClientMessage *XrdProofConn::SendRecv(XPClientRequest *req, const void *reqDa
    return xmsg;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SendReq tries to send a single command for a number of times
+
 XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqData,
                                         char **answData, const char *CmdName,
                                         bool notifyerr)
 {
-   // SendReq tries to send a single command for a number of times
    XPDLOC(ALL, "Conn::SendReq")
 
    XrdClientMessage *answMex = 0;
@@ -710,13 +719,14 @@ XrdClientMessage *XrdProofConn::SendReq(XPClientRequest *req, const void *reqDat
    return answMex;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the server's response is ours.
+/// If the response's status is "OK" returns 1; if the status is "redirect", it
+/// means that the max number of redirections has been achieved, so returns 0.
+
 bool XrdProofConn::CheckResp(struct ServerResponseHeader *resp,
                              const char *method, bool notifyerr)
 {
-   // Checks if the server's response is ours.
-   // If the response's status is "OK" returns 1; if the status is "redirect", it
-   // means that the max number of redirections has been achieved, so returns 0.
    XPDLOC(ALL, "Conn::CheckResp")
 
    if (MatchStreamID(resp)) {
@@ -740,11 +750,11 @@ bool XrdProofConn::CheckResp(struct ServerResponseHeader *resp,
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check stream ID matching
+
 bool XrdProofConn::MatchStreamID(struct ServerResponseHeader *ServerResponse)
 {
-   // Check stream ID matching
-
    char sid[2];
 
    memcpy(sid, &fStreamid, sizeof(sid));
@@ -753,19 +763,20 @@ bool XrdProofConn::MatchStreamID(struct ServerResponseHeader *ServerResponse)
    return (memcmp(ServerResponse->streamid, sid, sizeof(sid)) == 0 );
 }
 
-//_____________________________________________________________________________
-void XrdProofConn::SetSID(kXR_char *sid) {
-   // Set our stream id, to match against that one in the server's response.
+////////////////////////////////////////////////////////////////////////////////
+/// Set our stream id, to match against that one in the server's response.
 
+void XrdProofConn::SetSID(kXR_char *sid) {
    memcpy((void *)sid, (const void*)&fStreamid, 2);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send request to server
+/// (NB: req is marshalled at this point, so we need also the plain reqDataLen)
+
 XReqErrorType XrdProofConn::LowWrite(XPClientRequest *req, const void* reqData,
                                      int reqDataLen)
 {
-   // Send request to server
-   // (NB: req is marshalled at this point, so we need also the plain reqDataLen)
    XPDLOC(ALL, "Conn::LowWrite")
 
    // Strong mutual exclusion over the physical channel
@@ -794,11 +805,12 @@ XReqErrorType XrdProofConn::LowWrite(XPClientRequest *req, const void* reqData,
    return kOK;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check error status
+
 bool XrdProofConn::CheckErrorStatus(XrdClientMessage *mex, int &Retry,
                                     const char *CmdName, bool notifyerr)
 {
-   // Check error status
    XPDLOC(ALL, "Conn::CheckErrorStatus")
 
    TRACE(DBG, "parsing reply from server "<<URLTAG);
@@ -860,11 +872,12 @@ bool XrdProofConn::CheckErrorStatus(XrdClientMessage *mex, int &Retry,
    return 1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Gets access to the connected server.
+/// The login and authorization steps are performed here.
+
 bool XrdProofConn::GetAccessToSrv(XrdClientPhyConnection *p)
 {
-   // Gets access to the connected server.
-   // The login and authorization steps are performed here.
    XPDLOC(ALL, "Conn::GetAccessToSrv")
 
    XrdClientPhyConnection *phyconn = (p) ? p : fPhyConn;
@@ -915,11 +928,11 @@ bool XrdProofConn::GetAccessToSrv(XrdClientPhyConnection *p)
    return ok;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low level write call
+
 int XrdProofConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *phyconn)
 {
-   // Low level write call
-
    if (phyconn && phyconn->IsValid()) {
       phyconn->WriteRaw(buf, len, 0);
    } else if (fgConnMgr) {
@@ -930,11 +943,11 @@ int XrdProofConn::WriteRaw(const void *buf, int len, XrdClientPhyConnection *phy
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Low level receive call
+
 int XrdProofConn::ReadRaw(void *buf, int len, XrdClientPhyConnection *phyconn)
 {
-   // Low level receive call
-
    if (phyconn && phyconn->IsValid()) {
       phyconn->ReadRaw(buf, len);
    } else if (fgConnMgr) {
@@ -945,11 +958,12 @@ int XrdProofConn::ReadRaw(void *buf, int len, XrdClientPhyConnection *phyconn)
    return -1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Performs initial hand-shake with the server in order to understand which
+/// kind of server is there at the other side
+
 XrdProofConn::ESrvType XrdProofConn::DoHandShake(XrdClientPhyConnection *p)
 {
-   // Performs initial hand-shake with the server in order to understand which
-   // kind of server is there at the other side
    XPDLOC(ALL, "Conn::DoHandShake")
 
    XrdClientPhyConnection *phyconn = (p) ? p : fPhyConn;
@@ -1047,19 +1061,20 @@ XrdProofConn::ESrvType XrdProofConn::DoHandShake(XrdClientPhyConnection *p)
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the socket descriptor of the underlying connection
+
 int XrdProofConn::GetLowSocket()
 {
-   // Return the socket descriptor of the underlying connection
-
    return (fPhyConn ? fPhyConn->GetSocket() : -1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This method perform the loggin-in into the server just after the
+/// hand-shake. It also calls the Authenticate() method
+
 bool XrdProofConn::Login()
 {
-   // This method perform the loggin-in into the server just after the
-   // hand-shake. It also calls the Authenticate() method
    XPDLOC(ALL, "Conn::Login")
 
    XPClientRequest reqhdr, reqsave;
@@ -1241,12 +1256,13 @@ bool XrdProofConn::Login()
    return resp;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Negotiate authentication with the remote server. Tries in turn
+/// all available protocols proposed by the server (in plist),
+/// starting from the first.
+
 XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
 {
-   // Negotiate authentication with the remote server. Tries in turn
-   // all available protocols proposed by the server (in plist),
-   // starting from the first.
    XPDLOC(ALL, "Conn::Authenticate")
 
    XrdSecProtocol *protocol = (XrdSecProtocol *)0;
@@ -1422,29 +1438,29 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    return protocol;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interrupt the underlying socket
+
 void XrdProofConn::SetInterrupt()
 {
-   // Interrupt the underlying socket
-
    if (fPhyConn)
       fPhyConn->SetInterrupt();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interrupt connection attempts
+
 void XrdProofConn::SetConnectInterrupt()
 {
-   // Interrupt connection attempts
-
    XrdSysMutexHelper mhp(fConnectInterruptMtx);
    fConnectInterrupt = 1;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if interrupted during connect
+
 bool XrdProofConn::ConnectInterrupt()
 {
-   // Check if interrupted during connect
-
    bool rc = 0;
    {  XrdSysMutexHelper mhp(fConnectInterruptMtx);
       rc = fConnectInterrupt;
@@ -1455,11 +1471,11 @@ bool XrdProofConn::ConnectInterrupt()
    return rc;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test validity of this connection
+
 bool XrdProofConn::IsValid() const
 {
-   // Test validity of this connection
-
    if (fConnected)
       if (fPhyConn && fPhyConn->IsValid())
          return 1;

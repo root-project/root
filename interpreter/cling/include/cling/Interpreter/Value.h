@@ -11,6 +11,8 @@
 #define CLING_VALUE_H
 
 #include <stddef.h>
+#include <stdint.h>
+#include <type_traits>
 
 namespace llvm {
   class raw_ostream;
@@ -51,16 +53,6 @@ namespace cling {
     /// \brief The actual value.
     Storage m_Storage;
 
-    /// \brief The value's type, stored as opaque void* to reduce
-    /// dependencies.
-    void* m_Type;
-
-    ///\brief Interpreter, produced the value.
-    ///
-    ///(Size without this is 24, this member makes it 32)
-    ///
-    Interpreter* m_Interpreter;
-
     enum EStorageType {
       kSignedIntegerOrEnumerationType,
       kUnsignedIntegerOrEnumerationType,
@@ -68,11 +60,56 @@ namespace cling {
       kFloatType,
       kLongDoubleType,
       kPointerType,
+      kManagedAllocation,
       kUnsupportedType
     };
 
+    /// \brief Which part in m_Storage is active.
+    EStorageType m_StorageType;
+
+    /// \brief The value's type, stored as opaque void* to reduce
+    /// dependencies.
+    void* m_Type;
+
+    ///\brief Interpreter that produced the value.
+    ///
+    Interpreter* m_Interpreter;
+
     /// \brief Retrieve the underlying, canonical, desugared, unqualified type.
-    EStorageType getStorageType() const;
+    EStorageType getStorageType() const { return m_StorageType; }
+
+    /// \brief Determine the underlying, canonical, desugared, unqualified type:
+    /// the element of Storage to be used.
+    static EStorageType determineStorageType(clang::QualType QT);
+
+    /// \brief Determine the underlying, canonical, desugared, unqualified type:
+    /// the element of Storage to be used.
+    static constexpr EStorageType determineStorageTypeT(...) {
+      return kManagedAllocation;
+    }
+
+    template <class T, class = typename std::enable_if<std::is_integral<T>::value>::type>
+    static constexpr EStorageType determineStorageTypeT(T*) {
+      return std::is_signed<T>::value
+        ? kSignedIntegerOrEnumerationType
+        : kUnsignedIntegerOrEnumerationType;
+    }
+    static constexpr EStorageType determineStorageTypeT(double*) {
+      return kDoubleType;
+    }
+    static constexpr EStorageType determineStorageTypeT(float*) {
+      return kFloatType;
+    }
+    static constexpr EStorageType determineStorageTypeT(long double*) {
+      return kDoubleType;
+    }
+    template <class T>
+    static constexpr EStorageType determineStorageTypeT(T**) {
+      return kPointerType;
+    }
+    static constexpr EStorageType determineStorageTypeT(void*) {
+      return kUnsupportedType;
+    }
 
     /// \brief Allocate storage as needed by the type.
     void ManagedAllocate();
@@ -81,10 +118,7 @@ namespace cling {
     ///   dependencies.
     void AssertOnUnsupportedTypeCast() const;
 
-    /// \brief Get the function address of the wrapper of the destructor.
-    void* GetDtorWrapperPtr(const clang::RecordDecl* RD) const;
-
-    unsigned long GetNumberOfElements() const;
+    size_t GetNumberOfElements() const;
 
     // Allow simplisticCastAs to be partially specialized.
     template<typename T>
@@ -103,7 +137,8 @@ namespace cling {
         case kLongDoubleType:
           return (T) V.getAs<long double>();
         case kPointerType:
-          return (T) (size_t) V.getAs<void*>();
+        case kManagedAllocation:
+          return (T) (uintptr_t) V.getAs<void*>();
         case kUnsupportedType:
           V.AssertOnUnsupportedTypeCast();
         }
@@ -115,42 +150,68 @@ namespace cling {
     struct CastFwd<T*> {
       static T* cast(const Value& V) {
         EStorageType storageType = V.getStorageType();
-        switch (storageType) {
-        case kPointerType:
-          return (T*) (size_t) V.getAs<void*>();
-        default:
-          V.AssertOnUnsupportedTypeCast(); break;
-        }
+        if (storageType == kPointerType
+            || storageType == kManagedAllocation)
+          return (T*) (uintptr_t) V.getAs<void*>();
+        V.AssertOnUnsupportedTypeCast();
         return 0;
       }
     };
 
+    Value(void* QualTypeAsOpaquePtr, Interpreter& Interp, EStorageType stType):
+      m_StorageType(stType),
+      m_Type(QualTypeAsOpaquePtr),
+      m_Interpreter(&Interp) {
+    }
+
   public:
     /// \brief Default constructor, creates a value that IsInvalid().
-    Value(): m_Type(0), m_Interpreter(0) {}
+    Value():
+      m_StorageType(kUnsupportedType), m_Type(nullptr),
+      m_Interpreter(nullptr) {}
     /// \brief Copy a value.
     Value(const Value& other);
     /// \brief Move a value.
-    Value(Value&& other);
-    /// \brief Construct a valid but ininitialized Value. After this call the
+    Value(Value&& other):
+      m_Storage(other.m_Storage), m_StorageType(other.m_StorageType),
+      m_Type(other.m_Type), m_Interpreter(other.m_Interpreter) {
+      // Invalidate other so it will not release.
+      other.m_StorageType = kUnsupportedType;
+    }
+
+    /// \brief Construct a valid but uninitialized Value. After this call the
     ///   value's storage can be accessed; i.e. calls ManagedAllocate() if
     ///   needed.
     Value(clang::QualType Ty, Interpreter& Interp);
+
     /// \brief Destruct the value; calls ManagedFree() if needed.
     ~Value();
+
+    /// \brief Create a valid but ininitialized Value. After this call the
+    ///   value's storage can be accessed; i.e. calls ManagedAllocate() if
+    ///   needed.
+    template <class T>
+    static Value Create(void* QualTypeAsOpaquePtr, Interpreter& Interp) {
+      EStorageType stType
+        = std::is_reference<T>::value ?
+       determineStorageTypeT((typename std::remove_reference<T>::type**)nullptr)
+        : determineStorageTypeT((T*)nullptr);
+      return Value(QualTypeAsOpaquePtr, Interp, stType);
+    }
 
     Value& operator =(const Value& other);
     Value& operator =(Value&& other);
 
     clang::QualType getType() const;
     clang::ASTContext& getASTContext() const;
-    Interpreter* getInterpreter() { return m_Interpreter; }
-    const Interpreter* getInterpreter() const { return m_Interpreter; }
+    Interpreter* getInterpreter() const { return m_Interpreter; }
 
     /// \brief Whether this type needs managed heap, i.e. the storage provided
     /// by the m_Storage member is insufficient, or a non-trivial destructor
     /// must be called.
-    bool needsManagedAllocation() const;
+    bool needsManagedAllocation() const {
+      return getStorageType() == kManagedAllocation;
+    }
 
     /// \brief Determine whether the Value has been set.
     //
@@ -165,8 +226,7 @@ namespace cling {
     //
     /// Determine whether the Value is set and not void.
     /// Only in this case can getAs() or simplisticCastAs() be called.
-    bool hasValue() const {
-      return isValid() && !isVoid(); }
+    bool hasValue() const { return isValid() && !isVoid(); }
 
     /// \brief Get a reference to the value without type checking.
     /// T *must* correspond to type. Else use simplisticCastAs()!
@@ -219,8 +279,8 @@ namespace cling {
     ///   std::string printValue(const MyClass* const p, POSSIBLYDERIVED* ac,
     ///                          const Value& V);
     ///\endcode
-    void print(llvm::raw_ostream& Out) const;
-    void dump() const;
+    void print(llvm::raw_ostream& Out, bool escape = false) const;
+    void dump(bool escape = true) const;
   };
 } // end namespace cling
 

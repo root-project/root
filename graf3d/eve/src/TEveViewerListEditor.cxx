@@ -13,13 +13,16 @@
 #include "TEveViewer.h"
 #include "TEveGValuators.h"
 
-//______________________________________________________________________________
-// GUI editor for TEveViewerList.
-//
+/** \class TEveViewerListEditor
+\ingroup TEve
+GUI editor for TEveViewerList.
+*/
 
 ClassImp(TEveViewerListEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -28,8 +31,6 @@ TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t
    fBrightness(0),
    fColorSet(0)
 {
-   // Constructor.
-
    MakeTitle("TEveViewerList");
 
    Int_t labelW = 63;
@@ -46,36 +47,30 @@ TEveViewerListEditor::TEveViewerListEditor(const TGWindow *p, Int_t width, Int_t
    AddFrame(fColorSet, new TGLayoutHints(kLHintsLeft, 2, 1, 4, 4));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveViewerListEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveViewerList*>(obj);
 
    fBrightness->SetValue(fM->GetColorBrightness());
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for brightness.
 
-// Implements callback/slot methods
-
-//______________________________________________________________________________
 void TEveViewerListEditor::DoBrightness()
 {
-   // Slot for brightness.
-
    fColorSet->SetText(fM->UseLightColorSet()?"DarkColorSet": "Light ColorSet");
    fM->SetColorBrightness(fBrightness->GetValue());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for color set.
+
 void TEveViewerListEditor::SwitchColorSet()
 {
-   // Slot for color set.
-
    fColorSet->SetText(fM->UseLightColorSet()? "Light ColorSet":"Dark ColorSet");
    fM->SwitchColorSet();
 }

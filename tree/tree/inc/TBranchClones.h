@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
 class TClonesArray;
 class TTreeCloner;
@@ -31,16 +29,17 @@ class TTreeCloner;
 class TBranchClones : public TBranch {
 
 protected:
-   TClonesArray     *fList;           //!Pointer to the clonesarray
-   Int_t            fRead;            //!flag = 1 if clonesarray has been read
-   Int_t            fN;               //!Number of elements in ClonesArray
-   Int_t            fNdataMax;        //!Maximum value of fN
-   TString          fClassName;       //name of the class of the objets in the ClonesArray
-   TBranch          *fBranchCount;    //Branch with clones count
+   TClonesArray     *fList;           ///<! Pointer to the clonesarray
+   Int_t            fRead;            ///<! flag = 1 if clonesarray has been read
+   Int_t            fN;               ///<! Number of elements in ClonesArray
+   Int_t            fNdataMax;        ///<! Maximum value of fN
+   TString          fClassName;       ///< name of the class of the objets in the ClonesArray
+   TBranch          *fBranchCount;    ///< Branch with clones count
 
    friend class TTreeCloner;
 
    void Init(TTree *tree, TBranch *parent, const char *name, void *clonesaddress, Int_t basketsize=32000,Int_t compress=-1, Int_t splitlevel=1);
+   virtual Int_t   FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
 public:
    TBranchClones();
@@ -49,7 +48,6 @@ public:
    virtual ~TBranchClones();
 
    virtual void    Browse(TBrowser *b);
-   virtual Int_t   Fill();
    virtual const char* GetClassName() const { return fClassName; }
    virtual Int_t   GetEntry(Long64_t entry=0, Int_t getall = 0);
    virtual Int_t   GetN() const {return fN;}
@@ -62,6 +60,8 @@ public:
    virtual void    SetBasketSize(Int_t buffsize);
    virtual void    SetTree(TTree *tree) { fTree = tree; fBranchCount->SetTree(tree); }
    virtual void    UpdateFile();
+
+private:
 
    ClassDef(TBranchClones,2);  //Branch in case of an array of clone objects
 };

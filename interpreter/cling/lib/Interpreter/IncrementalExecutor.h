@@ -10,22 +10,27 @@
 #ifndef CLING_INCREMENTAL_EXECUTOR_H
 #define CLING_INCREMENTAL_EXECUTOR_H
 
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/StringRef.h"
-
 #include "IncrementalJIT.h"
+#include "BackendPasses.h"
 
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
+#include "cling/Utils/Casting.h"
+
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringRef.h"
 
 #include <vector>
 #include <set>
 #include <map>
 #include <memory>
+#include <atomic>
 
 namespace clang {
   class DiagnosticsEngine;
+  class CodeGenOptions;
+  class CompilerInstance;
 }
 
 namespace llvm {
@@ -35,8 +40,8 @@ namespace llvm {
 }
 
 namespace cling {
-  class Value;
   class IncrementalJIT;
+  class Value;
 
   class IncrementalExecutor {
   public:
@@ -46,6 +51,13 @@ namespace cling {
     ///\brief Our JIT interface.
     ///
     std::unique_ptr<IncrementalJIT> m_JIT;
+
+    // optimizer etc passes
+    std::unique_ptr<BackendPasses> m_BackendPasses;
+
+    ///\brier A pointer to the IncrementalExecutor of the parent Interpreter.
+    ///
+    IncrementalExecutor* m_externalIncrementalExecutor;
 
     ///\brief Helper that manages when the destructor of an object to be called.
     ///
@@ -89,15 +101,19 @@ namespace cling {
       const llvm::Module* m_FromM;
     };
 
+    ///\brief Atomic used as a spin lock to protect the access to m_AtExitFuncs
+    ///
+    /// AddAtExitFunc is used at the end of the 'interpreted' user code
+    /// and before the calling framework has any change of taking back/again
+    /// its lock protecting the access to cling, so we need to explicit protect
+    /// again multiple conccurent access.
+    std::atomic_flag m_AtExitFuncsSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
+
     typedef llvm::SmallVector<CXAAtExitElement, 128> AtExitFunctions;
     ///\brief Static object, which are bound to unloading of certain declaration
     /// to be destructed.
     ///
     AtExitFunctions m_AtExitFuncs;
-
-    ///\brief Module for which registration of static destructors currently
-    /// takes place.
-    llvm::Module* m_CurrentAtExitModule;
 
     ///\brief Modules to emit upon the next call to the JIT.
     ///
@@ -118,7 +134,6 @@ namespace cling {
     clang::DiagnosticsEngine& m_Diags;
 #endif
 
-    std::unique_ptr<llvm::TargetMachine> CreateHostTargetMachine() const;
 
   public:
     enum ExecutionResult {
@@ -128,9 +143,14 @@ namespace cling {
       kNumExeResults
     };
 
-    IncrementalExecutor(clang::DiagnosticsEngine& diags);
+    IncrementalExecutor(clang::DiagnosticsEngine& diags,
+                        const clang::CompilerInstance& CI);
 
     ~IncrementalExecutor();
+
+    void setExternalIncrementalExecutor(IncrementalExecutor *extIncrExec) {
+      m_externalIncrementalExecutor = extIncrExec;
+    }
 
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
@@ -144,8 +164,13 @@ namespace cling {
     }
 
     ///\brief Unload a set of JIT symbols.
-    void unloadFromJIT(Transaction::ExeUnloadHandle H) {
-      m_JIT->removeModules((size_t)H.m_Opaque);
+    bool unloadFromJIT(llvm::Module* M, Transaction::ExeUnloadHandle H) {
+      auto iMod = std::find(m_ModulesToJIT.begin(), m_ModulesToJIT.end(), M);
+      if (iMod != m_ModulesToJIT.end())
+        m_ModulesToJIT.erase(iMod);
+      else
+        m_JIT->removeModules((size_t)H.m_Opaque);
+      return true;
     }
 
     ///\brief Run the static initializers of all modules collected to far.
@@ -178,17 +203,22 @@ namespace cling {
     /// Allows runtime declaration of a function passing its pointer for being
     /// used by JIT generated code.
     ///
-    /// @param[in] symbolName - The name of the symbol as required by the
+    /// @param[in] Name - The name of the symbol as required by the
     ///                         linker (mangled if needed)
-    /// @param[in] symbolAddress - The function pointer to register
+    /// @param[in] Address - The function pointer to register
+    /// @param[in] JIT - Add to the JIT injected symbol table
     /// @returns true if the symbol is successfully registered, false otherwise.
     ///
-    bool addSymbol(const char* symbolName,  void* symbolAddress);
+    bool addSymbol(const char* Name, void* Address, bool JIT = false);
 
     ///\brief Add a llvm::Module to the JIT.
     ///
     /// @param[in] module - The module to pass to the execution engine.
-    void addModule(llvm::Module* module) { m_ModulesToJIT.push_back(module); }
+    void addModule(llvm::Module* module) {
+      if (m_BackendPasses)
+        m_BackendPasses->runOnModule(*module);
+      m_ModulesToJIT.push_back(module);
+    }
 
     ///\brief Tells the execution context that we are shutting down the system.
     ///
@@ -217,7 +247,7 @@ namespace cling {
 
     ///\brief Keep track of the entities whose dtor we need to call.
     ///
-    void AddAtExitFunc(void (*func) (void*), void* arg);
+    void AddAtExitFunc(void (*func) (void*), void* arg, llvm::Module* M);
 
     ///\brief Try to resolve a symbol through our LazyFunctionCreators;
     /// print an error message if that fails.
@@ -245,19 +275,13 @@ namespace cling {
 
     template <class T>
     ExecutionResult executeInitOrWrapper(llvm::StringRef funcname, T& fun) {
-      union {
-        T fun;
-        void* address;
-      } p2f;
-      p2f.address = (void*)m_JIT->getSymbolAddress(funcname);
+      fun = utils::UIntToFunctionPtr<T>(m_JIT->getSymbolAddress(funcname,
+                                                              false /*dlsym*/));
 
       // check if there is any unresolved symbol in the list
-      if (diagnoseUnresolvedSymbols(funcname, "function") || !p2f.address) {
-        fun = 0;
+      if (diagnoseUnresolvedSymbols(funcname, "function") || !fun)
         return IncrementalExecutor::kExeUnresolvedSymbols;
-      }
 
-      fun = p2f.fun;
       return IncrementalExecutor::kExeSuccess;
     }
   };

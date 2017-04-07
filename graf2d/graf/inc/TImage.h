@@ -13,27 +13,11 @@
 #define ROOT_TImage
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TImage                                                               //
-//                                                                      //
-// Abstract interface to image processing library.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttImage
 #include "TAttImage.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
 class TVirtualPad;
 class TArrayD;

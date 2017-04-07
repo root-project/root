@@ -44,7 +44,7 @@ public:
   virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const;
 
 
-  RooArgSet components() { RooArgSet tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
+  RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
 
   virtual ~RooProduct() ;
 
@@ -63,8 +63,6 @@ protected:
 
   RooListProxy _compRSet ;
   RooListProxy _compCSet ;
-  TIterator* _compRIter ;  //! do not persist
-  TIterator* _compCIter ;  //! do not persist
 
   class CacheElem : public RooAbsCacheElement {
   public:

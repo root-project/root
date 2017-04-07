@@ -1,5 +1,12 @@
-// Display a 3D histogram using GL (box option).
-//Author: Timur Pocheptsov
+/// \file
+/// \ingroup tutorial_gl
+/// Display a 3D histogram using GL (box option).
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
+
 void glh3c()
 {
   gStyle->SetCanvasPreferGL(kTRUE);

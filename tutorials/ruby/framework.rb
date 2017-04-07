@@ -1,4 +1,3 @@
-gROOT.Reset();
 c1 = TCanvas.new("c1","The ROOT Framework",200,10,700,500)
 c1.Range(0,0,19,12)
 

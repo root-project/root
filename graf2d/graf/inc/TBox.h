@@ -13,45 +13,25 @@
 #define ROOT_TBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBox                                                                 //
-//                                                                      //
-// Box class.                                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 class TBox : public TObject, public TAttLine, public TAttFill, public TAttBBox2D {
 
 private:
-   TObject     *fTip;          //!tool tip associated with box
+   TObject     *fTip;          ///<! tool tip associated with box
 
 protected:
-   Double_t     fX1;           //X of 1st point
-   Double_t     fY1;           //Y of 1st point
-   Double_t     fX2;           //X of 2nd point
-   Double_t     fY2;           //Y of 2nd point
-   Bool_t       fResizing;     //!True if box is being resized
+   Double_t     fX1;           ///< X of 1st point
+   Double_t     fY1;           ///< Y of 1st point
+   Double_t     fX2;           ///< X of 2nd point
+   Double_t     fY2;           ///< Y of 2nd point
+   Bool_t       fResizing;     ///<! True if box is being resized
 
 public:
    // Private bits, clients can only test but not change them

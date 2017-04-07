@@ -12,9 +12,7 @@
 #ifndef ROOT_TSpline
 #define ROOT_TSpline
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TH1;
 class TF1;

@@ -1,15 +1,19 @@
+/// \file
+/// \ingroup tutorial_io
+/// \notebook -nodraw
+/// Example of script showing how to create a ROOT file with subdirectories.
+/// The script scans a given directory tree and recreates the same structure in the ROOT file.
+/// All source files of type .h,cxx,c,dat,py are imported as TMacro objects.
+/// See also the other tutorial readCode.C
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TFile.h"
 #include "TSystem.h"
 #include "TMacro.h"
 
 void importdir(const char *dirname) {
-  //Example of script showing how to create a ROOT file with subdirectories.
-  //The script scans a given directory tree and recreates the
-  //same structure in the ROOT file.
-  //All source files of type .h,cxx,c,dat,py are imported as TMacro objects
-  //see also other tutorial readCode.C
-  //Author: Rene Brun
-
    char *slash = (char*)strrchr(dirname,'/');
    char *locdir;
    if (slash) locdir = slash+1;
@@ -50,6 +54,7 @@ void importdir(const char *dirname) {
 }
 void importCode() {
    TFile *f = new TFile("code.root","recreate");
-   importdir("../tutorials"); //change the directory as you like
+   TString dir = gROOT->GetTutorialDir();
+   importdir(dir); //change the directory as you like
    delete f;
 }

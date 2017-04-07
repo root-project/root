@@ -9,14 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TAttParticle                                                         //
-//                                                                      //
-// Particle definition, partly based on GEANT3 particle definition      //
-//                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TAttParticle
+    \ingroup eg
+
+Particle definition, partly based on GEANT3 particle definition
+*/
 
 #include "TAttParticle.h"
 #include "THashList.h"
@@ -27,13 +24,13 @@ ClassImp(TAttParticle)
 
 THashList *TAttParticle::fgList = new THashList;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Particle definition default constructor
+///
+
 TAttParticle::TAttParticle()
 {
-//
-//  Particle definition default constructor
-//
-
    //do nothing just set some dummy values
    fPDGMass       = 0.0;
    fPDGStable     = kTRUE;
@@ -46,22 +43,22 @@ TAttParticle::TAttParticle()
    fGranularity   = 90;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Particle definition normal constructor. If the particle is set to be
+///  stable, the decay width parameter does have no meaning and can be set to
+///  any value. The parameters granularity, LowerCutOff and HighCutOff are
+///  used for the construction of the mean free path look up tables. The
+///  granularity will be the number of logwise energy points for which the
+///  mean free path will be calculated.
+///
+
 TAttParticle::TAttParticle(const char *name, const char *title,
               Double_t Mass, Bool_t Stable,
               Double_t DecayWidth, Double_t Charge, const char *Type,
               Int_t MCnumber, Int_t granularity, Double_t LowerCutOff,
               Double_t HighCutOff) : TNamed(name,title)
 {
-//
-//  Particle definition normal constructor. If the particle is set to be
-//  stable, the decay width parameter does have no meaning and can be set to
-//  any value. The parameters granularity, LowerCutOff and HighCutOff are
-//  used for the construction of the mean free path look up tables. The
-//  granularity will be the number of logwise energy points for which the
-//  mean free path will be calculated.
-//
-
    fPDGMass       = Mass;
    fPDGStable     = Stable;
    fPDGDecayWidth = DecayWidth;
@@ -75,21 +72,22 @@ TAttParticle::TAttParticle(const char *name, const char *title,
    fgList->Add(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Particle destructor
+///
+
 TAttParticle::~TAttParticle()
 {
-//
-//  Particle destructor
-//
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Converts the ISAJET Particle number into the PDG MC number
+///
+
 Int_t TAttParticle::ConvertISAtoPDG(Int_t isaNumber)
 {
-//
-//  Converts the ISAJET Particle number into the PDG MC number
-//
    switch (isaNumber) {
       case     1 : return     2; //     UP        .30000E+00       .67
       case    -1 : return    -2; //     UB        .30000E+00      -.67
@@ -238,17 +236,18 @@ Int_t TAttParticle::ConvertISAtoPDG(Int_t isaNumber)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Defines particles according to the Particle Data Group
+///
+///  For questions regarding distribution or content of the MC particle
+///  codes, contact
+///  Gary Wagman (GSWagman@LBL.BITNET, LBL::GSWagman, or GSWagman@LBL.GOV).
+///  (510)486-6610
+///
+
 void TAttParticle::DefinePDG()
 {
-//
-//  Defines particles according to the Particle Data Group
-//
-//  For questions regarding distribution or content of the MC particle
-//  codes, contact
-//  Gary Wagman (GSWagman@LBL.BITNET, LBL::GSWagman, or GSWagman@LBL.GOV).
-//  (510)486-6610
-//
    if (!fgList->IsEmpty()) return;
 
    new TAttParticle("down","Q001",0.005,kTRUE, .0,-0.333333333333333,"Quark", 1);
@@ -1498,12 +1497,13 @@ void TAttParticle::DefinePDG()
                                     1.e38,0.0,"Artificial",0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Get a pointer to the particle object according to the name given
+///
+
 TAttParticle* TAttParticle::GetParticle(const char *name)
 {
-//
-//  Get a pointer to the particle object according to the name given
-//
    TAttParticle *def = (TAttParticle *)fgList->FindObject(name);
    if (!def) {
       fgList->Error("GetParticle","No match for %s exists !",name);
@@ -1511,12 +1511,13 @@ TAttParticle* TAttParticle::GetParticle(const char *name)
    return def;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Get a pointer to the particle object according to the MC code number
+///
+
 TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
 {
-//
-//  Get a pointer to the particle object according to the MC code number
-//
    TIter next(fgList);
    TAttParticle *par;
    while ((par = (TAttParticle *)next())) {
@@ -1526,13 +1527,13 @@ TAttParticle* TAttParticle::GetParticle(Int_t mcnumber)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Print the entire information of this kind of particle
+///
+
 void TAttParticle::Print(Option_t *) const
 {
-//
-//  Print the entire information of this kind of particle
-//
-
    Printf("\nParticle: %-15s  ",
           this->GetName());
    if (!fPDGStable) {
@@ -1546,12 +1547,13 @@ void TAttParticle::Print(Option_t *) const
    Printf(" ");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Samples a mass according to the Breit-Wigner resonance distribution
+///
+
 Double_t TAttParticle::SampleMass() const
 {
-//
-//  Samples a mass according to the Breit-Wigner resonance distribution
-//
    if ( fPDGStable || fPDGDecayWidth == 0.0 )
       return fPDGMass;
    else {
@@ -1561,21 +1563,22 @@ Double_t TAttParticle::SampleMass() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Samples a mass in the interval:
+///
+///  fPDGMass-widthcut*fPDGDecayWidtht - fPDGMass+widthcut*fPDGDecayWidth
+///
+///  according to the Breit-Wigner resonance distribution
+///
+
 Double_t TAttParticle::SampleMass(Double_t widthcut) const
 {
-//
-//  Samples a mass in the interval:
-//
-//  fPDGMass-widthcut*fPDGDecayWidtht - fPDGMass+widthcut*fPDGDecayWidth
-//
-//  according to the Breit-Wigner resonance distribution
-//
    if ( fPDGStable || fPDGDecayWidth == 0.0 )
       return fPDGMass;
    else {
       return (fPDGMass+
              0.5*fPDGDecayWidth*
-             TMath::Tan((2.0*gRandom->Rndm(0)-1.0)*TMath::ATan(2.0*widthcut)));
+             TMath::Tan((2.0*gRandom->Rndm()-1.0)*TMath::ATan(2.0*widthcut)));
    }
 }

@@ -21,17 +21,14 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#include <limits>
+#include "Rtypes.h"
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TMatrixDUtils
 #include "TMatrixDUtils.h"
-#endif
-#ifndef ROOT_TVectorD
+#include "TObject.h"
 #include "TVectorD.h"
-#endif
+
+#include <limits>
 
 class TDecompBase : public TObject
 {

@@ -5,15 +5,15 @@
 .\" NAME should be all caps, SECTION should be 1-8, maybe w/ subsection
 .\" other parms are allowed: see man(7), man(1)
 .SH NAME
-g2rootold \- convert GEANT geomtry files to ROOT files
+g2rootold \- convert GEANT geometry files to ROOT files
 .SH SYNOPSIS
-.B g2rootoldd
+.B g2rootold
 .I [-f map_name] geant_name macro_name
 .SH "DESCRIPTION"
 You can convert a
 .B GEANT
 (see
-.I http://wwwinfo.cern.ch/asd/geant/index.html
+.I http://geant.cern.ch/
 fore more on
 .BR GEANT )
 geometry to
@@ -54,7 +54,7 @@ session;
 .nf
 root [1] .x detector.C
 root [2] detector.Draw()
-root [3] c1.x3d()   // (this invokes the 3-d Root viewver)
+root [3] c1.x3d()   // (this invokes the 3-d Root viewer)
 root [4] TFile f("detector.root","NEW") //open a new root file
 root [5] detector.Write() //Write the geometry structure
 root [6] f.Write()
@@ -103,9 +103,9 @@ and
 .I JDIGI.
 .SH "SEE ALSO"
 .RS
-.IR root (1),
-.IR g2root (1),
-.IR h2root(1),
+.IR root(1) ,
+.IR g2root(1) ,
+.IR h2root(1) ,
 .RE
 and
 .RS

@@ -12,34 +12,7 @@
 #ifndef ROOT_TGeoArb8
 #define ROOT_TGeoArb8
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoArb8 - a arbitrary trapezoid with less than 8 vertices standing on //
-//   two paralel planes perpendicular to Z axis. Parameters :             //
-//            - dz - half length in Z;                                    //
-//            - xy[8][2] - vector of (x,y) coordinates of vertices        //
-//               - first four points (xy[i][j], i<4, j<2) are the (x,y)   //
-//                 coordinates of the vertices sitting on the -dz plane;  //
-//               - last four points (xy[i][j], i>=4, j<2) are the (x,y)   //
-//                 coordinates of the vertices sitting on the +dz plane;  //
-//   The order of defining the vertices of an arb8 is the following :     //
-//      - point 0 is connected with points 1,3,4                          //
-//      - point 1 is connected with points 0,2,5                          //
-//      - point 2 is connected with points 1,3,6                          //
-//      - point 3 is connected with points 0,2,7                          //
-//      - point 4 is connected with points 0,5,7                          //
-//      - point 5 is connected with points 1,4,6                          //
-//      - point 6 is connected with points 2,5,7                          //
-//      - point 7 is connected with points 3,4,6                          //
-//   Points can be identical in order to create shapes with less than     //
-//   8 vertices.                                                          //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoArb8 : public TGeoBBox
 {
@@ -113,21 +86,6 @@ public:
    ClassDef(TGeoArb8, 1)         // arbitrary trapezoid with 8 vertices
 };
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoTrap                                                               //
-//                                                                        //
-// Trap is a general trapezoid, i.e. one for which the faces perpendicular//
-// to z are trapezia and their centres are not the same x, y. It has 11   //
-// parameters: the half length in z, the polar angles from the centre of  //
-// the face at low z to that at high z, H1 the half length in y at low z, //
-// LB1 the half length in x at low z and y low edge, LB2 the half length  //
-// in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the//
-// centre of low y edge to the centre of the high y edge, and H2, LB2,    //
-// LH2, TH2, the corresponding quantities at high z.                      //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoTrap : public TGeoArb8
 {
 protected:
@@ -181,21 +139,6 @@ public:
 
    ClassDef(TGeoTrap, 1)         // G3 TRAP shape
 };
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoGtra                                                               //
-//                                                                        //
-// Gtra is a twisted general trapezoid, i.e. one for which the faces perpendicular//
-// to z are trapezia and their centres are not the same x, y. It has 12   //
-// parameters: the half length in z, the polar angles from the centre of  //
-// the face at low z to that at high z, the twist angle, H1 the half length in y at low z, //
-// LB1 the half length in x at low z and y low edge, LB2 the half length  //
-// in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the//
-// centre of low y edge to the centre of the high y edge, and H2, LB2,    //
-// LH2, TH2, the corresponding quantities at high z.                      //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoGtra : public TGeoTrap
 {

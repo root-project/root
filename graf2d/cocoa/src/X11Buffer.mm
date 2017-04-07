@@ -607,7 +607,6 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 
    //I assume here, that all XOR ops in one iteration (one Update call) must
    //be for the same window (if not, there is no normal way to implement this at all).
-   //TODO: verify and check this condition.
 
    NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
 
@@ -853,7 +852,8 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
                assert(fClippedRegion.size() == 1 && "ClipOverlaps, internal logic error");
                break;
             }
-            recIt->origin = [view.fParentView convertPoint : recIt->origin toView : view];
+            recIt->origin = NSPointToCGPoint([view.fParentView convertPoint :
+                                              NSPointFromCGPoint(recIt->origin) toView : view]);
          }
       }
    }
@@ -911,7 +911,7 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
 
    //This is quite straightforward implementation - I'm calculation rectangles, which are part of
    //a widget's rect, not hidden by any of fRectsToClip.
-   //TODO: find a better algorithm.
+
    typedef std::vector<WidgetRect>::const_iterator rect_const_iterator;
    typedef std::vector<bool>::size_type size_type;
 

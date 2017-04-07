@@ -1,5 +1,10 @@
-//How to add a function to the class context menu
-//Author: Ilka Antcheva
+/// \file
+/// \ingroup tutorial_gui
+/// Example showing how to add a function to the class context menu
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva
 
 #include "TH1.h"
 #include "TClassMenuItem.h"

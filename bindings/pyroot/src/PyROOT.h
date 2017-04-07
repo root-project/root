@@ -89,6 +89,7 @@ static inline void* PyROOT_PyCapsule_GetPointer( PyObject* capsule, const char* 
 #define PYROOT__long__ "__long__"
 #define PYROOT__idiv__ "__idiv__"
 #define PYROOT__div__  "__div__"
+#define PYROOT__next__ "next"
 
 #endif  // ! 3.0
 
@@ -127,6 +128,7 @@ static inline void* PyROOT_PyCapsule_GetPointer( PyObject* capsule, const char* 
 #define PYROOT__long__ "__int__"
 #define PYROOT__idiv__ "__itruediv__"
 #define PYROOT__div__  "__truediv__"
+#define PYROOT__next__ "__next__"
 
 #define Py_TPFLAGS_HAVE_RICHCOMPARE 0
 #define Py_TPFLAGS_CHECKTYPES 0

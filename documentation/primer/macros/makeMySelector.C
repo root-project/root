@@ -3,9 +3,9 @@
 //////////////////////////////////////////////////////
 //
 // open root file containing the Tree
-  TFile *f = TFile::Open("conductivity_experiment.root");
+    TFile f("conductivity_experiment.root");
 // create TTree object from it
-  TTree *t = (TTree *) f->Get("cond_data");
+    TTree *t; f.GetObject("cond_data",t);
 // this generates the files MySelector.h and MySelector.C
-  t->MakeSelector("MySelector");
-  }
+    t->MakeSelector("MySelector");
+}

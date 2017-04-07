@@ -25,6 +25,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Transforms/Utils/LoopUtils.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "loop-instsimplify"
@@ -42,14 +43,10 @@ namespace {
     bool runOnLoop(Loop*, LPPassManager&) override;
 
     void getAnalysisUsage(AnalysisUsage &AU) const override {
-      AU.setPreservesCFG();
       AU.addRequired<AssumptionCacheTracker>();
-      AU.addRequired<LoopInfoWrapperPass>();
-      AU.addRequiredID(LoopSimplifyID);
-      AU.addPreservedID(LoopSimplifyID);
-      AU.addPreservedID(LCSSAID);
-      AU.addPreserved<ScalarEvolution>();
       AU.addRequired<TargetLibraryInfoWrapperPass>();
+      AU.setPreservesCFG();
+      getLoopAnalysisUsage(AU);
     }
   };
 }
@@ -58,10 +55,8 @@ char LoopInstSimplify::ID = 0;
 INITIALIZE_PASS_BEGIN(LoopInstSimplify, "loop-instsimplify",
                 "Simplify instructions in loops", false, false)
 INITIALIZE_PASS_DEPENDENCY(AssumptionCacheTracker)
+INITIALIZE_PASS_DEPENDENCY(LoopPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
-INITIALIZE_PASS_DEPENDENCY(LCSSA)
 INITIALIZE_PASS_END(LoopInstSimplify, "loop-instsimplify",
                 "Simplify instructions in loops", false, false)
 
@@ -70,15 +65,13 @@ Pass *llvm::createLoopInstSimplifyPass() {
 }
 
 bool LoopInstSimplify::runOnLoop(Loop *L, LPPassManager &LPM) {
-  if (skipOptnoneFunction(L))
+  if (skipLoop(L))
     return false;
 
   DominatorTreeWrapperPass *DTWP =
       getAnalysisIfAvailable<DominatorTreeWrapperPass>();
   DominatorTree *DT = DTWP ? &DTWP->getDomTree() : nullptr;
   LoopInfo *LI = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
-  const DataLayout *DL = DLP ? &DLP->getDataLayout() : nullptr;
   const TargetLibraryInfo *TLI =
       &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
   auto &AC = getAnalysis<AssumptionCacheTracker>().getAssumptionCache(
@@ -110,10 +103,11 @@ bool LoopInstSimplify::runOnLoop(Loop *L, LPPassManager &LPM) {
       WorklistItem Item = VisitStack.pop_back_val();
       BasicBlock *BB = Item.getPointer();
       bool IsSubloopHeader = Item.getInt();
+      const DataLayout &DL = L->getHeader()->getModule()->getDataLayout();
 
       // Simplify instructions in the current basic block.
       for (BasicBlock::iterator BI = BB->begin(), BE = BB->end(); BI != BE;) {
-        Instruction *I = BI++;
+        Instruction *I = &*BI++;
 
         // The first time through the loop ToSimplify is empty and we try to
         // simplify all instructions. On later iterations ToSimplify is not
@@ -134,14 +128,12 @@ bool LoopInstSimplify::runOnLoop(Loop *L, LPPassManager &LPM) {
             ++NumSimplified;
           }
         }
-        bool res = RecursivelyDeleteTriviallyDeadInstructions(I, TLI);
-        if (res) {
-          // RecursivelyDeleteTriviallyDeadInstruction can remove
-          // more than one instruction, so simply incrementing the
-          // iterator does not work. When instructions get deleted
-          // re-iterate instead.
+        if (RecursivelyDeleteTriviallyDeadInstructions(I, TLI)) {
+          // RecursivelyDeleteTriviallyDeadInstruction can remove more than one
+          // instruction, so simply incrementing the iterator does not work.
+          // When instructions get deleted re-iterate instead.
           BI = BB->begin(); BE = BB->end();
-          LocalChanged |= res;
+          LocalChanged = true;
         }
 
         if (IsSubloopHeader && !isa<PHINode>(I))

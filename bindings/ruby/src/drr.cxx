@@ -495,7 +495,7 @@ void drr_find_method_prototype( G__ClassInfo *klass, char *methname, VALUE inarg
    /* Loop if we have to, i.e. there are T_OBJECTS ^= TObjects and the first
     * combination is not correct.
     */
-   if( nobjects > 0 and !(minfo->IsValid()) ) {
+   if( nobjects > 0 && !(minfo->IsValid()) ) {
       for( UInt_t reference_map=0x1; reference_map < bitmap_end; reference_map++) {
          cproto[0] = static_cast<char>( 0 ); // reset cproto
          drr_map_args2 (inargs, cproto, cproto_size, 0, offset, reference_map);

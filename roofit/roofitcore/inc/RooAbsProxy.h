@@ -18,7 +18,6 @@
 
 #include "TObject.h"
 #include "RooAbsArg.h"
-#include "Riosfwd.h"
 
 #ifdef _WIN32
 // Turn off 'warning C4355: 'this' : used in base member initializer list'

@@ -16,39 +16,30 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-// TEveQuadSetGL
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GL-renderer for TEveQuadSet class.
+/** \class TEveQuadSetGL
+\ingroup TEve
+GL-renderer for TEveQuadSet class.
+*/
 
 ClassImp(TEveQuadSetGL);
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
 
-//______________________________________________________________________________
 TEveQuadSetGL::TEveQuadSetGL() : TEveDigitSetGL(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = false; // Disable DL.
    fMultiColor = kTRUE;
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 Bool_t TEveQuadSetGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveQuadSet>(obj);
    return kTRUE;
 }
-
-/******************************************************************************/
 
 namespace
 {
@@ -61,11 +52,11 @@ namespace
   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw quad-set with GL.
+
 void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Draw quad-set with GL.
-
    static const TEveException eH("TEveQuadSetGL::DirectDraw ");
 
    // printf("QuadSetGLRenderer::DirectDraw Style %d, LOD %d\n", rnrCtx.Style(), rnrCtx.LOD());
@@ -104,11 +95,11 @@ void TEveQuadSetGL::DirectDraw(TGLRnrCtx & rnrCtx) const
    DrawFrameIfNeeded(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering for free-quads and rectangles.
+
 void TEveQuadSetGL::RenderQuads(TGLRnrCtx& rnrCtx) const
 {
-   // GL rendering for free-quads and rectangles.
-
    static const TEveException eH("TEveQuadSetGL::RenderQuads ");
 
    TEveQuadSet& mQ = * fM;
@@ -382,11 +373,11 @@ void TEveQuadSetGL::RenderQuads(TGLRnrCtx& rnrCtx) const
    if (rnrCtx.SecSelection()) glPopName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering for line-types.
+
 void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
 {
-   // GL rendering for line-types.
-
    static const TEveException eH("TEveQuadSetGL::RenderLines ");
 
    TEveQuadSet& mQ = * fM;
@@ -442,11 +433,11 @@ void TEveQuadSetGL::RenderLines(TGLRnrCtx & rnrCtx) const
    if (rnrCtx.SecSelection()) glPopName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// GL rendering for hexagons.
+
 void TEveQuadSetGL::RenderHexagons(TGLRnrCtx & rnrCtx) const
 {
-   // GL rendering for hexagons.
-
    static const TEveException eH("TEveQuadSetGL::RenderHexagons ");
 
    const Float_t sqr3hf = 0.5*TMath::Sqrt(3);

@@ -89,7 +89,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
 #ifdef DEBUG
       std::cout << "number of unbin data is " << n << " of dim " << N << std::endl;
 #endif
-      d->Initialize(n,N);
+      d->Append(n,N);
       TBranch * bx = tree->GetBranch("x");
       double vx[N];
       bx->SetAddress(vx);
@@ -117,7 +117,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
       //std::cout << "number of unbin data is " << n << std::endl;
 
       if (dim == 2) {
-         d->Initialize(n,2);
+         d->Append(n,2);
          TBranch * bx = tree->GetBranch("x");
          TBranch * by = tree->GetBranch("y");
          double v[2];
@@ -130,7 +130,7 @@ ROOT::Fit::UnBinData * FillUnBinData(TTree * tree, bool copyData = true, unsigne
          }
       }
       else if (dim == 1) {
-         d->Initialize(n,1);
+         d->Append(n,1);
          TBranch * bx = tree->GetBranch("x");
          double v[1];
          bx->SetAddress(&v[0]);
@@ -507,9 +507,9 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
       if (fname == "gaussian") {
          double val,pmin,pmax;
          val = func->GetParameter(1); //func->GetParLimits(1,-100,100);
-         RooRealVar * mean = new RooRealVar("mean","Mean of Gaussian",val) ;
+         mean = new RooRealVar("mean","Mean of Gaussian",val) ;
          val = func->GetParameter(2); func->GetParLimits(1,pmin,pmax);
-         RooRealVar * sigma = new RooRealVar("sigma","Width of Gaussian",val) ;
+         sigma = new RooRealVar("sigma","Width of Gaussian",val) ;
 
          pdf = new RooGaussian("gauss","gauss(x,mean,sigma)",x,*mean,*sigma) ;
       }

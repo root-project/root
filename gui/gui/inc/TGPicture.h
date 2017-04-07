@@ -24,21 +24,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TGClient
 #include "TGClient.h"
-#endif
-#ifndef ROOT_TGGC
 #include "TGGC.h"
-#endif
 
 class THashTable;
 

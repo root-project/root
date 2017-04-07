@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 
 #if !defined(__CINT__)
@@ -100,6 +98,9 @@ private:
 
    static void       ThreadStub(void *Parameter) {((TWinNTSystem *)Parameter)->TimerThread();}
    void              TimerThread();
+   void              FillWithHomeDirectory(const char *userName, char *mydir) const;
+   char             *GetWorkingDirectory(char driveletter) const;
+   
 
 protected:
    static int        WinNTUnixConnect(int port);
@@ -170,7 +171,9 @@ public:
    void             *OpenDirectory(const char *name);
    const char       *WorkingDirectory(char driveletter);
    const char       *WorkingDirectory();
+   std::string       GetWorkingDirectory() const;
    const char       *HomeDirectory(const char *userName=0);
+   std::string       GetHomeDirectory(const char *userName=0) const;
    const char       *TempDirectory() const;
    FILE             *TempFileName(TString &base, const char *dir = 0);
 

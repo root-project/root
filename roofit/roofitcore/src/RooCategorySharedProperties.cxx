@@ -14,15 +14,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCategorySharedProperties is the container for all properties
-// that are shared between instance of RooCategory objects that
-// are clones of each other. At present the only property that is
-// shared in this way is the list of alternate named range definitions
-// END_HTML
-//
+/**
+\file RooCategorySharedProperties.cxx
+\class RooCategorySharedProperties
+\ingroup Roofitcore
+
+RooCategorySharedProperties is the container for all properties
+that are shared between instance of RooCategory objects that
+are clones of each other. At present the only property that is
+shared in this way is the list of alternate named range definitions
+**/
 
 #include "RooFit.h"
 #include "RooCategorySharedProperties.h"
@@ -35,24 +36,27 @@ ClassImp(RooCategorySharedProperties)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooCategorySharedProperties::RooCategorySharedProperties()
 {
-  // Constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with unique-id string
+
 RooCategorySharedProperties::RooCategorySharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr)
 {
-  // Constructor with unique-id string
 } 
 
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategorySharedProperties::RooCategorySharedProperties(const RooCategorySharedProperties& other) :
   RooSharedProperties(other)
 {
@@ -79,10 +83,11 @@ RooCategorySharedProperties::RooCategorySharedProperties(const RooCategoryShared
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCategorySharedProperties::~RooCategorySharedProperties() 
 {
-  // Destructor
   _altRanges.Delete() ;
 } 
 

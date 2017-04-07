@@ -14,63 +14,67 @@
 
 ClassImp(TCONE)
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/cone.gif"> </P> End_Html
-// CONE is a conical tube. It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dz         half-length in z
-//     - rmin1      inside radius at -DZ in z
-//     - rmax1      outside radius at -DZ in z
-//     - rmin2      inside radius at +DZ in z
-//     - rmax2      outside radius at +DZ in z
+/** \class TCONE
+\ingroup g3d
 
+A conical tube.
 
-//______________________________________________________________________________
+\image html g3d_cone.png
+It has 8 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dz:         half-length in z
+  - rmin1:      inside radius at -DZ in z
+  - rmax1:      outside radius at -DZ in z
+  - rmin2:      inside radius at +DZ in z
+  - rmax2:      outside radius at +DZ in z
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape default constructor
+
 TCONE::TCONE()
 {
-   // CONE shape default constructor
-
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape normal constructor
 
-//______________________________________________________________________________
 TCONE::TCONE(const char *name, const char *title, const char *material, Float_t dz,
              Float_t rmin1, Float_t rmax1,
              Float_t rmin2, Float_t rmax2)
       : TTUBE(name, title,material,rmin1,rmax1,dz)
 {
-   // CONE shape normal constructor
-
    fRmin2 = rmin2;
    fRmax2 = rmax2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape "simplified" constructor
 
-//______________________________________________________________________________
 TCONE::TCONE(const char *name, const char *title, const char *material, Float_t dz, Float_t rmax1
             , Float_t rmax2) : TTUBE(name, title,material,0,rmax1,dz)
 {
-   // CONE shape "simplified" constructor
-
    fRmin2 = 0;
    fRmax2 = rmax2;
 }
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// CONE shape default destructor
+
 TCONE::~TCONE()
 {
-   // CONE shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create CONE points
+
 void TCONE::SetPoints(Double_t *points) const
 {
-   // Create CONE points
-
    Double_t rmin1, rmax1, dz;
    Int_t j, n;
 

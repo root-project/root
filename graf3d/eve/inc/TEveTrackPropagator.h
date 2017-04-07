@@ -215,6 +215,7 @@ protected:
 
    // Propagation, state of current track
    std::vector<TEveVector4D> fPoints;        // Calculated point.
+   std::vector<TEveVector4D> fLastPoints;    // Copy of the latest calculated points.
    TEveVectorD               fV;             // Start vertex.
    Helix_t                   fH;             // Helix.
 
@@ -331,6 +332,8 @@ public:
    TMarker& RefPMAtt()  { return fPMAtt; }
    TMarker& RefFVAtt()  { return fFVAtt; }
    TMarker& RefPTBAtt() { return fPTBAtt; }
+
+   const std::vector<TEveVector4D>& GetLastPoints() const { return fLastPoints; }
 
    static Bool_t IsOutsideBounds(const TEveVectorD& point, Double_t maxRsqr, Double_t maxZ);
 

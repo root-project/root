@@ -34,18 +34,20 @@ TPyDispatcher::TPyDispatcher( PyObject* callable ) : fCallable( 0 )
    fCallable = callable;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Applies python object reference counting.
+
 TPyDispatcher::TPyDispatcher( const TPyDispatcher& other ) : TObject ( other )
 {
-// Copy constructor. Applies python object reference counting.
    Py_XINCREF( other.fCallable );
    fCallable = other.fCallable;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator. Applies python object reference counting.
+
 TPyDispatcher& TPyDispatcher::operator=( const TPyDispatcher& other )
 {
-// Assignment operator. Applies python object reference counting.
    if ( this != &other ) {
       this->TObject::operator=( other );
 
@@ -57,9 +59,10 @@ TPyDispatcher& TPyDispatcher::operator=( const TPyDispatcher& other )
    return *this;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor. Reference counting for the held python object is in effect.
+
 TPyDispatcher::~TPyDispatcher() {
-// Destructor. Reference counting for the held python object is in effect.
    Py_XDECREF( fCallable );
 }
 
@@ -104,7 +107,8 @@ PyObject* TPyDispatcher::DispatchVA( const char* format, ... )
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char* format, ... )
 {
    PyObject* pyobj = PyROOT::BindCppObject( obj, Cppyy::GetScope( clname ), kFALSE /* isRef */ );
@@ -160,7 +164,8 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( TPad* selpad, TObject* selected, Int_t event )
 {
    PyObject* args = PyTuple_New( 3 );
@@ -179,7 +184,8 @@ PyObject* TPyDispatcher::Dispatch( TPad* selpad, TObject* selected, Int_t event 
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( Int_t event, Int_t x, Int_t y, TObject* selected )
 {
    PyObject* args = PyTuple_New( 4 );
@@ -199,7 +205,8 @@ PyObject* TPyDispatcher::Dispatch( Int_t event, Int_t x, Int_t y, TObject* selec
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( TVirtualPad* pad, TObject* obj, Int_t event )
 {
    PyObject* args = PyTuple_New( 3 );
@@ -218,7 +225,8 @@ PyObject* TPyDispatcher::Dispatch( TVirtualPad* pad, TObject* obj, Int_t event )
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( TGListTreeItem* item, TDNDData* data )
 {
    PyObject* args = PyTuple_New( 2 );
@@ -236,7 +244,8 @@ PyObject* TPyDispatcher::Dispatch( TGListTreeItem* item, TDNDData* data )
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
 {
    PyObject* args = PyTuple_New( 2 );
@@ -254,7 +263,8 @@ PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 PyObject* TPyDispatcher::Dispatch( TSlave* slave, TProofProgressInfo* pi )
 {
    PyObject* args = PyTuple_New( 2 );

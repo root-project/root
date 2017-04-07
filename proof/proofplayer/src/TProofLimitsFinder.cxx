@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofLimitsFinder                                                   //
-//                                                                      //
-// Class to find nice axis limits and synchronize them between workers  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofLimitsFinder
+\ingroup proofkernel
+
+Class to find axis limits and synchronize them between workers
+
+*/
 
 #include "TProofLimitsFinder.h"
 #include "TProofServ.h"
@@ -27,15 +26,15 @@
 
 ClassImp(TProofLimitsFinder)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get bining information. Send current min and max and receive common
+/// min max in return.
+
 void TProofLimitsFinder::AutoBinFunc(TString& key,
                                      Double_t& xmin, Double_t& xmax,
                                      Double_t& ymin, Double_t& ymax,
                                      Double_t& zmin, Double_t& zmax)
 {
-   // Get bining information. Send current min and max and receive common
-   // min max in return.
-
    if (!gProofServ) return;
 
    TSocket *s = gProofServ->GetSocket();
@@ -71,11 +70,11 @@ void TProofLimitsFinder::AutoBinFunc(TString& key,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find good limits
+
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 {
-   // Find good limits
-
    Double_t dummy = 0;
 
    TString key = h->GetName();
@@ -85,11 +84,11 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find good limits
+
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax)
 {
-   // Find good limits
-
    Double_t dummy = 0;
 
    TString key = h->GetName();
@@ -99,11 +98,11 @@ Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find good limits
+
 Int_t TProofLimitsFinder::FindGoodLimits(TH1 *h, Axis_t xmin, Axis_t xmax, Axis_t ymin, Axis_t ymax, Axis_t zmin, Axis_t zmax)
 {
-   // Find good limits
-
    TString key = h->GetName();
    AutoBinFunc(key, xmin, xmax, ymin, ymax, zmin, zmax);
 

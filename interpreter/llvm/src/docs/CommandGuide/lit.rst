@@ -56,7 +56,7 @@ GENERAL OPTIONS
  Search for :file:`{NAME}.cfg` and :file:`{NAME}.site.cfg` when searching for
  test suites, instead of :file:`lit.cfg` and :file:`lit.site.cfg`.
 
-.. option:: --param NAME, --param NAME=VALUE
+.. option:: -D NAME, -D NAME=VALUE, --param NAME, --param NAME=VALUE
 
  Add a user defined parameter ``NAME`` with the given ``VALUE`` (or the empty
  string if not given).  The meaning and use of these parameters is test suite
@@ -79,6 +79,11 @@ OUTPUT OPTIONS
 
  Show more information on test failures, for example the entire test output
  instead of just the test result.
+
+.. option:: -a, --show-all
+
+ Show more information about all tests, for example the entire test
+ commandline and output.
 
 .. option:: --no-progress-bar
 
@@ -161,7 +166,7 @@ ADDITIONAL OPTIONS
 
 .. option:: --show-tests
 
- List all of the the discovered tests and exit.
+ List all of the discovered tests and exit.
 
 EXIT STATUS
 -----------
@@ -341,7 +346,7 @@ LOCAL CONFIGURATION FILES
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When :program:`lit` loads a subdirectory in a test suite, it instantiates a
-local test configuration by cloning the configuration for the parent direction
+local test configuration by cloning the configuration for the parent directory
 --- the root of this configuration chain will always be a test suite.  Once the
 test configuration is cloned :program:`lit` checks for a *lit.local.cfg* file
 in the subdirectory.  If present, this file will be loaded and can be used to
@@ -349,6 +354,35 @@ specialize the configuration for each individual directory.  This facility can
 be used to define subdirectories of optional tests, or to change other
 configuration parameters --- for example, to change the test format, or the
 suffixes which identify test files.
+
+PRE-DEFINED SUBSTITUTIONS
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:program:`lit` provides various patterns that can be used with the RUN command.
+These are defined in TestRunner.py.
+
+ ========== ==============
+  Macro      Substitution
+ ========== ==============
+ %s         source path (path to the file currently being run)
+ %S         source dir (directory of the file currently being run)
+ %p         same as %S
+ %{pathsep} path separator
+ %t         temporary file name unique to the test
+ %T         temporary directory unique to the test
+ %%         %
+ %/s        same as %s but replace all / with \\
+ %/S        same as %S but replace all / with \\
+ %/p        same as %p but replace all / with \\
+ %/t        same as %t but replace all / with \\
+ %/T        same as %T but replace all / with \\
+ ========== ==============
+
+Further substitution patterns might be defined by each test module.
+See the modules :ref:`local-configuration-files`.
+
+More information on the testing infrastucture can be found in the
+:doc:`../TestingGuide`.
 
 TEST RUN OUTPUT FORMAT
 ~~~~~~~~~~~~~~~~~~~~~~

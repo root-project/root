@@ -1,5 +1,10 @@
-//script showing how to use the GL viewer API to animate a picture
-//Author: Richard maunder
+/// \file
+/// \ingroup tutorial_gl
+/// Script showing how to use the GL viewer API to animate a picture.
+///
+/// \macro_code
+///
+/// \author Richard Maunder
 
 #include "TGLViewer.h"
 #include "TGLOrthoCamera.h"

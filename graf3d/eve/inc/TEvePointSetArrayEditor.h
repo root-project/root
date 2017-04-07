@@ -42,7 +42,7 @@ public:
 
    void DoRange();
 
-   ClassDef(TEvePointSetArrayEditor, 1); // Editor for TEvePointSetArray class.
+   ClassDef(TEvePointSetArrayEditor, 0); // Editor for TEvePointSetArray class.
 };
 
 #endif

@@ -13,18 +13,7 @@
 #define ROOT_TImageDump
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TImageDump                                                           //
-//                                                                      //
-// save canvas in an image in batch mode                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TImage;
 class TColor;
@@ -32,8 +21,8 @@ class TPoint;
 
 class TImageDump : public TVirtualPS {
 protected:
-   TImage           *fImage;     // image
-   Int_t             fType;      // PostScript workstation type
+   TImage           *fImage;     ///< Image
+   Int_t             fType;      ///< PostScript workstation type
 
    Int_t  XtoPixel(Double_t x);
    Int_t  YtoPixel(Double_t y);

@@ -12,27 +12,7 @@
 #ifndef ROOT_TGeoParaboloid
 #define ROOT_TGeoParaboloid
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//
-// TGeoParaboloid - Paraboloid  class. A paraboloid is the solid bounded by
-//            the following surfaces:
-//            - 2 planes parallel with XY cutting the Z axis at Z=-dz and Z=+dz
-//            - the surface of revolution of a parabola described by:
-//                 z = a*(x*x + y*y) + b
-//       The parameters a and b are automatically computed from:
-//            - rlo - the radius of the circle of intersection between the
-//              parabolic surface and the plane z = -dz
-//            - rhi - the radius of the circle of intersection between the
-//              parabolic surface and the plane z = +dz
-//         | -dz = a*rlo*rlo + b
-//         |  dz = a*rhi*rhi + b      where: rlo != rhi, both >= 0
-//
-////////////////////////////////////////////////////////////////////////////
-
 
 class TGeoParaboloid : public TGeoBBox
 {

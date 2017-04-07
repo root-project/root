@@ -53,13 +53,13 @@
 
 ClassImp(TGViewFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a editor frame.
+
 TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
                          ULong_t back) :
    TGCompositeFrame(v, w, h, options | kOwnBackground, back)
 {
-   // Create a editor frame.
-
    fView = v;
 
    SetBackgroundColor(back);
@@ -84,15 +84,15 @@ TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
 
 ClassImp(TGView)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an editor view, containing an TGEditorFrame and (optionally)
+/// a horizontal and vertical scrollbar.
+
 TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
                UInt_t xMargin, UInt_t yMargin, UInt_t options,
                UInt_t sboptions, ULong_t back)
        : TGCompositeFrame(p, w, h, options, GetDefaultFrameBackground())
 {
-   // Create an editor view, containing an TGEditorFrame and (optionally)
-   // a horizontal and vertical scrollbar.
-
    fWidgetId    = id;
    fMsgWindow   = p;
    fWidgetFlags = kWidgetWantFocus;
@@ -142,11 +142,11 @@ TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
    fLayoutManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete view.
+
 TGView::~TGView()
 {
-   // Delete view.
-
    if (!MustCleanup()) {
       delete fCanvas;
       delete fHsb;
@@ -154,11 +154,11 @@ TGView::~TGView()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear view.
+
 void TGView::Clear(Option_t *)
 {
-   // Clear view.
-
    fScrolling = -1;
 
    fMousePos.fX = fMousePos.fY = -1;
@@ -171,11 +171,11 @@ void TGView::Clear(Option_t *)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll view in specified direction to make newTop the visible location.
+
 void TGView::SetVisibleStart(Int_t newTop, Int_t direction)
 {
-   // Scroll view in specified direction to make newTop the visible location.
-
    if (direction == kHorizontal) {
       if (newTop / fScrollVal.fX == fVisible.fX / fScrollVal.fX) {
          return;
@@ -189,19 +189,19 @@ void TGView::SetVisibleStart(Int_t newTop, Int_t direction)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw region.
+
 void TGView::DrawRegion(Int_t, Int_t, UInt_t, UInt_t)
 {
-   // Draw region.
-
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// update a part of view
+
 void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // update a part of view
-
    x = x < 0 ? 0 : x;
    y = y < 0 ? 0 : y;
 
@@ -221,20 +221,20 @@ void TGView::UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set some gc values
+
 void TGView::UpdateBackgroundStart()
 {
-   // set some gc values
-
    fWhiteGC.SetTileStipXOrigin(-fVisible.fX);
    fWhiteGC.SetTileStipYOrigin(-fVisible.fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// handle button
+
 Bool_t TGView::HandleButton(Event_t *event)
 {
-   // handle button
-
    if (event->fType == kButtonPress) {
       int amount, ch;
 
@@ -263,11 +263,11 @@ Bool_t TGView::HandleButton(Event_t *event)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// redraw
+
 void TGView::DoRedraw()
 {
-   // redraw
-
    DrawBorder();
 
    if (!fExposedRegion.IsEmpty()) {
@@ -277,11 +277,11 @@ void TGView::DoRedraw()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle expose events.
+
 Bool_t TGView::HandleExpose(Event_t *event)
 {
-   // Handle expose events.
-
    if (event->fWindow == fCanvas->GetId()) {
 
       TGPosition pos(event->fX, event->fY);
@@ -309,11 +309,11 @@ Bool_t TGView::HandleExpose(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process scrollbar messages.
+
 Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process scrollbar messages.
-
    switch(GET_MSG(msg)) {
       case kC_HSCROLL:
          switch(GET_SUBMSG(msg)) {
@@ -339,11 +339,11 @@ Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// layout view
+
 void TGView::Layout()
 {
-   // layout view
-
    Bool_t need_vsb, need_hsb;
    Int_t cw, ch;
 
@@ -421,11 +421,11 @@ void TGView::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the border of the text edit widget.
+
 void TGView::DrawBorder()
 {
-   // Draw the border of the text edit widget.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
       case kSunkenFrame | kDoubleBorder:
          if (gClient->GetStyle() < 2) {
@@ -446,22 +446,22 @@ void TGView::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the canvas to pos.
+
 void TGView::ScrollToPosition(TGLongPosition pos)
 {
-   // Scroll the canvas to pos.
-
    if (pos.fX < 0) pos.fX = 0;
    if (pos.fY < 0) pos.fY = 0;
    if (pos.fX != fHsb->GetPosition()) fHsb->SetPosition(pos.fX / fScrollVal.fX);
    if (pos.fY != fVsb->GetPosition()) fVsb->SetPosition(pos.fY / fScrollVal.fY);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the canvas to new_top in the kVertical or kHorizontal direction.
+
 void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 {
-   // Scroll the canvas to new_top in the kVertical or kHorizontal direction.
-
    Point_t points[4];
    Int_t xsrc, ysrc, xdest, ydest, cpyheight, cpywidth;
 
@@ -563,31 +563,31 @@ void TGView::ScrollCanvas(Int_t new_top, Int_t direction)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change background color of the canvas frame.
+
 void TGView::ChangeBackground(Pixel_t col)
 {
-   // Change background color of the canvas frame.
-
    fCanvas->SetBackgroundColor(col);
    fWhiteGC.SetBackground(col);
    fWhiteGC.SetForeground(col);
    DrawRegion(0, 0, fCanvas->GetWidth(), fCanvas->GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set background color of the canvas frame.
+
 void TGView::SetBackgroundColor(Pixel_t col)
 {
-   // Set background color of the canvas frame.
-
    fCanvas->SetBackgroundColor(col);
    fWhiteGC.SetBackground(col);
    fWhiteGC.SetForeground(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set backgound  pixmap
+
 void TGView::SetBackgroundPixmap(Pixmap_t p)
 {
-   // Set backgound  pixmap
-
    fCanvas->SetBackgroundPixmap(p);
 }

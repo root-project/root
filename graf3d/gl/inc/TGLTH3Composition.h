@@ -8,18 +8,10 @@
 #include <memory>
 #include <vector>
 
-#ifndef ROOT_TGLHistPainter
 #include "TGLHistPainter.h"
-#endif
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TGLQuadric
 #include "TGLQuadric.h"
-#endif
-#ifndef ROOT_TH3
 #include "TH3.h"
-#endif
 
 //
 //Composition of TH3 objects. All TH3 must have the same axis range
@@ -57,7 +49,7 @@ private:
    typedef std::pair<const TH3 *, ETH3BinShape> TH3Pair_t;
 
    std::vector<TH3Pair_t>        fHists;
-   std::auto_ptr<TGLHistPainter> fPainter;
+   std::unique_ptr<TGLHistPainter> fPainter;
 
    TGLTH3Composition(const TGLTH3Composition &rhs);
    TGLTH3Composition &operator = (const TGLTH3Composition &);

@@ -11,26 +11,28 @@
 #ifndef CLING_AST_NULL_DEREF_PROTECTION_H
 #define CLING_AST_NULL_DEREF_PROTECTION_H
 
-#include "TransactionTransformer.h"
+#include "ASTTransformer.h"
 
 namespace clang {
-  class Sema;
+  class Decl;
+}
+namespace cling {
+  class Interpreter;
 }
 
 namespace cling {
 
-  class NullDerefProtectionTransformer : public TransactionTransformer {
+  class NullDerefProtectionTransformer : public ASTTransformer {
+    cling::Interpreter* m_Interp;
+  public:
+    ///\ brief Constructs the NullDeref AST Transformer.
+    ///
+    ///\param[in] I - The interpreter.
+    ///
+    NullDerefProtectionTransformer(cling::Interpreter* I);
 
-
-    public:
-      ///\ brief Constructs the NullDeref AST Transformer.
-      ///
-      ///\param[in] S - The semantic analysis object.
-      ///
-      NullDerefProtectionTransformer(clang::Sema* S);
-
-      virtual ~NullDerefProtectionTransformer();
-      virtual void Transform();
+    virtual ~NullDerefProtectionTransformer();
+    Result Transform(clang::Decl* D) override;
   };
 
 } // namespace cling

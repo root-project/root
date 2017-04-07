@@ -17,16 +17,17 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/TargetInfo.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCInstPrinter.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCParser/MCAsmParser.h"
+#include "llvm/MC/MCParser/MCTargetAsmParser.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
-#include "llvm/MC/MCTargetAsmParser.h"
 #include "llvm/MC/MCTargetOptions.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -199,9 +200,7 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
   // Also copy the current token over.
   LineToks.push_back(Tok);
 
-  PP.EnterTokenStream(LineToks.begin(), LineToks.size(),
-                      /*disable macros*/ true,
-                      /*owns tokens*/ false);
+  PP.EnterTokenStream(LineToks, /*DisableMacroExpansions*/ true);
 
   // Clear the current token and advance to the first token in LineToks.
   ConsumeAnyToken();
@@ -209,18 +208,40 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
   // Parse an optional scope-specifier if we're in C++.
   CXXScopeSpec SS;
   if (getLangOpts().CPlusPlus) {
-    ParseOptionalCXXScopeSpecifier(SS, ParsedType(), /*EnteringContext=*/false);
+    ParseOptionalCXXScopeSpecifier(SS, nullptr, /*EnteringContext=*/false);
   }
 
   // Require an identifier here.
   SourceLocation TemplateKWLoc;
   UnqualifiedId Id;
-  bool Invalid =
-      ParseUnqualifiedId(SS,
-                         /*EnteringContext=*/false,
-                         /*AllowDestructorName=*/false,
-                         /*AllowConstructorName=*/false,
-                         /*ObjectType=*/ParsedType(), TemplateKWLoc, Id);
+  bool Invalid = true;
+  ExprResult Result;
+  if (Tok.is(tok::kw_this)) {
+    Result = ParseCXXThis();
+    Invalid = false;
+  } else {
+    Invalid = ParseUnqualifiedId(SS,
+                                 /*EnteringContext=*/false,
+                                 /*AllowDestructorName=*/false,
+                                 /*AllowConstructorName=*/false,
+                                 /*ObjectType=*/nullptr, TemplateKWLoc, Id);
+    // Perform the lookup.
+    Result = Actions.LookupInlineAsmIdentifier(SS, TemplateKWLoc, Id, Info,
+                                               IsUnevaluatedContext);
+  }
+  // While the next two tokens are 'period' 'identifier', repeatedly parse it as
+  // a field access. We have to avoid consuming assembler directives that look
+  // like '.' 'else'.
+  while (Result.isUsable() && Tok.is(tok::period)) {
+    Token IdTok = PP.LookAhead(0);
+    if (IdTok.isNot(tok::identifier))
+      break;
+    ConsumeToken(); // Consume the period.
+    IdentifierInfo *Id = Tok.getIdentifierInfo();
+    ConsumeToken(); // Consume the identifier.
+    Result = Actions.LookupInlineAsmVarDeclField(Result.get(), Id->getName(),
+                                                 Info, Tok.getLocation());
+  }
 
   // Figure out how many tokens we are into LineToks.
   unsigned LineIndex = 0;
@@ -254,9 +275,7 @@ ExprResult Parser::ParseMSAsmIdentifier(llvm::SmallVectorImpl<Token> &LineToks,
   LineToks.pop_back();
   LineToks.pop_back();
 
-  // Perform the lookup.
-  return Actions.LookupInlineAsmIdentifier(SS, TemplateKWLoc, Id, Info,
-                                           IsUnevaluatedContext);
+  return Result;
 }
 
 /// Turn a sequence of our tokens back into a string that we can hand
@@ -316,6 +335,33 @@ static bool buildMSAsmString(Preprocessor &PP, SourceLocation AsmLoc,
   return false;
 }
 
+/// isTypeQualifier - Return true if the current token could be the
+/// start of a type-qualifier-list.
+static bool isTypeQualifier(const Token &Tok) {
+  switch (Tok.getKind()) {
+  default: return false;
+  // type-qualifier
+  case tok::kw_const:
+  case tok::kw_volatile:
+  case tok::kw_restrict:
+  case tok::kw___private:
+  case tok::kw___local:
+  case tok::kw___global:
+  case tok::kw___constant:
+  case tok::kw___generic:
+  case tok::kw___read_only:
+  case tok::kw___read_write:
+  case tok::kw___write_only:
+    return true;
+  }
+}
+
+// Determine if this is a GCC-style asm statement.
+static bool isGCCAsmStatement(const Token &TokAfterAsm) {
+  return TokAfterAsm.is(tok::l_paren) || TokAfterAsm.is(tok::kw_goto) ||
+         isTypeQualifier(TokAfterAsm);
+}
+
 /// ParseMicrosoftAsmStatement. When -fms-extensions/-fasm-blocks is enabled,
 /// this routine is called to collect the tokens for an MS asm statement.
 ///
@@ -371,6 +417,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
     if (!InAsmComment && Tok.is(tok::l_brace)) {
       // Consume the opening brace.
       SkippedStartOfLine = Tok.isAtStartOfLine();
+      AsmToks.push_back(Tok);
       EndLoc = ConsumeBrace();
       BraceNesting++;
       LBraceLocs.push_back(EndLoc);
@@ -395,15 +442,19 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
       if (ExpLoc.first != FID ||
           SrcMgr.getLineNumber(ExpLoc.first, ExpLoc.second) != LineNo) {
         // If this is a single-line __asm, we're done, except if the next
-        // line begins with an __asm too, in which case we finish a comment
+        // line is MS-style asm too, in which case we finish a comment
         // if needed and then keep processing the next line as a single
         // line __asm.
         bool isAsm = Tok.is(tok::kw_asm);
-        if (SingleLineMode && !isAsm)
+        if (SingleLineMode && (!isAsm || isGCCAsmStatement(NextToken())))
           break;
         // We're no longer in a comment.
         InAsmComment = false;
         if (isAsm) {
+          // If this is a new __asm {} block we want to process it seperately
+          // from the single-line __asm statements
+          if (PP.LookAhead(0).is(tok::l_brace))
+            break;
           LineNo = SrcMgr.getLineNumber(ExpLoc.first, ExpLoc.second);
           SkippedStartOfLine = Tok.isAtStartOfLine();
         }
@@ -419,6 +470,11 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
         BraceCount == (savedBraceCount + BraceNesting)) {
       // Consume the closing brace.
       SkippedStartOfLine = Tok.isAtStartOfLine();
+      // Don't want to add the closing brace of the whole asm block
+      if (SingleLineMode || BraceNesting > 1) {
+        Tok.clearFlag(Token::LeadingSpace);
+        AsmToks.push_back(Tok);
+      }
       EndLoc = ConsumeBrace();
       BraceNesting--;
       // Finish if all of the opened braces in the inline asm section were
@@ -502,17 +558,21 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
   if (buildMSAsmString(PP, AsmLoc, AsmToks, TokOffsets, AsmString))
     return StmtError();
 
+  TargetOptions TO = Actions.Context.getTargetInfo().getTargetOpts();
+  std::string FeaturesStr =
+      llvm::join(TO.Features.begin(), TO.Features.end(), ",");
+
   std::unique_ptr<llvm::MCRegisterInfo> MRI(TheTarget->createMCRegInfo(TT));
   std::unique_ptr<llvm::MCAsmInfo> MAI(TheTarget->createMCAsmInfo(*MRI, TT));
   // Get the instruction descriptor.
   std::unique_ptr<llvm::MCInstrInfo> MII(TheTarget->createMCInstrInfo());
   std::unique_ptr<llvm::MCObjectFileInfo> MOFI(new llvm::MCObjectFileInfo());
   std::unique_ptr<llvm::MCSubtargetInfo> STI(
-      TheTarget->createMCSubtargetInfo(TT, "", ""));
+      TheTarget->createMCSubtargetInfo(TT, TO.CPU, FeaturesStr));
 
   llvm::SourceMgr TempSrcMgr;
   llvm::MCContext Ctx(MAI.get(), MRI.get(), MOFI.get(), &TempSrcMgr);
-  MOFI->InitMCObjectFileInfo(TT, llvm::Reloc::Default, llvm::CodeModel::Default,
+  MOFI->InitMCObjectFileInfo(TheTriple, /*PIC*/ false, llvm::CodeModel::Default,
                              Ctx);
   std::unique_ptr<llvm::MemoryBuffer> Buffer =
       llvm::MemoryBuffer::getMemBuffer(AsmString, "<MS inline asm>");
@@ -530,7 +590,7 @@ StmtResult Parser::ParseMicrosoftAsmStatement(SourceLocation AsmLoc) {
       TheTarget->createMCAsmParser(*STI, *Parser, *MII, MCOptions));
 
   std::unique_ptr<llvm::MCInstPrinter> IP(
-      TheTarget->createMCInstPrinter(1, *MAI, *MII, *MRI, *STI));
+      TheTarget->createMCInstPrinter(llvm::Triple(TT), 1, *MAI, *MII, *MRI));
 
   // Change to the Intel dialect.
   Parser->setAssemblerDialect(1);
@@ -610,15 +670,10 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
   assert(Tok.is(tok::kw_asm) && "Not an asm stmt");
   SourceLocation AsmLoc = ConsumeToken();
 
-  if (getLangOpts().AsmBlocks && Tok.isNot(tok::l_paren) &&
-      !isTypeQualifier()) {
+  if (getLangOpts().AsmBlocks && !isGCCAsmStatement(Tok)) {
     msAsm = true;
     return ParseMicrosoftAsmStatement(AsmLoc);
   }
-
-  // Check if GNU-style inline Asm is disabled.
-  if (!getLangOpts().GNUAsm)
-    Diag(AsmLoc, diag::err_gnu_inline_asm_disabled);
 
   DeclSpec DS(AttrFactory);
   SourceLocation Loc = Tok.getLocation();
@@ -635,6 +690,14 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
 
   // Remember if this was a volatile asm.
   bool isVolatile = DS.getTypeQualifiers() & DeclSpec::TQ_volatile;
+
+  // TODO: support "asm goto" constructs (PR#9295).
+  if (Tok.is(tok::kw_goto)) {
+    Diag(Tok, diag::err_asm_goto_not_supported_yet);
+    SkipUntil(tok::r_paren, StopAtSemi);
+    return StmtError();
+  }
+
   if (Tok.isNot(tok::l_paren)) {
     Diag(Tok, diag::err_expected_lparen_after) << "asm";
     SkipUntil(tok::r_paren, StopAtSemi);
@@ -644,6 +707,15 @@ StmtResult Parser::ParseAsmStatement(bool &msAsm) {
   T.consumeOpen();
 
   ExprResult AsmString(ParseAsmStringLiteral());
+
+  // Check if GNU-style InlineAsm is disabled.
+  // Error on anything other than empty string.
+  if (!(getLangOpts().GNUAsm || AsmString.isInvalid())) {
+    const auto *SL = cast<StringLiteral>(AsmString.get());
+    if (!SL->getString().trim().empty())
+      Diag(Loc, diag::err_gnu_inline_asm_disabled);
+  }
+
   if (AsmString.isInvalid()) {
     // Consume up to and including the closing paren.
     T.skipToEnd();

@@ -19,16 +19,23 @@
 
 
 #pragma link C++ class TAxis-;
+#pragma link C++ class TAxisModLab+;
 #pragma link C++ class TBinomialEfficiencyFitter+;
 #pragma link C++ class TFormula-;
-#pragma link C++ class TFormulaOld-;
-#pragma link C++ class TFormulaOldPrimitive+;
+#pragma link C++ class ROOT::v5::TFormula-;
+#pragma link C++ class ROOT::v5::TFormulaPrimitive+;
 #pragma link C++ class TFractionFitter+;
 #pragma link C++ class TFitResult+;
 #pragma link C++ class TFitResultPtr+;
+#pragma link C++ class TF1NormSum+;
+#pragma link C++ class TF1Convolution+;
 #pragma link C++ class TF1-;
-#pragma link C++ class TF1Old-;
+#pragma link C++ class ROOT::v5::TF1Data-;
+#pragma read sourceClass="TF1" targetClass="ROOT::v5::TF1Data";
+#pragma read sourceClass="TFormula" targetClass="ROOT::v5::TFormula";
 #pragma link C++ class TF1Parameters+;
+#pragma link C++ class TFormulaParamOrder+;
+#pragma link C++ class std::map<TString,int,TFormulaParamOrder>+;
 #pragma link C++ class TF12+;
 #pragma link C++ class TF2-;
 #pragma link C++ class TF3-;
@@ -40,6 +47,7 @@
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
 #pragma link C++ class TGraphDelaunay+;
+#pragma link C++ class TGraphDelaunay2D+;
 #pragma link C++ class TGraphSmooth+;
 #pragma link C++ class TGraphTime+;
 #pragma link C++ class TH1-;
@@ -109,6 +117,7 @@
 #pragma link C++ class TNDArrayRef<const UShort_t>+;
 */
 #pragma link C++ class THn+;
+#pragma link C++ class THnChain+;
 #pragma link C++ class THnT<Float_t>+;
 //#pragma link C++ class THnT<Float16_t>+;
 #pragma link C++ class THnT<Double_t>+;
@@ -151,10 +160,6 @@
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TVirtualFitter+;
 #pragma link C++ class TBackCompFitter+;
-#pragma link C++ class TUnfold+;
-#pragma link C++ class TUnfoldSys+;
-#pragma link C++ class TUnfoldBinning+;
-#pragma link C++ class TUnfoldDensity+;
 #pragma link C++ class TSVDUnfold+;
 #pragma link C++ class TEfficiency+;
 #pragma link C++ class TKDE+;
@@ -302,7 +307,7 @@
 #pragma link C++ function R__H(Int_t);
 #pragma link C++ function R__H(const char*);
 
-#pragma link C++ class ROOT::THnBaseBrowsable;
+#pragma link C++ class ROOT::Internal::THnBaseBrowsable;
 #pragma link C++ class ROOT::Math::WrappedTF1;
 #pragma link C++ class ROOT::Math::WrappedMultiTF1;
 
@@ -331,5 +336,22 @@
   source="" target="fBinSumw2" \
   code="{ fBinSumw2.Reset(); }"
 
+
+#ifdef ROOT7_THist
+#pragma link C++ class ROOT::Experimental::TH1F+;
+#pragma link C++ class ROOT::Experimental::TH1D+;
+#pragma link C++ class ROOT::Experimental::TH2F+;
+#pragma link C++ class ROOT::Experimental::TH2D+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>+;
+#pragma link C++ class ROOT::Experimental::THistStatContent<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::THistStatUncertainty<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImplBase<ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty> >+;
+#pragma link C++ class ROOT::Experimental::Detail::THistData<2,double,ROOT::Experimental::Detail::THistDataDefaultStorage,ROOT::Experimental::THistStatContent,ROOT::Experimental::THistStatUncertainty>+;
+#pragma link C++ class ROOT::Experimental::Detail::THistImpl<ROOT::Experimental::Detail::THistData<2, double, ROOT::Experimental::Detail::THistDataDefaultStorage, ROOT::Experimental::THistStatContent, ROOT::Experimental::THistStatUncertainty>, ROOT::Experimental::TAxisEquidistant, ROOT::Experimental::TAxisIrregular>+;
+#pragma link C++ class tuple<ROOT::Experimental::TAxisEquidistant,ROOT::Experimental::TAxisIrregular>+;
+#pragma link C++ class ROOT::Experimental::TAxisEquidistant+;
+#pragma link C++ class ROOT::Experimental::TAxisIrregular+;
+#pragma link C++ class ROOT::Experimental::TAxisBase+;
+#endif
 
 #endif

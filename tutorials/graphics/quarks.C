@@ -1,5 +1,13 @@
-// example illustrating divided pads and Latex
-// Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// Example illustrating divided pads and Latex.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void quarks () {
    TCanvas *c1 = new TCanvas("c1", "c1",10,10,630,760);
    c1->SetFillColor(kBlack);
@@ -39,7 +47,7 @@ void quarks () {
 
    tex.SetTextColor(kBlack); tex.SetTextSize(0.8);
 
-// ------------>Create main pad and its subdivisions
+// Create main pad and its subdivisions
    TPad *pad = new TPad("pad", "pad",0.15,0.11,0.85,0.79);
    pad->Draw();
    pad->cd();

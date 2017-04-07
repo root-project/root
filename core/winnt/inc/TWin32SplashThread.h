@@ -12,9 +12,7 @@
 #ifndef ROOT_TWin32SplashThread
 #define ROOT_TWin32SplashThread
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 class TWin32SplashThread {

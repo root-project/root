@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooSharedProperties is the base class for shared properties
-// that can be stored in RooSharedPropertiesList.
-// END_HTML
-//
+/**
+\file RooSharedProperties.cxx
+\class RooSharedProperties
+\ingroup Roofitcore
+
+Class RooSharedProperties is the base class for shared properties
+that can be stored in RooSharedPropertiesList.
+**/
 
 #include "RooFit.h"
 #include "RooSharedProperties.h"
@@ -38,43 +39,48 @@ ClassImp(RooSharedProperties)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(kFALSE)
 {
-  // Default constructor
   RooTrace::create(this) ;
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with unique-id string
+
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), _refCount(0), _inSharedList(kFALSE)
 {
-  // Constructor with unique-id string
   RooTrace::create(this) ;
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSharedProperties::~RooSharedProperties() 
 {
-  // Destructor
   RooTrace::destroy(this) ;
 } 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true of unique id of this property is equal to that of other
+
 Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) 
 {
-  // Return true of unique id of this property is equal to that of other
   return (_uuid==other._uuid) ;
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Printing interface
+
 void RooSharedProperties::Print(Option_t* /*opts*/) const 
 {
-  // Printing interface
   cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
 }

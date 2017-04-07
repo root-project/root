@@ -27,44 +27,43 @@
 #include "TEnv.h"
 #include "TSystem.h"
 
-//==============================================================================
-//==============================================================================
-// TEveViewer
-//==============================================================================
+/** \class TEveViewer
+\ingroup TEve
+Eve representation of TGLViewer.
 
-//______________________________________________________________________________
-//
-// Eve representation of TGLViewer.
-//
-// The gl-viewer is owned by this class and is deleted in destructor.
-//
-// The frame is not deleted, it is expected that the gl-viewer implementation
-// will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
-// This could be an optional argument to SetGLViewer. A frame could be
-// passed as well.
-//
-// When stand-alone viewer is requested, it will come up with menu-hiding
-// enabled by default. If you dislike this, add the following line to rootrc
-// file (or set corresponding gEnv entry in application initialization):
-//   Eve.Viewer.HideMenus: off
+The gl-viewer is owned by this class and is deleted in destructor.
+
+The frame is not deleted, it is expected that the gl-viewer implementation
+will delete that. TGLSAViewer and TGEmbeddedViewer both do so.
+This could be an optional argument to SetGLViewer. A frame could be
+passed as well.
+
+When stand-alone viewer is requested, it will come up with menu-hiding
+enabled by default. If you dislike this, add the following line to rootrc
+file (or set corresponding gEnv entry in application initialization):
+~~~ {.cpp}
+   Eve.Viewer.HideMenus: off
+~~~
+*/
 
 ClassImp(TEveViewer);
 
 Bool_t TEveViewer::fgInitInternal        = kFALSE;
 Bool_t TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+///
+/// The base-class TEveWindowFrame is constructed without a frame so
+/// a default composite-frame is instantiated and stored in fGUIFrame.
+/// Cleanup is set to no-cleanup as viewers need to be zapped with some
+/// more care.
+
 TEveViewer::TEveViewer(const char* n, const char* t) :
    TEveWindowFrame(0, n, t),
    fGLViewer      (0),
    fGLViewerFrame (0)
 {
-   // Constructor.
-   // The base-class TEveWindowFrame is constructed without a frame so
-   // a default composite-frame is instantiated and stored in fGUIFrame.
-   // Cleanup is set to no-cleanup as viewers need to be zapped with some
-   // more care.
-
    SetChildClass(TEveSceneInfo::Class());
    fGUIFrame->SetCleanup(kNoCleanup); // the gl-viewer's frame deleted elsewhere.
 
@@ -74,11 +73,11 @@ TEveViewer::TEveViewer(const char* n, const char* t) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveViewer::~TEveViewer()
 {
-   // Destructor.
-
    fGLViewer->SetEventHandler(0);
 
    fGLViewerFrame->UnmapWindow();
@@ -87,13 +86,11 @@ TEveViewer::~TEveViewer()
    TTimer::SingleShot(150, "TGLViewer", fGLViewer, "Delete()");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize static data-members according to running conditions.
 
-//______________________________________________________________________________
 void TEveViewer::InitInternal()
 {
-   // Initialize static data-members according to running conditions.
-
    // Determine if display is running on a mac.
    // This also works for ssh connection mac->linux.
    fgRecreateGlOnDockOps = (gVirtualX->SupportsExtension("Apple-WM") == 1);
@@ -101,12 +98,12 @@ void TEveViewer::InitInternal()
    fgInitInternal = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function called before a window is undocked.
+/// On mac we have to force recreation of gl-context.
+
 void TEveViewer::PreUndock()
 {
-   // Virtual function called before a window is undocked.
-   // On mac we have to force recreation of gl-context.
-
    TEveWindowFrame::PreUndock();
    if (fgRecreateGlOnDockOps)
    {
@@ -119,34 +116,32 @@ void TEveViewer::PreUndock()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual function called after a window is docked.
+/// On mac we have to force recreation of gl-context.
+
 void TEveViewer::PostDock()
 {
-   // Virtual function called after a window is docked.
-   // On mac we have to force recreation of gl-context.
-
    if (fgRecreateGlOnDockOps) {
       fGLViewer->CreateGLWidget();
    }
    TEveWindowFrame::PostDock();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Return TEveViewer icon.
 
-//______________________________________________________________________________
 const TGPicture* TEveViewer::GetListTreeIcon(Bool_t)
 {
-   // Return TEveViewer icon.
-
    return TEveElement::fgListTreeIcons[1];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set TGLViewer that is represented by this object.
+/// The old gl-viewer is deleted.
+
 void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
 {
-   // Set TGLViewer that is represented by this object.
-   // The old gl-viewer is deleted.
-
    delete fGLViewer;
    fGLViewer      = viewer;
    fGLViewerFrame = frame;
@@ -154,17 +149,17 @@ void TEveViewer::SetGLViewer(TGLViewer* viewer, TGFrame* frame)
    fGLViewer->SetSmartRefresh(kTRUE);
 }
 
-//______________________________________________________________________________
-TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
-{
-   // Spawn new GLViewer and adopt it.
+////////////////////////////////////////////////////////////////////////////////
+/// Spawn new GLViewer and adopt it.
 
+TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t quad_buf)
+{
    static const TEveException kEH("TEveViewer::SpawnGLViewer ");
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
    TGLFormat *form = 0;
-   if (stereo)
+   if (stereo && quad_buf)
    {
       form = new TGLFormat;
       form->SetStereo(kTRUE);
@@ -191,7 +186,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    SetGLViewer(v, v->GetFrame());
 
    if (stereo)
-      v->SetStereo(kTRUE);
+      v->SetStereo(kTRUE, quad_buf);
 
    if (fEveFrame == 0)
       PreUndock();
@@ -199,11 +194,11 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo)
    return v;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Spawn new GLViewer and adopt it.
+
 TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t border)
 {
-   // Spawn new GLViewer and adopt it.
-
    static const TEveException kEH("TEveViewer::SpawnGLEmbeddedViewer ");
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
@@ -221,22 +216,22 @@ TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t bord
    return v;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw viewer immediately.
+
 void TEveViewer::Redraw(Bool_t resetCameras)
 {
-   // Redraw viewer immediately.
-
    if (resetCameras) fGLViewer->PostSceneBuildSetup(kTRUE);
    fGLViewer->RequestDraw(TGLRnrCtx::kLODHigh);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch stereo mode.
+/// This only works TGLSAViewers and, of course, with stereo support
+/// provided by the OpenGL driver.
+
 void TEveViewer::SwitchStereo()
 {
-   // Switch stereo mode.
-   // This only works TGLSAViewers and, of course, with stereo support
-   // provided by the OpenGL driver.
-
    TGLSAViewer *v = dynamic_cast<TGLSAViewer*>(fGLViewer);
 
    if (!v) {
@@ -260,13 +255,11 @@ switch_stereo:
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Add 'scene' to the list of scenes.
 
-//______________________________________________________________________________
 void TEveViewer::AddScene(TEveScene* scene)
 {
-   // Add 'scene' to the list of scenes.
-
    static const TEveException eh("TEveViewer::AddScene ");
 
    TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
@@ -278,43 +271,43 @@ void TEveViewer::AddScene(TEveScene* scene)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove element 'el' from the list of children and also remove
+/// appropriate GLScene from GLViewer's list of scenes.
+/// Virtual from TEveElement.
+
 void TEveViewer::RemoveElementLocal(TEveElement* el)
 {
-   // Remove element 'el' from the list of children and also remove
-   // appropriate GLScene from GLViewer's list of scenes.
-   // Virtual from TEveElement.
-
    fGLViewer->RemoveScene(((TEveSceneInfo*)el)->GetGLScene());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all children, forwarded to GLViewer.
+/// Virtual from TEveElement.
+
 void TEveViewer::RemoveElementsLocal()
 {
-   // Remove all children, forwarded to GLViewer.
-   // Virtual from TEveElement.
-
    fGLViewer->RemoveAllScenes();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Object to be edited when this is selected, returns the TGLViewer.
+/// Virtual from TEveElement.
+
 TObject* TEveViewer::GetEditorObject(const TEveException& eh) const
 {
-   // Object to be edited when this is selected, returns the TGLViewer.
-   // Virtual from TEveElement.
-
    if (!fGLViewer)
       throw(eh + "fGLViewer not set.");
    return fGLViewer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive a pasted object. TEveViewer only accepts objects of
+/// class TEveScene.
+/// Virtual from TEveElement.
+
 Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
 {
-   // Receive a pasted object. TEveViewer only accepts objects of
-   // class TEveScene.
-   // Virtual from TEveElement.
-
    static const TEveException eh("TEveViewer::HandleElementPaste ");
 
    TEveScene* scene = dynamic_cast<TEveScene*>(el);
@@ -327,19 +320,15 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
    }
 }
 
-
-/******************************************************************************/
-/******************************************************************************/
-// TEveViewerList
-/******************************************************************************/
-
-//______________________________________________________________________________
-//
-// List of Viewers providing common operations on TEveViewer collections.
+/** \class TEveViewerList
+\ingroup TEve
+List of Viewers providing common operations on TEveViewer collections.
+*/
 
 ClassImp(TEveViewerList);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveViewerList::TEveViewerList(const char* n, const char* t) :
    TEveElementList(n, t),
    fShowTooltip   (kTRUE),
@@ -353,41 +342,39 @@ TEveViewerList::TEveViewerList(const char* n, const char* t) :
    Connect();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveViewerList::~TEveViewerList()
 {
-   // Destructor.
-
    Disconnect();
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Call base-class implementation.
+/// If compound is open and compound of the new element is not set,
+/// the el's compound is set to this.
 
-//______________________________________________________________________________
 void TEveViewerList::AddElement(TEveElement* el)
 {
-   // Call base-class implementation.
-   // If compund is open and compound of the new element is not set,
-   // the el's compound is set to this.
-
    TEveElementList::AddElement(el);
    el->IncParentIgnoreCnt();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decompoundofy el, call base-class version.
+
 void TEveViewerList::RemoveElementLocal(TEveElement* el)
 {
-   // Decompoundofy el, call base-class version.
-
    el->DecParentIgnoreCnt();
    TEveElementList::RemoveElementLocal(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decompoundofy children, call base-class version.
+
 void TEveViewerList::RemoveElementsLocal()
 {
-   // Decompoundofy children, call base-class version.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       (*i)->DecParentIgnoreCnt();
@@ -396,13 +383,11 @@ void TEveViewerList::RemoveElementsLocal()
    TEveElementList::RemoveElementsLocal();
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to TGLViewer class-signals.
 
-//______________________________________________________________________________
 void TEveViewerList::Connect()
 {
-   // Connect to TGLViewer class-signals.
-
    TQObject::Connect("TGLViewer", "MouseOver(TObject*,UInt_t)",
                      "TEveViewerList", this, "OnMouseOver(TObject*,UInt_t)");
 
@@ -422,11 +407,11 @@ void TEveViewerList::Connect()
                      "TEveViewerList", this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disconnect from TGLViewer class-signals.
+
 void TEveViewerList::Disconnect()
 {
-   // Disconnect from TGLViewer class-signals.
-
    TQObject::Disconnect("TGLViewer", "MouseOver(TObject*,UInt_t)",
                         this, "OnMouseOver(TObject*,UInt_t)");
 
@@ -446,20 +431,16 @@ void TEveViewerList::Disconnect()
                         this, "OnUnClicked(TObject*,UInt_t,UInt_t)");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint viewers that are tagged as changed.
 
-//______________________________________________________________________________
 void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogicals)
 {
-   // Repaint viewers that are tagged as changed.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
       if (glv->IsChanged())
       {
-         // printf(" TEveViewer '%s' changed ... reqesting draw.\n", (*i)->GetObject()->GetName());
-
          if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
          if (dropLogicals) glv->SetSmartRefresh(kFALSE);
 
@@ -470,16 +451,14 @@ void TEveViewerList::RepaintChangedViewers(Bool_t resetCameras, Bool_t dropLogic
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Repaint all viewers.
+
 void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
 {
-   // Repaint all viewers.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
-
-      // printf(" TEveViewer '%s' sending redraw reqest.\n", (*i)->GetObject()->GetName());
 
       if (resetCameras) glv->PostSceneBuildSetup(kTRUE);
       if (dropLogicals) glv->SetSmartRefresh(kFALSE);
@@ -490,11 +469,11 @@ void TEveViewerList::RepaintAllViewers(Bool_t resetCameras, Bool_t dropLogicals)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete annotations from all viewers.
+
 void TEveViewerList::DeleteAnnotations()
 {
-   // Delete annotations from all viewers.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TGLViewer* glv = ((TEveViewer*)*i)->GetGLViewer();
@@ -502,14 +481,12 @@ void TEveViewerList::DeleteAnnotations()
    }
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Callback done from a TEveScene destructor allowing proper
+/// removal of the scene from affected viewers.
 
-//______________________________________________________________________________
 void TEveViewerList::SceneDestructing(TEveScene* scene)
 {
-   // Callback done from a TEveScene destructor allowing proper
-   // removal of the scene from affected viewers.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       TEveViewer* viewer = (TEveViewer*) *i;
@@ -524,17 +501,12 @@ void TEveViewerList::SceneDestructing(TEveScene* scene)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Show / hide tooltip for various MouseOver events.
+/// Must be called from slots where sender is TGLEventHandler.
 
-/******************************************************************************/
-// Processing of events from TGLViewers.
-/******************************************************************************/
-
-//______________________________________________________________________________
 void TEveViewerList::HandleTooltip()
 {
-   // Show / hide tooltip for various MouseOver events.
-   // Must be called from slots where sender is TGLEventHandler.
-
    if (fShowTooltip)
    {
       TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
@@ -552,20 +524,20 @@ void TEveViewerList::HandleTooltip()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::MouseOver() signal.
+///
+/// The attempt is made to determine the TEveElement being
+/// represented by the physical shape and global highlight is updated
+/// accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// highlighted.
+///
+/// Highlight is always in single-selection mode.
+
 void TEveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
 {
-   // Slot for global TGLViewer::MouseOver() signal.
-   //
-   // The attempt is made to determine the TEveElement being
-   // represented by the physical shape and global higlight is updated
-   // accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // highlighted.
-   //
-   // Highlight is always in single-selection mode.
-
    TEveElement *el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
@@ -577,17 +549,17 @@ void TEveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
    HandleTooltip();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::ReMouseOver().
+///
+/// The obj is dyn-casted to the TEveElement and global selection is
+/// updated accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// selected.
+
 void TEveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
 {
-   // Slot for global TGLViewer::ReMouseOver().
-   //
-   // The obj is dyn-casted to the TEveElement and global selection is
-   // updated accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // selected.
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
@@ -599,17 +571,17 @@ void TEveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
    HandleTooltip();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::UnMouseOver().
+///
+/// The obj is dyn-casted to the TEveElement and global selection is
+/// updated accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// selected.
+
 void TEveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
 {
-   // Slot for global TGLViewer::UnMouseOver().
-   //
-   // The obj is dyn-casted to the TEveElement and global selection is
-   // updated accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // selected.
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
@@ -621,70 +593,70 @@ void TEveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
    HandleTooltip();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::Clicked().
+///
+/// The obj is dyn-casted to the TEveElement and global selection is
+/// updated accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// selected.
+
 void TEveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
 {
-   // Slot for global TGLViewer::Clicked().
-   //
-   // The obj is dyn-casted to the TEveElement and global selection is
-   // updated accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // selected.
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::ReClicked().
+///
+/// The obj is dyn-casted to the TEveElement and global selection is
+/// updated accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// selected.
+
 void TEveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
 {
-   // Slot for global TGLViewer::ReClicked().
-   //
-   // The obj is dyn-casted to the TEveElement and global selection is
-   // updated accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // selected.
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetSelection()->UserRePickedElement(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for global TGLViewer::UnClicked().
+///
+/// The obj is dyn-casted to the TEveElement and global selection is
+/// updated accordingly.
+///
+/// If TEveElement::IsPickable() returns false, the element is not
+/// selected.
+
 void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state*/)
 {
-   // Slot for global TGLViewer::UnClicked().
-   //
-   // The obj is dyn-casted to the TEveElement and global selection is
-   // updated accordingly.
-   //
-   // If TEveElement::IsPickable() returns false, the element is not
-   // selected.
-
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
    gEve->GetSelection()->UserUnPickedElement(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color brightness.
+
 void TEveViewerList::SetColorBrightness(Float_t b)
 {
-   // Set color brightness.
-
    TEveUtil::SetColorBrightness(b, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch background color.
+
 void TEveViewerList::SwitchColorSet()
 {
-   // Switch background color.
-
    fUseLightColorSet = ! fUseLightColorSet;
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {

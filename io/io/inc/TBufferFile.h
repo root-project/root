@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
-#ifndef ROOT_Bytes
 #include "Bytes.h"
-#endif
 
 #include <vector>
 
@@ -53,16 +49,16 @@ class TBufferFile : public TBuffer {
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
 
-   Int_t           fMapCount;      //Number of objects or classes in map
-   Int_t           fMapSize;       //Default size of map
-   Int_t           fDisplacement;  //Value to be added to the map offsets
-   UShort_t        fPidOffset;     //Offset to be added to the pid index in this key/buffer.
-   TExMap         *fMap;           //Map containing object,offset pairs for reading/writing
-   TExMap         *fClassMap;      //Map containing object,class pairs for reading
-   TStreamerInfo  *fInfo;          //Pointer to TStreamerInfo object writing/reading the buffer
-   InfoList_t      fInfoStack;     //Stack of pointers to the TStreamerInfos
+   Int_t           fMapCount;      ///< Number of objects or classes in map
+   Int_t           fMapSize;       ///< Default size of map
+   Int_t           fDisplacement;  ///< Value to be added to the map offsets
+   UShort_t        fPidOffset;     ///< Offset to be added to the pid index in this key/buffer.
+   TExMap         *fMap;           ///< Map containing object,offset pairs for reading/writing
+   TExMap         *fClassMap;      ///< Map containing object,class pairs for reading
+   TStreamerInfo  *fInfo;          ///< Pointer to TStreamerInfo object writing/reading the buffer
+   InfoList_t      fInfoStack;     ///< Stack of pointers to the TStreamerInfos
 
-   static Int_t    fgMapSize;      //Default map size for all TBuffer objects
+   static Int_t    fgMapSize;      ///< Default map size for all TBuffer objects
 
    // Default ctor
    TBufferFile() : TBuffer(), fMapCount(0), fMapSize(0),
@@ -70,8 +66,8 @@ protected:
      fInfo(0), fInfoStack() {}
 
    // TBuffer objects cannot be copied or assigned
-   TBufferFile(const TBufferFile &);       // not implemented
-   void operator=(const TBufferFile &);    // not implemented
+   TBufferFile(const TBufferFile &);       ///<  not implemented
+   void operator=(const TBufferFile &);    ///<  not implemented
 
    Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
    void   CheckCount(UInt_t offset);
@@ -252,7 +248,7 @@ public:
    virtual   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=0);
    virtual   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=0);
 
-   virtual   void     StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass = 0 );
+   virtual   void     StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass = 0 );
    virtual   void     StreamObject(void *obj, const char *className, const TClass* onFileClass = 0 );
    virtual   void     StreamObject(void *obj, const TClass *cl, const TClass* onFileClass = 0 );
    virtual   void     StreamObject(TObject *obj);
@@ -272,7 +268,9 @@ public:
    virtual   void     ReadDouble(Double_t   &d);
    virtual   void     ReadCharP(Char_t      *c);
    virtual   void     ReadTString(TString   &s);
-   virtual   void     ReadStdString(std::string &s);
+   virtual   void     ReadStdString(std::string *s);
+   using              TBuffer::ReadStdString;
+   virtual   void     ReadCharStar(char* &s);
 
    virtual   void     WriteBool(Bool_t       b);
    virtual   void     WriteChar(Char_t       c);
@@ -289,7 +287,9 @@ public:
    virtual   void     WriteDouble(Double_t   d);
    virtual   void     WriteCharP(const Char_t *c);
    virtual   void     WriteTString(const TString &s);
-   virtual   void     WriteStdString(const std::string &s);
+   using              TBuffer::WriteStdString;
+   virtual   void     WriteStdString(const std::string *s);
+   virtual   void     WriteCharStar(char *s);
 
    // Special basic ROOT objects and collections
    virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const;

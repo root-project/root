@@ -22,13 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THastList
 #include "THashList.h"
-#endif
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
 class TExMap;
 class TEnum;
@@ -73,6 +69,7 @@ public:
    ~TListOfEnums() override;
 
    TEnum     *Find(DeclId_t id) const;
+   virtual TEnum *GetObject(const char*) const;
 
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;

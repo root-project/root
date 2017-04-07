@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLiteRow
 #define ROOT_TSQLiteRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 #if !defined(__CINT__)
 #include <sqlite3.h>

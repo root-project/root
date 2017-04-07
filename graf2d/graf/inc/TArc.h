@@ -21,9 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TEllipse
+#include "Rtypes.h"
 #include "TEllipse.h"
-#endif
 
 
 class TArc : public TEllipse {

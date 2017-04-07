@@ -3,12 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(net/netx)
-ROOT_USE_PACKAGE(proof/proofd)
-ROOT_USE_PACKAGE(io/xml)
-
-
 include_directories(${ALIEN_INCLUDE_DIR})
 
 

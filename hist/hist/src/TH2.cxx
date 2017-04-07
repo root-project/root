@@ -28,37 +28,50 @@
 
 ClassImp(TH2)
 
+/** \addtogroup Hist
+@{
+\class TH2C
+\brief tomato 2-D histogram with a byte per channel (see TH1 documentation)
+\class TH2S
+\brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+\class TH2I
+\brief tomato 2-D histogram with an int per channel (see TH1 documentation)}
+\class TH2F
+\brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+\class TH2D
+\brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
+@}
+*/
 
-//______________________________________________________________________________
-//
-// Service class for 2-Dim histogram classes
-//
-//  TH2C a 2-D histogram with one byte per cell (char)
-//  TH2S a 2-D histogram with two bytes per cell (short integer)
-//  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
-//  TH2F a 2-D histogram with four bytes per cell (float)
-//  TH2D a 2-D histogram with eight bytes per cell (double)
-//
+/** \class TH2
+ Service class for 2-Dim histogram classes
+
+- TH2C a 2-D histogram with one byte per cell (char)
+- TH2S a 2-D histogram with two bytes per cell (short integer)
+- TH2I a 2-D histogram with four bytes per cell (32 bits integer)
+- TH2F a 2-D histogram with four bytes per cell (float)
+- TH2D a 2-D histogram with eight bytes per cell (double)
+*/
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2::TH2()
 {
-   // Constructor.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments in the TH1 base class constructors.
+
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
      :TH1(name,title,nbinsx,xlow,xup)
 {
-   // See comments in the TH1 base class constructors.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -68,13 +81,13 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments in the TH1 base class constructors.
+
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
      :TH1(name,title,nbinsx,xbins)
 {
-   // See comments in the TH1 base class constructors.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -84,13 +97,13 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments in the TH1 base class constructors.
+
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,const Double_t *ybins)
      :TH1(name,title,nbinsx,xlow,xup)
 {
-   // See comments in the TH1 base class constructors.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -101,13 +114,13 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments in the TH1 base class constructors.
+
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
-   // See comments in the TH1 base class constructors.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -118,13 +131,13 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See comments in the TH1 base class constructors.
+
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins)
      :TH1(name,title,nbinsx,xbins)
 {
-   // See comments in the TH1 base class constructors.
-
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
@@ -135,33 +148,34 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// The list of functions is not copied. (Use Clone if needed)
+
 TH2::TH2(const TH2 &h) : TH1()
 {
-   // Copy constructor.
-   // The list of functions is not copied. (Use Clone if needed)
-
    ((TH2&)h).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2::~TH2()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill histogram with all entries in the buffer.
+///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
+///  - action =  0 histogram is filled from the buffer
+///  - action =  1 histogram is filled and buffer is deleted
+///                The buffer is automatically deleted when the number of entries
+///                in the buffer is greater than the number of entries in the histogram
+
 Int_t TH2::BufferEmpty(Int_t action)
 {
-   // Fill histogram with all entries in the buffer.
-   // action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
-   // action =  0 histogram is filled from the buffer
-   // action =  1 histogram is filled and buffer is deleted
-   //             The buffer is automatically deleted when the number of entries
-   //             in the buffer is greater than the number of entries in the histogram
-
    // do we need to compute the bin size?
    if (!fBuffer) return 0;
    Int_t nbentries = (Int_t)fBuffer[0];
@@ -225,15 +239,17 @@ Int_t TH2::BufferEmpty(Int_t action)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// accumulate arguments in buffer. When buffer is full, empty the buffer
+/// ~~~ {.cpp}
+/// fBuffer[0] = number of entries in buffer
+/// fBuffer[1] = w of first entry
+/// fBuffer[2] = x of first entry
+/// fBuffer[3] = y of first entry
+/// ~~~
+
 Int_t TH2::BufferFill(Double_t x, Double_t y, Double_t w)
 {
-   // accumulate arguments in buffer. When buffer is full, empty the buffer
-   // fBuffer[0] = number of entries in buffer
-   // fBuffer[1] = w of first entry
-   // fBuffer[2] = x of first entry
-   // fBuffer[3] = y of first entry
-
    if (!fBuffer) return -3;
    Int_t nbentries = (Int_t)fBuffer[0];
    if (nbentries < 0) {
@@ -257,11 +273,11 @@ Int_t TH2::BufferFill(Double_t x, Double_t y, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2::Copy(TObject &obj) const
 {
-   // Copy.
-
    TH1::Copy(obj);
    ((TH2&)obj).fScalefactor = fScalefactor;
    ((TH2&)obj).fTsumwy      = fTsumwy;
@@ -270,33 +286,33 @@ void TH2::Copy(TObject &obj) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invalid Fill method.
+
 Int_t TH2::Fill(Double_t )
 {
-   // Invalid Fill method.
-
    Error("Fill", "Invalid signature - do nothing");
    return -1;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment cell defined by x,y by 1.
+///
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
+///
+/// -  If the storage of the sum of squares of weights has been triggered,
+///    via the function Sumw2, then the sum of the squares of weights is incremented
+///    by 1 in the cell corresponding to x,y.
+///
+/// The function returns the corresponding global bin number which has its content
+/// incremented by 1
+
 Int_t TH2::Fill(Double_t x,Double_t y)
 {
-   // Increment cell defined by x,y by 1.
-   //
-   // if x or/and y is less than the low-edge of the corresponding axis first bin,
-   //   the Underflow cell is incremented.
-   // if x or/and y is greater than the upper edge of corresponding axis last bin,
-   //   the Overflow cell is incremented.
-   //
-   // If the storage of the sum of squares of weights has been triggered,
-   // via the function Sumw2, then the sum of the squares of weights is incremented
-   // by 1 in the cell corresponding to x,y.
-   //
-   // The function returns the corresponding global bin number which has its content
-   // incremented by 1
-
    if (fBuffer) return BufferFill(x,y,1);
 
    Int_t binx, biny, bin;
@@ -324,23 +340,23 @@ Int_t TH2::Fill(Double_t x,Double_t y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment cell defined by x,y by a weight w.
+///
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
+///
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w^2 in the bin corresponding to x,y
+///
+/// The function returns the corresponding global bin number which has its content
+/// incremented by w
+
 Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
 {
-   // Increment cell defined by x,y by a weight w.
-   //
-   // if x or/and y is less than the low-edge of the corresponding axis first bin,
-   //   the Underflow cell is incremented.
-   // if x or/and y is greater than the upper edge of corresponding axis last bin,
-   //   the Overflow cell is incremented.
-   //
-   //  If the weight is not equal to 1, the storage of the sum of squares of
-   //   weights is automatically triggered and the sum of the squares of weights is incremented
-   //   by w^2 in the bin corresponding to x,y
-   //
-   // The function returns the corresponding global bin number which has its content
-   // incremented by w
-
    if (fBuffer) return BufferFill(x,y,w);
 
    Int_t binx, biny, bin;
@@ -349,7 +365,7 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -370,30 +386,30 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment cell defined by namex,namey by a weight w
+///
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
+///
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w^2 in the bin corresponding to namex,namey
+///
+/// The function returns the corresponding global bin number which has its content
+/// incremented by w
+
 Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
 {
-   // Increment cell defined by namex,namey by a weight w
-   //
-   // if x or/and y is less than the low-edge of the corresponding axis first bin,
-   //   the Underflow cell is incremented.
-   // if x or/and y is greater than the upper edge of corresponding axis last bin,
-   //   the Overflow cell is incremented.
-   //
-   // If the weight is not equal to 1, the storage of the sum of squares of
-   //  weights is automatically triggered and the sum of the squares of weights is incremented
-   //  by w^2 in the bin corresponding to namex,namey
-   //
-   // The function returns the corresponding global bin number which has its content
-   // incremented by w
-
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -412,30 +428,30 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment cell defined by namex,y by a weight w
+///
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
+///
+///  - If the weight is not equal to 1, the storage of the sum of squares of
+///    weights is automatically triggered and the sum of the squares of weights is incremented
+///    by w^2 in the bin corresponding to namex,y
+///
+/// The function returns the corresponding global bin number which has its content
+/// incremented by w
+
 Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
 {
-   // Increment cell defined by namex,y by a weight w
-   //
-   // if x or/and y is less than the low-edge of the corresponding axis first bin,
-   //   the Underflow cell is incremented.
-   // if x or/and y is greater than the upper edge of corresponding axis last bin,
-   //   the Overflow cell is incremented.
-   //
-   // If the weight is not equal to 1, the storage of the sum of squares of
-   //  weights is automatically triggered and the sum of the squares of weights is incremented
-   //  by w^2 in the bin corresponding to namex,y
-   //
-   // The function returns the corresponding global bin number which has its content
-   // incremented by w
-
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(namex);
    biny = fYaxis.FindBin(y);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
@@ -455,30 +471,30 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment cell defined by x,namey by a weight w
+///
+///  - if x or/and y is less than the low-edge of the corresponding axis first bin,
+///    the Underflow cell is incremented.
+///  - if x or/and y is greater than the upper edge of corresponding axis last bin,
+///    the Overflow cell is incremented.
+///
+///  - If the weight is not equal to 1, the storage of the sum of squares of
+///    weights is automatically triggered and the sum of the squares of weights is incremented
+///    by w^2 in the bin corresponding to x,y.
+///
+/// The function returns the corresponding global bin number which has its content
+/// incremented by w
+
 Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
 {
-   // Increment cell defined by x,namey by a weight w
-   //
-   // if x or/and y is less than the low-edge of the corresponding axis first bin,
-   //   the Underflow cell is incremented.
-   // if x or/and y is greater than the upper edge of corresponding axis last bin,
-   //   the Overflow cell is incremented.
-   //
-   // If the weight is not equal to 1, the storage of the sum of squares of
-   //  weights is automatically triggered and the sum of the squares of weights is incremented
-   //  by w^2 in the bin corresponding to x,y.
-   //
-   // The function returns the corresponding global bin number which has its content
-   // incremented by w
-
    Int_t binx, biny, bin;
    fEntries++;
    binx = fXaxis.FindBin(x);
    biny = fYaxis.FindBin(namey);
    if (binx <0 || biny <0) return -1;
    bin  = biny*(fXaxis.GetNbins()+2) + binx;
-   if (!fSumw2.fN && w != 1.0)  Sumw2();   // must be called before AddBinContent
+   if (!fSumw2.fN && w != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();   // must be called before AddBinContent
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -498,24 +514,24 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill a 2-D histogram with an array of values and weights.
+///
+///  - ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
+///  - x:       array of x values to be histogrammed
+///  - y:       array of y values to be histogrammed
+///  - w:       array of weights
+///  - stride:  step size through arrays x, y and w
+///
+///   - If the weight is not equal to 1, the storage of the sum of squares of
+///     weights is automatically triggered and the sum of the squares of weights is incremented
+///     by w[i]^2 in the bin corresponding to x[i],y[i].
+///   - If w is NULL each entry is assumed a weight=1
+///
+/// NB: function only valid for a TH2x object
+
 void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double_t *w, Int_t stride)
 {
-   // Fill a 2-D histogram with an array of values and weights.
-   //
-   // ntimes:  number of entries in arrays x and w (array size must be ntimes*stride)
-   // x:       array of x values to be histogrammed
-   // y:       array of y values to be histogrammed
-   // w:       array of weights
-   // stride:  step size through arrays x, y and w
-   //
-   //  If the weight is not equal to 1, the storage of the sum of squares of
-   //   weights is automatically triggered and the sum of the squares of weights is incremented
-   //   by w[i]^2 in the bin corresponding to x[i],y[i].
-   //  If w is NULL each entry is assumed a weight=1
-   //
-   // NB: function only valid for a TH2x object
-
    Int_t binx, biny, bin, i;
    ntimes *= stride;
    Int_t ifirst = 0;
@@ -543,7 +559,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (binx <0 || biny <0) continue;
       bin  = biny*(fXaxis.GetNbins()+2) + binx;
       if (w) ww = w[i];
-      if (!fSumw2.fN && ww != 1.0)  Sumw2();
+      if (!fSumw2.fN && ww != 1.0 && !TestBit(TH1::kIsNotW))  Sumw2();
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin,ww);
       if (binx == 0 || binx > fXaxis.GetNbins()) {
@@ -564,22 +580,22 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill histogram following distribution in function fname.
+///
+///   The distribution contained in the function fname (TF2) is integrated
+///   over the channel contents.
+///   It is normalized to 1.
+///   Getting one random number implies:
+///     - Generating a random number between 0 and 1 (say r1)
+///     - Look in which bin in the normalized integral r1 corresponds to
+///     - Fill histogram channel
+///   ntimes random numbers are generated
+///
+///  One can also call TF2::GetRandom2 to get a random variate from a function.
+
 void TH2::FillRandom(const char *fname, Int_t ntimes)
 {
-   // Fill histogram following distribution in function fname.
-   //
-   //   The distribution contained in the function fname (TF2) is integrated
-   //   over the channel contents.
-   //   It is normalized to 1.
-   //   Getting one random number implies:
-   //     - Generating a random number between 0 and 1 (say r1)
-   //     - Look in which bin in the normalized integral r1 corresponds to
-   //     - Fill histogram channel
-   //   ntimes random numbers are generated
-   //
-   //  One can also call TF2::GetRandom2 to get a random variate from a function.
-
    Int_t bin, binx, biny, ibin, loop;
    Double_t r1, x, y;
    //*-*- Search for fname in the list of ROOT defined functions
@@ -613,7 +629,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 
    // Start main loop ntimes
    for (loop=0;loop<ntimes;loop++) {
-      r1 = gRandom->Rndm(loop);
+      r1 = gRandom->Rndm();
       ibin = TMath::BinarySearch(nbins,&integral[0],r1);
       biny = ibin/nbinsx;
       binx = 1 + ibin - nbinsx*biny;
@@ -626,20 +642,20 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill histogram following distribution in histogram h.
+///
+///   The distribution contained in the histogram h (TH2) is integrated
+///   over the channel contents.
+///   It is normalized to 1.
+///   Getting one random number implies:
+///     - Generating a random number between 0 and 1 (say r1)
+///     - Look in which bin in the normalized integral r1 corresponds to
+///     - Fill histogram channel
+///   ntimes random numbers are generated
+
 void TH2::FillRandom(TH1 *h, Int_t ntimes)
 {
-   // Fill histogram following distribution in histogram h.
-   //
-   //   The distribution contained in the histogram h (TH2) is integrated
-   //   over the channel contents.
-   //   It is normalized to 1.
-   //   Getting one random number implies:
-   //     - Generating a random number between 0 and 1 (say r1)
-   //     - Look in which bin in the normalized integral r1 corresponds to
-   //     - Fill histogram channel
-   //   ntimes random numbers are generated
-
    if (!h) { Error("FillRandom", "Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
       Error("FillRandom", "Histograms with different dimensions"); return;
@@ -657,12 +673,12 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
+/// if no bins with content > threshold is found the function returns -1.
+
 Int_t TH2::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 {
-   // Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
-   // if no bins with content > threshold is found the function returns -1.
-
    if (axis < 1 || axis > 2) {
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -687,12 +703,12 @@ Int_t TH2::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
+/// if no bins with content > threshold is found the function returns -1.
+
 Int_t TH2::FindLastBinAbove(Double_t threshold, Int_t axis) const
 {
-   // Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
-   // if no bins with content > threshold is found the function returns -1.
-
    if (axis < 1 || axis > 2) {
       Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
@@ -717,7 +733,8 @@ Int_t TH2::FindLastBinAbove(Double_t threshold, Int_t axis) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void TH2::DoFitSlices(bool onX,
                       TF1 *f1, Int_t firstbin, Int_t lastbin, Int_t cut, Option_t *option, TObjArray* arr)
 {
@@ -810,7 +827,7 @@ void TH2::DoFitSlices(bool onX,
             hlist[ipar]->Fill(outerAxis.GetBinCenter(binOn),f1->GetParameter(ipar));
             hlist[ipar]->SetBinError(binOn,f1->GetParError(ipar));
          }
-         hchi2->Fill(outerAxis.GetBinCenter(binOn),f1->GetChisquare()/(npfits-npar));
+         hchi2->SetBinContent(binOn,f1->GetChisquare()/(npfits-npar));
       }
       delete hp;
    }
@@ -821,125 +838,129 @@ void TH2::DoFitSlices(bool onX,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project slices along X in case of a 2-D histogram, then fit each slice
+/// with function f1 and make a histogram for each fit parameter
+/// Only bins along Y between firstybin and lastybin are considered.
+/// By default (firstybin == 0, lastybin == -1), all bins in y including
+/// over- and underflows are taken into account.
+/// If f1=0, a gaussian is assumed
+/// Before invoking this function, one can set a subrange to be fitted along X
+/// via f1->SetRange(xmin,xmax)
+/// The argument option (default="QNR") can be used to change the fit options.
+///    - "Q"  means Quiet mode
+///    - "N"  means do not show the result of the fit
+///    - "R"  means fit the function in the specified function range
+///    - "G2" merge 2 consecutive bins along X
+///    - "G3" merge 3 consecutive bins along X
+///    - "G4" merge 4 consecutive bins along X
+///    - "G5" merge 5 consecutive bins along X
+///    - "S"  sliding merge: merge n consecutive bins along X accordingly to what Gn is given.
+///           It makes sense when used together with a Gn option
+///
+/// The generated histograms are returned by adding them to arr, if arr is not NULL.
+/// arr's SetOwner() is called, to signal that it is the user's respponsability to
+/// delete the histograms, possibly by deleting the arrary.
+/// ~~~ {.cpp}
+///    TObjArray aSlices;
+///    h2->FitSlicesX(func, 0, -1, 0, "QNR", &aSlices);
+/// ~~~
+/// will already delete the histograms once aSlice goes out of scope. aSlices will
+/// contain the histogram for the i-th parameter of the fit function at aSlices[i];
+/// aSlices[n] (n being the number of parameters) contains the chi2 distribution of
+/// the fits.
+///
+/// If arr is NULL, the generated histograms are added to the list of objects
+/// in the current directory. It is the user's responsability to delete
+/// these histograms.
+///
+///  Example: Assume a 2-d histogram h2
+/// ~~~ {.cpp}
+///   Root > h2->FitSlicesX(); produces 4 TH1D histograms
+///          with h2_0 containing parameter 0(Constant) for a Gaus fit
+///                    of each bin in Y projected along X
+///          with h2_1 containing parameter 1(Mean) for a gaus fit
+///          with h2_2 containing parameter 2(StdDev)  for a gaus fit
+///          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
+///
+///   Root > h2->FitSlicesX(0,15,22,10);
+///          same as above, but only for bins 15 to 22 along Y
+///          and only for bins in Y for which the corresponding projection
+///          along X has more than cut bins filled.
+/// ~~~
+///  NOTE: To access the generated histograms in the current directory, do eg:
+/// ~~~ {.cpp}
+///     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+/// ~~~
+
 void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option_t *option, TObjArray* arr)
 {
-   // Project slices along X in case of a 2-D histogram, then fit each slice
-   // with function f1 and make a histogram for each fit parameter
-   // Only bins along Y between firstybin and lastybin are considered.
-   // By default (firstybin == 0, lastybin == -1), all bins in y including
-   // over- and underflows are taken into account.
-   // If f1=0, a gaussian is assumed
-   // Before invoking this function, one can set a subrange to be fitted along X
-   // via f1->SetRange(xmin,xmax)
-   // The argument option (default="QNR") can be used to change the fit options.
-   //     "Q"  means Quiet mode
-   //     "N"  means do not show the result of the fit
-   //     "R"  means fit the function in the specified function range
-   //     "G2" merge 2 consecutive bins along X
-   //     "G3" merge 3 consecutive bins along X
-   //     "G4" merge 4 consecutive bins along X
-   //     "G5" merge 5 consecutive bins along X
-   //     "S"  sliding merge: merge n consecutive bins along X accordingly to what Gn is given.
-   //          It makes sense when used together with a Gn option
-   //
-   // The generated histograms are returned by adding them to arr, if arr is not NULL.
-   // arr's SetOwner() is called, to signal that it is the user's respponsability to
-   // delete the histograms, possibly by deleting the arrary.
-   //    TObjArray aSlices;
-   //    h2->FitSlicesX(func, 0, -1, 0, "QNR", &aSlices);
-   // will already delete the histograms once aSlice goes out of scope. aSlices will
-   // contain the histogram for the i-th parameter of the fit function at aSlices[i];
-   // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
-   // the fits.
-   //
-   // If arr is NULL, the generated histograms are added to the list of objects
-   // in the current directory. It is the user's responsability to delete
-   // these histograms.
-   //
-   //  Example: Assume a 2-d histogram h2
-   //   Root > h2->FitSlicesX(); produces 4 TH1D histograms
-   //          with h2_0 containing parameter 0(Constant) for a Gaus fit
-   //                    of each bin in Y projected along X
-   //          with h2_1 containing parameter 1(Mean) for a gaus fit
-   //          with h2_2 containing parameter 2(RMS)  for a gaus fit
-   //          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
-   //
-   //   Root > h2->FitSlicesX(0,15,22,10);
-   //          same as above, but only for bins 15 to 22 along Y
-   //          and only for bins in Y for which the corresponding projection
-   //          along X has more than cut bins filled.
-   //
-   //  NOTE: To access the generated histograms in the current directory, do eg:
-   //     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
-
    DoFitSlices(true, f1, firstybin, lastybin, cut, option, arr);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project slices along Y in case of a 2-D histogram, then fit each slice
+/// with function f1 and make a histogram for each fit parameter
+/// Only bins along X between firstxbin and lastxbin are considered.
+/// By default (firstxbin == 0, lastxbin == -1), all bins in x including
+/// over- and underflows are taken into account.
+/// If f1=0, a gaussian is assumed
+/// Before invoking this function, one can set a subrange to be fitted along Y
+/// via f1->SetRange(ymin,ymax)
+/// The argument option (default="QNR") can be used to change the fit options.
+///    - "Q"  means Quiet mode
+///    - "N"  means do not show the result of the fit
+///    - "R"  means fit the function in the specified function range
+///    - "G2" merge 2 consecutive bins along Y
+///    - "G3" merge 3 consecutive bins along Y
+///    - "G4" merge 4 consecutive bins along Y
+///    - "G5" merge 5 consecutive bins along Y
+///    - "S"  sliding merge: merge n consecutive bins along Y accordingly to what Gn is given.
+///           It makes sense when used together with a Gn option
+///
+/// The generated histograms are returned by adding them to arr, if arr is not NULL.
+/// arr's SetOwner() is called, to signal that it is the user's respponsability to
+/// delete the histograms, possibly by deleting the arrary.
+/// ~~~ {.cpp}
+///    TObjArray aSlices;
+///    h2->FitSlicesY(func, 0, -1, 0, "QNR", &aSlices);
+/// ~~~
+/// will already delete the histograms once aSlice goes out of scope. aSlices will
+/// contain the histogram for the i-th parameter of the fit function at aSlices[i];
+/// aSlices[n] (n being the number of parameters) contains the chi2 distribution of
+/// the fits.
+///
+/// If arr is NULL, the generated histograms are added to the list of objects
+/// in the current directory. It is the user's responsability to delete
+/// these histograms.
+///
+///  Example: Assume a 2-d histogram h2
+/// ~~~ {.cpp}
+///   Root > h2->FitSlicesY(); produces 4 TH1D histograms
+///          with h2_0 containing parameter 0(Constant) for a Gaus fit
+///                    of each bin in X projected along Y
+///          with h2_1 containing parameter 1(Mean) for a gaus fit
+///          with h2_2 containing parameter 2(StdDev)  for a gaus fit
+///          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
+///
+///   Root > h2->FitSlicesY(0,15,22,10);
+///          same as above, but only for bins 15 to 22 along X
+///          and only for bins in X for which the corresponding projection
+///          along Y has more than cut bins filled.
+/// ~~~
+///
+///  NOTE: To access the generated histograms in the current directory, do eg:
+/// ~~~ {.cpp}
+///     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
+/// ~~~
+///
+/// A complete example of this function is given in tutorial:fitslicesy.C.
+
 void TH2::FitSlicesY(TF1 *f1, Int_t firstxbin, Int_t lastxbin, Int_t cut, Option_t *option, TObjArray* arr)
 {
-   // Project slices along Y in case of a 2-D histogram, then fit each slice
-   // with function f1 and make a histogram for each fit parameter
-   // Only bins along X between firstxbin and lastxbin are considered.
-   // By default (firstxbin == 0, lastxbin == -1), all bins in x including
-   // over- and underflows are taken into account.
-   // If f1=0, a gaussian is assumed
-   // Before invoking this function, one can set a subrange to be fitted along Y
-   // via f1->SetRange(ymin,ymax)
-   // The argument option (default="QNR") can be used to change the fit options.
-   //     "Q"  means Quiet mode
-   //     "N"  means do not show the result of the fit
-   //     "R"  means fit the function in the specified function range
-   //     "G2" merge 2 consecutive bins along Y
-   //     "G3" merge 3 consecutive bins along Y
-   //     "G4" merge 4 consecutive bins along Y
-   //     "G5" merge 5 consecutive bins along Y
-   //     "S"  sliding merge: merge n consecutive bins along Y accordingly to what Gn is given.
-   //          It makes sense when used together with a Gn option
-   //
-   // The generated histograms are returned by adding them to arr, if arr is not NULL.
-   // arr's SetOwner() is called, to signal that it is the user's respponsability to
-   // delete the histograms, possibly by deleting the arrary.
-   //    TObjArray aSlices;
-   //    h2->FitSlicesY(func, 0, -1, 0, "QNR", &aSlices);
-   // will already delete the histograms once aSlice goes out of scope. aSlices will
-   // contain the histogram for the i-th parameter of the fit function at aSlices[i];
-   // aSlices[n] (n being the number of parameters) contains the chi2 distribution of
-   // the fits.
-   //
-   // If arr is NULL, the generated histograms are added to the list of objects
-   // in the current directory. It is the user's responsability to delete
-   // these histograms.
-   //
-   //  Example: Assume a 2-d histogram h2
-   //   Root > h2->FitSlicesY(); produces 4 TH1D histograms
-   //          with h2_0 containing parameter 0(Constant) for a Gaus fit
-   //                    of each bin in X projected along Y
-   //          with h2_1 containing parameter 1(Mean) for a gaus fit
-   //          with h2_2 containing parameter 2(RMS)  for a gaus fit
-   //          with h2_chi2 containing the chisquare/number of degrees of freedom for a gaus fit
-   //
-   //   Root > h2->FitSlicesY(0,15,22,10);
-   //          same as above, but only for bins 15 to 22 along X
-   //          and only for bins in X for which the corresponding projection
-   //          along Y has more than cut bins filled.
-   //
-   //  NOTE: To access the generated histograms in the current directory, do eg:
-   //     TH1D *h2_1 = (TH1D*)gDirectory->Get("h2_1");
-   //
-   // A complete example of this function is given in begin_html <a href="examples/fitslicesy.C.html">tutorial:fitslicesy.C</a> end_html
-   // with the following output:
-   //Begin_Html
-   /*
-   <img src="gif/fitslicesy.gif">
-   */
-   //End_Html
-
    DoFitSlices(false, f1, firstxbin, lastxbin, cut, option, arr);
-
 }
 
 Int_t TH2::GetBin(Int_t binx, Int_t biny, Int_t) const
@@ -953,28 +974,29 @@ Int_t TH2::GetBin(Int_t binx, Int_t biny, Int_t) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute first cell (binx,biny) in the range [firstxbin,lastxbin][firstybin,lastybin] for which
+/// diff = abs(cell_content-c) <= maxdiff
+/// In case several cells in the specified range with diff=0 are found
+/// the first cell found is returned in binx,biny.
+/// In case several cells in the specified range satisfy diff <=maxdiff
+/// the cell with the smallest difference is returned in binx,biny.
+/// In all cases the function returns the smallest difference.
+///
+/// NOTE1: if firstxbin < 0, firstxbin is set to 1
+///        if (lastxbin < firstxbin then lastxbin is set to the number of bins in X
+///          ie if firstxbin=1 and lastxbin=0 (default) the search is on all bins in X except
+///          for X's under- and overflow bins.
+///        if firstybin < 0, firstybin is set to 1
+///        if (lastybin < firstybin then lastybin is set to the number of bins in Y
+///          ie if firstybin=1 and lastybin=0 (default) the search is on all bins in Y except
+///          for Y's under- and overflow bins.
+///
+/// NOTE2: if maxdiff=0 (default), the first cell with content=c is returned.
+
 Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin, Int_t lastxbin,
                                  Int_t firstybin, Int_t lastybin, Double_t maxdiff) const
 {
-   // compute first cell (binx,biny) in the range [firstxbin,lastxbin][firstybin,lastybin] for which
-   // diff = abs(cell_content-c) <= maxdiff
-   // In case several cells in the specified range with diff=0 are found
-   // the first cell found is returned in binx,biny.
-   // In case several cells in the specified range satisfy diff <=maxdiff
-   // the cell with the smallest difference is returned in binx,biny.
-   // In all cases the function returns the smallest difference.
-   //
-   // NOTE1: if firstxbin < 0, firstxbin is set to 1
-   //        if (lastxbin < firstxbin then lastxbin is set to the number of bins in X
-   //          ie if firstxbin=1 and lastxbin=0 (default) the search is on all bins in X except
-   //          for X's under- and overflow bins.
-   //        if firstybin < 0, firstybin is set to 1
-   //        if (lastybin < firstybin then lastybin is set to the number of bins in Y
-   //          ie if firstybin=1 and lastybin=0 (default) the search is on all bins in Y except
-   //          for Y's under- and overflow bins.
-   // NOTE2: if maxdiff=0 (default), the first cell with content=c is returned.
-
    if (fDimension != 2) {
       binx = -1;
       biny = -1;
@@ -997,29 +1019,29 @@ Double_t TH2::GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t fir
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return correlation factor between axis1 and axis2.
+
 Double_t TH2::GetCorrelationFactor(Int_t axis1, Int_t axis2) const
 {
-   // Return correlation factor between axis1 and axis2.
-
    if (axis1 < 1 || axis2 < 1 || axis1 > 2 || axis2 > 2) {
       Error("GetCorrelationFactor","Wrong parameters");
       return 0;
    }
    if (axis1 == axis2) return 1;
-   Double_t rms1 = GetRMS(axis1);
-   if (rms1 == 0) return 0;
-   Double_t rms2 = GetRMS(axis2);
-   if (rms2 == 0) return 0;
-   return GetCovariance(axis1,axis2)/rms1/rms2;
+   Double_t stddev1 = GetStdDev(axis1);
+   if (stddev1 == 0) return 0;
+   Double_t stddev2 = GetStdDev(axis2);
+   if (stddev2 == 0) return 0;
+   return GetCovariance(axis1,axis2)/stddev1/stddev2;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return covariance between axis1 and axis2.
+
 Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 {
-   // Return covariance between axis1 and axis2.
-
    if (axis1 < 1 || axis2 < 1 || axis1 > 2 || axis2 > 2) {
       Error("GetCovariance","Wrong parameters");
       return 0;
@@ -1045,13 +1067,13 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return 2 random numbers along axis x and y distributed according
+/// the cellcontents of a 2-dim histogram
+/// return a NaN if the histogram has a bin with negative content
+
 void TH2::GetRandom2(Double_t &x, Double_t &y)
 {
-   // Return 2 random numbers along axis x and y distributed according
-   // the cellcontents of a 2-dim histogram
-   // return a NaN if the histogram has a bin with negative content
-
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbins  = nbinsx*nbinsy;
@@ -1078,31 +1100,33 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the array stats from the contents of this histogram
+/// The array stats must be correctly dimensionned in the calling program.
+/// ~~~ {.cpp}
+/// stats[0] = sumw
+/// stats[1] = sumw2
+/// stats[2] = sumwx
+/// stats[3] = sumwx2
+/// stats[4] = sumwy
+/// stats[5] = sumwy2
+/// stats[6] = sumwxy
+/// ~~~
+///
+/// If no axis-subranges are specified (via TAxis::SetRange), the array stats
+/// is simply a copy of the statistics quantities computed at filling time.
+/// If sub-ranges are specified, the function recomputes these quantities
+/// from the bin contents in the current axis ranges.
+///
+///  Note that the mean value/StdDev is computed using the bins in the currently
+///  defined ranges (see TAxis::SetRange). By default the ranges include
+///  all bins from 1 to nbins included, excluding underflows and overflows.
+///  To force the underflows and overflows in the computation, one must
+///  call the static function TH1::StatOverflows(kTRUE) before filling
+///  the histogram.
+
 void TH2::GetStats(Double_t *stats) const
 {
-   // Fill the array stats from the contents of this histogram
-   // The array stats must be correctly dimensionned in the calling program.
-   // stats[0] = sumw
-   // stats[1] = sumw2
-   // stats[2] = sumwx
-   // stats[3] = sumwx2
-   // stats[4] = sumwy
-   // stats[5] = sumwy2
-   // stats[6] = sumwxy
-   //
-   // If no axis-subranges are specified (via TAxis::SetRange), the array stats
-   // is simply a copy of the statistics quantities computed at filling time.
-   // If sub-ranges are specified, the function recomputes these quantities
-   // from the bin contents in the current axis ranges.
-   //
-   //  Note that the mean value/RMS is computed using the bins in the currently
-   //  defined ranges (see TAxis::SetRange). By default the ranges include
-   //  all bins from 1 to nbins included, excluding underflows and overflows.
-   //  To force the underflows and overflows in the computation, one must
-   //  call the static function TH1::StatOverflows(kTRUE) before filling
-   //  the histogram.
-
    if (fBuffer) ((TH2*)this)->BufferEmpty();
 
    if ((fTsumw == 0 && fEntries > 0) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
@@ -1154,64 +1178,66 @@ void TH2::GetStats(Double_t *stats) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return integral of bin contents. Only bins in the bins range are considered.
+/// By default the integral is computed as the sum of bin contents in the range.
+/// if option "width" is specified, the integral is the sum of
+/// the bin contents multiplied by the bin width in x and in y.
+
 Double_t TH2::Integral(Option_t *option) const
 {
-   // Return integral of bin contents. Only bins in the bins range are considered.
-   // By default the integral is computed as the sum of bin contents in the range.
-   // if option "width" is specified, the integral is the sum of
-   // the bin contents multiplied by the bin width in x and in y.
-
    return Integral(fXaxis.GetFirst(),fXaxis.GetLast(),
       fYaxis.GetFirst(),fYaxis.GetLast(),option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
+/// for a 2-D histogram
+/// By default the integral is computed as the sum of bin contents in the range.
+/// if option "width" is specified, the integral is the sum of
+/// the bin contents multiplied by the bin width in x and in y.
+
 Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
-   // Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
-   // for a 2-D histogram
-   // By default the integral is computed as the sum of bin contents in the range.
-   // if option "width" is specified, the integral is the sum of
-   // the bin contents multiplied by the bin width in x and in y.
    double err = 0;
    return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,err,option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
+/// for a 2-D histogram. Calculates also the integral error using error propagation
+/// from the bin errors assumming that all the bins are uncorrelated.
+/// By default the integral is computed as the sum of bin contents in the range.
+/// if option "width" is specified, the integral is the sum of
+/// the bin contents multiplied by the bin width in x and in y.
+
 Double_t TH2::IntegralAndError(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t lastybin, Double_t & error, Option_t *option) const
 {
-   // Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
-   // for a 2-D histogram. Calculates also the integral error using error propagation
-   // from the bin errors assumming that all the bins are uncorrelated.
-   // By default the integral is computed as the sum of bin contents in the range.
-   // if option "width" is specified, the integral is the sum of
-   // the bin contents multiplied by the bin width in x and in y.
    return DoIntegral(firstxbin,lastxbin,firstybin,lastybin,-1,0,error,option,kTRUE);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///illegal for a TH2
+
 Double_t TH2::Interpolate(Double_t)
 {
-   //illegal for a TH2
-
    Error("Interpolate","This function must be called with 2 arguments for a TH2");
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a point P(x,y), Interpolate approximates the value via bilinear
+/// interpolation based on the four nearest bin centers
+/// see Wikipedia, Bilinear Interpolation
+/// Andy Mastbaum 10/8/2008
+/// vaguely based on R.Raja 6-Sep-2008
+
  Double_t TH2::Interpolate(Double_t x, Double_t y)
 {
-   // Given a point P(x,y), Interpolate approximates the value via bilinear
-   // interpolation based on the four nearest bin centers
-   // see Wikipedia, Bilinear Interpolation
-   // Andy Mastbaum 10/8/2008
-   // vaguely based on R.Raja 6-Sep-2008
-
    Double_t f=0;
    Double_t x1=0,x2=0,y1=0,y2=0;
    Double_t dx,dy;
@@ -1281,41 +1307,41 @@ Double_t TH2::Interpolate(Double_t)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///illegal for a TH2
+
 Double_t TH2::Interpolate(Double_t, Double_t, Double_t)
 {
-   //illegal for a TH2
-
    Error("Interpolate","This function must be called with 2 arguments for a TH2");
    return 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Statistical test of compatibility in shape between
+/// THIS histogram and h2, using Kolmogorov test.
+///     Default: Ignore under- and overflow bins in comparison
+///
+///     option is a character string to specify options
+///        - "U" include Underflows in test
+///        - "O" include Overflows
+///        - "N" include comparison of normalizations
+///        - "D" Put out a line of "Debug" printout
+///        - "M" Return the Maximum Kolmogorov distance instead of prob
+///
+///   The returned function value is the probability of test
+///       (much less than one means NOT compatible)
+///
+///   The KS test uses the distance between the pseudo-CDF's obtained
+///   from the histogram. Since in 2D the order for generating the pseudo-CDF is
+///   arbitrary, two pairs of pseudo-CDF are used, one starting from the x axis the
+///   other from the y axis and the maximum distance is the average of the two maximum
+///   distances obtained.
+///
+///  Code adapted by Rene Brun from original HBOOK routine HDIFF
+
 Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
-   // Statistical test of compatibility in shape between
-   // THIS histogram and h2, using Kolmogorov test.
-   //     Default: Ignore under- and overflow bins in comparison
-   //
-   //     option is a character string to specify options
-   //         "U" include Underflows in test
-   //         "O" include Overflows
-   //         "N" include comparison of normalizations
-   //         "D" Put out a line of "Debug" printout
-   //         "M" Return the Maximum Kolmogorov distance instead of prob
-   //
-   //   The returned function value is the probability of test
-   //       (much less than one means NOT compatible)
-   //
-   //   The KS test uses the distance between the pseudo-CDF's obtained
-   //   from the histogram. Since in 2D the order for generating the pseudo-CDF is
-   //   arbitrary, two pairs of pseudo-CDF are used, one starting from the x axis the
-   //   other from the y axis and the maximum distance is the average of the two maximum
-   //   distances obtained.
-   //
-   //  Code adapted by Rene Brun from original HBOOK routine HDIFF
-
    TString opt = option;
    opt.ToUpper();
 
@@ -1482,298 +1508,54 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 }
 
 
-//______________________________________________________________________________
-Long64_t TH2::Merge(TCollection *list)
-{
-   // Add all histograms in the collection to this histogram.
-   // This function computes the min/max for the axes,
-   // compute a new number of bins, if necessary,
-   // add bin contents, errors and statistics.
-   // If overflows are present and limits are different the function will fail.
-   // The function returns the total number of entries in the result histogram
-   // if the merge is successfull, -1 otherwise.
-   //
-   // IMPORTANT remark. The 2 axis x and y may have different number
-   // of bins and different limits, BUT the largest bin width must be
-   // a multiple of the smallest bin width and the upper limit must also
-   // be a multiple of the bin width.
+////////////////////////////////////////////////////////////////////////////////
+/// Rebin only the X axis
+/// see Rebin2D
 
-   if (!list) return 0;
-   if (list->IsEmpty()) return (Long64_t) GetEntries();
-
-   TList inlist;
-   inlist.AddAll(list);
-
-   TAxis newXAxis;
-   TAxis newYAxis;
-   Bool_t initialLimitsFound = kFALSE;
-   Bool_t allSameLimits = kTRUE;
-   Bool_t sameLimitsX = kTRUE;
-   Bool_t sameLimitsY = kTRUE;
-   Bool_t allHaveLimits = kTRUE;
-   Bool_t firstHistWithLimits = kTRUE;
-
-   TIter next(&inlist);
-   TH2 * h = this;
-   do  {
-
-      Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
-      allHaveLimits = allHaveLimits && hasLimits;
-
-      if (hasLimits) {
-         h->BufferEmpty();
-
-         // this is done in case the first histograms are empty and
-         // the histogram have different limits
-         if (firstHistWithLimits ) {
-            // set axis limits in the case the first histogram did not have limits
-            if (h != this ) {
-              if (!SameLimitsAndNBins(fXaxis, *(h->GetXaxis())) ) {
-                if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
-                else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
-              }
-              if (!SameLimitsAndNBins(fYaxis, *(h->GetYaxis())) ) {
-                if (h->GetYaxis()->GetXbins()->GetSize() != 0) fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
-                else                                           fYaxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
-              }
-            }
-            firstHistWithLimits = kFALSE;
-         }
-
-         if (!initialLimitsFound) {
-            // this is executed the first time an histogram with limits is found
-            // to set some initial values on the new axes
-            initialLimitsFound = kTRUE;
-            if (h->GetXaxis()->GetXbins()->GetSize() != 0) newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
-            else                                           newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
-            if (h->GetYaxis()->GetXbins()->GetSize() != 0) newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXbins()->GetArray());
-            else                                           newYAxis.Set(h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(), h->GetYaxis()->GetXmax());
-         }
-         else {
-           // check first if histograms have same bins in X
-           if (!SameLimitsAndNBins(newXAxis, *(h->GetXaxis()))) {
-             sameLimitsX = kFALSE;
-             // recompute in this case the optimal limits
-             // The condition to works is that the histogram have same bin with
-             // and one common bin edge
-             if (!RecomputeAxisLimits(newXAxis, *(h->GetXaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
-                     newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax(),
-                     h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-                     h->GetXaxis()->GetXmax());
-               return -1;
-             }
-           }
-
-           // check first if histograms have same bins in Y
-           if (!SameLimitsAndNBins(newYAxis, *(h->GetYaxis()))) {
-             sameLimitsY = kFALSE;
-             // recompute in this case the optimal limits
-             // The condition to works is that the histogram have same bin with
-             // and one common bin edge
-             if (!RecomputeAxisLimits(newYAxis, *(h->GetYaxis()))) {
-               Error("Merge", "Cannot merge histograms - limits are inconsistent:\n "
-                     "first: (%d, %f, %f), second: (%d, %f, %f)",
-                     newYAxis.GetNbins(), newYAxis.GetXmin(), newYAxis.GetXmax(),
-                     h->GetYaxis()->GetNbins(), h->GetYaxis()->GetXmin(),
-                     h->GetYaxis()->GetXmax());
-               return -1;
-             }
-           }
-           allSameLimits = sameLimitsY && sameLimitsX;
-         }
-      }
-   }  while ( ( h = dynamic_cast<TH2*> ( next() ) ) != NULL );
-   if (!h && (*next) ) {
-      Error("Merge","Attempt to merge object of class: %s to a %s",
-            (*next)->ClassName(),this->ClassName());
-      return -1;
-   }
-   next.Reset();
-
-   // In the case of histogram with different limits
-   // newX(Y)Axis will now have the new found limits
-   // but one needs first to clone this histogram to perform the merge
-   // The clone is not needed when all histograms have the same limits
-   TH2 * hclone = 0;
-   if (!allSameLimits) {
-      // We don't want to add the clone to gDirectory,
-      // so remove our kMustCleanup bit temporarily
-      Bool_t mustCleanup = TestBit(kMustCleanup);
-      if (mustCleanup) ResetBit(kMustCleanup);
-      hclone = (TH2*)IsA()->New();
-      hclone->SetDirectory(0);
-      Copy(*hclone);
-      if (mustCleanup) SetBit(kMustCleanup);
-      BufferEmpty(1);         // To remove buffer.
-      Reset();                // BufferEmpty sets limits so we can't use it later.
-      SetEntries(0);
-      inlist.AddFirst(hclone);
-   }
-
-   if (!allSameLimits && initialLimitsFound) {
-     if (!sameLimitsX) {
-       fXaxis.SetRange(0,0);
-       if (newXAxis.GetXbins()->GetSize() != 0) fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXbins()->GetArray());
-       else                                     fXaxis.Set(newXAxis.GetNbins(),newXAxis.GetXmin(), newXAxis.GetXmax());
-     }
-     if (!sameLimitsY) {
-       fYaxis.SetRange(0,0);
-       if (newYAxis.GetXbins()->GetSize() != 0) fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXbins()->GetArray());
-       else                                     fYaxis.Set(newYAxis.GetNbins(),newYAxis.GetXmin(), newYAxis.GetXmax());
-     }
-     fZaxis.Set(1,0,1);
-     fNcells = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
-     SetBinsLength(fNcells);
-     if (fSumw2.fN) {
-       fSumw2.Set(fNcells);
-     }
-   }
-
-   if (!allHaveLimits) {
-      // fill this histogram with all the data from buffers of histograms without limits
-      while ( (h = dynamic_cast<TH2*> (next())) ) {
-         if (h->GetXaxis()->GetXmin() >= h->GetXaxis()->GetXmax() && h->fBuffer) {
-            // no limits
-            Int_t nbentries = (Int_t)h->fBuffer[0];
-            for (Int_t i = 0; i < nbentries; i++)
-               Fill(h->fBuffer[3*i + 2], h->fBuffer[3*i + 3], h->fBuffer[3*i + 1]);
-            // Entries from buffers have to be filled one by one
-            // because FillN doesn't resize histograms.
-         }
-      }
-      if (!initialLimitsFound) {
-         if (hclone) {
-            inlist.Remove(hclone);
-            delete hclone;
-         }
-         return (Long64_t) GetEntries();  // all histograms have been processed
-      }
-      next.Reset();
-   }
-
-   //merge bin contents and errors
-   Double_t stats[kNstat], totstats[kNstat];
-   for (Int_t i=0;i<kNstat;i++) {totstats[i] = stats[i] = 0;}
-   GetStats(totstats);
-   Double_t nentries = GetEntries();
-   Int_t binx, biny, ix, iy, nx, ny, bin, ibin;
-   Double_t cu;
-   Int_t nbix = fXaxis.GetNbins();
-   Bool_t canExtend = CanExtendAllAxes();
-   SetCanExtend(TH1::kNoAxis); // reset, otherwise setting the under/overflow will extend the axis
-
-   while ((h=(TH2*)next())) {
-
-      // skip empty histograms
-      Double_t histEntries = h->GetEntries();
-      if (h->fTsumw == 0 && histEntries == 0) continue;
-
-      // process only if the histogram has limits; otherwise it was processed before
-      if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
-         // import statistics
-         h->GetStats(stats);
-         for (Int_t i = 0; i < kNstat; i++)
-            totstats[i] += stats[i];
-         nentries += histEntries;
-
-         nx = h->GetXaxis()->GetNbins();
-         ny = h->GetYaxis()->GetNbins();
-
-         for (biny = 0; biny <= ny + 1; biny++) {
-            if (!allSameLimits)
-               iy = fYaxis.FindBin(h->GetYaxis()->GetBinCenter(biny));
-            else
-               iy = biny;
-            for (binx = 0; binx <= nx + 1; binx++) {
-               bin = binx +(nx+2)*biny;
-
-               cu = h->RetrieveBinContent(bin);
-               if (!allSameLimits) {
-                  if (cu != 0 && ( (!sameLimitsX && (binx == 0 || binx == nx+1)) || (!sameLimitsY && (biny == 0 || biny == ny+1)) )) {
-                     Error("Merge", "Cannot merge histograms - the histograms have"
-                           " different limits and undeflows/overflows are present."
-                           " The initial histogram is now broken!");
-                     return -1;
-                  }
-                  ix = fXaxis.FindBin(h->GetXaxis()->GetBinCenter(binx));
-               }
-               else {
-                  // case histograms with the same limits
-                  ix = binx;
-               }
-               ibin = ix +(nbix+2)*iy;
-
-               if (ibin < 0) continue;
-               AddBinContent(ibin,cu);
-               if (fSumw2.fN) {
-                  Double_t error1 = h->GetBinError(bin);
-                  fSumw2.fArray[ibin] += error1*error1;
-               }
-            }
-         }
-      }
-   }
-   SetCanExtend(canExtend);
-
-   //copy merged stats
-   PutStats(totstats);
-   SetEntries(nentries);
-   if (hclone) {
-      inlist.Remove(hclone);
-      delete hclone;
-   }
-   return (Long64_t)nentries;
-}
-
-
-//______________________________________________________________________________
 TH2 *TH2::RebinX(Int_t ngroup, const char *newname)
 {
-   // Rebin only the X axis
-   // see Rebin2D
-
    return Rebin2D(ngroup, 1, newname);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rebin only the Y axis
+/// see Rebin2D
+
 TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
 {
-   // Rebin only the Y axis
-   // see Rebin2D
-
    return Rebin2D(1, ngroup, newname);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
+///
+///   if newname is not blank a new temporary histogram hnew is created.
+///   else the current histogram is modified (default)
+///   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
+///   have to me merged into one bin of hnew
+///   If the original histogram has errors stored (via Sumw2), the resulting
+///   histograms has new errors correctly calculated.
+///
+///   examples: if hpxpy is an existing TH2 histogram with 40 x 40 bins
+/// ~~~ {.cpp}
+///     hpxpy->Rebin2D();  // merges two bins along the xaxis and yaxis in one in hpxpy
+///                        // Carefull: previous contents of hpxpy are lost
+///     hpxpy->RebinX(5);  //merges five bins along the xaxis in one in hpxpy
+///     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
+///                                          // merging 5 bins of h1 along the yaxis in one bin
+/// ~~~
+///
+///   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
+///          along the xaxis/yaxis the top limit(s) of the rebinned histogram
+///          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
+///          ybin=newybins*nygroup and the corresponding bins are added to
+///          the overflow bin.
+///          Statistics will be recomputed from the new bin contents.
+
 TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 {
-   // Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
-   //
-   //   if newname is not blank a new temporary histogram hnew is created.
-   //   else the current histogram is modified (default)
-   //   The parameter nxgroup/nygroup indicate how many bins along the xaxis/yaxis of this
-   //   have to me merged into one bin of hnew
-   //   If the original histogram has errors stored (via Sumw2), the resulting
-   //   histograms has new errors correctly calculated.
-   //
-   //   examples: if hpxpy is an existing TH2 histogram with 40 x 40 bins
-   //     hpxpy->Rebin2D();  // merges two bins along the xaxis and yaxis in one in hpxpy
-   //                        // Carefull: previous contents of hpxpy are lost
-   //     hpxpy->RebinX(5);  //merges five bins along the xaxis in one in hpxpy
-   //     TH2 *hnew = hpxpy->RebinY(5,"hnew"); // creates a new histogram hnew
-   //                                          // merging 5 bins of h1 along the yaxis in one bin
-   //
-   //   NOTE : If nxgroup/nygroup is not an exact divider of the number of bins,
-   //          along the xaxis/yaxis the top limit(s) of the rebinned histogram
-   //          is changed to the upper edge of the xbin=newxbins*nxgroup resp.
-   //          ybin=newybins*nygroup and the corresponding bins are added to
-   //          the overflow bin.
-   //          Statistics will be recomputed from the new bin contents.
-
    Int_t nxbins  = fXaxis.GetNbins();
    Int_t nybins  = fYaxis.GetNbins();
    Int_t nx      = nxbins + 2; // normal bins + underflow and overflow
@@ -1952,7 +1734,8 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
    TString opt = option;
@@ -2066,6 +1849,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    // in case need to store sum of weight square/bin for the profile
    bool useWeights = (GetSumw2N() > 0);
    if (useWeights) h1->Sumw2();
+   // we need to set this bit because we fill the profile using a single Fill for many entries
+   // This is needed for the changes applied to make automatically the histogram weighted in ROOT 6 versions
+   else h1->SetBit(TH1::kIsNotW);
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
@@ -2132,101 +1918,111 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project a 2-D histogram into a profile histogram along X.
+///
+///   The projection is made from the channels along the Y axis
+///   ranging from firstybin to lastybin included.
+///   By default, bins 1 to ny are included
+///   When all bins are included, the number of entries in the projection
+///   is set to the number of entries of the 2-D histogram, otherwise
+///   the number of entries is incremented by 1 for all non empty cells.
+///
+///   if option "d" is specified, the profile is drawn in the current pad.
+///
+///   if option "o" original axis range of the target axes will be
+///   kept, but only bins inside the selected range will be filled.
+///
+///   The option can also be used to specify the projected profile error type.
+///   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+///
+///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+///   One must create a graphical cut (mouse or C++) and specify the name
+///   of the cut between [] in the option.
+///   For example, with a TCutG named "cutg", one can call:
+///      myhist->ProfileX(" ",firstybin,lastybin,"[cutg]");
+///   To invert the cut, it is enough to put a "-" in front of its name:
+///      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
+///   It is possible to apply several cuts ("," means logical AND):
+///      myhist->ProfileX(" ",firstybin,lastybin,"[cutg1,cutg2]");
+///
+///   NOTE that if a TProfile named "name" exists in the current directory or pad with
+///   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
+///   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
+///
+///   NOTE that the X axis attributes of the TH2 are copied to the X axis of the profile.
+///
+///   NOTE that the default under- / overflow behavior differs from what ProjectionX
+///   does! Profiles take the bin center into account, so here the under- and overflow
+///   bins are ignored by default.
+///
+///   NOTE that the return profile histogram is computed using the Y bin center values instead of
+///   the real Y values which are used to fill the 2d histogram. Therefore the obtained profile is just an approximation of the
+///   correct profile histogram that would be obtained when filling it directly with the original data (see ROOT-7770)
+
+
 TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
-   // Project a 2-D histogram into a profile histogram along X.
-   //
-   //   The projection is made from the channels along the Y axis
-   //   ranging from firstybin to lastybin included.
-   //   By default, bins 1 to ny are included
-   //   When all bins are included, the number of entries in the projection
-   //   is set to the number of entries of the 2-D histogram, otherwise
-   //   the number of entries is incremented by 1 for all non empty cells.
-   //
-   //   if option "d" is specified, the profile is drawn in the current pad.
-   //
-   //   if option "o" original axis range of the target axes will be
-   //   kept, but only bins inside the selected range will be filled.
-   //
-   //   The option can also be used to specify the projected profile error type.
-   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
-   //
-   //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
-   //   One must create a graphical cut (mouse or C++) and specify the name
-   //   of the cut between [] in the option.
-   //   For example, with a TCutG named "cutg", one can call:
-   //      myhist->ProfileX(" ",firstybin,lastybin,"[cutg]");
-   //   To invert the cut, it is enough to put a "-" in front of its name:
-   //      myhist->ProfileX(" ",firstybin,lastybin,"[-cutg]");
-   //   It is possible to apply several cuts ("," means logical AND):
-   //      myhist->ProfileX(" ",firstybin,lastybin,"[cutg1,cutg2]");
-   //
-   //   NOTE that if a TProfile named "name" exists in the current directory or pad with
-   //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
-   //   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
-   //
-   //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the profile.
-   //
-   //   NOTE that the default under- / overflow behavior differs from what ProjectionX
-   //   does! Profiles take the bin center into account, so here the under- and overflow
-   //   bins are ignored by default.
-
    return DoProfile(true, name, firstybin, lastybin, option);
 
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project a 2-D histogram into a profile histogram along Y.
+///
+///   The projection is made from the channels along the X axis
+///   ranging from firstxbin to lastxbin included.
+///   By default, bins 1 to nx are included
+///   When all bins are included, the number of entries in the projection
+///   is set to the number of entries of the 2-D histogram, otherwise
+///   the number of entries is incremented by 1 for all non empty cells.
+///
+///   if option "d" is specified, the profile is drawn in the current pad.
+///
+///   if option "o" , the original axis range of the target axis will be
+///   kept, but only bins inside the selected range will be filled.
+///
+///   The option can also be used to specify the projected profile error type.
+///   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+///
+///   One must create a graphical cut (mouse or C++) and specify the name
+///   of the cut between [] in the option.
+///   For example, with a TCutG named "cutg", one can call:
+///      myhist->ProfileY(" ",firstybin,lastybin,"[cutg]");
+///   To invert the cut, it is enough to put a "-" in front of its name:
+///      myhist->ProfileY(" ",firstybin,lastybin,"[-cutg]");
+///   It is possible to apply several cuts:
+///      myhist->ProfileY(" ",firstybin,lastybin,"[cutg1,cutg2]");
+///
+///   NOTE that if a TProfile named "name" exists in the current directory or pad with
+///   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
+///   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
+///
+///   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the profile.
+///
+///   NOTE that the default under- / overflow behavior differs from what ProjectionX
+///   does! Profiles take the bin center into account, so here the under- and overflow
+///   bins are ignored by default.
+///
+///   NOTE that the return profile histogram is computed using the X bin center values instead of
+///   the real X values which are used to fill the 2d histogram. Therefore the obtained profile is just an approximation of the
+///   correct profile histogram that would be obtained when filling it directly with the original data (see ROOT-7770)
+
+
 TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
-   // Project a 2-D histogram into a profile histogram along Y.
-   //
-   //   The projection is made from the channels along the X axis
-   //   ranging from firstxbin to lastxbin included.
-   //   By default, bins 1 to nx are included
-   //   When all bins are included, the number of entries in the projection
-   //   is set to the number of entries of the 2-D histogram, otherwise
-   //   the number of entries is incremented by 1 for all non empty cells.
-   //
-   //   if option "d" is specified, the profile is drawn in the current pad.
-   //
-   //   if option "o" , the original axis range of the target axis will be
-   //   kept, but only bins inside the selected range will be filled.
-   //
-   //   The option can also be used to specify the projected profile error type.
-   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
-   //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
-   //
-   //   One must create a graphical cut (mouse or C++) and specify the name
-   //   of the cut between [] in the option.
-   //   For example, with a TCutG named "cutg", one can call:
-   //      myhist->ProfileY(" ",firstybin,lastybin,"[cutg]");
-   //   To invert the cut, it is enough to put a "-" in front of its name:
-   //      myhist->ProfileY(" ",firstybin,lastybin,"[-cutg]");
-   //   It is possible to apply several cuts:
-   //      myhist->ProfileY(" ",firstybin,lastybin,"[cutg1,cutg2]");
-   //
-   //   NOTE that if a TProfile named "name" exists in the current directory or pad with
-   //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
-   //   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
-   //
-   //   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the profile.
-   //
-   //   NOTE that the default under- / overflow behavior differs from what ProjectionX
-   //   does! Profiles take the bin center into account, so here the under- and overflow
-   //   bins are ignored by default.
-
    return DoProfile(false, name, firstxbin, lastxbin, option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal (protected) method for performing projection on the X or Y axis
+/// called by ProjectionX or ProjectionY
+
 TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
-   // Internal (protected) method for performing projection on the X or Y axis
-   // called by ProjectionX or ProjectionY
-
    const char *expectedName = 0;
    Int_t inNbin;
    Int_t firstOutBin, lastOutBin;
@@ -2423,7 +2219,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       h1->PutStats(stats);
    }
    else {
-      // the statistics is automatically recalulated since it is reset by the call to SetBinContent
+      // the statistics is automatically recalculated since it is reset by the call to SetBinContent
       // we just need to set the entries since they have not been correctly calculated during the projection
       // we can only set them to the effective entries
       h1->SetEntries( h1->GetEffectiveEntries() );
@@ -2460,90 +2256,90 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project a 2-D histogram into a 1-D histogram along X.
+///
+///   The projection is always of the type TH1D.
+///   The projection is made from the channels along the Y axis
+///   ranging from firstybin to lastybin included.
+///   By default, all bins including under- and overflow are included.
+///   The number of entries in the projection is estimated from the
+///   number of effective entries for all the cells included in the projection.
+///
+///   To exclude the underflow bins in Y, use firstybin=1.
+///   To exclude the overflow bins in Y, use lastybin=nx.
+///
+///   if option "e" is specified, the errors are computed.
+///   if option "d" is specified, the projection is drawn in the current pad.
+///   if option "o" original axis range of the taget axes will be
+///   kept, but only bins inside the selected range will be filled.
+///
+///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+///   One must create a graphical cut (mouse or C++) and specify the name
+///   of the cut between [] in the option.
+///   For example, with a TCutG named "cutg", one can call:
+///      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg]");
+///   To invert the cut, it is enough to put a "-" in front of its name:
+///      myhist->ProjectionX(" ",firstybin,lastybin,"[-cutg]");
+///   It is possible to apply several cuts:
+///      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg1,cutg2]");
+///
+///   NOTE that if a TH1D named "name" exists in the current directory or pad
+///   the histogram is reset and filled again with the projected contents of the TH2.
+///
+///   NOTE that the X axis attributes of the TH2 are copied to the X axis of the projection.
+
 TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
 {
-   // Project a 2-D histogram into a 1-D histogram along X.
-   //
-   //   The projection is always of the type TH1D.
-   //   The projection is made from the channels along the Y axis
-   //   ranging from firstybin to lastybin included.
-   //   By default, all bins including under- and overflow are included.
-   //   The number of entries in the projection is estimated from the
-   //   number of effective entries for all the cells included in the projection.
-   //
-   //   To exclude the underflow bins in Y, use firstybin=1.
-   //   To exclude the overflow bins in Y, use lastybin=nx.
-   //
-   //   if option "e" is specified, the errors are computed.
-   //   if option "d" is specified, the projection is drawn in the current pad.
-   //   if option "o" original axis range of the taget axes will be
-   //   kept, but only bins inside the selected range will be filled.
-   //
-   //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
-   //   One must create a graphical cut (mouse or C++) and specify the name
-   //   of the cut between [] in the option.
-   //   For example, with a TCutG named "cutg", one can call:
-   //      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg]");
-   //   To invert the cut, it is enough to put a "-" in front of its name:
-   //      myhist->ProjectionX(" ",firstybin,lastybin,"[-cutg]");
-   //   It is possible to apply several cuts:
-   //      myhist->ProjectionX(" ",firstybin,lastybin,"[cutg1,cutg2]");
-   //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad
-   //   the histogram is reset and filled again with the projected contents of the TH2.
-   //
-   //   NOTE that the X axis attributes of the TH2 are copied to the X axis of the projection.
-
    return DoProjection(true, name, firstybin, lastybin, option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Project a 2-D histogram into a 1-D histogram along Y.
+///
+///   The projection is always of the type TH1D.
+///   The projection is made from the channels along the X axis
+///   ranging from firstxbin to lastxbin included.
+///   By default, all bins including under- and overflow are included.
+///   The number of entries in the projection is estimated from the
+///   number of effective entries for all the cells included in the projection
+///
+///   To exclude the underflow bins in X, use firstxbin=1.
+///   To exclude the oveerflow bins in X, use lastxbin=nx.
+///
+///   if option "e" is specified, the errors are computed.
+///   if option "d" is specified, the projection is drawn in the current pad.
+///   if option "o" original axis range of the taget axes will be
+///   kept, but only bins inside the selected range will be filled.
+///
+///   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
+///   One must create a graphical cut (mouse or C++) and specify the name
+///   of the cut between [] in the option.
+///   For example, with a TCutG named "cutg", one can call:
+///      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg]");
+///   To invert the cut, it is enough to put a "-" in front of its name:
+///      myhist->ProjectionY(" ",firstxbin,lastxbin,"[-cutg]");
+///   It is possible to apply several cuts:
+///      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg1,cutg2]");
+///
+///   NOTE that if a TH1D named "name" exists in the current directory or pad and having
+///   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
+///   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
+///
+///   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the projection.
+
 TH1D *TH2::ProjectionY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
 {
-   // Project a 2-D histogram into a 1-D histogram along Y.
-   //
-   //   The projection is always of the type TH1D.
-   //   The projection is made from the channels along the X axis
-   //   ranging from firstxbin to lastxbin included.
-   //   By default, all bins including under- and overflow are included.
-   //   The number of entries in the projection is estimated from the
-   //   number of effective entries for all the cells included in the projection
-   //
-   //   To exclude the underflow bins in X, use firstxbin=1.
-   //   To exclude the oveerflow bins in X, use lastxbin=nx.
-   //
-   //   if option "e" is specified, the errors are computed.
-   //   if option "d" is specified, the projection is drawn in the current pad.
-   //   if option "o" original axis range of the taget axes will be
-   //   kept, but only bins inside the selected range will be filled.
-   //
-   //   Using a TCutG object, it is possible to select a sub-range of a 2-D histogram.
-   //   One must create a graphical cut (mouse or C++) and specify the name
-   //   of the cut between [] in the option.
-   //   For example, with a TCutG named "cutg", one can call:
-   //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg]");
-   //   To invert the cut, it is enough to put a "-" in front of its name:
-   //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[-cutg]");
-   //   It is possible to apply several cuts:
-   //      myhist->ProjectionY(" ",firstxbin,lastxbin,"[cutg1,cutg2]");
-   //
-   //   NOTE that if a TH1D named "name" exists in the current directory or pad and having
-   //   a compatible axis, the histogram is reset and filled again with the projected contents of the TH2.
-   //   In the case of axis incompatibility, an error is reported and a NULL pointer is returned.
-   //
-   //   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the projection.
-
    return DoProjection(false, name, firstxbin, lastxbin, option);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace current statistics with the values in array stats
+
 void TH2::PutStats(Double_t *stats)
 {
-   // Replace current statistics with the values in array stats
-
    TH1::PutStats(stats);
    fTsumwy  = stats[4];
    fTsumwy2 = stats[5];
@@ -2551,37 +2347,41 @@ void TH2::PutStats(Double_t *stats)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the X distribution of quantiles in the other variable Y
+/// name is the name of the returned histogram
+/// prob is the probability content for the quantile (0.5 is the default for the median)
+/// An approximate error for the quantile is computed assuming that the distribution in
+/// the other variable is normal. According to this approximate formula the error on the quantile is
+/// estimated as sqrt( p (1-p) / ( n * f(q)^2) ), where p is the probability content of the quantile and
+/// n is the number of events used to compute the quantile and f(q) is the probability distribution for the
+/// other variable evaluated at the obtained quantile. In the error estimation the probability is then assumed to be
+///  a normal distribution.
+
 TH1D* TH2::QuantilesX( Double_t prob, const char * name) const
 {
-   // Compute the X distribution of quantiles in the other variable Y
-   // name is the name of the returned histogram
-   // prob is the probability content for the quantile (0.5 is the default for the median)
-   // An approximate error for the quantile is computed assuming that the distribution in
-   // the other variable is normal.
-
    return DoQuantiles(true, name, prob);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the Y distribution of quantiles in the other variable X
+/// name is the name of the returned histogram
+/// prob is the probability content for the quantile (0.5 is the default for the median)
+/// An approximate error for the quantile is computed assuming that the distribution in
+/// the other variable is normal.
+
 TH1D* TH2::QuantilesY( Double_t prob, const char * name) const
 {
-   // Compute the Y distribution of quantiles in the other variable X
-   // name is the name of the returned histogram
-   // prob is the probability content for the quantile (0.5 is the default for the median)
-   // An approximate error for the quantile is computed assuming that the distribution in
-   // the other variable is normal.
-
    return DoQuantiles(false, name, prob);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Implementation of quantiles for x or y
+
 TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
 {
-   // Implementation of quantiles for x or y
-
    const TAxis *outAxis = 0;
    const TAxis *inAxis = 0;
    if ( onX )   {
@@ -2638,11 +2438,14 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
     slice->GetQuantiles(1,qq,pp);
     h1->SetBinContent(ibin,qq[0]);
     // compute error using normal approximation
-    // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq) ) from Kendall
-    // where f(xq) is the p.d.f value at the quantile xqp
+    // quantile error  ~  sqrt (q*(1-q)/ *( n * f(xq)^2 ) from Kendall
+    // where f(xq) is the p.d.f value at the quantile xq
     Double_t n = slice->GetEffectiveEntries();
-    Double_t f = TMath::Gaus(qq[0], slice->GetRMS(), kTRUE);
-    Double_t error = TMath::Sqrt( prob*(1.-prob)/ ( n * f) );
+    Double_t f = TMath::Gaus(qq[0], slice->GetMean(), slice->GetStdDev(), kTRUE);
+    Double_t error = 0;
+    // set the errors to zero in case of small statistics
+    if (f > 0 && n > 1)
+       error = TMath::Sqrt( prob*(1.-prob)/ (n * f * f) );
     h1->SetBinError(ibin, error);
   }
   if (slice) delete slice;
@@ -2650,11 +2453,11 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH1::Reset(option);
    TString opt = option;
    opt.ToUpper();
@@ -2666,10 +2469,11 @@ void TH2::Reset(Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bin content
+
 void TH2::SetBinContent(Int_t bin, Double_t content)
 {
-   // Set bin content
    fEntries++;
    fTsumw = 0;
    if (bin < 0) return;
@@ -2678,88 +2482,88 @@ void TH2::SetBinContent(Int_t bin, Double_t content)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the mouse is moved in a pad containing a 2-d view of this histogram
+/// a second canvas shows the projection along X corresponding to the
+/// mouse position along Y.
+/// To stop the generation of the projections, delete the canvas
+/// containing the projection.
+
 void TH2::SetShowProjectionX(Int_t nbins)
 {
-   // When the mouse is moved in a pad containing a 2-d view of this histogram
-   // a second canvas shows the projection along X corresponding to the
-   // mouse position along Y.
-   // To stop the generation of the projections, delete the canvas
-   // containing the projection.
-
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("x",nbins);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// When the mouse is moved in a pad containing a 2-d view of this histogram
+/// a second canvas shows the projection along Y corresponding to the
+/// mouse position along X.
+/// To stop the generation of the projections, delete the canvas
+/// containing the projection.
+
 void TH2::SetShowProjectionY(Int_t nbins)
 {
-   // When the mouse is moved in a pad containing a 2-d view of this histogram
-   // a second canvas shows the projection along Y corresponding to the
-   // mouse position along X.
-   // To stop the generation of the projections, delete the canvas
-   // containing the projection.
-
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("y",nbins);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   This function calculates the background spectrum in this histogram.
+///   The background is returned as a histogram.
+///   to be implemented (may be)
+
 TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 {
-   //   This function calculates the background spectrum in this histogram.
-   //   The background is returned as a histogram.
-   //   to be implemented (may be)
-
 
    return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%lx,%d,\"%s\")",
                                             (ULong_t)this, niter, option));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Interface to TSpectrum2::Search
+///the function finds peaks in this histogram where the width is > sigma
+///and the peak maximum greater than threshold*maximum bin content of this.
+///for more detauils see TSpectrum::Search.
+///note the difference in the default value for option compared to TSpectrum2::Search
+///option="" by default (instead of "goff")
+
 Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
-   //Interface to TSpectrum2::Search
-   //the function finds peaks in this histogram where the width is > sigma
-   //and the peak maximum greater than threshold*maximum bin content of this.
-   //for more detauils see TSpectrum::Search.
-   //note the difference in the default value for option compared to TSpectrum2::Search
-   //option="" by default (instead of "goff")
-
 
    return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
                                              (ULong_t)this, sigma, option, threshold));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Smooth bin contents of this 2-d histogram using kernel algorithms
+/// similar to the ones used in the raster graphics community.
+/// Bin contents in the active range are replaced by their smooth values.
+/// If Errors are defined via Sumw2, they are also scaled and computed.
+/// However, note the resulting errors will be correlated between different-bins, so
+/// the errors should not be used blindly to perform any calculation involving several bins,
+/// like fitting the histogram.  One would need to compute also the bin by bin correlation matrix.
+///
+/// 3 kernels are proposed k5a, k5b and k3a.
+/// k5a and k5b act on 5x5 cells (i-2,i-1,i,i+1,i+2, and same for j)
+/// k5b is a bit more stronger in smoothing
+/// k3a acts only on 3x3 cells (i-1,i,i+1, and same for j).
+/// By default the kernel "k5a" is used. You can select the kernels "k5b" or "k3a"
+/// via the option argument.
+/// If TAxis::SetRange has been called on the x or/and y axis, only the bins
+/// in the specified range are smoothed.
+/// In the current implementation if the first argument is not used (default value=1).
+///
+/// implementation by David McKee (dmckee@bama.ua.edu). Extended by Rene Brun
+
 void TH2::Smooth(Int_t ntimes, Option_t *option)
 {
-   // Smooth bin contents of this 2-d histogram using kernel algorithms
-   // similar to the ones used in the raster graphics community.
-   // Bin contents in the active range are replaced by their smooth values.
-   // If Errors are defined via Sumw2, they are also scaled and computed.
-   // However, note the resulting errors will be correlated between different-bins, so
-   // the errors should not be used blindly to perform any calculation involving several bins,
-   // like fitting the histogram.  One would need to compute also the bin by bin correlation matrix.
-   //
-   // 3 kernels are proposed k5a, k5b and k3a.
-   // k5a and k5b act on 5x5 cells (i-2,i-1,i,i+1,i+2, and same for j)
-   // k5b is a bit more stronger in smoothing
-   // k3a acts only on 3x3 cells (i-1,i,i+1, and same for j).
-   // By default the kernel "k5a" is used. You can select the kernels "k5b" or "k3a"
-   // via the option argument.
-   // If TAxis::SetRange has been called on the x or/and y axis, only the bins
-   // in the specified range are smoothed.
-   // In the current implementation if the first argument is not used (default value=1).
-   //
-   // implementation by David McKee (dmckee@bama.ua.edu). Extended by Rene Brun
-
    Double_t k5a[5][5] =  { { 0, 0, 1, 0, 0 },
                            { 0, 2, 2, 2, 0 },
                            { 1, 2, 5, 2, 1 },
@@ -2858,11 +2662,11 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TH2.
+
 void TH2::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TH2.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -2892,29 +2696,31 @@ void TH2::Streamer(TBuffer &R__b)
 ClassImp(TH2C)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(): TH2(), TArrayC()
 {
-   // Constructor.
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2C::~TH2C()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
@@ -2922,77 +2728,77 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayC::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
-   // Copy constructor.
-
    ((TH2C&)h2c).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+
 void TH2C::AddBinContent(Int_t bin)
 {
-   // Increment bin content by 1.
-
    if (fArray[bin] < 127) fArray[bin]++;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w.
+
 void TH2C::AddBinContent(Int_t bin, Double_t w)
 {
-   // Increment bin content by w.
-
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -128 && newval < 128) {fArray[bin] = Char_t(newval); return;}
    if (newval < -127) fArray[bin] = -127;
@@ -3000,42 +2806,42 @@ void TH2C::AddBinContent(Int_t bin, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2C::Copy(TObject &newth2) const
 {
-   // Copy.
-
    TH2::Copy((TH2C&)newth2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2C::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH2::Reset(option);
    TArrayC::Reset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TH2C::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
-
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayC::Set(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TH2C.
+
 void TH2C::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TH2C.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -3066,21 +2872,21 @@ void TH2C::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TH2C& TH2C::operator=(const TH2C &h1)
 {
-   // Operator =
-
    if (this != &h1)  ((TH2C&)h1).Copy(*this);
    return *this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2C operator*(Float_t c1, TH2C &h1)
 {
-   // Operator *
-
    TH2C hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3088,11 +2894,11 @@ TH2C operator*(Float_t c1, TH2C &h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TH2C operator+(TH2C &h1, TH2C &h2)
 {
-   // Operator +
-
    TH2C hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3100,11 +2906,11 @@ TH2C operator+(TH2C &h1, TH2C &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
 TH2C operator-(TH2C &h1, TH2C &h2)
 {
-   // Operator -
-
    TH2C hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3112,11 +2918,11 @@ TH2C operator-(TH2C &h1, TH2C &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2C operator*(TH2C &h1, TH2C &h2)
 {
-   // Operator *
-
    TH2C hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3124,11 +2930,11 @@ TH2C operator*(TH2C &h1, TH2C &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
 TH2C operator/(TH2C &h1, TH2C &h2)
 {
-   // Operator /
-
    TH2C hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3144,29 +2950,31 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 ClassImp(TH2S)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(): TH2(), TArrayS()
 {
-   // Constructor.
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2S::~TH2S()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
@@ -3174,77 +2982,77 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayS::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
-   // Copy constructor.
-
    ((TH2S&)h2s).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+
 void TH2S::AddBinContent(Int_t bin)
 {
-   // Increment bin content by 1.
-
    if (fArray[bin] < 32767) fArray[bin]++;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w.
+
 void TH2S::AddBinContent(Int_t bin, Double_t w)
 {
-   // Increment bin content by w.
-
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -32768 && newval < 32768) {fArray[bin] = Short_t(newval); return;}
    if (newval < -32767) fArray[bin] = -32767;
@@ -3252,42 +3060,42 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2S::Copy(TObject &newth2) const
 {
-   // Copy.
-
    TH2::Copy((TH2S&)newth2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2S::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH2::Reset(option);
    TArrayS::Reset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TH2S::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
-
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayS::Set(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TH2S.
+
 void TH2S::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TH2S.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -3318,21 +3126,21 @@ void TH2S::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TH2S& TH2S::operator=(const TH2S &h1)
 {
-   // Operator =
-
    if (this != &h1)  ((TH2S&)h1).Copy(*this);
    return *this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2S operator*(Float_t c1, TH2S &h1)
 {
-   // Operator *
-
    TH2S hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3340,11 +3148,11 @@ TH2S operator*(Float_t c1, TH2S &h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TH2S operator+(TH2S &h1, TH2S &h2)
 {
-   // Operator +
-
    TH2S hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3352,11 +3160,11 @@ TH2S operator+(TH2S &h1, TH2S &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
 TH2S operator-(TH2S &h1, TH2S &h2)
 {
-   // Operator -
-
    TH2S hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3364,11 +3172,11 @@ TH2S operator-(TH2S &h1, TH2S &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2S operator*(TH2S &h1, TH2S &h2)
 {
-   // Operator *
-
    TH2S hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3376,11 +3184,11 @@ TH2S operator*(TH2S &h1, TH2S &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
 TH2S operator/(TH2S &h1, TH2S &h2)
 {
-   // Operator /
-
    TH2S hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3396,30 +3204,31 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 ClassImp(TH2I)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(): TH2(), TArrayI()
 {
-   // Constructor.
-
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2I::~TH2I()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
@@ -3427,77 +3236,77 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayI::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 {
-   // Copy constructor.
-
    ((TH2I&)h2i).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+
 void TH2I::AddBinContent(Int_t bin)
 {
-   // Increment bin content by 1.
-
    if (fArray[bin] < 2147483647) fArray[bin]++;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w.
+
 void TH2I::AddBinContent(Int_t bin, Double_t w)
 {
-   // Increment bin content by w.
-
    Int_t newval = fArray[bin] + Int_t(w);
    if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
@@ -3505,52 +3314,52 @@ void TH2I::AddBinContent(Int_t bin, Double_t w)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2I::Copy(TObject &newth2) const
 {
-   // Copy.
-
    TH2::Copy((TH2I&)newth2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2I::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH2::Reset(option);
    TArrayI::Reset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TH2I::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
-
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayI::Set(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TH2I& TH2I::operator=(const TH2I &h1)
 {
-   // Operator =
-
    if (this != &h1)  ((TH2I&)h1).Copy(*this);
    return *this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2I operator*(Float_t c1, TH2I &h1)
 {
-   // Operator *
-
    TH2I hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3558,11 +3367,11 @@ TH2I operator*(Float_t c1, TH2I &h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TH2I operator+(TH2I &h1, TH2I &h2)
 {
-   // Operator +
-
    TH2I hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3570,11 +3379,11 @@ TH2I operator+(TH2I &h1, TH2I &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
 TH2I operator-(TH2I &h1, TH2I &h2)
 {
-   // Operator -
-
    TH2I hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3582,11 +3391,11 @@ TH2I operator-(TH2I &h1, TH2I &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2I operator*(TH2I &h1, TH2I &h2)
 {
-   // Operator *
-
    TH2I hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3594,11 +3403,11 @@ TH2I operator*(TH2I &h1, TH2I &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
 TH2I operator/(TH2I &h1, TH2I &h2)
 {
-   // Operator /
-
    TH2I hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3614,30 +3423,31 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 ClassImp(TH2F)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(): TH2(), TArrayF()
 {
-   // Constructor.
-
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2F::~TH2F()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
@@ -3645,60 +3455,60 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2F::TH2F(const TMatrixFBase &m)
 :TH2("TMatrixFBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
-   // Constructor.
-
    TArrayF::Set(fNcells);
    Int_t ilow = m.GetRowLwb();
    Int_t iup  = m.GetRowUpb();
@@ -3712,51 +3522,51 @@ TH2F::TH2F(const TMatrixFBase &m)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
-   // Copy constructor.
-
    ((TH2F&)h2f).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2F::Copy(TObject &newth2) const
 {
-   // Copy.
-
    TH2::Copy((TH2F&)newth2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2F::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH2::Reset(option);
    TArrayF::Reset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TH2F::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
-
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayF::Set(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TH2F.
+
 void TH2F::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TH2F.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -3787,21 +3597,21 @@ void TH2F::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TH2F& TH2F::operator=(const TH2F &h1)
 {
-   // Operator =
-
    if (this != &h1)  ((TH2F&)h1).Copy(*this);
    return *this;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2F operator*(Float_t c1, TH2F &h1)
 {
-   // Operator *
-
    TH2F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3809,11 +3619,11 @@ TH2F operator*(Float_t c1, TH2F &h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2F operator*(TH2F &h1, Float_t c1)
 {
-   // Operator *
-
    TH2F hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -3821,11 +3631,11 @@ TH2F operator*(TH2F &h1, Float_t c1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TH2F operator+(TH2F &h1, TH2F &h2)
 {
-   // Operator +
-
    TH2F hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -3833,11 +3643,11 @@ TH2F operator+(TH2F &h1, TH2F &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
 TH2F operator-(TH2F &h1, TH2F &h2)
 {
-   // Operator -
-
    TH2F hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -3845,11 +3655,11 @@ TH2F operator-(TH2F &h1, TH2F &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2F operator*(TH2F &h1, TH2F &h2)
 {
-   // Operator *
-
    TH2F hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -3857,11 +3667,11 @@ TH2F operator*(TH2F &h1, TH2F &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
 TH2F operator/(TH2F &h1, TH2F &h2)
 {
-   // Operator /
-
    TH2F hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);
@@ -3877,30 +3687,31 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 ClassImp(TH2D)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(): TH2(), TArrayD()
 {
-   // Constructor.
-
    SetBinsLength(9);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TH2D::~TH2D()
 {
-   // Destructor.
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 
@@ -3908,60 +3719,60 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
            :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
            :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    if (fgDefaultSumw2) Sumw2();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TH2D::TH2D(const TMatrixDBase &m)
 :TH2("TMatrixDBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
 {
-   // Constructor.
-
    TArrayD::Set(fNcells);
    Int_t ilow = m.GetRowLwb();
    Int_t iup  = m.GetRowUpb();
@@ -3976,51 +3787,51 @@ TH2D::TH2D(const TMatrixDBase &m)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
-   // Copy constructor.
-
    ((TH2D&)h2d).Copy(*this);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
 void TH2D::Copy(TObject &newth2) const
 {
-   // Copy.
-
    TH2::Copy((TH2D&)newth2);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
 void TH2D::Reset(Option_t *option)
 {
-   // Reset this histogram: contents, errors, etc.
-
    TH2::Reset(option);
    TArrayD::Reset();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
 void TH2D::SetBinsLength(Int_t n)
 {
-   // Set total number of bins including under/overflow
-   // Reallocate bin contents array
-
    if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
    fNcells = n;
    TArrayD::Set(n);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TH2D.
+
 void TH2D::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TH2D.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -4051,22 +3862,22 @@ void TH2D::Streamer(TBuffer &R__b)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
 TH2D& TH2D::operator=(const TH2D &h1)
 {
-   // Operator =
-
    if (this != &h1)  ((TH2D&)h1).Copy(*this);
    return *this;
 }
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2D operator*(Float_t c1, TH2D &h1)
 {
-   // Operator *
-
    TH2D hnew = h1;
    hnew.Scale(c1);
    hnew.SetDirectory(0);
@@ -4074,11 +3885,11 @@ TH2D operator*(Float_t c1, TH2D &h1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
 TH2D operator+(TH2D &h1, TH2D &h2)
 {
-   // Operator +
-
    TH2D hnew = h1;
    hnew.Add(&h2,1);
    hnew.SetDirectory(0);
@@ -4086,11 +3897,11 @@ TH2D operator+(TH2D &h1, TH2D &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
 TH2D operator-(TH2D &h1, TH2D &h2)
 {
-   // Operator -
-
    TH2D hnew = h1;
    hnew.Add(&h2,-1);
    hnew.SetDirectory(0);
@@ -4098,11 +3909,11 @@ TH2D operator-(TH2D &h1, TH2D &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
 TH2D operator*(TH2D &h1, TH2D &h2)
 {
-   // Operator *
-
    TH2D hnew = h1;
    hnew.Multiply(&h2);
    hnew.SetDirectory(0);
@@ -4110,11 +3921,11 @@ TH2D operator*(TH2D &h1, TH2D &h2)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
 TH2D operator/(TH2D &h1, TH2D &h2)
 {
-   // Operator /
-
    TH2D hnew = h1;
    hnew.Divide(&h2);
    hnew.SetDirectory(0);

@@ -12,75 +12,73 @@
 #include "TEveBox.h"
 #include "TEveProjectionManager.h"
 
-//==============================================================================
-// TEveBox
-//==============================================================================
+/** \class TEveBox
+\ingroup TEve
+3D box with arbitrary vertices (cuboid).
+Vertices 0-3 specify the "bottom" rectangle in clockwise direction and
+vertices 4-7 the "top" rectangle so that 4 is above 0, 5 above 1 and so on.
 
-//______________________________________________________________________________
-//
-// 3D box with arbitrary vertices (cuboid).
-// Vertices 0-3 specify the "bottom" rectangle in clockwise direction and
-// vertices 4-7 the "top" rectangle so that 4 is above 0, 5 above 1 and so on.
-//
-// If vertices are provided some local coordinates the transformation matrix
-// of the element should also be set (but then the memory usage is increased
-// by the size of the TEveTrans object).
-//
-// Currently only supports 3D -> 2D projections.
+If vertices are provided some local coordinates the transformation matrix
+of the element should also be set (but then the memory usage is increased
+by the size of the TEveTrans object).
+
+Currently only supports 3D -> 2D projections.
+*/
 
 ClassImp(TEveBox);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveBox::TEveBox(const char* n, const char* t) :
    TEveShape(n, t)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveBox::~TEveBox()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vertex 'i'.
+
 void TEveBox::SetVertex(Int_t i, Float_t x, Float_t y, Float_t z)
 {
-   // Set vertex 'i'.
-
    fVertices[i][0] = x;
    fVertices[i][1] = y;
    fVertices[i][2] = z;
    ResetBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vertex 'i'.
+
 void TEveBox::SetVertex(Int_t i, const Float_t* v)
 {
-   // Set vertex 'i'.
-
    fVertices[i][0] = v[0];
    fVertices[i][1] = v[1];
    fVertices[i][2] = v[2];
    ResetBBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set vertices.
+
 void TEveBox::SetVertices(const Float_t* vs)
 {
-   // Set vertices.
-
    memcpy(fVertices, vs, sizeof(fVertices));
    ResetBBox();
 }
 
-//==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box of the data.
+
 void TEveBox::ComputeBBox()
 {
-   // Compute bounding-box of the data.
-
    TEveShape::CheckAndFixBoxOrientationFv(fVertices);
 
    BBoxInit();
@@ -90,46 +88,45 @@ void TEveBox::ComputeBBox()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, return TEveBoxProjected class.
+
 TClass* TEveBox::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, return TEveBoxProjected class.
-
    return TEveBoxProjected::Class();
 }
 
 
-//==============================================================================
-// TEveBoxProjected
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Projection of TEveBox.
+/** \class TEveBoxProjected
+\ingroup TEve
+Projection of TEveBox.
+*/
 
 ClassImp(TEveBoxProjected);
 
 Bool_t TEveBoxProjected::fgDebugCornerPoints = kFALSE;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveBoxProjected::TEveBoxProjected(const char* n, const char* t) :
    TEveShape(n, t),
    fBreakIdx(0)
 {
-   // Constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveBoxProjected::~TEveBoxProjected()
 {
-   // Destructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box, virtual from TAttBBox.
+
 void TEveBoxProjected::ComputeBBox()
 {
-   // Compute bounding-box, virtual from TAttBBox.
-
    BBoxInit();
    for (vVector2_i i = fPoints.begin(); i != fPoints.end(); ++i)
    {
@@ -137,32 +134,32 @@ void TEveBoxProjected::ComputeBBox()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveBoxProjected::SetDepthLocal(Float_t d)
 {
-   // This is virtual method from base-class TEveProjected.
-
    SetDepthCommon(d, this, fBBox);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is virtual method from base-class TEveProjected.
+
 void TEveBoxProjected::SetProjection(TEveProjectionManager* mng, TEveProjectable* model)
 {
-   // This is virtual method from base-class TEveProjected.
-
    TEveProjected::SetProjection(mng, model);
    CopyVizParams(dynamic_cast<TEveElement*>(model));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Re-project the box. Projects all points and finds 2D convex-hull.
+///
+/// The only issue is with making sure that initial conditions for
+/// hull-search are reasonable -- that is, there are no overlaps with the
+/// first point.
+
 void TEveBoxProjected::UpdateProjection()
 {
-   // Re-project the box. Projects all points and finds 2D convex-hull.
-   //
-   // The only issue is with making sure that initial conditions for
-   // hull-search are reasonable -- that is, there are no overlaps with the
-   // first point.
-
    TEveBox *box = dynamic_cast<TEveBox*>(fProjectable);
 
    fDebugPoints.clear();
@@ -212,20 +209,20 @@ void TEveBoxProjected::UpdateProjection()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of fgDebugCornerPoints static.
+
 Bool_t TEveBoxProjected::GetDebugCornerPoints()
 {
-   // Get state of fgDebugCornerPoints static.
-
    return fgDebugCornerPoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of fgDebugCornerPoints static.
+/// When this is true, points will be drawn at the corners of
+/// computed convex hull.
+
 void TEveBoxProjected::SetDebugCornerPoints(Bool_t d)
 {
-   // Set state of fgDebugCornerPoints static.
-   // When this is true, points will be drawn at the corners of
-   // computed convex hull.
-
    fgDebugCornerPoints = d;
 }

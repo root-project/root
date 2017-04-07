@@ -9,102 +9,110 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixTSparse                                                       //
-//                                                                      //
-// Template class of a general sparse matrix in the Harwell-Boeing      //
-// format                                                               //
-//                                                                      //
-// Besides the usual shape/size decsriptors of a matrix like fNrows,    //
-// fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and //
-// column index, fColIndex only for those elements unequal zero:        //
-//                                                                      //
-// fRowIndex[0,..,fNrows]:    Stores for each row the index range of    //
-//                            the elements in the data and column array //
-// fColIndex[0,..,fNelems-1]: Stores the column number for each data    //
-//                            element != 0                              //
-//                                                                      //
-// As an example how to access all sparse data elements:                //
-//                                                                      //
-// for (Int_t irow = 0; irow < this->fNrows; irow++) {                  //
-//   const Int_t sIndex = fRowIndex[irow];                              //
-//   const Int_t eIndex = fRowIndex[irow+1];                            //
-//   for (Int_t index = sIndex; index < eIndex; index++) {              //
-//     const Int_t icol = fColIndex[index];                             //
-//     const Element data = fElements[index];                           //
-//     printf("data(%d,%d) = %.4e\n",irow+this->fRowLwb,icol+           //
-//                                               this->fColLwb,data);   //
-//   }                                                                  //
-// }                                                                    //
-//                                                                      //
-// When checking whether sparse matrices are compatible (like in an     //
-// assigment !), not only the shape parameters are compared but also    //
-// the sparse structure through fRowIndex and fColIndex .               //
-//                                                                      //
-// Several methods exist to fill a sparse matrix with data entries.     //
-// Most are the same like for dense matrices but some care has to be    //
-// taken with regard to performance. In the constructor, always the     //
-// shape of the matrix has to be specified in some form . Data can be   //
-// entered through the following methods :                              //
-// 1. constructor                                                       //
-//    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,         //
-//                   Int_t col_upb,Int_t nr_nonzeros,                   //
-//                   Int_t *row, Int_t *col,Element *data);            //
-//    It uses SetMatrixArray(..), see below                             //
-// 2. copy constructors                                                 //
-// 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)   //
-//    where it is expected that the irow,icol and data array contain    //
-//    nr entries . Only the entries with non-zero data[i] value are     //
-//    inserted. Be aware that the input data array will be modified     //
-//    inside the routine for doing the necessary sorting of indices !   //
-// 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....                  //
-//    This is a very flexible method but expensive :                    //
-//    - if no entry for slot (i,j) is found in the sparse index table   //
-//      it will be entered, which involves some memory management !     //
-//    - before invoking this method in a loop it is smart to first      //
-//      set the index table through a call to SetSparseIndex(..)        //
-// 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)    //
-//    the matrix to be inserted at position (row_lwb,col_lwb) can be    //
-//    both dense or sparse .                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixTSparse
+    \ingroup Matrix
+
+ TMatrixTSparse
+
+ Template class of a general sparse matrix in the Harwell-Boeing
+ format
+
+ Besides the usual shape/size decsriptors of a matrix like fNrows,
+ fRowLwb,fNcols and fColLwb, we also store a row index, fRowIndex and
+ column index, fColIndex only for those elements unequal zero:
+
+~~~
+ fRowIndex[0,..,fNrows]:    Stores for each row the index range of
+                            the elements in the data and column array
+ fColIndex[0,..,fNelems-1]: Stores the column number for each data
+                            element != 0
+~~~
+
+ As an example how to access all sparse data elements:
+
+~~~
+ for (Int_t irow = 0; irow < this->fNrows; irow++) {
+   const Int_t sIndex = fRowIndex[irow];
+   const Int_t eIndex = fRowIndex[irow+1];
+   for (Int_t index = sIndex; index < eIndex; index++) {
+     const Int_t icol = fColIndex[index];
+     const Element data = fElements[index];
+     printf("data(%d,%d) = %.4e\n",irow+this->fRowLwb,icol+
+                                               this->fColLwb,data);
+   }
+ }
+~~~
+
+ When checking whether sparse matrices are compatible (like in an
+ assigment !), not only the shape parameters are compared but also
+ the sparse structure through fRowIndex and fColIndex .
+
+ Several methods exist to fill a sparse matrix with data entries.
+ Most are the same like for dense matrices but some care has to be
+ taken with regard to performance. In the constructor, always the
+ shape of the matrix has to be specified in some form . Data can be
+ entered through the following methods :
+ 1. constructor
+~~~
+    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
+                   Int_t col_upb,Int_t nr_nonzeros,
+                   Int_t *row, Int_t *col,Element *data);
+~~~
+    It uses SetMatrixArray(..), see below
+ 2. copy constructors
+ 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
+    where it is expected that the irow,icol and data array contain
+    nr entries . Only the entries with non-zero data[i] value are
+    inserted. Be aware that the input data array will be modified
+    inside the routine for doing the necessary sorting of indices !
+ 4. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
+    This is a very flexible method but expensive :
+    - if no entry for slot (i,j) is found in the sparse index table
+      it will be entered, which involves some memory management !
+    - before invoking this method in a loop it is smart to first
+      set the index table through a call to SetSparseIndex(..)
+ 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
+    the matrix to be inserted at position (row_lwb,col_lwb) can be
+    both dense or sparse .
+
+*/
 
 #include "TMatrixTSparse.h"
+#include "TBuffer.h"
 #include "TMatrixT.h"
 #include "TMath.h"
 
 templateClassImp(TMatrixTSparse)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Space is allocated for row/column indices and data, but the sparse structure
+/// information has still to be set !
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t no_rows,Int_t no_cols)
 {
-  // Space is allocated for row/column indices and data, but the sparse structure
-  // information has still to be set !
-
    Allocate(no_rows,no_cols,0,0,1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Space is allocated for row/column indices and data, but the sparse structure
+/// information has still to be set !
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
 {
-  // Space is allocated for row/column indices and data, but the sparse structure
-  // information has still to be set !
-
    Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Space is allocated for row/column indices and data. Sparse row/column index
+/// structure together with data is coming from the arrays, row, col and data, resp .
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                         Int_t nr,Int_t *row, Int_t *col,Element *data)
 {
-  // Space is allocated for row/column indices and data. Sparse row/column index
-  // structure together with data is coming from the arrays, row, col and data, resp .
-
    const Int_t irowmin = TMath::LocMin(nr,row);
    const Int_t irowmax = TMath::LocMax(nr,row);
    const Int_t icolmin = TMath::LocMin(nr,col);
@@ -138,7 +146,8 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
    SetMatrixArray(nr,row,col,data);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &another) : TMatrixTBase<Element>(another)
 {
@@ -150,7 +159,8 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &another) 
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixT<Element> &another) : TMatrixTBase<Element>(another)
 {
@@ -160,13 +170,13 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixT<Element> &another) : TMat
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix applying a specific operation to the prototype.
+/// Supported operations are: kZero, kUnit, kTransposed and kAtA
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSparse<Element> &prototype)
 {
-  // Create a matrix applying a specific operation to the prototype.
-  // Supported operations are: kZero, kUnit, kTransposed and kAtA
-
    R__ASSERT(prototype.IsValid());
 
    Int_t nr_nonzeros = 0;
@@ -187,9 +197,9 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
          for (Int_t i = rowLwb; i <= rowLwb+nrows-1; i++)
             for (Int_t j = colLwb; j <= colLwb+ncols-1; j++)
                if (i==j) nr_nonzeros++;
-            Allocate(nrows,ncols,rowLwb,colLwb,1,nr_nonzeros);
-            UnitMatrix();
-            break;
+         Allocate(nrows,ncols,rowLwb,colLwb,1,nr_nonzeros);
+         UnitMatrix();
+         break;
       }
       case kTransposed:
       {
@@ -210,13 +220,13 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix applying a specific operation to two prototypes.
+/// Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b)
 {
-  // Create a matrix applying a specific operation to two prototypes.
-  // Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -242,13 +252,13 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix applying a specific operation to two prototypes.
+/// Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT<Element> &b)
 {
-  // Create a matrix applying a specific operation to two prototypes.
-  // Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -274,13 +284,13 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrix
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a matrix applying a specific operation to two prototypes.
+/// Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
+
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixT<Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b)
 {
-  // Create a matrix applying a specific operation to two prototypes.
-  // Supported operations are: kMult (a*b), kMultTranspose (a*b'), kPlus (a+b), kMinus (a-b)
-
    R__ASSERT(a.IsValid());
    R__ASSERT(b.IsValid());
 
@@ -306,15 +316,15 @@ TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixT<Element> &a,EMatrixCreato
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Allocate new matrix. Arguments are number of rows, columns, row lowerbound (0 default)
+/// and column lowerbound (0 default), 0 initialization flag and number of non-zero
+/// elements (only relevant for sparse format).
+
 template<class Element>
 void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t col_lwb,
                               Int_t init,Int_t nr_nonzeros)
 {
-  // Allocate new matrix. Arguments are number of rows, columns, row lowerbound (0 default)
-  // and column lowerbound (0 default), 0 initialization flag and number of non-zero
-  // elements (only relevant for sparse format).
-
    if ( (nr_nonzeros > 0 && (no_rows == 0 || no_cols == 0)) ||
        (no_rows < 0 || no_cols < 0 || nr_nonzeros < 0) )
    {
@@ -350,12 +360,12 @@ void TMatrixTSparse<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert in row rown, n elements of array v at column coln
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::InsertRow(Int_t rown,Int_t coln,const Element *v,Int_t n)
 {
-  // Insert in row rown, n elements of array v at column coln
-
    const Int_t arown = rown-this->fRowLwb;
    const Int_t acoln = coln-this->fColLwb;
    const Int_t nr = (n > 0) ? n : this->fNcols;
@@ -433,12 +443,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::InsertRow(Int_t rown,Int_t coln,
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store in array v, n matrix elements of row rown starting at column coln
+
 template<class Element>
 void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_t n) const
 {
-  // Store in array v, n matrix elements of row rown starting at column coln
-
    const Int_t arown = rown-this->fRowLwb;
    const Int_t acoln = coln-this->fColLwb;
    const Int_t nr = (n > 0) ? n : this->fNcols;
@@ -473,13 +483,13 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
 {
-  // General matrix multiplication. Create a matrix C such that C = A * B'.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -581,13 +591,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMatrixT<Element> &b,Int_t constr)
 {
-  // General matrix multiplication. Create a matrix C such that C = A * B'.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -672,13 +682,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
 {
-  // General matrix multiplication. Create a matrix C such that C = A * B'.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -764,13 +774,13 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix addition. Create a matrix C such that C = A + B.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
 {
-  // General matrix addition. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -846,13 +856,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix addition. Create a matrix C such that C = A + B.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element> &b,Int_t constr)
 {
-  // General matrix addition. Create a matrix C such that C = A + B.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -917,13 +927,13 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
 {
-  // General matrix subtraction. Create a matrix C such that C = A - B.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -999,13 +1009,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element> &b,Int_t constr)
 {
-  // General matrix subtraction. Create a matrix C such that C = A - B.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -1070,13 +1080,13 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// Note, matrix C is allocated for constr=1.
+
 template<class Element>
 void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr)
 {
-  // General matrix subtraction. Create a matrix C such that C = A - B.
-  // Note, matrix C is allocated for constr=1.
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -1141,26 +1151,26 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixT<Element> &a,const TMatrixTS
       SetSparseIndex(indexc_r);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy matrix data to array . It is assumed that array is of size >= fNelems
+
 template<class Element>
 void TMatrixTSparse<Element>::GetMatrix2Array(Element *data,Option_t * /*option*/) const
 {
-  // Copy matrix data to array . It is assumed that array is of size >= fNelems
-
    R__ASSERT(this->IsValid());
 
    const Element * const elem = GetMatrixArray();
    memcpy(data,elem,this->fNelems*sizeof(Element));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy nr elements from row/col index and data array to matrix . It is assumed
+/// that arrays are of size >= nr
+/// Note that the input arrays are not passed as const since they will be modified !
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *row,Int_t *col,Element *data)
 {
-  // Copy nr elements from row/col index and data array to matrix . It is assumed
-  // that arrays are of size >= nr
-  // Note that the input arrays are not passed as const since they will be modified !
-
    R__ASSERT(this->IsValid());
    if (nr <= 0) {
       Error("SetMatrixArray(Int_t,Int_t*,Int_t*,Element*","nr <= 0");
@@ -1245,12 +1255,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase/decrease the number of non-zero elements to nelems_new
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(Int_t nelems_new)
 {
-  // Increase/decrease the number of non-zero elements to nelems_new
-
    if (nelems_new != this->fNelems) {
       Int_t nr = TMath::Min(nelems_new,this->fNelems);
       Int_t *oIp = fColIndex;
@@ -1279,12 +1289,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(Int_t nelems_ne
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Use non-zero data of matrix source to set the sparse structure
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(const TMatrixTBase<Element> &source)
 {
-  // Use non-zero data of matrix source to set the sparse structure
-
    if (gMatrixCheck) {
       R__ASSERT(source.IsValid());
       if (this->GetNrows()  != source.GetNrows()  || this->GetNcols()  != source.GetNcols() ||
@@ -1321,13 +1331,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndex(const TMatrixTB
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the row/column indices to the "sum" of matrices a and b
+/// It is checked that enough space has been allocated
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b)
 {
-  // Set the row/column indices to the "sum" of matrices a and b
-  // It is checked that enough space has been allocated
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -1415,13 +1425,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the row/column indices to the "sum" of matrices a and b
+/// It is checked that enough space has been allocated
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrixT<Element> &a,const TMatrixTSparse<Element> &b)
 {
-  // Set the row/column indices to the "sum" of matrices a and b
-  // It is checked that enough space has been allocated
-
    if (gMatrixCheck) {
       R__ASSERT(a.IsValid());
       R__ASSERT(b.IsValid());
@@ -1465,7 +1475,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
       }
    }
 
-   // Allocate thre necessary space in fRowIndex and fColIndex
+   // Allocate the necessary space in fRowIndex and fColIndex
    if (this->NonZeros() != nc)
       SetSparseIndex(nc);
 
@@ -1498,15 +1508,15 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::SetSparseIndexAB(const TMatrix
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of the matrix to nrows x ncols with nr_nonzeros non-zero entries
+/// if nr_nonzeros > 0 .
+/// New dynamic elements are created, the overlapping part of the old ones are
+/// copied to the new structures, then the old elements are deleted.
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros)
 {
-  // Set size of the matrix to nrows x ncols with nr_nonzeros non-zero entries
-  // if nr_nonzeros > 0 .
-  // New dynamic elements are created, the overlapping part of the old ones are
-  // copied to the new structures, then the old elements are deleted.
-
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
@@ -1592,16 +1602,16 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t nrows,Int_t ncols
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb] with nr_nonzeros
+/// non-zero entries if nr_nonzeros > 0 .
+/// New dynamic elements are created, the overlapping part of the old ones are
+/// copied to the new structures, then the old elements are deleted.
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                          Int_t nr_nonzeros)
 {
-  // Set size of the matrix to [row_lwb:row_upb] x [col_lwb:col_upb] with nr_nonzeros
-  // non-zero entries if nr_nonzeros > 0 .
-  // New dynamic elemenst are created, the overlapping part of the old ones are
-  // copied to the new structures, then the old elements are deleted.
-
    R__ASSERT(this->IsValid());
    if (!this->fIsOwner) {
       Error("ResizeTo(Int_t,Int_t,Int_t,Int_t,Int_t)","Not owner of data array,cannot resize");
@@ -1695,7 +1705,8 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::ResizeTo(Int_t row_lwb,Int_t row
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                       Int_t nr_nonzeros,Int_t *pRowIndex,Int_t *pColIndex,Element *pData)
@@ -1729,17 +1740,17 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Use(Int_t row_lwb,Int_t row_up
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get submatrix [row_lwb..row_upb][col_lwb..col_upb]; The indexing range of the
+/// returned matrix depends on the argument option:
+///
+/// option == "S" : return [0..row_upb-row_lwb+1][0..col_upb-col_lwb+1] (default)
+/// else          : return [row_lwb..row_upb][col_lwb..col_upb]
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
                                                        TMatrixTBase<Element> &target,Option_t *option) const
 {
-  // Get submatrix [row_lwb..row_upb][col_lwb..col_upb]; The indexing range of the
-  // returned matrix depends on the argument option:
-  //
-  // option == "S" : return [0..row_upb-row_lwb+1][0..col_upb-col_lwb+1] (default)
-  // else          : return [row_lwb..row_upb][col_lwb..col_upb]
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       if (row_lwb < this->fRowLwb || row_lwb > this->fRowLwb+this->fNrows-1) {
@@ -1832,13 +1843,13 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::GetSub(Int_t row_lwb,Int_t row_u
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
+/// [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1];
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source)
 {
-  // Insert matrix source starting at [row_lwb][col_lwb], thereby overwriting the part
-  // [row_lwb..row_lwb+nrows_source-1][col_lwb..col_lwb+ncols_source-1];
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
@@ -1969,12 +1980,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetSub(Int_t row_lwb,Int_t col_l
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Transpose a matrix.
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse<Element> &source)
 {
-  // Transpose a matrix.
-
    if (gMatrixCheck) {
       R__ASSERT(this->IsValid());
       R__ASSERT(source.IsValid());
@@ -2025,7 +2036,8 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::Transpose(const TMatrixTSparse
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::Zero()
 {
@@ -2039,12 +2051,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Zero()
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make a unit matrix (matrix need not be a square one).
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::UnitMatrix()
 {
-  // Make a unit matrix (matrix need not be a square one).
-
    R__ASSERT(this->IsValid());
 
    Int_t i;
@@ -2080,13 +2092,13 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::UnitMatrix()
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.
+/// The norm is induced by the infinity vector norm.
+
 template<class Element>
 Element TMatrixTSparse<Element>::RowNorm() const
 {
-  // Row matrix norm, MAX{ SUM{ |M(i,j)|, over j}, over i}.
-  // The norm is induced by the infinity vector norm.
-
    R__ASSERT(this->IsValid());
 
    const Element *       ep = GetMatrixArray();
@@ -2109,13 +2121,13 @@ Element TMatrixTSparse<Element>::RowNorm() const
    return norm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Column matrix norm, MAX{ SUM{ |M(i,j)|, over i}, over j}.
+/// The norm is induced by the 1 vector norm.
+
 template<class Element>
 Element TMatrixTSparse<Element>::ColNorm() const
 {
-  // Column matrix norm, MAX{ SUM{ |M(i,j)|, over i}, over j}.
-  // The norm is induced by the 1 vector norm.
-
    R__ASSERT(this->IsValid());
 
    const TMatrixTSparse<Element> mt(kTransposed,*this);
@@ -2139,7 +2151,8 @@ Element TMatrixTSparse<Element>::ColNorm() const
    return norm;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
 {
@@ -2182,7 +2195,8 @@ Element &TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template <class Element>
 Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
 {
@@ -2211,13 +2225,13 @@ Element TMatrixTSparse<Element>::operator()(Int_t rown,Int_t coln) const
    else                                             return fElements[index];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
+/// are used !
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixTSparse<Element> &source)
 {
-  // Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
-  // are used !
-
    if (gMatrixCheck && !AreCompatible(*this,source)) {
       Error("operator=(const TMatrixTSparse &)","matrices not compatible");
       return *this;
@@ -2234,13 +2248,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixTSparse
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
+/// are used !
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixT<Element> &source)
 {
-  // Notice that the sparsity of the matrix is NOT changed : its fRowIndex/fColIndex
-  // are used !
-
    if (gMatrixCheck && !AreCompatible(*this,(TMatrixTBase<Element> &)source)) {
       Error("operator=(const TMatrixT &)","matrices not compatible");
       return *this;
@@ -2265,13 +2279,13 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(const TMatrixT<Eleme
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assign val to every element of the matrix. Check that the row/col
+/// indices are set !
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(Element val)
 {
-  // Assign val to every element of the matrix. Check that the row/col
-  // indices are set !
-
    R__ASSERT(this->IsValid());
 
    if (fRowIndex[this->fNrowIndex-1] == 0) {
@@ -2287,12 +2301,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add val to every element of the matrix.
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator+=(Element val)
 {
-  // Add val to every element of the matrix.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -2303,12 +2317,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator+=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Subtract val from every element of the matrix.
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator-=(Element val)
 {
-  // Subtract val from every element of the matrix.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -2319,12 +2333,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator-=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply every element of the matrix with val.
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator*=(Element val)
 {
-  // Multiply every element of the matrix with val.
-
    R__ASSERT(this->IsValid());
 
    Element *ep = this->GetMatrixArray();
@@ -2335,12 +2349,12 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::operator*=(Element val)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// randomize matrix element values
+
 template<class Element>
 TMatrixTBase<Element> &TMatrixTSparse<Element>::Randomize(Element alpha,Element beta,Double_t &seed)
 {
-  // randomize matrix element values
-
    R__ASSERT(this->IsValid());
 
    const Element scale = beta-alpha;
@@ -2382,12 +2396,12 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::Randomize(Element alpha,Element 
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// randomize matrix element values but keep matrix symmetric positive definite
+
 template<class Element>
 TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Element beta,Double_t &seed)
 {
-  // randomize matrix element values but keep matrix symmetric positive definite
-
    const Element scale = beta-alpha;
    const Element shift = alpha/scale;
 
@@ -2492,7 +2506,7 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
    TMatrixTSparse<Element> tmp(TMatrixTSparse<Element>::kTransposed,*this);
    *this += tmp;
 
-   // make sure to divide the diagonal by 2 becuase the operation
+   // make sure to divide the diagonal by 2 because the operation
    // *this += tmp; adds the diagonal again
    {
       const Int_t    * const pR = this->GetRowIndexArray();
@@ -2512,7 +2526,8 @@ TMatrixTSparse<Element> &TMatrixTSparse<Element>::RandomizePD(Element alpha,Elem
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2520,7 +2535,8 @@ TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source1,const T
   return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source1,const TMatrixT<Element> &source2)
 {
@@ -2528,7 +2544,8 @@ TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source1,const T
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator+(const TMatrixT<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2536,7 +2553,8 @@ TMatrixTSparse<Element> operator+(const TMatrixT<Element> &source1,const TMatrix
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source,Element val)
 {
@@ -2545,7 +2563,8 @@ TMatrixTSparse<Element> operator+(const TMatrixTSparse<Element> &source,Element 
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator+(Element val,const TMatrixTSparse<Element> &source)
 {
@@ -2554,7 +2573,8 @@ TMatrixTSparse<Element> operator+(Element val,const TMatrixTSparse<Element> &sou
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2562,7 +2582,8 @@ TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source1,const T
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source1,const TMatrixT<Element> &source2)
 {
@@ -2570,7 +2591,8 @@ TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source1,const T
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator-(const TMatrixT<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2578,7 +2600,8 @@ TMatrixTSparse<Element> operator-(const TMatrixT<Element> &source1,const TMatrix
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source,Element val)
 {
@@ -2587,7 +2610,8 @@ TMatrixTSparse<Element> operator-(const TMatrixTSparse<Element> &source,Element 
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator-(Element val,const TMatrixTSparse<Element> &source)
 {
@@ -2596,7 +2620,8 @@ TMatrixTSparse<Element> operator-(Element val,const TMatrixTSparse<Element> &sou
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2604,7 +2629,8 @@ TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source1,const T
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source1,const TMatrixT<Element> &source2)
 {
@@ -2612,7 +2638,8 @@ TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source1,const T
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator*(const TMatrixT<Element> &source1,const TMatrixTSparse<Element> &source2)
 {
@@ -2620,7 +2647,8 @@ TMatrixTSparse<Element> operator*(const TMatrixT<Element> &source1,const TMatrix
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator*(Element val,const TMatrixTSparse<Element> &source)
 {
@@ -2629,7 +2657,8 @@ TMatrixTSparse<Element> operator*(Element val,const TMatrixTSparse<Element> &sou
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source,Element val)
 {
@@ -2638,22 +2667,22 @@ TMatrixTSparse<Element> operator*(const TMatrixTSparse<Element> &source,Element 
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify addition: target += scalar * source.
+
 template<class Element>
 TMatrixTSparse<Element> &Add(TMatrixTSparse<Element> &target,Element scalar,const TMatrixTSparse<Element> &source)
 {
-  // Modify addition: target += scalar * source.
-
    target += scalar * source;
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply target by the source, element-by-element.
+
 template<class Element>
 TMatrixTSparse<Element> &ElementMult(TMatrixTSparse<Element> &target,const TMatrixTSparse<Element> &source)
 {
-  // Multiply target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementMult(TMatrixTSparse &,const TMatrixTSparse &)","matrices not compatible");
       return target;
@@ -2668,12 +2697,12 @@ TMatrixTSparse<Element> &ElementMult(TMatrixTSparse<Element> &target,const TMatr
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Divide target by the source, element-by-element.
+
 template<class Element>
 TMatrixTSparse<Element> &ElementDiv(TMatrixTSparse<Element> &target,const TMatrixTSparse<Element> &source)
 {
-   // Divide target by the source, element-by-element.
-
    if (gMatrixCheck && !AreCompatible(target,source)) {
       ::Error("ElementDiv(TMatrixT &,const TMatrixT &)","matrices not compatible");
       return target;
@@ -2694,7 +2723,8 @@ TMatrixTSparse<Element> &ElementDiv(TMatrixTSparse<Element> &target,const TMatri
    return target;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 template<class Element>
 Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,const TMatrixTSparse<Element> &m2,Int_t verbose)
 {
@@ -2740,12 +2770,12 @@ Bool_t AreCompatible(const TMatrixTSparse<Element> &m1,const TMatrixTSparse<Elem
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TMatrixTSparse.
+
 template<class Element>
 void TMatrixTSparse<Element>::Streamer(TBuffer &R__b)
 {
-// Stream an object of class TMatrixTSparse.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
@@ -2760,12 +2790,8 @@ void TMatrixTSparse<Element>::Streamer(TBuffer &R__b)
 
 template class TMatrixTSparse<Float_t>;
 
-#ifndef ROOT_TMatrixFSparsefwd
 #include "TMatrixFSparsefwd.h"
-#endif
-#ifndef ROOT_TMatrixFfwd
 #include "TMatrixFfwd.h"
-#endif
 
 template TMatrixFSparse  operator+    <Float_t>(const TMatrixFSparse &source1,const TMatrixFSparse &source2);
 template TMatrixFSparse  operator+    <Float_t>(const TMatrixFSparse &source1,const TMatrixF       &source2);
@@ -2789,12 +2815,8 @@ template TMatrixFSparse &ElementDiv   <Float_t>(TMatrixFSparse &target,const TMa
 
 template Bool_t          AreCompatible<Float_t>(const TMatrixFSparse &m1,const TMatrixFSparse &m2,Int_t verbose);
 
-#ifndef ROOT_TMatrixDSparsefwd
 #include "TMatrixDSparsefwd.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
 template class TMatrixTSparse<Double_t>;
 

@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsStudy is an abstract base class for RooStudyManager modules
-//
-// END_HTML
-//
+/**
+\file RooAbsStudy.cxx
+\class RooAbsStudy
+\ingroup Roofitcore
+
+RooAbsStudy is an abstract base class for RooStudyManager modules
+
+**/
 
 
 
@@ -39,27 +40,30 @@ ClassImp(RooAbsStudy)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsStudy::RooAbsStudy(const char* name, const char* title) : TNamed(name,title), _storeDetails(0), _summaryData(0), _detailData(0), _ownDetailData(kTRUE)
 {  
-  // Constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsStudy::RooAbsStudy(const RooAbsStudy& other) : TNamed(other), _storeDetails(other._storeDetails), _summaryData(other._summaryData), 
 						     _detailData(0), _ownDetailData(other._ownDetailData)
 {  
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsStudy::~RooAbsStudy() 
 {
-  // Destructor
   if (_summaryData) delete _summaryData ;
   if (_ownDetailData && _detailData) {
     _detailData->Delete() ;
@@ -70,7 +74,8 @@ RooAbsStudy::~RooAbsStudy()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSet& varsWithError, const RooArgSet& varsWithAsymError) 
 {
   if (_summaryData) {
@@ -84,7 +89,8 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars) 
 {
   if (!_summaryData) {
@@ -96,18 +102,19 @@ void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::storeDetailedOutput(TNamed& object) 
 {
   if (_storeDetails) {
 
     if (!_detailData) {
       _detailData = new RooLinkedList ;
-      _detailData->SetName(Form("%s_detailed_data",GetName())) ;
+      _detailData->SetName(TString::Format("%s_detailed_data_list",GetName())) ;
       //cout << "RooAbsStudy::ctor() detailData name = " << _detailData->GetName() << endl ;
     }
 
-    object.SetName(Form("%s_detailed_data_%d",GetName(),_detailData->GetSize())) ;    
+    object.SetName(TString::Format("%s_detailed_data_%d",GetName(),_detailData->GetSize())) ;    
     //cout << "storing detailed data with name " << object.GetName() << endl ;
     _detailData->Add(&object) ;
   } else {
@@ -117,7 +124,8 @@ void RooAbsStudy::storeDetailedOutput(TNamed& object)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
 {
   if (!chunkList) return ;

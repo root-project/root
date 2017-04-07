@@ -9,19 +9,18 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //                                                                      //
-// Basic data type descriptor (datatype information is obtained from    //
-// CINT). This class describes the attributes of type definitions       //
-// (typedef's). The TROOT class contains a list of all currently        //
-// defined types (accessible via TROOT::GetListOfTypes()).              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TDataType
+Basic data type descriptor (datatype information is obtained from
+CINT). This class describes the attributes of type definitions
+(typedef's). The TROOT class contains a list of all currently
+defined types (accessible via TROOT::GetListOfTypes()).
+*/
 
 #include "TDataType.h"
 #include "TInterpreter.h"
 #include "TCollection.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #ifdef R__SOLARIS
 #include <typeinfo>
 #endif
@@ -30,13 +29,13 @@ ClassImp(TDataType)
 
 TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TDataType ctor. TDataTypes are constructed in TROOT via
+/// a call to TCling::UpdateListOfTypes().
+
 TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
    fTypeNameIdx(-1), fTypeNameLen(0)
 {
-   // Default TDataType ctor. TDataTypes are constructed in TROOT via
-   // a call to TCling::UpdateListOfTypes().
-
    fInfo = info;
 
    if (fInfo) {
@@ -54,12 +53,12 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for basic data types, like "char", "unsigned char", etc.
+
 TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental),
    fTypeNameIdx(-1), fTypeNameLen(0)
 {
-   // Constructor for basic data types, like "char", "unsigned char", etc.
-
    fInfo = 0;
    SetName(typenam);
    SetTitle("Builtin basic type");
@@ -67,7 +66,9 @@ TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental),
    SetType(fName.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TDataType::TDataType(const TDataType& dt) :
   TDictionary(dt),
   fInfo(gCling->TypedefInfo_FactoryCopy(dt.fInfo)),
@@ -77,13 +78,13 @@ TDataType::TDataType(const TDataType& dt) :
   fTrueName(dt.fTrueName),
   fTypeNameIdx(dt.fTypeNameIdx), fTypeNameLen(dt.fTypeNameLen)
 {
-   //copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 TDataType& TDataType::operator=(const TDataType& dt)
 {
-   //assignement operator
    if(this!=&dt) {
       TDictionary::operator=(dt);
       gCling->TypedefInfo_Delete(fInfo);
@@ -98,19 +99,19 @@ TDataType& TDataType::operator=(const TDataType& dt)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TDataType dtor deletes adopted CINT TypedefInfo object.
+
 TDataType::~TDataType()
 {
-   // TDataType dtor deletes adopted CINT TypedefInfo object.
-
    gCling->TypedefInfo_Delete(fInfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the name of the type.
+
 const char *TDataType::GetTypeName(EDataType type)
 {
-   // Return the name of the type.
-
    switch (type) {
       case  1: return "Char_t";
       case  2: return "Short_t";
@@ -141,11 +142,12 @@ const char *TDataType::GetTypeName(EDataType type)
    return ""; // to silence compilers
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get basic type of typedef, e,g.: "class TDirectory*" -> "TDirectory".
+/// Result needs to be used or copied immediately.
+
 TString TDataType::GetTypeName()
 {
-   // Get basic type of typedef, e,g.: "class TDirectory*" -> "TDirectory".
-   // Result needs to be used or copied immediately.
    if (fTypeNameLen) {
      return fTrueName(fTypeNameIdx, fTypeNameLen);
    }
@@ -167,11 +169,11 @@ TString TDataType::GetTypeName()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get full type description of typedef, e,g.: "class TDirectory*".
+
 const char *TDataType::GetFullTypeName() const
 {
-   // Get full type description of typedef, e,g.: "class TDirectory*".
-
    if (fInfo) {
       (const_cast<TDataType*>(this))->CheckInfo();
       return fTrueName;
@@ -181,11 +183,11 @@ const char *TDataType::GetFullTypeName() const
    }
 }
 
-//______________________________________________________________________________
-EDataType TDataType::GetType(const type_info &typeinfo)
-{
-   // Set type id depending on name.
+////////////////////////////////////////////////////////////////////////////////
+/// Set type id depending on name.
 
+EDataType TDataType::GetType(const std::type_info &typeinfo)
+{
    EDataType retType = kOther_t;
 
    if (!strcmp(typeid(unsigned int).name(), typeinfo.name())) {
@@ -226,13 +228,13 @@ EDataType TDataType::GetType(const type_info &typeinfo)
    return retType;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return string containing value in buffer formatted according to
+/// the basic data type. The result needs to be used or copied immediately.
+
 const char *TDataType::AsString(void *buf) const
 {
-   // Return string containing value in buffer formatted according to
-   // the basic data type. The result needs to be used or copied immediately.
-
-   thread_local TString line(81);
+   TTHREAD_TLS_DECL_ARG(TString, line ,81);
    const char *name;
 
    if (fInfo) {
@@ -255,7 +257,11 @@ const char *TDataType::AsString(void *buf) const
       line.Form( "%ld", *(Long_t *)buf);
    else if (!strcmp("unsigned long long", name))
       line.Form( "%llu", *(ULong64_t *)buf);
+   else if (!strcmp("ULong64_t", name))
+      line.Form( "%llu", *(ULong64_t *)buf);
    else if (!strcmp("long long", name))
+      line.Form( "%lld", *(Long64_t *)buf);
+   else if (!strcmp("Long64_t", name))
       line.Form( "%lld", *(Long64_t *)buf);
    else if (!strcmp("unsigned short", name))
       line.Form( "%hu", *(unsigned short *)buf);
@@ -275,20 +281,20 @@ const char *TDataType::AsString(void *buf) const
    return line;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get property description word. For meaning of bits see EProperty.
+
 Long_t TDataType::Property() const
 {
-   // Get property description word. For meaning of bits see EProperty.
-
    if (fInfo) (const_cast<TDataType*>(this))->CheckInfo();
    return fProperty;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set type id depending on name.
+
 void TDataType::SetType(const char *name)
 {
-   // Set type id depending on name.
-
    fTrueName = name;
    fType = kOther_t;
    fSize = 0;
@@ -354,20 +360,20 @@ void TDataType::SetType(const char *name)
    // kCounter =  6, kBits     = 15
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get size of basic typedef'ed type.
+
 Int_t TDataType::Size() const
 {
-   // Get size of basic typedef'ed type.
-
    if (fInfo) (const_cast<TDataType*>(this))->CheckInfo();
    return fSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refresh the underlying information.
+
 void TDataType::CheckInfo()
 {
-   // Refresh the underlying information.
-
    // This can be needed if the library defining this typedef was loaded after
    // another library and that this other library is unloaded (in which case
    // things can get renumbered inside CINT).
@@ -396,11 +402,11 @@ void TDataType::CheckInfo()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the TDataType objects for builtins.
+
 void TDataType::AddBuiltins(TCollection* types)
 {
-   // Create the TDataType objects for builtins.
-
    if (fgBuiltins[kChar_t] == 0) {
       // Add also basic types (like a identity typedef "typedef int int")
       fgBuiltins[kChar_t] = new TDataType("char");
@@ -428,10 +434,11 @@ void TDataType::AddBuiltins(TCollection* types)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given a EDataType type, get the TDataType* that represents it.
+
 TDataType* TDataType::GetDataType(EDataType type)
 {
-   // Given a EDataType type, get the TDataType* that represents it.
    if (type == kOther_t) return 0;
    return fgBuiltins[(int)type];
 }

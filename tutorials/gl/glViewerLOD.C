@@ -1,5 +1,10 @@
-//To set the Level Of Details when rendering geometry shapes
-//Author: Richard Maunder
+/// \file
+/// \ingroup tutorial_gl
+/// To set the Level Of Details when rendering geometry shapes.
+///
+/// \macro_code
+///
+/// \author Richard Maunder
 
 void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE,
                  Bool_t reqSpheres = kTRUE, Bool_t reqTubes = kTRUE)

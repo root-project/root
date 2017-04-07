@@ -1,3 +1,13 @@
+/// \file
+/// \ingroup tutorial_gui
+/// Example of using signal/slot in TCanvas/TPad to get feedback about processed events.
+/// Note that slots can be either functions or class methods.
+/// Compare this with tutorials $ROOTSYS/tutorials/hist/exec1.C and $ROOTSYS/tutorials/hist/exec2.C.
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva
+
 #include <TH1.h>
 #include <TCanvas.h>
 #include <TQObject.h>
@@ -5,11 +15,6 @@
 
 void exec3()
 {
-   // Example of using signal/slot in TCanvas/TPad to get feedback
-   // about processed events. Note that slots can be either functions
-   // or class methods. Compare this with tutorials exec1.C and exec2.C.
-   //Author: Ilka Antcheva
-
    // Temporary work around the lack of automatic refresh of the list
    // when a script is reloaded.
    gROOT->GetListOfGlobalFunctions()->Delete();

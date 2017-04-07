@@ -111,17 +111,18 @@ TF1Editor::TF1Editor(const TGWindow *p, Int_t width, Int_t height,
    AddFrame(f6, new TGLayoutHints(kLHintsTop, 3, 3, 5, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of TF1 editor.
+
 TF1Editor::~TF1Editor()
 {
-   // Destructor of TF1 editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TF1Editor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fNXpoints->Connect("ValueSet(Long_t)", "TF1Editor", this, "DoXPoints()");
    (fNXpoints->GetNumberEntry())->Connect("ReturnPressed()", "TF1Editor",
                                           this, "DoXPoints()");
@@ -133,10 +134,11 @@ void TF1Editor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the function parameters and options.
+
 void TF1Editor::SetModel(TObject* obj)
 {
-   // Pick up the function parameters and options.
    if (obj == 0 || !obj->InheritsFrom(TF1::Class())) {
       return;
    }
@@ -171,11 +173,11 @@ void TF1Editor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the function parameter(s) settings.
+
 void TF1Editor::DoParameterSettings()
 {
-   // Slot connected to the function parameter(s) settings.
-
    TGMainFrame *main =  (TGMainFrame *)GetMainFrame();
    Double_t rmin = fSldMinX->GetNumber();
    Double_t rmax = fSldMaxX->GetNumber();
@@ -184,11 +186,11 @@ void TF1Editor::DoParameterSettings()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the number of points setting.
+
 void TF1Editor::DoXPoints()
 {
-   // Slot connected to the number of points setting.
-
    if (fAvoidSignal) return;
    Double_t rmin, rmax;
    fF1->GetRange(rmin, rmax);
@@ -201,11 +203,11 @@ void TF1Editor::DoXPoints()
    fF1->SetRange(rmin, rmax);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-Slider range for function redrawing.
+
 void TF1Editor::DoSliderXMoved()
 {
-   // Slot connected to the x-Slider range for function redrawing.
-
    if (fAvoidSignal) return;
 
    TVirtualPad *save = 0;
@@ -244,11 +246,11 @@ void TF1Editor::DoSliderXMoved()
    if(save) gPad = save;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-Slider.
+
 void TF1Editor::DoSliderXPressed()
 {
-   // Slot connected to the x-Slider.
-
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
    TVirtualPad *save = 0;
@@ -277,11 +279,11 @@ void TF1Editor::DoSliderXPressed()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the x-Slider.
+
 void TF1Editor::DoSliderXReleased()
 {
-   // Slot connected to the x-Slider.
-
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
    TVirtualPad *save = 0;
@@ -310,11 +312,11 @@ void TF1Editor::DoSliderXReleased()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to min/max settings of the slider range.
+
 void TF1Editor::DoXRange()
 {
-   // Slot connected to min/max settings of the slider range.
-
    if (fAvoidSignal) return;
    TAxis *x = fF1->GetHistogram()->GetXaxis();
    Int_t nx = x->GetNbins();
@@ -333,11 +335,11 @@ void TF1Editor::DoXRange()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Exclude TAttFillEditor from this interface.
+
 void TF1Editor::ActivateBaseClassEditors(TClass* cl)
 {
-   // Exclude TAttFillEditor from this interface.
-
    fGedEditor->ExcludeClassEditor(TAttFill::Class());
    TGedFrame::ActivateBaseClassEditors(cl);
 }

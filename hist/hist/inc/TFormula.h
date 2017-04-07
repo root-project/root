@@ -1,3 +1,4 @@
+
 // @(#)root/hist:$Id$
 // Author: Maciej Zimnoch   30/09/2013
 
@@ -13,15 +14,9 @@
 #define ROOT_TFormula
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
- #ifndef ROOT_TBits
-#include "TBits.h"
-#endif
-#ifndef ROOT_TObjArray
+ #include "TBits.h"
 #include "TObjArray.h"
-#endif
 #include "TMethodCall.h"
 #include "TInterpreter.h"
 #include <vector>
@@ -47,6 +42,12 @@ public:
    : fName(name),fBody(""),fNargs(0),fFound(false),fFuncCall(false){}
    Bool_t operator<(const TFormulaFunction &rhv) const
    {
+      // order by length - first the longer ones to avoid replacing wrong functions 
+      if ( fName.Length() > rhv.fName.Length() )
+         return true;
+      else if ( fName.Length() > rhv.fName.Length() )
+         return false;
+      // case of equal length
       return fName < rhv.fName && fBody < rhv.fBody;
    }
    Bool_t operator==(const TFormulaFunction &rhv) const
@@ -54,6 +55,7 @@ public:
       return fName == rhv.fName && fBody == rhv.fBody && fNargs == rhv.fNargs;
    }
 };
+
 class TFormulaVariable
 {
 public:
@@ -73,6 +75,10 @@ public:
    }
 };
 
+struct TFormulaParamOrder {
+   bool operator() (const TString& a, const TString& b) const;
+};
+
 
 class TFormula : public TNamed
 {
@@ -83,27 +89,29 @@ private:
    TString           fClingInput;           //! input function passed to Cling
    std::vector<Double_t>  fClingVariables;       //!  cached variables
    std::vector<Double_t>  fClingParameters;      //  parameter values
-   Bool_t            fReadyToExecute;       //!
+   Bool_t            fReadyToExecute;       //! trasient to force initialization
    Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
    TMethodCall*      fMethod;        //! pointer to methocall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
+   void *   fLambdaPtr;                                    //!  pointer to the lambda function
 
    void     InputFormulaIntoCling();
-   void     PrepareEvalMethod();
+   Bool_t   PrepareEvalMethod();
    void     FillDefaults();
    void     HandlePolN(TString &formula);
    void     HandleParametrizedFunctions(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
-   Bool_t   IsDefaultVariableName(const TString &name);
+   Bool_t   InitLambdaExpression(const char * formula);
+   static Bool_t   IsDefaultVariableName(const TString &name);
 protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
    std::map<TString,TFormulaVariable>  fVars;     //!  list of  variable names
-   std::map<TString,Int_t>             fParams;   //!  list of  parameter names
+   std::map<TString,Int_t,TFormulaParamOrder>   fParams;   //  list of  parameter names
    std::map<TString,Double_t>          fConsts;   //!
    std::map<TString,TString>           fFunctionsShortcuts;  //!
    TString                        fFormula;
@@ -112,45 +120,51 @@ protected:
    Int_t                          fNumber;  //!
    std::vector<TObject*>          fLinearParts;  // vector of linear functions
 
-   Bool_t IsOperator(const char c);
-   Bool_t IsBracket(const char c);
-   Bool_t IsFunctionNameChar(const char c);
+   static Bool_t IsOperator(const char c);
+   static Bool_t IsBracket(const char c);
+   static Bool_t IsFunctionNameChar(const char c);
+   static Bool_t IsScientificNotation(const TString & formula, int ipos);
+   static Bool_t IsHexadecimal(const TString & formula, int ipos);
+   static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);
    Bool_t PrepareFormula(TString &formula);
+   void   ReplaceParamName(TString &formula, const TString & oldname, const TString & name);
    void   DoAddParameter(const TString &name, Double_t value, bool processFormula);
    void   DoSetParameters(const Double_t * p, Int_t size);
+   void   SetPredefinedParamNames(); 
 
-   Double_t       DoEval(const Double_t * x  = nullptr, const Double_t * p = nullptr);
-
-   enum {
-      kNotGlobal     = BIT(10),  // don't store in gROOT->GetListOfFunction (it should be protected)
-   };
+   Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
 
 public:
 
    enum {
-      kNormalized    = BIT(14),   // set to true if the TFormula (ex gausn) is normalized
-      kLinear        = BIT(16)    //set to true if the TFormula is for linear fitting
+      kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
+      kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
+      kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
+      kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda  
    };
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
-   TFormula(const TString &name, TString formula, bool addToGlobList = true);
+   TFormula(const char *name, const char * formula = "", bool addToGlobList = true);
+   TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
-                  TFormula(const char *name, Int_t nparams, Int_t ndims);
+   //               TFormula(const char *name, Int_t nparams, Int_t ndims);
 
-   void           AddParameter(const TString &name, Double_t value) { DoAddParameter(name,value,true); }
-   void           AddVariable(const TString &name, Double_t value);
-   void           AddVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
-   void           Copy(TObject &f1) const;
-   Double_t       Eval(Double_t x);
-   Double_t       Eval(Double_t x, Double_t y);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z);
-   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t );
-   Double_t       EvalPar(const Double_t *x, const Double_t *params=0);
-   TString        GetExpFormula() const { return fFormula; }
+   void           AddParameter(const TString &name, Double_t value = 0) { DoAddParameter(name,value,true); }
+   void           AddVariable(const TString &name, Double_t value = 0);
+   void           AddVariables(const TString *vars, const Int_t size);
+   Int_t          Compile(const char *expression="");
+   virtual void   Copy(TObject &f1) const;
+   virtual void   Clear(Option_t * option="");
+   Double_t       Eval(Double_t x) const;
+   Double_t       Eval(Double_t x, Double_t y) const;
+   Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
+   Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
+   Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
+   TString        GetExpFormula(Option_t *option="") const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}
@@ -161,10 +175,13 @@ public:
    Double_t       GetParameter(Int_t param) const;
    Double_t*      GetParameters() const;
    void           GetParameters(Double_t *params) const;
-   Double_t       GetVariable(const TString &name);
-   Bool_t         IsValid() const { return fReadyToExecute; }
+   Double_t       GetVariable(const char *name) const;
+   Int_t          GetVarNumber(const char *name) const;
+   TString        GetVarName(Int_t ivar) const;
+   Bool_t         IsValid() const { return fReadyToExecute && fClingInitialized; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const;
+   void           SetName(const char* name);
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);
@@ -180,6 +197,6 @@ public:
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
 
-   ClassDef(TFormula,9)
+   ClassDef(TFormula,10)
 };
 #endif

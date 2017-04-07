@@ -1,20 +1,21 @@
-#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-#*-*
-#*-*  This program creates :
-#*-*    - a one dimensional histogram
-#*-*    - a two dimensional histogram
-#*-*    - a profile histogram
-#*-*    - a memory-resident ntuple
-#*-*
-#*-*  These objects are filled with some random numbers and saved on a file.
-#*-*
-#*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+## \file
+## \ingroup tutorial_pyroot
+## \notebook -js
+##  This program creates :
+##    - a one dimensional histogram
+##    - a two dimensional histogram
+##    - a profile histogram
+##    - a memory-resident ntuple
+##
+##  These objects are filled with some random numbers and saved on a file.
+##
+## \macro_image
+## \macro_code
+##
+## \author Wim Lavrijsen
 
 from ROOT import TCanvas, TFile, TProfile, TNtuple, TH1F, TH2F
 from ROOT import gROOT, gBenchmark, gRandom, gSystem, Double
-
-
-gROOT.Reset()
 
 # Create a new canvas, and customize it.
 c1 = TCanvas( 'c1', 'Dynamic Filling Example', 200, 10, 700, 500 )
@@ -51,22 +52,22 @@ rannor, rndm = gRandom.Rannor, gRandom.Rndm
 # For speed, bind and cache the Fill member functions,
 histos = [ 'hpx', 'hpxpy', 'hprof', 'ntuple' ]
 for name in histos:
-   exec '%sFill = %s.Fill' % (name,name)
+   exec('%sFill = %s.Fill' % (name,name))
 
 # Fill histograms randomly.
 px, py = Double(), Double()
 kUPDATE = 1000
-for i in xrange( 25000 ):
+for i in range( 25000 ):
  # Generate random values.
    rannor( px, py )
    pz = px*px + py*py
    random = rndm(1)
 
  # Fill histograms.
-   hpxFill( px )
-   hpxpyFill( px, py )
-   hprofFill( px, pz )
-   ntupleFill( px, py, pz, random, i )
+   hpx.Fill( px )
+   hpxpy.Fill( px, py )
+   hprof.Fill( px, pz )
+   ntuple.Fill( px, py, pz, random, i )
 
  # Update display every kUPDATE events.
    if i and i%kUPDATE == 0:
@@ -81,7 +82,7 @@ for i in xrange( 25000 ):
 
 # Destroy member functions cache.
 for name in histos:
-   exec 'del %sFill' % name
+   exec('del %sFill' % name)
 del histos
 
 gBenchmark.Show( 'hsimple' )
@@ -92,6 +93,6 @@ hfile.Write()
 hpx.SetFillColor( 48 )
 c1.Modified()
 c1.Update()
-  
+
 # Note that the file is automatically closed when application terminates
 # or when the file destructor is called.

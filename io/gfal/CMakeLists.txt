@@ -2,8 +2,6 @@
 # CMakeLists.txt file for building ROOT io/gfal package
 ############################################################################
 
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(net/net)
 include_directories(${GFAL_INCLUDE_DIRS})
 
 add_definitions(-D_FILE_OFFSET_BITS=64)

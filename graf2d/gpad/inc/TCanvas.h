@@ -13,33 +13,16 @@
 #define ROOT_TCanvas
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCanvas                                                              //
-//                                                                      //
-// Graphics canvas.                                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 
-#ifndef ROOT_TAttCanvas
 #include "TAttCanvas.h"
-#endif
 
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TCanvasImp
 #include "TCanvasImp.h"
-#endif
 
 class TContextMenu;
 class TControlBar;
@@ -52,42 +35,43 @@ friend class TThread;
 friend class TInterpreter;
 
 protected:
-   TAttCanvas    fCatt;            //Canvas attributes
-   TString       fDISPLAY;         //Name of destination screen
-   Size_t        fXsizeUser;       //User specified size of canvas along X in CM
-   Size_t        fYsizeUser;       //User specified size of canvas along Y in CM
-   Size_t        fXsizeReal;       //Current size of canvas along X in CM
-   Size_t        fYsizeReal;       //Current size of canvas along Y in CM
-   Color_t       fHighLightColor;  //Highlight color of active pad
-   Int_t         fDoubleBuffer;    //Double buffer flag (0=off, 1=on)
-   Int_t         fWindowTopX;      //Top X position of window (in pixels)
-   Int_t         fWindowTopY;      //Top Y position of window (in pixels)
-   UInt_t        fWindowWidth;     //Width of window (including borders, etc.)
-   UInt_t        fWindowHeight;    //Height of window (including menubar, borders, etc.)
-   UInt_t        fCw;              //Width of the canvas along X (pixels)
-   UInt_t        fCh;              //Height of the canvas along Y (pixels)
-   Int_t         fEvent;           //!Type of current or last handled event
-   Int_t         fEventX;          //!Last X mouse position in canvas
-   Int_t         fEventY;          //!Last Y mouse position in canvas
-   Int_t         fCanvasID;        //!Canvas identifier
-   TObject      *fSelected;        //!Currently selected object
-   TObject      *fClickSelected;   //!Currently click-selected object
-   Int_t         fSelectedX;       //!X of selected object
-   Int_t         fSelectedY;       //!Y of selected object
-   TString       fSelectedOpt;     //!Drawing option of selected object
-   TPad         *fSelectedPad;     //!Pad containing currently selected object
-   TPad         *fClickSelectedPad;//!Pad containing currently click-selected object
-   TPad         *fPadSave;         //!Pointer to saved pad in HandleInput
-   TCanvasImp   *fCanvasImp;       //!Window system specific canvas implementation
-   TContextMenu *fContextMenu;     //!Context menu pointer
-   Bool_t        fBatch;           //!True when in batchmode
-   Bool_t        fUpdating;        //!True when Updating the canvas
-   Bool_t        fRetained;        //Retain structure flag
-   Bool_t        fUseGL;           //!True when rendering is with GL
+   TAttCanvas    fCatt;            ///< Canvas attributes
+   TString       fDISPLAY;         ///< Name of destination screen
+   Size_t        fXsizeUser;       ///< User specified size of canvas along X in CM
+   Size_t        fYsizeUser;       ///< User specified size of canvas along Y in CM
+   Size_t        fXsizeReal;       ///< Current size of canvas along X in CM
+   Size_t        fYsizeReal;       ///< Current size of canvas along Y in CM
+   Color_t       fHighLightColor;  ///< Highlight color of active pad
+   Int_t         fDoubleBuffer;    ///< Double buffer flag (0=off, 1=on)
+   Int_t         fWindowTopX;      ///< Top X position of window (in pixels)
+   Int_t         fWindowTopY;      ///< Top Y position of window (in pixels)
+   UInt_t        fWindowWidth;     ///< Width of window (including borders, etc.)
+   UInt_t        fWindowHeight;    ///< Height of window (including menubar, borders, etc.)
+   UInt_t        fCw;              ///< Width of the canvas along X (pixels)
+   UInt_t        fCh;              ///< Height of the canvas along Y (pixels)
+   Int_t         fEvent;           ///<! Type of current or last handled event
+   Int_t         fEventX;          ///<! Last X mouse position in canvas
+   Int_t         fEventY;          ///<! Last Y mouse position in canvas
+   Int_t         fCanvasID;        ///<! Canvas identifier
+   TObject      *fSelected;        ///<! Currently selected object
+   TObject      *fClickSelected;   ///<! Currently click-selected object
+   Int_t         fSelectedX;       ///<! X of selected object
+   Int_t         fSelectedY;       ///<! Y of selected object
+   TString       fSelectedOpt;     ///<! Drawing option of selected object
+   TPad         *fSelectedPad;     ///<! Pad containing currently selected object
+   TPad         *fClickSelectedPad;///<! Pad containing currently click-selected object
+   TPad         *fPadSave;         ///<! Pointer to saved pad in HandleInput
+   TCanvasImp   *fCanvasImp;       ///<! Window system specific canvas implementation
+   TContextMenu *fContextMenu;     ///<! Context menu pointer
+   Bool_t        fBatch;           ///<! True when in batchmode
+   Bool_t        fUpdating;        ///<! True when Updating the canvas
+   Bool_t        fRetained;        ///< Retain structure flag
+   Bool_t        fUseGL;           ///<! True when rendering is with GL
+   Bool_t        fDrawn;           ///<! Set to True when the Draw method is called
    //
-   TVirtualPadPainter *fPainter;   //!Canvas (pad) painter.
+   TVirtualPadPainter *fPainter;   ///<! Canvas (pad) painter.
 
-   static Bool_t fgIsFolder;       //Indicates if canvas can be browsed as a folder
+   static Bool_t fgIsFolder;       ///< Indicates if canvas can be browsed as a folder
 
 private:
    TCanvas(const TCanvas &canvas);  // cannot copy canvas, use TObject::Clone()
@@ -190,6 +174,7 @@ public:
    Bool_t            HasMenuBar() const { return TestBit(kMenuBar); }
    void              Iconify() { fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
+   Bool_t            IsDrawn() { return fDrawn; }
    Bool_t            IsFolder() const;
    Bool_t            IsGrayscale();
    Bool_t            IsRetained() const { return fRetained; }
@@ -206,6 +191,7 @@ public:
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    virtual void      Closed();                                                         // *SIGNAL*
    void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
+   void              ResetDrawn() { fDrawn=kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
    void              SaveSource(const char *filename="", Option_t *option="");

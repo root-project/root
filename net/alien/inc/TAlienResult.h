@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridResult
 #include "TGridResult.h"
-#endif
 
 
 class TAlienResult : public TGridResult {

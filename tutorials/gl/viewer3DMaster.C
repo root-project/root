@@ -1,19 +1,18 @@
-// Demonstrates 3D viewer architecture TVirtualViewer3D and TBuffer3D in the master frame.
-// Here each shape is described directly in a TBuffer3D
-// class, with identity translation matrix c.f. viewer3DLocal.C
+/// \file
+/// \ingroup tutorial_gl
+/// Demonstrates 3D viewer architecture TVirtualViewer3D and TBuffer3D in the master frame.
+/// Here each shape is described directly in a TBuffer3D
+/// class, with identity translation matrix c.f. viewer3DLocal.C
+///
+/// Our abstract base shape class.
+///
+/// As we overload TObject::Paint which is called directly from compiled
+/// code, this script must also be compiled to work correctly.
+///
+/// \macro_code
+///
+/// \author Richard Maunder
 
-// Our abstract base shape class.
-// Author: Richard Maunder
-
-// As we overload TObject::Paint which is called directly from compiled
-// code, this script must also be compiled to work correctly.
-
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("viewer3DMaster.C");
-   viewer3DMaster();
-}
-#else
 
 #include "TVirtualViewer3D.h"
 #include "TBuffer3D.h"
@@ -333,4 +332,3 @@ void viewer3DMaster()
    myGeom->Draw("ogl");
 }
 
-#endif

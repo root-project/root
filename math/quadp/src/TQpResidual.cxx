@@ -59,11 +59,11 @@
 
 ClassImp(TQpResidual)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpResidual::TQpResidual()
 {
-// Constructor
-
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -77,12 +77,12 @@ TQpResidual::TQpResidual()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixup,
                          TVectorD &iclo,TVectorD &icup)
 {
-// Constructor
-
    fNx = nx;
    fMy = my;
    fMz = mz;
@@ -123,21 +123,21 @@ TQpResidual::TQpResidual(Int_t nx,Int_t my,Int_t mz,TVectorD &ixlo,TVectorD &ixu
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpResidual::TQpResidual(const TQpResidual &another) : TObject(another)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate residuals, their norms, and duality complementarity gap,
+/// given a problem and variable set.
+
 void TQpResidual::CalcResids(TQpDataBase *prob_in,TQpVar *vars)
 {
-// Calculate residuals, their norms, and duality complementarity gap,
-// given a problem and variable set.
-
    TQpDataDens *prob = (TQpDataDens *) prob_in;
 
    fRQ.ResizeTo(prob->fG); fRQ = prob->fG;
@@ -232,12 +232,12 @@ void TQpResidual::CalcResids(TQpDataBase *prob_in,TQpVar *vars)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Modify the "complementarity" component of the residuals, by adding the pairwise
+/// products of the complementary variables plus a constant alpha to this term.
+
 void TQpResidual::Add_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 {
-// Modify the "complementarity" component of the residuals, by adding the pairwise
-// products of the complementary variables plus a constant alpha to this term.
-
    if (fMclo > 0) AddElemMult(fRlambda,1.0,vars->fT,vars->fLambda);
    if (fMcup > 0) AddElemMult(fRpi    ,1.0,vars->fU,vars->fPi);
    if (fNxlo > 0) AddElemMult(fRgamma ,1.0,vars->fV,vars->fGamma);
@@ -252,22 +252,22 @@ void TQpResidual::Add_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the "complementarity" component of the residuals to the pairwise products of
+/// the complementary variables plus a constant alpha .
+
 void TQpResidual::Set_r3_xz_alpha(TQpVar *vars,Double_t alpha)
 {
-// Set the "complementarity" component of the residuals to the pairwise products of
-// the complementary variables plus a constant alpha .
-
    this->Clear_r3();
    this->Add_r3_xz_alpha(vars,alpha);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the complementarity component of the residuals to 0.
+
 void TQpResidual::Clear_r3()
 {
-// set the complementarity component of the residuals to 0.
-
    if (fMclo > 0) fRlambda.Zero();
    if (fMcup > 0) fRpi    .Zero();
    if (fNxlo > 0) fRgamma .Zero();
@@ -275,12 +275,12 @@ void TQpResidual::Clear_r3()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set the noncomplementarity components of the residual (the terms arising from
+/// the linear equalities in the KKT conditions) to 0.
+
 void TQpResidual::Clear_r1r2()
 {
-// set the noncomplementarity components of the residual (the terms arising from
-// the linear equalities in the KKT conditions) to 0.
-
    fRQ.Zero();
    fRA.Zero();
    fRC.Zero();
@@ -292,14 +292,14 @@ void TQpResidual::Clear_r1r2()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform the projection operation required by Gondzio algorithm: replace each
+/// component r3_i of the complementarity component of the residuals by r3p_i-r3_i,
+/// where r3p_i is the projection of r3_i onto the box [rmin, rmax]. Then if the
+/// resulting value is less than -rmax, replace it by -rmax.
+
 void TQpResidual::Project_r3(Double_t rmin,Double_t rmax)
 {
-// Perform the projection operation required by Gondzio algorithm: replace each
-// component r3_i of the complementarity component of the residuals by r3p_i-r3_i,
-// where r3p_i is the projection of r3_i onto the box [rmin, rmax]. Then if the
-// resulting value is less than -rmax, replace it by -rmax.
-
    if (fMclo > 0) {
       GondzioProjection(fRlambda,rmin,rmax);
       fRlambda.SelectNonZeros(fCloIndex);
@@ -319,11 +319,11 @@ void TQpResidual::Project_r3(Double_t rmin,Double_t rmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if vector elements as selected through array indices are non-zero
+
 Bool_t TQpResidual::ValidNonZeroPattern()
 {
-// Check if vector elements as selected through array indices are non-zero
-
    if (fNxlo > 0 &&
       (!fRv    .MatchesNonZeroPattern(fXloIndex) ||
        !fRgamma.MatchesNonZeroPattern(fXloIndex)) ) {
@@ -351,13 +351,13 @@ Bool_t TQpResidual::ValidNonZeroPattern()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Replace each component r3_i of the complementarity component of the residuals
+/// by r3p_i-r3_i, where r3p_i is the projection of r3_i onto the box [rmin, rmax].
+/// Then if the resulting value is less than -rmax, replace it by -rmax.
+
 void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 {
-// Replace each component r3_i of the complementarity component of the residuals
-// by r3p_i-r3_i, where r3p_i is the projection of r3_i onto the box [rmin, rmax].
-// Then if the resulting value is less than -rmax, replace it by -rmax.
-
          Double_t *        ep = v.GetMatrixArray();
    const Double_t * const fep = ep+v.GetNrows();
 
@@ -374,11 +374,11 @@ void TQpResidual::GondzioProjection(TVectorD &v,Double_t rmin,Double_t rmax)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TQpResidual &TQpResidual::operator=(const TQpResidual &source)
 {
-// Assignment operator
-
    if (this != &source) {
       TObject::operator=(source);
 

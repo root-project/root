@@ -11,24 +11,13 @@
 #ifndef ROOSTATS_AsymptoticCalculator
 #define ROOSTATS_AsymptoticCalculator
 
-//_________________________________________________
-/*
-BEGIN_HTML
-<p>
-Calculator based on Asymptotic formula, 
- on the ProfileLikelihood and the Asimov data set
-</p>
-END_HTML
-*/
-//
-
-
-
-#ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
-#endif
+#include "RooArgSet.h"
+#include "Rtypes.h"
 
-class RooArgSet;
+class RooArgList;
+class RooCategory;
+class RooRealVar;
 class RooPoisson;
 class RooProdPdf;
 
@@ -39,10 +28,10 @@ namespace RooStats {
 
    public:
       AsymptoticCalculator(
-         RooAbsData &data,  // need to pass non-const since RooAbsPdf::fitTo takes a non-const data set 
+         RooAbsData &data,  // need to pass non-const since RooAbsPdf::fitTo takes a non-const data set
          const ModelConfig &altModel,
-         const ModelConfig &nullModel,  
-         bool nominalAsimov = false 
+         const ModelConfig &nullModel,
+         bool nominalAsimov = false
          );
       //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
       // {
@@ -51,51 +40,51 @@ namespace RooStats {
       ~AsymptoticCalculator() {
       }
 
-      // initialize the calculator by performin g a global fit and make the Asimov data set
-      bool Initialize() const; 
+      /// initialize the calculator by performing a global fit and make the Asimov data set
+      bool Initialize() const;
 
-      // re-implement HypoTest computation using the asymptotic 
-      virtual HypoTestResult *GetHypoTest() const; 
+      /// re-implement HypoTest computation using the asymptotic
+      virtual HypoTestResult *GetHypoTest() const;
 
-      // make the asimov data from the ModelConfig and list of poi - return data set annd snapshoot of global obs 
-      // poiValues is the snapshot of POI used for finding the best buisance parameter values (conditioned at these values)
-      // genPoiValues is optionally a different set of POI values used for generating. By default the same POI are used for generating and for finding the nuisance parameters
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0); 
+      /// make the asimov data from the ModelConfig and list of poi - return data set and snapshot of global obs
+      /// poiValues is the snapshot of POI used for finding the best nuisance parameter values (conditioned at these values)
+      /// genPoiValues is optionally a different set of POI values used for generating. By default the same POI are used for generating and for finding the nuisance parameters
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0);
 
 
-      // make a nominal asimov data from the ModelConfig and parameter values
-      // The parameter values (including the nunisance) could be given from a fit to data or be at the nominal values
+      /// make a nominal asimov data from the ModelConfig and parameter values
+      /// The parameter values (including the nuisance) could be given from a fit to data or be at the nominal values
       static RooAbsData * MakeAsimovData( const ModelConfig & model,  const RooArgSet & allParamValues, RooArgSet & globObs);
 
 
 
-      static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables ); 
+      static RooAbsData * GenerateAsimovData(const RooAbsPdf & pdf, const RooArgSet & observables );
 
-      // function given the null and the alt p value - return the expected one given the N - sigma value
-      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls, bool oneSided = true ); 
+      /// function given the null and the alt p value - return the expected one given the N - sigma value
+      static double GetExpectedPValues(double pnull, double palt, double nsigma, bool usecls, bool oneSided = true );
 
-      // set test statistic for one sided (upper limits)
+      /// set test statistic for one sided (upper limits)
       void SetOneSided(bool on) { fOneSided = on; }
 
-      // set the test statistics for two sided (in case of upper limits
-      // for discovery does not make really sense)
+      /// set the test statistics for two sided (in case of upper limits
+      /// for discovery does not make really sense)
       void SetTwoSided() { fOneSided = false; fOneSidedDiscovery = false;}
 
-      // set the test statistics for one-sided discovery
+      /// set the test statistics for one-sided discovery
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
 
-      // re-implement setters since they needs to re-initialize the calculator
+      /// re-implementation of  setters since they are needed to re-initialize the calculator
       virtual void SetNullModel(const ModelConfig &nullModel) {
          HypoTestCalculatorGeneric::SetNullModel(nullModel);
-         fIsInitialized = false; 
+         fIsInitialized = false;
       }
       virtual void SetAlternateModel(const ModelConfig &altModel) {
          HypoTestCalculatorGeneric::SetAlternateModel(altModel);
-         fIsInitialized = false; 
+         fIsInitialized = false;
       }
-      virtual void SetData(RooAbsData &data) { 
+      virtual void SetData(RooAbsData &data) {
          HypoTestCalculatorGeneric::SetData(data);
-         fIsInitialized = false; 
+         fIsInitialized = false;
       }
 
 
@@ -103,14 +92,14 @@ namespace RooStats {
       bool IsOneSidedDiscovery() const { return fOneSidedDiscovery; }
 
 
-      // set using of qtilde, by default is controlled if RoORealVar is limited or not 
+      /// set using of qtilde, by default is controlled if RoORealVar is limited or not
       void SetQTilde(bool on) { fUseQTilde = on; }
 
-      // return snapshot of the best fit parameter 
+      /// return snapshot of the best fit parameter
       const RooArgSet & GetBestFitPoi() const { return fBestFitPoi; }
-      // return best fit parameter (firs of poi)
+      /// return best fit parameter (firs of poi)
       const RooRealVar * GetMuHat() const { return dynamic_cast<RooRealVar*>(fBestFitPoi.first()); }
-      // return best fit value for all parameters
+      /// return best fit value for all parameters
       const RooArgSet & GetBestFitParams() const { return fBestFitPoi; }
 
       static void SetPrintLevel(int level);
@@ -122,7 +111,7 @@ namespace RooStats {
       // // configure TestStatSampler for the Alt run
       // int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
 
-      
+
       static RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
                                                       RooCategory * channelCat = 0);
 
@@ -131,33 +120,33 @@ namespace RooStats {
 
 
       static void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double
-                           &binVolume, int &ibin); 
+                           &binVolume, int &ibin);
 
-      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet *poiSet = 0 ); 
+      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet *poiSet = 0 );
 
       static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
-      static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs); 
+      static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
 
    protected:
       ClassDef(AsymptoticCalculator,2)
 
-   private: 
+   private:
 
-      bool fOneSided;                // for one sided PL test statistic (upper limits)
-      mutable bool fOneSidedDiscovery;                // for one sided PL test statistic (for discovery)
-      bool fNominalAsimov;                   // make Asimov at nominal parameter values
-      mutable bool fIsInitialized;                  //! flag to check if calculator is initialized
-      mutable int fUseQTilde;              // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
-      static int fgPrintLevel;     // control print level  (0 minimal, 1 normal, 2 debug)
-      mutable double fNLLObs; 
-      mutable double fNLLAsimov; 
+      bool fOneSided;                     // for one sided PL test statistic (upper limits)
+      mutable bool fOneSidedDiscovery;    // for one sided PL test statistic (for discovery)
+      bool fNominalAsimov;                // make Asimov at nominal parameter values
+      mutable bool fIsInitialized;        //! flag to check if calculator is initialized
+      mutable int fUseQTilde;             // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
+      static int fgPrintLevel;            // control print level  (0 minimal, 1 normal, 2 debug)
+      mutable double fNLLObs;
+      mutable double fNLLAsimov;
 
-      mutable RooAbsData * fAsimovData;   // asimov data set 
-      mutable RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables 
-      mutable RooArgSet  fBestFitPoi;       // snapshot of best fitted POI values
-      mutable RooArgSet  fBestFitParams;       // snapshot of all best fitted Parameter values
-      
-      
+      mutable RooAbsData * fAsimovData;   // asimov data set
+      mutable RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables
+      mutable RooArgSet  fBestFitPoi;     // snapshot of best fitted POI values
+      mutable RooArgSet  fBestFitParams;  // snapshot of all best fitted Parameter values
+
+
    };
 }
 

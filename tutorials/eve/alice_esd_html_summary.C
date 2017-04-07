@@ -1,8 +1,10 @@
-// @(#)root/eve:$Id$
-
-// Html table and event summary for alice_esd.C
-
-//==============================================================================
+/// \file
+/// \ingroup tutorial_eve
+/// Html table and event summary for alice_esd.C
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 class HtmlObjTable : public TObject
 {

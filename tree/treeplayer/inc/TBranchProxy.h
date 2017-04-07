@@ -12,30 +12,14 @@
 #ifndef ROOT_TBranchProxy
 #define ROOT_TBranchProxy
 
-#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
-#ifndef ROOT_TClonesArray
 #include "TClonesArray.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_Riostream
 #include "Riostream.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
-#endif
 
 #include <list>
 #include <algorithm>
@@ -56,7 +40,7 @@ class TStreamerElement;
 // 2D array would actually be a wrapper of a wrapper i.e. has a method TArrayWrapper<T> operator[](int i);
 
 namespace ROOT {
-
+namespace Internal {
    //_______________________________________________
    // String builder to be used in the constructors.
    class TBranchProxyHelper {
@@ -74,11 +58,13 @@ namespace ROOT {
       }
       operator const char*() { return fName.Data(); };
    };
+} // namespace Internal
 
 
+namespace Detail {
    class TBranchProxy {
    protected:
-      TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
+      Internal::TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
 
       Bool_t   fInitialized;
 
@@ -113,10 +99,10 @@ namespace ROOT {
       virtual void Print();
 
       TBranchProxy();
-      TBranchProxy(TBranchProxyDirector* boss, const char* top, const char* name = 0);
-      TBranchProxy(TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
-      TBranchProxy(TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
-      TBranchProxy(TBranchProxyDirector* boss, TBranch* branch, const char* membername);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
 
       TBranchProxy* GetProxy() { return this; }
@@ -307,10 +293,13 @@ namespace ROOT {
 
       Int_t GetOffset() { return fOffset; }
    };
+} // namespace Detail
+
+namespace Internal {
 
    //____________________________________________________________________________________________
    // Concrete Implementation of the branch proxy around the data members which are array of char
-   class TArrayCharProxy : public TBranchProxy {
+   class TArrayCharProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -368,7 +357,7 @@ namespace ROOT {
 
    //_______________________________________________________
    // Base class for the proxy around object in TClonesArray.
-   class TClaProxy : public TBranchProxy {
+   class TClaProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -410,7 +399,7 @@ namespace ROOT {
 
    //_______________________________________________
    // Base class for the proxy around STL containers.
-   class TStlProxy : public TBranchProxy {
+   class TStlProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -451,7 +440,7 @@ namespace ROOT {
    //______________________________________
    // Template of the proxy around objects.
    template <class T>
-   class TImpProxy : public TBranchProxy {
+   class TImpProxy : public Detail::TBranchProxy {
    public:
       void Print() {
          TBranchProxy::Print();
@@ -512,7 +501,7 @@ namespace ROOT {
    //____________________________________________
    // Template for concrete implementation of proxy around array of T
    template <class T>
-   class TArrayProxy : public TBranchProxy {
+   class TArrayProxy : public Detail::TBranchProxy {
    public:
       TArrayProxy() : TBranchProxy() {}
       TArrayProxy(TBranchProxyDirector *director, const char *name) : TBranchProxy(director,name) {};
@@ -550,7 +539,7 @@ namespace ROOT {
    //_____________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
-   class TClaImpProxy : public TBranchProxy {
+   class TClaImpProxy : public Detail::TBranchProxy {
    public:
 
       void Print() {
@@ -602,7 +591,7 @@ namespace ROOT {
    //_________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
-   class TStlImpProxy : public TBranchProxy {
+   class TStlImpProxy : public Detail::TBranchProxy {
    public:
 
       void Print() {
@@ -653,7 +642,7 @@ namespace ROOT {
    //_________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
-   class TClaArrayProxy : public TBranchProxy {
+   class TClaArrayProxy : public Detail::TBranchProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
@@ -690,7 +679,7 @@ namespace ROOT {
    //__________________________________________________________________________________________________
    // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
-   class TStlArrayProxy : public TBranchProxy {
+   class TStlArrayProxy : public Detail::TBranchProxy {
    public:
       typedef typename T::array_t array_t;
       typedef typename T::type_t type_t;
@@ -820,6 +809,11 @@ namespace ROOT {
    typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayShortProxy;    // Concrete Implementation of the branch proxy around an stl container of UShort_t
    typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
    typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
+
+} // namespace Internal
+
+// Reasonably backward compatible.
+using Detail::TBranchProxy;
 
 } // namespace ROOT
 

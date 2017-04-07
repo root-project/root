@@ -12,12 +12,16 @@
 #ifndef ROOT_Math_GeneticMinimizer
 #define ROOT_Math_GeneticMinimizer
 
-#include <vector>
-
 #include "Math/Minimizer.h"
 
-#include "TMVA/IFitterTarget.h"
-#include "TMVA/Interval.h"
+#include "RtypesCore.h"
+
+#include <vector>
+
+namespace TMVA {
+   class IFitterTarget;
+   class Interval;
+}
 
 namespace ROOT {
    namespace Math {
@@ -48,6 +52,8 @@ struct GeneticMinimizerParameters {
 //_______________________________________________________________________________
 /**
    GeneticMinimizer
+
+   Minimizer class based on the Gentic algorithm implemented in TMVA
 
    @ingroup MultiMin
 */

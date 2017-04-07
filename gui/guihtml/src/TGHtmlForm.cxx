@@ -45,11 +45,11 @@
 #include "TGComboBox.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unmap any input control that is currently mapped.
+
 void TGHtml::UnmapControls()
 {
-   // Unmap any input control that is currently mapped.
-
    TGHtmlInput *p;
 
    for (p = fFirstInput; p; p = p->fINext) {
@@ -59,17 +59,17 @@ void TGHtml::UnmapControls()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map any control that should be visible according to the
+/// current scroll position. At the same time, if any controls that
+/// should not be visible are mapped, unmap them. After this routine
+/// finishes, all <INPUT> controls should be in their proper places
+/// regardless of where they might have been before.
+///
+/// Return the number of controls that are currently visible.
+
 int TGHtml::MapControls()
 {
-   // Map any control that should be visible according to the
-   // current scroll position. At the same time, if any controls that
-   // should not be visible are mapped, unmap them. After this routine
-   // finishes, all <INPUT> controls should be in their proper places
-   // regardless of where they might have been before.
-   //
-   // Return the number of controls that are currently visible.
-
    TGHtmlInput *p;     // For looping over all controls
    int x, y, w, h;    // Part of the virtual canvas that is visible
    int cnt = 0;       // Number of visible controls
@@ -96,12 +96,12 @@ int TGHtml::MapControls()
    return cnt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all input controls. This happens when the TGHtml widget
+/// is cleared.
+
 void TGHtml::DeleteControls()
 {
-   // Delete all input controls. This happens when the TGHtml widget
-   // is cleared.
-
    TGHtmlInput *p;        // For looping over all controls
 
    p = fFirstInput;
@@ -124,11 +124,11 @@ void TGHtml::DeleteControls()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an appropriate type value for the given <INPUT> markup.
+
 static int InputType(TGHtmlElement *p)
 {
-   // Return an appropriate type value for the given <INPUT> markup.
-
    int type = INPUT_TYPE_Unknown;
    const char *z;
    int i;
@@ -184,13 +184,13 @@ static int InputType(TGHtmlElement *p)
    return type;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// 'frame' is the child widget that is used to implement an input
+/// element. Query the widget for its size and put that information
+/// in the pElem structure that represents the input.
+
 void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
 {
-   // 'frame' is the child widget that is used to implement an input
-   // element. Query the widget for its size and put that information
-   // in the pElem structure that represents the input.
-
 
    pElem->fFrame = frame;
    if (pElem->fFrame == 0) {
@@ -239,13 +239,13 @@ void TGHtml::SizeAndLink(TGFrame *frame, TGHtmlInput *pElem)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append all text and space tokens between pStart and pEnd to
+/// the given TString.  [ TGTextEdit ]
+
 void TGHtml::AppendText(TGString *str, TGHtmlElement *pFirs,
                         TGHtmlElement *pEnd)
 {
-   // Append all text and space tokens between pStart and pEnd to
-   // the given TString.  [ TGTextEdit ]
-
    while (pFirs && pFirs != pEnd) {
       switch (pFirs->fType) {
          case Html_Text:
@@ -290,19 +290,19 @@ protected:
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The "p" argument points to a <select>.  This routine scans all
+/// subsequent elements (up to the next </select>) looking for
+/// <option> tags.  For each option tag, it appends the corresponding
+/// entry to the "lb" listbox element.
+///
+/// lb   -- An TGListBox object
+/// p    -- The <SELECT> markup
+/// pEnd -- The </SELECT> markup
+
 void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
                               TGHtmlElement *pEnd)
 {
-   // The "p" argument points to a <select>.  This routine scans all
-   // subsequent elements (up to the next </select>) looking for
-   // <option> tags.  For each option tag, it appends the corresponding
-   // entry to the "lb" listbox element.
-   //
-   // lb   -- An TGListBox object
-   // p    -- The <SELECT> markup
-   // pEnd -- The </SELECT> markup
-
    int id = 0;
 
    while (p && p != pEnd && p->fType != Html_EndSELECT) {
@@ -342,20 +342,20 @@ void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine implements the Sizer() function for <INPUT>,
+/// <SELECT> and <TEXTAREA> markup.
+///
+/// A side effect of sizing these markups is that widgets are
+/// created to represent the corresponding input controls.
+///
+/// The function normally returns 0.  But if it is dealing with
+/// a <SELECT> or <TEXTAREA> that is incomplete, 1 is returned.
+/// In that case, the sizer will be called again at some point in
+/// the future when more information is available.
+
 int TGHtml::ControlSize(TGHtmlInput *pElem)
 {
-   // This routine implements the Sizer() function for <INPUT>,
-   // <SELECT> and <TEXTAREA> markup.
-   //
-   // A side effect of sizing these markups is that widgets are
-   // created to represent the corresponding input controls.
-   //
-   // The function normally returns 0.  But if it is dealing with
-   // a <SELECT> or <TEXTAREA> that is incomplete, 1 is returned.
-   // In that case, the sizer will be called again at some point in
-   // the future when more information is available.
-
    int incomplete = 0;    // kTRUE if data is incomplete
 
    if (pElem->fSized) return 0;
@@ -537,11 +537,11 @@ int TGHtml::ControlSize(TGHtmlInput *pElem)
    return incomplete;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of elments of type p in a form.
+
 int TGHtml::FormCount(TGHtmlInput *p, int radio)
 {
-   // Return the number of elments of type p in a form.
-
    TGHtmlElement *q = p;
 
    switch (p->fType) {
@@ -559,11 +559,11 @@ int TGHtml::FormCount(TGHtmlInput *p, int radio)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add the DOM control information for form elements.
+
 void TGHtml::AddFormInfo(TGHtmlElement *p)
 {
-   // Add the DOM control information for form elements.
-
    TGHtmlElement *q;
    TGHtmlForm *f;
    const char *name, *z;
@@ -636,11 +636,11 @@ static char gNeedEscape[] = {
 };
 #define NeedToEscape(C) ((C)>0 && (C)<127 && gNeedEscape[(int)(C)])
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Append to the given TString an encoded version of the given text.
+
 void TGHtml::EncodeText(TGString *str, const char *z)
 {
-   // Append to the given TString an encoded version of the given text.
-
    int i;
 
    while (*z) {
@@ -664,11 +664,11 @@ void TGHtml::EncodeText(TGString *str, const char *z)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages (GUI events) in the html widget.
+
 Bool_t TGHtml::ProcessMessage(Long_t msg, Long_t p1, Long_t p2)
 {
-   // Process messages (GUI events) in the html widget.
-
 /*
   OWidgetMessage *wmsg = (OWidgetMessage *) msg;
   TGHtmlInput *p;

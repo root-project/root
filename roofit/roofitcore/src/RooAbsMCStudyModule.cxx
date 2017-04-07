@@ -14,22 +14,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooAbsMCStudyModule is a base class for add-on modules to RooMCStudy that
-// can perform additional calculations on each generate+fit cycle managed
-// by RooMCStudy
-//
-// This class can insert code to be executed before each generation step,
-// between the generation and fitting step and after the fitting step.
-// Any summary output variables declared in the RooDataSet exported through
-// summaryData() is merged with the 'master' summary dataset in RooMCStudy
-//
-// Look at RooDLLSignificanceMCStudyModule for an example of an implementation
-// END_HTML
-//
-//
+/**
+\file RooAbsMCStudyModule.cxx
+\class RooAbsMCStudyModule
+\ingroup Roofitcore
+
+RooAbsMCStudyModule is a base class for add-on modules to RooMCStudy that
+can perform additional calculations on each generate+fit cycle managed
+by RooMCStudy
+
+This class can insert code to be executed before each generation step,
+between the generation and fitting step and after the fitting step.
+Any summary output variables declared in the RooDataSet exported through
+summaryData() is merged with the 'master' summary dataset in RooMCStudy
+
+Look at RooDLLSignificanceMCStudyModule for an example of an implementation
+**/
 
 #include "RooFit.h"
 #include "RooAbsMCStudyModule.h"
@@ -40,25 +40,28 @@ ClassImp(RooAbsMCStudyModule)
   ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0) 
 {
-  // Constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsMCStudyModule::RooAbsMCStudyModule(const RooAbsMCStudyModule& other) : TNamed(other), _mcs(other._mcs)
 {
-  // Copy constructor
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Store reference to RooMCStudy object that this module relates to and call internal module
+/// initialization function
+
 Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study) 
 { 
-  // Store reference to RooMCStudy object that this module relates to and call internal module
-  // initialization function
   _mcs = &study ; 
   return initializeInstance() ; 
 }  

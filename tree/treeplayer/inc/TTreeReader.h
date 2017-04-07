@@ -22,15 +22,9 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THashTable
 #include "THashTable.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
-#endif
 
 #include <deque>
 #include <iterator>
@@ -40,59 +34,62 @@ class TDirectory;
 class TFileCollection;
 
 namespace ROOT {
+namespace Internal {
    class TBranchProxyDirector;
+}
 }
 
 class TTreeReader: public TObject {
 public:
 
-   // Iterate through the entries of a TTree.
-   //
-   // This iterator drives the associated TTreeReader; its
-   // dereferencing (and actually even the iteration) will
-   // set the entry number represented by this iterator.
-   // It does not really represent a data element; it simply
-   // returns the entry number (or -1 once the end of the tree
-   // is reached).
+   ///\class TTreeReader::Iterator_t
+   /// Iterate through the entries of a TTree.
+   ///
+   /// This iterator drives the associated TTreeReader; its
+   /// dereferencing (and actually even the iteration) will
+   /// set the entry number represented by this iterator.
+   /// It does not really represent a data element; it simply
+   /// returns the entry number (or -1 once the end of the tree
+   /// is reached).
    class Iterator_t:
       public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
    private:
-      Long64_t fEntry; // Entry number of the tree referenced by this iterator; -1 is invalid.
-      TTreeReader* fReader; // The reader we select the entries on.
+      Long64_t fEntry; ///< Entry number of the tree referenced by this iterator; -1 is invalid.
+      TTreeReader* fReader; ///< The reader we select the entries on.
 
-      // Whether the iterator points to a valid entry.
+      /// Whether the iterator points to a valid entry.
       bool IsValid() const { return fEntry >= 0; }
 
    public:
-      // Default-initialize the iterator as "past the end".
+      /// Default-initialize the iterator as "past the end".
       Iterator_t(): fEntry(-1), fReader() {}
 
-      // Initialize the iterator with the reader it steers and a
-      // tree entry number; -1 is invalid.
+      /// Initialize the iterator with the reader it steers and a
+      /// tree entry number; -1 is invalid.
       Iterator_t(TTreeReader& reader, Long64_t entry):
          fEntry(entry), fReader(&reader) {}
 
+      /// Compare two iterators for equality.
       bool operator==(const Iterator_t& lhs) const {
-         // Compare two iterators for equality.
          // From C++14: value initialized (past-end) it compare equal.
          if (!IsValid() && !lhs.IsValid()) return true;
          return fEntry == lhs.fEntry && fReader == lhs.fReader;
       }
 
+      /// Compare two iterators for inequality.
       bool operator!=(const Iterator_t& lhs) const {
-         // Compare two iterators for inequality.
          return !(*this == lhs);
       }
 
+      /// Increment the iterator (postfix i++).
       Iterator_t operator++(int) {
-         // Increment the iterator (postfix i++).
          Iterator_t ret = *this;
          this->operator++();
          return ret;
       }
 
+      /// Increment the iterator (prefix ++i).
       Iterator_t& operator++() {
-         // Increment the iterator (prefix ++i).
          if (IsValid()) {
             ++fEntry;
             // Force validity check of new fEntry.
@@ -104,8 +101,8 @@ public:
          return *this;
       }
 
+      /// Set the entry number in the reader and return it.
       const Long64_t& operator*() {
-         // Set the entry number in the reader and return it.
          if (IsValid()) {
             // If we cannot access that entry, mark the iterator invalid.
             if (fReader->SetEntry(fEntry) != kEntryValid) {
@@ -124,75 +121,135 @@ public:
    typedef Iterator_t iterator;
 
    enum EEntryStatus {
-      kEntryValid = 0, // data read okay
-      kEntryNotLoaded, // no entry has been loaded yet
-      kEntryNoTree, // the tree does not exist
-      kEntryNotFound, // the tree entry number does not exist
-      kEntryChainSetupError, // problem in accessing a chain element, e.g. file without the tree
-      kEntryChainFileError, // problem in opening a chain's file
-      kEntryDictionaryError, // problem reading dictionary info from tree
+      kEntryValid = 0, ///< data read okay
+      kEntryNotLoaded, ///< no entry has been loaded yet
+      kEntryNoTree, ///< the tree does not exist
+      kEntryNotFound, ///< the tree entry number does not exist
+      kEntryChainSetupError, ///< problem in accessing a chain element, e.g. file without the tree
+      kEntryChainFileError, ///< problem in opening a chain's file
+      kEntryDictionaryError, ///< problem reading dictionary info from tree
+      kEntryBeyondEnd ///< last entry loop has reached its end
    };
 
-   TTreeReader():
-      fDirectory(0),
-      fEntryStatus(kEntryNoTree),
-      fDirector(0)
-   {}
+   TTreeReader() = default;
 
-   TTreeReader(TTree* tree);
-   TTreeReader(const char* keyname, TDirectory* dir = NULL );
-   TTreeReader(const char* /*keyname*/, TFileCollection* /*files*/) { Error("TTreeReader()", "Not Implemented!");};
+   TTreeReader(TTree* tree, TEntryList* entryList = nullptr);
+   TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
+   TTreeReader(const char* keyname, TEntryList* entryList = nullptr):
+   TTreeReader(keyname, nullptr, entryList) {}
 
    ~TTreeReader();
 
-   void SetTree(TTree* tree);
-   void SetTree(const char* /*keyname*/, TDirectory* /*dir = NULL*/ ) { Error("SetTree()", "Not Implemented!");};
-   void SetChain(const char* /*keyname*/, TFileCollection* /*files*/ ) { Error("SetChain()", "Not Implemented!");};
+   void SetTree(TTree* tree, TEntryList* entryList = nullptr);
+   void SetTree(const char* keyname, TEntryList* entryList = nullptr) {
+      SetTree(keyname, nullptr, entryList);
+   }
+   void SetTree(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
 
    Bool_t IsChain() const { return TestBit(kBitIsChain); }
 
-   Bool_t Next() { return SetEntry(GetCurrentEntry() + 1) == kEntryValid; }
+   TTree* GetTree() const { return fTree; }
+   TEntryList* GetEntryList() const { return fEntryList; }
+
+   ///\{ \name Entry setters
+
+   /// Move to the next entry (or index of the TEntryList if that is set).
+   ///
+   /// \return false if the previous entry was already the last entry. This allows
+   ///   the function to be used in `while (reader.Next()) { ... }`
+   Bool_t Next() {
+      return SetEntry(GetCurrentEntry() + 1) == kEntryValid;
+   }
+
+   /// Set the next entry (or index of the TEntryList if that is set).
+   ///
+   /// \param entry If not TEntryList is set, the entry is a global entry (i.e.
+   /// not the entry number local to the chain's current tree).
+   /// \returns the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetEntry(Long64_t entry) { return SetEntryBase(entry, kFALSE); }
+
+   /// Set the next local tree entry. If a TEntryList is set, this function is
+   /// equivalent to `SetEntry()`.
+   ///
+   /// \param entry Entry number of the TChain's current TTree. This is the
+   /// entry number passed for instance by `TSelector::Process(entry)`, i.e.
+   /// within `TSelector::Process()` always use `SetLocalEntry()` and not
+   /// `SetEntry()`!
+   /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
+
+   /// \deprecated Please use SetEntriesRange() instead!
+   ///  Sets the entry that `Next()` will stop iteration on. Equivalent to the
+   ///  preferred `SetEntriesRange(0, end)`
+   ///
+   /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
+   ///   load anymore).
+   void SetLastEntry(Long64_t endEntry) R__DEPRECATED(6, 12, "Misnomer and duplication; please use SetEntriesRange()!")
+   { fEndEntry = endEntry; }
+
+   EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
+
+   /// Restart a Next() loop from entry 0 (of TEntryList index 0 of fEntryList is set).
+   void Restart();
+
+   ///\}
 
    EEntryStatus GetEntryStatus() const { return fEntryStatus; }
 
-   TTree* GetTree() const { return fTree; }
-   Long64_t GetEntries(Bool_t force) const { return fTree ? (force ? fTree->GetEntries() : fTree->GetEntriesFast() ) : -1; }
-   Long64_t GetCurrentEntry() const;
+   Long64_t GetEntries(Bool_t force) const;
 
+   /// Returns the index of the current entry being read.
+   ///
+   /// If `IsChain()`, the returned index corresponds to the global entry number
+   /// (i.e. not the entry number local to the chain's current tree).
+   /// If `fEntryList`, the returned index corresponds to an index in the
+   /// TEntryList; to translate to the TChain's / TTree's entry number pass it
+   /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
+   Long64_t GetCurrentEntry() const { return fEntry; }
+
+   /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
-      // Return an iterator to the 0th TTree entry.
       return Iterator_t(*this, 0);
    }
+   /// Return an iterator beyond the last TTree entry.
    Iterator_t end() const { return Iterator_t(); }
 
 protected:
    void Initialize();
-   ROOT::TNamedBranchProxy* FindProxy(const char* branchname) const {
-      return (ROOT::TNamedBranchProxy*) fProxies.FindObject(branchname); }
+   ROOT::Internal::TNamedBranchProxy* FindProxy(const char* branchname) const {
+      return (ROOT::Internal::TNamedBranchProxy*) fProxies.FindObject(branchname); }
    TCollection* GetProxies() { return &fProxies; }
 
-   void RegisterValueReader(ROOT::TTreeReaderValueBase* reader);
-   void DeregisterValueReader(ROOT::TTreeReaderValueBase* reader);
+   Bool_t RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
+   void DeregisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader);
 
    EEntryStatus SetEntryBase(Long64_t entry, Bool_t local);
 
 private:
 
    enum EPropertyBits {
-      kBitIsChain = BIT(14) // our tree is a chain
+      kBitIsChain = BIT(14), ///< our tree is a chain
+      kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15) ///< the tree had a TEntryList and we have warned about that
    };
 
-   TTree* fTree; // tree that's read
-   TDirectory* fDirectory; // directory (or current file for chains)
-   EEntryStatus fEntryStatus; // status of most recent read request
-   ROOT::TBranchProxyDirector* fDirector; // proxying director, owned
-   std::deque<ROOT::TTreeReaderValueBase*> fValues; // readers that use our director
-   THashTable   fProxies; //attached ROOT::TNamedBranchProxies; owned
+   TTree* fTree = nullptr; ///< tree that's read
+   TEntryList* fEntryList = nullptr; ///< entry list to be used
+   EEntryStatus fEntryStatus = kEntryNotLoaded; ///< status of most recent read request
+   Int_t fMostRecentTreeNumber = -1; ///< TTree::GetTreeNumber() of the most recent tree
+   ROOT::Internal::TBranchProxyDirector* fDirector = nullptr; ///< proxying director, owned
+   std::deque<ROOT::Internal::TTreeReaderValueBase*> fValues; ///< readers that use our director
+   THashTable   fProxies; ///< attached ROOT::TNamedBranchProxies; owned
 
-   friend class ROOT::TTreeReaderValueBase;
-   friend class ROOT::TTreeReaderArrayBase;
+   Long64_t fEntry = -1; ///< Current (non-local) entry of fTree or of fEntryList if set.
+
+   /// The end of the entry loop. When set (i.e. >= 0), it provides a way
+   /// to stop looping over the TTree when we reach a certain entry: Next()
+   /// returns kFALSE when GetCurrentEntry() reaches fEndEntry.
+   Long64_t fEndEntry = -1;
+   Bool_t fProxiesSet = kFALSE; ///< True if the proxies have been set, false otherwise
+
+   friend class ROOT::Internal::TTreeReaderValueBase;
+   friend class ROOT::Internal::TTreeReaderArrayBase;
 
    ClassDef(TTreeReader, 0); // A simple interface to read trees
 };

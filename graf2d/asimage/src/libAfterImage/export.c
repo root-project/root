@@ -956,6 +956,9 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 	Bool new_image = True ;
 	START_TIME(started);
 	int cmap_size = 1;
+#if (GIFLIB_MAJOR>=5)
+	int errcode;
+#endif
 #define GIF_NETSCAPE_EXT_BYTES 3
 	unsigned char netscape_ext_bytes[GIF_NETSCAPE_EXT_BYTES] = { 0x1, 0x0, 0x0};
 #define GIF_GCE_BYTES 4	
@@ -994,10 +997,18 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 
 	while( cmap_size < 256 && cmap_size < (int)cmap.count+(gce_bytes[0]&0x01) )
 		cmap_size = cmap_size<<1 ;
+#if (GIFLIB_MAJOR>=5)
+	if( (gif_cmap = GifMakeMapObject(cmap_size, NULL )) == NULL )
+#else
 	if( (gif_cmap = MakeMapObject(cmap_size, NULL )) == NULL )
+#endif
 	{
 		free( mapped_im );
+#if (GIFLIB_MAJOR>=5)
+		ASIM_PrintGifError(E_GIF_ERR_NOT_ENOUGH_MEM);
+#else
 		ASIM_PrintGifError();
+#endif
 		return False;
 	}
 	memcpy( &(gif_cmap->Colors[0]), &(cmap.entries[0]), MIN(cmap.count,(unsigned int)cmap_size)*3 );
@@ -1009,13 +1020,25 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		SavedImage *images = NULL ;
 		int count = 0 ;
 		/* TODO: do something about multiimage files !!! */
+#if (GIFLIB_MAJOR>=5)
+		gif = open_gif_read(infile, &errcode);
+#else
 		gif = open_gif_read(infile);
+#endif
 		if( gif == NULL || get_gif_saved_images(gif, -1, &images, &count) == GIF_ERROR)
 		{
+#if (GIFLIB_MAJOR>=5)
+			ASIM_PrintGifError(errcode);
+#else
 			ASIM_PrintGifError();
+#endif
 			if( gif )
 			{
+#if (GIFLIB_MAJOR>=5)
+				DGifCloseFile(gif, &errcode);
+#else
 				DGifCloseFile(gif);
+#endif
 				gif = NULL ;
 			}
 			if (infile)
@@ -1031,14 +1054,22 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			gif_src = *gif ;
 			gif->SColorMap = NULL ;
 			gif->Image.ColorMap = NULL ;
+#if (GIFLIB_MAJOR>=5)
+            DGifCloseFile(gif, &errcode);
+#else
 			DGifCloseFile(gif);
+#endif
 			gif = NULL;
 			fclose (infile);
 			infile = NULL;
 			outfile = open_writable_image_file( path );
 
 			if (outfile)
+#if (GIFLIB_MAJOR>=5)
+				gif = EGifOpenFileHandle(fileno(outfile), &errcode);
+#else
 				gif = EGifOpenFileHandle(fileno(outfile));
+#endif
 				
 			if (gif)
 			{
@@ -1049,26 +1080,46 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 									   gif_src.SColorMap )) == GIF_OK )
 					status = write_gif_saved_images( gif, images, count );
 				if( status != GIF_OK )
+#if (GIFLIB_MAJOR>=5)
+					ASIM_PrintGifError(status);
+#else
 					ASIM_PrintGifError();
+#endif
 			}
 			if (gif_src.SColorMap)
 			{  /* we only want to save private colormap if it is any different from
 			    * screen colormap ( saves us  768 bytes per image ) */
 				if( gif_cmap->ColorCount == gif_src.SColorMap->ColorCount )
 					dont_save_cmap = ( memcmp( gif_cmap->Colors, gif_src.SColorMap->Colors, gif_cmap->ColorCount*sizeof(GifColorType)) == 0 );
+#if (GIFLIB_MAJOR>=5)
+				GifFreeMapObject(gif_src.SColorMap);
+#else
 				FreeMapObject(gif_src.SColorMap);
+#endif
 			}
 			if (gif)
 			{
 				EGifPutExtension(gif, GRAPHICS_EXT_FUNC_CODE, GIF_GCE_BYTES, &(gce_bytes[0]));
 				if( get_flags( params->gif.flags, EXPORT_ANIMATION_REPEATS ) )
 				{
+#if (GIFLIB_MAJOR>=5)
+					EGifPutExtensionLeader(gif, APPLICATION_EXT_FUNC_CODE);
+					EGifPutExtensionBlock(gif, 11, "NETSCAPE2.0");
+					EGifPutExtensionBlock(gif, GIF_NETSCAPE_EXT_BYTES, &(netscape_ext_bytes[0]));
+					EGifPutExtensionTrailer(gif);
+#else
 					EGifPutExtensionFirst(gif, APPLICATION_EXT_FUNC_CODE, 11, "NETSCAPE2.0");
 					EGifPutExtensionLast(gif, 0, GIF_NETSCAPE_EXT_BYTES, &(netscape_ext_bytes[0]));
+#endif
 				}
 				
+#if (GIFLIB_MAJOR>=5)
+				if( (errcode = EGifPutImageDesc(gif, 0, 0, im->width, im->height, false, (dont_save_cmap)?NULL:gif_cmap )) == GIF_ERROR )
+					ASIM_PrintGifError(errcode);
+#else
 				if( EGifPutImageDesc(gif, 0, 0, im->width, im->height, FALSE, (dont_save_cmap)?NULL:gif_cmap ) == GIF_ERROR )
 					ASIM_PrintGifError();
+#endif
 			}
 		}
 		free_gif_saved_images( images, count );
@@ -1080,24 +1131,46 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			outfile = open_writable_image_file(path);
 			
 		if (outfile)
+        {
+#if (GIFLIB_MAJOR>=5)
+			gif = EGifOpenFileHandle(fileno(outfile), &errcode);
+			if (errcode != E_GIF_SUCCEEDED)
+				ASIM_PrintGifError(errcode);
+#else
 			if ((gif = EGifOpenFileHandle(fileno(outfile))) == NULL)
 				ASIM_PrintGifError();
+#endif
+        }
 	}
 
 	if( new_image && gif )
 	{
+#if (GIFLIB_MAJOR>=5)
+		if( (errcode = EGifPutScreenDesc(gif, im->width, im->height, cmap_size, 0, gif_cmap )) == GIF_ERROR )
+			ASIM_PrintGifError(errcode);
+#else
 		if( EGifPutScreenDesc(gif, im->width, im->height, cmap_size, 0, gif_cmap ) == GIF_ERROR )
 			ASIM_PrintGifError();
+#endif
 	
 		EGifPutExtension(gif, 0xf9, GIF_GCE_BYTES, &(gce_bytes[0]));
 	
+#if (GIFLIB_MAJOR>=5)
+		if( (errcode = EGifPutImageDesc(gif, 0, 0, im->width, im->height, false, NULL )) == GIF_ERROR )
+			ASIM_PrintGifError(errcode);
+#else
 		if( EGifPutImageDesc(gif, 0, 0, im->width, im->height, FALSE, NULL ) == GIF_ERROR )
 			ASIM_PrintGifError();
+#endif
 	}
 
 	if( gif_cmap )
 	{
+#if (GIFLIB_MAJOR>=5)
+		GifFreeMapObject(gif_cmap);
+#else
 		FreeMapObject(gif_cmap);
+#endif
 		gif_cmap = NULL ;
 	}
 	if( gif )
@@ -1111,12 +1184,23 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 			register int *src = mapped_im + x*y;
 	  	    while( --x >= 0 )
 	  			row_pointer[x] = src[x] ;
+#if (GIFLIB_MAJOR>=5)
+			if( (errcode = EGifPutLine(gif, row_pointer, im->width))  == GIF_ERROR)
+				ASIM_PrintGifError(errcode);
+#else
 			if( EGifPutLine(gif, row_pointer, im->width)  == GIF_ERROR)
 				ASIM_PrintGifError();
+#endif
 		}
 		free( row_pointer );
+#if (GIFLIB_MAJOR>=5)
+		EGifCloseFile(gif, &errcode);
+		if (errcode != E_GIF_SUCCEEDED)
+			ASIM_PrintGifError(errcode);
+#else
 		if (EGifCloseFile(gif) == GIF_ERROR)
 			ASIM_PrintGifError();
+#endif
 		gif = NULL;
 	}
 	free( mapped_im );

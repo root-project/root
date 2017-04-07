@@ -9,19 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMethodCall                                                          //
-//                                                                      //
-// Method or function calling interface. Objects of this class contain  //
-// the (CINT) environment to call a global function or a method for an  //
-// object of a specific class with the desired arguments. This class is //
-// espicially useful when a method has to be called more times for      //
-// different objects and/or with different arguments. If a function or  //
-// method needs to be called only once one better uses                  //
-// TInterpreter::Execute().                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMethodCall
+Method or function calling interface. Objects of this class contain
+the (CINT) environment to call a global function or a method for an
+object of a specific class with the desired arguments. This class is
+especially useful when a method has to be called more times for
+different objects and/or with different arguments. If a function or
+method needs to be called only once one better uses
+TInterpreter::Execute().
+*/
 
 #include "TInterpreter.h"
 #include "TMethodCall.h"
@@ -34,62 +30,65 @@
 
 ClassImp(TMethodCall)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TMethodCall ctor. Use Init() to initialize the method call
+/// environment.
+
 TMethodCall::TMethodCall():
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
-   // Default TMethodCall ctor. Use Init() to initialize the method call
-   // environment.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a method invocation environment for a specific class, method
+/// described by the callfunc.
+
 TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
-   // Create a method invocation environment for a specific class, method
-   // described by the callfunc.
-
    Init(cl, callfunc, offset);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a method invocation environment for a specific class, method and
+/// parameters. The parameter string has the form: "\"aap\", 3, 4.35".
+/// To execute the method call TMethodCall::Execute(object,...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
-   // Create a method invocation environment for a specific class, method and
-   // parameters. The parameter string has the form: "\"aap\", 3, 4.35".
-   // To execute the method call TMethodCall::Execute(object,...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    Init(cl, method, params);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a global function invocation environment. The parameter
+/// string has the form: "\"aap\", 3, 4,35". To execute the
+/// function call TMethodCall::Execute(...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 TMethodCall::TMethodCall(const char *function, const char *params):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
-   // Create a global function invocation environment. The parameter
-   // string has the form: "\"aap\", 3, 4,35". To execute the
-   // function call TMethodCall::Execute(...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    Init(function, params);
 }
 
-//______________________________________________________________________________
-TMethodCall::TMethodCall(TFunction *func):
+////////////////////////////////////////////////////////////////////////////////
+/// Create a global function invocation environment base on a TFunction object.
+/// To execute the function call TMethodCall::Execute(...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
+TMethodCall::TMethodCall(const TFunction *func):
 fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 {
-   // Create a global function invocation environment base on a TFunction object.
-   // To execute the function call TMethodCall::Execute(...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    Init(func);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TMethodCall::TMethodCall(const TMethodCall &orig) :
 TObject(orig),
 fFunc(orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0),
@@ -97,14 +96,13 @@ fOffset(orig.fOffset), fClass(orig.fClass), fMetPtr(0 /*!*/),
 fMethod(orig.fMethod), fParams(orig.fParams), fProto(orig.fProto),
 fDtorOnly(orig.fDtorOnly), fRetType(orig.fRetType)
 {
-   // Copy ctor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
 {
-   // Assignement operator.
-
    if (this != &rhs) {
       gCling->CallFunc_Delete(fFunc);
       fFunc     = rhs.fFunc ? gCling->CallFunc_FactoryCopy(rhs.fFunc) : 0;
@@ -123,31 +121,34 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TMethodCall dtor.
+
 TMethodCall::~TMethodCall()
 {
-   // TMethodCall dtor.
-
    gCling->CallFunc_Delete(fFunc);
    delete fMetPtr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return an exact copy of this object.
+
 TObject *TMethodCall::Clone(const char *) const
 {
-   // Return an exact copy of this object.
-
    TObject *newobj = new TMethodCall(*this);
    return newobj;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function to find the scope associated with a qualified
+/// function name
+
+static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
+{
+
 //______________________________________________________________________________
 // FIXME: We don't need to split that into lookup scope and lookup member.
 // Consider merging the implementation with the new lookup functionality.
-static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinfo)
-{
-   // Helper function to find the scope associated with a qualified
-   // function name
 
    if (function) {
       UInt_t nested = 0;
@@ -174,12 +175,12 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the method invocation environment based on
+/// the CallFunc object and the TClass describing the function context.
+
 void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
 {
-   // Initialize the method invocation environment based on
-   // the CallFunc object and the TClass describing the function context.
-
    if (!function) {
       fOffset = 0;
       fDtorOnly = kFALSE;
@@ -215,12 +216,12 @@ void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
 
 }
 
-//______________________________________________________________________________
-void TMethodCall::Init(TFunction *function)
-{
-   // Initialize the method invocation environment based on
-   // the TFunction object.
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the method invocation environment based on
+/// the TFunction object.
 
+void TMethodCall::Init(const TFunction *function)
+{
    if (!function) return;
 
    if (!fFunc)
@@ -228,12 +229,12 @@ void TMethodCall::Init(TFunction *function)
    else
       gCling->CallFunc_Init(fFunc);
 
-   TMethod *m = dynamic_cast<TMethod*>(function);
+   const TMethod *m = dynamic_cast<const TMethod*>(function);
    fClass = m ? m->GetClass() : 0;
    fMetPtr = (TFunction*)function->Clone();
-   fMethod = function->GetName();
+   fMethod = fMetPtr->GetName();
    fParams = "";
-   fProto  = function->GetSignature()+1; // skip leading )
+   fProto  = fMetPtr->GetSignature()+1; // skip leading )
    Ssiz_t s = fProto.Last(')');
    fProto.Remove(s); // still need to remove default values :(
 
@@ -244,16 +245,17 @@ void TMethodCall::Init(TFunction *function)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the method invocation environment. Necessary input
+/// information: the class, method name and the parameter string
+/// of the form "\"aap\", 3, 4.35".
+///
+/// To execute the method call TMethodCall::Execute(object,...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst /* = kFALSE */)
 {
-   // Initialize the method invocation environment. Necessary input
-   // information: the class, method name and the parameter string
-   // of the form "\"aap\", 3, 4.35".
-   // To execute the method call TMethodCall::Execute(object,...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    if (!cl) {
       UInt_t pos = 0;
@@ -264,16 +266,17 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_
    gCling->ClassInfo_Delete(cinfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the function invocation environment. Necessary input
+/// information: the function name and the parameter string of
+/// the form "\"aap\", 3, 4.35".
+///
+/// To execute the method call TMethodCall::Execute(...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 void TMethodCall::Init(const char *function, const char *params)
 {
-   // Initialize the function invocation environment. Necessary input
-   // information: the function name and the parameter string of
-   // the form "\"aap\", 3, 4.35".
-   // To execute the method call TMethodCall::Execute(...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
@@ -281,18 +284,18 @@ void TMethodCall::Init(const char *function, const char *params)
    gCling->ClassInfo_Delete(cinfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function implements Init and InitWithPrototype.
+///
+/// 'methodname' should NOT have any scope information in it.  The scope
+/// information should be passed via the TClass or CINT ClassInfo.
+
 void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      const char *proto,
                                      Bool_t objectIsConst, TClass *cl,
                                      const ClassInfo_t *cinfo,
                                      ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
-   // This function implements Init and InitWithPrototype.
-
-   // 'methodname' should NOT have any scope information in it.  The scope
-   // information should be passed via the TClass or CINT ClassInfo.
-
    if (!fFunc) {
       R__LOCKGUARD2(gInterpreterMutex);
       fFunc = gCling->CallFunc_Factory();
@@ -324,16 +327,17 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the method invocation environment. Necessary input
+/// information: the class, method name and the prototype string of
+/// the form: "char*,int,float".
+///
+/// To execute the method call TMethodCall::Execute(object,...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst /* = kFALSE */, ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
-   // Initialize the method invocation environment. Necessary input
-   // information: the class, method name and the prototype string of
-   // the form: "char*,int,float".
-   // To execute the method call TMethodCall::Execute(object,...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    if (!cl) {
       UInt_t pos = 0;
@@ -344,16 +348,17 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
    gCling->ClassInfo_Delete(cinfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the function invocation environment. Necessary input
+/// information: the function name and the prototype string of
+/// the form: "char*,int,float".
+///
+/// To execute the method call TMethodCall::Execute(...).
+/// This two step method is much more efficient than calling for
+/// every invocation TInterpreter::Execute(...).
+
 void TMethodCall::InitWithPrototype(const char *function, const char *proto, ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
-   // Initialize the function invocation environment. Necessary input
-   // information: the function name and the prototype string of
-   // the form: "char*,int,float".
-   // To execute the method call TMethodCall::Execute(...).
-   // This two step method is much more efficient than calling for
-   // every invocation TInterpreter::Execute(...).
-
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
@@ -361,22 +366,22 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto, ROO
    gCling->ClassInfo_Delete(cinfo);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the method call has been properly initialized and is
+/// usable.
+
 Bool_t TMethodCall::IsValid() const
 {
-   // Return true if the method call has been properly initialized and is
-   // usable.
-
    return fFunc ? gCling->CallFunc_IsValid(fFunc) : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the TMethod describing the method to be executed. This takes
+/// all overriding and overloading into account (call TClass::GetMethod()).
+/// Since finding the method is expensive the result is cached.
+
 TFunction *TMethodCall::GetMethod()
 {
-   // Returns the TMethod describing the method to be executed. This takes
-   // all overriding and overloading into account (call TClass::GetMethod()).
-   // Since finding the method is expensive the result is cached.
-
    // Since the object in the list of global function are often deleted
    // we need to copy them.
 
@@ -407,11 +412,11 @@ TFunction *TMethodCall::GetMethod()
    return fMetPtr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method (with preset arguments) for the specified object.
+
 void TMethodCall::Execute(void *object)
 {
-   // Execute the method (with preset arguments) for the specified object.
-
    if (!fFunc) return;
 
    void *address = 0;
@@ -422,11 +427,11 @@ void TMethodCall::Execute(void *object)
    gCling->CallFunc_Exec(fFunc,address);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method for the specified object and argument values.
+
 void TMethodCall::Execute(void *object, const char *params)
 {
-   // Execute the method for the specified object and argument values.
-
    if (!fFunc) return;
 
    // SetArgs contains the necessary lock.
@@ -439,11 +444,11 @@ void TMethodCall::Execute(void *object, const char *params)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method (with preset arguments) for the specified object.
+
 void TMethodCall::Execute(void *object, Long_t &retLong)
 {
-   // Execute the method (with preset arguments) for the specified object.
-
    if (!fFunc) return;
 
    void *address = 0;
@@ -453,11 +458,11 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method for the specified object and argument values.
+
 void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
 {
-   // Execute the method for the specified object and argument values.
-
    if (!fFunc) return;
 
    // SetArgs contains the necessary lock.
@@ -470,11 +475,11 @@ void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method (with preset arguments) for the specified object.
+
 void TMethodCall::Execute(void *object, Double_t &retDouble)
 {
-   // Execute the method (with preset arguments) for the specified object.
-
    if (!fFunc) return;
 
    void *address = 0;
@@ -484,11 +489,11 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method for the specified object and argument values.
+
 void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 {
-   // Execute the method for the specified object and argument values.
-
    if (!fFunc) return;
 
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
@@ -500,11 +505,11 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method (with preset arguments) for the specified object.
+
 void TMethodCall::Execute(void *object, char **retText)
 {
-   // Execute the method (with preset arguments) for the specified object.
-
    if (!fFunc) return;
 
    void *address = 0;
@@ -514,11 +519,11 @@ void TMethodCall::Execute(void *object, char **retText)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the method for the specified object and argument values.
+
 void TMethodCall::Execute(void *object, const char *params, char **retText)
 {
-   // Execute the method for the specified object and argument values.
-
    if (!fFunc) return;
 
    // SetArgs contains the necessary lock.
@@ -531,13 +536,31 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    gCling->SetTempLevel(-1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Invoke the method
+///
+/// \param[in] objAddress  Address of the object to execute the method (nullptr if it is a free function)
+/// \param[in] args        Array of pointer to the address of the argument to pass to the
+///                        function as is.  *No* conversion is done, the argument must be
+///                        of the expected type.
+/// \param[in] nargs       Number of arguments passed (must be less than actua size of args
+/// \param[out] ret        Address of value (or object) to use for the return value.
+
+void TMethodCall::Execute(void *objAddress, const void* args[], int nargs, void *ret /* = 0 */)
+{
+   if (!fFunc) return;
+
+   gCling->CallFunc_ExecWithArgsAndReturn(fFunc,objAddress,args,nargs,ret);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the return type of the method. Either (unsigned) long,
+/// int, short and char, or float and double or anything else.
+/// Since finding the return type is expensive the result is cached.
+
 TMethodCall::EReturnType TMethodCall::ReturnType()
 {
-   // Returns the return type of the method. Either (unsigned) long,
-   // int, short and char, or float and double or anything else.
-   // Since finding the return type is expensive the result is cached.
-
    if ( fRetType == kNone) {
       TFunction *func = GetMethod();
       if (func == 0) {
@@ -552,69 +575,69 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
    return fRetType;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ParamArr is an array containing the function argument values.
+/// If nparam = -1 then paramArr must contain values for all function
+/// arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
+/// Nargs is the number of all arguments and NargsOpt is the number
+/// of default arguments.
+
 void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 {
-   // ParamArr is an array containing the function argument values.
-   // If nparam = -1 then paramArr must contain values for all function
-   // arguments, otherwise Nargs-NargsOpt <= nparam <= Nargs, where
-   // Nargs is the number of all arguments and NargsOpt is the number
-   // of default arguments.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset parameter list. To be used before the first call the SetParam().
+
 void TMethodCall::ResetParam()
 {
-   // Reset parameter list. To be used before the first call the SetParam().
-
    if (!fFunc) return;
    gCling->CallFunc_ResetArg(fFunc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a long method parameter.
+
 void TMethodCall::SetParam(Long_t l)
 {
-   // Add a long method parameter.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,l);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a double method parameter.
+
 void TMethodCall::SetParam(Float_t f)
 {
-   // Add a double method parameter.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,f);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a double method parameter.
+
 void TMethodCall::SetParam(Double_t d)
 {
-   // Add a double method parameter.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,d);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a long long method parameter.
+
 void TMethodCall::SetParam(Long64_t ll)
 {
-   // Add a long long method parameter.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,ll);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a unsigned long long method parameter.
+
 void TMethodCall::SetParam(ULong64_t ull)
 {
-   // Add a unsigned long long method parameter.
-
    if (!fFunc) return;
    gCling->CallFunc_SetArg(fFunc,ull);
 }

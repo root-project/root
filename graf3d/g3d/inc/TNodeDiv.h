@@ -22,9 +22,7 @@
 #ifndef ROOT_TNodeDiv
 #define ROOT_TNodeDiv
 
-#ifndef ROOT_TNode
 #include "TNode.h"
-#endif
 
 
 class TNodeDiv  : public TNode {

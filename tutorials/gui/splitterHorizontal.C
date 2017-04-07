@@ -1,10 +1,15 @@
-//
-// Author: Ilka Antcheva   1/12/2006
-
-// This macro gives an example of how to create a horizontal splitter
-// To run it do either:
-// .x splitterHorizontal.C
-// .x splitterHorizontal.C++
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to create a horizontal splitter.
+/// To run it do either:
+/// ~~~
+/// .x splitterHorizontal.C
+/// .x splitterHorizontal.C++
+/// ~~~
+///
+/// \macro_code
+///
+/// \author Ilka Antcheva   1/12/2006
 
 #include <TGClient.h>
 #include <TGButton.h>

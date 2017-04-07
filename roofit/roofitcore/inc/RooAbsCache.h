@@ -17,7 +17,6 @@
 #define ROO_ABS_CACHE
 
 #include "Rtypes.h"
-#include "Riosfwd.h"
 
 class RooAbsArg ;
 class RooAbsCollection ;

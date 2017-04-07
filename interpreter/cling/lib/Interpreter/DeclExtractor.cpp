@@ -9,7 +9,6 @@
 
 #include "DeclExtractor.h"
 
-#include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -67,7 +66,7 @@ namespace {
 namespace cling {
 
   DeclExtractor::DeclExtractor(Sema* S)
-    : TransactionTransformer(S), m_Context(&S->getASTContext()),
+    : WrapperTransformer(S), m_Context(&S->getASTContext()),
       m_UniqueNameCounter(0)
   { }
 
@@ -75,19 +74,22 @@ namespace cling {
   DeclExtractor::~DeclExtractor()
   { }
 
-  void DeclExtractor::Transform() {
-    if (!getTransaction()->getCompilationOpts().DeclarationExtraction)
-      return;
+  WrapperTransformer::Result DeclExtractor::Transform(Decl* D) {
+    if (!getCompilationOpts().DeclarationExtraction)
+      return Result(D, true);
+    FunctionDecl* FD = cast<FunctionDecl>(D);
+    assert(utils::Analyze::IsWrapper(FD) && "Expected wrapper");
 
-    if(!ExtractDecl(getTransaction()->getWrapperFD()))
-      setTransaction(0); // On error set to NULL.
+    if (!ExtractDecl(FD))
+      return Result(nullptr, false);
+    return Result(FD, true);
   }
 
   bool DeclExtractor::ExtractDecl(FunctionDecl* FD) {
     llvm::SmallVector<NamedDecl*, 4> TouchedDecls;
     CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
     assert(CS && "Function body not a CompoundStmt?");
-    DeclContext* DC = FD->getTranslationUnitDecl();
+    DeclContext* DC = m_Context->getTranslationUnitDecl();
     Scope* TUScope = m_Sema->TUScope;
     assert(TUScope == m_Sema->getScopeForContext(DC) && "TU scope from DC?");
     llvm::SmallVector<Stmt*, 4> Stmts;
@@ -111,9 +113,6 @@ namespace cling {
             EnforceInitOrder(Stmts);
             assert(!Stmts.size() && "Stmt list must be flushed.");
           }
-
-          // We know the transaction is closed, but it is safe.
-          getTransaction()->forceAppend(ND);
 
           DeclContext* OldDC = ND->getDeclContext();
 
@@ -145,6 +144,8 @@ namespace cling {
           clearLinkage(ND);
 
           TouchedDecls.push_back(ND);
+
+          Emit(DeclGroupRef(ND));
         }
       }
     }
@@ -179,35 +180,23 @@ namespace cling {
       }
     }
 
-    CS->setStmts(*m_Context, Stmts.data(), Stmts.size());
+    CS->setStmts(*m_Context, Stmts);
 
-    // The order matters, because when we extract decls from the wrapper we
-    // append them to the transaction. If the transaction gets unloaded it will
-    // introduce a fake dependency, so put the move last.
-    Transaction* T = getTransaction();
-    for (Transaction::iterator I = T->decls_begin(), E = T->decls_end();
-         I != E; ++I)
-      if (!I->m_DGR.isNull() && I->m_DGR.isSingleDecl()
-          && I->m_DGR.getSingleDecl() == T->getWrapperFD()) {
-        T->erase(I);
-        break;
-      }
-    T->forceAppend(FD);
+    if (hasNoErrors && !TouchedDecls.empty()) {
+      // Put the wrapper after its declarations. (Nice when AST dumping)
+      DC->removeDecl(FD);
+      DC->addDecl(FD);
+    }
 
-    // Put the wrapper after its declarations. (Nice when AST dumping)
-    DC->removeDecl(FD);
-    DC->addDecl(FD);
-
-    return hasNoErrors;
+    return hasNoErrors ? FD : 0;
   }
 
   void DeclExtractor::createUniqueName(std::string& out) {
     if (out.empty())
       out += '_';
 
-    out += "_init_order";
-    out += utils::Synthesize::UniquePrefix;
-    llvm::raw_string_ostream(out) << m_UniqueNameCounter++;
+    llvm::raw_string_ostream(out) << "_init_order"
+      << utils::Synthesize::UniquePrefix << m_UniqueNameCounter++;
   }
 
   void DeclExtractor::EnforceInitOrder(llvm::SmallVectorImpl<Stmt*>& Stmts){
@@ -245,8 +234,7 @@ namespace cling {
       CompoundStmt* CS = new (*m_Context)CompoundStmt(*m_Context, StmtsRef,
                                                       Loc, Loc);
       FD->setBody(CS);
-      // We know the transaction is closed, but it is safe.
-      getTransaction()->forceAppend(FD);
+      Emit(FD);
 
       // Create the VarDecl with the init
       std::string VarName = "__vd";
@@ -265,9 +253,7 @@ namespace cling {
       assert(VD && TheCall && "Missing VD or its init!");
       VD->setInit(TheCall);
 
-      // We know the transaction is closed, but it is safe.
-      getTransaction()->forceAppend(VD); // Add it to the transaction for codegenning
-      VD->setHidden(true);
+      Emit(VD); // Add it to the transaction for codegenning
       TUDC->addHiddenDecl(VD);
       Stmts.clear();
       return;
@@ -289,7 +275,7 @@ namespace cling {
                               Sema::LookupTagName, Sema::ForRedeclaration
                               );
 
-        m_Sema->LookupName(Previous, S);
+        m_Sema->LookupQualifiedName(Previous, DC);
 
         // There is no function diagnosing the redeclaration of tags (eg. enums).
         // So either we have to do it by hand or we can call the top-most
@@ -302,8 +288,7 @@ namespace cling {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
                               Sema::LookupOrdinaryName, Sema::ForRedeclaration
                               );
-
-        m_Sema->LookupName(Previous, S);
+        m_Sema->LookupQualifiedName(Previous, DC);
         m_Sema->CheckVariableDeclaration(VD, Previous);
         if (VD->isInvalidDecl())
           return true;
@@ -526,7 +511,7 @@ namespace cling {
           SourceLocation KWLoc = NewTD->getLocStart();
           if (!m_Sema->isAcceptableTagRedeclaration(PrevTagDecl, Kind,
                                           NewTD->isThisDeclarationADefinition(),
-                                                    KWLoc, *Name)) {
+                                                    KWLoc, Name)) {
             bool SafeToContinue
               = (PrevTagDecl->getTagKind() != TTK_Enum && Kind != TTK_Enum);
 

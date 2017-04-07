@@ -10,26 +10,30 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStatistic                                                           //
-//                                                                      //
-// Statistical variable, defined by its mean and RMS.                   //
-// Named, streamable, storable and mergeable.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+                                                               
+\class TStatistic                                                     
+                                                               
+Statistical variable, defined by its mean and variance (RMS).             
+Named, streamable, storable and mergeable.                     
+
+@ingroup MathCore
+
+*/
+                                                               
+
 
 #include "TStatistic.h"
 
 
 templateClassImp(TStatistic)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from a vector of values
+
 TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w)
          : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.)
 {
-   // Constructor from a vector of values
-
    if (n > 0) {
       for (Int_t i = 0; i < n; i++) {
          if (w) {

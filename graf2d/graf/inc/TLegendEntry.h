@@ -14,32 +14,12 @@
 #define ROOT_TLegendEntry
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLegendEntry                                                         //
-// Matthew.Adam.Dobbs@Cern.CH, September 1999                           //
-// Storage class for one entry of a TLegend                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TLegendEntry : public TObject, public TAttText, public TAttLine,
                      public TAttFill, public TAttMarker {
@@ -60,9 +40,9 @@ public:
    virtual void          SetOption( Option_t *option="lpf" ) { fOption = option; } // *MENU*
 
 protected:
-   TObject      *fObject;   // pointer to object being represented by this entry
-   TString       fLabel;    // Text associated with the entry, will become latex
-   TString       fOption;   // Options associated with this entry
+   TObject      *fObject;   ///< pointer to object being represented by this entry
+   TString       fLabel;    ///< Text associated with the entry, will become latex
+   TString       fOption;   ///< Options associated with this entry
 
 private:
    TLegendEntry& operator=(const TLegendEntry&); // Not implemented

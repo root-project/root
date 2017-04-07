@@ -9,14 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////////////////////////////////////
-//                                                                     //
-// TControlBarButton                                                   //
-//                                                                     //
-// TControlBarButtons are created by the TControlBar. Not for general  //
-// consumption.                                                        //
-//                                                                     //
-/////////////////////////////////////////////////////////////////////////
+/** \class TControlBarButton
+\ingroup gpad
+This class defines the control bar buttons
+
+Created by the TControlBar. Not for general consumption.
+*/
 
 #include "TControlBarButton.h"
 #include "TCanvas.h"
@@ -32,30 +30,30 @@ const char *kSStr = "SEPARATOR";
 
 ClassImp(TControlBarButton)
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default control bar button ctor.
+
 TControlBarButton::TControlBarButton() : TNamed()
 {
-   // Default controlbar button ctor.
-
    fType   = 0;
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create control bar button.
+
 TControlBarButton::TControlBarButton(const char *label, const char *action,
                                      const char *hint, const char *type)
    : TNamed(label, hint)
 {
-   // Create controlbar button.
-
    SetType(type);
    SetAction(action);
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute control bar button command.
+
 void TControlBarButton::Action()
 {
-   // Execute controlbar button command.
-
    if (!fAction.IsNull()) {
 
       gApplication->ProcessLine(fAction.Data());
@@ -64,11 +62,11 @@ void TControlBarButton::Action()
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set action to be executed by this button.
+
 void TControlBarButton::SetAction(const char *action)
 {
-   // Set action to be executed by this button.
-
    if (action) {
       char *s = Strip(action);
       fAction = s;
@@ -78,12 +76,12 @@ void TControlBarButton::SetAction(const char *action)
 }
 
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set button type. Type can be either "button", "drawnbutton" or
+/// "separator". String is case insensitive. Default is "button".
+
 void TControlBarButton::SetType(const char *type)
 {
-   // Set button type. Type can be either "button", "drawnbutton" or
-   // "separator". String is case insensitive. Default is "button".
-
    fType = kButton;
 
    if (type && *type) {
@@ -99,12 +97,12 @@ void TControlBarButton::SetType(const char *type)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set button type. Type can be either kButton, kDrawnButton or kSeparator.
+/// Default is kButton.
+
 void TControlBarButton::SetType(Int_t type)
 {
-   // Set button type. Type can be either kButton, kDrawnButton or kSeparator.
-   // Default is kButton.
-
    switch (type) {
 
       case kButton:

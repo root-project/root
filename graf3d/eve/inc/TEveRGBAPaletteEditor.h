@@ -64,7 +64,7 @@ public:
    void DoUnderflowAction(Int_t mode);
    void DoOverflowAction(Int_t mode);
 
-   ClassDef(TEveRGBAPaletteSubEditor, 1); // Sub-editor for TEveRGBAPalette class.
+   ClassDef(TEveRGBAPaletteSubEditor, 0); // Sub-editor for TEveRGBAPalette class.
 };
 
 
@@ -87,7 +87,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TEveRGBAPaletteEditor, 1); // Editor for TEveRGBAPalette class.
+   ClassDef(TEveRGBAPaletteEditor, 0); // Editor for TEveRGBAPalette class.
 };
 
 #endif

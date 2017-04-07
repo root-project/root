@@ -4,10 +4,6 @@
 
 set(libname Geom)
 
-ROOT_USE_PACKAGE(math)
-ROOT_USE_PACKAGE(io/io)
-ROOT_USE_PACKAGE(hist/hist)
-
 set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoMedium.h TGeoMaterial.h
              TGeoMatrix.h TGeoVolume.h TGeoNode.h
@@ -17,7 +13,7 @@ set(headers1 TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h
              TGeoPgon.h TGeoArb8.h TGeoTrd1.h TGeoTrd2.h
              TGeoManager.h TGeoCompositeShape.h TGeoShapeAssembly.h
              TGeoScaledShape.h TVirtualGeoPainter.h TVirtualGeoTrack.h
-             TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
+             TVirtualGeoConverter.h TGeoPolygon.h TGeoXtru.h TGeoPhysicalNode.h
              TGeoHelix.h TGeoParaboloid.h TGeoElement.h TGeoHalfSpace.h
              TGeoBuilder.h TGeoNavigator.h)
 set(headers2 TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h

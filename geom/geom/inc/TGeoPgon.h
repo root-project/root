@@ -12,22 +12,9 @@
 #ifndef ROOT_TGeoPgon
 #define ROOT_TGeoPgon
 
-#ifndef ROOT_TGeoPcon
+#include <mutex>
+
 #include "TGeoPcon.h"
-#endif
-
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoPgon - a polygone. It has at least 10 parameters :                 //
-//            - the lower phi limit;                                      //
-//            - the range in phi;                                         //
-//            - the number of edges on each z plane;                      //
-//            - the number of z planes (at least two) where the inner/outer //
-//              radii are changing;                                       //
-//            - z coordinate, inner and outer radius for each z plane     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoPgon : public TGeoPcon
 {
@@ -49,6 +36,7 @@ protected:
    Int_t                 fNedges;    // number of edges (at least one)
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! Size for the navigation data array
+   mutable std::mutex                 fMutex;      //! Mutex for thread data
 
    // internal utility methods
    Int_t                 GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_t istart, Double_t *sphi, Int_t *iphi, Double_t stepmax=TGeoShape::Big()) const;

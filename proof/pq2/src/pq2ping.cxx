@@ -52,15 +52,15 @@ Bool_t  gIsProof = kFALSE;
 // Global variables defined by other PQ2 components
 extern Int_t gverbose;
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if something is running at gUrl
+/// Return
+///        0 if OK and data server
+///        1 if OK and PROOF server
+///       -1 if nothing valid is available
+
 Int_t checkUrl(const char *url, const char *flog, bool def_proof)
 {
-   // Check if something is running at gUrl
-   // Return
-   //        0 if OK and data server
-   //        1 if OK and PROOF server
-   //       -1 if nothing valid is available
-
    gIsProof = kFALSE;
    gUrl.SetUrl(url);
    TString protocol(gUrl.GetProtocol());
@@ -115,15 +115,15 @@ Int_t checkUrl(const char *url, const char *flog, bool def_proof)
    return ((gIsProof) ? 1 : 0);
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a XrdXrootd service is running on 'port' at 'host'
+/// Return
+///        0 if OK
+///       -1 if nothing is listening on the port (connection cannot be open)
+///        1 if something is listening but not XROOTD
+
 Int_t pingXrootdAt()
 {
-   // Check if a XrdXrootd service is running on 'port' at 'host'
-   // Return
-   //        0 if OK
-   //       -1 if nothing is listening on the port (connection cannot be open)
-   //        1 if something is listening but not XROOTD
-
    Int_t port = gUrl.GetPort();
    const char *host = gUrl.GetHost();
 
@@ -186,15 +186,15 @@ Int_t pingXrootdAt()
    return 0;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a XrdProofd service is running on 'port' at 'host'
+/// Return
+///        0 if OK
+///       -1 if nothing is listening on the port (connection cannot be open)
+///        1 if something is listening but not XPROOFD
+
 Int_t pingXproofdAt()
 {
-   // Check if a XrdProofd service is running on 'port' at 'host'
-   // Return
-   //        0 if OK
-   //       -1 if nothing is listening on the port (connection cannot be open)
-   //        1 if something is listening but not XPROOFD
-
    Int_t port = gUrl.GetPort();
    const char *host = gUrl.GetHost();
 
@@ -271,15 +271,15 @@ Int_t pingXproofdAt()
    return 0;
 }
 
-//_______________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if service is running at 'url'
+/// Return
+///        0 if OK
+///       -1 if nothing is listening at the URL
+///        1 if not a directory
+
 Int_t pingServerAt()
 {
-   // Check if service is running at 'url'
-   // Return
-   //        0 if OK
-   //       -1 if nothing is listening at the URL
-   //        1 if not a directory
-
    Int_t rc = -1;
    FileStat_t st;
    if (gSystem->GetPathInfo(gUrl.GetUrl(), st) == 0) {

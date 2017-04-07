@@ -39,9 +39,7 @@
 ***************************************************************************/
 // for platform specific configurations
 
-#ifndef ROOT_Math_MnConfig
 #include "Math/MConfig.h"
-#endif
 
 #include <iosfwd>
 
@@ -52,16 +50,18 @@
 
 /**
    @defgroup SMatrixGroup SMatrix
+   @ingroup  Math
 
-   \ref SMatrix  for high performance vector and matrix computations.
+   \ref SMatrixPage  for high performance vector and matrix computations.
    Classes representing Matrices and Vectors of arbitrary type and dimension and related functions.
    For a detailed description and usage examples see:
    <ul>
-    <li>\ref SMatrix home page
+    <li>\ref SMatrixPage home page
     <li>\ref SVectorDoc
     <li>\ref SMatrixDoc
     <li>\ref MatVecFunctions
    </ul>
+
 
 */
 
@@ -81,12 +81,8 @@
 */
 
 
-#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-#endif
-#ifndef ROOT_Math_MatrixRepresentationsStatic
 #include "Math/MatrixRepresentationsStatic.h"
-#endif
 
 
 namespace ROOT {
@@ -735,13 +731,9 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
 
 #ifndef __CINT__
 
-#ifndef ROOT_Math_SMatrix_icc
 #include "Math/SMatrix.icc"
-#endif
 
-#ifndef ROOT_Math_MatrixFunctions
 #include "Math/MatrixFunctions.h"
-#endif
 
 #endif //__CINT__
 

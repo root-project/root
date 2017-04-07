@@ -12,32 +12,16 @@
 #ifndef ROOT_TGraphNode
 #define ROOT_TGraphNode
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 struct GVizAgraph_t;
 struct GVizAgnode_t;
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGraphNode                                                           //
-//                                                                      //
-// Interface to the graphviz package.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 
 class TGraphNode : public TNamed, public TAttText, public TAttFill, public TAttLine  {
@@ -46,11 +30,11 @@ protected:
 
 
 
-   GVizAgnode_t *fGVNode; // Graphviz node
-   Double_t fX;           // Node's center X coordinate
-   Double_t fY;           // Node's center Y coordinate
-   Double_t fH;           // Node height
-   Double_t fW;           // Node width
+   GVizAgnode_t *fGVNode; ///< Graphviz node
+   Double_t fX;           ///< Node's center X coordinate
+   Double_t fY;           ///< Node's center Y coordinate
+   Double_t fH;           ///< Node height
+   Double_t fW;           ///< Node width
 
 public:
 

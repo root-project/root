@@ -30,6 +30,8 @@
 
 #include <pthread.h>
 
+#include "RtypesCore.h"
+
 class TAtomicCount {
 private:
    Long_t                  fCnt;     // counter

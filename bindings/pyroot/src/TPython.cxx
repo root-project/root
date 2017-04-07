@@ -12,6 +12,7 @@
 
 // ROOT
 #include "TROOT.h"
+#include "TClassRef.h"
 #include "TObject.h"
 
 // Standard
@@ -83,6 +84,10 @@
 ClassImp(TPython)
 static PyObject* gMainDict = 0;
 
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
+
 
 //- static public members ----------------------------------------------------
 Bool_t TPython::Initialize()
@@ -96,8 +101,13 @@ Bool_t TPython::Initialize()
 
    if ( ! Py_IsInitialized() ) {
    // this happens if Cling comes in first
+#if PY_VERSION_HEX < 0x03020000
       PyEval_InitThreads();
+#endif
       Py_Initialize();
+#if PY_VERSION_HEX >= 0x03020000
+      PyEval_InitThreads();
+#endif
 
    // try again to see if the interpreter is initialized
       if ( ! Py_IsInitialized() ) {
@@ -133,13 +143,77 @@ Bool_t TPython::Initialize()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Import the named python module and create Cling equivalents for its classes
+/// and methods.
+
+Bool_t TPython::Import( const char* mod_name )
+{
+// setup
+   if ( ! Initialize() )
+      return kFALSE;
+
+   PyObject* mod = PyImport_ImportModule( mod_name );
+   if ( ! mod ) {
+      PyErr_Print();
+      return kFALSE;
+   }
+
+// allow finding to prevent creation of a python proxy for the C++ proxy
+   Py_INCREF( mod );
+   PyModule_AddObject( PyROOT::gRootModule, mod_name, mod );
+
+// force creation of the module as a namespace
+   TClass::GetClass( mod_name, kTRUE );
+
+   PyObject* dct = PyModule_GetDict( mod );
+
+// create Cling classes for all new python classes
+   PyObject* values = PyDict_Values( dct );
+   for ( int i = 0; i < PyList_GET_SIZE( values ); ++i ) {
+      PyObject* value = PyList_GET_ITEM( values, i );
+      Py_INCREF( value );
+
+   // collect classes
+      if ( PyClass_Check( value ) || PyObject_HasAttr( value, PyROOT::PyStrings::gBases ) ) {
+      // get full class name (including module)
+         PyObject* pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gCppName );
+         if( ! pyClName ) {
+            pyClName  = PyObject_GetAttr( value, PyROOT::PyStrings::gName );
+         }
+
+         if ( PyErr_Occurred() )
+            PyErr_Clear();
+
+      // build full, qualified name
+         std::string fullname = mod_name;
+         fullname += ".";
+         fullname += PyROOT_PyUnicode_AsString( pyClName );
+
+      // force class creation (this will eventually call TPyClassGenerator)
+         TClass::GetClass( fullname.c_str(), kTRUE );
+
+         Py_XDECREF( pyClName );
+      }
+
+      Py_DECREF( value );
+   }
+
+   Py_DECREF( values );
+
+// TODO: mod "leaks" here
+   if ( PyErr_Occurred() )
+      return kFALSE;
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute the give python script as if it were a macro (effectively an
+/// execfile in __main__), and create Cling equivalents for any newly available
+/// python classes.
+
 void TPython::LoadMacro( const char* name )
 {
-// Execute the give python script as if it were a macro (effectively an
-// execfile in __main__), and create Cling equivalents for any newly available
-// python classes.
-
 // setup
    if ( ! Initialize() )
       return;
@@ -148,7 +222,13 @@ void TPython::LoadMacro( const char* name )
    PyObject* old = PyDict_Values( gMainDict );
 
 // actual execution
+#if PY_VERSION_HEX < 0x03000000
    Exec( (std::string( "execfile(\"" ) + name + "\")").c_str() );
+#else
+   Exec( (std::string("__pyroot_f = open(\"" ) + name + "\"); "
+                      "exec(__pyroot_f.read()); "
+                      "__pyroot_f.close(); del __pyroot_f" ).c_str() );
+#endif
 
 // obtain new __main__ contents
    PyObject* current = PyDict_Values( gMainDict );
@@ -171,8 +251,8 @@ void TPython::LoadMacro( const char* name )
          // need to check for both exact and derived (differences exist between older and newer
          // versions of python ... bug?)
             if ( (pyModName && pyClName) &&\
-                 ( (PyBytes_CheckExact( pyModName ) && PyBytes_CheckExact( pyClName )) ||\
-                   (PyBytes_Check( pyModName ) && PyBytes_Check( pyClName ))\
+                 ( (PyROOT_PyUnicode_CheckExact( pyModName ) && PyROOT_PyUnicode_CheckExact( pyClName )) ||\
+                   (PyROOT_PyUnicode_Check( pyModName ) && PyROOT_PyUnicode_Check( pyClName ))\
                  ) ) {
             // build full, qualified name
                std::string fullname = PyROOT_PyUnicode_AsString( pyModName );
@@ -195,15 +275,19 @@ void TPython::LoadMacro( const char* name )
    Py_DECREF( old );
 }
 
-//____________________________________________________________________________
-void TPython::ExecScript( const char* name, int argc, const char** argv )
-{
-// Execute a python stand-alone script, with argv CLI arguments.
-//
-// example of use:
-//    const char* argv[] = { "1", "2", "3" };
-//    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a python stand-alone script, with argv CLI arguments.
+///
+/// example of use:
+///    const char* argv[] = { "1", "2", "3" };
+///    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
 
+void TPython::ExecScript( const char* name, int argc, const char**
+#if PY_VERSION_HEX < 0x03000000
+       argv
+#endif
+   )
+{
 
 // setup
    if ( ! Initialize() )
@@ -245,7 +329,6 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
    delete [] argv2;
 #else
 // TODO: fix this to work like above ...
-   argv = 0;
 #endif
 
 // actual script execution
@@ -264,11 +347,11 @@ void TPython::ExecScript( const char* name, int argc, const char** argv )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute a python statement (e.g. "import ROOT").
+
 Bool_t TPython::Exec( const char* cmd )
 {
-// Execute a python statement (e.g. "import ROOT").
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -281,22 +364,22 @@ Bool_t TPython::Exec( const char* cmd )
    if ( result ) {
       Py_DECREF( result );
       return kTRUE;
-   } else {
-      PyErr_Print();
-      return kFALSE;
    }
+
+   PyErr_Print();
+   return kFALSE;
 }
 
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate a python expression (e.g. "ROOT.TBrowser()").
+///
+/// Caution: do not hold on to the return value: either store it in a builtin
+/// type (implicit casting will work), or in a pointer to a ROOT object (explicit
+/// casting to a void* is required).
+
 const TPyReturn TPython::Eval( const char* expr )
 {
-// Evaluate a python expression (e.g. "ROOT.TBrowser()").
-//
-// Caution: do not hold on to the return value: either store it in a builtin
-// type (implicit casting will work), or in a pointer to a ROOT object (explicit
-// casting to a void* is required).
-
 // setup
    if ( ! Initialize() )
       return TPyReturn();
@@ -345,11 +428,11 @@ const TPyReturn TPython::Eval( const char* expr )
    return TPyReturn();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind a ROOT object with, at the python side, the name "label".
+
 Bool_t TPython::Bind( TObject* object, const char* label )
 {
-// Bind a ROOT object with, at the python side, the name "label".
-
 // check given address and setup
    if ( ! ( object && Initialize() ) )
       return kFALSE;
@@ -370,11 +453,11 @@ Bool_t TPython::Bind( TObject* object, const char* label )
    return kFALSE;
 }
 
-//____________________________________________________________________________
-void TPython::Prompt() {
-// Enter an interactive python session (exit with ^D). State is preserved
-// between successive calls.
+////////////////////////////////////////////////////////////////////////////////
+/// Enter an interactive python session (exit with ^D). State is preserved
+/// between successive calls.
 
+void TPython::Prompt() {
 // setup
    if ( ! Initialize() ) {
       return;
@@ -384,12 +467,12 @@ void TPython::Prompt() {
    PyRun_InteractiveLoop( stdin, const_cast< char* >( "\0" ) );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is of ObjectProxy type or any
+/// derived type.
+
 Bool_t TPython::ObjectProxy_Check( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is of ObjectProxy type or any
-// derived type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -398,11 +481,11 @@ Bool_t TPython::ObjectProxy_Check( PyObject* pyobject )
    return PyROOT::ObjectProxy_Check( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is ObjectProxy type.
+
 Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is ObjectProxy type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -411,12 +494,12 @@ Bool_t TPython::ObjectProxy_CheckExact( PyObject* pyobject )
    return PyROOT::ObjectProxy_CheckExact( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is of MethodProxy type or any
+/// derived type.
+
 Bool_t TPython::MethodProxy_Check( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is of MethodProxy type or any
-// derived type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -425,11 +508,11 @@ Bool_t TPython::MethodProxy_Check( PyObject* pyobject )
    return PyROOT::MethodProxy_Check( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test whether the type of the given pyobject is MethodProxy type.
+
 Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
 {
-// Test whether the type of the given pyobject is MethodProxy type.
-
 // setup
    if ( ! Initialize() )
       return kFALSE;
@@ -438,11 +521,11 @@ Bool_t TPython::MethodProxy_CheckExact( PyObject* pyobject )
    return PyROOT::MethodProxy_CheckExact( pyobject );
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extract the object pointer held by the ObjectProxy pyobject.
+
 void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
 {
-// Extract the object pointer held by the ObjectProxy pyobject.
-
 // setup
    if ( ! Initialize() )
       return 0;
@@ -455,12 +538,12 @@ void* TPython::ObjectProxy_AsVoidPtr( PyObject* pyobject )
    return ((PyROOT::ObjectProxy*)pyobject)->GetObject();
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind the addr to a python object of class defined by classname.
+
 PyObject* TPython::ObjectProxy_FromVoidPtr(
    void* addr, const char* classname, Bool_t python_owns )
 {
-// Bind the addr to a python object of class defined by classname.
-
 // setup
    if ( ! Initialize() )
       return 0;

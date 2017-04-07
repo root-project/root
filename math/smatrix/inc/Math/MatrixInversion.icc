@@ -4,6 +4,10 @@
 #ifndef ROOT_Math_MatrixInversion_icc
 #define ROOT_Math_MatrixInversion_icc
 
+#ifndef ROOT_Math_Dinv
+#error "Do not use MatrixInversion.icc directly. #include \"Math/Dinv.h\" instead."
+#endif // ROOT_Math_Dinv
+
 
 #include "Math/SVector.h"
 #include "Math/Math.h"

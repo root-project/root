@@ -13,21 +13,13 @@
 #ifndef ROOT_Fit_PoissonLikelihoodFCN
 #define ROOT_Fit_PoissonLikelihoodFCN
 
-#ifndef ROOT_Fit_BasicFCN
 #include "Fit/BasicFCN.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
-#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
-#endif
 
-#ifndef ROOT_Fit_FitUtil
 #include "Fit/FitUtil.h"
-#endif
 
 
 #include <memory>

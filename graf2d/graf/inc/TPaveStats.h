@@ -12,27 +12,17 @@
 #define ROOT_TPaveStats
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPaveStats                                                           //
-//                                                                      //
-// a special TPaveText to draw histogram statistics                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TPaveText
 #include "TPaveText.h"
-#endif
 
 
 class TPaveStats : public TPaveText {
 
 protected:
-   Int_t         fOptFit;            //option Fit
-   Int_t         fOptStat;           //option Stat
-   TString       fFitFormat;         //Printing format for fit parameters
-   TString       fStatFormat;        //Printing format for stats
-   TObject      *fParent;            //owner of this TPaveStats
+   Int_t         fOptFit;            ///< option Fit
+   Int_t         fOptStat;           ///< option Stat
+   TString       fFitFormat;         ///< Printing format for fit parameters
+   TString       fStatFormat;        ///< Printing format for stats
+   TObject      *fParent;            ///< owner of this TPaveStats
 
 public:
    TPaveStats();

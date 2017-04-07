@@ -48,19 +48,6 @@ const Float_t kScale = 0.93376068;
 
 ClassImp(TGQuartz)
 
-//TODO:
-//Originally, Olivier Couet suggested to have a separate module quartz with quartz-related graphics,
-//to be used by both iOS and MacOSX code. Also, the separation of non-GUI and gui parts was suggested
-//that's why we have TGQuartz and TGCocoa classes (TGCocoa is never used as it is, TGQuartz is
-//created and initialzed by TROOT.
-//Today it's clear that there is not need in any special quartz classes anymore -
-//in my iOS applications/module I do not need anything from quartz module, also, the
-//amount of code in quartz module is so small, that it can be merged back into cocoa module.
-
-//At some point, I'll merge cocoa and quartz modules and cleanup all this
-//mess and weird code we have in a quartz module.
-
-
 namespace X11 = ROOT::MacOSX::X11;
 namespace Quartz = ROOT::Quartz;
 namespace Util = ROOT::MacOSX::Util;
@@ -86,7 +73,7 @@ void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoin
 
 //______________________________________________________________________________
 TGQuartz::TGQuartz()
-            : fUseAA(true)
+            : fUseAA(true), fUseFAAA(false)
 {
    //Default ctor.
 
@@ -108,7 +95,7 @@ TGQuartz::TGQuartz()
 //______________________________________________________________________________
 TGQuartz::TGQuartz(const char *name, const char *title)
             : TGCocoa(name, title),
-              fUseAA(true)
+              fUseAA(true), fUseFAAA(false)
 {
    //Constructor.
    if (!TTF::IsInitialized())
@@ -176,7 +163,8 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
             return;
          }
       }
-
+      Quartz::SetLineStyle(ctx, GetLineStyle());
+      Quartz::SetLineWidth(ctx, GetLineWidth());
       Quartz::DrawBox(ctx, x1, y1, x2, y2, isHollow);
    }
 }
@@ -212,7 +200,7 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
 
    const Quartz::CGStateGuard ctxGuard(ctx);
    //AA flag is not a part of a state.
-   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseFAAA);
 
    const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
@@ -367,7 +355,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
    if (!text || !text[0])//Can this ever happen? TPad::PaintText does not check this.
       return;
 
-   if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
+   if (GetTextSize()<1.5)//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
 
    NSObject<X11Drawable> * const drawable =
@@ -712,7 +700,7 @@ void TGQuartz::AlignTTFString()
    //End of comment.
 
    //This code is from TGX11TTF (with my fixes).
-   //It looks like align can not be both X and Y aling?
+   //It looks like align can not be both X and Y align?
 
    const EAlign align = EAlign(fTextAlign);
 
@@ -834,7 +822,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
          return;
       }
 
-      //TODO: this is copy & paste from TGX11TTF, needs more checks (indices).
+      // This is copy & paste from TGX11TTF:
       const Int_t xo = x1 < 0 ? -x1 : 0;
       const Int_t yo = y1 < 0 ? -y1 : 0;
 
@@ -855,7 +843,7 @@ void TGQuartz::RenderTTFString(Int_t x, Int_t y, ETextMode mode)
 
    CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
    // paint the glyphs in the pixmap.
-   TTGlyph *glyph = TTF::GetGlyphs();
+   TTF::TTGlyph *glyph = TTF::GetGlyphs();
    for (int n = 0; n < TTF::GetNumGlyphs(); ++n, ++glyph) {
       if (FT_Glyph_To_Bitmap(&glyph->fImage, TTF::GetSmoothing() ? ft_render_mode_normal : ft_render_mode_mono, 0, 1 ))
          continue;
@@ -932,7 +920,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
       }
 
       // if fore or background have changed from previous character
-      // recalculate the 3 smooting colors (interpolation between fore-
+      // recalculate the 3 smoothing colors (interpolation between fore-
       // and background colors)
       if (fore != col[4].fPixel || back != col[0].fPixel) {
          col[4].fPixel = fore;
@@ -942,7 +930,7 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
             TGCocoa::QueryColor(kNone, col[0]);
          }
 
-         // interpolate between fore and backgound colors
+         // interpolate between fore and background colors
          for (int x = 3; x > 0; --x) {
             col[x].fRed   = (col[4].fRed   * x + col[0].fRed   * (4 - x)) / 4;
             col[x].fGreen = (col[4].fGreen * x + col[0].fGreen * (4 - x)) / 4;
@@ -1003,13 +991,21 @@ void TGQuartz::SetAA()
    if (gEnv) {
       const TString value(TString(gEnv->GetValue("Cocoa.EnableAntiAliasing", "auto")).Strip());
       if (value == "auto") {
-         //TODO: what about multi-head setup?
          [[NSScreen mainScreen] backingScaleFactor] > 1. ? fUseAA = true : fUseAA = false;
       } else if (value == "no")
          fUseAA = false;
       else {
          assert(value == "yes" && "SetAA, value must be 'yes', 'no' or 'auto'");
          fUseAA = true;
+      }
+      const TString valuefa(TString(gEnv->GetValue("Cocoa.EnableFillAreaAntiAliasing", "auto")).Strip());
+      if (valuefa == "auto") {
+         [[NSScreen mainScreen] backingScaleFactor] > 1. ? fUseFAAA = true : fUseFAAA = false;
+      } else if (valuefa == "no")
+         fUseFAAA = false;
+      else {
+         assert(valuefa == "yes" && "SetAA, value must be 'yes', 'no' or 'auto'");
+         fUseFAAA = true;
       }
    }
 }

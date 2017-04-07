@@ -33,14 +33,21 @@ GLH          := $(filter-out $(MODDIRI)/TX11GL.h, $(GLH))
 endif
 
 # Excluded from rootcint
-GLH1         := $(MODDIRI)/gl2ps.h $(MODDIRI)/CsgOps.h \
+GLH1         := $(MODDIRI)/CsgOps.h \
                 $(MODDIRI)/TGLIncludes.h $(MODDIRI)/TGLWSIncludes.h \
-                $(MODDIRI)/TGLContextPrivate.h $(MODDIRI)/TGLMarchingCubes.h \
+                $(MODDIRI)/TGLMarchingCubes.h \
 		$(MODDIRI)/TKDEAdapter.h $(MODDIRI)/TGL5DPainter.h \
 		$(MODDIRI)/TKDEFGT.h $(MODDIRI)/TGLIsoMesh.h
 
 # Used by rootcint
 GLH2         := $(filter-out $(GLH1), $(GLH))
+
+ifeq ($(BUILTINGL2PS),yes)
+GL2PSFLAGS   := -I$(MODDIRS)/gl2ps
+else
+GLS          := $(filter-out $(MODDIRS)/gl2ps.cxx, $(GLS))
+GL2PSFLAGS   := $(GL2PSINCDIR:%=-I%)
+endif
 
 ifneq ($(OPENGLLIB),)
 GLLIBS       := $(OPENGLLIBDIR) $(OPENGLULIB) $(OPENGLLIB) \
@@ -60,9 +67,18 @@ GLLIB        := $(LPATH)/libRGL.$(SOEXT)
 GLMAP        := $(GLLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
+GLH_REL      := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
+ALLHDRS      += $(GLH_REL)
 ALLLIBS      += $(GLLIB)
 ALLMAPS      += $(GLMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(GLH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Graph3d_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(GLLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(GLDEP)
@@ -78,6 +94,7 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRGL.$(SOEXT) $@ "$(GLO) $(GLO1) $(GLDO)" \
 		   "$(GLLIBEXTRA) $(FTGLLIBDIR) $(FTGLLIBS) \
+		    $(GL2PSLIBDIR) $(GL2PSLIB) \
 		    $(GLEWLIBDIR) $(GLEWLIBS) $(GLLIBS)"
 
 $(call pcmrule,GL)
@@ -107,12 +124,12 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 ifeq ($(ARCH),win32)
 $(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                            $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) -I$(WIN32GDKDIR)/gdk/src \
-                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%)
+                             $(GDKDIRI:%=-I%) $(GLIBDIRI:%=-I%) $(GL2PSFLAGS)
 else
-$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%)
-$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLO) $(GLDO): CXXFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
+$(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%) $(GL2PSFLAGS)
 endif
 
 $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)
@@ -120,6 +137,7 @@ $(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FT
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+
 $(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.

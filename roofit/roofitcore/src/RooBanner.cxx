@@ -4,16 +4,21 @@
 #include "Riostream.h"
 #include "TEnv.h"
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Print banner message when RooFit library is loaded
-// END_HTML
-//
+/**
+\file RooBanner.cxx
+\class RooBanner
+\ingroup Roofitcore
+
+Print banner message when RooFit library is loaded
+**/
 
 using namespace std;
 
 const char* VTAG="3.60" ;
+
+Int_t doBanner();
+
+static Int_t dummy = doBanner() ;
 
 Int_t doBanner()
 
@@ -27,7 +32,7 @@ Int_t doBanner()
       << endl ;
    }
 #endif
+  (void) dummy;
   return 0 ;
 }
 
-static Int_t dummy = doBanner() ;

@@ -43,12 +43,12 @@
 #include "TSocket.h"
 #include "TSystem.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ctor.
+
 TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,
                        const char *height)
 {
-   // ctor.
-
    fHtml = htm;
    fZUrl = StrDup(url);
    fZWidth = StrDup(width);
@@ -61,11 +61,11 @@ TGHtmlImage::TGHtmlImage(TGHtml *htm, const char *url, const char *width,
    fTimer = NULL;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  dtor.
+
 TGHtmlImage::~TGHtmlImage()
 {
-   //  dtor.
-
    delete [] fZUrl;
    delete [] fZWidth;
    delete [] fZHeight;
@@ -74,11 +74,11 @@ TGHtmlImage::~TGHtmlImage()
    if (fTimer) delete fTimer;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the alignment for an image
+
 int TGHtml::GetImageAlignment(TGHtmlElement *p)
 {
-   // Find the alignment for an image
-
    const char *z;
    int i;
    int result;
@@ -111,17 +111,17 @@ int TGHtml::GetImageAlignment(TGHtmlElement *p)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine is called when an image changes. If the size of the
+/// images changes, then we need to completely redo the layout. If
+/// only the appearance changes, then this works like an expose event.
+///
+/// pImage    - Pointer to an TGHtmlImage object
+/// newWidth  - New width of the image
+/// newHeight - New height of the image
+
 void TGHtml::ImageChanged(TGHtmlImage *pImage, int newWidth, int newHeight)
 {
-   // This routine is called when an image changes. If the size of the
-   // images changes, then we need to completely redo the layout. If
-   // only the appearance changes, then this works like an expose event.
-   //
-   // pImage    - Pointer to an TGHtmlImage object
-   // newWidth  - New width of the image
-   // newHeight - New height of the image
-
    TGHtmlImageMarkup *pElem;
 
    if (pImage->fW != newWidth || pImage->fH != newHeight) {
@@ -151,12 +151,12 @@ void TGHtml::ImageChanged(TGHtmlImage *pImage, int newWidth, int newHeight)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Given an <IMG> markup, find or create an appropriate TGHtmlImage
+/// object and return a pointer to that object. NULL might be returned.
+
 TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 {
-   // Given an <IMG> markup, find or create an appropriate TGHtmlImage
-   // object and return a pointer to that object. NULL might be returned.
-
    const char *zWidth;
    const char *zHeight;
    const char *zSrc;
@@ -205,11 +205,11 @@ TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
    return pImage;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Temporary function to read remote pictures
+
 static TImage *ReadRemoteImage(const char *url)
 {
-   // Temporary function to read remote pictures
-
    TImage *image = 0;
    FILE *tmp;
    char *buf;
@@ -259,12 +259,12 @@ static TImage *ReadRemoteImage(const char *url)
    return image;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is the default LoadImage() procedure. It just tries to load the
+/// image from a file in the local filesystem.
+
 TImage *TGHtml::LoadImage(const char *url, int w, int h)
 {
-   // This is the default LoadImage() procedure. It just tries to load the
-   // image from a file in the local filesystem.
-
    TImage *image = 0;
 
    //TGHtmlUri uri(url);
@@ -288,12 +288,12 @@ TImage *TGHtml::LoadImage(const char *url, int w, int h)
    return image;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the height and width, converting to percent if required
+/// ret must be at least 16 characters long
+
 const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
 {
-   // Return the height and width, converting to percent if required
-   // ret must be at least 16 characters long
-
    int n, m, val;
    const char *tz, *z;
    TGHtmlElement *pElem = p;
@@ -333,13 +333,13 @@ const char *TGHtml::GetPctWidth(TGHtmlElement *p, char *opt, char *ret)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine searchs for an image beneath the coordinates x,y
+/// and returns the token number of the the image, or -1 if no
+/// image found.
+
 int TGHtml::GetImageAt(int x, int y)
 {
-   // This routine searchs for an image beneath the coordinates x,y
-   // and returns the token number of the the image, or -1 if no
-   // image found.
-
    TGHtmlBlock *pBlock;
    TGHtmlElement *pElem;
    //int n;

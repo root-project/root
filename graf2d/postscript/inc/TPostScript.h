@@ -13,83 +13,72 @@
 #define ROOT_TPostScript
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TPostScript                                                          //
-//                                                                      //
-// PostScript driver.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TVirtualPS
 #include "TVirtualPS.h"
-#endif
 
 class TPoints;
 
 class TPostScript : public TVirtualPS {
 
 protected:
-   Float_t fX1v;             //X bottom left corner of paper
-   Float_t fY1v;             //Y bottom left corner of paper
-   Float_t fX2v;             //X top right corner of paper
-   Float_t fY2v;             //Y top right corner of paper
-   Float_t fX1w;             //
-   Float_t fY1w;             //
-   Float_t fX2w;             //
-   Float_t fY2w;             //
-   Float_t fDXC;             //
-   Float_t fDYC;             //
-   Float_t fXC;              //
-   Float_t fYC;              //
-   Float_t fFX;              //
-   Float_t fFY;              //
-   Float_t fXVP1;            //
-   Float_t fXVP2;            //
-   Float_t fYVP1;            //
-   Float_t fYVP2;            //
-   Float_t fXVS1;            //
-   Float_t fXVS2;            //
-   Float_t fYVS1;            //
-   Float_t fYVS2;            //
-   Float_t fXsize;           //Page size along X
-   Float_t fYsize;           //Page size along Y
-   Float_t fMaxsize;         //Largest dimension of X and Y
-   Float_t fRed;             //Per cent of red
-   Float_t fGreen;           //Per cent of green
-   Float_t fBlue;            //Per cent of blue
-   Float_t fLineScale;       //Line width scale factor
-   Int_t   fLineJoin;        //Appearance of joining lines
-   Int_t   fSave;            //Number of gsave for restore
-   Int_t   fNXzone;          //Number of zones along X
-   Int_t   fNYzone;          //Number of zones along Y
-   Int_t   fIXzone;          //Current zone along X
-   Int_t   fIYzone;          //Current zone along Y
-   Float_t fMarkerSizeCur;   //current transformed value of marker size
-   Int_t   fCurrentColor;    //current Postscript color index
-   Int_t   fNpages;          //number of pages
-   Int_t   fType;            //PostScript workstation type
-   Int_t   fMode;            //PostScript mode
-   Int_t   fClip;            //Clipping mode
-   Bool_t  fBoundingBox;     //True for Encapsulated PostScript
-   Bool_t  fClear;           //True when page must be cleared
-   Bool_t  fClipStatus;      //Clipping Indicator
-   Bool_t  fRange;           //True when a range has been defined
-   Bool_t  fZone;            //Zone indicator
-   char    fPatterns[32];    //Indicate if pattern n is defined
-   Int_t   fNbinCT;          //Number of entries in the current Cell Array
-   Int_t   fNbCellW;         //Number of boxes per line
-   Int_t   fNbCellLine;      //Number of boxes in the current line
-   Int_t   fMaxLines;        //Maximum number of lines in a PS array
-   Int_t   fLastCellRed;     //Last red value
-   Int_t   fLastCellGreen;   //Last green value
-   Int_t   fLastCellBlue;    //Last blue value
-   Int_t   fNBSameColorCell; //Number of boxes with the same color
-   TString fFileName;        //PS file name
-   Bool_t  fFontEmbed;       //True is FontEmbed has been called
+   Float_t fX1v;             ///< X bottom left corner of paper
+   Float_t fY1v;             ///< Y bottom left corner of paper
+   Float_t fX2v;             ///< X top right corner of paper
+   Float_t fY2v;             ///< Y top right corner of paper
+   Float_t fX1w;             ///<
+   Float_t fY1w;             ///<
+   Float_t fX2w;             ///<
+   Float_t fY2w;             ///<
+   Float_t fDXC;             ///<
+   Float_t fDYC;             ///<
+   Float_t fXC;              ///<
+   Float_t fYC;              ///<
+   Float_t fFX;              ///<
+   Float_t fFY;              ///<
+   Float_t fXVP1;            ///<
+   Float_t fXVP2;            ///<
+   Float_t fYVP1;            ///<
+   Float_t fYVP2;            ///<
+   Float_t fXVS1;            ///<
+   Float_t fXVS2;            ///<
+   Float_t fYVS1;            ///<
+   Float_t fYVS2;            ///<
+   Float_t fXsize;           ///< Page size along X
+   Float_t fYsize;           ///< Page size along Y
+   Float_t fMaxsize;         ///< Largest dimension of X and Y
+   Float_t fRed;             ///< Per cent of red
+   Float_t fGreen;           ///< Per cent of green
+   Float_t fBlue;            ///< Per cent of blue
+   Float_t fLineScale;       ///< Line width scale factor
+   Int_t   fLineJoin;        ///< Appearance of joining lines
+   Int_t   fSave;            ///< Number of gsave for restore
+   Int_t   fNXzone;          ///< Number of zones along X
+   Int_t   fNYzone;          ///< Number of zones along Y
+   Int_t   fIXzone;          ///< Current zone along X
+   Int_t   fIYzone;          ///< Current zone along Y
+   Float_t fMarkerSizeCur;   ///< current transformed value of marker size
+   Int_t   fCurrentColor;    ///< current Postscript color index
+   Int_t   fNpages;          ///< number of pages
+   Int_t   fType;            ///< PostScript workstation type
+   Int_t   fMode;            ///< PostScript mode
+   Int_t   fClip;            ///< Clipping mode
+   Bool_t  fBoundingBox;     ///< True for Encapsulated PostScript
+   Bool_t  fClear;           ///< True when page must be cleared
+   Bool_t  fClipStatus;      ///< Clipping Indicator
+   Bool_t  fRange;           ///< True when a range has been defined
+   Bool_t  fZone;            ///< Zone indicator
+   char    fPatterns[32];    ///< Indicate if pattern n is defined
+   Int_t   fNbinCT;          ///< Number of entries in the current Cell Array
+   Int_t   fNbCellW;         ///< Number of boxes per line
+   Int_t   fNbCellLine;      ///< Number of boxes in the current line
+   Int_t   fMaxLines;        ///< Maximum number of lines in a PS array
+   Int_t   fLastCellRed;     ///< Last red value
+   Int_t   fLastCellGreen;   ///< Last green value
+   Int_t   fLastCellBlue;    ///< Last blue value
+   Int_t   fNBSameColorCell; ///< Number of boxes with the same color
+   TString fFileName;        ///< PS file name
+   Bool_t  fFontEmbed;       ///< True is FontEmbed has been called
 
-   static Int_t fgLineJoin;  //Appearance of joining lines
+   static Int_t fgLineJoin;  ///< Appearance of joining lines
 
 public:
    TPostScript();

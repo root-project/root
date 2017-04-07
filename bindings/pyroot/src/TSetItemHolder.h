@@ -22,7 +22,7 @@ namespace PyROOT {
       virtual PyObject* PreProcessArgs( ObjectProxy*& self, PyObject* args, PyObject* kwds );
 
    protected:
-      virtual Bool_t InitExecutor_( TExecutor*& );
+      virtual Bool_t InitExecutor_( TExecutor*&, TCallContext* ctxt = 0 );
    };
 
 } // namespace PyROOT

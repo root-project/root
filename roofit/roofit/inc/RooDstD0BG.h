@@ -27,17 +27,17 @@ class RooDstD0BG : public RooAbsPdf {
 public:
   RooDstD0BG() {} ;
   RooDstD0BG(const char *name, const char *title,
-	     RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
-	     RooAbsReal& _a, RooAbsReal& _b);
+        RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
+        RooAbsReal& _a, RooAbsReal& _b);
 
   RooDstD0BG(const RooDstD0BG& other, const char *name=0) ;
-  virtual TObject *clone(const char *newname) const { 
+  virtual TObject *clone(const char *newname) const {
     return new RooDstD0BG(*this,newname); }
   inline virtual ~RooDstD0BG() { };
-  
+
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  
+
 protected:
 
   RooRealProxy dm ;
@@ -45,9 +45,9 @@ protected:
   RooRealProxy C,A,B ;
 
   Double_t evaluate() const;
-  
+
 private:
-  
+
   ClassDef(RooDstD0BG,1) // D*-D0 mass difference background PDF
 };
 

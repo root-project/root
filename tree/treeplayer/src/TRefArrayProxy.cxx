@@ -13,23 +13,23 @@
 #include "TRefArrayProxy.h"
 #include "TFormLeafInfoReference.h"
 
-//______________________________________________________________________________
-//
-// TRefArrayProxy is a container proxy, which allows to access references stored
-// in a TRefArray from TTree::Draw
+/** \class TRefArrayProxy
+A container proxy, which allows to access references stored
+in a TRefArray from TTree::Draw
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access referenced object(-data)
+
 void* TRefArrayProxy::GetObject(TFormLeafInfoReference* /*info*/, void* data, Int_t instance)  {
-   // Access referenced object(-data)
-
    TRefArray* ref = (TRefArray*)data;//((char*)data + info->GetOffset());
    return ref->At(instance);
 }
 
-//______________________________________________________________________________
-Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* /*info*/, void* data)   {
-   // TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
 
+Int_t  TRefArrayProxy::GetCounterValue(TFormLeafInfoReference* /*info*/, void* data)   {
    TRefArray* ref = (TRefArray*)data;
    return ref->GetEntriesFast();
 }

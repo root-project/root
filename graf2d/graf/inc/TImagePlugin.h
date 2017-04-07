@@ -13,25 +13,15 @@
 #define ROOT_TImagePlugin
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TImagePlugin                                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TImagePlugin : public TObject {
 
 protected:
-   TString fExtension;  // file extension
+   TString fExtension;  ///< file extension
 
 public:
    TImagePlugin(const char *ext) { fExtension = ext; }

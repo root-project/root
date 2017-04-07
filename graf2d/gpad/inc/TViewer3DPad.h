@@ -12,25 +12,15 @@
 #ifndef ROOT_TViewer3DPad
 #define ROOT_TViewer3DPad
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TViewer3DPad                                                         //
-//                                                                      //
-// Provides 3D viewer interface (TVirtualViewer3D) support on a pad.    //
-// Will be merged with TView / TView3D eventually.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
-#endif
 
 class TVirtualPad;
 
 class TViewer3DPad : public TVirtualViewer3D {
 private:
-   TVirtualPad &  fPad; // the pad we paint into.
-   Bool_t         fBuilding; // is scene being built?
+   TVirtualPad &  fPad;       ///< the pad we paint into.
+   Bool_t         fBuilding;  ///< is scene being built?
 
    // Non-copyable
    TViewer3DPad(const TViewer3DPad &);

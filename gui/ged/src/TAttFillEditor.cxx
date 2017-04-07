@@ -43,13 +43,13 @@ enum EFillWid {
 };
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of fill attributes GUI.
+
 TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of fill attributes GUI.
-
    fPriority = 2;
 
    fAttFill = 0;
@@ -85,17 +85,18 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
    AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of fill editor.
+
 TAttFillEditor::~TAttFillEditor()
 {
-  // Destructor of fill editor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TAttFillEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttFillEditor", this, "DoFillColor(Pixel_t)");
    fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttFillEditor", this, "DoFillAlphaColor(ULong_t)");
    fPatternSelect->Connect("PatternSelected(Style_t)", "TAttFillEditor", this, "DoFillPattern(Style_t)");
@@ -106,11 +107,11 @@ void TAttFillEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used fill attributes.
+
 void TAttFillEditor::SetModel(TObject* obj)
 {
-   // Pick up the used fill attributes.
-
    TAttFill *attfill = dynamic_cast<TAttFill *>(obj);
    if (!attfill) return;
 
@@ -133,11 +134,11 @@ void TAttFillEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the fill area color with alpha.
+
 void TAttFillEditor::DoFillAlphaColor(ULong_t p)
 {
-   // Slot connected to the fill area color with alpha.
-
    TColor *color = (TColor *)p;
 
    if (fAvoidSignal) return;
@@ -148,11 +149,11 @@ void TAttFillEditor::DoFillAlphaColor(ULong_t p)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the fill area color.
+
 void TAttFillEditor::DoFillColor(Pixel_t color)
 {
-   // Slot connected to the fill area color.
-
    if (fAvoidSignal) return;
    fAttFill->SetFillColor(TColor::GetColor(color));
 
@@ -164,21 +165,21 @@ void TAttFillEditor::DoFillColor(Pixel_t color)
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the fill area pattern.
+
 void TAttFillEditor::DoFillPattern(Style_t pattern)
 {
-   // Slot connected to the fill area pattern.
-
    if (fAvoidSignal) return;
    fAttFill->SetFillStyle(pattern);
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value from the entry field.
+
 void TAttFillEditor::DoAlphaField()
 {
-   // Slot to set the alpha value from the entry field.
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor())) {
@@ -188,11 +189,11 @@ void TAttFillEditor::DoAlphaField()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set the alpha value
+
 void TAttFillEditor::DoAlpha()
 {
-   // Slot to set the alpha value
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor())) {
@@ -202,11 +203,11 @@ void TAttFillEditor::DoAlpha()
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to set alpha value online.
+
 void TAttFillEditor::DoLiveAlpha(Int_t a)
 {
-   // Slot to set alpha value online.
-
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
@@ -221,11 +222,11 @@ void TAttFillEditor::DoLiveAlpha(Int_t a)
    Update();
 }
 
-//_______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot to update alpha value on click on Slider
+
 void TAttFillEditor::GetCurAlpha()
 {
-   // Slot to update alpha value on click on Slider
-
    if (fAvoidSignal) return;
 
    if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor())) {

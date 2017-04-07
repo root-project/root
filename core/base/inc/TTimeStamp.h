@@ -39,16 +39,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 #include <ctime>
 
-#ifdef R__WIN32
+#if defined (_MSC_VER) && (_MSC_VER < 1900)
 struct timespec {
    time_t   tv_sec;  // seconds
    long     tv_nsec; // nanoseconds

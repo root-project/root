@@ -25,44 +25,41 @@
 #include "TGLEventHandler.h"
 #include "RConfigure.h"
 
-/******************************************************************************/
-// TGLWidget
-/******************************************************************************/
+/** \class TGLWidget
+\ingroup opengl
+GL window with context. _Must_ _have_ a parent window
+(the 'parent' parameter of ctors). The current version inherits
+TGCanvas (I'm not sure about future versions), probably, in future
+multiple inheritance will be added - the second
+base class will be TGLPaintDevice or something like this.
 
-//______________________________________________________________________________
-//
-// GL window with context. _Must_ _have_ a parent window
-// (the 'parent' parameter of ctors). The current version inherits
-// TGCanvas (I'm not sure about future versions), probably, in future
-// multiple inheritance will be added - the second
-// base class will be TGLPaintDevice or something like this.
-//
-// Usage:
-// - Simply create TGLWidget as an embedded widget, and
-//   connect your slots to signals you need: HandleExpose, HandleConfigureNotify, etc.
-//   In your slots you can use gl API directly - under Win32 TGLWidget switches
-//   between threads internally (look TGLPShapeObjEditor for such usage).
-// - You can write your own class, derived from TGLWidget, with PaintGL and InitGL
-//   overriden.
-//
-// Resources (and invariants):
-// -fContainer (TGLWidgetContainer) - controlled by std::auto_ptr
-// -fWindowIndex - controlled manually (see CreateWidget and dtor)
-// -fGLContext - controlled manually (see CreateWidget and dtor)
-// -visual info for X11 version, controlled manually (see CreateGLContainer and dtor)
-//
-// Exceptions:
-// -can be thrown only during construction.
-// -under win32 class does not throw itself (but some internal operations can throw)
-// -under X11 can throw std::runtime_error (from CreateGLContext).
-// -In case of exceptions resources will be freed.
-//
-// TGLWidget object is immutable as far as it was created.
-//
-// Boolean parameter defines, if you want to grab user's input or not.
-// By default you want, but for example when not - see TGLPShapeObjEditor.
-//
-// Non-copyable.
+Usage:
+  - Simply create TGLWidget as an embedded widget, and
+    connect your slots to signals you need: HandleExpose, HandleConfigureNotify, etc.
+    In your slots you can use gl API directly - under Win32 TGLWidget switches
+    between threads internally (look TGLPShapeObjEditor for such usage).
+  - You can write your own class, derived from TGLWidget, with PaintGL and InitGL
+    overriden.
+
+Resources (and invariants):
+  - fContainer (TGLWidgetContainer) - controlled by std::auto_ptr
+  - fWindowIndex - controlled manually (see CreateWidget and dtor)
+  - fGLContext - controlled manually (see CreateWidget and dtor)
+  - visual info for X11 version, controlled manually (see CreateGLContainer and dtor)
+
+Exceptions:
+  - can be thrown only during construction.
+  - under win32 class does not throw itself (but some internal operations can throw)
+  - under X11 can throw std::runtime_error (from CreateGLContext).
+  - In case of exceptions resources will be freed.
+
+TGLWidget object is immutable as far as it was created.
+
+Boolean parameter defines, if you want to grab user's input or not.
+By default you want, but for example when not - see TGLPShapeObjEditor.
+
+Non-copyable.
+*/
 
 ClassImp(TGLWidget);
 
@@ -70,37 +67,37 @@ ClassImp(TGLWidget);
 // TGLWidget - system-independent methods
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static constructor for creating widget with default pixel format.
+
 TGLWidget* TGLWidget::CreateDummy()
 {
-   // Static constructor for creating widget with default pixel format.
-
    TGLFormat format(Rgl::kNone);
 
    return Create(format, gClient->GetDefaultRoot(), kFALSE, kFALSE, 0, 1, 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static constructor for creating widget with default pixel format.
+
 TGLWidget* TGLWidget::Create(const TGWindow* parent, Bool_t selectInput,
               Bool_t shareDefault, const TGLPaintDevice *shareDevice,
               UInt_t width, UInt_t height)
 {
-   // Static constructor for creating widget with default pixel format.
-
    TGLFormat format;
 
    return Create(format, parent, selectInput, shareDefault, shareDevice,
                  width, height);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static constructor for creating widget with given pixel format.
+
 TGLWidget* TGLWidget::Create(const TGLFormat &format,
              const TGWindow* parent, Bool_t selectInput,
              Bool_t shareDefault, const TGLPaintDevice *shareDevice,
              UInt_t width, UInt_t height)
 {
-   // Static constructor for creating widget with given pixel format.
-
    // Make sure window-system dependent part of GL-util is initialized.
    TGLUtil::InitializeIfNeeded();
 
@@ -137,7 +134,9 @@ TGLWidget* TGLWidget::Create(const TGLFormat &format,
    return glw;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates widget with default pixel format.
+
 TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    : TGFrame(gClient, glw, p),
      fGLContext(0),
@@ -146,8 +145,6 @@ TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
      fFromInit(kTRUE),
      fEventHandler(0)
 {
-   // Creates widget with default pixel format.
-
    if (selectInput)
    {
       gVirtualX->GrabButton(GetId(), kAnyButton, kAnyModifier,
@@ -159,11 +156,11 @@ TGLWidget::TGLWidget(Window_t glw, const TGWindow* p, Bool_t selectInput)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Destructor. Deletes window ???? and XVisualInfo
+
 TGLWidget::~TGLWidget()
 {
-   //Destructor. Deletes window ???? and XVisualInfo
-
 #ifndef WIN32
 #ifndef R__HAS_COCOA
    XFree(fInnerData.second);//free XVisualInfo
@@ -184,81 +181,91 @@ TGLWidget::~TGLWidget()
    gVirtualX->CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Call glEnable(... in overrider of InitGL.
+
 void TGLWidget::InitGL()
 {
-   //Call glEnable(... in overrider of InitGL.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Do actual drawing in overrider of PaintGL.
+
 void TGLWidget::PaintGL()
 {
-   //Do actual drawing in overrider of PaintGL.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Make the gl-context current.
+
 Bool_t TGLWidget::MakeCurrent()
 {
-   //Make the gl-context current.
    return fGLContext->MakeCurrent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Clear the current gl-context.
+
 Bool_t TGLWidget::ClearCurrent()
 {
-   //Clear the current gl-context.
    return fGLContext->ClearCurrent();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Swap buffers.
+
 void TGLWidget::SwapBuffers()
 {
-   //Swap buffers.
    fGLContext->SwapBuffers();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Get gl context.
+
 const TGLContext *TGLWidget::GetContext()const
 {
-   //Get gl context.
    return fGLContext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Pixel format.
+
 const TGLFormat *TGLWidget::GetPixelFormat()const
 {
-   //Pixel format.
    return &fGLFormat;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Dpy*, XVisualInfo *
+
 std::pair<void *, void *> TGLWidget::GetInnerData()const
 {
-   //Dpy*, XVisualInfo *
    return fInnerData;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Register gl-context created for this window.
+
 void TGLWidget::AddContext(TGLContext *ctx)
 {
-   //Register gl-context created for this window.
    fValidContexts.insert(ctx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Remove context (no real deletion, done by TGLContex dtor).
+
 void TGLWidget::RemoveContext(TGLContext *ctx)
 {
-   //Remove context (no real deletion, done by TGLContex dtor).
    std::set<TGLContext *>::iterator it = fValidContexts.find(ctx);
    if (it != fValidContexts.end())
       fValidContexts.erase(it);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///For camera.
+
 void TGLWidget::ExtractViewport(Int_t *vp)const
 {
-   //For camera.
-
    vp[0] = 0;
    vp[1] = 0;
    vp[2] = GetWidth();
@@ -325,21 +332,21 @@ namespace {
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CreateWidget.
+/// Static function called prior to widget construction,
+/// I've extracted this code from ctors to make WIN32/X11
+/// separation simpler and because of gInterpreter usage.
+/// new, TGLContext can throw
+/// std::bad_alloc and std::runtime_error. Before try block, the only
+/// resource allocated is pointed by fWindowIndex (InitWindow cannot throw).
+/// In try block (and after successful constraction)
+/// resources are controlled by std::auto_ptrs and dtor.
+
 Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat& /*format*/,
                                  UInt_t width, UInt_t  height,
                                  std::pair<void *, void *>& innerData)
 {
-   // CreateWidget.
-   // Static function called prior to widget construction,
-   // I've extracted this code from ctors to make WIN32/X11
-   // separation simpler and because of gInterpreter usage.
-   // new, TGLContext can throw
-   // std::bad_alloc and std::runtime_error. Before try block, the only
-   // resource allocated is pointed by fWindowIndex (InitWindow cannot throw).
-   // In try block (and after successful constraction)
-   // resources are controlled by std::auto_ptrs and dtor.
-
    Int_t widx = gVirtualX->InitWindow((ULong_t)parent->GetId());
    innerData.second = (void*) widx;
    Window_t win = gVirtualX->GetWindowID(widx);
@@ -347,12 +354,12 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat& /*form
    return win;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixel format.
+/// Resource - hDC, owned and freed by guard object.
+
 void TGLWidget::SetFormat()
 {
-   // Set pixel format.
-   // Resource - hDC, owned and freed by guard object.
-
    if (!fFromInit) {
       Error("TGLWidget::SetFormat", "Sorry, you should not call this function");
       return;
@@ -392,14 +399,14 @@ void TGLWidget::SetFormat()
 #elif defined(R__HAS_COCOA) //MacOSX with Cocoa enabled.
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CreateWidget - MacOSX/Cocoa version.
+/// Static function called prior to construction.
+
 Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format,
                                  UInt_t width, UInt_t height,
                                  std::pair<void *, void *>& /*internalData*/)
 {
-   // CreateWidget - MacOSX/Cocoa version.
-   // Static function called prior to construction.
-
    typedef std::pair<UInt_t, Int_t> component_type;
 
    std::vector<component_type>formatComponents;
@@ -420,11 +427,12 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
    return gVirtualX->CreateOpenGLWindow(parent->GetId(), width, height, formatComponents);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixel format.
+/// Empty version for X11.
+
 void TGLWidget::SetFormat()
 {
-   // Set pixel format.
-   // Empty version for X11.
 }
 
 //==============================================================================
@@ -481,17 +489,17 @@ namespace
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CreateWidget - X11 version.
+/// Static function called prior to construction.
+/// Can throw std::bad_alloc and std::runtime_error.
+/// This version is bad - I do not check the results of
+/// X11 calls.
+
 Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format,
                                  UInt_t width, UInt_t height,
                                  std::pair<void *, void *>& innerData)
 {
-   // CreateWidget - X11 version.
-   // Static function called prior to construction.
-   // Can throw std::bad_alloc and std::runtime_error.
-   // This version is bad - I do not check the results of
-   // X11 calls.
-
    std::vector<Int_t> glxfmt;
    fill_format(glxfmt, format);
 
@@ -527,11 +535,12 @@ Window_t TGLWidget::CreateWindow(const TGWindow* parent, const TGLFormat &format
    return glWin;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pixel format.
+/// Empty version for X11.
+
 void TGLWidget::SetFormat()
 {
-   // Set pixel format.
-   // Empty version for X11.
 }
 
 //==============================================================================
@@ -543,17 +552,19 @@ void TGLWidget::SetFormat()
 // Event handling
 //==============================================================================
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Set event-handler. All events are passed to this object.
+
 void TGLWidget::SetEventHandler(TGEventHandler *eh)
 {
-   //Set event-handler. All events are passed to this object.
    fEventHandler = eh;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse crossing event.
+
 Bool_t TGLWidget::HandleCrossing(Event_t *ev)
 {
-   // Handle mouse crossing event.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleCrossing((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -570,10 +581,11 @@ Bool_t TGLWidget::HandleCrossing(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleButton(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleButton((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -585,10 +597,11 @@ Bool_t TGLWidget::HandleButton(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleDoubleClick((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -600,10 +613,11 @@ Bool_t TGLWidget::HandleDoubleClick(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleConfigureNotify((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -618,10 +632,11 @@ Bool_t TGLWidget::HandleConfigureNotify(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleFocusChange(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleFocusChange((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -633,10 +648,11 @@ Bool_t TGLWidget::HandleFocusChange(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleKey(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleKey((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -648,10 +664,11 @@ Bool_t TGLWidget::HandleKey(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 Bool_t TGLWidget::HandleMotion(Event_t *ev)
 {
-   //Delegate call to the owner.
    if (!gVirtualX->IsCmdThread()) {
       gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->HandleMotion((Event_t *)0x%lx)", (ULong_t)this, (ULong_t)ev));
       return kTRUE;
@@ -663,16 +680,11 @@ Bool_t TGLWidget::HandleMotion(Event_t *ev)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Delegate call to the owner.
+
 void TGLWidget::DoRedraw()
 {
-   //Delegate call to the owner.
-//   if (!gVirtualX->IsCmdThread()) {
-//      gROOT->ProcessLineFast(Form("((TGLWidget *)0x%lx)->DoRedraw()", this));
-//      return;
-//   }
-//    R__LOCKGUARD2(gROOTMutex);
-
    if (fEventHandler)
       return fEventHandler->Repaint();
 }

@@ -17,18 +17,18 @@
 
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// A class encapsulating GL rendering of TEveFrameBox via a static
-// meber function.
+/** \class TEveFrameBoxGL
+\ingroup TEve
+A class encapsulating GL rendering of TEveFrameBox via a static member function.
+*/
 
 ClassImp(TEveFrameBoxGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the frame with GL.
+
 void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
 {
-   // Render the frame with GL.
-
    const Float_t * p = b.fFramePoints;
    Float_t normal[3];
 
@@ -104,11 +104,11 @@ void TEveFrameBoxGL::RenderFrame(const TEveFrameBox& b, Bool_t fillp)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render the frame-box with GL.
+
 void TEveFrameBoxGL::Render(const TEveFrameBox* box)
 {
-   // Render the frame-box with GL.
-
    const TEveFrameBox& b = *box;
 
    glPushAttrib(GL_POLYGON_BIT | GL_LINE_BIT | GL_ENABLE_BIT);

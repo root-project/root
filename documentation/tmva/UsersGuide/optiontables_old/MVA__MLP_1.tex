@@ -1,0 +1,21 @@
+\begin{optiontableAuto}
+                  NCycles  &  \mc{1}{c}{--}  &              500  &  \mc{1}{l}{--}  &  Number of training cycles \\
+             HiddenLayers  &  \mc{1}{c}{--}  &            N,N-1  &  \mc{1}{l}{--}  &  Specification of hidden layer architecture \\
+               NeuronType  &  \mc{1}{c}{--}  &          sigmoid  &  \mc{1}{l}{--}  &  Neuron activation function type \\
+               RandomSeed  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Random seed for initial synapse weights (0 means unique seed for each run; default value '1') \\
+            EstimatorType  &  \mc{1}{c}{--}  &              MSE  &  MSE, CE, linear, sigmoid, tanh, radial  &  MSE (Mean Square Estimator) for Gaussian Likelihood or CE(Cross-Entropy) for Bernoulli Likelihood \\
+          NeuronInputType  &  \mc{1}{c}{--}  &              sum  &  sum, sqsum, abssum  &  Neuron input function type \\
+           TrainingMethod  &  \mc{1}{c}{--}  &               BP  &  BP, GA, BFGS  &  Train with Back-Propagation (BP), BFGS Algorithm (BFGS), or Genetic Algorithm (GA - slower and worse) \\
+             LearningRate  &  \mc{1}{c}{--}  &             0.02  &  \mc{1}{l}{--}  &  ANN learning rate parameter \\
+                DecayRate  &  \mc{1}{c}{--}  &             0.01  &  \mc{1}{l}{--}  &  Decay rate for learning parameter \\
+                 TestRate  &  \mc{1}{c}{--}  &               10  &  \mc{1}{l}{--}  &  Test for overtraining performed at each \#th epochs \\
+          EpochMonitoring  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  Provide epoch-wise monitoring plots according to TestRate (caution: causes big ROOT output file!) \\
+                 Sampling  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Only 'Sampling' (randomly selected) events are trained each epoch \\
+            SamplingEpoch  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &  Sampling is used for the first 'SamplingEpoch' epochs, afterwards, all events are taken for training \\
+       SamplingImportance  &  \mc{1}{c}{--}  &                1  &  \mc{1}{l}{--}  &   The sampling weights of events in epochs which successful (worse estimator than before) are multiplied with SamplingImportance, else they are divided. \\
+         SamplingTraining  &  \mc{1}{c}{--}  &             True  &  \mc{1}{l}{--}  &  The training sample is sampled \\
+          SamplingTesting  &  \mc{1}{c}{--}  &            False  &  \mc{1}{l}{--}  &  The testing sample is sampled \\
+                ResetStep  &  \mc{1}{c}{--}  &               50  &  \mc{1}{l}{--}  &  How often BFGS should reset history \\
+                      Tau  &  \mc{1}{c}{--}  &                3  &  \mc{1}{l}{--}  &  LineSearch size step \\
+                   BPMode  &  \mc{1}{c}{--}  &       sequential  &  sequential, batch  &  Back-propagation learning mode: sequential or batch \\
+\end{optiontableAuto}

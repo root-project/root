@@ -1,11 +1,15 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
+/// \file
+/// \ingroup tutorial_eve
+/// Shows CMS geometry in stereo mode.
+/// This requires quad-buffer support in the OpenGL hardware / driver,
+/// otheriwse a fatal error occurs.
+///
+/// \image html eve_geom_cms_stereo.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
-// Shows CMS geometry in stereo mode.
-// This requires quad-buffer support in the OpenGL hardware / driver,
-// otheriwse a fatal error occurs.
-
-void geom_cms_stereo()
+void geom_cms_stereo(Bool_t quad_buf=kTRUE)
 {
    TEveManager::Create();
 
@@ -33,7 +37,7 @@ void geom_cms_stereo()
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
 
    TEveViewer* sv = new TEveViewer("Stereo GL", "Stereoscopic view");
-   sv->SpawnGLViewer(gEve->GetEditor(), kTRUE);
+   sv->SpawnGLViewer(gEve->GetEditor(), kTRUE, quad_buf);
    sv->AddScene(gEve->GetGlobalScene());
 
    slot->ReplaceWindow(sv);

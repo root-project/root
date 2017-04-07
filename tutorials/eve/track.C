@@ -1,31 +1,28 @@
-// @(#)root/eve:$Id$
-// Author: Alja Mrak-Tadel
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of TEveTrackPRopagator with different magnetic
+/// field configurations.
+/// Needs to be run in compiled mode.
+/// root
+/// ~~~{.cpp}
+///   .L track.C+
+///   track(3, kTRUE)
+/// ~~~
+/// void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
+/// Modes are
+///  0. B = 0, no difference btween signed and charge particles;
+///  1. constant B field (along z, but could have arbitrary direction);
+///  2. variable B field, sign change at  R = 200 cm;
+///  3. magnetic field with a zero-field region;
+///  4. CMS magnetic field - simple track;
+///  5. CMS magnetic field - track with different path-marks.
+///  6. Concpetual ILC detector, problematic track
+///
+/// \image html eve_track.png
+/// \macro_code
+///
+/// \author Alja Mrak-Tadel
 
-// Demonstrates usage of TEveTrackPRopagator with different magnetic
-// field configurations.
-// Needs to be run in compiled mode.
-// root
-//   .L track.C+
-//   track(3, kTRUE)
-//
-// void track(Int_t mode = 5, Bool_t isRungeKutta = kTRUE)
-// Modes are
-// 0 - B = 0, no difference btween signed and charge particles;
-// 1 - constant B field (along z, but could have arbitrary direction);
-// 2 - variable B field, sign change at  R = 200 cm;
-// 3 - magnetic field with a zero-field region;
-// 4 - CMS magnetic field - simple track;
-// 5 - CMS magnetic field - track with different path-marks.
-// 6 - Concpetual ILC detector, problematic track
-
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   Info("track.C",
-        "Has to be run in compiled mode, esp. if you want to pass parameters.");
-   gSystem->CompileMacro("track.C");
-   track();
-}
-#else
 
 #include "TEveTrackPropagator.h"
 #include "TEveTrack.h"
@@ -167,10 +164,6 @@ TEveTrack* make_track(TEveTrackPropagator* prop, Int_t sign)
 
 void track(Int_t mode = 1, Bool_t isRungeKutta = kTRUE)
 {
-#if defined (__CINT__)
-   Error("track.C", "Must be run in compiled mode!");
-   return;
-#endif
 
    gSystem->IgnoreSignal(kSigSegmentationViolation, true);
    TEveManager::Create();

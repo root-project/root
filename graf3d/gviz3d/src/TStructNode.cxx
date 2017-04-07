@@ -30,12 +30,12 @@ ClassImp(TStructNode);
 
 EScalingType TStructNode::fgScalBy = kMembers;
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructs node with name "name" of class "typeName" and given parent "parent" which represents pointer "pointer".
+/// Size of node is set to "size" and type is set to "type"
+
 TStructNode::TStructNode(TString name, TString typeName, void* pointer, TStructNode* parent, ULong_t size, ENodeType type)
 {
-   // Constructs node with name "name" of class "typeName" and given parent "parent" which represents pointer "pointer".
-   // Size of node is set to "size" and type is set to "type"
-
    fName = name;
    fTypeName = typeName;
    fTotalSize = fSize = size;
@@ -57,19 +57,19 @@ TStructNode::TStructNode(TString name, TString typeName, void* pointer, TStructN
    fMaxObjects = 100;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructs list of nodes
+
 TStructNode::~TStructNode()
 {
-   // Destructs list of nodes
-
    delete fMembers;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Overrided method. Compare to objects of TStructNode class.
+
 Int_t TStructNode::Compare(const TObject* obj) const
 {
-   // Overrided method. Compare to objects of TStructNode class.
-
    TStructNode* node = (TStructNode*)obj;
 
    if (GetVolume() < node->GetVolume()) {
@@ -89,138 +89,142 @@ Int_t TStructNode::Compare(const TObject* obj) const
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns number of all members in node
+
 ULong_t TStructNode::GetAllMembersCount() const
 {
-   // Returns number of all members in node
-
    return fAllMembersCount;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns center of outlining box on x-axis
+
 Float_t TStructNode::GetCenter() const
 {
-   // Returns center of outlining box on x-axis
    return (fX + fWidth /2);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns height of outlining box
+
 Float_t TStructNode::GetHeight() const
 {
-   // Returns height of outlining box
-
    return fHeight;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns actual level of node
+
 UInt_t TStructNode::GetLevel() const
 {
-   // Returns actual level of node
-
    return fLevel;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of object
+
 const char* TStructNode::GetName() const
 {
-   // Returns name of object
    return fName.Data();
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns type of node
+
 ENodeType TStructNode::GetNodeType() const
 {
-   // Returns type of node
-
    return fNodeType;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns maximum number of leves displayed when the node is top node on scene
+
 UInt_t TStructNode::GetMaxLevel() const
 {
-   // Returns maximum number of leves displayed when the node is top node on scene
-
    return fMaxLevel;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns maximum number of objects displayed when the node is top node on scene
+
 UInt_t TStructNode::GetMaxObjects() const
 {
-   // Returns maximum number of objects displayed when the node is top node on scene
    return fMaxObjects;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list with pointers to daughter nodes.
+
 TList* TStructNode::GetMembers() const
 {
-   // Returns list with pointers to daughter nodes.
-
    return fMembers;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of members of node
+
 ULong_t TStructNode::GetMembersCount() const
 {
-   // Returns numbers of members of node
-
    return fMembersCount;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns center of outlining box on y-axis
+
 Float_t TStructNode::GetMiddle() const
 {
-   // Returns center of outlining box on y-axis
-
    return (fY + fHeight/2);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns pointer to parent node
+
 TStructNode* TStructNode::GetParent() const
 {
-   // Returns pointer to parent node
-
    return fParent;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns main pointer
+
 void* TStructNode::GetPointer() const
 {
-   // Returns main pointer
    return fPointer;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns relative numbers of members. If node is collapsed, then method returns number of all members,
+/// it's node and its daughters, otherwise it returns number of members of node
+
 ULong_t TStructNode::GetRelativeMembersCount() const
 {
-   // Returns relative numbers of members. If node is collapsed, then method returns number of all members,
-   // it's node and its daughters, otherwise it returns number of members of node
-
    if (fCollapsed) {
       return fAllMembersCount;
    }
    return fMembersCount;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns relative size of node. If node is collapsed, then function returns size of node and dauthers,
+/// otherwise returns size of node only.
+
 ULong_t TStructNode::GetRelativeSize() const
 {
-   // Returns relative size of node. If node is collapsed, then function returns size of node and dauthers,
-   // otherwise returns size of node only.
-
    if (fCollapsed) {
       return fTotalSize;
    }
    return fSize;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns size or number of members. If ScaleBy is set to kMembers and node is collapsed, then it
+/// returns all number of members. If node isn't collapsed it returns number of members.
+/// If Scaleby is set to kSize and node is collapsed, then it returns total size of node and daughters,
+/// else it returns size of node, otherwise it returns 0.
+
 ULong_t TStructNode::GetRelativeVolume() const
 {
-   // Returns size or number of members. If ScaleBy is set to kMembers and node is collapsed, then it
-   // returns all number of members. If node isn't collapsed it returns number of members.
-   // If Scaleby is set to kSize and node is collapsed, then it returns total size of node and daughters,
-   // else it returns size of node, otherwise it returns 0.
-
    if (fgScalBy == kMembers) {
       if (fCollapsed) {
          return GetAllMembersCount();
@@ -238,44 +242,44 @@ ULong_t TStructNode::GetRelativeVolume() const
    }
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ratio - relative volume to area taken by utlining box.
+
 Float_t TStructNode::GetRelativeVolumeRatio()
 {
-   // Returns ratio - relative volume to area taken by utlining box.
-
    return ((Float_t)(GetRelativeVolume())/(fWidth*fHeight));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns size of node
+
 ULong_t TStructNode::GetSize() const
 {
-   // Returns size of node
-
    return fSize;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns total size of allocated memory in bytes
+
 ULong_t TStructNode::GetTotalSize() const
 {
-   // Returns total size of allocated memory in bytes
-
    return fTotalSize;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of class
+
 TString TStructNode::GetTypeName() const
 {
-   // Returns name of class
-
    return fTypeName;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns size or number of members. If ScaleBy is set to kMembers it returns all number of members.
+/// If Scaleby is set to kSize then it returns total size of node and daughters, otherwise it returns 0.
+
 ULong_t TStructNode::GetVolume() const
 {
-   // Returns size or number of members. If ScaleBy is set to kMembers it returns all number of members.
-   // If Scaleby is set to kSize then it returns total size of node and daughters, otherwise it returns 0.
-
    if (fgScalBy == kMembers) {
       return GetAllMembersCount();
    } else if (fgScalBy == kSize) {
@@ -286,185 +290,186 @@ ULong_t TStructNode::GetVolume() const
 
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns ratio - volme of node to area taken by outlining box
+
 Float_t TStructNode::GetVolumeRatio()
 {
-   // Returns ratio - volme of node to area taken by outlining box
-
    return ((Float_t)(GetVolume())/(fWidth*fHeight));
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns width of outlining box
+
 Float_t TStructNode::GetWidth() const
 {
-   // Returns width of outlining box
-
    return fWidth;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns X coordinate
+
 Float_t TStructNode::GetX() const
 {
-   // Returns X coordinate
-
    return fX;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns Y coordinate
+
 Float_t TStructNode::GetY() const
 {
-   // Returns Y coordinate
-
    return fY;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if node is colllapsed
+
 Bool_t TStructNode::IsCollapsed() const
 {
-   // Returns true if node is colllapsed
-
    return fCollapsed;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true, because we have overrided method Compare
+
 Bool_t TStructNode::IsSortable() const
 {
-   // Returns true, because we have overrided method Compare
-
    return kTRUE;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if node is visible
+
 bool TStructNode::IsVisible() const
 {
-   // Returns true if node is visible
-
    return fVisible;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets numbers of all members to "number"
+
 void TStructNode::SetAllMembersCount(ULong_t number)
 {
-   // Sets numbers of all members to "number"
-
    fAllMembersCount = number;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets collapsing of node to "collapse"
+
 void TStructNode::SetCollapsed(Bool_t collapse)
 {
-   // Sets collapsing of node to "collapse"
-
    fCollapsed = collapse;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets width of outlining box to "w"
+
 void TStructNode::SetHeight(Float_t val)
 {
-   // Sets width of outlining box to "w"
-
    fHeight = val;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets maximum number of leves displayed when the node is top node on scene
+
 void TStructNode::SetMaxLevel(UInt_t level)
 {
-   // Sets maximum number of leves displayed when the node is top node on scene
-
    fMaxLevel = level;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets maximum number of objects displayed when the node is top node on scene
+
 void TStructNode::SetMaxObjects(UInt_t max)
 {
-   // Sets maximum number of objects displayed when the node is top node on scene
-
    fMaxObjects = max;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets list of dauther nodes to "list"
+
 void TStructNode::SetMembers(TList* list)
 {
-   // Sets list of dauther nodes to "list"
-
    fMembers = list;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets number of members to "number"
+
 void TStructNode::SetMembersCount(ULong_t number)
 {
-   // Sets number of members to "number"
    fMembersCount = number;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets type of node to "type"
+
 void TStructNode::SetNodeType(ENodeType type)
 {
-   // Sets type of node to "type"
-
    fNodeType = type;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets main pointer to "pointer"
+
 void TStructNode::SetPointer(void* pointer)
 {
-   // Sets main pointer to "pointer"
-
    fPointer = pointer;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets scaling by to "type"
+
 void TStructNode::SetScaleBy(EScalingType type)
 {
-   // Sets scaling by to "type"
-
    fgScalBy = type;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets size of node to "size"
+
 void TStructNode::SetSize(ULong_t size)
 {
-   // Sets size of node to "size"
-
    fSize = size;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets total size  of allocated memory in bytes to value "size"
+
 void TStructNode::SetTotalSize(ULong_t size)
 {
-   // Sets total size  of allocated memory in bytes to value "size"
-
    fTotalSize = size;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets visibility of node to "visible"
+
 void TStructNode::SetVisible(bool visible)
 {
-   // Sets visibility of node to "visible"
-
    fVisible = visible;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets width of outlining box to "w"
+
 void TStructNode::SetWidth(Float_t w)
 {
-   // Sets width of outlining box to "w"
-
    fWidth = w;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets X coordinate to "x"
+
 void TStructNode::SetX(Float_t x)
 {
-   // Sets X coordinate to "x"
-
    fX = x;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets Y coordinate to "y"
+
 void TStructNode::SetY(Float_t y)
 {
-   // Sets Y coordinate to "y"
-
    fY = y;
 }

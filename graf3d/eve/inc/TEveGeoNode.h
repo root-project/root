@@ -84,7 +84,7 @@ public:
    static Int_t GetCSGExportNSeg();
    static void  SetCSGExportNSeg(Int_t nseg);
 
-   ClassDef(TEveGeoNode, 1); // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
+   ClassDef(TEveGeoNode, 0); // Wrapper for TGeoNode that allows it to be shown in GUI and controlled as a TEveElement.
 };
 
 //----------------------------------------------------------------
@@ -131,7 +131,7 @@ public:
    void VolumeColChanged(TGeoVolume* volume);
    void NodeVisChanged(TGeoNode* node);
 
-   ClassDef(TEveGeoTopNode, 1); // Top-level TEveGeoNode with a pointer to TGeoManager and controls for steering of TGeoPainter.
+   ClassDef(TEveGeoTopNode, 0); // Top-level TEveGeoNode with a pointer to TGeoManager and controls for steering of TGeoPainter.
 };
 
 #endif

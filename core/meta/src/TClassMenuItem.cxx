@@ -9,22 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Describes one element of the context menu associated to a class      //
-// The menu item may describe                                           //
-//    - a separator,                                                    //
-//    - standard list of methods i.e. the methods defined in            //
-//      the described class by a *MENU* in the comment field            //
-//      of the header,                                                  //
-//    - a method of an external class or a global function              //
-//  All the standard methods of the class are described by only         //
-//  one item. Since a complete context menu is described by a TList of  //
-//  TClassMenuItem elements, it is possible to customize the context    //
-//  menu of a class by removing the element "standard methods" and      //
-//  replacing it by whatever one wants.                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TClassMenuItem
+Describes one element of the context menu associated to a class
+The menu item may describe
+   - a separator,
+   - standard list of methods i.e. the methods defined in
+     the described class by a *MENU* in the comment field
+     of the header,
+   - a method of an external class or a global function
+All the standard methods of the class are described by only
+one item. Since a complete context menu is described by a TList of
+TClassMenuItem elements, it is possible to customize the context
+menu of a class by removing the element "standard methods" and
+replacing it by whatever one wants.
+*/
 
 #include "TClassMenuItem.h"
 #include "TList.h"
@@ -33,15 +31,15 @@
 
 ClassImp(TClassMenuItem)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default TClassMenuItem ctor. TClassMenuItems are constructed in TClass
+/// with a standard content but may be customized later
+///  - fType = 0 : external method/function
+///  - fType = 1 : separator
+///  - fType = 2 : standard methods list
+
 TClassMenuItem::TClassMenuItem() : TObject()
 {
-   // Default TClassMenuItem ctor. TClassMenuItems are constructed in TClass
-   // with a standard content but may be customized later
-   // fType = 0 : external method/function
-   // fType = 1 : separator
-   // fType = 2 : standard methods list
-
    fType          = kPopupUserFunction;
    fSelf          = 0;
    fToggle        = 0;
@@ -51,24 +49,24 @@ TClassMenuItem::TClassMenuItem() : TObject()
    fSelfObjectPos = -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassMenuItem ctor. TClassMenuItems are constructed in TClass
+/// with a standard content but may be customized later
+///  - type = 0 : external method/function
+///  - type = 1 : separator
+///  - type = 2 : standard methods list
+/// self indicates if the object to be called is the one selected
+/// by the popup menu
+/// selfobjposition, if non zero, indicates the position in the arguments
+/// list of the argument corresponding to the selected (clicked) object.
+/// This argument in the calling method should be a TObject*
+/// Note: It is the responsibility of the caller/creator to add to the
+/// menu list.
+
 TClassMenuItem::TClassMenuItem(Int_t type, TClass *parentcl,
     const char *title, const char *functionname, TObject *obj,
     const char *args, Int_t selfobjposition, Bool_t self) : TObject()
 {
-   // TClassMenuItem ctor. TClassMenuItems are constructed in TClass
-   // with a standard content but may be customized later
-   // type = 0 : external method/function
-   // type = 1 : separator
-   // type = 2 : standard methods list
-   // self indicates if the object to be called is the one selected
-   // by the popup menu
-   // selfobjposition, if non zero, indicates the position in the arguments
-   // list of the argument corresponding to the selected (clicked) object.
-   // This argument in the calling method should be a TObject*
-   // Note: It is the responsability of the caller/creator to add to the
-   // menu list.
-
    fType          = (EClassMenuItemType) type;
    fSelf          = self;
    fToggle        = 0;
@@ -81,7 +79,12 @@ TClassMenuItem::TClassMenuItem(Int_t type, TClass *parentcl,
    fSelfObjectPos = selfobjposition;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+///
+/// Note: It is the responsibility of the caller/creator to add to the
+/// menu list.
+
 TClassMenuItem::TClassMenuItem(const TClassMenuItem& cmi) :
   TObject(cmi),
   fType(cmi.fType),
@@ -95,17 +98,16 @@ TClassMenuItem::TClassMenuItem(const TClassMenuItem& cmi) :
   fSubMenu(cmi.fSubMenu),
   fParent(cmi.fParent)
 {
-   //copy constructor
-   // Note: It is the responsability of the caller/creator to add to the
-   // menu list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+///
+/// Note: It is the responsibility of the caller/creator to add to the
+/// menu list.
+
 TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi)
 {
-   //assignement operator
-   // Note: It is the responsability of the caller/creator to add to the
-   // menu list.
    if(this!=&cmi) {
       TObject::operator=(cmi);
       fType=cmi.fType;
@@ -122,10 +124,10 @@ TClassMenuItem& TClassMenuItem::operator=(const TClassMenuItem& cmi)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TClassMenuItem dtor.
+
 TClassMenuItem::~TClassMenuItem()
 {
-   // TClassMenuItem dtor.
-
    if (fParent) fParent->GetMenuList()->Remove(this);
 }

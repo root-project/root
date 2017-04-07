@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -46,12 +46,13 @@ enum ETGeoTrd1Wid {
    kTRD1_APPLY, kTRD1_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for trd1 editor
+
 TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for trd1 editor
    fShape   = 0;
    fDxi1 = fDxi2 = fDyi = fDzi = 0.0;
    fNamei = "";
@@ -69,7 +70,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    TGTextEntry *nef;
    MakeTitle("Trd1 dimensions");
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
-  
+
    // Number entry for dx1
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -81,7 +82,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDx1->Associate(this);
    f1->AddFrame(fEDx1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    // Number entry for dx2
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -105,7 +106,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDy->Associate(this);
    f2->AddFrame(fEDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    // Number entry for dz
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -117,15 +118,15 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fEDz->Associate(this);
    f3->AddFrame(fEDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
-      
+
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
    f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -135,27 +136,29 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f1, "Undo");
    f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoTrd1Editor::~TGeoTrd1Editor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTrd1Editor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTrd1Editor", this, "DoApply()");
    fUndo->Connect("Clicked()", "TGeoTrd1Editor", this, "DoUndo()");
    fShapeName->Connect("TextChanged(const char *)", "TGeoTrd1Editor", this, "DoModified()");
@@ -171,14 +174,15 @@ void TGeoTrd1Editor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected object.
+
 void TGeoTrd1Editor::SetModel(TObject* obj)
 {
-   // Connect to the selected object.
    if (obj == 0 || (obj->IsA()!=TGeoTrd1::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoTrd1*)obj;
    fDxi1 = fShape->GetDx1();
    fDxi2 = fShape->GetDx2();
@@ -189,7 +193,7 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fEDx1->SetNumber(fDxi1);
    fEDx2->SetNumber(fDxi2);
    fEDy->SetNumber(fDyi);
@@ -197,34 +201,37 @@ void TGeoTrd1Editor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoTrd1Editor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change.
+
 void TGeoTrd1Editor::DoName()
 {
-// Perform name change.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoTrd1Editor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
-   Double_t dy = fEDy->GetNumber(); 
+   Double_t dy = fEDy->GetNumber();
    Double_t dz = fEDz->GetNumber();
    Double_t param[4];
    param[0] = dx1;
@@ -240,20 +247,22 @@ void TGeoTrd1Editor::DoApply()
          fShape->Draw();
          fPad->GetView()->ShowAxis();
       } else Update();
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoTrd1Editor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTrd1Editor::DoUndo()
 {
-// Slot for undoing last operation.
    fEDx1->SetNumber(fDxi1);
    fEDx2->SetNumber(fDxi2);
    fEDy->SetNumber(fDyi);
@@ -262,11 +271,12 @@ void TGeoTrd1Editor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx1.
+
 void TGeoTrd1Editor::DoDx1()
 {
-// Slot for dx1.
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    if (dx1<0) {
@@ -276,15 +286,16 @@ void TGeoTrd1Editor::DoDx1()
    if (dx1<1.e-6 && dx2<1.e-6) {
       dx1 = 0.1;
       fEDx1->SetNumber(dx1);
-   }      
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx2.
+
 void TGeoTrd1Editor::DoDx2()
 {
-// Slot for dx2.
    Double_t dx1 = fEDx1->GetNumber();
    Double_t dx2 = fEDx2->GetNumber();
    if (dx2<0) {
@@ -294,15 +305,16 @@ void TGeoTrd1Editor::DoDx2()
    if (dx1<1.e-6 && dx2<1.e-6) {
       dx2 = 0.1;
       fEDx2->SetNumber(dx2);
-   }      
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dy.
+
 void TGeoTrd1Editor::DoDy()
 {
-// Slot for dy.
    Double_t dy = fEDy->GetNumber();
    if (dy<=0) {
       dy = 0.1;
@@ -312,10 +324,11 @@ void TGeoTrd1Editor::DoDy()
    if (!IsDelayed()) DoApply();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dz.
+
 void TGeoTrd1Editor::DoDz()
 {
-// Slot for dz.
    Double_t dz = fEDz->GetNumber();
    if (dz<=0) {
       dz = 0.1;

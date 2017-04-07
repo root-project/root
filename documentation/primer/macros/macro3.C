@@ -1,10 +1,10 @@
 // Builds a polar graph in a square Canvas.
 
 void macro3(){
-    TCanvas* c = new TCanvas("myCanvas","myCanvas",600,600);
-    double rmin=0;
-    double rmax=TMath::Pi()*6;
-    const int npoints=1000;
+    auto c = new TCanvas("myCanvas","myCanvas",600,600);
+    Double_t rmin=0.;
+    Double_t rmax=TMath::Pi()*6.;
+    const Int_t npoints=1000;
     Double_t r[npoints];
     Double_t theta[npoints];
     for (Int_t ipt = 0; ipt < npoints; ipt++) {
@@ -15,5 +15,5 @@ void macro3(){
     grP1.SetTitle("A Fan");
     grP1.SetLineWidth(3);
     grP1.SetLineColor(2);
-    grP1.DrawClone("AOL");
+    grP1.DrawClone("L");
 }

@@ -43,12 +43,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
 }
 }
 
-@implementation ROOTOpenGLView {
-   BOOL            fIsOverlapped;
-
-   NSOpenGLPixelFormat *fPixelFormat;
-   BOOL fUpdateContext;
-}
+@implementation ROOTOpenGLView
 
 @synthesize fOpenGLContext;
 @synthesize fUpdateContext;
@@ -184,7 +179,7 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
    //In case of TBrowser, setFrame started infinite recursion:
    //HandleConfigure for embedded main frame emits signal, slot
    //calls layout, layout calls setFrame -> HandleConfigure and etc. etc.
-   if (CGRectEqualToRect(newFrame, self.frame))
+   if (NSEqualRects(newFrame, self.frame))
       return;
 
    [super setFrame : newFrame];

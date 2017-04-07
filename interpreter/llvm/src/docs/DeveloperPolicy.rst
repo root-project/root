@@ -30,7 +30,7 @@ This policy is also designed to accomplish the following objectives:
 This policy is aimed at frequent contributors to LLVM. People interested in
 contributing one-off patches can do so in an informal way by sending them to the
 `llvm-commits mailing list
-<http://lists.cs.uiuc.edu/mailman/listinfo/llvm-commits>`_ and engaging another
+<http://lists.llvm.org/mailman/listinfo/llvm-commits>`_ and engaging another
 developer to see it through the process.
 
 Developer Policies
@@ -47,23 +47,23 @@ Stay Informed
 -------------
 
 Developers should stay informed by reading at least the "dev" mailing list for
-the projects you are interested in, such as `llvmdev
-<http://lists.cs.uiuc.edu/mailman/listinfo/llvmdev>`_ for LLVM, `cfe-dev
-<http://lists.cs.uiuc.edu/mailman/listinfo/cfe-dev>`_ for Clang, or `lldb-dev
-<http://lists.cs.uiuc.edu/mailman/listinfo/lldb-dev>`_ for LLDB.  If you are
+the projects you are interested in, such as `llvm-dev
+<http://lists.llvm.org/mailman/listinfo/llvm-dev>`_ for LLVM, `cfe-dev
+<http://lists.llvm.org/mailman/listinfo/cfe-dev>`_ for Clang, or `lldb-dev
+<http://lists.llvm.org/mailman/listinfo/lldb-dev>`_ for LLDB.  If you are
 doing anything more than just casual work on LLVM, it is suggested that you also
 subscribe to the "commits" mailing list for the subproject you're interested in,
 such as `llvm-commits
-<http://lists.cs.uiuc.edu/mailman/listinfo/llvm-commits>`_, `cfe-commits
-<http://lists.cs.uiuc.edu/mailman/listinfo/cfe-commits>`_, or `lldb-commits
-<http://lists.cs.uiuc.edu/mailman/listinfo/lldb-commits>`_.  Reading the
+<http://lists.llvm.org/mailman/listinfo/llvm-commits>`_, `cfe-commits
+<http://lists.llvm.org/mailman/listinfo/cfe-commits>`_, or `lldb-commits
+<http://lists.llvm.org/mailman/listinfo/lldb-commits>`_.  Reading the
 "commits" list and paying attention to changes being made by others is a good
 way to see what other people are interested in and watching the flow of the
 project as a whole.
 
 We recommend that active developers register an email account with `LLVM
 Bugzilla <http://llvm.org/bugs/>`_ and preferably subscribe to the `llvm-bugs
-<http://lists.cs.uiuc.edu/mailman/listinfo/llvmbugs>`_ email list to keep track
+<http://lists.llvm.org/mailman/listinfo/llvm-bugs>`_ email list to keep track
 of bugs and enhancements occurring in LLVM.  We really appreciate people who are
 proactive at catching incoming bugs in their components and dealing with them
 promptly.
@@ -186,7 +186,7 @@ problem, we have a notion of an 'owner' for a piece of the code.  The sole
 responsibility of a code owner is to ensure that a commit to their area of the
 code is appropriately reviewed, either by themself or by someone else.  The list
 of current code owners can be found in the file
-`CODE_OWNERS.TXT <http://llvm.org/viewvc/llvm-project/llvm/trunk/CODE_OWNERS.TXT?view=markup>`_
+`CODE_OWNERS.TXT <http://llvm.org/klaus/llvm/blob/master/CODE_OWNERS.TXT>`_
 in the root of the LLVM source tree.
 
 Note that code ownership is completely different than reviewers: anyone can
@@ -275,12 +275,70 @@ reverted. This is necessary when the change blocks other developers from making
 progress. The developer is welcome to re-commit the change after the problem has
 been fixed.
 
+.. _commit messages:
+
+Commit messages
+---------------
+
+Although we don't enforce the format of commit messages, we prefer that
+you follow these guidelines to help review, search in logs, email formatting
+and so on. These guidelines are very similar to rules used by other open source
+projects.
+
+Most importantly, the contents of the message should be carefully written to
+convey the rationale of the change (without delving too much in detail). It
+also should avoid being vague or overly specific. For example, "bits were not
+set right" will leave the reviewer wondering about which bits, and why they
+weren't right, while "Correctly set overflow bits in TargetInfo" conveys almost
+all there is to the change.
+
+Below are some guidelines about the format of the message itself:
+
+* Separate the commit message into title, body and, if you're not the original
+  author, a "Patch by" attribution line (see below).
+
+* The title should be concise. Because all commits are emailed to the list with
+  the first line as the subject, long titles are frowned upon.  Short titles
+  also look better in `git log`.
+
+* When the changes are restricted to a specific part of the code (e.g. a
+  back-end or optimization pass), it is customary to add a tag to the
+  beginning of the line in square brackets.  For example, "[SCEV] ..."
+  or "[OpenMP] ...". This helps email filters and searches for post-commit
+  reviews.
+
+* The body, if it exists, should be separated from the title by an empty line.
+
+* The body should be concise, but explanatory, including a complete
+  reasoning.  Unless it is required to understand the change, examples,
+  code snippets and gory details should be left to bug comments, web
+  review or the mailing list.
+
+* If the patch fixes a bug in bugzilla, please include the PR# in the message.
+
+* `Attribution of Changes`_ should be in a separate line, after the end of
+  the body, as simple as "Patch by John Doe.". This is how we officially
+  handle attribution, and there are automated processes that rely on this
+  format.
+
+* Text formatting and spelling should follow the same rules as documentation
+  and in-code comments, ex. capitalization, full stop, etc.
+
+* If the commit is a bug fix on top of another recently committed patch, or a
+  revert or reapply of a patch, include the svn revision number of the prior
+  related commit. This could be as simple as "Revert rNNNN because it caused
+  PR#".
+
+For minor violations of these recommendations, the community normally favors
+reminding the contributor of this policy over reverting. Minor corrections and
+omissions can be handled by sending a reply to the commits mailing list.
+
 Obtaining Commit Access
 -----------------------
 
 We grant commit access to contributors with a track record of submitting high
 quality patches.  If you would like commit access, please send an email to
-`Chris <mailto:sabre@nondot.org>`_ with the following information:
+`Chris <mailto:clattner@llvm.org>`_ with the following information:
 
 #. The user name you want to commit with, e.g. "hacker".
 
@@ -290,8 +348,10 @@ quality patches.  If you would like commit access, please send an email to
 #. A "password hash" of the password you want to use, e.g. "``2ACR96qjUqsyM``".
    Note that you don't ever tell us what your password is; you just give it to
    us in an encrypted form.  To get this, run "``htpasswd``" (a utility that
-   comes with apache) in crypt mode (often enabled with "``-d``"), or find a web
-   page that will do it for you.
+   comes with apache) in *crypt* mode (often enabled with "``-d``"), or find a web
+   page that will do it for you.  Note that our system does not work with MD5
+   hashes.  These are significantly longer than a crypt hash - e.g.
+   "``$apr1$vea6bBV2$Z8IFx.AfeD8LhqlZFqJer0``".
 
 Once you've been granted commit access, you should be able to check out an LLVM
 tree with an SVN URL of "https://username@llvm.org/..." instead of the normal
@@ -307,7 +367,7 @@ If you have recently been granted commit access, these policies apply:
 
 #. You are granted *commit-after-approval* to all parts of LLVM.  To get
    approval, submit a `patch`_ to `llvm-commits
-   <http://lists.cs.uiuc.edu/mailman/listinfo/llvm-commits>`_. When approved,
+   <http://lists.llvm.org/mailman/listinfo/llvm-commits>`_. When approved,
    you may commit it yourself.
 
 #. You are allowed to commit patches without approval which you think are
@@ -336,8 +396,8 @@ Making a Major Change
 ---------------------
 
 When a developer begins a major new project with the aim of contributing it back
-to LLVM, they should inform the community with an email to the `llvmdev
-<http://lists.cs.uiuc.edu/mailman/listinfo/llvmdev>`_ email list, to the extent
+to LLVM, they should inform the community with an email to the `llvm-dev
+<http://lists.llvm.org/mailman/listinfo/llvm-dev>`_ email list, to the extent
 possible. The reason for this is to:
 
 #. keep the community informed about future changes to LLVM,
@@ -425,8 +485,9 @@ want the source code to be littered with random attributions "this code written
 by J. Random Hacker" (this is noisy and distracting). In practice, the revision
 control system keeps a perfect history of who changed what, and the CREDITS.txt
 file describes higher-level contributions. If you commit a patch for someone
-else, please say "patch contributed by J. Random Hacker!" in the commit
-message. Overall, please do not add contributor names to the source code.
+else, please follow the attribution of changes in the simple manner as outlined
+by the `commit messages`_ section. Overall, please do not add contributor names
+to the source code.
 
 Also, don't commit patches authored by others unless they have submitted the
 patch to the project or you have been authorized to submit them on their behalf
@@ -446,8 +507,15 @@ for llvm users and not imposing a big burden on llvm developers:
 * The textual format is not backwards compatible. We don't change it too often,
   but there are no specific promises.
 
-* The bitcode format produced by a X.Y release will be readable by all following
-  X.Z releases and the (X+1).0 release.
+* Additions and changes to the IR should be reflected in
+  ``test/Bitcode/compatibility.ll``.
+
+* The bitcode format produced by a X.Y release will be readable by all
+  following X.Z releases and the (X+1).0 release.
+
+* After each X.Y release, ``compatibility.ll`` must be copied to
+  ``compatibility-X.Y.ll``. The corresponding bitcode file should be assembled
+  using the X.Y build and committed as ``compatibility-X.Y.ll.bc``.
 
 * Newer releases can ignore features from older releases, but they cannot
   miscompile them. For example, if nsw is ever replaced with something else,
@@ -458,6 +526,33 @@ for llvm users and not imposing a big burden on llvm developers:
 * Non-debug metadata is defined to be safe to drop, so a valid way to upgrade
   it is to drop it. That is not very user friendly and a bit more effort is
   expected, but no promises are made.
+
+C API Changes
+----------------
+
+* Stability Guarantees: The C API is, in general, a "best effort" for stability.
+  This means that we make every attempt to keep the C API stable, but that
+  stability will be limited by the abstractness of the interface and the
+  stability of the C++ API that it wraps. In practice, this means that things
+  like "create debug info" or "create this type of instruction" are likely to be
+  less stable than "take this IR file and JIT it for my current machine".
+
+* Release stability: We won't break the C API on the release branch with patches
+  that go on that branch, with the exception that we will fix an unintentional
+  C API break that will keep the release consistent with both the previous and
+  next release.
+
+* Testing: Patches to the C API are expected to come with tests just like any
+  other patch.
+
+* Including new things into the API: If an LLVM subcomponent has a C API already
+  included, then expanding that C API is acceptable. Adding C API for
+  subcomponents that don't currently have one needs to be discussed on the
+  mailing list for design and maintainability feedback prior to implementation.
+
+* Documentation: Any changes to the C API are required to be documented in the
+  release notes so that it's clear to external users who do not follow the
+  project how the C API is changing and evolving.
 
 .. _copyright-license-patents:
 
@@ -549,7 +644,7 @@ LICENSE.txt files specifically indicate that they contain GPL code.
 
 We have no plans to change the license of LLVM.  If you have questions or
 comments about the license, please contact the `LLVM Developer's Mailing
-List <mailto:llvmdev@cs.uiuc.edu>`_.
+List <mailto:llvm-dev@lists.llvm.org>`_.
 
 Patents
 -------
@@ -565,5 +660,5 @@ patent-related trouble with their changes (including from third parties).  If
 you or your employer own the rights to a patent and would like to contribute
 code to LLVM that relies on it, we require that the copyright owner sign an
 agreement that allows any other user of LLVM to freely use your patent.  Please
-contact the `oversight group <mailto:llvm-oversight@cs.uiuc.edu>`_ for more
+contact the `LLVM Foundation Board of Directors <mailto:board@llvm.org>`_ for more
 details.

@@ -9,27 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualPacketizer                                                   //
-//                                                                      //
-// The packetizer is a load balancing object created for each query.    //
-// It generates packets to be processed on PROOF worker servers.        //
-// A packet is an event range (begin entry and number of entries) or    //
-// object range (first object and number of objects) in a TTree         //
-// (entries) or a directory (objects) in a file.                        //
-// Packets are generated taking into account the performance of the     //
-// remote machine, the time it took to process a previous packet on     //
-// the remote machine, the locality of the database files, etc.         //
-//                                                                      //
-// TVirtualPacketizer includes common parts of PROOF packetizers.       //
-// Look in subclasses for details.                                      //
-// The default packetizer is TPacketizerAdaptive.                       //
-// To use an alternative one, for instance - the TPacketizer, call:     //
-// proof->SetParameter("PROOF_Packetizer", "TPacketizer");              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TVirtualPacketizer
+\ingroup proofkernel
 
+The packetizer is a load balancing object created for each query.
+It generates packets to be processed on PROOF worker servers.
+A packet is an event range (begin entry and number of entries) or
+object range (first object and number of objects) in a TTree
+(entries) or a directory (objects) in a file.
+Packets are generated taking into account the performance of the
+remote machine, the time it took to process a previous packet on
+the remote machine, the locality of the database files, etc.
+
+TVirtualPacketizer includes common parts of PROOF packetizers.
+Look in subclasses for details.
+The default packetizer is TPacketizerAdaptive (TPacketizer for Proof-Lite).
+To use an alternative one, for instance - the TPacketizer, call:
+proof->SetParameter("PROOF_Packetizer", "TPacketizer");
+
+*/
 
 #include "TVirtualPacketizer.h"
 #include "TEnv.h"
@@ -61,11 +59,11 @@
 
 ClassImp(TVirtualPacketizer)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
 {
-   // Constructor.
-
    fInput =  input;
    // General configuration parameters
    fMinPacketTime = 3;
@@ -168,11 +166,11 @@ TVirtualPacketizer::TVirtualPacketizer(TList *input, TProofProgressStatus *st)
       fUseEstOpt = kEstAverage;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TVirtualPacketizer::~TVirtualPacketizer()
 {
-   // Destructor.
-
    SafeDelete(fCircProg);
    SafeDelete(fProgress);
    SafeDelete(fFailedPackets);
@@ -181,11 +179,11 @@ TVirtualPacketizer::~TVirtualPacketizer()
    fProgressStatus = 0; // belongs to the player
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get entries.
+
 Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
 {
-   // Get entries.
-
    Long64_t entries;
    TFile *file = TFile::Open(e->GetFileName());
 
@@ -231,32 +229,32 @@ Long64_t TVirtualPacketizer::GetEntries(Bool_t tree, TDSetElement *e)
    return entries;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next packet.
+
 TDSetElement *TVirtualPacketizer::GetNextPacket(TSlave *, TMessage *)
 {
-   // Get next packet.
-
    AbstractMethod("GetNextPacket");
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop process.
+
 void TVirtualPacketizer::StopProcess(Bool_t /*abort*/, Bool_t stoptimer)
 {
-   // Stop process.
-
    fStop = kTRUE;
    if (stoptimer) HandleTimer(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a new TDSetElement from from base packet starting from
+/// the first entry with num entries.
+/// The function returns a new created objects which have to be deleted.
+
 TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
                                                   Long64_t first, Long64_t num)
 {
-   // Creates a new TDSetElement from from base packet starting from
-   // the first entry with num entries.
-   // The function returns a new created objects which have to be deleted.
-
    TDSetElement* elem = new TDSetElement(base->GetFileName(), base->GetObjName(),
                                          base->GetDirectory(), first, num,
                                          0, fDataSet.Data());
@@ -280,11 +278,11 @@ TDSetElement* TVirtualPacketizer::CreateNewPacket(TDSetElement* base,
    return elem;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send progress message to client.
+
 Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
 {
-   // Send progress message to client.
-
    PDB(kPacketizer,2)
       Info("HandleTimer", "fProgress: %p, isDone: %d",
                           fProgress, TestBit(TVirtualPacketizer::kIsDone));
@@ -426,11 +424,11 @@ Bool_t TVirtualPacketizer::HandleTimer(TTimer *)
    return kFALSE; // ignored?
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initialization time
+
 void TVirtualPacketizer::SetInitTime()
 {
-   // Set the initialization time
-
    if (TestBit(TVirtualPacketizer::kIsInitializing)) {
       fInitTime = Long64_t(gSystem->Now() - fStartTime) / (Float_t)1000.;
       ResetBit(TVirtualPacketizer::kIsInitializing);
@@ -439,12 +437,12 @@ void TVirtualPacketizer::SetInitTime()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds new workers. Must be implemented by each real packetizer properly.
+/// Returns the number of workers added, or -1 on failure.
+
 Int_t TVirtualPacketizer::AddWorkers(TList *)
 {
-   // Adds new workers. Must be implemented by each real packetizer properly.
-   // Returns the number of workers added, or -1 on failure.
-
    Warning("AddWorkers", "Not implemented for this packetizer");
 
    return -1;

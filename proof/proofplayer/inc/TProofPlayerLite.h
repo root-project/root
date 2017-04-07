@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofPlayer
 #include "TProofPlayer.h"
-#endif
 
 
 class TProofPlayerLite : public TProofPlayerRemote {

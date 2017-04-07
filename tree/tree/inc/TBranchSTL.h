@@ -32,7 +32,6 @@ class TBranchSTL: public TBranch {
       virtual ~TBranchSTL();
       virtual void           Browse( TBrowser *b );
       virtual Bool_t         IsFolder() const;
-      virtual Int_t          Fill();
       virtual const char    *GetClassName() const { return fClassName.Data(); }
       virtual Int_t          GetExpectedType(TClass *&clptr,EDataType &type);
       virtual Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 );
@@ -46,6 +45,7 @@ class TBranchSTL: public TBranch {
 
    void ReadLeavesImpl( TBuffer& b );
    void FillLeavesImpl( TBuffer& b );
+   virtual Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
 #ifndef __CINT__
       struct ElementBranchHelper_t
@@ -62,21 +62,21 @@ class TBranchSTL: public TBranch {
       };
 
       typedef std::map<TClass*, ElementBranchHelper_t> BranchMap_t;
-      BranchMap_t fBranchMap;                         //! Branch map
-      std::vector<ElementBranchHelper_t> fBranchVector; //! Branch vector
+      BranchMap_t fBranchMap;                           ///<! Branch map
+      std::vector<ElementBranchHelper_t> fBranchVector; ///<! Branch vector
 #endif // __CINT__
 
-      TVirtualCollectionProxy* fCollProxy;    //! Collection proxy
-      TBranch*                 fParent;       //! Parent of this branch
-      TClass*                  fIndArrayCl;   //! Class of the ind array
-      TIndArray                fInd;          //! Indices
-      TString                  fContName;     //  Class name of referenced object
-      TString                  fClassName;    //  Name of the parent class, if we're the data member
-      mutable Int_t            fClassVersion; //  Version number of the class
-      UInt_t                   fClCheckSum;   //  Class checksum
-      mutable TStreamerInfo   *fInfo;         //! The streamer info
-      char*                    fObject;       //! Pointer to object at address or the
-      Int_t                    fID;           //  Element serial number in the streamer info
+      TVirtualCollectionProxy* fCollProxy;    ///<! Collection proxy
+      TBranch*                 fParent;       ///<! Parent of this branch
+      TClass*                  fIndArrayCl;   ///<! Class of the ind array
+      TIndArray                fInd;          ///<! Indices
+      TString                  fContName;     ///<  Class name of referenced object
+      TString                  fClassName;    ///<  Name of the parent class, if we're the data member
+      mutable Int_t            fClassVersion; ///<  Version number of the class
+      UInt_t                   fClCheckSum;   ///<  Class checksum
+      mutable TStreamerInfo   *fInfo;         ///<! The streamer info
+      char*                    fObject;       ///<! Pointer to object at address or the
+      Int_t                    fID;           ///<  Element serial number in the streamer info
 };
 
 #endif // ROOT_TBranchSTL

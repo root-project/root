@@ -38,7 +38,7 @@ public:
 protected:
 
   RooListProxy x ;
-  
+
   Double_t evaluate() const ;
 
 private:

@@ -46,22 +46,24 @@ ClassImp(PyROOT::TPyROOTApplication)
 
 //- constructors/destructor --------------------------------------------------
 PyROOT::TPyROOTApplication::TPyROOTApplication(
-   const char* acn, int* argc, char** argv, Bool_t bLoadLibs ) :
+   const char* acn, int* argc, char** argv, Bool_t /*bLoadLibs*/ ) :
       TApplication( acn, argc, argv )
 {
-// Create a TApplication derived for use with interactive ROOT from python. A
-// set of standard, often used libs is loaded if bLoadLibs is true (default).
-
-   if ( bLoadLibs )   // note that this section could be programmed in python
-   {
-   // follow TRint to minimize differences with root.exe (note: changed <pair>
-   // to <utility> for Cling, which is correct)
-      ProcessLine( "#include <iostream>", kTRUE );
-      ProcessLine( "#include <string>",   kTRUE ); // for std::string iostream.
-      ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
-      ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
-                                                   //  to properly unload these files
-   }
+// The following code is redundant with ROOT6 and the PCH: the headers are
+// available to the interpreter.
+// // Create a TApplication derived for use with interactive ROOT from python. A
+// // set of standard, often used libs is loaded if bLoadLibs is true (default).
+//
+//    if ( bLoadLibs )   // note that this section could be programmed in python
+//    {
+//    // follow TRint to minimize differences with root.exe (note: changed <pair>
+//    // to <utility> for Cling, which is correct)
+//       ProcessLine( "#include <iostream>", kTRUE );
+//       ProcessLine( "#include <string>",   kTRUE ); // for std::string iostream.
+//       ProcessLine( "#include <vector>",   kTRUE ); // needed because they're used within the
+//       ProcessLine( "#include <utility>",  kTRUE ); //  core ROOT dicts and CINT won't be able
+//                                                    //  to properly unload these files
+//    }
 
 #ifdef WIN32
    // switch win32 proxy main thread id
@@ -121,12 +123,12 @@ Bool_t PyROOT::TPyROOTApplication::CreatePyROOTApplication( Bool_t bLoadLibs )
    return kFALSE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup the basic ROOT globals gBenchmark, gStyle, gProgname, if not already
+/// set. Always returns true.
+
 Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
 {
-// Setup the basic ROOT globals gBenchmark, gStyle, gProgname, if not already
-// set. Always returns true.
-
    if ( ! gBenchmark ) gBenchmark = new TBenchmark();
    if ( ! gStyle ) gStyle = new TStyle();
 
@@ -141,12 +143,12 @@ Bool_t PyROOT::TPyROOTApplication::InitROOTGlobals()
    return kTRUE;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Install ROOT message handler which will turn ROOT error message into
+/// python exceptions. Always returns true.
+
 Bool_t PyROOT::TPyROOTApplication::InitROOTMessageCallback()
 {
-// Install ROOT message handler which will turn ROOT error message into
-// python exceptions. Always returns true.
-
    SetErrorHandler( (ErrorHandlerFunc_t)&Utility::ErrMsgHandler );
    return kTRUE;
 }

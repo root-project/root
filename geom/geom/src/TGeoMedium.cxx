@@ -9,16 +9,19 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// Media are used to store properties related to tracking and which are useful
-// only when using geometry with a particle transport MC package (via VMC). One
-// may define several tracking media for a given material. The media ID are user
-// defined values that are not used by the geometry package. In case geometry
-// is used via VMC (in GEANT) these numbers are overwritten, so one can only
-// rely on these values after gMC->FinishGeometry() is called.
-// The media parameters are inspired from GEANT3 and the values defined make sense
-// in context of GEANT (3 but also 4) or FLUKA interfaces.
-////////////////////////////////////////////////////////////////////////////////
+
+/** \class TGeoMedium
+\ingroup Geometry_classes
+
+Media are used to store properties related to tracking and which are useful
+only when using geometry with a particle transport MC package (via VMC). One
+may define several tracking media for a given material. The media ID are user
+defined values that are not used by the geometry package. In case geometry
+is used via VMC (in GEANT) these numbers are overwritten, so one can only
+rely on these values after gMC->FinishGeometry() is called.
+The media parameters are inspired from GEANT3 and the values defined make sense
+in context of GEANT (3 but also 4) or FLUKA interfaces.
+*/
 
 #include "Riostream.h"
 #include "TGeoManager.h"
@@ -27,20 +30,22 @@
 
 ClassImp(TGeoMedium)
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoMedium::TGeoMedium()
 {
-// Default constructor
    fId      = 0;
    for (Int_t i=0; i<20; i++) fParams[i] = 0.;
    fMaterial= 0;
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMedium::TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params)
              :TNamed(name,"")
 {
-// constructor
    fName = fName.Strip();
    fId    = numed;
    for (Int_t i=0; i<20; i++) fParams[i] = 0.;
@@ -52,12 +57,13 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, D
    gGeoManager->GetListOfMedia()->Add(this);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
 TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield,
               Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin)
              :TNamed(name,"")
 {
-// constructor
    fName = fName.Strip();
    fId    = numed;
    for (Int_t i=0; i<20; i++) fParams[i] = 0.;
@@ -83,20 +89,22 @@ TGeoMedium::TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, I
    gGeoManager->GetListOfMedia()->Add(this);
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+///copy constructor
+
 TGeoMedium::TGeoMedium(const TGeoMedium& gm) :
   TNamed(gm),
   fId(gm.fId),
   fMaterial(gm.fMaterial)
 {
-   //copy constructor
    for(Int_t i=0; i<20; i++) fParams[i]=gm.fParams[i];
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+///assignment operator
+
 TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm)
 {
-   //assignment operator
    if(this!=&gm) {
       TNamed::operator=(gm);
       fId=gm.fId;
@@ -106,25 +114,28 @@ TGeoMedium& TGeoMedium::operator=(const TGeoMedium& gm)
    return *this;
 }
 
-//-----------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoMedium::~TGeoMedium()
 {
-// Destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Provide a pointer name containing uid.
+
 char *TGeoMedium::GetPointerName() const
 {
-// Provide a pointer name containing uid.
    static TString name;
    name = TString::Format("pMed%d", GetUniqueID());
    return (char*)name.Data();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoMedium::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TestBit(TGeoMedium::kMedSavePrimitive)) return;
    fMaterial->SavePrimitive(out,option);
    out << "// Medium: " << GetName() << std::endl;

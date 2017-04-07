@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// Class RooPullVar represents the pull of measurement w.r.t to true value
-// using the measurement value and its error. Both the true value and
-// the measured value (with error) are taken from two user supplied
-// RooRealVars. If an asymmetric error is defined on a given measurement the proper 
-// side of that asymmetric error will be used
-// END_HTML
-//
+/**
+\file RooPullVar.cxx
+\class RooPullVar
+\ingroup Roofitcore
+
+Class RooPullVar represents the pull of measurement w.r.t to true value
+using the measurement value and its error. Both the true value and
+the measured value (with error) are taken from two user supplied
+RooRealVars. If an asymmetric error is defined on a given measurement the proper 
+side of that asymmetric error will be used
+**/
 
 #include "RooFit.h"
 
@@ -41,54 +42,58 @@ ClassImp(RooPullVar)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooPullVar::RooPullVar()
 {
-  // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct RooAbsReal representing the pull of a RooRealVar 'meas' providing the
+/// measured value and its error and a RooAbsReal 'truth' providing the true value
+
 RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, RooAbsReal& truth) :
   RooAbsReal(name, title),
   _meas("meas","Measurement",this,meas),
   _true("true","Truth",this,truth)
 {
-  // Construct RooAbsReal representing the pull of a RooRealVar 'meas' providing the
-  // measured value and its error and a RooAbsReal 'truth' providing the true value
 }
 
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
   RooAbsReal(other, name), 
   _meas("meas",this,other._meas),
   _true("true",this,other._true)
 {
-  // Copy constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooPullVar::~RooPullVar() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate pull. Use asymmetric error if defined in measurement,
+/// otherwise use symmetric error. If measurement has no error
+/// return zero.
+
 Double_t RooPullVar::evaluate() const 
 {
-  // Calculate pull. Use asymmetric error if defined in measurement,
-  // otherwise use symmetric error. If measurement has no error
-  // return zero.
-
   const RooRealVar& meas = static_cast<const RooRealVar&>(_meas.arg()) ;  
   if (meas.hasAsymError()) {
     Double_t delta = _meas-_true ;

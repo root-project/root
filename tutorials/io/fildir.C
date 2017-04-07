@@ -1,7 +1,15 @@
+/// \file
+/// \ingroup tutorial_io
+/// \notebook
+/// This macro displays the ROOT Directory data structure
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void fildir(){
-   //
-   // This macro displays the ROOT Directory data structure
-   //Author: Rene Brun
+
 
    TCanvas *c1 = new TCanvas("c1","ROOT FilDir description",700,900);
    c1->Range(1,1,19,24.5);
@@ -116,4 +124,5 @@ void fildir(){
    keydata->AddText("fClassName: 'TKey'");
    keydata->AddText("fName: Object name");
    keydata->AddText("fTitle: Object Title");
+   c1->Print("fildir.png");
 }

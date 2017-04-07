@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLLogicalShape
 #define ROOT_TGLLogicalShape
 
-#ifndef ROOT_TGLBoundingBox
 #include "TGLBoundingBox.h"
-#endif
 
 class TBuffer3D;
 class TObject;

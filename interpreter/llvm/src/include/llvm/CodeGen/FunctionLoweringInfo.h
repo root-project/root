@@ -18,6 +18,7 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/IndexedMap.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/ISDOpcodes.h"
@@ -61,6 +62,9 @@ public:
   /// registers.
   bool CanLowerReturn;
 
+  /// True if part of the CSRs will be handled via explicit copies.
+  bool SplitCSR;
+
   /// DemoteRegister - if CanLowerReturn is false, DemoteRegister is a vreg
   /// allocated to hold a pointer to the hidden sret parameter.
   unsigned DemoteRegister;
@@ -68,10 +72,75 @@ public:
   /// MBBMap - A mapping from LLVM basic blocks to their machine code entry.
   DenseMap<const BasicBlock*, MachineBasicBlock *> MBBMap;
 
+  typedef SmallVector<unsigned, 1> SwiftErrorVRegs;
+  typedef SmallVector<const Value*, 1> SwiftErrorValues;
+  /// A function can only have a single swifterror argument. And if it does
+  /// have a swifterror argument, it must be the first entry in
+  /// SwiftErrorVals.
+  SwiftErrorValues SwiftErrorVals;
+
+  /// Track the virtual register for each swifterror value in a given basic
+  /// block. Entries in SwiftErrorVRegs have the same ordering as entries
+  /// in SwiftErrorVals.
+  /// Note that another choice that is more straight-forward is to use
+  /// Map<const MachineBasicBlock*, Map<Value*, unsigned/*VReg*/>>. It
+  /// maintains a map from swifterror values to virtual registers for each
+  /// machine basic block. This choice does not require a one-to-one
+  /// correspondence between SwiftErrorValues and SwiftErrorVRegs. But because
+  /// of efficiency concern, we do not choose it.
+  llvm::DenseMap<const MachineBasicBlock*, SwiftErrorVRegs> SwiftErrorMap;
+
+  /// Track the virtual register for each swifterror value at the end of a basic
+  /// block when we need the assignment of a virtual register before the basic
+  /// block is visited. When we actually visit the basic block, we will make
+  /// sure the swifterror value is in the correct virtual register.
+  llvm::DenseMap<const MachineBasicBlock*, SwiftErrorVRegs>
+      SwiftErrorWorklist;
+
+  /// Find the swifterror virtual register in SwiftErrorMap. We will assert
+  /// failure when the value does not exist in swifterror map.
+  unsigned findSwiftErrorVReg(const MachineBasicBlock*, const Value*) const;
+  /// Set the swifterror virtual register in SwiftErrorMap.
+  void setSwiftErrorVReg(const MachineBasicBlock *MBB, const Value*, unsigned);
+
   /// ValueMap - Since we emit code for the function a basic block at a time,
   /// we must remember which virtual registers hold the values for
   /// cross-basic-block values.
-  DenseMap<const Value*, unsigned> ValueMap;
+  DenseMap<const Value *, unsigned> ValueMap;
+
+  /// Track virtual registers created for exception pointers.
+  DenseMap<const Value *, unsigned> CatchPadExceptionPointers;
+
+  /// Keep track of frame indices allocated for statepoints as they could be
+  /// used across basic block boundaries.  This struct is more complex than a
+  /// simple map because the stateopint lowering code de-duplicates gc pointers
+  /// based on their SDValue (so %p and (bitcast %p to T) will get the same
+  /// slot), and we track that here.
+
+  struct StatepointSpillMap {
+    typedef DenseMap<const Value *, Optional<int>> SlotMapTy;
+
+    /// Maps uniqued llvm IR values to the slots they were spilled in.  If a
+    /// value is mapped to None it means we visited the value but didn't spill
+    /// it (because it was a constant, for instance).
+    SlotMapTy SlotMap;
+
+    /// Maps llvm IR values to the values they were de-duplicated to.
+    DenseMap<const Value *, const Value *> DuplicateMap;
+
+    SlotMapTy::const_iterator find(const Value *V) const {
+      auto DuplIt = DuplicateMap.find(V);
+      if (DuplIt != DuplicateMap.end())
+        V = DuplIt->second;
+      return SlotMap.find(V);
+    }
+
+    SlotMapTy::const_iterator end() const { return SlotMap.end(); }
+  };
+
+  /// Maps gc.statepoint instructions to their corresponding StatepointSpillMap
+  /// instances.
+  DenseMap<const Instruction *, StatepointSpillMap> StatepointSpillMaps;
 
   /// StaticAllocaMap - Keep track of frame indices for fixed sized allocas in
   /// the entry block.  This allows the allocas to be efficiently referenced
@@ -88,7 +157,7 @@ public:
   /// RegFixups - Registers which need to be replaced after isel is done.
   DenseMap<unsigned, unsigned> RegFixups;
 
-  /// StatepointStackSlots - A list of temporary stack slots (frame indices) 
+  /// StatepointStackSlots - A list of temporary stack slots (frame indices)
   /// used to spill values at a statepoint.  We store them here to enable
   /// reuse of the same stack slots across different statepoints in different
   /// basic blocks.
@@ -100,14 +169,9 @@ public:
   /// MBB - The current insert position inside the current block.
   MachineBasicBlock::iterator InsertPt;
 
-#ifndef NDEBUG
-  SmallPtrSet<const Instruction *, 8> CatchInfoLost;
-  SmallPtrSet<const Instruction *, 8> CatchInfoFound;
-#endif
-
   struct LiveOutInfo {
     unsigned NumSignBits : 31;
-    bool IsValid : 1;
+    unsigned IsValid : 1;
     APInt KnownOne, KnownZero;
     LiveOutInfo() : NumSignBits(0), IsValid(true), KnownOne(1, 0),
                     KnownZero(1, 0) {}
@@ -150,10 +214,13 @@ public:
   }
 
   unsigned CreateReg(MVT VT);
-  
+
   unsigned CreateRegs(Type *Ty);
-  
+
   unsigned InitializeRegForValue(const Value *V) {
+    // Tokens never live in vregs.
+    if (V->getType()->isTokenTy())
+      return 0;
     unsigned &R = ValueMap[V];
     assert(R == 0 && "Already initialized this value register!");
     return R = CreateRegs(V->getType());
@@ -220,7 +287,12 @@ public:
   /// getArgumentFrameIndex - Get frame index for the byval argument.
   int getArgumentFrameIndex(const Argument *A);
 
+  unsigned getCatchPadExceptionPointerVReg(const Value *CPI,
+                                           const TargetRegisterClass *RC);
+
 private:
+  void addSEHHandlersForLPads(ArrayRef<const LandingPadInst *> LPads);
+
   /// LiveOutRegInfo - Information about live out vregs.
   IndexedMap<LiveOutInfo, VirtReg2IndexFunctor> LiveOutRegInfo;
 };

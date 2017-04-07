@@ -11,19 +11,7 @@
 #ifndef ROOT_TVirtualGeoPainter
 #define ROOT_TVirtualGeoPainter
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualGeoPainter                                                   //
-//                                                                      //
-// Abstract base class for geometry painters                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoVolume;
 class TGeoNode;

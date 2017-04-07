@@ -14,21 +14,11 @@
 
 #include <vector>
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
-#ifndef ROOT_TGLPlotBox
 #include "TGLPlotBox.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TGLPlotCoordinates;
 class TGLPlotCamera;

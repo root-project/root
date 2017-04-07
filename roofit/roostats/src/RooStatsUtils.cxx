@@ -9,11 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/////////////////////////////////////////
-// RooStats
-//
-// namespace for classes and functions of the RooStats package
-/////////////////////////////////////////
 #include "Rtypes.h"
 
 #if !defined(R__ALPHA) && !defined(R__SOLARIS) && !defined(R__ACC) && !defined(R__FBSD)
@@ -37,18 +32,18 @@ using namespace std;
 namespace RooStats {
 
    bool gUseOffset = false;
-   
-   void UseNLLOffset(bool on) { 
+
+   void UseNLLOffset(bool on) {
       // use offset in NLL calculations
       gUseOffset = on;
    }
 
    bool IsNLLOffset() {
-      return gUseOffset; 
-   }      
+      return gUseOffset;
+   }
 
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
-   // utility function to factorize constraint terms from a pdf 
+   // utility function to factorize constraint terms from a pdf
    // (from G. Petrucciani)
       const std::type_info & id = typeid(pdf);
       if (id == typeid(RooProdPdf)) {
@@ -59,7 +54,7 @@ namespace RooStats {
             FactorizePdf(observables, *pdfi, obsTerms, constraints);
          }
       } else if (id == typeid(RooExtendPdf)) {
-         TIterator *iter = pdf.serverIterator(); 
+         TIterator *iter = pdf.serverIterator();
          // extract underlying pdf which is extended; first server is the pdf; second server is the number of events variable
          RooAbsPdf *updf = dynamic_cast<RooAbsPdf *>(iter->Next());
          assert(updf != 0);
@@ -85,9 +80,9 @@ namespace RooStats {
 
 
    void FactorizePdf(RooStats::ModelConfig &model, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
-      // utility function to factorize constraint terms from a pdf 
+      // utility function to factorize constraint terms from a pdf
       // (from G. Petrucciani)
-      if (!model.GetObservables() ) { 
+      if (!model.GetObservables() ) {
          oocoutE((TObject*)0,InputArguments) << "RooStatsUtils::FactorizePdf - invalid input model: missing observables" << endl;
          return;
       }
@@ -95,8 +90,8 @@ namespace RooStats {
    }
 
 
-   RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) { 
-      // make a nuisance pdf by factorizing out all constraint terms in a common pdf 
+   RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) {
+      // make a nuisance pdf by factorizing out all constraint terms in a common pdf
       RooArgList obsTerms, constraints;
       FactorizePdf(observables, pdf, obsTerms, constraints);
       if(constraints.getSize() == 0) {
@@ -108,16 +103,16 @@ namespace RooStats {
       return new RooProdPdf(name,"", constraints);
    }
 
-   RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name) { 
+   RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name) {
       // make a nuisance pdf by factorizing out all constraint terms in a common pdf
-      if (!model.GetPdf() || !model.GetObservables() ) { 
+      if (!model.GetPdf() || !model.GetObservables() ) {
          oocoutE((TObject*)0, InputArguments) << "RooStatsUtils::MakeNuisancePdf - invalid input model: missing pdf and/or observables" << endl;
          return 0;
       }
       return MakeNuisancePdf(*model.GetPdf(), *model.GetObservables(), name);
    }
 
-   RooAbsPdf * StripConstraints(RooAbsPdf &pdf, const RooArgSet &observables) { 
+   RooAbsPdf * StripConstraints(RooAbsPdf &pdf, const RooArgSet &observables) {
       const std::type_info & id = typeid(pdf);
 
       if (id == typeid(RooProdPdf)) {
@@ -133,25 +128,25 @@ namespace RooStats {
 
          if(newList.getSize() == 0) return NULL; // only constraints in product
          // return single component (no longer a product)
-         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained", 
-                                                                                                               newList.at(0)->GetName()))); 
+         else if(newList.getSize() == 1) return dynamic_cast<RooAbsPdf *>(newList.at(0)->clone(TString::Format("%s_unconstrained",
+                                                                                                               newList.at(0)->GetName())));
          else return new RooProdPdf(TString::Format("%s_unconstrained", prod->GetName()).Data(),
             TString::Format("%s without constraints", prod->GetTitle()).Data(), newList);
 
       } else if (id == typeid(RooExtendPdf)) {
 
-         TIterator *iter = pdf.serverIterator(); 
+         TIterator *iter = pdf.serverIterator();
          // extract underlying pdf which is extended; first server is the pdf; second server is the number of events variable
          RooAbsPdf *uPdf = dynamic_cast<RooAbsPdf *>(iter->Next());
          RooAbsReal *extended_term = dynamic_cast<RooAbsReal *>(iter->Next());
          assert(uPdf != NULL); assert(extended_term != NULL); assert(iter->Next() == NULL);
          delete iter;
-         
+
          RooAbsPdf *newUPdf = StripConstraints(*uPdf, observables);
          if(newUPdf == NULL) return NULL; // only constraints in underlying pdf
          else return new RooExtendPdf(TString::Format("%s_unconstrained", pdf.GetName()).Data(),
             TString::Format("%s without constraints", pdf.GetTitle()).Data(), *newUPdf, *extended_term);
-         
+
       } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
 
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf); assert(sim != NULL);
@@ -168,17 +163,17 @@ namespace RooStats {
             pdfList.add(*newPdf);
          }
 
-         return new RooSimultaneous(TString::Format("%s_unconstrained", sim->GetName()).Data(), 
-            TString::Format("%s without constraints", sim->GetTitle()).Data(), pdfList, *cat); 
+         return new RooSimultaneous(TString::Format("%s_unconstrained", sim->GetName()).Data(),
+            TString::Format("%s without constraints", sim->GetTitle()).Data(), pdfList, *cat);
 
-      } else if (pdf.dependsOn(observables)) {  
+      } else if (pdf.dependsOn(observables)) {
          return (RooAbsPdf *) pdf.clone(TString::Format("%s_unconstrained", pdf.GetName()).Data());
       }
 
       return NULL; // just  a constraint term
    }
 
-   RooAbsPdf * MakeUnconstrainedPdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) { 
+   RooAbsPdf * MakeUnconstrainedPdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name) {
       // make a clone pdf without all constraint terms in a common pdf
       RooAbsPdf * unconstrainedPdf = StripConstraints(pdf, observables);
       if(!unconstrainedPdf) {
@@ -186,11 +181,11 @@ namespace RooStats {
          return NULL;
       }
       if(name != NULL) unconstrainedPdf->SetName(name);
-      return unconstrainedPdf;   
+      return unconstrainedPdf;
    }
 
-   RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name) { 
-      // make a clone pdf without all constraint terms in a common pdf 
+   RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name) {
+      // make a clone pdf without all constraint terms in a common pdf
       if(!model.GetPdf() || !model.GetObservables()) {
          oocoutE((TObject *)NULL, InputArguments) << "RooStatsUtils::MakeUnconstrainedPdf - invalid input model: missing pdf and/or observables" << endl;
          return NULL;
@@ -295,20 +290,20 @@ namespace RooStats {
    }
 
 
-   // useful function to print in one line the content of a set with their values 
-   void PrintListContent(const RooArgList & l, std::ostream & os ) { 
+   // useful function to print in one line the content of a set with their values
+   void PrintListContent(const RooArgList & l, std::ostream & os ) {
       bool first = true;
-      os << "( "; 
-      for (int i = 0; i< l.getSize(); ++i) { 
+      os << "( ";
+      for (int i = 0; i< l.getSize(); ++i) {
          if (first) {
             first=kFALSE ;
          } else {
             os << ", " ;
          }
-         l[i].printName(os); 
-         os << " = "; 
-         l[i].printValue(os); 
+         l[i].printName(os);
+         os << " = ";
+         l[i].printValue(os);
       }
-      os << ")\n"; 
+      os << ")\n";
    }
 }

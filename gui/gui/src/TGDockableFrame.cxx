@@ -48,12 +48,12 @@ ClassImp(TGDockHideButton)
 ClassImp(TGUndockedFrame)
 ClassImp(TGDockableFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dock button (i.e. button with two vertical bars).
+
 TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
    TGButton (p, id, GetDefaultGC()(), kChildFrame)
 {
-   // Create a dock button (i.e. button with two vertical bars).
-
    fWidgetFlags = kWidgetIsEnabled;
    fMouseOn = kFALSE;
    Resize(10, GetDefaultHeight());
@@ -71,17 +71,18 @@ TGDockButton::TGDockButton(const TGCompositeFrame *p, int id) :
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete dock button.
+
 TGDockButton::~TGDockButton()
 {
-   // Delete dock button.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle dock button crossing events.
+
 Bool_t TGDockButton::HandleCrossing(Event_t *event)
 {
-   // Handle dock button crossing events.
-
    TGButton::HandleCrossing(event);
    if (event->fType == kLeaveNotify) {
       fMouseOn = kFALSE;
@@ -94,11 +95,11 @@ Bool_t TGDockButton::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw borders of dock button.
+
 void TGDockButton::DrawBorder()
 {
-   // Draw borders of dock button.
-
    int options = GetOptions();
 
    if (fState == kButtonDown || fState == kButtonEngaged)
@@ -116,11 +117,11 @@ void TGDockButton::DrawBorder()
    ChangeOptions(options);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the dock button, i.e. two vertical lines.
+
 void TGDockButton::DoRedraw()
 {
-   // Draw the dock button, i.e. two vertical lines.
-
    int x = 1, y = 0;
 
    DrawBorder();
@@ -133,22 +134,22 @@ void TGDockButton::DoRedraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dock hide button (i.e. button with small triangle).
+
 TGDockHideButton::TGDockHideButton(const TGCompositeFrame *p) :
    TGDockButton (p, 2)
 {
-   // Create a dock hide button (i.e. button with small triangle).
-
    Resize(10, 8);
    fAspectRatio = 0;
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw dock hide button.
+
 void TGDockHideButton::DoRedraw()
 {
-   // Draw dock hide button.
-
    int x = 1, y = 0;
 
    DrawBorder();
@@ -166,12 +167,12 @@ void TGDockHideButton::DoRedraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the undocked (transient) frame.
+
 TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
    TGTransientFrame(p, dockable ? dockable->GetMainFrame() : 0, 10, 10)
 {
-   // Create the undocked (transient) frame.
-
    SetWindowName("");
    fDockable = dockable;
 
@@ -183,44 +184,42 @@ TGUndockedFrame::TGUndockedFrame(const TGWindow *p, TGDockableFrame *dockable) :
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete undocked frame. Puts back dockable frame in its original container.
+
 TGUndockedFrame::~TGUndockedFrame()
 {
-   // Delete undocked frame. Puts back dockable frame in its original container.
-
    if (fDockable && !fDockable->fDeleted) {
       fDockable->DockContainer(kFALSE);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fix the size of the undocked frame so it cannot be changed via the WM.
+
 void TGUndockedFrame::FixSize()
 {
-   // Fix the size of the undocked frame so it cannot be changed via the WM.
-
    ChangeOptions(GetOptions() | kFixedSize);
    SetWMSize(fWidth, fHeight);
    SetWMSizeHints(fWidth, fHeight, fWidth, fHeight, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close undocked frame (called via WM close button).
+
 void TGUndockedFrame::CloseWindow()
 {
-   // Close undocked frame (called via WM close button).
-
    DeleteWindow();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a dockable frame widget.
+
 TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    : TGCompositeFrame(p, 10, 10, kHorizontalFrame), TGWidget(id)
 {
-   // Create a dockable frame widget.
-
    fMsgWindow = fParent;
-
-   fCl = new TGLayoutHints(kLHintsExpandY | kLHintsExpandX);
 
    TGLayoutHints *l1 = new TGLayoutHints(kLHintsTop | kLHintsLeft);
    TGLayoutHints *l2 = new TGLayoutHints(kLHintsExpandY | kLHintsLeft);
@@ -255,11 +254,11 @@ TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
    TGFrame::SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup dockable frame.
+
 TGDockableFrame::~TGDockableFrame()
 {
-   // Cleanup dockable frame.
-
    // Just set the flag and delete fFrame. The other components
    // are deleted in TGCompositeFrame destructor.
    if (fFrame) {
@@ -268,21 +267,21 @@ TGDockableFrame::~TGDockableFrame()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame to dockable frame container. Frame and hints are NOT adopted.
+
 void TGDockableFrame::AddFrame(TGFrame *f, TGLayoutHints *hints)
 {
-   // Add frame to dockable frame container. Frame and hints are NOT adopted.
-
    f->ReparentWindow(fContainer);
    fContainer->AddFrame(f, fHints = hints);
    fContainer->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Undock container.
+
 void TGDockableFrame::UndockContainer()
 {
-   // Undock container.
-
    int ax, ay;
    Window_t wdummy;
 
@@ -294,7 +293,7 @@ void TGDockableFrame::UndockContainer()
    TGDimension size = fContainer->GetSize();
    RemoveFrame(fContainer);
    fContainer->ReparentWindow(fFrame);
-   fFrame->AddFrame(fContainer, fCl);  // fHints
+   fFrame->AddFrame(fContainer, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    gVirtualX->TranslateCoordinates(GetId(), fClient->GetDefaultRoot()->GetId(), fX,
                                    fY + fFrame->GetHeight(), ax, ay, wdummy);
@@ -317,11 +316,11 @@ void TGDockableFrame::UndockContainer()
    Undocked();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Dock container back to TGDockableFrame.
+
 void TGDockableFrame::DockContainer(Int_t del)
 {
-   // Dock container back to TGDockableFrame.
-
    if (!fFrame) return;
    if (del) {
       delete fFrame;  // this will call DockContainer again with del = kFALSE
@@ -330,7 +329,7 @@ void TGDockableFrame::DockContainer(Int_t del)
 
    fFrame->RemoveFrame(fContainer);
    fContainer->ReparentWindow(this);
-   TGCompositeFrame::AddFrame(fContainer, fCl);  // fHints
+   TGCompositeFrame::AddFrame(fContainer, new TGLayoutHints(kLHintsExpandY | kLHintsExpandX));
 
    // kludge! (for special case)
    fDockButton->Resize(fDockButton->GetDefaultWidth(), 1);
@@ -349,11 +348,11 @@ void TGDockableFrame::DockContainer(Int_t del)
    Docked();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show dock container.
+
 void TGDockableFrame::ShowContainer()
 {
-   // Show dock container.
-
    if (!fHidden) return;
 
    ShowFrame(fContainer);
@@ -366,11 +365,11 @@ void TGDockableFrame::ShowContainer()
    SendMessage(fMsgWindow, MK_MSG(kC_DOCK, kDOCK_SHOW), fWidgetId, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide dock container.
+
 void TGDockableFrame::HideContainer()
 {
-   // Hide dock container.
-
    if (fHidden || !fEnableHide) return;
 
    HideFrame(fContainer);
@@ -383,11 +382,11 @@ void TGDockableFrame::HideContainer()
    SendMessage(fMsgWindow, MK_MSG(kC_DOCK, kDOCK_HIDE),fWidgetId, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process dockable frame messages.
+
 Bool_t TGDockableFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process dockable frame messages.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -411,11 +410,11 @@ Bool_t TGDockableFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable undocking.
+
 void TGDockableFrame::EnableUndock(Bool_t onoff)
 {
-   // Enable undocking.
-
    fEnableUndock = onoff;
    if (onoff)
       fButtons->ShowFrame(fDockButton);
@@ -424,11 +423,11 @@ void TGDockableFrame::EnableUndock(Bool_t onoff)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable hiding.
+
 void TGDockableFrame::EnableHide(Bool_t onoff)
 {
-   // Enable hiding.
-
    fEnableHide = onoff;
    if (onoff)
       fButtons->ShowFrame(fHideButton);
@@ -437,11 +436,11 @@ void TGDockableFrame::EnableHide(Bool_t onoff)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window name so it appear as title of the undock window.
+
 void TGDockableFrame::SetWindowName(const char *name)
 {
-   // Set window name so it appear as title of the undock window.
-
    fDockName = "";
    if (name) {
       fDockName = name;
@@ -449,11 +448,11 @@ void TGDockableFrame::SetWindowName(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a dockable frame widget as a C++ statement(s) on output stream out.
+
 void TGDockableFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a dockable frame widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    out << std::endl << "   // dockable frame" << std::endl;

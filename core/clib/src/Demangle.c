@@ -844,14 +844,14 @@ string *trawname;
    }
    if (trawname)
       string_appendn (trawname, *mangled, r);
-      string_appendn (tname, *mangled, r);
-      *mangled += r;
-      string_append (tname, "<");
+   string_appendn (tname, *mangled, r);
+   *mangled += r;
+   string_append (tname, "<");
    /* get size of template parameter list */
-      if (!get_count (mangled, &r))
-      {
-         return (0);
-      }
+   if (!get_count (mangled, &r))
+   {
+      return (0);
+   }
    for (i = 0; i < r; i++)
    {
       if (need_comma)
@@ -1030,22 +1030,22 @@ string *trawname;
    }
    if (tname->p[-1] == '>')
       string_append (tname, " ");
-      string_append (tname, ">");
+   string_append (tname, ">");
 
    /*
-    if (work -> static_type)
-    {
-    string_append (declp, *mangled + 1);
-    *mangled += strlen (*mangled);
-    success = 1;
-    }
-    else
-    {
-    success = demangle_args (work, mangled, declp);
-    }
-    }
-    */
-      return (success);
+   if (work -> static_type)
+   {
+     string_append (declp, *mangled + 1);
+     *mangled += strlen (*mangled);
+     success = 1;
+   }
+   else
+   {
+     success = demangle_args (work, mangled, declp);
+   }
+   }
+   */
+   return (success);
 }
 
 static int

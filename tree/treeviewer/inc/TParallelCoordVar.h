@@ -12,15 +12,9 @@
 #ifndef ROOT_TParallelCoordVar
 #define ROOT_TParallelCoordVar
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 class TParallelCoord;
 class TParallelCoordSelect;

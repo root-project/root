@@ -22,7 +22,17 @@ VDTH    := include/vdt/asin.h\
 	include/vdt/vdtMath.h
 
 # We create a stamp file as vdt is the only module without a library.
-ALLHDRS      += $(patsubst $(MODDIRI)/vdt/%.h, include/%.h, $(VDTH) )
+VDTH_REL     := $(patsubst $(MODDIRI)/vdt/%.h, include/%.h, $(VDTH))
+ALLHDRS      += $(VDTH_REL)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(VDTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Math_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += // link no-library-created \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
+
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \

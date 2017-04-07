@@ -42,9 +42,18 @@ TREEVIEWERLIB := $(LPATH)/libTreeViewer.$(SOEXT)
 TREEVIEWERMAP := $(TREEVIEWERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEVIEWERH))
+TREEVIEWERH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEVIEWERH))
+ALLHDRS       += $(TREEVIEWERH_REL)
 ALLLIBS       += $(TREEVIEWERLIB)
 ALLMAPS       += $(TREEVIEWERMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TREEVIEWERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Tree_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(TREEVIEWERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(TREEVIEWERDEP)

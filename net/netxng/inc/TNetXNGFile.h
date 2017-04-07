@@ -80,7 +80,8 @@ private:
    virtual Bool_t IsUseable() const;
    virtual Bool_t GetVectorReadLimits();
    virtual void   SetEnv();
-   XrdCl::OpenFlags::Flags ParseOpenMode(Option_t *modestr);
+   Int_t ParseOpenMode(Option_t *in, TString &modestr,
+                       XrdCl::OpenFlags::Flags &mode, Bool_t assumeRead);
 
    TNetXNGFile(const TNetXNGFile &other);             // Not implemented
    TNetXNGFile &operator =(const TNetXNGFile &other); // Not implemented

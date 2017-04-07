@@ -1,8 +1,11 @@
-// @(#)root/eve:$Id$
-// Author: Matevz Tadel
-
-// Demonstrates usage of TEveBox class.
-
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates usage of TEveBox class.
+///
+/// \image html eve_box.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 TEveBox* box(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0)
 {

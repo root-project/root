@@ -22,6 +22,7 @@
 #include "textinput/Callbacks.h"
 #include "Getline_color.h"
 #include "TApplication.h"
+#include "TInterpreter.h"
 
 extern "C" {
    int (* Gl_in_key)(int ch) = 0;
@@ -34,12 +35,12 @@ using namespace textinput;
 namespace {
    // TTabCom adapter.
    class ROOTTabCompletion: public TabCompletion {
-   private:
-      ROOTTabCompletion(const ROOTTabCompletion&); // not implemented
-      ROOTTabCompletion& operator=(const ROOTTabCompletion&); // not implemented
    public:
       ROOTTabCompletion(): fLineBuf(new char[fgLineBufSize]) {}
       virtual ~ROOTTabCompletion() { delete []fLineBuf; }
+
+      ROOTTabCompletion(const ROOTTabCompletion&) = delete;
+      ROOTTabCompletion& operator=(const ROOTTabCompletion&) = delete;
 
       // Returns false on error
       bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
@@ -85,6 +86,27 @@ namespace {
    };
    const size_t ROOTTabCompletion::fgLineBufSize = 16*1024;
 
+   class TClingTabCompletion: public TabCompletion {
+   public:
+      TClingTabCompletion() {}
+      virtual ~TClingTabCompletion() {}
+
+      TClingTabCompletion(const TClingTabCompletion&) = delete;
+      TClingTabCompletion& operator=(const TClingTabCompletion&) = delete;
+
+      // Returns false on error
+      bool Complete(Text& line /*in+out*/, size_t& cursor /*in+out*/,
+                    EditorRange& r /*out*/,
+                    std::vector<std::string>& completions /*out*/) {
+         gInterpreter->CodeComplete(line.GetText(), cursor, completions);
+         // FIXME: handle single completion by completing "line"
+         // FIXME: adjust r's update range, for now:
+         // redraw whole line, incl prompt
+         r.fEdit.Extend(Range::AllWithPrompt());
+         r.fDisplay.Extend(Range::AllWithPrompt());
+         return true;
+      }
+   };
 
    // Helper to define the lifetime of the TextInput singleton.
    class TextInputHolder {
@@ -107,8 +129,8 @@ namespace {
          delete fDisplay;
       }
 
-      const char* TakeInput() {
-         fTextInput.TakeInput(fInputLine);
+      const char* TakeInput(bool force = false) {
+         fTextInput.TakeInput(fInputLine, force);
          fInputLine += "\n"; // ROOT wants a trailing newline.
          return fInputLine.c_str();
       }
@@ -170,7 +192,7 @@ extern "C" {
 void
 Gl_config(const char* which, int value) {
    if (strcmp(which, "noecho") == 0) {
-      TextInputHolder::get().HideInput(value);
+      TextInputHolder::get().MaskInput(value);
    } else {
       // unsupported directive
       printf("Gl_config unsupported: %s ?\n", which);
@@ -183,10 +205,15 @@ Gl_histadd(const char* buf) {
 }
 
 /* Wrapper around textinput.
- * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup
+ * Modes: -1 = init, 0 = line mode, 1 = one char at a time mode, 2 = cleanup, 3 = clear input line
  */
 const char*
 Getlinem(EGetLineMode mode, const char* prompt) {
+
+   if (mode == kClear) {
+      TextInputHolder::getHolder().TakeInput(true);
+      return 0;
+   }
 
    if (mode == kCleanUp) {
       TextInputHolder::get().ReleaseInputOutput();

@@ -1,9 +1,18 @@
+## \file
+## \ingroup tutorial_pyroot
+## Run benchmarks macros.
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
+
+from __future__ import print_function
 import os, sys
 import ROOT
 
 ROOT.SetSignalPolicy( ROOT.kSignalFast )
 
-### macro files
+## macro files
 macros = [
    'framework.py', 'hsimple.py', 'hsum.py', 'formula1.py',
    'fillrandom.py','fit1.py', 'h1draw.py', 'graph.py',
@@ -11,10 +20,10 @@ macros = [
    'geometry.py', 'na49view.py', 'file.py',
    'ntuple1.py', 'rootmarks.py' ]
 
-### note: this function is defined in tutorials/rootlogon.C
+## note: this function is defined in tutorials/rootlogon.C
 def bexec( dir, macro, bench ):
    if ROOT.gROOT.IsBatch():
-      print 'Processing benchmark: %s\n' % macro
+      print('Processing benchmark: %s\n' % macro)
 
    summary = bench.GetPrimitive( 'TPave' )
    tmacro = summary.GetLineWith( macro )
@@ -23,7 +32,7 @@ def bexec( dir, macro, bench ):
    bench.Modified()
    bench.Update()
 
-   execfile( os.path.join( macrodir, macro ), sys.modules[ __name__ ].__dict__ )
+   exec( open(os.path.join( macrodir, macro )).read(), sys.modules[ __name__ ].__dict__ )
 
    summary2 = bench.GetPrimitive( 'TPave' )
    tmacro2 = summary2.GetLineWith( macro )
@@ -33,15 +42,10 @@ def bexec( dir, macro, bench ):
    bench.Update()
 
 
-### --------------------------------------------------------------------------
+## --------------------------------------------------------------------------
 if __name__ == '__main__':
-   ROOT.gROOT.Reset()
 
-   try:
-    # convenience, allowing to run this file from a different directory
-      macrodir = os.path.dirname( os.path.join( os.getcwd(), __file__ ) )
-   except NameError:
-      macrodir = ''      # in case of p2.2
+   macrodir = os.path.join(str(ROOT.gROOT.GetTutorialDir()), 'pyroot')
 
  # window for keeping track of bench marks that are run
    bench = ROOT.TCanvas( 'bench','Benchmarks Summary', -1000, 50, 200, 500 )

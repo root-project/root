@@ -1,6 +1,12 @@
-// This draws the Mathematical Symbols letters as a table and save the result
-// as GIF, PS, PDF and SVG files.
-//Author: Rene Brun
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// This draws the Mathematical Symbols letters as a table and save the result
+/// as GIF, PS, PDF and SVG files.
+///
+/// \macro_image
+///
+/// \author Rene Brun
 
 void latex5() {
    TCanvas *c1 = new TCanvas("mathsymb","Mathematical Symbols",600,600);

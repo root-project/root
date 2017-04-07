@@ -18,12 +18,12 @@ NETDS        := $(call stripsrc,$(MODDIRS)/G__Net.cxx)
 NETDO        := $(NETDS:.cxx=.o)
 NETDH        := $(NETDS:.cxx=.h)
 
-NETH         := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+NETMH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
 NETS         := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 ifeq ($(CRYPTOLIB),)
 NETNOCRYPTO  := -DR__NO_CRYPTO
-NETH         := $(filter-out $(MODDIRI)/TS3WebFile.h,$(NETH))
-NETH         := $(filter-out $(MODDIRI)/TS3HTTPRequest.h,$(NETH))
+NETMH        := $(filter-out $(MODDIRI)/TS3WebFile.h,$(NETMH))
+NETMH        := $(filter-out $(MODDIRI)/TS3HTTPRequest.h,$(NETMH))
 NETS         := $(filter-out $(MODDIRS)/TS3WebFile.cxx,$(NETS))
 NETS         := $(filter-out $(MODDIRS)/TS3HTTPRequest.cxx,$(NETS))
 else
@@ -35,7 +35,7 @@ endif
 
 ifeq ($(SSLLIB),)
 NETSSL       :=
-NETH         := $(filter-out $(MODDIRI)/TSSLSocket.h,$(NETH))
+NETMH        := $(filter-out $(MODDIRI)/TSSLSocket.h,$(NETMH))
 NETS         := $(filter-out $(MODDIRS)/TSSLSocket.cxx,$(NETS))
 else
 NETSSL       := -DR__SSL
@@ -49,10 +49,21 @@ NETMAP       := $(NETLIB:.$(SOEXT)=.rootmap)
 
 EXTRANETFLAGS =
 
+NETINCH      := $(subst $(MODDIRI)/%.h,include/%.h,$(NETMH))
+
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETH))
+NETMH_REL    := $(patsubst $(MODDIRI)/%.h,include/%.h,$(NETMH))
+ALLHDRS      += $(NETMH_REL)
 ALLLIBS      += $(NETLIB)
 ALLMAPS      += $(NETMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(NETMH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(NETLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(NETDEP)
@@ -71,15 +82,15 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 $(call pcmrule,NET)
 	$(noop)
 
-$(NETDS):       $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
+$(NETDS):       $(NETINCH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NET) -c -writeEmptyRootPCM $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NET) -c -writeEmptyRootPCM $(NETNOCRYPTO) $(NETSSL) $(patsubst include/%,%,$(NETINCH)) $(NETL)
 
-$(NETMAP):      $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
+$(NETMAP):      $(NETINCH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(NETDS) $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCLINGSTAGE2) -r $(NETDS) $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(patsubst include/%,%,$(NETINCH)) $(NETL)
 
 all-$(MODNAME): $(NETLIB)
 

@@ -18,56 +18,53 @@
 #include "TGLRnrCtx.h"
 #include "TGLIncludes.h"
 
-//==============================================================================
-// TEveJetConeGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveJetCone.
-//
+/** \class TEveJetConeGL
+\ingroup TEve
+OpenGL renderer class for TEveJetCone.
+*/
 
 ClassImp(TEveJetConeGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveJetConeGL::TEveJetConeGL() :
    TGLObject(), fC(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveJetConeGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fC = SetModelDynCast<TEveJetCone>(obj);
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveJetConeGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveJetCone*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear DL cache and reset internal point array.
+
 void TEveJetConeGL::DLCacheClear()
 {
-   // Clear DL cache and reset internal point array.
-
    fP.clear();
    TGLObject::DLCacheClear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate points for drawing.
+
 void TEveJetConeGL::CalculatePoints() const
 {
-   // Calculate points for drawing.
-
    assert(fC->fNDiv > 2);
 
    const Int_t  NP = fC->fNDiv;
@@ -82,11 +79,11 @@ void TEveJetConeGL::CalculatePoints() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the cone.
+
 void TEveJetConeGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw the cone.
-
    if (fP.empty()) CalculatePoints();
 
    if (fC->fHighlightFrame && rnrCtx.Highlight())
@@ -122,11 +119,11 @@ void TEveJetConeGL::Draw(TGLRnrCtx& rnrCtx) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
+
 void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
-   // Render with OpenGL.
-
    // printf("TEveJetConeGL::DirectDraw LOD %d\n", rnrCtx.CombiLOD());
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT | GL_LIGHTING_BIT);
@@ -172,41 +169,37 @@ void TEveJetConeGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
    glPopAttrib();
 }
 
-
-//==============================================================================
-// TEveJetConeProjectedGL
-//==============================================================================
-
-//______________________________________________________________________________
-// OpenGL renderer class for TEveJetConeProjected.
-//
+/** \class TEveJetConeProjectedGL
+\ingroup TEve
+OpenGL renderer class for TEveJetConeProjected.
+*/
 
 ClassImp(TEveJetConeProjectedGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveJetConeProjectedGL::TEveJetConeProjectedGL() :
    TEveJetConeGL(), fM(0)
 {
-   // Constructor.
-
    // fDLCache = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 Bool_t TEveJetConeProjectedGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-
    fM = SetModelDynCast<TEveJetConeProjected>(obj);
    fC = dynamic_cast<TEveJetCone*>(fM->GetProjectable());
    return fC != 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set bounding box.
+
 void TEveJetConeProjectedGL::SetBBox()
 {
-   // Set bounding box.
-
    SetAxisAlignedBBox(((TEveJetConeProjected*)fExternalObj)->AssertBBox());
 }
 
@@ -219,11 +212,11 @@ namespace
    };
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate points for drawing.
+
 void TEveJetConeProjectedGL::CalculatePoints() const
 {
-   // Calculate points for drawing.
-
    static const TEveException kEH("TEveJetConeProjectedGL::CalculatePoints ");
 
    fP.resize(3);
@@ -282,11 +275,11 @@ void TEveJetConeProjectedGL::CalculatePoints() const
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw jet outline.
+
 void TEveJetConeProjectedGL::RenderOutline() const
 {
-   // Draw jet outline.
-
    const Int_t NP = fP.size();
    glBegin(GL_LINE_LOOP);
    for (Int_t i = 0; i < NP; ++i)
@@ -296,11 +289,11 @@ void TEveJetConeProjectedGL::RenderOutline() const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw jet surface.
+
 void TEveJetConeProjectedGL::RenderPolygon() const
 {
-   // Draw jet surface.
-
    const Int_t NP = fP.size();
    glBegin(GL_POLYGON);
    for (Int_t i = 0; i < NP; ++i)
@@ -310,11 +303,11 @@ void TEveJetConeProjectedGL::RenderPolygon() const
    glEnd();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the cone.
+
 void TEveJetConeProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw the cone.
-
    if (fP.empty()) CalculatePoints();
 
    if (rnrCtx.IsDrawPassOutlineLine())
@@ -336,12 +329,11 @@ void TEveJetConeProjectedGL::Draw(TGLRnrCtx& rnrCtx) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Render with OpenGL.
 
-//______________________________________________________________________________
 void TEveJetConeProjectedGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 {
-   // Render with OpenGL.
-
    // printf("TEveJetConeProjectedGL::DirectDraw LOD %d\n", rnrCtx.CombiLOD());
 
    fMultiColor = (fM->fDrawFrame && fM->fFillColor != fM->fLineColor);

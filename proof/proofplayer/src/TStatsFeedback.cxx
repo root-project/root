@@ -10,13 +10,12 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TStatsFeedback                                                       //
-//                                                                      //
-// Utility class to display PROOF stats feedback histos during queries. //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TStatsFeedback
+\ingroup proofkernel
+
+Utility class to display PROOF stats feedback histos during queries
+
+*/
 
 #include "TStatsFeedback.h"
 
@@ -35,11 +34,11 @@
 ClassImp(TStatsFeedback)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TStatsFeedback::TStatsFeedback(TProof *proof)
 {
-   // Constructor
-
    if (proof == 0) proof = gProof;
 
    TProof *p = dynamic_cast<TProof*>(proof);
@@ -51,27 +50,27 @@ TStatsFeedback::TStatsFeedback(TProof *proof)
    fProof = p;
    fName = fProof->GetSessionTag();
 
-   if (!(proof->Connect("Feedback(TList *objs)", "TStatsFeedback",
-                  this, "Feedback(TList *objs)"))) {
+   if (!(proof->Connect("Feedback(TList*)", "TStatsFeedback",
+                  this, "Feedback(TList*)"))) {
       Error("TStatsFeedback", "Connect() failed");
       SetBit(TObject::kInvalidObject);
       return;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TStatsFeedback::~TStatsFeedback()
 {
-   // Destructor
-
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Display feedback
+
 void TStatsFeedback::Feedback(TList *objs)
 {
-   // Display feedback
-
    TSeqCollection *canvases = gROOT->GetListOfCanvases();
 
    PDB(kFeedback,1) Info("Feedback", "%d Objects", objs->GetSize());

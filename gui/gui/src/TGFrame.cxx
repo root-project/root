@@ -136,13 +136,13 @@ ClassImp(TGGroupFrame)
 ClassImp(TGHeaderFrame)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a TGFrame object. Options is an OR of the EFrameTypes.
+
 TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options, Pixel_t back)
    : TGWindow(p, 0, 0, w, h, 0, 0, 0, 0, 0, options)
 {
-   // Create a TGFrame object. Options is an OR of the EFrameTypes.
-
    if (!fgInit && gClient) {
       TGFrame::GetDefaultFrameBackground();
       TGFrame::GetDefaultSelectedBackground();
@@ -192,15 +192,15 @@ TGFrame::TGFrame(const TGWindow *p, UInt_t w, UInt_t h,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a frame using an externally created window. For example
+/// to register the root window (called by TGClient), or a window
+/// created via TVirtualX::InitWindow() (id is obtained with
+/// TVirtualX::GetWindowID()).
+
 TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    : TGWindow(c, id, parent)
 {
-   // Create a frame using an externally created window. For example
-   // to register the root window (called by TGClient), or a window
-   // created via TVirtualX::InitWindow() (id is obtained with
-   // TVirtualX::GetWindowID()).
-
    if (!fgInit && gClient) {
       TGFrame::GetDefaultFrameBackground();
       TGFrame::GetDefaultSelectedBackground();
@@ -242,21 +242,21 @@ TGFrame::TGFrame(TGClient *c, Window_t id, const TGWindow *parent)
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGFrame::~TGFrame()
 {
-   // Destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete window. Use single shot timer to call final delete method.
+/// We use this indirect way since deleting the window in its own
+/// execution "thread" can cause side effects because frame methods
+/// can still be called while the window object has already been deleted.
+
 void TGFrame::DeleteWindow()
 {
-   // Delete window. Use single shot timer to call final delete method.
-   // We use this indirect way since deleting the window in its own
-   // execution "thread" can cause side effects because frame methods
-   // can still be called while the window object has already been deleted.
-
    if (gDNDManager) {
       if (gDNDManager->GetMainFrame() == this)
          gDNDManager->SetMainFrame(0);
@@ -269,39 +269,39 @@ void TGFrame::DeleteWindow()
    SetBit(kDeleteWindowCalled);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change frame background color.
+
 void TGFrame::ChangeBackground(Pixel_t back)
 {
-   // Change frame background color.
-
    fBackground = back;
    gVirtualX->SetWindowBackground(fId, back);
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return frame foreground color.
+
 Pixel_t TGFrame::GetForeground() const
 {
-   // Return frame foreground color.
-
    return fgBlackPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set background color (override from TGWindow base class).
+/// Same effect as ChangeBackground().
+
 void TGFrame::SetBackgroundColor(Pixel_t back)
 {
-   // Set background color (override from TGWindow base class).
-   // Same effect as ChangeBackground().
-
    fBackground = back;
    TGWindow::SetBackgroundColor(back);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change frame options. Options is an OR of the EFrameTypes.
+
 void TGFrame::ChangeOptions(UInt_t options)
 {
-   // Change frame options. Options is an OR of the EFrameTypes.
-
    if ((options & (kDoubleBorder | kSunkenFrame | kRaisedFrame)) !=
       (fOptions & (kDoubleBorder | kSunkenFrame | kRaisedFrame))) {
       if (!InheritsFrom(TGGroupFrame::Class())) {
@@ -315,30 +315,30 @@ void TGFrame::ChangeOptions(UInt_t options)
    fOptions = options;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add events specified in the emask to the events the frame should handle.
+
 void TGFrame::AddInput(UInt_t emask)
 {
-   // Add events specified in the emask to the events the frame should handle.
-
    fEventMask |= emask;
    gVirtualX->SelectInput(fId, fEventMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove events specified in emask from the events the frame should handle.
+
 void TGFrame::RemoveInput(UInt_t emask)
 {
-   // Remove events specified in emask from the events the frame should handle.
-
    fEventMask &= ~emask;
    gVirtualX->SelectInput(fId, fEventMask);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw 3D rectangle on the frame border.
+
 void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
                               UInt_t w, UInt_t h)
 {
-   // Draw 3D rectangle on the frame border.
-
    switch (type) {
       case kSunkenFrame:
          gVirtualX->DrawLine(fId, GetShadowGC()(),  x,     y,     x+w-2, y);
@@ -397,20 +397,20 @@ void TGFrame::Draw3dRectangle(UInt_t type, Int_t x, Int_t y,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw frame border.
+
 void TGFrame::DrawBorder()
 {
-   // Draw frame border.
-
    Draw3dRectangle(fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder),
                    0, 0, fWidth, fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the frame.
+
 void TGFrame::DoRedraw()
 {
-   // Redraw the frame.
-
    gVirtualX->ClearArea(fId, fBorderWidth, fBorderWidth,
                    fWidth - (fBorderWidth << 1), fHeight - (fBorderWidth << 1));
 
@@ -419,11 +419,11 @@ void TGFrame::DoRedraw()
    DrawBorder();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This event is generated when the frame is resized.
+
 Bool_t TGFrame::HandleConfigureNotify(Event_t *event)
 {
-   // This event is generated when the frame is resized.
-
    if ((event->fWidth != fWidth) || (event->fHeight != fHeight)) {
       fWidth  = event->fWidth;
       fHeight = event->fHeight;
@@ -432,12 +432,12 @@ Bool_t TGFrame::HandleConfigureNotify(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle all frame events. Events are dispatched to the specific
+/// event handlers.
+
 Bool_t TGFrame::HandleEvent(Event_t *event)
 {
-   // Handle all frame events. Events are dispatched to the specific
-   // event handlers.
-
    if (gDragManager && !fClient->IsEditDisabled() &&
        gDragManager->HandleEvent(event)) return kTRUE;
 
@@ -560,31 +560,32 @@ Bool_t TGFrame::HandleEvent(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   std::cout << fWidth << "x" << fHeight << std::endl;
+
 TGDimension TGFrame::GetDefaultSize() const
 {
-   //   std::cout << fWidth << "x" << fHeight << std::endl;
    return TGDimension(fWidth, fHeight);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move frame.
+
 void TGFrame::Move(Int_t x, Int_t y)
 {
-   // Move frame.
-
    if (x != fX || y != fY) {
       TGWindow::Move(x, y);
       fX = x; fY = y;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the frame.
+/// If w=0 && h=0 - Resize to default size
+
 void TGFrame::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the frame.
-   // If w=0 && h=0 - Resize to default size
-
    if (w != fWidth || h != fHeight) {
       TGDimension siz(0,0);
       siz = GetDefaultSize();
@@ -595,20 +596,20 @@ void TGFrame::Resize(UInt_t w, UInt_t h)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the frame.
+
 void TGFrame::Resize(TGDimension size)
 {
-   // Resize the frame.
-
    Resize(size.fWidth, size.fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and/or resize the frame.
+/// If w=0 && h=0 - Resize to default size
+
 void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move and/or resize the frame.
-   // If w=0 && h=0 - Resize to default size
-
    // we do it anyway as we don't know if it's only a move or only a resize
    TGDimension siz(0,0);
    siz = GetDefaultSize();
@@ -619,12 +620,12 @@ void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send message (i.e. event) to window w. Message is encoded in one long
+/// as message type and up to two long parameters.
+
 void TGFrame::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Send message (i.e. event) to window w. Message is encoded in one long
-   // as message type and up to two long parameters.
-
    Event_t event;
 
    if (w) {
@@ -643,12 +644,12 @@ void TGFrame::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t pa
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle a client message. Client messages are the ones sent via
+/// TGFrame::SendMessage (typically by widgets).
+
 Bool_t TGFrame::HandleClientMessage(Event_t *event)
 {
-   // Handle a client message. Client messages are the ones sent via
-   // TGFrame::SendMessage (typically by widgets).
-
    if (gDNDManager) {
       gDNDManager->HandleClientMessage(event);
    }
@@ -658,11 +659,11 @@ Bool_t TGFrame::HandleClientMessage(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default frame background.
+
 ULong_t TGFrame::GetDefaultFrameBackground()
 {
-   // Get default frame background.
-
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgDefaultFrameBackground = gClient->GetResourcePool()->GetFrameBgndColor();
@@ -671,11 +672,11 @@ ULong_t TGFrame::GetDefaultFrameBackground()
    return fgDefaultFrameBackground;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default selected frame background.
+
 ULong_t TGFrame::GetDefaultSelectedBackground()
 {
-   // Get default selected frame background.
-
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgDefaultSelectedBackground = gClient->GetResourcePool()->GetSelectedBgndColor();
@@ -684,11 +685,11 @@ ULong_t TGFrame::GetDefaultSelectedBackground()
    return fgDefaultSelectedBackground;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get white pixel value.
+
 ULong_t TGFrame::GetWhitePixel()
 {
-   // Get white pixel value.
-
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgWhitePixel = gClient->GetResourcePool()->GetWhiteColor();
@@ -697,11 +698,11 @@ ULong_t TGFrame::GetWhitePixel()
    return fgWhitePixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get black pixel value.
+
 ULong_t TGFrame::GetBlackPixel()
 {
-   // Get black pixel value.
-
    static Bool_t init = kFALSE;
    if (!init && gClient) {
       fgBlackPixel = gClient->GetResourcePool()->GetBlackColor();
@@ -710,69 +711,69 @@ ULong_t TGFrame::GetBlackPixel()
    return fgBlackPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get black graphics context.
+
 const TGGC &TGFrame::GetBlackGC()
 {
-   // Get black graphics context.
-
    if (!fgBlackGC && gClient)
       fgBlackGC = gClient->GetResourcePool()->GetBlackGC();
    return *fgBlackGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get white graphics context.
+
 const TGGC &TGFrame::GetWhiteGC()
 {
-   // Get white graphics context.
-
    if (!fgWhiteGC && gClient)
       fgWhiteGC = gClient->GetResourcePool()->GetWhiteGC();
    return *fgWhiteGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get highlight color graphics context.
+
 const TGGC &TGFrame::GetHilightGC()
 {
-   // Get highlight color graphics context.
-
    if (!fgHilightGC && gClient)
       fgHilightGC = gClient->GetResourcePool()->GetFrameHiliteGC();
    return *fgHilightGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get shadow color graphics context.
+
 const TGGC &TGFrame::GetShadowGC()
 {
-   // Get shadow color graphics context.
-
    if (!fgShadowGC && gClient)
       fgShadowGC = gClient->GetResourcePool()->GetFrameShadowGC();
    return *fgShadowGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get background color graphics context.
+
 const TGGC &TGFrame::GetBckgndGC()
 {
-   // Get background color graphics context.
-
    if (!fgBckgndGC && gClient)
       fgBckgndGC = gClient->GetResourcePool()->GetFrameBckgndGC();
    return *fgBckgndGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get time of last mouse click.
+
 Time_t TGFrame::GetLastClick()
 {
-   // Get time of last mouse click.
-
    return fgLastClick;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print window id.
+
 void TGFrame::Print(Option_t *option) const
 {
-   // Print window id.
-
    TString opt = option;
    if (opt.Contains("tree")) {
       TGWindow::Print(option);
@@ -784,41 +785,43 @@ void TGFrame::Print(Option_t *option) const
    std::cout << " w=" << fWidth << " h=" << fHeight << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetDragType
+
 void TGFrame::SetDragType(Int_t)
 {
-   // SetDragType
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// SetDropType
+
 void TGFrame::SetDropType(Int_t)
 {
-   // SetDropType
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns drag source type.
+/// If frame is not "draggable" - return zero
+
 Int_t TGFrame::GetDragType() const
 {
-   // Returns drag source type.
-   // If frame is not "draggable" - return zero
-
    return fClient->IsEditable();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns drop target type.
+/// If frame cannot accept drop - return zero
+
 Int_t TGFrame::GetDropType() const
 {
-   // Returns drop target type.
-   // If frame cannot accept drop - return zero
-
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Go into GUI building mode.
+
 void TGFrame::StartGuiBuilding(Bool_t on)
 {
-   // Go into GUI building mode.
-
    if (GetEditDisabled()) return;
    if (!gDragManager) gDragManager = TVirtualDragManager::Instance();
    if (!gDragManager) return;
@@ -833,13 +836,13 @@ void TGFrame::StartGuiBuilding(Bool_t on)
    if (comp) comp->SetEditable(on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a composite frame. A composite frame has in addition to a TGFrame
+/// also a layout manager and a list of child frames.
+
 TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
          UInt_t options, Pixel_t back) : TGFrame(p, w, h, options, back)
 {
-   // Create a composite frame. A composite frame has in addition to a TGFrame
-   // also a layout manager and a list of child frames.
-
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
@@ -856,14 +859,14 @@ TGCompositeFrame::TGCompositeFrame(const TGWindow *p, UInt_t w, UInt_t h,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a frame using an externally created window. For example
+/// to register the root window (called by TGClient), or a window
+/// created via TVirtualX::InitWindow() (id is obtained with TVirtualX::GetWindowID()).
+
 TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent)
    : TGFrame(c, id, parent)
 {
-   // Create a frame using an externally created window. For example
-   // to register the root window (called by TGClient), or a window
-   // created via TVirtualX::InitWindow() (id is obtained with TVirtualX::GetWindowID()).
-
    fLayoutManager = 0;
    fList          = new TList;
    fLayoutBroken  = kFALSE;
@@ -877,11 +880,11 @@ TGCompositeFrame::TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *par
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a composite frame.
+
 TGCompositeFrame::~TGCompositeFrame()
 {
-   // Delete a composite frame.
-
    if (fMustCleanup != kNoCleanup) {
       Cleanup();
    } else {
@@ -900,32 +903,32 @@ TGCompositeFrame::~TGCompositeFrame()
    fLayoutManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return kTRUE if frame is being edited.
+
 Bool_t TGCompositeFrame::IsEditable() const
 {
-   // Return kTRUE if frame is being edited.
-
    return (fClient->GetRoot() == (TGWindow*)this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch ON/OFF edit mode.
+/// If edit mode is ON it is possible:
+///
+///  1. embed other ROOT GUI application (a la ActiveX)
+///
+///  For example:
+///    TGMainFrame *m = new TGMainFrame(gClient->GetRoot(), 500, 500);
+///    m->SetEditable();
+///    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
+///    Aclock a;
+///    gROOT->Macro("$ROOTSYS/tutorials/gui/guitest.C");
+///    m->SetEditable(0);
+///    m->MapWindow();
+///
+
 void TGCompositeFrame::SetEditable(Bool_t on)
 {
-   // Switch ON/OFF edit mode.
-   // If edit mode is ON it is possible:
-   //
-   //  1. embed other ROOT GUI application (a la ActiveX)
-   //
-   //  For example:
-   //    TGMainFrame *m = new TGMainFrame(gClient->GetRoot(), 500, 500);
-   //    m->SetEditable();
-   //    gSystem->Load("$ROOTSYS/test/Aclock"); // load Aclock demo
-   //    Aclock a;
-   //    gROOT->Macro("$ROOTSYS/tutorials/gui/guitest.C");
-   //    m->SetEditable(0);
-   //    m->MapWindow();
-   //
-
    if (on && ((fEditDisabled & kEditDisable) ||
               (fEditDisabled & kEditDisableLayout))) return;
 
@@ -937,14 +940,14 @@ void TGCompositeFrame::SetEditable(Bool_t on)
    if (gDragManager) gDragManager->SetEditable(on);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup and delete all objects contained in this composite frame.
+/// This will delete all objects added via AddFrame().
+/// CAUTION: all objects (frames and layout hints) must be unique, i.e.
+/// cannot be shared.
+
 void TGCompositeFrame::Cleanup()
 {
-   // Cleanup and delete all objects contained in this composite frame.
-   // This will delete all objects added via AddFrame().
-   // CAUTION: all objects (frames and layout hints) must be unique, i.e.
-   // cannot be shared.
-
    if (!fList) return;
 
    TGFrameElement *el;
@@ -971,13 +974,13 @@ void TGCompositeFrame::Cleanup()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the layout manager for the composite frame.
+/// The layout manager is adopted by the frame and will be deleted
+/// by the frame.
+
 void TGCompositeFrame::SetLayoutManager(TGLayoutManager *l)
 {
-   // Set the layout manager for the composite frame.
-   // The layout manager is adopted by the frame and will be deleted
-   // by the frame.
-
    if (l) {
       delete fLayoutManager;
       fLayoutManager = l;
@@ -985,21 +988,21 @@ void TGCompositeFrame::SetLayoutManager(TGLayoutManager *l)
       Error("SetLayoutManager", "no layout manager specified");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set broken layout. No Layout method is called.
+
 void TGCompositeFrame::SetLayoutBroken(Bool_t on)
 {
-   // Set broken layout. No Layout method is called.
-
    fLayoutBroken = on;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set edit disable flag for this frame and subframes
+///
+///  - if (on & kEditDisable) - disable edit for this frame and all subframes.
+
 void TGCompositeFrame::SetEditDisabled(UInt_t on)
 {
-   // Set edit disable flag for this frame and subframes
-   //
-   //  - if (on & kEditDisable) - disable edit for this frame and all subframes.
-
    fEditDisabled = on;
    UInt_t set = on & kEditDisable;
 
@@ -1016,11 +1019,11 @@ void TGCompositeFrame::SetEditDisabled(UInt_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change composite frame options. Options is an OR of the EFrameTypes.
+
 void TGCompositeFrame::ChangeOptions(UInt_t options)
 {
-   // Change composite frame options. Options is an OR of the EFrameTypes.
-
    TGFrame::ChangeOptions(options);
 
    if (options & kHorizontalFrame)
@@ -1029,27 +1032,27 @@ void TGCompositeFrame::ChangeOptions(UInt_t options)
       SetLayoutManager(new TGVerticalLayout(this));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Turn on automatic cleanup of child frames in dtor.
+///
+/// if mode = kNoCleanup    - no automatic cleanup
+/// if mode = kLocalCleanup - automatic cleanup in this composite frame only
+/// if mode = kDeepCleanup  - automatic deep cleanup in this composite frame
+///                           and all child composite frames (hierarchical)
+///
+/// Attention!
+///    Hierarchical cleaning is dangerous and must be used with caution.
+///    There are many GUI components (in ROOT and in user code) which do not
+///    use Clean method in destructor ("custom deallocation").
+///    Adding such component to GUI container which is using hierarchical
+///    cleaning will produce seg. violation when container is deleted.
+///    The reason is double deletion: first whem Clean method is invoked,
+///    then at "custom deallocation".
+///    We are going to correct all ROOT code to make it to be
+///    consitent with hierarchical cleaning scheeme.
+
 void TGCompositeFrame::SetCleanup(Int_t mode)
 {
-   // Turn on automatic cleanup of child frames in dtor.
-   //
-   // if mode = kNoCleanup    - no automatic cleanup
-   // if mode = kLocalCleanup - automatic cleanup in this composite frame only
-   // if mode = kDeepCleanup  - automatic deep cleanup in this composite frame
-   //                           and all child composite frames (hierarchical)
-   //
-   // Attention!
-   //    Hierarchical cleaning is dangerous and must be used with caution.
-   //    There are many GUI components (in ROOT and in user code) which do not
-   //    use Clean method in destructor ("custom deallocation").
-   //    Adding such component to GUI container which is using hierarchical
-   //    cleaning will produce seg. violation when container is deleted.
-   //    The reason is double deletion: first whem Clean method is invoked,
-   //    then at "custom deallocation".
-   //    We are going to correct all ROOT code to make it to be
-   //    consitent with hierarchical cleaning scheeme.
-
    if (mode == fMustCleanup)
       return;
 
@@ -1067,11 +1070,11 @@ void TGCompositeFrame::SetCleanup(Int_t mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find frame-element holding frame f.
+
 TGFrameElement* TGCompositeFrame::FindFrameElement(TGFrame *f) const
 {
-   // Find frame-element holding frame f.
-
    if (!fList) return 0;
 
    TGFrameElement *el;
@@ -1084,17 +1087,17 @@ TGFrameElement* TGCompositeFrame::FindFrameElement(TGFrame *f) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame to the composite frame using the specified layout hints.
+/// If no hints are specified default hints TGLayoutHints(kLHintsNormal,0,0,0,0)
+/// will be used. Most of the time, however, you will want to provide
+/// specific hints. User specified hints can be reused many times
+/// and need to be destroyed by the user. The added frames cannot not be
+/// added to different composite frames but still need to be deleted by
+/// the user.
+
 void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
 {
-   // Add frame to the composite frame using the specified layout hints.
-   // If no hints are specified default hints TGLayoutHints(kLHintsNormal,0,0,0,0)
-   // will be used. Most of the time, however, you will want to provide
-   // specific hints. User specified hints can be reused many times
-   // and need to be destroyed by the user. The added frames cannot not be
-   // added to different composite frames but still need to be deleted by
-   // the user.
-
    TGFrameElement *nw = new TGFrameElement(f, l ? l : fgDefaultHints);
    fList->Add(nw);
 
@@ -1104,11 +1107,11 @@ void TGCompositeFrame::AddFrame(TGFrame *f, TGLayoutHints *l)
       f->SetCleanup(kDeepCleanup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all frames from composite frame.
+
 void TGCompositeFrame::RemoveAll()
 {
-   // Remove all frames from composite frame.
-
    if (!fList) return;
 
    TGFrameElement *el;
@@ -1122,11 +1125,11 @@ void TGCompositeFrame::RemoveAll()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove frame from composite frame.
+
 void TGCompositeFrame::RemoveFrame(TGFrame *f)
 {
-   // Remove frame from composite frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el) {
@@ -1137,11 +1140,11 @@ void TGCompositeFrame::RemoveFrame(TGFrame *f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Map all sub windows that are part of the composite frame.
+
 void TGCompositeFrame::MapSubwindows()
 {
-   // Map all sub windows that are part of the composite frame.
-
    if (!fMapSubwindows) {
       //MapWindow();
       return;
@@ -1163,11 +1166,11 @@ void TGCompositeFrame::MapSubwindows()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide sub frame.
+
 void TGCompositeFrame::HideFrame(TGFrame *f)
 {
-   // Hide sub frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el) {
@@ -1177,11 +1180,11 @@ void TGCompositeFrame::HideFrame(TGFrame *f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show sub frame.
+
 void TGCompositeFrame::ShowFrame(TGFrame *f)
 {
-   // Show sub frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el) {
@@ -1191,11 +1194,11 @@ void TGCompositeFrame::ShowFrame(TGFrame *f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of sub frame.
+
 Int_t TGCompositeFrame::GetState(TGFrame *f) const
 {
-   // Get state of sub frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el)
@@ -1204,11 +1207,11 @@ Int_t TGCompositeFrame::GetState(TGFrame *f) const
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of sub frame.
+
 Bool_t TGCompositeFrame::IsVisible(TGFrame *f) const
 {
-   // Get state of sub frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el)
@@ -1217,11 +1220,11 @@ Bool_t TGCompositeFrame::IsVisible(TGFrame *f) const
       return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get state of sub frame.
+
 Bool_t TGCompositeFrame::IsArranged(TGFrame *f) const
 {
-   // Get state of sub frame.
-
    TGFrameElement *el = FindFrameElement(f);
 
    if (el)
@@ -1230,20 +1233,20 @@ Bool_t TGCompositeFrame::IsArranged(TGFrame *f) const
       return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the elements of the composite frame.
+
 void TGCompositeFrame::Layout()
 {
-   // Layout the elements of the composite frame.
-
    if (IsLayoutBroken()) return;
    fLayoutManager->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print all frames in this composite frame.
+
 void TGCompositeFrame::Print(Option_t *option) const
 {
-   // Print all frames in this composite frame.
-
    TString opt = option;
    if (opt.Contains("tree")) {
       TGWindow::Print(option);
@@ -1261,11 +1264,11 @@ void TGCompositeFrame::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change background color for this frame and all subframes.
+
 void TGCompositeFrame::ChangeSubframesBackground(Pixel_t back)
 {
-   // Change background color for this frame and all subframes.
-
    TGFrame::ChangeBackground(back);
    TGFrameElement *el;
 
@@ -1281,11 +1284,11 @@ void TGCompositeFrame::ChangeSubframesBackground(Pixel_t back)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get frame located at specified point.
+
 TGFrame *TGCompositeFrame::GetFrameFromPoint(Int_t x, Int_t y)
 {
-   // Get frame located at specified point.
-
    if (!Contains(x, y)) return 0;
 
    if (!fList) return this;
@@ -1305,12 +1308,12 @@ TGFrame *TGCompositeFrame::GetFrameFromPoint(Int_t x, Int_t y)
    return this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Translate coordinates to child frame.
+
 Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
                                               Int_t &fx, Int_t &fy)
 {
-   // Translate coordinates to child frame.
-
    if (child == this) {
       fx = x;
       fy = y;
@@ -1338,11 +1341,11 @@ Bool_t TGCompositeFrame::TranslateCoordinates(TGFrame *child, Int_t x, Int_t y,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag enter event.
+
 Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
 {
-   // Handle drag enter event.
-
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
@@ -1368,11 +1371,11 @@ Bool_t TGCompositeFrame::HandleDragEnter(TGFrame *)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag leave event.
+
 Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
 {
-   // Handle drag leave event.
-
    if (fClient && fClient->IsEditable() &&
        (fId != fClient->GetRoot()->GetId())) {
 
@@ -1386,20 +1389,20 @@ Bool_t TGCompositeFrame::HandleDragLeave(TGFrame *)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drag motion event.
+
 Bool_t TGCompositeFrame::HandleDragMotion(TGFrame *)
 {
-   // Handle drag motion event.
-
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle drop event.
+
 Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
                                         TGLayoutHints *lo)
 {
-   // Handle drop event.
-
    if (fClient && fClient->IsEditable() && frame && (x >= 0) && (y >= 0) &&
        (x + frame->GetWidth() <= fWidth) && (y + frame->GetHeight() <= fHeight)) {
 
@@ -1416,13 +1419,13 @@ Bool_t TGCompositeFrame::HandleDragDrop(TGFrame *frame, Int_t x, Int_t y,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a top level main frame. A main frame interacts
+/// with the window manager.
+
 TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
         UInt_t options) : TGCompositeFrame(p, w, h, options | kMainFrame)
 {
-   // Create a top level main frame. A main frame interacts
-   // with the window manager.
-
    // WMDeleteNotify causes the system to send a kClientMessage to the
    // window with fFormat=32 and fUser[0]=gWM_DELETE_WINDOW when window
    // closed via WM
@@ -1478,11 +1481,11 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMainFrame destructor.
+
 TGMainFrame::~TGMainFrame()
 {
-   // TGMainFrame destructor.
-
    delete [] fDNDTypeList;
    if (fBindList) {
       fBindList->Delete();
@@ -1490,15 +1493,15 @@ TGMainFrame::~TGMainFrame()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Opens dialog window allowing user to save the frame contents
+/// as a ROOT macro or as an image.
+/// Returns kTRUE if something was saved.
+///
+/// This is bound to Ctrl-S by default.
+
 Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
 {
-   // Opens dialog window allowing user to save the frame contents
-   // as a ROOT macro or as an image.
-   // Returns kTRUE if something was saved.
-   //
-   // This is bound to Ctrl-S by default.
-
    static TString dir(".");
    static Bool_t overwr = kFALSE;
 
@@ -1555,11 +1558,11 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keyboard events.
+
 Bool_t TGMainFrame::HandleKey(Event_t *event)
 {
-   // Handle keyboard events.
-
    if (fBindList) {
 
       TIter next(fBindList);
@@ -1586,11 +1589,11 @@ Bool_t TGMainFrame::HandleKey(Event_t *event)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Bind key to a window.
+
 Bool_t TGMainFrame::BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) const
 {
-   // Bind key to a window.
-
    TList *list = fBindList;
    Handle_t id = fId;
 
@@ -1609,11 +1612,11 @@ Bool_t TGMainFrame::BindKey(const TGWindow *w, Int_t keycode, Int_t modifier) co
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove key binding.
+
 void TGMainFrame::RemoveBind(const TGWindow *, Int_t keycode, Int_t modifier) const
 {
-   // Remove key binding.
-
    if (fBindList) {
       TIter next(fBindList);
       TGMapKey *m;
@@ -1628,11 +1631,11 @@ void TGMainFrame::RemoveBind(const TGWindow *, Int_t keycode, Int_t modifier) co
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button events.
+
 Bool_t TGMainFrame::HandleButton(Event_t *event)
 {
-   // Handle mouse button events.
-
    if (event->fType == kButtonRelease) {
       if (gDNDManager->IsDragging()) gDNDManager->Drop();
    }
@@ -1640,11 +1643,11 @@ Bool_t TGMainFrame::HandleButton(Event_t *event)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion events.
+
 Bool_t TGMainFrame::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion events.
-
    if (gDNDManager && gDNDManager->IsDragging()) {
       gDNDManager->Drag(event->fXRoot, event->fYRoot,
                         TGDNDManager::GetDNDActionCopy(), event->fTime);
@@ -1652,11 +1655,11 @@ Bool_t TGMainFrame::HandleMotion(Event_t *event)
    return TGCompositeFrame::HandleMotion(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle primary selection event.
+
 Bool_t TGMainFrame::HandleSelection(Event_t *event)
 {
-   // Handle primary selection event.
-
    if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDSelection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelection(event);
@@ -1664,11 +1667,11 @@ Bool_t TGMainFrame::HandleSelection(Event_t *event)
    return TGCompositeFrame::HandleSelection(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle selection request event.
+
 Bool_t TGMainFrame::HandleSelectionRequest(Event_t *event)
 {
-   // Handle selection request event.
-
    if ((Atom_t)event->fUser[1] == TGDNDManager::GetDNDSelection()) {
       if (gDNDManager)
          return gDNDManager->HandleSelectionRequest(event);
@@ -1676,11 +1679,11 @@ Bool_t TGMainFrame::HandleSelectionRequest(Event_t *event)
    return TGCompositeFrame::HandleSelectionRequest(event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle client messages sent to this frame.
+
 Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
 {
-   // Handle client messages sent to this frame.
-
    TGCompositeFrame::HandleClientMessage(event);
 
    if ((event->fFormat == 32) && ((Atom_t)event->fUser[0] == gWM_DELETE_WINDOW) &&
@@ -1692,12 +1695,12 @@ Bool_t TGMainFrame::HandleClientMessage(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send close message to self. This method should be called from
+/// a button to close this window.
+
 void TGMainFrame::SendCloseMessage()
 {
-   // Send close message to self. This method should be called from
-   // a button to close this window.
-
    Event_t event;
 
    event.fType   = kClientMessage;
@@ -1714,34 +1717,34 @@ void TGMainFrame::SendCloseMessage()
    gVirtualX->SendEvent(GetId(), &event);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close and delete main frame. We get here in response to ALT+F4 or
+/// a window manager close command. To terminate the application when this
+/// happens override this method and call gApplication->Terminate(0) or
+/// make a connection to this signal (if after the slot this method
+/// should not be called call DontCallClose() in the slot).
+/// By default the window will be deleted.
+
 void TGMainFrame::CloseWindow()
 {
-   // Close and delete main frame. We get here in response to ALT+F4 or
-   // a window manager close command. To terminate the application when this
-   // happens override this method and call gApplication->Terminate(0) or
-   // make a connection to this signal (if after the slot this method
-   // should not be called call DontCallClose() in the slot).
-   // By default the window will be deleted.
-
    DeleteWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Typically call this method in the slot connected to the CloseWindow()
+/// signal to prevent the calling of the default or any derived CloseWindow()
+/// methods to prevent premature or double deletion of this window.
+
 void TGMainFrame::DontCallClose()
 {
-   // Typically call this method in the slot connected to the CloseWindow()
-   // signal to prevent the calling of the default or any derived CloseWindow()
-   // methods to prevent premature or double deletion of this window.
-
    SetBit(kDontCallClose);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window name. This is typically done via the window manager.
+
 void TGMainFrame::SetWindowName(const char *name)
 {
-   // Set window name. This is typically done via the window manager.
-
    if (!name) {
       TGWindow::SetWindowName();
    } else {
@@ -1750,26 +1753,26 @@ void TGMainFrame::SetWindowName(const char *name)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window icon name. This is typically done via the window manager.
+
 void TGMainFrame::SetIconName(const char *name)
 {
-   // Set window icon name. This is typically done via the window manager.
-
    fIconName = name;
    gVirtualX->SetIconName(fId, (char *)name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window icon pixmap by name. This is typically done via the window
+/// manager. Icon can be in any image format supported by TImage, e.g.
+/// GIF, XPM, PNG, JPG .. or even PS, PDF (see EImageFileTypes in TImage.h
+/// for the full list of supported formats).
+///
+/// For example,
+///    main_frame->SetIconPixmap("/home/root/icons/bld_rgb.png");
+
 const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 {
-   // Set window icon pixmap by name. This is typically done via the window
-   // manager. Icon can be in any image format supported by TImage, e.g.
-   // GIF, XPM, PNG, JPG .. or even PS, PDF (see EImageFileTypes in TImage.h
-   // for the full list of supported formats).
-   //
-   // For example,
-   //    main_frame->SetIconPixmap("/home/root/icons/bld_rgb.png");
-
    fIconPixmap = iconName;
    const TGPicture *iconPic = fClient->GetPicture(iconName);
    if (iconPic) {
@@ -1780,17 +1783,17 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
       return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set window icon by xpm array. That allows to have icons
+/// builtin to the source code.
+///
+/// For example,
+///    #include "/home/root/icons/bld_rgb.xpm"
+///    //bld_rgb.xpm contains char *bld_rgb[] array
+///    main_frame->SetIconPixmap(bld_rgb);
+
 void TGMainFrame::SetIconPixmap(char **xpm_array)
 {
-   // Set window icon by xpm array. That allows to have icons
-   // builtin to the source code.
-   //
-   // For example,
-   //    #include "/home/root/icons/bld_rgb.xpm"
-   //    //bld_rgb.xpm contains char *bld_rgb[] array
-   //    main_frame->SetIconPixmap(bld_rgb);
-
    TImage *img = TImage::Create();
    if (!img) return;
    img->SetImageBuffer(xpm_array, TImage::kXpm);
@@ -1803,23 +1806,23 @@ void TGMainFrame::SetIconPixmap(char **xpm_array)
    delete img;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the windows class and resource name. Used to get the right
+/// resources from the resource database. However, ROOT applications
+/// will typically use the .rootrc file for this.
+
 void TGMainFrame::SetClassHints(const char *className, const char *resourceName)
 {
-   // Set the windows class and resource name. Used to get the right
-   // resources from the resource database. However, ROOT applications
-   // will typically use the .rootrc file for this.
-
    fClassName    = className;
    fResourceName = resourceName;
    gVirtualX->SetClassHints(fId, (char *)className, (char *)resourceName);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
+
 void TGMainFrame::SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input)
 {
-   // Set decoration style for MWM-compatible wm (mwm, ncdwm, fvwm?).
-
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fMWMValue = value;
@@ -1828,11 +1831,11 @@ void TGMainFrame::SetMWMHints(UInt_t value, UInt_t funcs, UInt_t input)
    gVirtualX->SetMWMHints(fId, value, funcs, input);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give the window manager a window position hint.
+
 void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
 {
-   // Give the window manager a window position hint.
-
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMX = x;
@@ -1840,11 +1843,11 @@ void TGMainFrame::SetWMPosition(Int_t x, Int_t y)
    gVirtualX->SetWMPosition(fId, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give the window manager a window size hint.
+
 void TGMainFrame::SetWMSize(UInt_t w, UInt_t h)
 {
-   // Give the window manager a window size hint.
-
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMWidth  = w;
@@ -1852,14 +1855,14 @@ void TGMainFrame::SetWMSize(UInt_t w, UInt_t h)
    gVirtualX->SetWMSize(fId, w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give the window manager minimum and maximum size hints. Also
+/// specify via winc and hinc the resize increments.
+
 void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
                                  UInt_t wmax, UInt_t hmax,
                                  UInt_t winc, UInt_t hinc)
 {
-   // Give the window manager minimum and maximum size hints. Also
-   // specify via winc and hinc the resize increments.
-
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fMinWidth    = fWMMinWidth  = wmin;
@@ -1871,11 +1874,11 @@ void TGMainFrame::SetWMSizeHints(UInt_t wmin, UInt_t hmin,
    gVirtualX->SetWMSizeHints(fId, wmin, hmin, wmax, hmax, winc, hinc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial state of the window. Either kNormalState or kIconicState.
+
 void TGMainFrame::SetWMState(EInitialState state)
 {
-   // Set the initial state of the window. Either kNormalState or kIconicState.
-
    if (fClient->IsEditable() && (fParent == fClient->GetRoot())) return;
 
    fWMInitState = state;
@@ -1883,14 +1886,14 @@ void TGMainFrame::SetWMState(EInitialState state)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a transient window. A transient window is typically used for
+/// dialog boxes.
+
 TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
                                    UInt_t w, UInt_t h, UInt_t options)
    : TGMainFrame(p, w, h, options | kTransientFrame)
 {
-   // Create a transient window. A transient window is typically used for
-   // dialog boxes.
-
    fMain = main;
    if (!fMain && gClient)
       fMain = gClient->GetRoot();
@@ -1900,15 +1903,15 @@ TGTransientFrame::TGTransientFrame(const TGWindow *p, const TGWindow *main,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Position transient frame centered relative to the parent frame.
+/// If fMain is 0 (i.e. TGTransientFrame is acting just like a
+/// TGMainFrame) and croot is true, the window will be centered on
+/// the root window, otherwise no action is taken and the default
+/// wm placement will be used.
+
 void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
 {
-   // Position transient frame centered relative to the parent frame.
-   // If fMain is 0 (i.e. TGTransientFrame is acting just like a
-   // TGMainFrame) and croot is true, the window will be centered on
-   // the root window, otherwise no action is taken and the default
-   // wm placement will be used.
-
    Int_t x=0, y=0, ax, ay;
    Window_t wdummy;
 
@@ -2022,15 +2025,15 @@ void TGTransientFrame::CenterOnParent(Bool_t croot, EPlacement pos)
    SetWMPosition(ax, ay);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a group frame. The title will be adopted and deleted by the
+/// group frame.
+
 TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
                            UInt_t options, GContext_t norm,
                            FontStruct_t font, Pixel_t back) :
    TGCompositeFrame(p, 1, 1, options, back)
 {
-   // Create a group frame. The title will be adopted and deleted by the
-   // group frame.
-
    fText       = title;
    fFontStruct = font;
    fNormGC     = norm;
@@ -2042,14 +2045,14 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, TGString *title,
    fBorderWidth = max_ascent + max_descent + 1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a group frame.
+
 TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
                            UInt_t options, GContext_t norm,
                            FontStruct_t font, Pixel_t back) :
    TGCompositeFrame(p, 1, 1, options, back)
 {
-   // Create a group frame.
-
    fText       = new TGString(!p && !title ? GetName() : title);
    fFontStruct = font;
    fNormGC     = norm;
@@ -2063,11 +2066,11 @@ TGGroupFrame::TGGroupFrame(const TGWindow *p, const char *title,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a group frame.
+
 TGGroupFrame::~TGGroupFrame()
 {
-   // Delete a group frame.
-
    if (fHasOwnFont) {
       TGGCPool *pool = fClient->GetGCPool();
       TGGC *gc = pool->FindGC(fNormGC);
@@ -2076,11 +2079,11 @@ TGGroupFrame::~TGGroupFrame()
    delete fText;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns default size.
+
 TGDimension TGGroupFrame::GetDefaultSize() const
 {
-   // Returns default size.
-
    UInt_t tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(),
                                     fText->GetLength()) + 24;
 
@@ -2089,24 +2092,24 @@ TGDimension TGGroupFrame::GetDefaultSize() const
    return  tw>dim.fWidth ? TGDimension(tw, dim.fHeight) : dim;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the group frame. Need special DoRedraw() since we need to
+/// redraw with fBorderWidth=0.
+
 void TGGroupFrame::DoRedraw()
 {
-   // Redraw the group frame. Need special DoRedraw() since we need to
-   // redraw with fBorderWidth=0.
-
    gVirtualX->ClearArea(fId, 0, 0, fWidth, fHeight);
 
    DrawBorder();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text color.
+/// If local is true color is changed locally, otherwise - globally.
+
 void TGGroupFrame::SetTextColor(Pixel_t color, Bool_t local)
 {
-   // Changes text color.
-   // If local is true color is changed locally, otherwise - globally.
-
    TGGCPool *pool =  fClient->GetResourcePool()->GetGCPool();
    TGGC *gc = pool->FindGC(fNormGC);
 
@@ -2121,12 +2124,12 @@ void TGGroupFrame::SetTextColor(Pixel_t color, Bool_t local)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If local is true font is changed locally - otherwise globally.
+
 void TGGroupFrame::SetTextFont(FontStruct_t font, Bool_t local)
 {
-   // Changes text font.
-   // If local is true font is changed locally - otherwise globally.
-
    FontH_t v = gVirtualX->GetFontHandle(font);
    if (!v) return;
 
@@ -2146,12 +2149,12 @@ void TGGroupFrame::SetTextFont(FontStruct_t font, Bool_t local)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If local is true font is changed locally - otherwise globally.
+
 void TGGroupFrame::SetTextFont(const char *fontName, Bool_t local)
 {
-   // Changes text font specified by name.
-   // If local is true font is changed locally - otherwise globally.
-
    TGFont *font = fClient->GetFont(fontName);
 
    if (font) {
@@ -2159,23 +2162,23 @@ void TGGroupFrame::SetTextFont(const char *fontName, Bool_t local)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTRUE if text attributes are unique,
+/// returns kFALSE if text attributes are shared (global).
+
 Bool_t TGGroupFrame::HasOwnFont() const
 {
-   // Returns kTRUE if text attributes are unique,
-   // returns kFALSE if text attributes are shared (global).
-
    return fHasOwnFont;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw border of around the group frame.
+///
+/// if frame is kRaisedFrame  - a frame border is of "wall style",
+/// otherwise of "groove style".
+
 void TGGroupFrame::DrawBorder()
 {
-   // Draw border of around the group frame.
-   //
-   // if frame is kRaisedFrame  - a frame border is of "wall style",
-   // otherwise of "groove style".
-
    Int_t x, y, l, t, r, b, gl, gr, sep, max_ascent, max_descent;
 
    UInt_t tw = gVirtualX->TextWidth(fFontStruct, fText->GetString(), fText->GetLength());
@@ -2252,12 +2255,12 @@ void TGGroupFrame::DrawBorder()
    fText->Draw(fId, fNormGC, x, y + max_ascent);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or change title of the group frame. Titlte TGString is adopted
+/// by the TGGroupFrame.
+
 void TGGroupFrame::SetTitle(TGString *title)
 {
-   // Set or change title of the group frame. Titlte TGString is adopted
-   // by the TGGroupFrame.
-
    if (!title) {
       Warning("SetTitle", "title cannot be 0, try \"\"");
       title = new TGString("");
@@ -2269,11 +2272,11 @@ void TGGroupFrame::SetTitle(TGString *title)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or change title of the group frame.
+
 void TGGroupFrame::SetTitle(const char *title)
 {
-   // Set or change title of the group frame.
-
    if (!title) {
       Error("SetTitle", "title cannot be 0, try \"\"");
       return;
@@ -2282,33 +2285,33 @@ void TGGroupFrame::SetTitle(const char *title)
    SetTitle(new TGString(title));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use.
+
 FontStruct_t TGGroupFrame::GetDefaultFontStruct()
 {
-   // Return default font structure in use.
-
    if (!fgDefaultFont && gClient)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use.
+
 const TGGC &TGGroupFrame::GetDefaultGC()
 {
-   // Return default graphics context in use.
-
    if (!fgDefaultGC && gClient)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Header Frame constructor.
+
 TGHeaderFrame::TGHeaderFrame(const TGWindow *p, UInt_t w, UInt_t h,
                  UInt_t options, Pixel_t back) :
   TGHorizontalFrame(p, w, h, options | kVerticalFrame, back)
 {
-   // Header Frame constructor.
-
    fSplitCursor = kNone;
    fSplitCursor = gVirtualX->CreateCursor(kArrowHor);
    fOverSplitter = false;
@@ -2324,22 +2327,22 @@ TGHeaderFrame::TGHeaderFrame(const TGWindow *p, UInt_t w, UInt_t h,
    AddInput(kPointerMotionMask);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set columns information in the header frame.
+
 void TGHeaderFrame::SetColumnsInfo(Int_t nColumns, TGTextButton  **colHeader,
                TGVFileSplitter  **splitHeader)
 {
-   // Set columns information in the header frame.
-
    fNColumns = nColumns;
    fColHeader = colHeader;
    fSplitHeader = splitHeader;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in header frame.
+
 Bool_t TGHeaderFrame::HandleButton(Event_t* event)
 {
-   // Handle mouse button event in header frame.
-
    if ( event->fY > 0 &&
         event->fY <= (Int_t) this->GetHeight() ) {
       for (Int_t i = 1; i < fNColumns; ++i ) {
@@ -2367,11 +2370,11 @@ Bool_t TGHeaderFrame::HandleButton(Event_t* event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click mouse event in header frame.
+
 Bool_t TGHeaderFrame::HandleDoubleClick(Event_t *event)
 {
-   // Handle double click mouse event in header frame.
-
    if ( event->fY > 0 &&
         event->fY <= (Int_t) this->GetHeight() ) {
       for (Int_t i = 1; i < fNColumns; ++i ) {
@@ -2394,11 +2397,11 @@ Bool_t TGHeaderFrame::HandleDoubleClick(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion events in header frame.
+
 Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
 {
-   // Handle mouse motion events in header frame.
-
    if ( event->fY > 0 &&
         event->fY <= (Int_t) this->GetHeight() ) {
       Bool_t inMiddle = false;
@@ -2424,11 +2427,11 @@ Bool_t TGHeaderFrame::HandleMotion(Event_t* event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a user color in a C++ macro file - used in SavePrimitive().
+
 void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
 {
-   // Save a user color in a C++ macro file - used in SavePrimitive().
-
    char quote = '"';
 
    if (gROOT->ClassSaved(TGFrame::Class())) {
@@ -2451,11 +2454,11 @@ void TGFrame::SaveUserColor(std::ostream &out, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a frame option string - used in SavePrimitive().
+
 TString TGFrame::GetOptionString() const
 {
-   // Returns a frame option string - used in SavePrimitive().
-
    TString options;
 
    if (!GetOptions()) {
@@ -2517,11 +2520,11 @@ TString TGFrame::GetOptionString() const
    return options;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns MWM decoration hints as a string - used in SavePrimitive().
+
 TString TGMainFrame::GetMWMvalueString() const
 {
-   // Returns MWM decoration hints as a string - used in SavePrimitive().
-
    TString hints;
 
    if (fMWMValue) {
@@ -2557,11 +2560,11 @@ TString TGMainFrame::GetMWMvalueString() const
    return hints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns MWM function hints as a string - used in SavePrimitive().
+
 TString TGMainFrame::GetMWMfuncString() const
 {
-   // Returns MWM function hints as a string - used in SavePrimitive().
-
    TString hints;
 
    if (fMWMFuncs) {
@@ -2594,11 +2597,11 @@ TString TGMainFrame::GetMWMfuncString() const
    return hints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns MWM input mode hints as a string - used in SavePrimitive().
+
 TString TGMainFrame::GetMWMinpString() const
 {
-   // Returns MWM input mode hints as a string - used in SavePrimitive().
-
    TString hints;
 
    if (fMWMInput == 0) hints = "kMWMInputModeless";
@@ -2612,11 +2615,11 @@ TString TGMainFrame::GetMWMinpString() const
    return hints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilary protected method  used to save subframes.
+
 void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Auxilary protected method  used to save subframes.
-
    if (fLayoutBroken)
       out << "   " << GetName() << "->SetLayoutBroken(kTRUE);" << std::endl;
 
@@ -2639,7 +2642,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
       // Don't save hidden (unmapped) frames having a parent different
       // than this frame. Solves a problem with shared frames
       // (e.g. shared menus in the new Browser)
-      if ((!el->fState & kIsVisible) && (el->fFrame->GetParent() != this))
+      if ((!(el->fState & kIsVisible)) && (el->fFrame->GetParent() != this))
          continue;
 
       // Remember if the frame to be saved is a TG(H,V)Splitter
@@ -2682,7 +2685,7 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
          hsplit = 0;
       }
 
-      if (!el->fState & kIsVisible) {
+      if (!(el->fState & kIsVisible)) {
          gListOfHiddenFrames->Add(el->fFrame);
       }
 
@@ -2714,11 +2717,11 @@ void TGCompositeFrame::SavePrimitiveSubframes(std::ostream &out, Option_t *optio
    out << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a composite frame widget as a C++ statement(s) on output stream out.
+
 void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a composite frame widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    if (!strcmp(GetName(),"")) {
@@ -2762,11 +2765,11 @@ void TGCompositeFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    SavePrimitiveSubframes(out, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the GUI main frame widget in a C++ macro file.
+
 void TGMainFrame::SaveSource(const char *filename, Option_t *option)
 {
-   // Save the GUI main frame widget in a C++ macro file.
-
    // iteration over all active classes to exclude the base ones
    TString opt = option;
    TBits *bc = new TBits();
@@ -3041,11 +3044,11 @@ void TGMainFrame::SaveSource(const char *filename, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a main frame widget as a C++ statement(s) on output stream out.
+
 void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a main frame widget as a C++ statement(s) on output stream out.
-
    if (fParent != gClient->GetDefaultRoot()) { // frame is embedded
       fOptions &= ~kMainFrame;
       TGCompositeFrame::SavePrimitive(out, option);
@@ -3093,11 +3096,11 @@ void TGMainFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a horizontal frame widget as a C++ statement(s) on output stream out.
+
 void TGHorizontalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a horizontal frame widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // horizontal frame" << std::endl;
@@ -3136,11 +3139,11 @@ void TGHorizontalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    SavePrimitiveSubframes(out, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a vertical frame widget as a C++ statement(s) on output stream out.
+
 void TGVerticalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a vertical frame widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // vertical frame" << std::endl;
@@ -3179,11 +3182,11 @@ void TGVerticalFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/
    SavePrimitiveSubframes(out, option);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a frame widget as a C++ statement(s) on output stream out.
+
 void TGFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a frame widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << "   TGFrame *";
@@ -3203,11 +3206,11 @@ void TGFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   " << GetName() << "->SetName(\"" << GetName() << "\");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a group frame widget as a C++ statement(s) on output stream out.
+
 void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a group frame widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    // font + GC
@@ -3282,11 +3285,11 @@ void TGGroupFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save the GUI tranzient frame widget in a C++ macro file.
+
 void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
 {
-   // Save the GUI tranzient frame widget in a C++ macro file.
-
    // iterate over all active classes to exclude the base ones
 
    TString opt = option;
@@ -3557,11 +3560,11 @@ void TGTransientFrame::SaveSource(const char *filename, Option_t *option)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a transient frame widget as a C++ statement(s) on output stream out.
+
 void TGTransientFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a transient frame widget as a C++ statement(s) on output stream out.
-
    char quote = '"';
 
    out << std::endl << "   // transient frame" << std::endl;

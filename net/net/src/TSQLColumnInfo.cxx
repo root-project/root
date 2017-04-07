@@ -44,7 +44,9 @@
 
 ClassImp(TSQLColumnInfo)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default contructor
+
 TSQLColumnInfo::TSQLColumnInfo() :
    TNamed(),
    fTypeName(),
@@ -55,10 +57,11 @@ TSQLColumnInfo::TSQLColumnInfo() :
    fSigned(-1),
    fNullable(kFALSE)
 {
-   // default contructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
+
 TSQLColumnInfo::TSQLColumnInfo(const char* columnname,
                                const char* sqltypename,
                                Bool_t nullable,
@@ -76,14 +79,13 @@ TSQLColumnInfo::TSQLColumnInfo(const char* columnname,
    fSigned(sign),
    fNullable(nullable)
 {
-   // normal constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints column information to standard output
+
 void TSQLColumnInfo::Print(Option_t*) const
 {
-   // Prints column information to standard output
-
    TROOT::IndentLevel();
    std::cout << "Column: " << GetName()
         << " type:'" << fTypeName << "'";

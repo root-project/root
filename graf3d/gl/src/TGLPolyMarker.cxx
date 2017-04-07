@@ -26,22 +26,22 @@
 #include "TClass.h"
 #include "TError.h"
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>GL Polymarker</h2></center>
+/** \class TGLPolyMarker
+\ingroup opengl
 To draw a 3D polymarker in a GL window.
-End_Html */
+*/
 
 ClassImp(TGLPolyMarker)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///TAttMarker is not TObject descendant, so I need dynamic_cast
+
 TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
    TGLLogicalShape(buffer),
    fVertices(buffer.fPnts, buffer.fPnts + 3 * buffer.NbPnts()),
    fStyle(7),
    fSize(1.)
 {
-   //TAttMarker is not TObject descendant, so I need dynamic_cast
    if (TAttMarker *realObj = dynamic_cast<TAttMarker *>(buffer.fID)) {
       fStyle = realObj->GetMarkerStyle();
       fSize  = realObj->GetMarkerSize() / 2.;
@@ -49,10 +49,11 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Debug tracing
+
 void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
-   // Debug tracing
    if (gDebug > 4) {
       Info("TGLPolyMarker::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
@@ -69,7 +70,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
    switch (fStyle) {
    case 27:
       stacks = 2, slices = 4;
-      // intentionaly no break
+      // intentionally no break
    case 4:case 8:case 20:case 24:
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
@@ -80,7 +81,7 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
       break;
    case 22:case 26:
       topRadius = 0.;
-      // intentionaly no break
+      // intentionally no break
    case 21:case 25:
       for (UInt_t i = 0; i < size; i += 3) {
          glPushMatrix();
@@ -103,10 +104,10 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
       break;
    case 7:
       pixelSize += 1;
-      // intentionaly no break
+      // intentionally no break
    case 6:
       pixelSize += 1;
-      // intentionaly no break
+      // intentionally no break
    case 1: case 9: case 10: case 11: default:
       TGLUtil::PointSize(pixelSize);
       glBegin(GL_POINTS);
@@ -118,10 +119,11 @@ void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw stars
+
 void TGLPolyMarker::DrawStars()const
 {
-   // Draw stars
    glDisable(GL_LIGHTING);
    const Double_t diag = TMath::Sqrt(2 * fSize * fSize) / 2;
 

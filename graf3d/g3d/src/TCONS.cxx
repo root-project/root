@@ -12,78 +12,74 @@
 #include "TCONS.h"
 #include "TNode.h"
 
-
 ClassImp(TCONS)
 
+/** \class TCONS
+\ingroup g3d
+A segment of a conical tube.
 
+\image html g3d_cons.png
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/cons.gif"> </P> End_Html
-// CONS is a segment of a conical tube. It has 10 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - dz         half-length in z
-//     - rmin1      inside radius at -DZ in z
-//     - rmax1      outside radius at -DZ in z
-//     - rmin2      inside radius at +DZ in z
-//     - rmax2      outside radius at +DZ in z
-//     - phi1       starting angle of the segment
-//     - phi2       ending angle of the segment
-//
-//
-// NOTE: phi1 should be smaller than phi2. If this is not the case,
-//       the system adds 360 degrees to phi2.
+It has 10 parameters:
 
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - dz:         half-length in z
+  - rmin1:      inside radius at -DZ in z
+  - rmax1:      outside radius at -DZ in z
+  - rmin2:      inside radius at +DZ in z
+  - rmax2:      outside radius at +DZ in z
+  - phi1:       starting angle of the segment
+  - phi2:       ending angle of the segment
 
+NOTE: phi1 should be smaller than phi2. If this is not the case,
+      the system adds 360 degrees to phi2.
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape default constructor
 
-
-//______________________________________________________________________________
 TCONS::TCONS()
 {
-   // CONS shape default constructor
-
    fRmin2 = 0.;
    fRmax2 = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape normal constructor
 
-//______________________________________________________________________________
 TCONS::TCONS(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1, Float_t rmin2, Float_t rmax2,
              Float_t phi1, Float_t phi2)
       : TTUBS(name,title,material,rmin1,rmax1,dz,phi1,phi2)
 {
-   // CONS shape normal constructor
-
    fRmin2 = rmin2;
    fRmax2 = rmax2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape normal constructor
 
-//______________________________________________________________________________
 TCONS::TCONS(const char *name, const char *title, const char *material,  Float_t rmax1, Float_t dz
                           , Float_t phi1, Float_t phi2, Float_t rmax2)
              : TTUBS(name,title,material,rmax1,dz,phi1,phi2)
 {
-   // CONS shape normal constructor
-
    fRmin2 = 0;
    fRmax2 = rmax2;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CONS shape default destructor
+
 TCONS::~TCONS()
 {
-   // CONS shape default destructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create CONS points
+
 void TCONS::SetPoints(Double_t *points) const
 {
-   // Create CONS points
-
    Int_t j, n;
    Float_t rmin1, rmax1, dz;
 

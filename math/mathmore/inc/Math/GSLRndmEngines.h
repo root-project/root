@@ -34,11 +34,13 @@
 #include <string>
 #include <vector>
 
+
 namespace ROOT {
 namespace Math {
 
 
    class GSLRngWrapper;
+   class GSLMCIntegrator; 
 
    //_________________________________________________________________
    /**
@@ -61,6 +63,8 @@ namespace Math {
       @ingroup Random
    */
    class GSLRandomEngine {
+
+      friend class GSLMCIntegrator;
 
    public:
 
@@ -108,13 +112,27 @@ namespace Math {
          0 is excluded and 1 is included
       */
       double operator() () const;
+      
+      /**
+         Generate a  random number between ]0,1]
+         0 is excluded and 1 is included
+      */
+      double Rndm() const { return (*this)(); }
 
       /**
           Generate an integer number between [0,max-1] (including 0 and max-1)
           if max is larger than available range of algorithm
           an error message is printed and zero is returned
       */
-      unsigned int RndmInt(unsigned int max) const;
+      unsigned long RndmInt(unsigned long max) const;
+      /**
+          Generate an integer number between [0,max_generator-1] (including 0 and max-1)
+          if max is larger than available range of algorithm
+          an error message is printed and zero is returned
+      */ 
+      unsigned long IntRndm() const {
+         return RndmInt(MaxInt());   // max return the largest value the generator can give +1
+      }
 
       /**
          Generate an array of random numbers.
@@ -142,6 +160,18 @@ namespace Math {
          return the state size of generator
       */
       unsigned int Size() const;
+
+      /**
+         return the minimum integer a generator can handle
+         typically this value is 0
+       */
+      unsigned long MinInt() const; 
+
+      /**
+         return the maximum integer +1 a generator can handle
+
+       */
+      unsigned long MaxInt() const; 
 
       /**
           set the random generator seed
@@ -200,6 +230,11 @@ namespace Math {
       double Gamma(double a, double b) const;
 
       /**
+         Beta distribution
+      */
+      double Beta(double a, double b) const;
+
+      /**
          Log Normal distribution
       */
       double LogNormal(double zeta, double sigma) const;
@@ -218,6 +253,21 @@ namespace Math {
          t student distribution
       */
       double tDist(double nu) const;
+
+      /**
+         Rayleigh distribution
+      */
+      double Rayleigh(double sigma) const;
+
+      /**
+         Logistic distribution
+      */
+      double Logistic(double a) const;
+
+      /**
+         Pareto distribution
+      */
+      double Pareto(double a, double b) const;
 
       /**
          generate random numbers in a 2D circle of radious 1
@@ -260,6 +310,12 @@ namespace Math {
          fRng = r;
       }
 
+      /// internal method to return the engine
+      /// Used by class like GSLMCIntegrator to set the engine
+      GSLRngWrapper * Engine() {
+         return fRng; 
+      }
+      
    private:
 
       GSLRngWrapper * fRng;                // pointer to GSL generator wrapper (managed by the class)
@@ -279,6 +335,7 @@ namespace Math {
    */
    class GSLRngMT : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngMT();
    };
 
@@ -292,6 +349,7 @@ namespace Math {
    */
    class GSLRngRanLux : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanLux();
    };
 
@@ -305,6 +363,7 @@ namespace Math {
    */
    class GSLRngRanLuxS1 : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanLuxS1();
    };
    typedef GSLRngRanLuxS1 GSLRngRanLux1; // for backward compatibility
@@ -319,6 +378,7 @@ namespace Math {
    */
    class GSLRngRanLuxS2 : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanLuxS2();
    };
    typedef GSLRngRanLuxS2 GSLRngRanLux2; // for backward compatibility
@@ -333,6 +393,7 @@ namespace Math {
    */
    class GSLRngRanLuxD1 : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanLuxD1();
    };
 
@@ -346,6 +407,7 @@ namespace Math {
    */
    class GSLRngRanLuxD2 : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanLuxD2();
    };
    typedef GSLRngRanLuxD2 GSLRngRanLux48; // for backward compatibility
@@ -360,6 +422,7 @@ namespace Math {
    */
    class GSLRngTaus : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngTaus();
    };
 
@@ -372,6 +435,7 @@ namespace Math {
    */
    class GSLRngGFSR4 : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngGFSR4();
    };
 
@@ -384,6 +448,7 @@ namespace Math {
    */
    class GSLRngCMRG : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngCMRG();
    };
 
@@ -396,6 +461,7 @@ namespace Math {
    */
    class GSLRngMRG : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngMRG();
    };
 
@@ -409,6 +475,7 @@ namespace Math {
    */
    class GSLRngRand : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRand();
    };
 
@@ -421,6 +488,7 @@ namespace Math {
    */
    class GSLRngRanMar : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngRanMar();
    };
 
@@ -433,15 +501,28 @@ namespace Math {
    */
    class GSLRngMinStd : public GSLRandomEngine {
    public:
+      typedef GSLRandomEngine BaseType; 
       GSLRngMinStd();
    };
 
+   /** MixMax generator based on ROOT::Math::MixMaxEngine of N=240
 
-
+       @ingroup Random 
+   */
+   class GSLRngMixMax : public GSLRandomEngine {
+   public:
+      typedef GSLRandomEngine BaseType; 
+      GSLRngMixMax();
+      virtual ~GSLRngMixMax();  // we need a dtcor since is not a standard GSL engine
+   };
 
 } // namespace Math
 } // namespace ROOT
 
+// random functions specialization for GSL
+// needs to be defined after defining GSLRandomEngine class 
+
+#include "Math/GSLRandomFunctions.h"
 
 #endif /* ROOT_Math_GSLRndmEngines */
 

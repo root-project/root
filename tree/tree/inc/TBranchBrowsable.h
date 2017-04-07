@@ -12,13 +12,9 @@
 #ifndef ROOT_TBranchBrowsable
 #define ROOT_TBranchBrowsable
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 #include <list>
 
@@ -89,14 +85,14 @@ protected:
 
 private:
    static void RegisterDefaultGenerators();
-   const TBranch    *fBranch; // pointer to the branch element representing the top object
-   const TVirtualBranchBrowsable *fParent; // parent method if this method is member of a returned class
-   TList            *fLeaves; // pointer to leaves
-   TClass           *fClass; // pointer to TClass representing our type (i.e. return type for methods), 0 if basic type
-   Bool_t            fTypeIsPointer; // return type is pointer to class
-   static std::list<MethodCreateListOfBrowsables_t> fgGenerators; // list of MethodCreateListOfBrowsables_t called by CreateListOfBrowsables
-   static Bool_t     fgGeneratorsSet; // have we set the generators yet? empty is not good enough - user might have removed them
-   ClassDef(TVirtualBranchBrowsable, 0); // Base class for helper objects used for browsing
+   const TBranch    *fBranch; ///< pointer to the branch element representing the top object
+   const TVirtualBranchBrowsable *fParent; ///< parent method if this method is member of a returned class
+   TList            *fLeaves; ///< pointer to leaves
+   TClass           *fClass;  ///< pointer to TClass representing our type (i.e. return type for methods), 0 if basic type
+   Bool_t            fTypeIsPointer; ///< return type is pointer to class
+   static std::list<MethodCreateListOfBrowsables_t> fgGenerators; ///< list of MethodCreateListOfBrowsables_t called by CreateListOfBrowsables
+   static Bool_t     fgGeneratorsSet; ///< have we set the generators yet? empty is not good enough - user might have removed them
+   ClassDef(TVirtualBranchBrowsable, 0); ///< Base class for helper objects used for browsing
 };
 
 

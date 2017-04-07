@@ -12,13 +12,12 @@
 #ifndef ROOT_TFriendProxy
 #define ROOT_TFriendProxy
 
-#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-#endif
 
 class TTree;
 
 namespace ROOT {
+namespace Internal {
 
    class TFriendProxy {
    protected:
@@ -34,6 +33,7 @@ namespace ROOT {
       void     Update(TTree *newmain);
    };
 
-}
+} // namespace Internal
+} // namespace ROOT
 
 #endif

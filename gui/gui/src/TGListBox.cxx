@@ -58,12 +58,12 @@ ClassImp(TGLineLBEntry)
 ClassImp(TGLBContainer)
 ClassImp(TGListBox)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Base class entry constructor.
+
 TGLBEntry::TGLBEntry(const TGWindow *p, Int_t id, UInt_t options, Pixel_t back) :
              TGFrame(p, 10, 10, options | kOwnBackground, back)
 {
-   // Base class entry constructor.
-
    fActive = kFALSE;
    fEntryId = id;
    fBkcolor = back;
@@ -72,21 +72,21 @@ TGLBEntry::TGLBEntry(const TGWindow *p, Int_t id, UInt_t options, Pixel_t back) 
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle active state of listbox entry.
+
 void TGLBEntry::Activate(Bool_t a)
 {
-   // Toggle active state of listbox entry.
-
    if (fActive == a) return;
    fActive = a;
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle active state of listbox entry.
+
 void TGLBEntry::Toggle()
 {
-   // Toggle active state of listbox entry.
-
    fActive = !fActive;
    DoRedraw();
 }
@@ -101,17 +101,18 @@ void TGLBEntry::Toggle()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a text listbox entry. The TGString is adopted.
+
 TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
       GContext_t norm, FontStruct_t font, UInt_t options, ULong_t back) :
    TGLBEntry(p, id, options, back)
 {
-   // Create a text listbox entry. The TGString is adopted.
-
    fText        = s;
    fTextChanged = kTRUE;
    fFontStruct  = font;
    fNormGC      = norm;
+   fTWidth      = 0;
 
    int max_ascent, max_descent;
 
@@ -123,19 +124,19 @@ TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete text listbox entry.
+
 TGTextLBEntry::~TGTextLBEntry()
 {
-   // Delete text listbox entry.
-
    if (fText) delete fText;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw text listbox entry on window/pixmap.
+
 void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Draw text listbox entry on window/pixmap.
-
    int max_ascent, max_descent;
 
    y += (fHeight - fTHeight) >> 1;
@@ -155,19 +156,19 @@ void TGTextLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw text listbox entry.
+
 void TGTextLBEntry::DoRedraw()
 {
-   // Redraw text listbox entry.
-
    if (fId) DrawCopy(fId, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or change text in text entry.
+
 void TGTextLBEntry::SetText(TGString *new_text)
 {
-   // Set or change text in text entry.
-
    if (fText) delete fText;
    fText = new_text;
    fTextChanged = kTRUE;
@@ -182,21 +183,21 @@ void TGTextLBEntry::SetText(TGString *new_text)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure in use for a text listbox entry.
+
 FontStruct_t TGTextLBEntry::GetDefaultFontStruct()
 {
-   // Return default font structure in use for a text listbox entry.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context in use for a text listbox entry.
+
 const TGGC &TGTextLBEntry::GetDefaultGC()
 {
-   // Return default graphics context in use for a text listbox entry.
-
    if (!fgDefaultGC)
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
    return *fgDefaultGC;
@@ -210,14 +211,14 @@ const TGGC &TGTextLBEntry::GetDefaultGC()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the line style listbox entry.
+
 TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
                              UInt_t w, Style_t style, UInt_t options, ULong_t back) :
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
-   // Create the line style listbox entry.
-
    GCValues_t gcv;
 
    gcv.fMask =  kGCLineStyle | kGCLineWidth | kGCFillStyle | kGCDashList;
@@ -237,25 +238,26 @@ TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
    gVirtualX->GetFontProperties(GetDefaultFontStruct(),
                                 max_ascent, max_descent);
    fTHeight = max_ascent + max_descent;
+   fLineLength = 0;
 
    Resize(fTWidth, fTHeight + 1);
    fEditDisabled = kEditDisable | kEditDisableGrab;
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete line style listbox entry.
+
 TGLineLBEntry::~TGLineLBEntry()
 {
-   // Delete line style listbox entry.
-
    fClient->FreeGC(fLineGC);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update line style listbox entry.
+
 void  TGLineLBEntry::Update(TGLBEntry *e)
 {
-   // Update line style listbox entry.
-
    TGTextLBEntry::Update(e);
 
    fClient->FreeGC(fLineGC);
@@ -263,11 +265,11 @@ void  TGLineLBEntry::Update(TGLBEntry *e)
    fLineGC->AddReference();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the line style corresponding to the TPad line styles.
+
 void TGLineLBEntry::SetLineStyle(Style_t linestyle)
 {
-   // Set the line style corresponding to the TPad line styles.
-
    static const char* dashed = "\x3\x3";
    static const char* dotted= "\x1\x2";
    static const char* dasheddotted = "\x3\x4\x1\x4";
@@ -316,20 +318,20 @@ void TGLineLBEntry::SetLineStyle(Style_t linestyle)
    fLineStyle = linestyle;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set or change line witdh in an entry.
+
 void TGLineLBEntry::SetLineWidth(Int_t width)
 {
-   // Set or change line witdh in an entry.
-
    fLineWidth = width;
    fLineGC->SetLineWidth(fLineWidth);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw copy on window/pixmap.
+
 void TGLineLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Draw copy on window/pixmap.
-
    TGTextLBEntry::DrawCopy(id, x, y);
    if (!strcmp(TGTextLBEntry::GetTitle(),"None")) return;
    if (fActive) {
@@ -343,11 +345,11 @@ void TGLineLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
                        x + fWidth - 5, y + fHeight/2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw line style listbox entry.
+
 void TGLineLBEntry::DoRedraw()
 {
-   // Redraw line style listbox entry.
-
    if (fId) DrawCopy(fId, 0, 0);
 }
 
@@ -359,15 +361,15 @@ void TGLineLBEntry::DoRedraw()
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the icon & text listbox entry.
+
 TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
                              const TGPicture *pic,
                              UInt_t /*w*/, Style_t /*style*/, UInt_t options, ULong_t back) :
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
-   // Create the icon & text listbox entry.
-
    int max_ascent, max_descent;
 
    fPicture = pic;
@@ -388,27 +390,27 @@ TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
    SetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete icon & text listbox entry.
+
 TGIconLBEntry::~TGIconLBEntry()
 {
-   // Delete icon & text listbox entry.
-
    fClient->FreePicture(fPicture);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update icon & text listbox entry.
+
 void  TGIconLBEntry::Update(TGLBEntry *e)
 {
-   // Update icon & text listbox entry.
-
    TGTextLBEntry::Update(e);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw copy on window/pixmap.
+
 void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Draw copy on window/pixmap.
-
    Int_t off_x = 0;
    if (fPicture) {
       fPicture->Draw(id, fNormGC, x + 2, y);
@@ -417,19 +419,19 @@ void TGIconLBEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    TGTextLBEntry::DrawCopy(id, x + off_x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw icon & text listbox entry.
+
 void TGIconLBEntry::DoRedraw()
 {
-   // Redraw icon & text listbox entry.
-
    if (fId) DrawCopy(fId, 0, 0);
 }
 
-//___________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change the icon of listbox entry containing icon & text.
+
 void TGIconLBEntry::SetPicture(const TGPicture *pic)
 {
-   // Change the icon of listbox entry containing icon & text.
-
    fClient->FreePicture(fPicture);
 
    if (pic) ((TGPicture *)pic)->AddReference();
@@ -474,53 +476,54 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a listbox container.
+
 TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
    TGContainer(p, w, h, options, back)
 {
-   // Create a listbox container.
-
    fLastActive = 0;
    fMsgWindow  = p;
    fMultiSelect = kFALSE;
    fChangeStatus = kFALSE;
+   fListBox = 0;
 
    SetWindowName();
    fEditDisabled = kEditDisableGrab | kEditDisableBtnEnable | kEditDisableKeyEnable;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the listbox container.
+
 TGLBContainer::~TGLBContainer()
 {
-   // Delete the listbox container.
-
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout container
+
 void TGLBContainer::Layout()
 {
-   // Layout container
-
    TGContainer::Layout();
    TGFrame::Resize(fListBox->GetViewPort()->GetWidth(), fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// redraw
+
 void TGLBContainer::DoRedraw()
 {
-   // redraw
-
    return TGContainer::DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add listbox entry with hints to container. To show entry call
+/// MapSubwindows() and Layout().
+
 void TGLBContainer::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
 {
-   // Add listbox entry with hints to container. To show entry call
-   // MapSubwindows() and Layout().
-
    // DEPRECATED: the color should always be set in the TGLBEntry ctor
    //lbe->SetBackgroundColor(fgWhitePixel);
 
@@ -529,13 +532,13 @@ void TGLBContainer::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert listbox entry after specified entry with id afterID. If afterID = -1
+/// then add entry at head of list. To show entry call MapSubwindows() and
+/// Layout().
+
 void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
 {
-   // Insert listbox entry after specified entry with id afterID. If afterID = -1
-   // then add entry at head of list. To show entry call MapSubwindows() and
-   // Layout().
-
    // DEPRECATED: the color should always be set in the TGLBEntry ctor
    //lbe->SetBackgroundColor(fgWhitePixel);
 
@@ -566,12 +569,12 @@ void TGLBContainer::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t aft
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert listbox entry before the list box entry with a higher id.
+/// To show entry call MapSubwindows() and Layout().
+
 void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
 {
-   // Insert listbox entry before the list box entry with a higher id.
-   // To show entry call MapSubwindows() and Layout().
-
    // DEPRECATED: the color should always be set in the TGLBEntry ctor
    //lbe->SetBackgroundColor(fgWhitePixel);
 
@@ -599,12 +602,12 @@ void TGLBContainer::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove the entry with specified id from the listbox container.
+/// To update the listbox call Layout().
+
 void TGLBContainer::RemoveEntry(Int_t id)
 {
-   // Remove the entry with specified id from the listbox container.
-   // To update the listbox call Layout().
-
    TGLBEntry      *e;
    TGFrameElement *el;
    TGLayoutHints  *l;
@@ -627,12 +630,12 @@ void TGLBContainer::RemoveEntry(Int_t id)
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove entries from from_ID to to_ID (including).
+/// To update the listbox call Layout().
+
 void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
 {
-   // Remove entries from from_ID to to_ID (including).
-   // To update the listbox call Layout().
-
    TGLBEntry      *e;
    TGFrameElement *el;
    TGLayoutHints  *l;
@@ -654,11 +657,11 @@ void TGLBContainer::RemoveEntries(Int_t from_ID, Int_t to_ID)
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all entries in this container.
+
 void TGLBContainer::RemoveAll()
 {
-   // Remove all entries in this container.
-
    TGLBEntry      *e;
    TGFrameElement *el;
    TGLayoutHints  *l;
@@ -678,21 +681,21 @@ void TGLBContainer::RemoveAll()
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the entry with the specified id.
+/// Returns the selected TGLBEntry.
+
 TGLBEntry *TGLBContainer::Select(Int_t id)
 {
-   // Select the entry with the specified id.
-   // Returns the selected TGLBEntry.
-
    return Select(id, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select / deselect the entry with the specified id.
+/// Returns the selected TGLBEntry.
+
 TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
 {
-   // Select / deselect the entry with the specified id.
-   // Returns the selected TGLBEntry.
-
    TGLBEntry      *f;
    TGFrameElement *el;
 
@@ -718,21 +721,21 @@ TGLBEntry *TGLBContainer::Select(Int_t id, Bool_t sel)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns id of selected entry. In case of no selected entry or
+/// if multi selection is switched on returns -1.
+
 Int_t TGLBContainer::GetSelected() const
 {
-   // Returns id of selected entry. In case of no selected entry or
-   // if multi selection is switched on returns -1.
-
    if (fLastActive == 0) return -1;
    return fLastActive->EntryId();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns kTrue if entry id is selected.
+
 Bool_t TGLBContainer::GetSelection(Int_t id)
 {
-   // Returns kTrue if entry id is selected.
-
    TGLBEntry     *f;
    TGFrameElement *el;
 
@@ -746,12 +749,12 @@ Bool_t TGLBContainer::GetSelection(Int_t id)
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds all selected entries (TGLBEntry) of the list box into
+/// the list selected.
+
 void TGLBContainer::GetSelectedEntries(TList *selected)
 {
-   // Adds all selected entries (TGLBEntry) of the list box into
-   // the list selected.
-
    TGLBEntry      *f;
    TGFrameElement *el;
 
@@ -764,11 +767,11 @@ void TGLBContainer::GetSelectedEntries(TList *selected)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enables and disables multiple selections of entries.
+
 void TGLBContainer::SetMultipleSelections(Bool_t multi)
 {
-   // Enables and disables multiple selections of entries.
-
    TGFrameElement *el;
 
    fMultiSelect = multi;
@@ -784,19 +787,19 @@ void TGLBContainer::SetMultipleSelections(Bool_t multi)
    ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return a pointer to vertical scroll bar.
+
 TGVScrollBar *TGLBContainer::GetVScrollbar() const
 {
-   // Return a pointer to vertical scroll bar.
-
    return fListBox ? fListBox->GetVScrollbar() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set new vertical scroll bar position.
+
 void TGLBContainer::SetVsbPosition(Int_t newPos)
 {
-   // Set new vertical scroll bar position.
-
    TGVScrollBar *vb = GetVScrollbar();
 
    if (vb && vb->IsMapped()) {
@@ -804,11 +807,11 @@ void TGLBContainer::SetVsbPosition(Int_t newPos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in the listbox container.
+
 Bool_t TGLBContainer::HandleButton(Event_t *event)
 {
-   // Handle mouse button event in the listbox container.
-
    int xf0, yf0, xff, yff;
 
    TGLBEntry *f;
@@ -917,11 +920,11 @@ Bool_t TGLBContainer::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle double click mouse event in the listbox container.
+
 Bool_t TGLBContainer::HandleDoubleClick(Event_t *ev)
 {
-   // Handle double click mouse event in the listbox container.
-
    if (!fMultiSelect) {
       if (fLastActive) {
          TGLBEntry *f = fLastActive;
@@ -935,11 +938,11 @@ Bool_t TGLBContainer::HandleDoubleClick(Event_t *ev)
    return TGContainer::HandleDoubleClick(ev);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse motion event in listbox container.
+
 Bool_t TGLBContainer::HandleMotion(Event_t *event)
 {
-   // Handle mouse motion event in listbox container.
-
    int xf0, yf0, xff, yff;
 
    static Long64_t was = gSystem->Now();
@@ -1015,11 +1018,11 @@ Bool_t TGLBContainer::HandleMotion(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Autoscroll while close to & beyond  The Wall
+
 void TGLBContainer::OnAutoScroll()
 {
-   // Autoscroll while close to & beyond  The Wall
-
    TGFrameElement* el = 0;
    TGLBEntry *f = 0;
    Int_t yf0, yff;
@@ -1069,22 +1072,22 @@ void TGLBContainer::OnAutoScroll()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Activate item.
+
 void TGLBContainer::ActivateItem(TGFrameElement *el)
 {
-   // Activate item.
-
    TGContainer::ActivateItem(el);
    fLastActive = (TGLBEntry *)el->fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the position in the list box of the entry id.
+/// The first position has position no 0. Returns -1 if entry id
+/// is not in the list of entries.
+
 Int_t TGLBContainer::GetPos(Int_t id)
 {
-   // Returns the position in the list box of the entry id.
-   // The first position has position no 0. Returns -1 if entry id
-   // is not in the list of entries.
-
    Int_t          pos = 0;
    TGLBEntry      *f;
    TGFrameElement *el;
@@ -1114,13 +1117,13 @@ Int_t TGLBContainer::GetPos(Int_t id)
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a listbox.
+
 TGListBox::TGListBox(const TGWindow *p, Int_t id,
                      UInt_t options, ULong_t back) :
    TGCompositeFrame(p, 10, 10, options, back)
 {
-   // Create a listbox.
-
    fMsgWindow = p;
    fWidgetId  = id;
 
@@ -1130,11 +1133,11 @@ TGListBox::TGListBox(const TGWindow *p, Int_t id,
    InitListBox();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a listbox widget.
+
 TGListBox::~TGListBox()
 {
-   // Delete a listbox widget.
-
    if (!MustCleanup()) {
       delete fVScrollbar;
       delete fVport;
@@ -1142,11 +1145,11 @@ TGListBox::~TGListBox()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initiate the internal classes of a list box.
+
 void TGListBox::InitListBox()
 {
-   // Initiate the internal classes of a list box.
-
    fVport = new TGViewPort(this, 6, 6, kChildFrame | kOwnBackground, fgWhitePixel);
    fVScrollbar = new TGVScrollBar(this, kDefaultScrollBarWidth, 6);
    fLbc = new TGLBContainer(fVport, 10, 10, kVerticalFrame, fgWhitePixel);
@@ -1175,11 +1178,11 @@ void TGListBox::InitListBox()
    fLayoutManager = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw borders of the list box widget.
+
 void TGListBox::DrawBorder()
 {
-   // Draw borders of the list box widget.
-
    switch (fOptions & (kSunkenFrame | kRaisedFrame | kDoubleBorder)) {
 
       case kSunkenFrame | kDoubleBorder:
@@ -1200,13 +1203,13 @@ void TGListBox::DrawBorder()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry with specified string and id to listbox. The id will be
+/// used in the event processing routine when the item is selected.
+/// The string will be adopted by the listbox.
+
 void TGListBox::AddEntry(TGString *s, Int_t id)
 {
-   // Add entry with specified string and id to listbox. The id will be
-   // used in the event processing routine when the item is selected.
-   // The string will be adopted by the listbox.
-
    TGTextLBEntry *lbe;
    TGLayoutHints *lhints;
 
@@ -1216,34 +1219,34 @@ void TGListBox::AddEntry(TGString *s, Int_t id)
    fLbc->AddEntry(lbe, lhints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry with specified string and id to listbox. The id will be
+/// used in the event processing routine when the item is selected.
+
 void TGListBox::AddEntry(const char *s, Int_t id)
 {
-   // Add entry with specified string and id to listbox. The id will be
-   // used in the event processing routine when the item is selected.
-
    AddEntry(new TGString(s), id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add specified TGLBEntry and TGLayoutHints to listbox. The
+/// entry and layout will be adopted and later deleted by the listbox.
+
 void TGListBox::AddEntry(TGLBEntry *lbe, TGLayoutHints *lhints)
 {
-   // Add specified TGLBEntry and TGLayoutHints to listbox. The
-   // entry and layout will be adopted and later deleted by the listbox.
-
    fItemVsize = TMath::Max(fItemVsize, lbe->GetDefaultHeight());
    fLbc->AddEntry(lbe, lhints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry with specified string and id to listbox sorted by increasing id.
+/// This sorting works proberly only if EntrySort functions are used to add
+/// entries without mixing them with other add or insert functions.  The id will be
+/// used in the event processing routine when the item is selected.
+/// The string will be adopted by the listbox.
+
 void TGListBox::AddEntrySort(TGString *s, Int_t id)
 {
-   // Add entry with specified string and id to listbox sorted by increasing id.
-   // This sorting works proberly only if EntrySort functions are used to add
-   // entries without mixing them with other add or insert functions.  The id will be
-   // used in the event processing routine when the item is selected.
-   // The string will be adopted by the listbox.
-
    TGTextLBEntry *lbe;
    TGLayoutHints *lhints;
 
@@ -1253,35 +1256,35 @@ void TGListBox::AddEntrySort(TGString *s, Int_t id)
    fLbc->AddEntrySort(lbe, lhints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry with specified string and id to listbox sorted by increasing id.
+/// This sorting works proberly only if EntrySort functions are used to add
+/// entries without mixing them with other add or insert functions. The id will be
+/// used in the event processing routine when the item is selected.
+
 void TGListBox::AddEntrySort(const char *s, Int_t id)
 {
-   // Add entry with specified string and id to listbox sorted by increasing id.
-   // This sorting works proberly only if EntrySort functions are used to add
-   // entries without mixing them with other add or insert functions. The id will be
-   // used in the event processing routine when the item is selected.
-
    AddEntrySort(new TGString(s), id);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add specified TGLBEntry and TGLayoutHints to listbox sorted by increasing id.
+/// This sorting works proberly only if EntrySort functions are used to add
+/// entries without mixing them with other add or insert functions. The
+/// entry and layout will be adopted and later deleted by the listbox.
+
 void TGListBox::AddEntrySort(TGLBEntry *lbe, TGLayoutHints *lhints)
 {
-   // Add specified TGLBEntry and TGLayoutHints to listbox sorted by increasing id.
-   // This sorting works proberly only if EntrySort functions are used to add
-   // entries without mixing them with other add or insert functions. The
-   // entry and layout will be adopted and later deleted by the listbox.
-
    fItemVsize = TMath::Max(fItemVsize, lbe->GetDefaultHeight());
    fLbc->AddEntrySort(lbe, lhints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert entry with specified string and id behind the entry with afterID.
+/// The string will be adopted and later deleted by the listbox.
+
 void TGListBox::InsertEntry(TGString *s, Int_t id, Int_t afterID)
 {
-   // Insert entry with specified string and id behind the entry with afterID.
-   // The string will be adopted and later deleted by the listbox.
-
    TGTextLBEntry *lbe;
    TGLayoutHints *lhints;
 
@@ -1291,19 +1294,19 @@ void TGListBox::InsertEntry(TGString *s, Int_t id, Int_t afterID)
    fLbc->InsertEntry(lbe, lhints, afterID);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert entry with specified string and id behind the entry with afterID.
+
 void TGListBox::InsertEntry(const char *s, Int_t id, Int_t afterID)
 {
-   // Insert entry with specified string and id behind the entry with afterID.
-
    InsertEntry(new TGString(s), id, afterID);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// method used to add entry via context menu
+
 void TGListBox::NewEntry(const char *s)
 {
-   // method used to add entry via context menu
-
    Int_t selected = fLbc->GetSelected();
 
    // no selected entry or the last entry
@@ -1315,13 +1318,13 @@ void TGListBox::NewEntry(const char *s)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// remove entry with id.
+/// If id = -1 - the selected entry/entries is/are removed.
+///
+
 void TGListBox:: RemoveEntry(Int_t id)
 {
-   // remove entry with id.
-   // If id = -1 - the selected entry/entries is/are removed.
-   //
-
    if (id >= 0) {
       fLbc->RemoveEntry(id);
       Layout();
@@ -1343,39 +1346,39 @@ void TGListBox:: RemoveEntry(Int_t id)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all entries.
+
 void TGListBox::RemoveAll()
 {
-   // Remove all entries.
-
    fLbc->RemoveAll();
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a range of entries defined by from_ID and to_ID.
+
 void TGListBox::RemoveEntries(Int_t from_ID, Int_t to_ID)
 {
-   // Remove a range of entries defined by from_ID and to_ID.
-
    fLbc->RemoveEntries(from_ID, to_ID);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert the specified TGLBEntry and layout hints behind afterID.
+/// The entry and layout will be adopted and later deleted by the listbox.
+
 void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
 {
-   // Insert the specified TGLBEntry and layout hints behind afterID.
-   // The entry and layout will be adopted and later deleted by the listbox.
-
    fItemVsize = TMath::Max(fItemVsize, lbe->GetDefaultHeight());
    fLbc->InsertEntry(lbe, lhints, afterID);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list box entry with specified id.
+
 TGLBEntry *TGListBox::GetEntry(Int_t id) const
 {
-   // Returns list box entry with specified id.
-
    TIter next(fLbc->GetList());
    TGFrameElement *el;
 
@@ -1386,11 +1389,11 @@ TGLBEntry *TGListBox::GetEntry(Int_t id) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll the entry with id to the top of the listbox.
+
 void TGListBox::SetTopEntry(Int_t id)
 {
-   // Scroll the entry with id to the top of the listbox.
-
    Int_t idPos;
 
    idPos = fLbc->GetPos(id);
@@ -1409,12 +1412,12 @@ void TGListBox::SetTopEntry(Int_t id)
    fVScrollbar->SetPosition(idPos);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the listbox widget. If fIntegralHeight is true make the height
+/// an integral number of the maximum height of a single entry.
+
 void TGListBox::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the listbox widget. If fIntegralHeight is true make the height
-   // an integral number of the maximum height of a single entry.
-
    if (fIntegralHeight)
       h = TMath::Max(fItemVsize, ((h - (fBorderWidth << 1)) / fItemVsize) * fItemVsize)
                      + (fBorderWidth << 1);
@@ -1423,11 +1426,11 @@ void TGListBox::Resize(UInt_t w, UInt_t h)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize the listbox widget.
+
 void TGListBox::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move and resize the listbox widget.
-
    if (fIntegralHeight)
       h = TMath::Max(fItemVsize, ((h - (fBorderWidth << 1)) / fItemVsize) * fItemVsize)
                      + (fBorderWidth << 1);
@@ -1435,11 +1438,11 @@ void TGListBox::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default size of listbox widget.
+
 TGDimension TGListBox::GetDefaultSize() const
 {
-   // Return default size of listbox widget.
-
    UInt_t h;
 
    if (fIntegralHeight)
@@ -1451,11 +1454,11 @@ TGDimension TGListBox::GetDefaultSize() const
    return TGDimension(fWidth, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout the listbox components.
+
 void TGListBox::Layout()
 {
-   // Layout the listbox components.
-
    TGFrame *container;
    UInt_t   cw, ch, tch;
    Bool_t   need_vsb;
@@ -1504,39 +1507,39 @@ void TGListBox::Layout()
    ((TGContainer *)container)->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort entries by name
+
 void TGListBox::SortByName(Bool_t ascend)
 {
-   // Sort entries by name
-
    fLbc->GetList()->Sort(ascend);
    Layout();
    fLbc->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return id of selected listbox item.
+
 Int_t TGListBox::GetSelected() const
 {
-   // Return id of selected listbox item.
-
    TGLBContainer *ct = (TGLBContainer *) fVport->GetContainer();
    return ct->GetSelected();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds all selected entries (TGLBEntry) of the list box into
+/// the list selected.
+
 void TGListBox::GetSelectedEntries(TList *selected)
 {
-   // Adds all selected entries (TGLBEntry) of the list box into
-   // the list selected.
-
    fLbc->GetSelectedEntries(selected);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change background to all entries
+
 void TGListBox::ChangeBackground(Pixel_t back)
 {
-   // Change background to all entries
-
    fBackground = back;
 
    TIter next(fLbc->GetList());
@@ -1549,12 +1552,12 @@ void TGListBox::ChangeBackground(Pixel_t back)
    fLbc->ClearViewPort();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages generated by the listbox container and forward
+/// messages to the listbox message handling window.
+
 Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process messages generated by the listbox container and forward
-   // messages to the listbox message handling window.
-
    switch (GET_MSG(msg)) {
       case kC_VSCROLL:
          switch (GET_SUBMSG(msg)) {
@@ -1608,11 +1611,11 @@ Bool_t TGListBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Selected signal with list box id and entry id.
+
 void TGListBox::Selected(Int_t widgetId, Int_t id)
 {
-   // Emit Selected signal with list box id and entry id.
-
    Long_t args[2];
 
    args[0] = widgetId;
@@ -1621,11 +1624,11 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
    Emit("Selected(Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked signal with list box id and entry id.
+
 void TGListBox::DoubleClicked(Int_t widgetId, Int_t id)
 {
-   // Emit DoubleClicked signal with list box id and entry id.
-
    Long_t args[2];
 
    args[0] = widgetId;
@@ -1634,11 +1637,11 @@ void TGListBox::DoubleClicked(Int_t widgetId, Int_t id)
    Emit("DoubleClicked(Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find entry by name.
+
 TGLBEntry *TGListBox::FindEntry(const char *name) const
 {
-   // Find entry by name.
-
    TList *list = fLbc->GetList();
    TGFrameElement *el = (TGFrameElement *)list->First();
    while (el) {
@@ -1649,11 +1652,11 @@ TGLBEntry *TGListBox::FindEntry(const char *name) const
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list box widget as a C++ statement(s) on output stream out.
+
 void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a list box widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetWhitePixel()) SaveUserColor(out, option);
 
    out << std::endl << "   // list box" << std::endl;
@@ -1691,11 +1694,11 @@ void TGListBox::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
        << ");" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list box entry widget as a C++ statement(s) on output stream out.
+
 void TGTextLBEntry::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save a list box entry widget as a C++ statement(s) on output stream out.
-
    TString content = GetText()->GetString();
    content.ReplaceAll('\\', "\\\\");
    content.ReplaceAll("\"", "\\\"");

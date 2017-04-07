@@ -33,17 +33,9 @@
 #ifndef ROOT_TGMdi
 #define ROOT_TGMdi
 
-#ifndef ROOT_TGMdiMainFrame
 #include "TGMdiMainFrame.h"
-#endif
-#ifndef ROOT_TGMdiMenu
 #include "TGMdiMenu.h"
-#endif
-#ifndef ROOT_TGMdiDecorFrame
 #include "TGMdiDecorFrame.h"
-#endif
-#ifndef ROOT_TGMdiFrame
 #include "TGMdiFrame.h"
-#endif
 
 #endif

@@ -11,15 +11,6 @@
 #ifndef ROOT_TEmulatedMapProxy
 #define ROOT_TEmulatedMapProxy
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TEmulatedMapProxy
-//
-// Streamer around an arbitrary STL like container, which implements basic
-// container functionality.
-//
-//////////////////////////////////////////////////////////////////////////
-
 #include "TEmulatedCollectionProxy.h"
 
 class TEmulatedMapProxy : public TEmulatedCollectionProxy  {

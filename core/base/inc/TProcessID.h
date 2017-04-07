@@ -22,14 +22,49 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
+
+#include <atomic>
+#include <type_traits>
 
 class TExMap;
+
+namespace ROOT {
+   namespace Internal {
+     /**
+      * \class ROOT::Internal::TAtomicPointer
+      * \brief Helper class to manage atomic pointers.
+      * \tparam T Pointer type to be made atomic
+      *
+      * Helper class to manage atomic pointers. The class enforces that the templated type
+      * is a pointer.
+      */
+      template <typename T> class TAtomicPointer {
+         private:
+            std::atomic<T> fAtomic;
+
+         public:
+            TAtomicPointer() : fAtomic(nullptr)
+            {
+               static_assert(std::is_pointer<T>::value, "Only pointer types supported");
+            }
+
+            ~TAtomicPointer() { delete fAtomic.load(); }
+
+            T operator->() const { return fAtomic; }
+
+            operator T() const { return fAtomic; }
+
+            T operator=(const T& t)
+            {
+               fAtomic = t;
+               return t;
+            }
+      };
+   } // End of namespace Internal
+} // End of namespace ROOT
+
 
 class TProcessID : public TNamed {
 
@@ -38,8 +73,9 @@ private:
    TProcessID& operator=(const TProcessID &ref); // TProcessID are not copiable.
 
 protected:
-   Int_t              fCount;     //!Reference count to this object (from TFile)
-   TObjArray         *fObjects;   //!Array pointing to the referenced objects
+   std::atomic_int    fCount;                           //!Reference count to this object (from TFile)
+   ROOT::Internal::TAtomicPointer<TObjArray*> fObjects; //!Array pointing to the referenced objects
+   std::atomic_flag   fLock;                            //!Spin lock for initialization of fObjects
 
    static TProcessID *fgPID;      //Pointer to current session ProcessID
    static TObjArray  *fgPIDs;     //Table of ProcessIDs

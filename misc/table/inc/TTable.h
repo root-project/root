@@ -33,10 +33,6 @@
 # include "TCut.h"
 #endif
 
-# ifndef ROOT_Riosfwd
-#  include "Riosfwd.h"
-# endif
-
 #ifndef __CINT__
 #  include <string.h>
 #  include <assert.h>
@@ -381,6 +377,5 @@ inline void TTable::Draw(Option_t *opt)
     //________________________________________________________________________________________________________________
     inline UInt_t TTable::piterator::Column() const { return fCurrentColIndex;}
 #endif
-#include "TTableDescriptor.h"
 
 #endif

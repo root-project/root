@@ -35,7 +35,10 @@ ClassImp(RooEffProd)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of a a production of p.d.f inPdf with efficiency
+/// function inEff.
+
 RooEffProd::RooEffProd(const char *name, const char *title, 
                              RooAbsPdf& inPdf, RooAbsReal& inEff) :
   RooAbsPdf(name,title),
@@ -45,14 +48,14 @@ RooEffProd::RooEffProd(const char *name, const char *title,
   _nset(0),
   _fixedNset(0)
 {  
-  // Constructor of a a production of p.d.f inPdf with efficiency
-  // function inEff.
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
   RooAbsPdf(other, name),
   _cacheMgr(other._cacheMgr,this),
@@ -61,25 +64,25 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
   _nset(0),
   _fixedNset(0) 
 {
-  // Copy constructor
 }
 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooEffProd::~RooEffProd() 
 {
-  // Destructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return p.d.f. value normalized over given set of observables
+
 Double_t RooEffProd::getValV(const RooArgSet* set) const 
 {  
-  // Return p.d.f. value normalized over given set of observables
-
   _nset = _fixedNset ? _fixedNset : set ;
   return RooAbsPdf::getValV(set) ;
 }
@@ -87,23 +90,23 @@ Double_t RooEffProd::getValV(const RooArgSet* set) const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate and return 'raw' unnormalized value of p.d.f
+
 Double_t RooEffProd::evaluate() const
 {
-  // Calculate and return 'raw' unnormalized value of p.d.f
-
   return eff()->getVal() * pdf()->getVal(_nset);
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return specialized generator context for RooEffProds that implements generation
+/// in a more efficient way than can be done for generic correlated products
+
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
                                             const RooArgSet* auxProto, Bool_t verbose) const
 {
-  // Return specialized generator context for RooEffProds that implements generation
-  // in a more efficient way than can be done for generic correlated products
-  
   assert(pdf()!=0);
   assert(eff()!=0);
   return new RooEffGenContext(*this,*pdf(),*eff(),vars,prototype,auxProto,verbose) ;
@@ -113,19 +116,19 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return internal integration capabilities of the p.d.f. Given a set 'allVars' for which
+/// integration is requested, returned the largest subset for which internal (analytical)
+/// integration is implemented (in argument analVars). The return value is a unique integer
+/// code that identifies the integration configuration (integrated observables and range name).
+///
+/// This implementation in RooEffProd catches all integrals without normalization and reroutes them
+/// through a custom integration routine that properly accounts for the use of normalized p.d.f.
+/// in the evaluate() expression, which breaks the default RooAbsPdf normalization handling
+
 Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
 					  const RooArgSet* normSet, const char* rangeName) const 
 {
-  // Return internal integration capabilities of the p.d.f. Given a set 'allVars' for which
-  // integration is requested, returned the largest subset for which internal (analytical)
-  // integration is implemented (in argument analVars). The return value is a unique integer
-  // code that identifies the integration configuration (integrated observables and range name).
-  //
-  // This implementation in RooEffProd catches all integrals without normalization and reroutes them
-  // through a custom integration routine that properly accounts for the use of normalized p.d.f.
-  // in the evaluate() expression, which breaks the default RooAbsPdf normalization handling
-
   
   // No special handling required if a normalization set is given
   if (normSet && normSet->getSize()>0) {    
@@ -173,12 +176,12 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return value of integral identified by code, which should be a return value of getAnalyticalIntegralWN,
+/// Code zero is always handled and signifies no integration (return value is normalized p.d.f. value)
+
 Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
 {
-  // Return value of integral identified by code, which should be a return value of getAnalyticalIntegralWN,
-  // Code zero is always handled and signifies no integration (return value is normalized p.d.f. value)
-
   // Return analytical integral defined by given scenario code
 
   // No integration scenario
@@ -195,12 +198,12 @@ Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Report all RooAbsArg derived objects contained in Cache Element (used in function optimization and
+/// and server redirect management of the cache)
+
 RooArgList RooEffProd::CacheElem::containedArgs(Action) 
 {
-  // Report all RooAbsArg derived objects contained in Cache Element (used in function optimization and
-  // and server redirect management of the cache)
-
   RooArgList ret(_intObs) ;
   ret.add(*_int) ;
   ret.add(*_clone) ;

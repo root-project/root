@@ -54,11 +54,11 @@
 
 ClassImp(TQpLinSolverBase)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TQpLinSolverBase::TQpLinSolverBase()
 {
-// Default constructor
-
    fNx   = 0;
    fMy   = 0;
    fMz   = 0;
@@ -70,11 +70,11 @@ TQpLinSolverBase::TQpLinSolverBase()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 {
-// Constructor
-
    fFactory = factory;
 
    fNx = data->fNx;
@@ -101,23 +101,23 @@ TQpLinSolverBase::TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TQpLinSolverBase::TQpLinSolverBase(const TQpLinSolverBase &another) : TObject(another),
                                                                       fFactory(another.fFactory)
 {
-// Copy constructor
-
    *this = another;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets up the matrix for the main linear system in "augmented system" form. The
+/// actual factorization is performed by a routine specific to either the sparse
+/// or dense case
+
 void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 {
-// Sets up the matrix for the main linear system in "augmented system" form. The
-// actual factorization is performed by a routine specific to either the sparse
-// or dense case
-
    R__ASSERT(vars->ValidNonZeroPattern());
 
    if (fNxlo+fNxup > 0) {
@@ -136,15 +136,15 @@ void TQpLinSolverBase::Factor(TQpDataBase * /* prob */,TQpVar *vars)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the diagonal matrices in the augmented system from the current set of variables
+
 void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
                                         TVectorD &t, TVectorD &lambda,
                                         TVectorD &u, TVectorD &pi,
                                         TVectorD &v, TVectorD &gamma,
                                         TVectorD &w, TVectorD &phi)
 {
-// Computes the diagonal matrices in the augmented system from the current set of variables
-
    if (fNxup+fNxlo > 0) {
       if (fNxlo > 0) AddElemDiv(dd,1.0,gamma,v,fXloIndex);
       if (fNxup > 0) AddElemDiv(dd,1.0,phi  ,w,fXupIndex);
@@ -155,14 +155,14 @@ void TQpLinSolverBase::ComputeDiagonals(TVectorD &dd,TVectorD &omega,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Solves the system for a given set of residuals. Assembles the right-hand side appropriate
+/// to the matrix factored in factor, solves the system using the factorization produced there,
+/// partitions the solution vector into step components, then recovers the step components
+/// eliminated during the block elimination that produced the augmented system form .
+
 void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQpVar *step)
 {
-// Solves the system for a given set of residuals. Assembles the right-hand side appropriate
-// to the matrix factored in factor, solves the system using the factorization produced there,
-// partitions the solution vector into step components, then recovers the step components
-// eliminated during the block elimination that produced the augmented system form .
-
    R__ASSERT(vars->ValidNonZeroPattern());
    R__ASSERT(res ->ValidNonZeroPattern());
 
@@ -257,13 +257,13 @@ void TQpLinSolverBase::Solve(TQpDataBase *prob,TQpVar *vars,TQpResidual *res,TQp
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assemble right-hand side of augmented system and call SolveCompressed to solve it
+
 void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
                                  TVectorD &stepz,TVectorD &steps,
                                  TVectorD & /* ztemp */, TQpDataBase * /* prob */ )
 {
-// Assemble right-hand side of augmented system and call SolveCompressed to solve it
-
    AddElemMult(stepz,-1.0,fNomegaInv,steps);
    this->JoinRHS(fRhs,stepx,stepy,stepz);
 
@@ -280,39 +280,39 @@ void TQpLinSolverBase::SolveXYZS(TVectorD &stepx,TVectorD &stepy,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assembles a single vector object from three given vectors .
+///     rhs_out (output) final joined vector
+///     rhs1_in (input) first part of rhs
+///     rhs2_in (input) middle part of rhs
+///     rhs3_in (input) last part of rhs .
+
 void TQpLinSolverBase::JoinRHS(TVectorD &rhs_out, TVectorD &rhs1_in,
                                TVectorD &rhs2_in,TVectorD &rhs3_in)
 {
-// Assembles a single vector object from three given vectors .
-//     rhs_out (output) final joined vector
-//     rhs1_in (input) first part of rhs
-//     rhs2_in (input) middle part of rhs
-//     rhs3_in (input) last part of rhs .
-
    fFactory->JoinRHS(rhs_out,rhs1_in,rhs2_in,rhs3_in);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extracts three component vectors from a given aggregated vector.
+///     vars_in  (input) aggregated vector
+///     x_in (output) first part of vars
+///     y_in (output) middle part of vars
+///     z_in (output) last part of vars
+
 void TQpLinSolverBase::SeparateVars(TVectorD &x_in,TVectorD &y_in,
                                     TVectorD &z_in,TVectorD &vars_in)
 {
-// Extracts three component vectors from a given aggregated vector.
-//     vars_in  (input) aggregated vector
-//     x_in (output) first part of vars
-//     y_in (output) middle part of vars
-//     z_in (output) last part of vars
-
    fFactory->SeparateVars(x_in,y_in,z_in,vars_in);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment opeartor
+
 TQpLinSolverBase &TQpLinSolverBase::operator=(const TQpLinSolverBase &source)
 {
-// Assignment opeartor
-
    if (this != &source) {
       TObject::operator=(source);
 

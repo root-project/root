@@ -21,22 +21,22 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveStraightLineSetEditor
-//
-// Editor for TEveStraightLineSet class.
+/** \class TEveStraightLineSetEditor
+\ingroup TEve
+Editor for TEveStraightLineSet class.
+*/
 
 ClassImp(TEveStraightLineSetEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
    fM(0)
                                                     // Initialize widget pointers to 0
 {
-   // Constructor.
-
    MakeTitle("TEveStraightLineSet");
 
    TGHorizontalFrame* frame = new TGHorizontalFrame(this);
@@ -56,13 +56,11 @@ TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t wi
    AddFrame(frame, new TGLayoutHints(kLHintsTop, 0, 0, 0, 0));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveStraightLineSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveStraightLineSet*>(obj);
 
    // Set values of widgets
@@ -70,24 +68,20 @@ void TEveStraightLineSetEditor::SetModel(TObject* obj)
    fRnrLines->SetState(fM->GetRnrLines() ? kButtonDown : kButtonUp);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrMarkers.
 
-// Implements callback/slot methods
-
-//______________________________________________________________________________
 void TEveStraightLineSetEditor::DoRnrMarkers()
 {
-   // Slot for RnrMarkers.
-
    fM->SetRnrMarkers(fRnrMarkers->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLines.
+
 void TEveStraightLineSetEditor::DoRnrLines()
 {
-   // Slot for RnrLines.
-
    fM->SetRnrLines(fRnrLines->IsOn());
    Update();
 }

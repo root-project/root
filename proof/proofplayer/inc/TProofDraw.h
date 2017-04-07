@@ -21,21 +21,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TTreeDrawArgsParser
 #include "TTreeDrawArgsParser.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include <vector>
 
@@ -140,7 +132,7 @@ protected:
 
 public:
    TProofDrawEventList() : fElist(0), fEventLists(0) {}
-   ~TProofDrawEventList();
+   ~TProofDrawEventList() {}
 
    virtual void        Init(TTree *);
    virtual void        SlaveBegin(TTree *);
@@ -158,8 +150,8 @@ class TProofDrawEntryList : public TProofDraw {
    virtual void DefVar() {}
 
  public:
-   TProofDrawEntryList() : fElist(0) {};
-   ~TProofDrawEntryList();
+   TProofDrawEntryList() : fElist(0) {}
+   ~TProofDrawEntryList() {}
 
    virtual void Init(TTree *);
    virtual void SlaveBegin(TTree *);

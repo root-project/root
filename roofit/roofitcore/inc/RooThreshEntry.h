@@ -16,7 +16,6 @@
 #ifndef ROO_THRESH_ENTRY
 #define ROO_THRESH_ENTRY
 
-#include "Riosfwd.h"
 #include "TNamed.h"
 #include "RooCatType.h"
 

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMakeProject                                                         //
-//                                                                      //
-// Helper class implementing the TFile::MakeProject.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/*
+\class TMakeProject TMakeProject.cxx
+\ingroup IO
+
+Helper class implementing the TFile::MakeProject.
+**/
 
 #include <ctype.h>
 #include "TMakeProject.h"
@@ -27,11 +26,11 @@
 #include "TStreamerElement.h"
 #include "TError.h"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an include statement, if it has not already been added.
+
 void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inclist)
 {
-   // Add an include statement, if it has not already been added.
-
    if (!strstr(inclist, statement)) {
       if (strlen(inclist)+strlen(statement) >= 50000) {
          Fatal("AddUniqueStatement","inclist too short need %u instead of 500000",UInt_t(strlen(inclist)+strlen(statement)));
@@ -41,11 +40,11 @@ void TMakeProject::AddUniqueStatement(FILE *fp, const char *statement, char *inc
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add an include statement, if it has not already been added.
+
 void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char *inclist)
 {
-   // Add an include statement, if it has not already been added.
-
    TString what;
    if (system) {
       what.Form("#include <%s>\n", header);
@@ -55,12 +54,12 @@ void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char 
    AddUniqueStatement(fp, what.Data(), inclist);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Chop the name by replacing the ending (before a potential extension) with
+/// a md5 summary of the name.
+
 void TMakeProject::ChopFileName(TString &name, Int_t limit)
 {
-   // Chop the name by replacing the ending (before a potential extension) with
-   // a md5 summary of the name.
-
    if (name.Length() >= limit) {
       Bool_t has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
       if (has_extension) {
@@ -78,10 +77,11 @@ void TMakeProject::ChopFileName(TString &name, Int_t limit)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the header name containing the description of name.
+
 TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos, Bool_t includeNested)
 {
-   //Return the header name containing the description of name
    TString result;
    std::string strname( TClassEdit::GetLong64_Name( in_name ) );
    const char *name = strname.c_str();
@@ -119,8 +119,19 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                   ChopFileName(result,255);
                   return result;
                }
+#ifndef WIN32
             }
             result.Append('_');
+#else
+            }
+            if (name[i+1] == '/') {
+               // don't replace the colon ':' in the case it's part of the drive name in a Windows path
+               // e.g. don't convert from "c:/root/..." to "c_/root/..."
+               result.Append(name[i]);
+            } else {
+               result.Append('_');
+            }
+#endif
             break;
          case ',':
          case '*':
@@ -141,13 +152,13 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the start of the class (forward) declaration.
+/// If 'implementEmptyClass' is 3 then never add a #pragma
+
 UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t top, TString &protoname,
       UInt_t *numberOfClasses, Int_t implementEmptyClass, Bool_t needGenericTemplate)
 {
-   // Write the start of the class (forward) declaration.
-   // if 'implementEmptyClass' is 3 then never add a #pragma
-
    // First open the namespace (if any)
    Int_t numberOfNamespaces = 0;
    const char *fullname = clname;
@@ -293,13 +304,15 @@ UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t to
    return numberOfNamespaces;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an empty StreamerInfo for the given type (no recursion) if it is not
+/// not known in the list of class.
+///
+/// If the type itself is a template,
+/// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
+
 void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *clname, Bool_t iscope)
 {
-   // Generate an empty StreamerInfo for the given type (no recursion) if it is not
-   // not known in the list of class.   If the type itself is a template,
-   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
-
    if (!TClassEdit::IsStdClass(clname) && !TClass::GetClass(clname) && gROOT->GetType(clname) == 0) {
 
       TStreamerInfo *info = (TStreamerInfo*)extrainfos->FindObject(clname);
@@ -338,13 +351,15 @@ void TMakeProject::GenerateMissingStreamerInfo(TList *extrainfos, const char *cl
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an empty StreamerInfo for types that are used in templates parameters
+/// but are not known in the list of class.
+///
+/// If the type itself is a template, we mark it with version 1 (a class)
+/// otherwise we mark it as version -3 (an enum).
+
 void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *clname)
 {
-   // Generate an empty StreamerInfo for types that are used in templates parameters
-   // but are not known in the list of class.   If the type itself is a template,
-   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
-
    UInt_t len = strlen(clname);
    UInt_t nest = 0;
    UInt_t last = 0;
@@ -365,7 +380,7 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
             break;
          case '>':
             if (nest == 0) return; // The name is not well formed, give up.
-            --nest; /* intentional fall throught to the next case */
+            --nest; /* intentional fall through to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
@@ -384,26 +399,30 @@ void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, const char *c
    GenerateMissingStreamerInfo(extrainfos,TClassEdit::ShortType(clname, TClassEdit::kDropTrailStar | TClassEdit::kLong64).c_str(),kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Generate an empty StreamerInfo for types that are used in templates parameters
+/// but are not known in the list of class.
+///
+/// If the type itself is a template,
+/// we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
+
 void TMakeProject::GenerateMissingStreamerInfos(TList *extrainfos, TStreamerElement *element)
 {
-   // Generate an empty StreamerInfo for types that are used in templates parameters
-   // but are not known in the list of class.   If the type itself is a template,
-   // we mark it with version 1 (a class) otherwise we mark it as version -3 (an enum).
-
    if (element->IsBase()) {
-      GenerateMissingStreamerInfos(extrainfos,element->GetClassPointer()->GetName());
+      TClass *elemCl = element->GetClassPointer();
+      if (elemCl) GenerateMissingStreamerInfos(extrainfos,elemCl->GetName());
+      else GenerateMissingStreamerInfos(extrainfos,element->GetTypeName());
    } else {
       GenerateMissingStreamerInfos(extrainfos,element->GetTypeName());
    }
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a (complete) forward declaration for the class 'clname'
+
 UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, char *inclist, Bool_t implementEmptyClass, Bool_t needGenericTemplate, const TList *extrainfos)
 {
-   // Insert a (complete) forward declaration for the class 'clname'
-
    UInt_t ninc = 0;
 
    if (strchr(clname, '<')) {
@@ -425,12 +444,12 @@ UInt_t TMakeProject::GenerateForwardDeclaration(FILE *fp, const char *clname, ch
    return ninc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the header file, the \#include needed for the argument of
+/// this template.
+
 UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, char *inclist, Bool_t forward, const TList *extrainfos)
 {
-   // Add to the header file, the #include needed for the argument of
-   // this template.
-
    UInt_t ninc = 0;
    UInt_t len = strlen(clname);
    UInt_t nest = 0;
@@ -445,7 +464,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
             break;
          case '>':
             if (nest==0) return ninc; // the name is not well formed, give up.
-            --nest; /* intentional fall throught to the next case */
+            --nest; /* intentional fall through to the next case */
          case ',':
             if ((clname[i] == ',' && nest == 1) || (clname[i] == '>' && nest == 0)) {
                TString incName(clname + last, i - last);
@@ -470,20 +489,20 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                         what = "deque";
                         break;
                      case ROOT::kSTLmap:
-                        what = "map";
-                        break;
                      case ROOT::kSTLmultimap:
                         what = "map";
                         break;
+                     case ROOT::kSTLunorderedmap:
+                     case ROOT::kSTLunorderedmultimap:
+                        what = "unordered_map";
+                        break;
                      case ROOT::kSTLset:
-                        what = "set";
-                        break;
-                     case ROOT::kSTLunorderedset:
-                        what = "unordered_set";
-                        break;
                      case ROOT::kSTLmultiset:
                         what = "set";
                         break;
+                     case ROOT::kSTLunorderedset:
+                     case ROOT::kSTLunorderedmultiset:
+                        what = "unordered_set";
                      case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
@@ -577,12 +596,12 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add to the header file anything that need to appear after the class
+/// declaration (this includes some \#pragma link).
+
 void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo *info, char *inclist)
 {
-   // Add to the header file anything that need to appear after the class
-   // declaration (this includes some #pragma link).
-
    TIter next(info->GetElements());
    TStreamerElement *element;
    while( (element = (TStreamerElement*)next()) ) {
@@ -619,15 +638,16 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If we have a map, multimap, set or multiset, plus unordered partners,
+/// and the key is a class, we need to replace the
+/// container by a vector since we don't have the
+/// comparator function.
+/// The 'name' is modified to return the change in the name,
+/// if any.
+
 TString TMakeProject::UpdateAssociativeToVector(const char *name)
 {
-   // If we have a map, multimap, set or multiset,
-   // and the key is a class, we need to replace the
-   // container by a vector since we don't have the
-   // comparator function.
-   // The 'name' is modified to return the change in the name,
-   // if any.
    TString newname( name );
 
    if (strchr(name,'<')!=0) {
@@ -641,12 +661,14 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
       }
       // Remove default allocator if any.
+      static const char* allocPrefix = "std::allocator<";
+      static const unsigned int allocPrefixLen (strlen(allocPrefix));
       switch (stlkind) {
          case ROOT::kSTLvector:
          case ROOT::kSTLlist:
          case ROOT::kSTLforwardlist:
          case ROOT::kSTLdeque:
-            if (narg>2 && strncmp(inside[2].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+            if (narg>2 && strncmp(inside[2].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
@@ -654,13 +676,19 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
          case ROOT::kSTLmultiset:
          case ROOT::kSTLmap:
          case ROOT::kSTLmultimap:
-            if (narg>4 && strncmp(inside[4].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+            if (narg>4 && strncmp(inside[4].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
          case ROOT::kSTLunorderedset:
-         // case ROOT::kSTLunorderedmultiset:
-            if (narg>5 && strncmp(inside[5].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
+         case ROOT::kSTLunorderedmultiset:
+            if (narg>5 && strncmp(inside[5].c_str(),allocPrefix,allocPrefixLen)==0) {
+               --narg;
+            }
+            break;
+         case ROOT::kSTLunorderedmap:
+         case ROOT::kSTLunorderedmultimap:
+            if (narg>6 && strncmp(inside[6].c_str(),allocPrefix,allocPrefixLen)==0) {
                --narg;
             }
             break;
@@ -674,7 +702,9 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
             std::string what;
             switch ( stlkind )  {
                case ROOT::kSTLmap:
-               case ROOT::kSTLmultimap: {
+               case ROOT::kSTLunorderedmap:
+               case ROOT::kSTLmultimap:
+               case ROOT::kSTLunorderedmultimap: {
                   what = "std::pair<";
                   what += inside[1];
                   what += ",";
@@ -693,6 +723,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                case ROOT::kSTLset:
                case ROOT::kSTLunorderedset:
                case ROOT::kSTLmultiset:
+               case ROOT::kSTLunorderedmultiset:
                   inside[0] = "std::vector";
                   break;
             }

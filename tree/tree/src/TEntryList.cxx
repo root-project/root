@@ -9,147 +9,140 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-/* Begin_Html
-<center><h2>TEntryList: a List of entry numbers in a TTree or TChain</h2></center>
+/** \class TEntryList
+\ingroup tree
+
+A List of entry numbers in a TTree or TChain.
 
 There are two types of entry lists:
-<ol>
-<li> for a TTree (fBlocks data member is non-zero)
-  Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
-  in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
-  of kBlockSize entries (currently 64000), so that the first block contains
-  information which entries out of the first 64000 pass the selection, the second
-  block - which entries out of the 64000-127999 interval pass the selection, etc.
-  Some blocks, obviously, might be empty. The internal representation of entry
-  numbers in the blocks is described in the TEntryListBlock class description, and
-  this representation might be changed by calling OptimizeStorage() function
-  (when the list is filled via the Enter() function, this is done automatically,
-  except for the last block).
-  Individual entry lists can be merged (functions Merge() and Add())
-  to make an entry list for a TChain of corresponding TTrees.
-End_Html
-Begin_Macro(source)
+
+#### 1.
+    for a TTree (fBlocks data member is non-zero)
+    Entry numbers are stored in TEntryListBlocks, which, in their turn, are stored
+    in the TObjArray fBlocks. The range of the entry numbers is cut into intervals
+    of kBlockSize entries (currently 64000), so that the first block contains
+    information which entries out of the first 64000 pass the selection, the second
+    block - which entries out of the 64000-127999 interval pass the selection, etc.
+    Some blocks, obviously, might be empty. The internal representation of entry
+    numbers in the blocks is described in the TEntryListBlock class description, and
+    this representation might be changed by calling OptimizeStorage() function
+    (when the list is filled via the Enter() function, this is done automatically,
+    except for the last block).
+    Individual entry lists can be merged (functions Merge() and Add())
+    to make an entry list for a TChain of corresponding TTrees.
+Begin_Macro
 entrylist_figure1.C
 End_Macro
 
-Begin_Html
-
-<li> for a TChain (fLists data member is non-zero)
-  It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
-  Trees and lists are matched by the TTree name and its file name (full path).
-  All sub-lists are returned by the GetLists() function and individual lists are
-  returned by GetEntryList() function. Such lists are no different from the lists for
-  TTrees, described above.
-End_Html
-Begin_Macro(source)
+#### 2.
+    for a TChain (fLists data member is non-zero)
+    It contains a TList of sub-lists (TEntryList objects, corresponding to each TTree)
+    Trees and lists are matched by the TTree name and its file name (full path).
+    All sub-lists are returned by the GetLists() function and individual lists are
+    returned by GetEntryList() function. Such lists are no different from the lists for
+    TTrees, described above.
+Begin_Macro
 entrylist_figure2.C
 End_Macro
 
-Begin_Html
-</ol>
-<h4>Operations on entry lists</h4>
+## Operations on entry lists
 
-<ul>
-<li> <b>Add</b>() - if the lists are for the same tree, adds all the entries of the second list
+- __Add__() - if the lists are for the same tree, adds all the entries of the second list
           to the first list. If the lists are for different trees, creates a TEntryList
           with 2 sublists for each TTree. If the lists are for TChains, merges the ones
           for the same trees and adds new sublists for the TTrees that were not included
           in the first TEntryList
-<li> <b>Subtract</b>() - if the lists are for the same TTree, removes the entries of the second
+- __Subtract__() - if the lists are for the same TTree, removes the entries of the second
                list from the first list. If the lists are for TChains, loops over all
                sub-lists
-<li> <b>GetEntry(n)</b> - returns the n-th entry number
-<li> <b>Next</b>()      - returns next entry number. Note, that this function is
+- __GetEntry(n)__ - returns the n-th entry number
+- __Next__()      - returns next entry number. Note, that this function is
                 much faster than GetEntry, and it's called when GetEntry() is called
                 for 2 or more indices in a row.
-</ul>
 
-<h4>TTree::Draw() and TChain::Draw()</h4>
+## TTree::Draw() and TChain::Draw()
 
-  Use option <b>entrylist</b> to write the results of TTree::Draw and TChain::Draw into
-  an entry list. Example:
-<pre>
+Use option __entrylist__ to write the results of TTree::Draw and TChain::Draw into
+an entry list. Example:
+~~~ {.cpp}
      tree->Draw(">>elist", "x<0 && y>0", "entrylist");
      TEntryList *elist = (TEntryList*)gDirectory->Get("elist");
-</pre>
+~~~
+## Example of Loop on TEntryList with a TChain
+~~~ {.cpp}
+     void loopChain() {
+        TFile *fe = TFile::Open("myelist.root");
+        TEntryList *myelist = (TEntryList*)fe->Get("myelist");
+        TChain *chain = new TChain("ntuple");
+        chain->Add("hsimple.root");
+        chain->Add("hsimple2.root");
+        Long64_t listEntries = myelist->GetN();
+        Long64_t chainEntries = chain->GetEntries();
+        Int_t treenum = 0;
+        chain->SetEntryList(myelist);
 
-<h4> Example of Loop on TEntryList with a TChain</h4>
-<pre>
-void loopChain() {
-   TFile *fe = TFile::Open("myelist.root");
-   TEntryList *myelist = (TEntryList*)fe-&gt;Get("myelist");
-   TChain *ch = new TChain("ntuple");
-   ch-&gt;Add("hsimple.root");
-   ch-&gt;Add("hsimple2.root");
-   Long64_t listEntries = myelist-&gt;GetN();
-   Long64_t chainEntries = ch-&gt;GetEntries();
-   Int_t treenum = 0;
-   ch-&gt;SetEntryList(myelist);
-
-   for (entry=start;entry &lt; end;entry++) {
-      entryNumber = treechain-&gt;GetEntryNumber(entry);
-      if (entryNumber &lt; 0) break;
-      localEntry = fTree-&gt;LoadTree(entryNumber);
-      if (localEntry &lt; 0) break;
-      // then either call branch-&gt;GetEntry(localEntry);
-      // or  entryNumber-&gt;GetEntry(entryNumber);
-      // In the later case the LoadTree is then somewhat redudant.
-   }
- }
-</pre>
-
+        for (entry=start;entry < end;entry++) {
+           entryNumber = chain->GetEntryNumber(entry);
+           if (entryNumber < 0) break;
+           localEntry = chain->LoadTree(entryNumber);
+           if (localEntry < 0) break;
+           ....
+           then either call
+              branch->GetEntry(localEntry);
+           or
+              chain->GetEntry(entryNumber);
+           In the later case the LoadTree is then somewhat redudant.
+           ...
+        }
+     }
+~~~
 When using the TEntryList interface directly, you can get the 'tree number' and entry in
 the current tree (i.e. value similar to the return value of LoadTree) from calling
 TEntryList::GetEntryAndTree:
-<pre>
-    Long64_t treeEntry = myelist-&gt;GetEntryAndTree(el,treenum);
-</pre>
-to obtain the entry number within the chain you need to add to it the value
-of
-<pre>treeEntry+ch->GetTreeOffset()[treenum]</pre>
+~~~ {.cpp}
+     Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+~~~
+to obtain the entry number within the chain you need to add to it the value of
+`treeEntry+ch->GetTreeOffset()[treenum]`
 such that the loop in the previous example can also be written as:
+~~~ {.cpp}
+     for (Long64_t el = 0; el < listEntries; el++) {
+        Long64_t treeEntry = myelist->GetEntryAndTree(el,treenum);
+        Long64_t chainEntry = treeEntry+ch->GetTreeOffset()[treenum];
+        printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
 
-<pre>for (Long64_t el = 0; el &lt; listEntries; el++) {
-   Long64_t treeEntry = myelist-&gt;GetEntryAndTree(el,treenum);
-   Long64_t chainEntry = treeEntry+ch-&gt;GetTreeOffset()[treenum];
-   printf("el=%lld, treeEntry=%lld, chainEntry=%lld, treenum=%d\n", el, treeEntry, chainEntry, treenum);
+        ch->LoadTree(chainEntry); // this also returns treeEntry
+        needed_branch->GetEntry(treeEntry);
+     }
+~~~
+## TSelectors
 
-   ch-&gt;LoadTree(chainEntry); // this also returns treeEntry
-   needed_branch-&gt;GetEntry(treeEntry);
-}
-</pre>
+To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
+to the output list of the selector (TSelector::fOutput). This is the only way to
+make the sub-lists of the TEntryList switch when the current tree of the TChain is
+changed.
 
+## Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())
 
-<h4> TSelectors</h4>
+while the TTree::SetEntryList() function is only setting the TTree::fEntryList
+data member, the same function in TChain also finds correspondance between
+the TTrees of this TChain and the sub-lists of this TEntryList.
 
-  To fill an TEntryList from a TSelector correctly, one must add the TEntryList object
-  to the output list of the selector (TSelector::fOutput). This is the only way to
-  make the sub-lists of the TEntryList switch when the current tree of the TChain is
-  changed.
+## TEntryList and the current directory
 
-<h4> Using a TEntryList as input (TTree::SetEntryList() and TChain::SetEntryList())</h4>
+TEntryList objects are automatically added to the current directory (like TTrees).
+However, in case of a TEntryList for a chain, only the top-level entry list is added,
+not the sub-lists for specific trees. Placing entry lists in the current directory
+allows calling them as a part of a TTreeFormula expression, so if the user wants
+to extract a sublist from a TChain entry list via the GetEntryList() or some other
+function, they have to add it to the current directory to be able to use it in
+TTreeFormula expressions.
 
-  while the TTree::SetEntryList() function is only setting the TTree::fEntryList
-  data member, the same function in TChain also finds correspondance between
-  the TTrees of this TChain and the sub-lists of this TEntryList.
+## TEntryList and TEventList
 
-<h4>TEntryList and the current directory</h4>
-
-  TEntryList objects are automatically added to the current directory (like TTrees).
-  However, in case of a TEntryList for a chain, only the top-level entry list is added,
-  not the sub-lists for specific trees. Placing entry lists in the current directory
-  allows calling them as a part of a TTreeFormula expression, so if the user wants
-  to extract a sublist from a TChain entry list via the GetEntryList() or some other
-  function, they have to add it to the current directory to be able to use it in
-  TTreeFormula expressions.
-
-<h4>TEntryList and TEventList</h4>
-
-  TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
-  See comments to those functions for more details
-End_Html */
-
+TTree::SetEventList() and TChain::SetEventList() transform a TEventList into a TEntryList
+See comments to those functions for more details
+*/
 
 #include "TEntryList.h"
 #include "TEntryListBlock.h"
@@ -162,11 +155,11 @@ End_Html */
 
 ClassImp(TEntryList)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// default c-tor
+
 TEntryList::TEntryList() : fEntriesToProcess(0)
 {
-   //default c-tor
-
    fLists = 0;
    fCurrent = 0;
    fBlocks = 0;
@@ -183,13 +176,13 @@ TEntryList::TEntryList() : fEntriesToProcess(0)
    fShift = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// c-tor with name and title
+
 TEntryList::TEntryList(const char *name, const char *title) :
    TNamed(name, title),
    fEntriesToProcess(0)
 {
-   //c-tor with name and title
-
    fLists = 0;
    fCurrent = 0;
    fBlocks = 0;
@@ -209,11 +202,11 @@ TEntryList::TEntryList(const char *name, const char *title) :
    fShift = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// constructor with name and title, which also sets the tree
+
 TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):TNamed(name, title)
 {
-   //constructor with name and title, which also sets the tree
-
    fLists = 0;
    fCurrent = 0;
    fBlocks = 0;
@@ -231,11 +224,11 @@ TEntryList::TEntryList(const char *name, const char *title, const TTree *tree):T
    fShift = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// c-tor with name and title, which also sets the treename and the filename
+
 TEntryList::TEntryList(const char *name, const char *title, const char *treename, const char *filename) : TNamed(name, title),fEntriesToProcess(0)
 {
-   //c-tor with name and title, which also sets the treename and the filename
-
    fLists = 0;
    fCurrent = 0;
    fBlocks = 0;
@@ -253,11 +246,11 @@ TEntryList::TEntryList(const char *name, const char *title, const char *treename
    fShift = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// c-tor, which sets the tree
+
 TEntryList::TEntryList(const TTree *tree) : fEntriesToProcess(0)
 {
-   //c-tor, which sets the tree
-
    fLists = 0;
    fCurrent = 0;
    fBlocks = 0;
@@ -276,11 +269,11 @@ TEntryList::TEntryList(const TTree *tree) : fEntriesToProcess(0)
    fShift = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy c-tor
+
 TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
 {
-   //copy c-tor
-
    fNBlocks = elist.fNBlocks;
    fTreeName = elist.fTreeName;
    fFileName = elist.fFileName;
@@ -324,12 +317,11 @@ TEntryList::TEntryList(const TEntryList &elist) : TNamed(elist)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
-//______________________________________________________________________________
 TEntryList::~TEntryList()
 {
-   // Destructor.
-
    if (fBlocks){
       fBlocks->Delete();
       delete fBlocks;
@@ -347,11 +339,11 @@ TEntryList::~TEntryList()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add 2 entry lists
+
 void TEntryList::Add(const TEntryList *elist)
 {
-   //Add 2 entry lists
-
    if (fN==0){
       if (!fLists && fTreeName=="" && fFileName==""){
          //this list is empty. copy the other list completely
@@ -518,15 +510,14 @@ void TEntryList::Add(const TEntryList *elist)
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// - When tree = 0, returns from the current list
+/// - When tree != 0, finds the list, corresponding to this tree
+/// - When tree is a chain, the entry is assumed to be global index and the local
+/// entry is recomputed from the treeoffset information of the chain
 
-//______________________________________________________________________________
 Int_t TEntryList::Contains(Long64_t entry, TTree *tree)
 {
-//When tree = 0, returns from the current list
-//When tree != 0, finds the list, corresponding to this tree
-//When tree is a chain, the entry is assumed to be global index and the local
-//entry is recomputed from the treeoffset information of the chain
-
    if (!tree){
       if (fBlocks) {
          //this entry list doesn't contain any sub-lists
@@ -551,23 +542,23 @@ Int_t TEntryList::Contains(Long64_t entry, TTree *tree)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by TKey and others to automatically add us to a directory when we are read from a file.
+
 void TEntryList::DirectoryAutoAdd(TDirectory* dir)
 {
-   // Called by TKey and others to automatically add us to a directory when we are read from a file.
-
    SetDirectory(dir);
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add entry \#entry to the list
+/// - When tree = 0, adds to the current list
+/// - When tree != 0, finds the list, corresponding to this tree
+/// - When tree is a chain, the entry is assumed to be global index and the local
+/// entry is recomputed from the treeoffset information of the chain
+
 Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 {
-   //Add entry #entry to the list
-   //When tree = 0, adds to the current list
-   //When tree != 0, finds the list, corresponding to this tree
-   //When tree is a chain, the entry is assumed to be global index and the local
-   //entry is recomputed from the treeoffset information of the chain
-
    if (!tree){
       if (!fLists) {
          if (!fBlocks) fBlocks = new TObjArray();
@@ -614,15 +605,15 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove entry \#entry from the list
+/// - When tree = 0, removes from the current list
+/// - When tree != 0, finds the list, corresponding to this tree
+/// - When tree is a chain, the entry is assumed to be global index and the local
+/// entry is recomputed from the treeoffset information of the chain
+
 Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
 {
-//Remove entry #entry from the list
-//When tree = 0, removes from the current list
-//When tree != 0, finds the list, corresponding to this tree
-//When tree is a chain, the entry is assumed to be global index and the local
-//entry is recomputed from the treeoffset information of the chain
-
    if (!tree){
       if (!fLists) {
          if (!fBlocks) return 0;
@@ -657,12 +648,12 @@ Bool_t TEntryList::Remove(Long64_t entry, TTree *tree)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of the entry \#index of this TEntryList in the TTree or TChain
+/// See also Next().
+
 Long64_t TEntryList::GetEntry(Int_t index)
 {
-   //return the number of the entry #index of this TEntryList in the TTree or TChain
-   //See also Next().
-
 
    if (index>=fN){
       return -1;
@@ -733,12 +724,12 @@ Long64_t TEntryList::GetEntry(Int_t index)
    return -1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the index of "index"-th non-zero entry in the TTree or TChain
+/// and the # of the corresponding tree in the chain
+
 Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
 {
-//return the index of "index"-th non-zero entry in the TTree or TChain
-//and the # of the corresponding tree in the chain
-
 //If shift is true, then when the requested entry is found in an entry list,
 //for which there is no corresponding tree in the chain, this list is not
 //taken into account, and entry from the next list with a tree is returned.
@@ -758,16 +749,16 @@ Long64_t TEntryList::GetEntryAndTree(Int_t index, Int_t &treenum)
    return result;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// To be able to re-localize the entry-list we identify the file by just the
+/// name and the anchor, i.e. we drop protocol, host, options, ...
+/// The result in the form 'file#anchor' (or 'file', if no anchor is present)
+/// is saved in 'fn'.
+/// The function optionally (is 'local' is defined) checks file locality (i.e.
+/// protocol 'file://') returning the result in '*local' .
+
 void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
 {
-   // To be able to re-localize the entry-list we identify the file by just the
-   // name and the anchor, i.e. we drop protocol, host, options, ...
-   // The result in the form 'file#anchor' (or 'file', if no anchor is present)
-   // is saved in 'fn'.
-   // The function optionally (is 'local' is defined) checks file locality (i.e.
-   // protocol 'file://') returning the result in '*local' .
-
    TUrl u(filename, kTRUE);
    if (local) *local = (!strcmp(u.GetProtocol(), "file")) ? kTRUE : kFALSE;
    if (strlen(u.GetAnchor()) > 0) {
@@ -779,14 +770,14 @@ void TEntryList::GetFileName(const char *filename, TString &fn, Bool_t *local)
    return;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the entry list, corresponding to treename and filename
+/// By default, the filename is first tried as is, and then, if the corresponding list
+/// is not found, the filename is expanded to the absolute path, and compared again.
+/// To avoid it, use option "ne"
+
 TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename, Option_t *opt)
 {
-   //return the entry list, correspoding to treename and filename
-   //By default, the filename is first tried as is, and then, if the corresponding list
-   //is not found, the filename is expanded to the absolute path, and compared again.
-   //To avoid it, use option "ne"
-
    if (gDebug > 1)
       Info("GetEntryList","tree: %s, file: %s",
                           (treename ? treename : "-"), (filename ? filename : "-"));
@@ -872,11 +863,11 @@ TEntryList *TEntryList::GetEntryList(const char *treename, const char *filename,
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Merge this list with the lists from the collection
+
 Int_t TEntryList::Merge(TCollection *list)
 {
-   //Merge this list with the lists from the collection
-
    if (!list) return -1;
    TIter next(list);
    TEntryList *elist = 0;
@@ -890,12 +881,12 @@ Int_t TEntryList::Merge(TCollection *list)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the next non-zero entry index (next after fLastIndexQueried)
+/// this function is faster than GetEntry()
+
 Long64_t TEntryList::Next()
 {
-   //return the next non-zero entry index (next after fLastIndexQueried)
-   //this function is faster than GetEntry()
-
    Long64_t result;
    if (fN == fLastIndexQueried+1 || fN==0){
       return -1;
@@ -978,12 +969,11 @@ Long64_t TEntryList::Next()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Checks if the array representation is more economical and if so, switches to it
 
-//______________________________________________________________________________
 void TEntryList::OptimizeStorage()
 {
-   //Checks if the array representation is more economical and if so, switches to it
-
    if (fBlocks){
       TEntryListBlock *block = 0;
       for (Int_t i=0; i<fNBlocks; i++){
@@ -993,14 +983,13 @@ void TEntryList::OptimizeStorage()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Print this list
+/// - option = "" - default - print the name of the tree and file
+/// - option = "all" - print all the entry numbers
 
-//______________________________________________________________________________
 void TEntryList::Print(const Option_t* option) const
 {
-   //Print this list
-   //option = "" - default - print the name of the tree and file
-   //option = "all" - print all the entry numbers
-
    TString opt = option;
    opt.ToUpper();
    if (fBlocks) {
@@ -1033,11 +1022,11 @@ void TEntryList::Print(const Option_t* option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this list
+
 void TEntryList::Reset()
 {
-   //Reset this list
-
    //Maybe not delete, but just reset the number of blocks to 0????
 
    if (fBlocks){
@@ -1065,25 +1054,25 @@ void TEntryList::Reset()
    fReapply = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add reference to directory dir. dir can be 0.
+
 void TEntryList::SetDirectory(TDirectory *dir)
 {
-   //Add reference to directory dir. dir can be 0.
-
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
    if (fDirectory) fDirectory->Append(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If a list for a tree with such name and filename exists, sets it as the current sublist
+/// If not, creates this list and sets it as the current sublist
+///
+/// ! the filename is taken as provided, no extensions to full path or url !
+
 void TEntryList::SetTree(const char *treename, const char *filename)
 {
-   //If a list for a tree with such name and filename exists, sets it as the current sublist
-   //If not, creates this list and sets it as the current sublist
-   //
-   // ! the filename is taken as provided, no extensions to full path or url !
-
    TEntryList *elist = 0;
 
    TString fn;
@@ -1185,25 +1174,25 @@ void TEntryList::SetTree(const char *treename, const char *filename)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If a list for a tree with such name and filename exists, sets it as the current sublist
+/// If not, creates this list and sets it as the current sublist
+/// The name of the file, where the tree is, is taken as
+/// `tree->GetTree()->GetCurrentFile()->GetName()`, and then expanded either to the absolute path,
+/// or to full url. If, for some reason, you want to provide
+/// the filename in a different format, use SetTree(const char *treename, const char *filename),
+/// where the filename is taken "as is".
+
 void TEntryList::SetTree(const TTree *tree)
 {
-   //If a list for a tree with such name and filename exists, sets it as the current sublist
-   //If not, creates this list and sets it as the current sublist
-   //The name of the file, where the tree is, is taken as
-   //tree->GetTree()->GetCurrentFile()->GetName(), and then expanded either to the absolute path,
-   //or to full url. If, for some reason, you want to provide
-   //the filename in a different format, use SetTree(const char *treename, const char *filename),
-   //where the filename is taken "as is".
-
    if (!tree) return;
    auto thisTree = tree->GetTree();
    if (!thisTree) return;
 
    TString treename;
-   if (TFile::Class() == tree->GetDirectory()->IsA())
+   if (tree->GetDirectory()->InheritsFrom("TFile")) {
       treename = thisTree->GetName();
-   else {
+   } else {
       treename = TString::Format("%s/%s",tree->GetDirectory()->GetName(),thisTree->GetName());
    }
 
@@ -1227,11 +1216,11 @@ void TEntryList::SetTree(const TTree *tree)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove all the entries of this entry list, that are contained in elist
+
 void TEntryList::Subtract(const TEntryList *elist)
 {
-   //remove all the entries of this entry list, that are contained in elist
-
    TEntryList *templist = 0;
    if (!fLists){
       if (!fBlocks) return;
@@ -1279,11 +1268,10 @@ void TEntryList::Subtract(const TEntryList *elist)
       }
    }
    return;
-
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEntryList operator||(TEntryList &elist1, TEntryList &elist2)
 {
    TEntryList eresult = elist1;
@@ -1297,16 +1285,16 @@ TEntryList operator||(TEntryList &elist1, TEntryList &elist2)
    return eresult;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Relocate the file paths.
+/// If `oldroot` is defined, replace `oldroot` with `newroot` in all file names,
+/// i.e. `oldroot/re/st/of/the/path` will become `newroot`/re/st/of/the/path`.
+/// If `oldroot` is null, the new path will be just `newroot/path`.
+/// Relocation is mandatory to use the entry-list with the same dataset at a different
+/// location (i.e. on a different cluster, machine or disks).
+
 Int_t TEntryList::RelocatePaths(const char *newroot, const char *oldroot)
 {
-   // Relocate the file paths.
-   // If 'oldroot' is defined, replace 'oldroot' with 'newroot' in all file names,
-   // i.e. <oldroot>/re/st/of/the/path will become <newroot>/re/st/of/the/path .
-   // If 'oldroot' is null, the new path will be just <newroot>/path .
-   // Relocation is mandatory to use the entry-list with the same dataset at a different
-   // location (i.e. on a different cluster, machine or disks).
-
    // At least newroot must be given
    if (!newroot || (newroot && strlen(newroot) <= 0)) {
       Warning("RelocatePaths", "the new location must be given!");
@@ -1356,17 +1344,17 @@ Int_t TEntryList::RelocatePaths(const char *newroot, const char *oldroot)
    return nrl;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Relocate entry list 'enlnm' in file 'fn' replacing 'oldroot' with 'newroot' in
+/// filenames. If 'enlnm' is null or '*' all entry lists in the file are relocated.
+/// Relocation is mandatory to use the entry-list with the same dataset at a different
+/// location (i.e. on a different cluster, machine or disks).
+/// This function can be called as many times as need to reach the desired result.
+/// The existing 'locations' can be checked qith TEntryList::Scan .
+
 Int_t TEntryList::Relocate(const char *fn,
                           const char *newroot, const char *oldroot, const char *enlnm)
 {
-   // Relocate entry list 'enlnm' in file 'fn' replacing 'oldroot' with 'newroot' in
-   // filenames. If 'enlnm' is null or '*' all entry lists in the file are relocated.
-   // Relocation is mandatory to use the entry-list with the same dataset at a different
-   // location (i.e. on a different cluster, machine or disks).
-   // This function can be called as many times as need to reach the desired result.
-   // The existing 'locations' can be checked qith TEntryList::Scan .
-
    // Open the file for updating
    TFile *fl = TFile::Open(fn, "UPDATE");
    if (!fl || (fl&& fl->IsZombie())) {
@@ -1405,17 +1393,18 @@ Int_t TEntryList::Relocate(const char *fn,
    return nrl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get in 'c' the string in common at the beginning of 'a' and 'b'
+///
+/// Return:
+/// - 0         a and b are not contained in each other, i.e. c != a && c != b
+/// - 1         a is contained in b, i.e. c == a (includes a == empty)
+/// - 2         b is contained in a, i.e. c == b (includes b == empty)
+/// - 3         b is a, i.e. c == b == a (includes a == b == empty)
+/// Auxiliary function for path scans.
+
 static Int_t GetCommonString(TString a, TString b, TString &c)
 {
-   // Get in 'c' the string in common at the beginning of 'a' and 'b'
-   // Return
-   //          0         a and b are not contained in each other, i.e. c != a && c != b
-   //          1         a is contained in b, i.e. c == a (includes a == empty)
-   //          2         b is contained in a, i.e. c == b (includes b == empty)
-   //          3         b is a, i.e. c == b == a (includes a == b == empty)
-   // Auxilliary function for path scans.
-
    if (a == b) {
       c = a;
       return 3;
@@ -1444,13 +1433,13 @@ static Int_t GetCommonString(TString a, TString b, TString &c)
    return 0;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan the paths to find the common roots. If 'roots' is defined, add
+/// the found roots to the list as TObjStrings.
+/// Return the number of roots found.
+
 Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
 {
-   // Scan the paths to find the common roots. If 'roots' is defined, add
-   // the found roots to the list as TObjStrings.
-   // Return the number of roots found.
-
    TList *xrl = roots ? roots : new TList;
 
    Int_t nrl = 0;
@@ -1484,7 +1473,7 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    if (notify) {
       Printf(" * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ *");
       Printf(" * Entry-list: %s", GetName());
-      Printf(" *   %d commont root paths found", nrl);
+      Printf(" *   %d common root paths found", nrl);
       nxr.Reset();
       while ((objs = (TObjString *) nxr())) {
          Printf(" *     %s", objs->GetName());
@@ -1501,13 +1490,13 @@ Int_t TEntryList::ScanPaths(TList *roots, Bool_t notify)
    return nrl;
 }
 
-//________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scan TEntryList in 'fn' to find the common parts of paths.
+/// If 'roots' is defined, add the found roots to the list as TObjStrings.
+/// Return the number of common root paths found.
+
 Int_t TEntryList::Scan(const char *fn, TList *roots)
 {
-   // Scan TEntryList in 'fn' to find the common parts of paths.
-   // If 'roots' is defined, add the found roots to the list as TObjStrings.
-   // Return the number of common root paths found.
-
    // Open the file for updating
    TFile *fl = TFile::Open(fn);
    if (!fl || (fl&& fl->IsZombie())) {
@@ -1537,12 +1526,12 @@ Int_t TEntryList::Scan(const char *fn, TList *roots)
    return nrs;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Custom streamer for class TEntryList to handle the different interpretation
+/// of fFileName between version 1 and >1 .
+
 void TEntryList::Streamer(TBuffer &b)
 {
-   // Custom streamer for class TEntryList to handle the different interpretation
-   // of fFileName between version 1 and >1 .
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);

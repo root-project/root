@@ -1,7 +1,16 @@
-// Draw a graph with text attached to each point.
-// The text is drawn in a TExec function, therefore if the text is
-// moved interactively, it will be automatically updated.
-// Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// Draw a graph with text attached to each point.
+/// The text is drawn in a TExec function attached to the TGraph,
+/// therefore if the text is
+/// moved interactively, it will be automatically updated.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
+
 void graphtext() {
    TCanvas *c = new TCanvas("c","A Simple Graph Example with Text",700,500);
    c->SetGrid();

@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include "TAttAxis.h"
+#include "TBuffer.h"
 #include "TStyle.h"
 #include "TVirtualPad.h"
 #include "TColor.h"
@@ -20,11 +21,26 @@
 
 ClassImp(TAttAxis)
 
+/** \class TAttAxis
+\ingroup Base
+\ingroup GraphicsAtt
 
-//______________________________________________________________________________
-//
-//  Manages histogram axis attributes
-//
+Manages histogram axis attributes.
+
+They are:
+
+  - The number of divisions
+  - The line axis' color
+  - The labels' color
+  - The labels' font
+  - The labels' offset
+  - The labels' size
+  - The tick marks'
+  - The axis title's offset
+  - The axis title's size
+  - The axis title's color
+  - The axis title's font
+*/
 
 TAttAxis::TAttAxis()
 {
@@ -32,19 +48,18 @@ TAttAxis::TAttAxis()
    ResetAttAxis();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
 
-//______________________________________________________________________________
 TAttAxis::~TAttAxis()
 {
-   // Destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy of the object.
 
-//______________________________________________________________________________
 void TAttAxis::Copy(TAttAxis &attaxis) const
 {
-   // Copy of the object.
-
    attaxis.fNdivisions  = fNdivisions;
    attaxis.fAxisColor   = fAxisColor;
    attaxis.fLabelColor  = fLabelColor;
@@ -58,12 +73,11 @@ void TAttAxis::Copy(TAttAxis &attaxis) const
    attaxis.fTitleFont   = fTitleFont;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset axis attributes
 
-//______________________________________________________________________________
 void TAttAxis::ResetAttAxis(Option_t *option)
 {
-   // Reset axis attributes
-
    if (gStyle) {
       fNdivisions  = gStyle->GetNdivisions(option);
       fAxisColor   = gStyle->GetAxisColor(option);
@@ -91,12 +105,11 @@ void TAttAxis::ResetAttAxis(Option_t *option)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save axis attributes as C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *subname)
 {
-    // Save axis attributes as C++ statement(s) on output stream out
-
    if (fNdivisions != 510) {
       out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
    }
@@ -144,157 +157,147 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set color of the line axis and tick marks
 
-//______________________________________________________________________________
 void TAttAxis::SetAxisColor(Color_t color, Float_t alpha)
 {
-   // Set color of the line axis and tick marks
-
    if (alpha<1.) fAxisColor = TColor::GetColorTransparent(color, alpha);
    else          fAxisColor = color;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set color of labels
 
-//______________________________________________________________________________
 void TAttAxis::SetLabelColor(Color_t color, Float_t alpha)
 {
-   // Set color of labels
-
    if (alpha<1.) fLabelColor = TColor::GetColorTransparent(color, alpha);
    else          fLabelColor = color;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set labels' font.
 
-//______________________________________________________________________________
 void TAttAxis::SetLabelFont(Style_t font)
 {
-   // Set labels' font.
-
    fLabelFont = font;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set distance between the axis and the labels
+/// The distance is expressed in per cent of the pad width
 
-//______________________________________________________________________________
 void TAttAxis::SetLabelOffset(Float_t offset)
 {
-   // Set distance between the axis and the labels
-   // The distance is expressed in per cent of the pad width
-
    fLabelOffset = offset;
    if (gPad) gPad->Modified();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of axis labels
+/// The size is expressed in per cent of the pad width
+
 void TAttAxis::SetLabelSize(Float_t size)
 {
-   // Set size of axis labels
-   // The size is expressed in per cent of the pad width
-
    fLabelSize = size;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the number of divisions for this axis.
+///
+///  - if optim = kTRUE (default), the number of divisions will be
+///                     optimized around the specified value.
+///  - if optim = kFALSE, or n < 0, the axis will be forced to use
+///                     exactly n divisions.
+///~~~ {.cpp}
+/// n = n1 + 100*n2 + 10000*n3
+///~~~
+/// Where n1 is the number of primary divisions,
+/// n2 is the number of second order divisions and
+/// n3 is the number of third order divisions.
+///
+/// e.g. 512 means 12 primary and 5 secondary divisions.
+///
+/// If the number of divisions is "optimized" (see above) n1, n2, n3 are
+/// maximum values.
 
-//______________________________________________________________________________
 void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {
-   // Set the number of divisions for this axis.
-   //
-   // if optim = kTRUE (default), the number of divisions will be
-   //                   optimized around the specified value.
-   // if optim = kFALSE, or n < 0, the axis will be forced to use
-   //                   exactly n divisions.
-   //
-   // n = n1 + 100*n2 + 10000*n3
-   //
-   // Where n1 is the number of primary divisions,
-   // n2 is the number of second order divisions and
-   // n3 is the number of third order divisions.
-   //
-   // e.g. 512 means 12 primary and 5 secondary divisions.
-   //
-   // If the number of divisions is "optimized" (see above) n1, n2, n3 are
-   // maximum values.
-
    fNdivisions = n;
    if (!optim) fNdivisions = -abs(n);
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///see function above
 
-//______________________________________________________________________________
 void TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim)
 {
-   //see function above
    SetNdivisions(n1+100*n2+10000*n3, optim);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set tick mark length
+/// The length is expressed in per cent of the pad width
+
 void TAttAxis::SetTickLength(Float_t length)
 {
-   // Set tick mark length
-   // The length is expressed in per cent of the pad width
-
    fTickLength = length;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set distance between the axis and the axis title
+/// Offset is a correction factor with respect to the "standard" value.
+///  - offset = 1   uses the default position that is computed in function
+///                 of the label offset and size.
+///  - offset = 1.2 will add 20 per cent more to the default offset.
 
-//______________________________________________________________________________
 void TAttAxis::SetTitleOffset(Float_t offset)
 {
-   // Set distance between the axis and the axis title
-   // Offset is a correction factor with respect to the "standard" value.
-   // offset = 1  uses the default position that is computed in function
-   // of the label offset and size.
-   // offset = 1.2 will add 20 per cent more to the default offset.
-
    fTitleOffset = offset;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set size of axis title
+/// The size is expressed in per cent of the pad width
 
-//______________________________________________________________________________
 void TAttAxis::SetTitleSize(Float_t size)
 {
-   // Set size of axis title
-   // The size is expressed in per cent of the pad width
-
    fTitleSize = size;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set color of axis title
 
-//______________________________________________________________________________
 void TAttAxis::SetTitleColor(Color_t color)
 {
-   // Set color of axis title
-
    fTitleColor = color;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the title font.
 
-//______________________________________________________________________________
 void TAttAxis::SetTitleFont(Style_t font)
 {
-   // Set the title font.
-
    fTitleFont = font;
    if (gPad) gPad->Modified();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object of class TAttAxis.
 
-//______________________________________________________________________________
 void TAttAxis::Streamer(TBuffer &R__b)
 {
-   // Stream an object of class TAttAxis.
-
    if (R__b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

@@ -12,19 +12,11 @@
 #ifndef ROOT_TGeoStateInfo
 #define ROOT_TGeoStateInfo
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
 
 class TGeoNode;
 class TGeoPolygon;
 struct TGeoStateInfo;
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoStateInfo - statefull info for the current geometry level.         //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 struct TGeoStateInfo {
    TGeoNode            *fNode;           // Node to which applies

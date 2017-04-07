@@ -32,10 +32,6 @@
 
 using namespace std;
 
-ClassImp(RooMath)
-;
-
-
 namespace faddeeva_impl {
     static inline void cexp(double& re, double& im)
     {
@@ -682,24 +678,4 @@ Double_t RooMath::interpolate(Double_t xa[], Double_t ya[], Int_t n, Double_t x)
     y += dy ;
   }
   return y ;
-}
-
-
-#include <map>
-void RooMath::warn(const char* oldfun, const char* newfun)
-{
-    static std::map<const char*, int> nwarn;
-    if (nwarn[oldfun] < 1<<12) {
-	++nwarn[oldfun];
-	if (newfun) {
-	    std::cout << "[#0] WARN: RooMath::" << oldfun <<
-		" is deprecated, please use " <<
-		newfun << " instead." << std::endl;
-	} else {
-	    std::cout << "[#0] WARN: RooMath::" << oldfun <<
-		" is deprecated, and no longer needed, "
-		"you can remove the call to " <<
-		oldfun << " entirely." << std::endl;
-	}
-    }
 }

@@ -12,16 +12,6 @@ PYROOTDIR    := $(MODDIR)
 PYROOTDIRS   := $(PYROOTDIR)/src
 PYROOTDIRI   := $(PYROOTDIR)/inc
 
-##### python64 #####
-ifeq ($(ARCH),macosx64)
-ifeq ($(MACOSX_MINOR),5)
-PYTHON64S    := $(MODDIRS)/python64.c
-PYTHON64O    := $(call stripsrc,$(PYTHON64S:.c=.o))
-PYTHON64     := bin/python64
-PYTHON64DEP  := $(PYTHON64O:.o=.d)
-endif
-endif
-
 ##### libPyROOT #####
 PYROOTL      := $(MODDIRI)/LinkDef.h
 PYROOTDS     := $(call stripsrc,$(MODDIRS)/G__PyROOT.cxx)
@@ -41,23 +31,48 @@ endif
 PYROOTMAP    := $(PYROOTLIB:.$(SOEXT)=.rootmap)
 
 ROOTPYS      := $(wildcard $(MODDIR)/*.py)
+ROOTAASS     := $(wildcard $(MODDIR)/ROOTaaS/* $(MODDIR)/ROOTaaS/*/* $(MODDIR)/ROOTaaS/*/*/*)
+# Above includes ROOTaaS/config which is a directory; filter those out.
+# Problem: $(dir $(ROOTAASS)) gives ROOTaaS/config/ thus patsubst %/, %
+ROOTAASS     := $(filter-out $(sort $(patsubst %/,%,$(dir $(ROOTAASS)))),$(ROOTAASS))
+
 ifeq ($(ARCH),win32)
 ROOTPY       := $(subst $(MODDIR),bin,$(ROOTPYS))
-bin/%.py: $(MODDIR)/%.py; cp $< $@
+ROOTAAS      := $(subst $(MODDIR),bin,$(ROOTAASS))
+bin/%.py: $(MODDIR)/%.py
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp $< $@
+bin/ROOTaaS/%: $(MODDIR)/ROOTaaS/%
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp -R $< $@
 else
 ROOTPY       := $(subst $(MODDIR),$(LPATH),$(ROOTPYS))
-$(LPATH)/%.py: $(MODDIR)/%.py; cp $< $@
+ROOTAAS      := $(subst $(MODDIR),$(LPATH),$(ROOTAASS))
+$(LPATH)/%.py: $(MODDIR)/%.py
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp $< $@
+$(LPATH)/ROOTaaS/%: $(MODDIR)/ROOTaaS/%
+	@[ -d $(dir $@) ] || mkdir -p $(dir $@)
+	cp -R $< $@
 endif
 ROOTPYC      := $(ROOTPY:.py=.pyc)
 ROOTPYO      := $(ROOTPY:.py=.pyo)
+ROOTAASC     := $(ROOTAAS:.py=.pyc)
+ROOTAASO     := $(ROOTAAS:.py=.pyo)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
+PYROOTH_REL  := $(patsubst $(MODDIRI)/%.h,include/%.h,$(PYROOTH))
+ALLHDRS      += $(PYROOTH_REL)
 ALLLIBS      += $(PYROOTLIB)
 ALLMAPS      += $(PYROOTMAP)
-
-ALLEXECS     += $(PYTHON64)
-INCLUDEFILES += $(PYTHON64DEP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(PYROOTH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module $(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(PYROOTLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(PYROOTDEP)
@@ -72,12 +87,14 @@ include/%.h:    $(PYROOTDIRI)/%.h
 %.pyo: %.py;    python -O -c 'import py_compile; py_compile.compile( "$<" )'
 
 $(PYROOTLIB):   $(PYROOTO) $(PYROOTDO) $(ROOTPY) $(ROOTPYC) $(ROOTPYO) \
-                $(ROOTLIBSDEP) $(PYTHONLIBDEP)
+                $(ROOTLIBSDEP) $(PYTHONLIBDEP) \
+                $(ROOTAAS) $(ROOTAASC) $(ROOTAASO)
+
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		  "$(SOFLAGS)" libPyROOT.$(SOEXT) $@ \
 		  "$(PYROOTO) $(PYROOTDO)" \
 		  "$(ROOTULIBS) $(RPATH) $(ROOTLIBS) $(PYROOTLIBEXTRA) \
-		   $(PYTHONLIBDIR) $(PYTHONLIB)" "$(PYTHONLIBFLAGS)"
+		   $(PYTHONLIBDIR) $(PYTHONLIB) $(PYTHONLIBFLAGS)"
 ifeq ($(ARCH),win32)
 	link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT \
 	lib/libPyROOT.lib -nodefaultlib kernel32.lib msvcrt.lib \
@@ -104,36 +121,32 @@ $(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(PYROOTDS) $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
-$(PYTHON64):    $(PYTHON64O)
-		$(CC) $(LDFLAGS) -o $@ $(PYTHON64O) \
-		   $(PYTHONLIBDIR) $(PYTHONLIB)
-
-all-$(MODNAME): $(PYROOTLIB) $(PYTHON64)
+all-$(MODNAME): $(PYROOTLIB)
 
 clean-$(MODNAME):
-		@rm -f $(PYROOTO) $(PYROOTDO) $(PYTHON64O)
+		@rm -f $(PYROOTO) $(PYROOTDO)
 
 clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(PYROOTDEP) $(PYROOTDS) $(PYROOTDH) $(PYROOTLIB) \
 		   $(ROOTPY) $(ROOTPYC) $(ROOTPYO) $(PYROOTMAP) \
-		   $(PYROOTPYD) $(PYTHON64DEP) $(PYTHON64)
+		   $(PYROOTPYD)
+		@rm -rf $(LPATH)/ROOTaaS bin/ROOTaaS
 
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(PYROOTO): CXXFLAGS += $(PYTHONINCDIR:%=-I%)
-$(PYTHON64O): CFLAGS += $(PYTHONINCDIR:%=-I%)
 ifeq ($(GCC_MAJOR),4)
 $(PYROOTO): CXXFLAGS += -fno-strict-aliasing
 endif
 ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
 # Building with clang or GCC
-$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-error=format 
+$(PYROOTO) $(PYROOTDO): CXXFLAGS += -Wno-error=format
 endif
 
 ifneq ($(CLANG_MAJOR),)
-# Building with clang 
-$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
+# Building with clang
+$(PYROOTO) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
 endif

@@ -9,6 +9,7 @@
 #   CMD   Command to be executed for the test.
 #   PRE   Command to be executed before the test command.
 #   POST  Command to be executed after the test command.
+#   IN    File to be used as input
 #   OUT   File to collect stdout and stderr.
 #   ENV   Environment VAR1=Value1;VAR2=Value2.
 #   CWD   Current working directory.
@@ -78,9 +79,17 @@ if(ENV)
   endforeach()
 endif()
 
-if(WIN32 AND SYS)
-  file(TO_NATIVE_PATH ${SYS}/bin _path)
-  set(ENV{PATH} "${_path};$ENV{PATH}")
+if(SYS)
+  if(WIN32)
+    file(TO_NATIVE_PATH ${SYS}/bin _path)
+    set(ENV{PATH} "${_path};$ENV{PATH}")
+  elseif(APPLE)
+    set(ENV{PATH} ${SYS}/bin:$ENV{PATH})
+    set(ENV{DYLD_LIBRARY_PATH} ${SYS}/lib:$ENV{DYLD_LIBRARY_PATH})
+  else()
+    set(ENV{PATH} ${SYS}/bin:$ENV{PATH})
+    set(ENV{LD_LIBRARY_PATH} ${SYS}/lib:$ENV{LD_LIBRARY_PATH})
+  endif()
 endif()
 
 #---Copy files to current direcotory----------------------------------------------------------------
@@ -104,14 +113,16 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
-  string (REPLACE ";" " " _strcmd "${_cmd}")
-  if(OUT)
+  if(IN)
+    set(_input INPUT_FILE ${IN})
+  endif()
 
+  if(OUT)
     # log stdout
     if(CHECKOUT)
       set(_chkout OUTPUT_VARIABLE _outvar)
     else()
-      set(_chkout "")
+      set(_chkout OUTPUT_VARIABLE _outvar2)
     endif()
 
     # log stderr
@@ -120,10 +131,10 @@ if(CMD)
     elseif(ERRREF)
       set(_chkerr ERROR_VARIABLE _errvar)
     else()
-      set(_chkerr "")
+      set(_chkerr ERROR_VARIABLE _errvar2)
     endif()
 
-    execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
+    execute_process(COMMAND ${_cmd} ${_input} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
 
     string(REGEX REPLACE "([.]*)[;][-][e][;]([^;]+)([.]*)" "\\1;-e '\\2\\3'" res "${_cmd}")
     string(REPLACE ";" " " res "${res}")
@@ -131,11 +142,11 @@ if(CMD)
     message("cd ${CWD}")
     message("${res}")
     message("-- BEGIN TEST OUTPUT --")
-    message("${_outvar}")
+    message("${_outvar}${_outvar2}")
     message("-- END TEST OUTPUT --")
-    if(_errvar)
+    if(_errvar OR _errvar2)
       message("-- BEGIN TEST ERROR --")
-      message("${_errvar}")
+      message("${_errvar}${_errvar2}")
       message("-- END TEST ERROR --")
     endif()
 
@@ -144,7 +155,7 @@ if(CMD)
       file(WRITE ${ERR} "${_errvar}")
     endif()
 
-    if(DEFINED RC AND (NOT _rc EQUAL RC))
+    if(DEFINED RC AND (NOT "${_rc}" STREQUAL "${RC}"))
       message(FATAL_ERROR "error code: ${_rc}")
     elseif(NOT DEFINED RC AND _rc)
       message(FATAL_ERROR "error code: ${_rc}")
@@ -152,6 +163,7 @@ if(CMD)
 
     if(CNVCMD)
       string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
+      string(REPLACE "@" "=" _outcnvcmd "${_outcnvcmd}")
       execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
       file(WRITE ${OUT} "${_outvar}")
       if(_rc)
@@ -178,6 +190,17 @@ if(CMD)
   else()
     execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
 
+    if(_rc STREQUAL "Segmentation fault" OR _rc EQUAL 11)
+       message(STATUS "Got ${_rc}, retrying again once more... with coredump enabled")
+       string (REPLACE ";" " " _cmd_str "${_cmd}")
+       file(WRITE run_with_coredump.sh "
+pwd
+ulimit -c unlimited
+${_cmd_str}
+")
+       execute_process(COMMAND bash run_with_coredump.sh ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
+    endif()
+
     if(DEFINED RC AND (NOT _rc EQUAL RC))
       message(FATAL_ERROR "error code: ${_rc}")
     elseif(NOT DEFINED RC AND _rc)
@@ -201,7 +224,7 @@ if(POST)
 endif()
 
 if(OUTREF)
-  execute_process(COMMAND ${diff_cmd} ${OUT} ${OUTREF} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  execute_process(COMMAND ${diff_cmd} ${OUTREF} ${OUT} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
   if(_outvar)
     message("-- BEGIN OUTDIFF OUTPUT --")
     message("${_outvar}")
@@ -213,7 +236,7 @@ if(OUTREF)
 endif()
 
 if(ERRREF)
-  execute_process(COMMAND ${diff_cmd} ${ERR} ${ERRREF} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
+  execute_process(COMMAND ${diff_cmd} ${ERRREF} ${ERR} OUTPUT_VARIABLE _outvar ERROR_VARIABLE _outvar RESULT_VARIABLE _rc)
   if(_outvar)
     message("-- BEGIN ERRDIFF OUTPUT --")
     message("${_outvar}")

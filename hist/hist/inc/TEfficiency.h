@@ -6,21 +6,16 @@
 #include <utility>
 
 //ROOT header
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
+
+#include "TFitResultPtr.h"
+
 
 class TCollection;
 class TF1;
@@ -28,9 +23,6 @@ class TGraphAsymmErrors;
 class TH1;
 class TH2;
 class TList;
-
-//|TEfficiency
-//------------------------
 
 class TEfficiency: public TNamed, public TAttLine, public TAttFill, public TAttMarker
 {
@@ -45,7 +37,8 @@ public:
       kFFC,                             //Feldman-Cousins interval
       kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
       kBUniform,                        //Prior ~ Uniform = Beta(1,1)
-      kBBayesian                        //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+      kBBayesian,                       //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+      kMidP                             //Mid-P Lancaster interval
    };
 
 protected:
@@ -54,7 +47,7 @@ protected:
       Double_t      fBeta_beta;              //global parameter for prior beta distribution (default = 1)
       std::vector<std::pair<Double_t, Double_t> > fBeta_bin_params;  // parameter for prior beta distribution different bin by bin
                                                                  // (default vector is empty)
-      Double_t      (*fBoundary)(Int_t,Int_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
+      Double_t      (*fBoundary)(Double_t,Double_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
       Double_t      fConfLevel;              //confidence level (default = 0.683, 1 sigma)
       TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
       TList*        fFunctions;              //->pointer to list of functions
@@ -99,6 +92,7 @@ public:
       ~TEfficiency();
 
       void          Add(const TEfficiency& rEff) {*this += rEff;}
+      void          Browse(TBrowser*){Draw();}
       TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
       TH2*          CreateHistogram(Option_t * opt = "") const;
       virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
@@ -107,7 +101,7 @@ public:
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       void          FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
-      Int_t         Fit(TF1* f1,Option_t* opt="");
+      TFitResultPtr Fit(TF1* f1,Option_t* opt="");
       // use trick of -1 to return global parameters
       Double_t      GetBetaAlpha(Int_t bin = -1) const {return (fBeta_bin_params.size() > (UInt_t)bin) ? fBeta_bin_params[bin].first : fBeta_alpha;}
       Double_t      GetBetaBeta(Int_t bin =  -1) const {return (fBeta_bin_params.size() > (UInt_t)bin) ? fBeta_bin_params[bin].second : fBeta_beta;}
@@ -157,7 +151,7 @@ public:
       void          SetTitle(const char* title);
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
-      void          SetUseWeightedEvents();
+      void          SetUseWeightedEvents(Bool_t on = kTRUE);
       void          SetWeight(Double_t weight);
       Bool_t        UsesBayesianStat() const {return TestBit(kIsBayesian);}
       Bool_t        UsesPosteriorMode() const   {return TestBit(kPosteriorMode) && TestBit(kIsBayesian);}
@@ -169,20 +163,22 @@ public:
       static Bool_t CheckBinning(const TH1& pass,const TH1& total);
       static Bool_t CheckConsistency(const TH1& pass,const TH1& total,Option_t* opt="");
       static Bool_t CheckEntries(const TH1& pass,const TH1& total,Option_t* opt="");
+      static Bool_t CheckWeights(const TH1& pass,const TH1& total);
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
                               Double_t alpha,Double_t beta,Double_t level=0.683,
                               const Double_t* w=0,Option_t* opt="");
       static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
 
       //calculating boundaries of confidence intervals
-      static Double_t AgrestiCoull(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t Normal(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t Wilson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Double_t FeldmanCousins(Int_t total,Int_t passed,Double_t level,Bool_t bUpper);
-      static Bool_t FeldmanCousinsInterval(Int_t total,Int_t passed,Double_t level,Double_t & lower, Double_t & upper);
+      static Double_t AgrestiCoull(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t ClopperPearson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t Normal(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t Wilson(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Double_t FeldmanCousins(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
+      static Bool_t FeldmanCousinsInterval(Double_t total,Double_t passed,Double_t level,Double_t & lower, Double_t & upper);
+      static Double_t MidPInterval(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
       // Bayesian functions
-      static Double_t Bayesian(Int_t total,Int_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
+      static Double_t Bayesian(Double_t total,Double_t passed,Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper, Bool_t bShortest = false);
       // helper functions for Bayesian statistics
       static Double_t BetaCentralInterval(Double_t level,Double_t alpha,Double_t beta,Bool_t bUpper);
       static Bool_t   BetaShortestInterval(Double_t level,Double_t alpha,Double_t beta,Double_t & lower, Double_t & upper);

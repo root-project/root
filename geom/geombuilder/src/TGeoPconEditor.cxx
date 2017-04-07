@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -45,12 +45,13 @@ enum ETGeoPconWid {
    kPCON_NAME, kPCON_NZ, kPCON_PHI1, kPCON_DPHI, kPCON_APPLY, kPCON_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for polycone editor
+
 TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for polycone editor
    fShape   = 0;
    fNsections = 0;
    fSections = 0;
@@ -64,7 +65,7 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
    fIsShapeEditable = kFALSE;
 
    fLHsect = new TGLayoutHints(kLHintsTop | kLHintsLeft, 0,0,2,2);
-      
+
    // TextEntry for shape name
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kPCON_NAME);
@@ -87,7 +88,7 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
    fENz->Associate(this);
    f1->AddFrame(fENz, new TGLayoutHints(kLHintsRight, 2, 2, 2, 2));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
-   
+
    // Number entry for Phi1
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Phi1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -126,12 +127,12 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
    CreateSections(2);
 
    AddFrame(fCan, new TGLayoutHints(kLHintsLeft, 0, 0, 4, 4));
-      
+
    // Delayed draw
    fDFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(fDFrame, "Delayed draw");
    fDFrame->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fDFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    fBFrame = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -141,14 +142,15 @@ TGeoPconEditor::TGeoPconEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(fBFrame, "Undo");
    fBFrame->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));  
+   AddFrame(fBFrame,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPconEditor::~TGeoPconEditor()
 {
-// Destructor
    if (fSections) delete fSections;
    if (fZi) delete [] fZi;
    if (fRmini) delete [] fRmini;
@@ -156,16 +158,17 @@ TGeoPconEditor::~TGeoPconEditor()
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoPconEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fENz->Connect("ValueSet(Long_t)", "TGeoPconEditor", this, "DoNz()");
    fEPhi1->Connect("ValueSet(Long_t)", "TGeoPconEditor", this, "DoPhi()");
    fEDPhi->Connect("ValueSet(Long_t)", "TGeoPconEditor", this, "DoPhi()");
@@ -176,14 +179,15 @@ void TGeoPconEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a given pcon.
+
 void TGeoPconEditor::SetModel(TObject* obj)
 {
-   // Connect to a given pcon.
    if (obj == 0 || (obj->IsA() != TGeoPcon::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoPcon*)obj;
    const char *sname = fShape->GetName();
    if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
@@ -198,18 +202,19 @@ void TGeoPconEditor::SetModel(TObject* obj)
    fDPhii = fShape->GetDphi();
    CreateSections(nsections);
    UpdateSections();
-   
+
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change dynamically the number of sections.
+
 void TGeoPconEditor::CreateSections(Int_t inew)
 {
-// Change dynamically the number of sections.
    if (inew == fNsections) return;
    if (!fSections) fSections = new TObjArray(8);
    TGCompositeFrame *cont = (TGCompositeFrame*)fCan->GetContainer();
@@ -222,7 +227,7 @@ void TGeoPconEditor::CreateSections(Int_t inew)
          fSections->Add(sect);
          cont->AddFrame(sect, fLHsect);
          sect->Connect("Changed(Int_t)", "TGeoPconEditor", this, "DoSectionChange(Int_t)");
-      }   
+      }
    } else {
    // some sections need to be removed
       for (isect=inew; isect<fNsections; isect++) {
@@ -234,18 +239,19 @@ void TGeoPconEditor::CreateSections(Int_t inew)
          fSections->RemoveAt(isect);
          delete sect;
       }
-   }   
+   }
    fNsections = inew;
    fCan->MapSubwindows();
    cont->Layout();
    cont->MapWindow();
    fCan->Layout();
-}         
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check validity of sections
+
 Bool_t TGeoPconEditor::CheckSections(Bool_t change)
 {
-// Check validity of sections
    TGeoPconSection *sect;
    Double_t zmin = 0;
    Double_t rmin = 0, rmax = 1.;
@@ -254,24 +260,25 @@ Bool_t TGeoPconEditor::CheckSections(Bool_t change)
       if (isect && (sect->GetZ()<zmin)) {
          if (!change) return kFALSE;
          sect->SetZ(zmin+1.);
-      }   
+      }
       zmin = sect->GetZ();
       if (sect->GetRmin()<0 ||
           (sect->GetRmax()<0) || ((sect->GetRmin()==0) && (sect->GetRmax()==0))) {
          if (!change) return kFALSE;
          sect->SetRmin(rmin);
          sect->SetRmax(rmax);
-      }   
+      }
       rmin = sect->GetRmin();
       rmax = sect->GetRmax();
    }
-   return kTRUE;   
+   return kTRUE;
 }
-      
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update sections according fShape.
+
 void TGeoPconEditor::UpdateSections()
 {
-// Update sections according fShape.
    if (fZi) delete [] fZi;
    if (fRmini) delete [] fRmini;
    if (fRmaxi) delete [] fRmaxi;
@@ -287,27 +294,30 @@ void TGeoPconEditor::UpdateSections()
       fRmini[isect] = fShape->GetRmin(isect);
       sect->SetRmax(fShape->GetRmax(isect));
       fRmaxi[isect] = fShape->GetRmax(isect);
-   }   
-}      
-      
-//______________________________________________________________________________
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if shape drawing is delayed.
+
 Bool_t TGeoPconEditor::IsDelayed() const
 {
-// Check if shape drawing is delayed.
    return (fDelayed->GetState() == kButtonDown);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform name change
+
 void TGeoPconEditor::DoName()
 {
-   // Perform name change
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoPconEditor::DoApply()
 {
-// Slot for applying modifications.
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
    fApply->SetEnabled(kFALSE);
@@ -345,12 +355,12 @@ void TGeoPconEditor::DoApply()
                view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                               orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
                Update();
-            }                  
+            }
          } else Update();
-      }   
+      }
       return;
-   }           
-   // No need to call SetDimensions   
+   }
+   // No need to call SetDimensions
    if (TMath::Abs(phi1-fShape->GetPhi1())>1.e-6) fShape->Phi1() = phi1;
    if (TMath::Abs(dphi-fShape->GetDphi())>1.e-6)  fShape->Dphi() = dphi;
    for (isect=0; isect<fNsections; isect++) {
@@ -358,7 +368,7 @@ void TGeoPconEditor::DoApply()
       fShape->Z(isect) = sect->GetZ();
       fShape->Rmin(isect) = sect->GetRmin();
       fShape->Rmax(isect) = sect->GetRmax();
-   }   
+   }
    fShape->ComputeBBox();
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -371,15 +381,16 @@ void TGeoPconEditor::DoApply()
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change parameters of section isect;
+
 void TGeoPconEditor::DoSectionChange(Int_t isect)
 {
-// Change parameters of section isect;
    TGeoPconSection *sect, *sectlo=0, *secthi=0;
    sect = (TGeoPconSection*)fSections->At(isect);
    if (isect) sectlo = (TGeoPconSection*)fSections->At(isect-1);
@@ -388,53 +399,57 @@ void TGeoPconEditor::DoSectionChange(Int_t isect)
    if (sectlo && z<sectlo->GetZ()) {
       z = sectlo->GetZ();
       sect->SetZ(z);
-   }   
+   }
    if (secthi && z>secthi->GetZ()) {
       z = secthi->GetZ();
       sect->SetZ(z);
-   } 
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change number of sections.
+
 void TGeoPconEditor::DoNz()
 {
-// Change number of sections.
    Int_t nz = fENz->GetIntNumber();
    if (nz < 2) {
       nz = 2;
       fENz->SetNumber(nz);
-   }   
+   }
    CreateSections(nz);
    CheckSections(kTRUE);
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change phi range.
+
 void TGeoPconEditor::DoPhi()
 {
-// Change phi range.
    Double_t phi1 = fEPhi1->GetNumber();
    Double_t dphi = fEDPhi->GetNumber();
    if (TMath::Abs(phi1)>360) fEPhi1->SetNumber(0);
    if (dphi>360) fEDPhi->SetNumber(360);
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for signaling modifications.
+
 void TGeoPconEditor::DoModified()
 {
-// Slot for signaling modifications.
    fApply->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoPconEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fENz->SetNumber(fNsecti);
    CreateSections(fNsecti);
    fEPhi1->SetNumber(fPhi1i);
@@ -445,7 +460,7 @@ void TGeoPconEditor::DoUndo()
       sect->SetZ(fZi[isect]);
       sect->SetRmin(fRmini[isect]);
       sect->SetRmax(fRmaxi[isect]);
-   }   
+   }
    DoApply();
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
@@ -453,17 +468,17 @@ void TGeoPconEditor::DoUndo()
 
 ClassImp(TGeoPconSection)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGeoPconSection::TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id)
                 :TGCompositeFrame(p,w,h,kHorizontalFrame | kFixedWidth)
 {
-   // Constructor.
-
    fNumber = id;
    TGTextEntry *nef;
    // Label with number
    AddFrame(new TGLabel(this, TString::Format("#%i",id)), new TGLayoutHints(kLHintsLeft, 2, 4, 6, 0));
-   
+
    // Z entry
    fEZ = new TGNumberEntry(this, 0., 5);
    fEZ->Resize(40,fEZ->GetDefaultHeight());
@@ -487,107 +502,120 @@ TGeoPconSection::TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id
    nef->SetToolTipText("Enter the maximum radius");
    fERmax->Associate(this);
    AddFrame(fERmax, new TGLayoutHints(kLHintsLeft, 2, 2, 2, 2));
-   
+
    ConnectSignals2Slots();
    MapSubwindows();
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPconSection::~TGeoPconSection()
 {
-// Destructor
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide daughter frames
+
 void TGeoPconSection::HideDaughters()
 {
-// Hide daughter frames
    fEZ->UnmapWindow();
    fERmin->UnmapWindow();
    fERmax->UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Changed(Int_t) signal.
+
 void TGeoPconSection::Changed(Int_t i)
 {
-// Emit Changed(Int_t) signal.
    Emit("Changed(Int_t)", i);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoPconSection::ConnectSignals2Slots()
 {
-// Connect signals to slots.
    fEZ->Connect("ValueSet(Long_t)", "TGeoPconSection", this, "DoZ()");
    fERmin->Connect("ValueSet(Long_t)", "TGeoPconSection", this, "DoRmin()");
    fERmax->Connect("ValueSet(Long_t)", "TGeoPconSection", this, "DoRmax()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Z value getter
+
 Double_t TGeoPconSection::GetZ() const
 {
-// Z value getter
    return fEZ->GetNumber();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rmin value getter
+
 Double_t TGeoPconSection::GetRmin() const
 {
-// Rmin value getter
    return fERmin->GetNumber();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rmax value getter
+
 Double_t TGeoPconSection::GetRmax() const
 {
-// Rmax value getter
    return fERmax->GetNumber();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Z value setter
+
 void TGeoPconSection::SetZ(Double_t z)
 {
-// Z value setter
    fEZ->SetNumber(z);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rmin value setter
+
 void TGeoPconSection::SetRmin(Double_t rmin)
 {
-// Rmin value setter
    fERmin->SetNumber(rmin);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rmax value setter
+
 void TGeoPconSection::SetRmax(Double_t rmax)
 {
-// Rmax value setter
    fERmax->SetNumber(rmax);
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Z slot.
+
 void TGeoPconSection::DoZ()
 {
-// Z slot.
    Changed(fNumber);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Rmin slot.
+
 void TGeoPconSection::DoRmin()
 {
-// Rmin slot.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmin>rmax-1.e-8) fERmin->SetNumber(rmax);
    Changed(fNumber);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Rmax slot.
+
 void TGeoPconSection::DoRmax()
 {
-// Rmax slot.
    Double_t rmin = fERmin->GetNumber();
    Double_t rmax = fERmax->GetNumber();
    if (rmax<rmin+1.e-8) fERmax->SetNumber(rmin);

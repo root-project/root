@@ -3,6 +3,9 @@
 ############################################################################
 
 #---Define package related variables-----------------------------------------------------------------
+
+if(builtin_unuran)
+
 set(UNR_SRCDIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(UNR_VERSION "1.8.0-root")
 set(UNR_TARNAME "unuran-${UNR_VERSION}")
@@ -12,7 +15,11 @@ set(UNR_UNTARDIR ${CMAKE_CURRENT_BINARY_DIR}/${UNR_TARNAME})
 
 #---Untar sources at configuration/generation time (needed for listing sources)
 if(NOT EXISTS ${UNR_UNTARDIR})
-  execute_process( COMMAND cmake -E tar xzf ${UNR_TARGZFILE}
+  execute_process( COMMAND ${CMAKE_COMMAND} -E tar xzf ${UNR_TARGZFILE}
+                   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
+  # This is necessary to replace the config.guess of unuran 1.8.0 as it does not allow to compile the 
+  # package on arm64.
+  execute_process( COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/config.guess_patch1 ${UNR_UNTARDIR}/autoconf/config.guess
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR} )
 endif()
 
@@ -43,11 +50,9 @@ endif()
 
 #---We need to disable some warnings-------------------------------------------------------------------
 string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
-  add_definitions(-Wno-parentheses-equality)
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-parentheses-equality)
 endif()
-
-ROOT_USE_PACKAGE(hist/hist)
 
 include_directories(BEFORE ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)
 add_definitions(-DHAVE_CONFIG_H)
@@ -60,8 +65,17 @@ set(unrsources ${UNR_UNTARDIR}/src/utils/*.c
                ${UNR_UNTARDIR}/src/tests/*.c
                ${UNR_UNTARDIR}/src/uniform/*.c
                ${UNR_UNTARDIR}/src/urng/*.c )
+set(unrconfig ${UNR_UNTARDIR}/config.h)
+
+else()
+
+include_directories(${UNURAN_INCLUDE_DIRS})
+set(unrsources)
+set(unrconfig)
+
+endif()
 
 ROOT_GENERATE_DICTIONARY(G__Unuran *.h MODULE Unuran LINKDEF LinkDef.h)
 
-ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${UNR_UNTARDIR}/config.h  LIBRARIES Core DEPENDENCIES Hist MathCore)
+ROOT_LINKER_LIBRARY(Unuran *.cxx ${unrsources} G__Unuran.cxx ${unrconfig} LIBRARIES Core ${UNURAN_LIBRARIES} DEPENDENCIES Hist MathCore)
 ROOT_INSTALL_HEADERS()

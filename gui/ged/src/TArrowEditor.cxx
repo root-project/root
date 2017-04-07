@@ -23,33 +23,21 @@ enum EArrowWid {
    kARROW_SIZ
 };
 
-//______________________________________________________________________________
-/* Begin_Html
+////////////////////////////////////////////////////////////////////////////////
+
+/*
 <center><h2>Implements user interface for editing of arrow attributes:
 shape, size, angle.</h2></center>
 The picture below shows this interface.
-End_Html
-Begin_Macro(GUI)
-{
-   gROOT->ProcessLine(".x $ROOTSYS/tutorials/graphics/arrow.C");
-   TCanvas *c1 = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("c1");
-   c1->SetBorderMode(0);
-   c1->ToggleEditor();
-   c1->Selected(c1, new TArrow(), 1);
-   TRootCanvas *r = (TRootCanvas*)c1->GetCanvasImp();
-   r->SetWindowSize(700,500);
-   return r->GetMainFrame();
-}
-End_Macro */
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of arrow GUI.
 
-//______________________________________________________________________________
 TArrowEditor::TArrowEditor(const TGWindow *p, Int_t width,
                            Int_t height, UInt_t options, Pixel_t back)
    : TGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor of arrow GUI.
-
    fArrow = 0;
 
    MakeTitle("Arrow");
@@ -93,11 +81,11 @@ TArrowEditor::TArrowEditor(const TGWindow *p, Int_t width,
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor of arrow editor.
+
 TArrowEditor::~TArrowEditor()
 {
-   // Destructor of arrow editor.
-
    TGFrameElement *el;
    TIter next(GetList());
 
@@ -108,11 +96,11 @@ TArrowEditor::~TArrowEditor()
    Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TArrowEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fOptionCombo->Connect("Selected(Int_t)", "TArrowEditor", this, "DoOption(Int_t)");
    fAngleEntry->Connect("ValueSet(Long_t)", "TArrowEditor", this, "DoAngle()");
    (fAngleEntry->GetNumberEntry())->Connect("ReturnPressed()", "TArrowEditor", this, "DoAngle()");
@@ -122,11 +110,11 @@ void TArrowEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pick up the used arrow attributes.
+
 void TArrowEditor::SetModel(TObject* obj)
 {
-   // Pick up the used arrow attributes.
-
    fArrow = (TArrow *)obj;
    fAvoidSignal = kTRUE;
 
@@ -144,22 +132,22 @@ void TArrowEditor::SetModel(TObject* obj)
    fAvoidSignal = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the arrow opening angle setting.
+
 void TArrowEditor::DoAngle()
 {
-   // Slot connected to the arrow opening angle setting.
-
    if (fAvoidSignal) return;
    fArrow->SetAngle((Float_t)fAngleEntry->GetNumber());
    fArrow->Paint(fArrow->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the arrow shape setting.
+
 void TArrowEditor::DoOption(Int_t id)
 {
-   // Slot connected to the arrow shape setting.
-
    if (fAvoidSignal) return;
    const char* opt=0;
    switch (id) {
@@ -200,22 +188,22 @@ void TArrowEditor::DoOption(Int_t id)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot connected to the arrow size.
+
 void TArrowEditor::DoSize()
 {
-   // Slot connected to the arrow size.
-
    if (fAvoidSignal) return;
    fArrow->SetArrowSize(fSizeEntry->GetNumber());
    fArrow->Paint(fArrow->GetDrawOption());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Arrow shape combobox.
+
 TGComboBox* TArrowEditor::BuildOptionComboBox(TGFrame* parent, Int_t id)
 {
-   // Arrow shape combobox.
-
    TGComboBox *cb = new TGComboBox(parent, id);
 
    cb->AddEntry(" -------|>",1);
@@ -233,11 +221,11 @@ TGComboBox* TArrowEditor::BuildOptionComboBox(TGFrame* parent, Int_t id)
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return shape entry according to the arrow draw option.
+
 Int_t TArrowEditor::GetShapeEntry(Option_t *option)
 {
-   // Return shape entry according to the arrow draw option.
-
    TString opt = option;
    opt.ToLower();
    Int_t id = 0;

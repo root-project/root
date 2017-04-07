@@ -1,3 +1,15 @@
+/// \file
+/// \ingroup Tutorials
+/// Defines aliases:
+///   - `ls(path)`
+///   - `edit(filename)`
+///   - `dir(path)`
+///   - `pwd()`
+///   - `cd(path)`
+///
+/// \macro_code
+///
+/// \author Rene Brun
 
 //______________________________________________________________________________
 void edit(char *file)

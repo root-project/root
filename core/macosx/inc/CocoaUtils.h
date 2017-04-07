@@ -13,6 +13,7 @@
 #define ROOT_CocoaUtils
 
 #include <cstddef>
+#include <cassert>
 
 #include <Foundation/Foundation.h>
 
@@ -23,19 +24,8 @@ namespace Util {
 /////////////////////////////////////////////////////////////////////
 //                                                                 //
 //  NSStrongReference. Class to keep strong reference to NSObject. //
-//  Move ctor and assignment operator are deleted.                 //
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
-
-//In principle, NS is a prefix for AppKit classes,
-//but I do not want to make it a suffix and
-//still have to distinguish between RAII classes
-//for AppKit and for Core Foundation/Core Graphics (suffix CF).
-//But in C++ I have namespaces, and I can have NSWhatIWant,
-//since it will be ROOT::MacOSX::Util::NSWhatIWant.
-//The same is true for CFWhatIWant (CF is a prefix for
-//CoreFoundation in Apple's API).
-
 
 template<class DerivedType>
 class NSStrongReference {
@@ -45,7 +35,7 @@ public:
    {
    }
 
-   NSStrongReference(NSObject *nsObject)
+   explicit NSStrongReference(NSObject *nsObject)
       : fNSObject([nsObject retain])
    {
    }
@@ -68,6 +58,24 @@ public:
          [fNSObject release];
          fNSObject = [rhs.fNSObject retain];
       }
+
+      return *this;
+   }
+
+   NSStrongReference(NSStrongReference && rhs)
+   {
+      fNSObject = rhs.fNSObject;
+      rhs.fNSObject = nil;
+   }
+
+   NSStrongReference & operator = (NSStrongReference && rhs)
+   {
+      //In case you're smart enough to self assign
+      //(using std::move, for example):
+      assert(this != &rhs);
+
+      fNSObject = rhs.fNSObject;
+      rhs.fNSObject = nil;
 
       return *this;
    }
@@ -102,7 +110,7 @@ private:
 
 ///////////////////////////////////////////////////////////////////
 //                                                               //
-// NSScopeGuard. Copy/move operations are deleted.               //
+// NSScopeGuard.                                                 //
 //                                                               //
 ///////////////////////////////////////////////////////////////////
 
@@ -138,9 +146,11 @@ public:
       }
    }
 
-   void Release()
+   NSObject *Release()
    {
+      NSObject *ret = fNSObject;
       fNSObject = nil;
+      return ret;
    }
 private:
    NSObject *fNSObject;
@@ -155,11 +165,9 @@ private:
 //                                  //
 //////////////////////////////////////
 
-//TODO: why do I have a special class instead of NSScopeGuard???
-
 class AutoreleasePool {
 public:
-   AutoreleasePool(bool delayCreation = false);
+   explicit AutoreleasePool(bool delayCreation = false);
    ~AutoreleasePool();
 
    //Drains the previous pool (if any)
@@ -216,6 +224,23 @@ public:
       return *this;
    }
 
+   CFStrongReference(CFStrongReference && rhs)
+   {
+      fRef = rhs.fRef;
+      rhs.fRef = 0;
+   }
+
+   CFStrongReference &operator = (CFStrongReference && rhs)
+   {
+      // Do not: a = std::move(a) :)
+      assert(this != &rhs);
+
+      fRef = rhs.fRef;
+      rhs.fRef = 0;
+
+      return *this;
+   }
+
    ~CFStrongReference()
    {
       if (fRef)
@@ -235,10 +260,7 @@ private:
 //                                               //
 // Scope guard for Core Foundations objects.     //
 // Specializations can be defined to call        //
-// something different from CFRetain/CFRelease,  //
-// but no need, they usually differ by accepting //
-// null pointer (CFRetain/CFRelease will cause   //
-// an error.                                     //
+// something different from CFRetain/CFRelease.  //
 //                                               //
 ///////////////////////////////////////////////////
 
@@ -275,9 +297,11 @@ public:
       }
    }
 
-   void Release()
+   RefType Release()
    {
+      RefType ret = fRef;
       fRef = 0;
+      return ret;
    }
 
 private:
@@ -289,17 +313,13 @@ private:
 
 ///////////////////////////////////////////////////
 //                                               //
-// Scoped array - scope guard for array.         //
+// Scoped array - scope guard for an array.      //
 // Sometimes, I can not use std::vector,         //
 // for example, data is allocated in TGCocoa     //
 // and must be later freed in Objective-C code.  //
 // To make the code exception-safe, I still      //
 // have to care about memory, which is already   //
-// allocated. Not to have all this explicit      //
-// delete [] in error handlers (it's easy        //
-// to forget!!!) - I have ScopedArray.           //
-// One good day I'll delete this and use         //
-// standard library.                             //
+// allocated.                                    //
 //                                               //
 ///////////////////////////////////////////////////
 
@@ -323,9 +343,11 @@ public:
       fData = p;
    }
 
-   void Release()
+   T *Release()
    {
+      T *ret = fData;
       fData = 0;
+      return ret;
    }
 
    T &operator [] (std::ptrdiff_t index)const

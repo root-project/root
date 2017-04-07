@@ -260,11 +260,11 @@ public:
    Bool_t HandleCrossing(Event_t *event);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle  crossing events.
+
 Bool_t TGuiBldMenuTitle::HandleCrossing(Event_t *event)
 {
-   // Handle  crossing events.
-
    if (event->fType == kEnterNotify) {
       fBgndColor = TRootGuiBuilder::GetPopupHlght();
    } else {
@@ -274,11 +274,11 @@ Bool_t TGuiBldMenuTitle::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw builder menu title.
+
 void TGuiBldMenuTitle::DoRedraw()
 {
-   // Redraw builder menu title.
-
    TGFrame::DoRedraw();
 
    int x, y, max_ascent, max_descent;
@@ -318,11 +318,11 @@ public:
    void DrawEntry(TGMenuEntry *entry);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw popup menu entry.
+
 void TGuiBldPopupMenu::DrawEntry(TGMenuEntry *entry)
 {
-   // Draw popup menu entry.
-
    FontStruct_t  font;
    GCValues_t    gcval;
 
@@ -490,11 +490,11 @@ public:
    void SetBackgroundColor(Pixel_t bgnd) { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw tool button.
+
 void TGuiBldToolButton::DoRedraw()
 {
-   // Redraw tool button.
-
    int x = (fWidth - fTWidth) >> 1;
    int y = (fHeight - fTHeight) >> 1;
    UInt_t w = GetWidth() - 1;
@@ -520,11 +520,11 @@ void TGuiBldToolButton::DoRedraw()
    pic->Draw(fId, fNormGC, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle crossing events.
+
 Bool_t TGuiBldToolButton::HandleCrossing(Event_t *event)
 {
-   // Handle crossing events.
-
    if (fTip) {
       if (event->fType == kEnterNotify) {
          fTip->Reset();
@@ -548,12 +548,12 @@ Bool_t TGuiBldToolButton::HandleCrossing(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of tool bar button and emit a signal according
+/// to passed arguments.
+
 void TGuiBldToolButton::SetState(EButtonState state, Bool_t emit)
 {
-   // Set state of tool bar button and emit a signal according
-   // to passed arguments.
-
    Bool_t was = !IsDown();
 
    if (state != fState) {
@@ -576,12 +576,12 @@ void TGuiBldToolButton::SetState(EButtonState state, Bool_t emit)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI builder application.
+
 TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    TGMainFrame(p ? p : gClient->GetDefaultRoot(), 1, 1)
 {
-   // Create GUI builder application.
-
    SetCleanup(kDeepCleanup);
    gGuiBuilder  = this;
    fManager = 0;
@@ -927,11 +927,11 @@ TRootGuiBuilder::TRootGuiBuilder(const TGWindow *p) : TGuiBuilder(),
    fEditor->SwitchLayout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TRootGuiBuilder::~TRootGuiBuilder()
 {
-   // Destructor.
-
    if (fIconPic) gClient->FreePicture(fIconPic);
    delete fMenuFile;
    delete fMenuWindow;
@@ -939,11 +939,11 @@ TRootGuiBuilder::~TRootGuiBuilder()
    gGuiBuilder = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close GUI builder via window manager "Close" button.
+
 void TRootGuiBuilder::CloseWindow()
 {
-   // Close GUI builder via window manager "Close" button.
-
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    if (root) root->SetEditable(kFALSE);
 
@@ -973,11 +973,11 @@ void TRootGuiBuilder::CloseWindow()
    Hide();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find action by name
+
 TGButton *TRootGuiBuilder::FindActionButton(const char *name, const char *sect)
 {
-   // Find action by name
-
    if (!name || !sect) return 0;
 
    TGShutterItem *item = fShutter->GetItem(sect);
@@ -1002,11 +1002,11 @@ TGButton *TRootGuiBuilder::FindActionButton(const char *name, const char *sect)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new action to widget palette.
+
 void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
 {
-   // Add new action to widget palette.
-
    if (!act || !sect) return;
 
    TGShutterItem *item = fShutter->GetItem(sect);
@@ -1051,11 +1051,11 @@ void TRootGuiBuilder::AddAction(TGuiBldAction *act, const char *sect)
    cont->Resize();  // invoke Layout()
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add new shutter item.
+
 void TRootGuiBuilder::AddSection(const char *sect)
 {
-   // Add new shutter item.
-
    static int id = 10000;
    TGShutterItem *item = new TGShutterItem(fShutter, new TGHotString(sect),
                                            id++);
@@ -1063,11 +1063,11 @@ void TRootGuiBuilder::AddSection(const char *sect)
    item->Connect("Selected()", "TRootGuiBuilder", this, "HandleMenu(=3)");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle buttons in the GUI builder's widget palette.
+
 void TRootGuiBuilder::HandleButtons()
 {
-   // Handle buttons in the GUI builder's widget palette.
-
    TGFrame *parent;
 
    if (fActionButton) {
@@ -1094,11 +1094,11 @@ void TRootGuiBuilder::HandleButtons()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute an action.
+
 TGFrame *TRootGuiBuilder::ExecuteAction()
 {
-   // Execute an action.
-
    if (!fAction || fAction->fAct.IsNull()) return 0;
 
    TGFrame *ret = 0;
@@ -1135,11 +1135,11 @@ TGFrame *TRootGuiBuilder::ExecuteAction()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inititiate GUI Builder menus.
+
 void TRootGuiBuilder::InitMenu()
 {
-   // Inititiate GUI Builder menus.
-
    fMenuFile = new TGuiBldPopupMenu();
    fMenuFile->AddEntry(new TGHotString("&Edit (Ctrl+double-click)"),
                        kGUIBLD_FILE_START, 0,
@@ -1209,20 +1209,20 @@ void TRootGuiBuilder::InitMenu()
    PropagateBgndColor(fMenuBar, GetBgnd());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set selected frame.
+
 void TRootGuiBuilder::ChangeSelected(TGFrame *f)
 {
-   // Set selected frame.
-
    fSelected = f;
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable toolbar buttons for alignment.
+
 void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 {
-   // Enable toolbar buttons for alignment.
-
    TGButton *btn = 0;
 
    btn = fToolBar->GetButton(kUpAct);
@@ -1262,11 +1262,11 @@ void TRootGuiBuilder::EnableLassoButtons(Bool_t on)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable toolbar buttons according to the selected frame.
+
 void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 {
-   // Enable/disable toolbar buttons according to the selected frame.
-
    fSelected = fManager->GetSelected();
 
    TGButton *btn = 0;
@@ -1334,11 +1334,11 @@ void TRootGuiBuilder::EnableSelectedButtons(Bool_t on)
 */
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable toolbar buttons according to the selected frame.
+
 void TRootGuiBuilder::EnableEditButtons(Bool_t on)
 {
-   // Enable/disable toolbar buttons according to the selected frame.
-
    TGButton *btn = 0;
 
    Bool_t lasso = fManager->IsLassoDrawn() && on;
@@ -1380,11 +1380,11 @@ void TRootGuiBuilder::EnableEditButtons(Bool_t on)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update gui builder.
+
 void TRootGuiBuilder::Update()
 {
-   // Update gui builder.
-
    if (!fManager) {
       return;
    }
@@ -1417,11 +1417,11 @@ void TRootGuiBuilder::Update()
    fActionButton = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the status of the selected mode.
+
 Bool_t TRootGuiBuilder::IsSelectMode() const
 {
-   // Return the status of the selected mode.
-
    TGButton *btn = 0;
    btn = fToolBar->GetButton(kSelectAct);
 
@@ -1430,11 +1430,11 @@ Bool_t TRootGuiBuilder::IsSelectMode() const
    return btn->IsDown();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the status of the grab mode.
+
 Bool_t TRootGuiBuilder::IsGrabButtonDown() const
 {
-   // Return the status of the grab mode.
-
    TGButton *btn = fToolBar->GetButton(kGrabAct);
 
    if (!btn) return kFALSE;
@@ -1457,11 +1457,11 @@ static const char *gSaveMacroTypes[] = {
    0,             0
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle keys.
+
 Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
 {
-   // Handle keys.
-
    if (event->fType == kGKeyPress) {
       UInt_t keysym;
       char str[2];
@@ -1486,11 +1486,11 @@ Bool_t TRootGuiBuilder::HandleKey(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a new project.
+
 Bool_t TRootGuiBuilder::NewProject(TString type)
 {
-   // Create a new project.
-
    TGWindow *root = (TGWindow*)fClient->GetRoot();
 
    if (root) root->SetEditable(kFALSE);
@@ -1540,11 +1540,11 @@ Bool_t TRootGuiBuilder::NewProject(TString type)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open new gui builder project.
+
 Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
 {
-   // Open new gui builder project.
-
 
    TGButton *btn = fToolBar->GetButton(kOpenAct);
    if (btn) {
@@ -1597,11 +1597,11 @@ Bool_t TRootGuiBuilder::OpenProject(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save selected project.
+
 Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
 {
-   // Save selected project.
-
    TGButton *btn = fToolBar->GetButton(kSaveAct);
    if (btn) {
       btn->SetBackgroundColor(GetBgnd());
@@ -1685,12 +1685,12 @@ Bool_t TRootGuiBuilder::SaveProject(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add macro to "User's Macros" section
+/// Input img must be static - do not delete it.
+
 void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
 {
-   // Add macro to "User's Macros" section
-   // Input img must be static - do not delete it.
-
    if (!img || !img->GetWidth() || !img->GetHeight()) {
       return;
    }
@@ -1733,11 +1733,11 @@ void TRootGuiBuilder::AddMacro(const char *macro, TImage *img)
    fClient->NeedRedraw(fShutter);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the editable frame.
+
 TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
 {
-   // Find the editable frame.
-
    const TGWindow *parent = win;
    TGMdiFrame *ret = 0;
 
@@ -1751,11 +1751,11 @@ TGMdiFrame *TRootGuiBuilder::FindEditableMdiFrame(const TGWindow *win)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Switch image of toolbar edit button according to the current state.
+
 void TRootGuiBuilder::SwitchToolbarButton()
 {
-   // Switch image of toolbar edit button according to the current state.
-
    static const TGPicture *start = fClient->GetPicture("bld_edit.png");
    static const TGPicture *stop = fClient->GetPicture("bld_stop.png");
 
@@ -1778,11 +1778,11 @@ void TRootGuiBuilder::SwitchToolbarButton()
    fClient->NeedRedraw(fStartButton, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle menu items.
+
 void TRootGuiBuilder::HandleMenu(Int_t id)
 {
-   // Handle menu items.
-
    TGWindow *root = (TGWindow*)fClient->GetRoot();
    TRootHelpDialog *hd;
 
@@ -1914,11 +1914,11 @@ void TRootGuiBuilder::HandleMenu(Int_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler before closing MDI frame.
+
 void TRootGuiBuilder::MaybeCloseWindow()
 {
-   // Handler before closing MDI frame.
-
    int retval;
    if (fClosing == -1)
       return;
@@ -1942,11 +1942,11 @@ void TRootGuiBuilder::MaybeCloseWindow()
    mdiframe->CloseWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handler for closed MDI frame.
+
 void TRootGuiBuilder::HandleWindowClosed(Int_t )
 {
-   // Handler for closed MDI frame.
-
    fEditable = 0;
 
    if (fClient->IsEditable()) {
@@ -1969,11 +1969,11 @@ void TRootGuiBuilder::HandleWindowClosed(Int_t )
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update information shown on the status bar.
+
 void TRootGuiBuilder::UpdateStatusBar(const char *txt)
 {
-   // Update information shown on the status bar.
-
    if (!fStatusBar) return;
 
    const char *text = 0;
@@ -1991,21 +1991,21 @@ void TRootGuiBuilder::UpdateStatusBar(const char *txt)
    fStatusBar->SetText(text);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear information shown in the status bar.
+
 void TRootGuiBuilder::EraseStatusBar()
 {
-   // Clear information shown in the status bar.
-
    if (!fStatusBar) return;
 
    fStatusBar->SetText("");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Keyborad key binding.
+
 void TRootGuiBuilder::BindKeys()
 {
-   // Keyborad key binding.
-
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_a),
                       kKeyControlMask, kTRUE);
 
@@ -2097,11 +2097,11 @@ void TRootGuiBuilder::BindKeys()
                       kKeyShiftMask, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create new vertical splitter (TGVSplitter).
+
 TGFrame *TRootGuiBuilder::VSplitter()
 {
-   // Create new vertical splitter (TGVSplitter).
-
    TGHorizontalFrame *ret = new TGHorizontalFrame();
    ret->SetCleanup(kDeepCleanup);
    TGVerticalFrame *v1 = new TGVerticalFrame(ret, 40, 10, kSunkenFrame |
@@ -2126,11 +2126,11 @@ TGFrame *TRootGuiBuilder::VSplitter()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Creates new horizontal splitter (TGHSplitter).
+
 TGFrame *TRootGuiBuilder::HSplitter()
 {
-   //  Creates new horizontal splitter (TGHSplitter).
-
    TGVerticalFrame *ret = new TGVerticalFrame();
    ret->SetCleanup(kDeepCleanup);
    TGHorizontalFrame *v1 = new TGHorizontalFrame(ret, 10, 40, kSunkenFrame |
@@ -2155,20 +2155,20 @@ TGFrame *TRootGuiBuilder::HSplitter()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide builder.
+
 void TRootGuiBuilder::Hide()
 {
-   // Hide builder.
-
    //fMain->CloseAll();
    UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default background color.
+
 ULong_t TRootGuiBuilder::GetBgnd()
 {
-   // Return default background color.
-
    return GetDefaultFrameBackground();
 
    static ULong_t gPixel = 0;
@@ -2185,11 +2185,11 @@ ULong_t TRootGuiBuilder::GetBgnd()
    return gPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return background GC.
+
 TGGC *TRootGuiBuilder::GetBgndGC()
 {
-   // Return background GC.
-
    if (fgBgnd) return fgBgnd;
 
    fgBgnd = new TGGC(TGFrame::GetBckgndGC());
@@ -2201,11 +2201,11 @@ TGGC *TRootGuiBuilder::GetBgndGC()
    return fgBgnd;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set a background color to frame and all its subframes.
+
 void TRootGuiBuilder::PropagateBgndColor(TGFrame *frame, Pixel_t color)
 {
-   // Set a background color to frame and all its subframes.
-
    if (!frame) return;
 
    frame->SetBackgroundColor(color);
@@ -2222,11 +2222,11 @@ void TRootGuiBuilder::PropagateBgndColor(TGFrame *frame, Pixel_t color)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return background color for popup menus.
+
 ULong_t TRootGuiBuilder::GetPopupBgnd()
 {
-   // Return background color for popup menus.
-
    return GetDefaultFrameBackground();
 
    static ULong_t gPixel = 0;
@@ -2244,11 +2244,11 @@ ULong_t TRootGuiBuilder::GetPopupBgnd()
    return gPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return background GC for popup menus.
+
 TGGC *TRootGuiBuilder::GetPopupBgndGC()
 {
-   // Return background GC for popup menus.
-
    if (fgBgndPopup) return fgBgndPopup;
 
    fgBgndPopup = new TGGC(TGFrame::GetBckgndGC());
@@ -2260,11 +2260,11 @@ TGGC *TRootGuiBuilder::GetPopupBgndGC()
    return fgBgndPopup;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return highlighted color for popup menu entry.
+
 ULong_t TRootGuiBuilder::GetPopupHlght()
 {
-   // Return highlighted color for popup menu entry.
-
    return GetDefaultSelectedBackground();
 
    static ULong_t gPixel = 0;
@@ -2282,11 +2282,11 @@ ULong_t TRootGuiBuilder::GetPopupHlght()
    return gPixel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return background GC for highlighted popup menu entry.
+
 TGGC *TRootGuiBuilder::GetPopupHlghtGC()
 {
-   // Return background GC for highlighted popup menu entry.
-
    if (fgBgndPopupHlght) return fgBgndPopupHlght;
 
    fgBgndPopupHlght = new TGGC(TGFrame::GetHilightGC());
@@ -2298,19 +2298,19 @@ TGGC *TRootGuiBuilder::GetPopupHlghtGC()
    return fgBgndPopupHlght;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return style popup menu.
+
 TGPopupMenu *TRootGuiBuilder::CreatePopup()
 {
-   // Return style popup menu.
-
    return new TGuiBldPopupMenu();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method used in guibuilding
+
 TGFrame *TRootGuiBuilder::BuildListTree()
 {
-   // Helper method used in guibuilding
-
    TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
    TGListTree *lt = new TGListTree(canvas, kHorizontalFrame);
    lt->AddItem(0, "Entry 1");
@@ -2324,11 +2324,11 @@ TGFrame *TRootGuiBuilder::BuildListTree()
    return canvas;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method used in guibuilding to create TGCanvas widget
+
 TGFrame *TRootGuiBuilder::BuildCanvas()
 {
-   // Helper method used in guibuilding to create TGCanvas widget
-
    TGCanvas *canvas = new TGCanvas(gClient->GetRoot(), 100, 100);
    TGCompositeFrame *cont = new TGCompositeFrame(canvas->GetViewPort(),
                                                  200, 200, kHorizontalFrame |
@@ -2345,11 +2345,11 @@ TGFrame *TRootGuiBuilder::BuildCanvas()
    return canvas;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method used in guibuilding to create TGShutter widget
+
 TGFrame *TRootGuiBuilder::BuildShutter()
 {
-   // Helper method used in guibuilding to create TGShutter widget
-
    TGShutterItem *item;
    TGCompositeFrame *container;
    const TGPicture  *buttonpic;
@@ -2436,11 +2436,11 @@ TGFrame *TRootGuiBuilder::BuildShutter()
    return shut;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGTextEdit widget
+
 TGFrame *TRootGuiBuilder::BuildTextEdit()
 {
-   // Helper method to create TGTextEdit widget
-
    TGTextEdit *te = new TGTextEdit();
 
    te->AddLine("all work and no play makes jack a pretty");
@@ -2456,11 +2456,11 @@ TGFrame *TRootGuiBuilder::BuildTextEdit()
    return te;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGTab widget
+
 TGFrame *TRootGuiBuilder::BuildTab()
 {
-   // Helper method to create TGTab widget
-
    TGTab *tab = new TGTab();
 
    tab->AddTab("Tab1");
@@ -2470,11 +2470,11 @@ TGFrame *TRootGuiBuilder::BuildTab()
    return tab;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGListBox widget
+
 TGFrame *TRootGuiBuilder::BuildListBox()
 {
-   // Helper method to create TGListBox widget
-
    TGListBox *lb = new TGListBox();
 
    lb->AddEntry("Entry 1", 0);
@@ -2491,11 +2491,11 @@ TGFrame *TRootGuiBuilder::BuildListBox()
    return lb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGComboBox widget
+
 TGFrame *TRootGuiBuilder::BuildComboBox()
 {
-   // Helper method to create TGComboBox widget
-
    TGComboBox *cb = new TGComboBox();
 
    cb->AddEntry("Entry 1 ", 0);
@@ -2515,33 +2515,33 @@ TGFrame *TRootGuiBuilder::BuildComboBox()
    return cb;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGHorizontal3DLine widget.
+
 TGFrame *TRootGuiBuilder::BuildH3DLine()
 {
-   // Helper method to create TGHorizontal3DLine widget.
-
    TGHorizontal3DLine *l = new TGHorizontal3DLine(0, 100, 2);
    l->Resize(100, 2);
 
    return l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGVertical3DLine widget.
+
 TGFrame *TRootGuiBuilder::BuildV3DLine()
 {
-   // Helper method to create TGVertical3DLine widget.
-
    TGVertical3DLine *l = new TGVertical3DLine();
    l->Resize(2, 100);
 
    return l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGHScrollBar
+
 TGFrame *TRootGuiBuilder::BuildHScrollBar()
 {
-   // Helper method to create TGHScrollBar
-
    TGHScrollBar *b = new TGHScrollBar();
 
    b->Resize(100, b->GetDefaultHeight());
@@ -2551,11 +2551,11 @@ TGFrame *TRootGuiBuilder::BuildHScrollBar()
    return b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGVScrollBar
+
 TGFrame *TRootGuiBuilder::BuildVScrollBar()
 {
-   // Helper method to create TGVScrollBar
-
    TGVScrollBar *b = new TGVScrollBar();
 
    b->Resize(b->GetDefaultWidth(), 100);
@@ -2565,11 +2565,11 @@ TGFrame *TRootGuiBuilder::BuildVScrollBar()
    return b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGHProgressBar
+
 TGFrame *TRootGuiBuilder::BuildHProgressBar()
 {
-   // Helper method to create TGHProgressBar
-
    TGHProgressBar *b = new TGHProgressBar();
 
    b->Resize(100, b->GetDefaultHeight());
@@ -2580,11 +2580,11 @@ TGFrame *TRootGuiBuilder::BuildHProgressBar()
    return b;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper method to create TGVProgressBar
+
 TGFrame *TRootGuiBuilder::BuildVProgressBar()
 {
-   // Helper method to create TGVProgressBar
-
    TGVProgressBar *b = new TGVProgressBar();
 
    b->Resize(b->GetDefaultWidth(), 100);

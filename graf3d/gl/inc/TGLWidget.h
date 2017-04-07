@@ -16,18 +16,10 @@
 #include <memory>
 #include <set>
 
-#ifndef ROOT_TGLContext
 #include "TGLContext.h"
-#endif
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
-#ifndef ROOT_TGLFormat
 #include "TGLFormat.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGLWidget;
 class TGEventHandler;

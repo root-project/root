@@ -12,12 +12,8 @@
 #ifndef ROOT_TDatabasePDG
 #define ROOT_TDatabasePDG
 
-#ifndef ROOT_TParticlePDG
 #include "TParticlePDG.h"
-#endif
-#ifndef ROOT_TParticleClassPDG
 #include "TParticleClassPDG.h"
-#endif
 
 class THashList;
 class TExMap;
@@ -25,7 +21,6 @@ class TExMap;
 class TDatabasePDG: public TNamed {
 
 protected:
-   static TDatabasePDG *fgInstance;        // protect against multiple instances
    THashList           *fParticleList;     // list of PDG particles
    TObjArray           *fListOfClasses;    // list of classes (leptons etc.)
    mutable TExMap      *fPdgMap;           //!hash-map from pdg-code to particle
@@ -84,8 +79,7 @@ public:
    virtual void   ReadPDGTable (const char *filename = "");
    virtual Int_t  WritePDGTable(const char *filename);
 
-   ClassDef(TDatabasePDG,2)  // PDG particle database
-
+   ClassDef(TDatabasePDG, 3);  // PDG particle database
 };
 
 #endif

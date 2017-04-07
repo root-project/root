@@ -41,10 +41,11 @@ using namespace RooFit ;
 
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun) ;
 
-//------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+/// Print test program number and its title
+
 void StatusPrint(Int_t id,const TString &title,Int_t status)
 {
-  // Print test program number and its title
   const Int_t kMAX = 65;
   Char_t number[4];
   sprintf(number,"%2d",id);
@@ -58,7 +59,8 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 //#include "stressRooFit_tests_direct.cxx"
 #include "stressRooFit_tests.cxx"
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t oneTest, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
   Int_t retVal = 0;
@@ -76,9 +78,12 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
          cout << "stressRooFit ERROR: reference file must be local file in writing mode" << endl ;
          return 1;
       }
-      fref = new TWebFile(refFile) ;
+      TFile::SetCacheFileDir(".");
+      fref = TFile::Open(refFile,"CACHEREAD") ;
+      //std::cout << "using WEB file " << refFile << std::endl;
     } else {
-      fref = new TFile(refFile,writeRef?"RECREATE":"") ;
+      fref = TFile::Open(refFile,writeRef?"RECREATE":"") ;
+      //std::cout << "using file " << refFile << std::endl;
     }
     if (fref->IsZombie()) {
       cout << "stressRooFit ERROR: cannot open reference file " << refFile << endl ;
@@ -255,7 +260,8 @@ int main(int argc,const char *argv[])
   Bool_t doDump      = kFALSE ;
   Bool_t doTreeStore = kFALSE ;
 
-  string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+  //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+  string refFileName = "stressRooFit_ref.root" ;
 
   // Parse command line arguments
   for (Int_t i=1 ;  i<argc ; i++) {
@@ -342,6 +348,22 @@ int main(int argc,const char *argv[])
   gBenchmark = new TBenchmark();
   Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
   return retVal;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t stressRooFit()
+{
+   Bool_t doWrite     = kFALSE ;
+   Int_t doVerbose    = 0 ;
+   Int_t oneTest      = -1 ;
+   Int_t dryRun       = kFALSE ;
+   Bool_t doDump      = kFALSE ;
+   Bool_t doTreeStore = kFALSE ;
+
+   //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
+   string refFileName = "stressRooFit_ref.root" ;
+   return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
 }
 
 #endif

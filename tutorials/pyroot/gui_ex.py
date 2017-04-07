@@ -1,3 +1,11 @@
+## \file
+## \ingroup tutorial_pyroot
+## A Simple GUI Example
+##
+## \macro_code
+##
+## \author Wim Lavrijsen
+
 import os, sys, ROOT
 
 def pygaus( x, par ):

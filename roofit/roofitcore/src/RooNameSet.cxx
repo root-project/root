@@ -14,16 +14,17 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooNameSet is a utility class that stores the names the objects
-// in a RooArget. This allows to preserve the contents of a RooArgSet
-// in a specific use contents beyond the lifespan of the object in
-// the RooArgSet. A new RooArgSet can be created from a RooNameSet
-// by offering it a list of new RooAbsArg objects. 
-// END_HTML
-//
+/**
+\file RooNameSet.cxx
+\class RooNameSet
+\ingroup Roofitcore
+
+RooNameSet is a utility class that stores the names the objects
+in a RooArget. This allows to preserve the contents of a RooArgSet
+in a specific use contents beyond the lifespan of the object in
+the RooArgSet. A new RooArgSet can be created from a RooNameSet
+by offering it a list of new RooAbsArg objects. 
+**/
 
 #include <cstring>
 #include <algorithm>
@@ -41,11 +42,12 @@
 ClassImp(RooNameSet)
 ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy src to dst, keep dstlen up to date, make sure zero length strings
+/// do not take memory
+
 void RooNameSet::strdup(Int_t& dstlen, char* &dstbuf, const char* src)
 {
-  // copy src to dst, keep dstlen up to date, make sure zero length strings
-  // do not take memory
   dstlen = src ? std::strlen(src) : 0;
   if (dstlen) ++dstlen;
   char *buf = dstlen ? new char[dstlen] : 0;
@@ -54,39 +56,43 @@ void RooNameSet::strdup(Int_t& dstlen, char* &dstbuf, const char* src)
   dstbuf = buf;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooNameSet::RooNameSet() : _len(0), _nameList(0)
 {
-  // Default constructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct from RooArgSet
+
 RooNameSet::RooNameSet(const RooArgSet& argSet) : _len(0), _nameList(0)
 {
-  // Construct from RooArgSet
   refill(argSet);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooNameSet::RooNameSet(const RooNameSet& other) :
   TObject(other), RooPrintable(other), _len(0), _nameList(0)
 {
-  // Copy constructor
   strdup(_len, _nameList, other._nameList);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooNameSet::~RooNameSet() 
 {
-  // Destructor
   delete[] _nameList;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 RooNameSet& RooNameSet::operator=(const RooNameSet& other) 
 {
-  // Assignment operator
-
   // Check comparison against self
   if (&other == this || _nameList == other._nameList) return *this;
 
@@ -95,11 +101,11 @@ RooNameSet& RooNameSet::operator=(const RooNameSet& other)
   return *this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Comparison operator
+
 Bool_t RooNameSet::operator==(const RooNameSet& other) const
 {
-  // Comparison operator
-
   // Check comparison against self
   if (&other == this || _nameList == other._nameList) return kTRUE;
 
@@ -107,7 +113,8 @@ Bool_t RooNameSet::operator==(const RooNameSet& other) const
     0 == std::strcmp(_nameList, other._nameList);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t RooNameSet::operator<(const RooNameSet& other) const 
 {
   if (&other == this) return kFALSE;
@@ -116,7 +123,8 @@ Bool_t RooNameSet::operator<(const RooNameSet& other) const
   return std::strcmp(_nameList, other._nameList) < 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooNameSet::extendBuffer(Int_t inc)
 {
   if (!inc) return;
@@ -133,16 +141,18 @@ void RooNameSet::extendBuffer(Int_t inc)
   _len = newsz;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooNameSet::setNameList(const char* givenList) 
 {
   strdup(_len, _nameList, givenList);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refill internal contents from names in given argSet
+
 void RooNameSet::refill(const RooArgSet& argSet) 
 {
-  // Refill internal contents from names in given argSet
   delete[] _nameList;
   _nameList = 0;
   _len = 0;
@@ -171,13 +181,13 @@ void RooNameSet::refill(const RooArgSet& argSet)
   }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a RooArgSet of objects in input 'list'
+/// whose names match to those in the internal name
+/// list of RooNameSet
+
 RooArgSet* RooNameSet::select(const RooArgSet& list) const 
 {
-  // Construct a RooArgSet of objects in input 'list'
-  // whose names match to those in the internal name
-  // list of RooNameSet
-
   RooArgSet* output = new RooArgSet;
   if (!_nameList || !std::strlen(_nameList)) return output;
 
@@ -197,30 +207,34 @@ RooArgSet* RooNameSet::select(const RooArgSet& list) const
   return output;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print name of nameset
+
 void RooNameSet::printName(std::ostream& os) const 
 {
-  // Print name of nameset
   os << GetName();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print title of nameset
+
 void RooNameSet::printTitle(std::ostream& os) const 
 {
-  // Print title of nameset
   os << GetTitle();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print class name of nameset
+
 void RooNameSet::printClassName(std::ostream& os) const 
 {
-  // Print class name of nameset
   os << IsA()->GetName();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print value of nameset, i.e the list of names
+
 void RooNameSet::printValue(std::ostream& os) const 
 {
-  // Print value of nameset, i.e the list of names
   os << content();
 }

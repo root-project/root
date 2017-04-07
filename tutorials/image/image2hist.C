@@ -1,9 +1,16 @@
-//Create a 2-D histogram from an image.
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_image
+/// \notebook
+/// Create a 2-D histogram from an image.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void image2hist()
 {
-   TASImage image("rose512.jpg");
+   TASImage image("$ROOTSYS/tutorials/image/rose512.jpg");
    UInt_t yPixels = image.GetHeight();
    UInt_t xPixels = image.GetWidth();
    UInt_t *argb   = image.GetArgbArray();
@@ -18,6 +25,6 @@ void image2hist()
       }
    }
 
-   gStyle->SetPalette(53);
+   gStyle->SetPalette(kCubehelix);
    h->Draw("colz");
 }

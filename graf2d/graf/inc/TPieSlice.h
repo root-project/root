@@ -8,34 +8,22 @@
 
 #ifndef ROOT_TPieSlice
 #define ROOT_TPieSlice
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include <TString.h>
-#endif
-#ifndef ROOT_TAttText
 #include <TAttText.h>
-#endif
-#ifndef ROOT_TAttFill
 #include <TAttFill.h>
-#endif
-#ifndef ROOT_TAttLine
 #include <TAttLine.h>
-#endif
-#ifndef ROOT_TPie
 #include <TPie.h>
-#endif
 
 class TPieSlice : public TNamed, public TAttFill, public TAttLine {
 
 private:
-   Bool_t   fIsActive;        //! True if is the slice under the mouse pointer
+   Bool_t   fIsActive;     ///<! True if is the slice under the mouse pointer
 
 protected:
-   TPie *fPie;             // The TPie object that contain this slice
-   Double_t fValue;        //value value of this slice
-   Double_t fRadiusOffset; //roffset offset from the center of the pie
+   TPie *fPie;             ///< The TPie object that contain this slice
+   Double_t fValue;        ///< value value of this slice
+   Double_t fRadiusOffset; ///< offset from the center of the pie
 
 public:
    TPieSlice();

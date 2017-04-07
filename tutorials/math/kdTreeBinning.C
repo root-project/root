@@ -1,14 +1,16 @@
-// ------------------------------------------------------------------------
-//
-// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
-//
-// Using TKDTree wrapper class as a data binning structure
-//  Plot the 2D data using the TH2Poly class
-//
-//
-// Author:   Bartolomeu Rabacal    11/2010
-//
-// ------------------------------------------------------------------------
+/// \file
+/// \ingroup tutorial_math
+/// \notebook
+/// kdTreeBinning tutorial: bin the data in cells of equal content using a kd-tree
+///
+/// Using TKDTree wrapper class as a data binning structure
+///  Plot the 2D data using the TH2Poly class
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Bartolomeu Rabacal
 
 #include <math.h>
 
@@ -24,8 +26,7 @@
 void kdTreeBinning() {
 
    // -----------------------------------------------------------------------------------------------
-   //  C r e a t e  r a n d o m  s a m p l e  w i t h  r e g u l a r  b i n n i n g  p l o t t i n g
-   // -----------------------------------------------------------------------------------------------
+   //  Create random sample with regular binning plotting
 
    const UInt_t DATASZ = 10000;
    const UInt_t DATADIM = 2;
@@ -49,8 +50,7 @@ void kdTreeBinning() {
 
 
    // ---------------------------------------------------------------------------------------------
-   // C r e a t e  K D T r e e B i n n i n g  o b j e c t  w i t h  T H 2 P o l y  p l o t t i n g
-   // ---------------------------------------------------------------------------------------------
+   // Create KDTreeBinning object with TH2Poly plotting
 
    TKDTreeBinning* kdBins = new TKDTreeBinning(DATASZ, DATADIM, smp, NBINS);
 
@@ -73,7 +73,7 @@ void kdTreeBinning() {
    std::cout << "Bin with minimum density: " << kdBins->GetBinMinDensity() << std::endl;
    std::cout << "Bin with maximum density: " << kdBins->GetBinMaxDensity() << std::endl;
 
-   TCanvas* c1 = new TCanvas("glc1", "TH2Poly from a kdTree",0,0,600,1000);
+   TCanvas* c1 = new TCanvas("glc1", "TH2Poly from a kdTree",0,0,600,800);
    c1->Divide(1,3);
    c1->cd(1);
    h1->Draw("lego");
@@ -82,35 +82,29 @@ void kdTreeBinning() {
    h2pol->Draw("COLZ L");
    c1->Update();
 
+   //-------------------------------------------------
+   // Draw an equivalent plot showing the data points 
 
-   /* Draw an equivalent plot showing the data points */
-   /*-------------------------------------------------*/
 
    std::vector<Double_t> z = std::vector<Double_t>(DATASZ, 0.);
    for (UInt_t i = 0; i < DATASZ; ++i)
       z[i] = (Double_t) h2pol->GetBinContent(h2pol->FindBin(smp[i], smp[DATASZ + i]));
 
    TGraph2D *g = new TGraph2D(DATASZ, smp, &smp[DATASZ], &z[0]);
-   gStyle->SetPalette(1);
    g->SetMarkerStyle(20);
-
 
    c1->cd(3);
    g->Draw("pcol");
    c1->Update();
 
-
    // ---------------------------------------------------------
    // make a new TH2Poly where bins are ordered by the density
-   // ---------------------------------------------------------
-
 
    TH2Poly* h2polrebin = new TH2Poly("h2PolyBinTest", "KDTree binning", kdBins->GetDataMin(0), kdBins->GetDataMax(0), kdBins->GetDataMin(1), kdBins->GetDataMax(1));
    h2polrebin->SetFloat();
 
-   /*---------------------------------*/
-   /* Sort the bins by their density  */
-   /*---------------------------------*/
+   //---------------------------------
+   // Sort the bins by their density  
 
    kdBins->SortBinsByDensity();
 
@@ -138,7 +132,7 @@ void kdTreeBinning() {
    // The new TH2Poly has to be same as old one and the TGraph2D should be similar to
    // the previous one. It is now made using as z value the bin number
 
-   TCanvas* c4 = new TCanvas("glc4", "TH2Poly from a kdTree (Ordered)",50,50,1050,1050);
+   TCanvas* c4 = new TCanvas("glc4", "TH2Poly from a kdTree (Ordered)",50,50,800,800);
 
    c4->Divide(2,2);
    c4->cd(1);
@@ -148,7 +142,6 @@ void kdTreeBinning() {
    g2->Draw("pcol");
 
    c4->Update();
-
 
    // make also the 1D binned histograms
 
@@ -173,5 +166,4 @@ void kdTreeBinning() {
   hX->Draw();
   c4->cd(4);
   hY->Draw();
-
 }

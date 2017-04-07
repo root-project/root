@@ -1,5 +1,11 @@
-//+ Example of a simple script creating 3 threads.
-// This script can only be executed via ACliC .x threadsh1.C++.
+/// \file
+/// \ingroup tutorial_thread
+/// Example of a simple script creating 3 threads.
+/// This script can only be executed via ACliC .x threadsh1.C++.
+///
+/// \macro_code
+///
+/// \author Victor Perevovchikov
 
 #include "TCanvas.h"
 #include "TFrame.h"
@@ -67,10 +73,6 @@ void closed(Int_t id)
 
 void threadsh1()
 {
-#ifdef __CINT__
-   printf("This script can only be executed via ACliC: .x threadsh1.C++\n");
-   return;
-#endif
 
    finished = kFALSE;
    //gDebug = 1;

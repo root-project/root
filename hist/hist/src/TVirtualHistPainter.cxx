@@ -18,19 +18,19 @@ TClass *TVirtualHistPainter::fgPainter = 0;
 
 ClassImp(TVirtualHistPainter)
 
-//______________________________________________________________________________
-//
-//  TVirtualHistPainter is an abstract interface to a histogram painter.
-//
+/** \class TVirtualHistPainter
+ \ingroup Hist
+ Abstract interface to a histogram painter
+*/
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to the current histogram painter.
+/// The painter will paint the specified obj. If the histogram painter
+/// does not exist a default painter is created.
+
 TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
 {
-   // Static function returning a pointer to the current histogram painter.
-   // The painter will paint the specified obj. If the histogram painter
-   // does not exist a default painter is created.
-
    // if no painter set yet, create a default painter via the PluginManager
    if (!fgPainter) {
       TPluginHandler *h;
@@ -51,10 +51,10 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set an alternative histogram painter.
+
 void TVirtualHistPainter::SetPainter(const char *painter)
 {
-   // Static function to set an alternative histogram painter.
-
    fgPainter = TClass::GetClass(painter);
 }

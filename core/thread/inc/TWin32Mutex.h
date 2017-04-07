@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMutexImp
 #include "TMutexImp.h"
-#endif
 
 #include "Windows4Root.h"
 

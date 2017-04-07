@@ -13,25 +13,14 @@
 #define ROOT_TSliderBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSliderBox                                                           //
-//                                                                      //
-// The moving box of a TSlider                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TWbox
 #include "TWbox.h"
-#endif
 
 class TSlider;
 
 class TSliderBox : public TWbox {
 
 protected:
-   TSlider   *fSlider;     //Pointer to slider
+   TSlider   *fSlider;     ///< Pointer to slider
 
    TSliderBox(const TSliderBox& sb)
      : TWbox(sb), fSlider(sb.fSlider) { }

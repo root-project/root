@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 class TDSet;
 class TDSetElement;
@@ -114,7 +110,7 @@ public:
                                    Double_t& ymin, Double_t& ymax,
                                    Double_t& zmin, Double_t& zmax) = 0;
 
-   virtual void MergeOutput() = 0;
+   virtual void MergeOutput(Bool_t = kFALSE) = 0;
 
    virtual Bool_t    IsClient() const = 0;
 
@@ -128,6 +124,9 @@ public:
    virtual void      SetStopTimer(Bool_t on = kTRUE,
                                   Bool_t abort = kFALSE, Int_t timeout = 0) = 0;
    virtual void      SetInitTime() = 0;
+
+   virtual void      SetMerging(Bool_t on = kTRUE) = 0;
+
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
 

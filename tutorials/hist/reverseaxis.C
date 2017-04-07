@@ -1,10 +1,17 @@
-// Example showing an histogram with reverse axis.
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Example showing an histogram with reverse axis.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
 void ReverseXAxis (TH1 *h);
 void ReverseYAxis (TH1 *h);
 
-void reverseaxis ()
+void reverseaxis()
 {
    TH2F *hpxpy  = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
    Float_t px, py;
@@ -19,7 +26,7 @@ void reverseaxis ()
    ReverseYAxis(hpxpy);
 }
 
-void ReverseXAxis (TH1 *h)
+void ReverseXAxis(TH1 *h)
 {
    // Remove the current axis
    h->GetXaxis()->SetLabelOffset(999);
@@ -38,7 +45,7 @@ void ReverseXAxis (TH1 *h)
    newaxis->Draw();
 }
 
-void ReverseYAxis (TH1 *h)
+void ReverseYAxis(TH1 *h)
 {
    // Remove the current axis
    h->GetYaxis()->SetLabelOffset(999);

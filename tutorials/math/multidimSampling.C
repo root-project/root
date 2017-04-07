@@ -1,6 +1,13 @@
-//+ example of sampling a multi-dim distribution using the DistSampler class
-//NOTE: This tutorial must be run with ACLIC
-//Author L. Moneta Dec 2010
+/// \file
+/// \ingroup tutorial_math
+/// \notebook
+/// Example of sampling a multi-dim distribution using the DistSampler class
+/// NOTE: This tutorial must be run with ACLIC
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Lorenzo Moneta
 
 // function (a 4d gaussian)
 #include "TMath.h"
@@ -26,6 +33,8 @@
 // This however requires that  the code must be compiled with ACLIC
 
 bool debug = false;
+
+// Define the GausND strcture
 struct GausND {
 
    TVectorD X;
@@ -81,19 +90,14 @@ struct GausND {
    }
 };
 
+// Use the Math namespace
 using namespace ROOT::Math;
 
 void multidimSampling() {
 
-#ifdef __CINT__
-   std::cout << "DO NOT RUN WITH CINT:" << std::endl;
-   std::cout << "we are using a custom function which requires" << std::endl;
-   std::cout << "that this tutorial must be compiled with ACLIC" << std::endl;
-  return;
-#endif
 
-   const int N = 100000;
-   //const int NBin = 1000;
+   const int N = 10000;
+   /*const int NBin = 1000;*/
    const int DIM = 4;
 
    double xmin[] = {-10,-10,-10, -10};
@@ -120,7 +124,7 @@ void multidimSampling() {
       else if (i < 2*DIM) f->SetParName(i, name.Format("sig_%d",i-2*DIM+1) );
    }
 
-   //ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");
+   /*ROOT::Math::DistSamplerOptions::SetDefaultSampler("Foam");*/
    DistSampler * sampler = Factory::CreateDistSampler();
    if (sampler == 0) {
       Info("multidimSampling","Default sampler %s is not available try with Foam ",
@@ -132,7 +136,6 @@ void multidimSampling() {
       Error("multidimSampling","Foam sampler is not available - exit ");
       return;
    }
-
 
    sampler->SetFunction(*f,DIM);
    sampler->SetRange(xmin,xmax);
@@ -146,6 +149,7 @@ void multidimSampling() {
       Error("Sampler::Init","Error initializing unuran sampler");
       return;
    }
+
    // generate the data
    w.Start();
    for (int i = 0; i < N; ++i) {
@@ -168,17 +172,7 @@ void multidimSampling() {
       t1->Fill();
    }
 
-
-   // try to fit the 2d data;
-   // GausND gaus2(2);
-   // TF2 * f2 = new TF2("f2",gaus2,-3,3,-3,3,5,"GausND");
-
-   // f2->SetParameters(0,0,1,1,0);
-   // f2->SetParLimits(4,-1,1);
-   // t1->UnbinnedFit("f2","x[0]:x[1]");
-
    // plot the data
-
    t1->Draw("x[0]:x[1]:x[2]:x[3]","","candle");
    TCanvas * c2 = new TCanvas();
    c2->Divide(3,2);
@@ -196,9 +190,7 @@ void multidimSampling() {
    c2->cd(ic++);
    t1->Draw("x[2]:x[3]");
 
-
    t1->Write();
    file->Close();
-
 
 }

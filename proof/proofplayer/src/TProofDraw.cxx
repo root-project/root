@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofDraw                                                           //
-//                                                                      //
-// Implement Tree drawing using PROOF.                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofDraw
+\ingroup proofkernel
+
+Implement Tree drawing using PROOF
+
+*/
 
 
 #include "TProofDraw.h"
@@ -108,12 +107,12 @@ extern "C" {
 
 ClassImp(TProofDraw)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TProofDraw::TProofDraw()
    : fStatus(0), fManager(0), fTree(0)
 {
-   // Constructor.
-
    fVar[0]         = 0;
    fVar[1]         = 0;
    fVar[2]         = 0;
@@ -127,31 +126,31 @@ TProofDraw::TProofDraw()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TProofDraw::~TProofDraw()
 {
-   // Destructor.
-
    ClearFormula();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Init the tree.
+
 void TProofDraw::Init(TTree *tree)
 {
-   // Init the tree.
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
    fTree = tree;
    CompileVariables();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when a new tree is loaded.
+
 Bool_t TProofDraw::Notify()
 {
-   // Called when a new tree is loaded.
-
    PDB(kDraw,1) Info("Notify","Enter");
    if (fStatus == 0) {
       if (!fOutput || (fOutput &&
@@ -167,11 +166,11 @@ Bool_t TProofDraw::Notify()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executed by the client before processing.
+
 void TProofDraw::Begin(TTree *tree)
 {
-   // Executed by the client before processing.
-
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
    TObject *os = fInput->FindObject("selection");
@@ -191,20 +190,20 @@ void TProofDraw::Begin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executed by each slave before processing.
+
 void TProofDraw::SlaveBegin(TTree* /*tree*/)
 {
-   // Executed by each slave before processing.
-
    // Get the weight
    TProofDraw::FillWeight();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get weight from input list, if any
+
 void TProofDraw::FillWeight()
 {
-   // Get weight from input list, if any
-
    Double_t ww;
    if (TProof::GetParameter(fInput, "PROOF_ChainWeight", ww) == 0)
       fWeight = ww;
@@ -212,11 +211,11 @@ void TProofDraw::FillWeight()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Processes a single variable from an entry.
+
 Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
 {
-   // Processes a single variable from an entry.
-
    Double_t w;
    Double_t v[4]; //[TTreeDrawArgsParser::fgMaxDimension];
 
@@ -239,11 +238,11 @@ Bool_t TProofDraw::ProcessSingle(Long64_t entry, Int_t i)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executed for each entry.
+
 Bool_t TProofDraw::Process(Long64_t entry)
 {
-   // Executed for each entry.
-
    PDB(kDraw,3) Info("Process", "enter entry = %lld", entry);
 
    fTree->LoadTree(entry);
@@ -258,21 +257,21 @@ Bool_t TProofDraw::Process(Long64_t entry)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executed by each slave after the processing has finished,
+/// before returning the results to the client.
+
 void TProofDraw::SlaveTerminate(void)
 {
-   // Executed by each slave after the processing has finished,
-   // before returning the results to the client.
-
    PDB(kDraw,1) Info("SlaveTerminate","Enter");
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Executed by the client after getting the processing retults.
+
 void TProofDraw::Terminate(void)
 {
-   // Executed by the client after getting the processing retults.
-
    PDB(kDraw,1) Info("Terminate","Enter");
    if (fStatus == 0) {
       fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"));
@@ -289,11 +288,11 @@ void TProofDraw::Terminate(void)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete internal buffers.
+
 void TProofDraw::ClearFormula()
 {
-   // Delete internal buffers.
-
    ResetBit(kWarn);
    for (Int_t i = 0; i < 4; i++)
       SafeDelete(fVar[i]);
@@ -303,13 +302,13 @@ void TProofDraw::ClearFormula()
    fMultiplicity = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move to a canvas named <name>_canvas; create the canvas if not existing.
+/// Used to avoid screwing up existing plots when non default names are used
+/// for the final objects
+
 void TProofDraw::SetCanvas(const char *objname)
 {
-   // Move to a canvas named <name>_canvas; create the canvas if not existing.
-   // Used to avoid screwing up existing plots when non default names are used
-   // for the final objects
-
    TString name = objname;
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -321,11 +320,11 @@ void TProofDraw::SetCanvas(const char *objname)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the drawing attributes from the input list
+
 void TProofDraw::SetDrawAtt(TObject *o)
 {
-   // Set the drawing attributes from the input list
-
    Int_t att = -1;
    PDB(kDraw,2) Info("SetDrawAtt", "setting attributes for %s", o->GetName());
 
@@ -378,11 +377,11 @@ void TProofDraw::SetDrawAtt(TObject *o)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the error status.
+
 void TProofDraw::SetError(const char *sub, const char *mesg)
 {
-   // Sets the error status.
-
    if (fStatus == 0) {
       if (!(fStatus = dynamic_cast<TStatus*>(fOutput->FindObject("PROOF_Status"))))
          return;
@@ -397,11 +396,27 @@ void TProofDraw::SetError(const char *sub, const char *mesg)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compiles each variable from fTreeDrawArgsParser for the tree fTree.
+/// Return kFALSE if any of the variable is not compilable.
+
 Bool_t TProofDraw::CompileVariables()
 {
-   // Compiles each variable from fTreeDrawArgsParser for the tree fTree.
-   // Return kFALSE if any of the variable is not compilable.
+   // Set aliases, if any
+   TNamed *nms = (TNamed *) fInput->FindObject("PROOF_ListOfAliases");
+   if (nms) {
+      TString names = nms->GetTitle(), n, na;
+      Ssiz_t from = 0;
+      while(names.Tokenize(n, from, ",")) {
+         if (!n.IsNull()) {
+            na.Form("alias:%s", n.Data());
+            TNamed *nm = (TNamed *) fInput->FindObject(na);
+            if (na) fTree->SetAlias(n.Data(), nm->GetTitle());
+         }
+      }
+   }
+   PDB(kDraw,2)
+      if (fTree->GetListOfAliases()) fTree->GetListOfAliases()->Print();
 
    fDimension = fTreeDrawArgsParser.GetDimension();
    fMultiplicity = 0;
@@ -451,11 +466,11 @@ Bool_t TProofDraw::CompileVariables()
 ClassImp(TProofDrawHist)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization for 1D Histogram.
+
 void TProofDrawHist::Begin1D(TTree *)
 {
-   // Initialization for 1D Histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 1);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH1* hold;
@@ -469,11 +484,11 @@ void TProofDrawHist::Begin1D(TTree *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization for 2D histogram.
+
 void TProofDrawHist::Begin2D(TTree *)
 {
-   // Initialization for 2D histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH2* hold;
@@ -487,11 +502,11 @@ void TProofDrawHist::Begin2D(TTree *)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialization for 3D histogram.
+
 void TProofDrawHist::Begin3D(TTree *)
 {
-   // Initialization for 3D histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH3* hold;
@@ -504,11 +519,11 @@ void TProofDrawHist::Begin3D(TTree *)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Begin().
+
 void TProofDrawHist::Begin(TTree *tree)
 {
-   // See TProofDraw::Begin().
-
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
    TObject *os = fInput->FindObject("selection");
@@ -542,11 +557,11 @@ void TProofDrawHist::Begin(TTree *tree)
    fTree = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define vars for 1D Histogram.
+
 void TProofDrawHist::DefVar1D()
 {
-   // Define vars for 1D Histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 1);
 
    fTreeDrawArgsParser.SetOriginal(0);
@@ -577,11 +592,11 @@ void TProofDrawHist::DefVar1D()
       fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define variables for 2D histogram.
+
 void TProofDrawHist::DefVar2D()
 {
-   // Define variables for 2D histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 2);
 
    fTreeDrawArgsParser.SetOriginal(0);
@@ -623,11 +638,11 @@ void TProofDrawHist::DefVar2D()
       fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define variables for 3D histogram.
+
 void TProofDrawHist::DefVar3D()
 {
-   // Define variables for 3D histogram.
-
    R__ASSERT(fTreeDrawArgsParser.GetDimension() == 3);
 
    fTreeDrawArgsParser.SetOriginal(0);
@@ -681,11 +696,11 @@ void TProofDrawHist::DefVar3D()
       fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define variables according to arguments.
+
 void TProofDrawHist::DefVar()
 {
-   // Define variables according to arguments.
-
    PDB(kDraw,1) Info("DefVar","Enter");
 
    TObject *os = fInput->FindObject("selection");
@@ -719,11 +734,11 @@ void TProofDrawHist::DefVar()
    fTree = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
+
 void TProofDrawHist::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
    if (fTree == 0) {
       if (!dynamic_cast<TH1*> (fTreeDrawArgsParser.GetOriginal())) {
@@ -742,11 +757,11 @@ void TProofDrawHist::Init(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawHist::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -832,11 +847,11 @@ void TProofDrawHist::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the histgram with given values.
+
 void TProofDrawHist::DoFill(Long64_t, Double_t w, const Double_t *v)
 {
-   // Fills the histgram with given values.
-
    if (fDimension == 1)
       fHistogram->Fill(v[0], w);
    else if (fDimension == 2)
@@ -846,11 +861,11 @@ void TProofDrawHist::DoFill(Long64_t, Double_t w, const Double_t *v)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawHist::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -887,21 +902,11 @@ void TProofDrawHist::Terminate(void)
 
 ClassImp(TProofDrawEventList)
 
-//______________________________________________________________________________
-TProofDrawEventList::~TProofDrawEventList()
-{
-   // Destructor.
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
 
-   SafeDelete(fElist);
-   SafeDelete(fEventLists);
-}
-
-
-//______________________________________________________________________________
 void TProofDrawEventList::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree) {      // new tree is being set
@@ -915,11 +920,11 @@ void TProofDrawEventList::Init(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawEventList::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -948,32 +953,30 @@ void TProofDrawEventList::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the eventlist with given values.
+
 void TProofDrawEventList::DoFill(Long64_t entry, Double_t , const Double_t *)
 {
-   // Fills the eventlist with given values.
-
    fElist->Enter(entry);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveTerminate().
+
 void TProofDrawEventList::SlaveTerminate(void)
 {
-   // See TProofDraw::SlaveTerminate().
-
    PDB(kDraw,1) Info("SlaveTerminate","Enter");
    fEventLists->Add(fElist);
-   fEventLists = 0;
-   fElist = 0;
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawEventList::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    TProofDraw::Terminate();   // take care of fStatus
    if (!fStatus)
       return;
@@ -999,29 +1002,22 @@ void TProofDrawEventList::Terminate(void)
 
 ClassImp(TProofDrawEntryList)
 
-//______________________________________________________________________________
-TProofDrawEntryList::~TProofDrawEntryList()
-{
-   //class destructor
-   SafeDelete(fElist);
-}
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
 
-//______________________________________________________________________________
 void TProofDrawEntryList::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    fTree = tree;
    CompileVariables();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawEntryList::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1048,29 +1044,28 @@ void TProofDrawEntryList::SlaveBegin(TTree *tree)
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the eventlist with given values.
+
 void TProofDrawEntryList::DoFill(Long64_t entry, Double_t , const Double_t *)
 {
-   // Fills the eventlist with given values.
-
    fElist->Enter(entry);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveTerminate().
+
 void TProofDrawEntryList::SlaveTerminate(void)
 {
-   // See TProofDraw::SlaveTerminate().
-
    PDB(kDraw,1) Info("SlaveTerminate","Enter");
    fElist->OptimizeStorage();
-   fElist = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawEntryList::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    TProofDraw::Terminate();   // take care of fStatus
    if (!fStatus)
       return;
@@ -1097,11 +1092,11 @@ void TProofDrawEntryList::Terminate(void)
 
 ClassImp(TProofDrawProfile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
+
 void TProofDrawProfile::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree == 0) {
@@ -1120,11 +1115,11 @@ void TProofDrawProfile::Init(TTree *tree)
    CompileVariables();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define relevant variables
+
 void TProofDrawProfile::DefVar()
 {
-   // Define relevant variables
-
    PDB(kDraw,1) Info("DefVar","Enter");
 
    if (fTreeDrawArgsParser.GetDimension() < 0) {
@@ -1172,11 +1167,11 @@ void TProofDrawProfile::DefVar()
       fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Begin().
+
 void TProofDrawProfile::Begin(TTree *tree)
 {
-   // See TProofDraw::Begin().
-
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
 
@@ -1208,11 +1203,11 @@ void TProofDrawProfile::Begin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawProfile::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1279,20 +1274,20 @@ void TProofDrawProfile::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the profile histogram with the given values.
+
 void TProofDrawProfile::DoFill(Long64_t , Double_t w, const Double_t *v)
 {
-   // Fills the profile histogram with the given values.
-
    fProfile->Fill(v[1], v[0], w);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawProfile::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -1329,11 +1324,11 @@ void TProofDrawProfile::Terminate(void)
 
 ClassImp(TProofDrawProfile2D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
+
 void TProofDrawProfile2D::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
    if (fTree == 0) {
       if (!dynamic_cast<TProfile2D*> (fTreeDrawArgsParser.GetOriginal())) {
@@ -1352,11 +1347,11 @@ void TProofDrawProfile2D::Init(TTree *tree)
    CompileVariables();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define relevant variables
+
 void TProofDrawProfile2D::DefVar()
 {
-   // Define relevant variables
-
    PDB(kDraw,1) Info("DefVar","Enter");
 
    if (fTreeDrawArgsParser.GetDimension() < 0) {
@@ -1415,11 +1410,11 @@ void TProofDrawProfile2D::DefVar()
       fInput->Add(new TNamed("PROOF_OPTIONS", "rebin"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Begin().
+
 void TProofDrawProfile2D::Begin(TTree *tree)
 {
-   // See TProofDraw::Begin().
-
    PDB(kDraw,1) Info("Begin","Enter tree = %p", tree);
 
    TObject *os = fInput->FindObject("selection");
@@ -1448,11 +1443,11 @@ void TProofDrawProfile2D::Begin(TTree *tree)
    PDB(kDraw,1) Info("Begin","varexp: %s", fInitialExp.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawProfile2D::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1522,20 +1517,20 @@ void TProofDrawProfile2D::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the histogram with the given values.
+
 void TProofDrawProfile2D::DoFill(Long64_t , Double_t w, const Double_t *v)
 {
-   // Fills the histogram with the given values.
-
    fProfile->Fill(v[2], v[1], v[0], w);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawProfile2D::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -1572,11 +1567,11 @@ void TProofDrawProfile2D::Terminate(void)
 
 ClassImp(TProofDrawGraph)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
+
 void TProofDrawGraph::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree == 0) {
@@ -1594,11 +1589,11 @@ void TProofDrawGraph::Init(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawGraph::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1624,20 +1619,20 @@ void TProofDrawGraph::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the graph with the given values.
+
 void TProofDrawGraph::DoFill(Long64_t , Double_t , const Double_t *v)
 {
-   // Fills the graph with the given values.
-
    fGraph->SetPoint(fGraph->GetN(), v[1], v[0]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawGraph::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -1720,11 +1715,11 @@ void TProofDrawGraph::Terminate(void)
 
 ClassImp(TProofDrawPolyMarker3D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Init().
+
 void TProofDrawPolyMarker3D::Init(TTree *tree)
 {
-   // See TProofDraw::Init().
-
    PDB(kDraw,1) Info("Init","Enter tree = %p", tree);
 
    if (fTree == 0) {
@@ -1737,11 +1732,11 @@ void TProofDrawPolyMarker3D::Init(TTree *tree)
    CompileVariables();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1767,20 +1762,20 @@ void TProofDrawPolyMarker3D::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the scatter plot with the given values.
+
 void TProofDrawPolyMarker3D::DoFill(Long64_t , Double_t , const Double_t *v)
 {
-   // Fills the scatter plot with the given values.
-
    fPolyMarker3D->SetNextPoint(v[2], v[1], v[0]);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawPolyMarker3D::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -1914,11 +1909,11 @@ void TProofDrawPolyMarker3D::Terminate(void)
 
 ClassImp(TProofDrawListOfGraphs)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -1946,20 +1941,20 @@ void TProofDrawListOfGraphs::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the scatter plot with the given values.
+
 void TProofDrawListOfGraphs::DoFill(Long64_t , Double_t , const Double_t *v)
 {
-   // Fills the scatter plot with the given values.
-
    fPoints->GetVector()->push_back(Point3D_t(v[2], v[1], v[0]));
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawListOfGraphs::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)
@@ -2069,11 +2064,11 @@ void TProofDrawListOfGraphs::Terminate(void)
 ClassImp(TProofDrawListOfPolyMarkers3D)
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::SlaveBegin().
+
 void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
 {
-   // See TProofDraw::SlaveBegin().
-
    PDB(kDraw,1) Info("SlaveBegin","Enter tree = %p", tree);
 
    // Get the weight
@@ -2101,21 +2096,21 @@ void TProofDrawListOfPolyMarkers3D::SlaveBegin(TTree *tree)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the scatter plot with the given values.
+
 void TProofDrawListOfPolyMarkers3D::DoFill(Long64_t , Double_t , const Double_t *v)
 {
-   // Fills the scatter plot with the given values.
-
    fPoints->GetVector()->push_back(Point4D_t(v[3], v[2], v[1], v[0]));
 }
 
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// See TProofDraw::Terminate().
+
 void TProofDrawListOfPolyMarkers3D::Terminate(void)
 {
-   // See TProofDraw::Terminate().
-
    PDB(kDraw,1) Info("Terminate","Enter");
    TProofDraw::Terminate();
    if (!fStatus)

@@ -29,16 +29,16 @@
 
 ClassImp(TStylePreview)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///  Constructor. Create a new window and draw a clone of
+/// currentPad->GetCanvas() in it, using the style 'style'.
+///  Thanks to that method, one can have a preview of any
+/// style with any object.
+
 TStylePreview::TStylePreview(const TGWindow *p, TStyle *style,
                               TVirtualPad *currentPad)
                      : TGTransientFrame(0, p)
 {
-   //  Constructor. Create a new window and draw a clone of
-   // currentPad->GetCanvas() in it, using the style 'style'.
-   //  Thanks to that method, one can have a preview of any
-   // style with any object.
-
    fPad = 0;
 
    // Create the main window.
@@ -68,11 +68,11 @@ TStylePreview::TStylePreview(const TGWindow *p, TStyle *style,
    fEcan->GetCanvas()->SetBit(kNoContextMenu);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TStylePreview::~TStylePreview()
 {
-   // Destructor.
-
    // Delete all the widgets created in this class.
    delete fEcan;
 
@@ -89,12 +89,12 @@ TStylePreview::~TStylePreview()
    delete fTrashListLayout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update the preview with possibly another style and
+/// another object than previously.
+
 void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
 {
-   // Update the preview with possibly another style and
-   // another object than previously.
-
    TCanvas *c;
    if (pad != fPad) {
       delete fEcan->GetCanvas();
@@ -118,11 +118,11 @@ void TStylePreview::Update(TStyle *style, TVirtualPad *pad)
    c->Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize the layout algorithm.
+
 void TStylePreview::MapTheWindow()
 {
-   // Initialize the layout algorithm.
-
    MapSubwindows();
    TCanvas *c = fPad->GetCanvas();
    if (c) {
@@ -137,10 +137,10 @@ void TStylePreview::MapTheWindow()
    MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to the selected canvas.
+
 TCanvas *TStylePreview::GetMainCanvas()
 {
-   // Return pointer to the selected canvas.
-
    return fEcan->GetCanvas();
 }

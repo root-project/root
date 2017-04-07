@@ -21,58 +21,66 @@
 #include <stdlib.h>
 
 
-////////////////////////////////////////////////////////////////////////
-//
-//  Particle database manager class
-//
-//  This manager creates a list of particles which by default is
-//  initialised from with the constants used by PYTHIA6 (plus some
-//  other particles added). See definition and the format of the default
-//  particle list in $ROOTSYS/etc/pdg_table.txt
-//
-//  there are 2 ways of redefining the name of the file containing the
-//  particle properties
-//
-//  1. one can define the name in .rootrc file:
-//
-//  Root.DatabasePDG: $(HOME)/my_pdg_table.txt
-//
-//  2. one can use TDatabasePDG::ReadPDGTable method explicitly:
-//
-//     - TDatabasePDG *pdg = new TDatabasePDG();
-//     - pdg->ReadPDGtable(filename)
-//
-//  See TParticlePDG for the description of a static particle properties.
-//  See TParticle    for the description of a dynamic particle particle.
-//
-////////////////////////////////////////////////////////////////////////
+/** \class TDatabasePDG
+    \ingroup eg
+
+Particle database manager class
+
+This manager creates a list of particles which by default is
+initialised from with the constants used by PYTHIA6 (plus some
+other particles added). See definition and the format of the default
+particle list in $ROOTSYS/etc/pdg_table.txt
+
+There are 2 ways of redefining the name of the file containing the
+particle properties
+
+-# One can define the name in .rootrc file:
+
+Root.DatabasePDG: $(HOME)/my_pdg_table.txt
+
+-# One can use TDatabasePDG::ReadPDGTable method explicitly:
+
+   - TDatabasePDG *pdg = new TDatabasePDG();
+   - pdg->ReadPDGtable(filename)
+
+See TParticlePDG for the description of a static particle properties.
+See TParticle    for the description of a dynamic particle particle.
+*/
 
 ClassImp(TDatabasePDG)
 
-TDatabasePDG*  TDatabasePDG::fgInstance = 0;
+////////////////////////////////////////////////////////////////////////////////
+/// Static function holding the instance.
 
-//______________________________________________________________________________
+TDatabasePDG** GetInstancePtr()
+{
+   static TDatabasePDG* fgInstance = nullptr;
+   return &fgInstance;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create PDG database. Initialization of the DB has to be done via explicit
+/// call to ReadDataBasePDG (also done by GetParticle methods)
+
 TDatabasePDG::TDatabasePDG(): TNamed("PDGDB","The PDG particle data base")
 {
-  // Create PDG database. Initialization of the DB has to be done via explicit
-  // call to ReadDataBasePDG (also done by GetParticle methods)
-
    fParticleList  = 0;
    fPdgMap        = 0;
    fListOfClasses = 0;
-   if (fgInstance) {
+   auto fgInstance = GetInstancePtr();
+   if (*fgInstance != nullptr) {
       Warning("TDatabasePDG", "object already instantiated");
    } else {
-      fgInstance = this;
+      *fgInstance = this;
       gROOT->GetListOfSpecials()->Add(this);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup the PDG database.
+
 TDatabasePDG::~TDatabasePDG()
 {
-   // Cleanup the PDG database.
-
    if (fParticleList) {
       fParticleList->Delete();
       delete fParticleList;    // this deletes all objects in the list
@@ -83,26 +91,34 @@ TDatabasePDG::~TDatabasePDG()
       fListOfClasses->Delete();
       delete fListOfClasses;
    }
-   gROOT->GetListOfSpecials()->Remove(this);
-   fgInstance = 0;
+   if (gROOT && !gROOT->TestBit(TObject::kInvalidObject))
+      gROOT->GetListOfSpecials()->Remove(this);
+   auto fgInstance = GetInstancePtr();
+   *fgInstance = nullptr;
 }
 
-//______________________________________________________________________________
-TDatabasePDG*  TDatabasePDG::Instance()
+////////////////////////////////////////////////////////////////////////////////
+///static function
+
+TDatabasePDG* TDatabasePDG::Instance()
 {
-   //static function
-   return (fgInstance) ? (TDatabasePDG*) fgInstance : new TDatabasePDG();
+   auto fgInstance = GetInstancePtr();
+   if (*fgInstance == nullptr) {
+      // Constructor creates a new instance, inits fgInstance.
+      new TDatabasePDG();
+   }
+   return *fgInstance;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build fPdgMap mapping pdg-code to particle.
+///
+/// Initial size is set so as to be able to hold at least 600
+/// particles: 521 in default table, ALICE adds 54 more.
+/// To be revisited after LHC discovers SUSY.
+
 void TDatabasePDG::BuildPdgMap() const
 {
-   // Build fPdgMap mapping pdg-code to particle.
-   //
-   // Initial size is set so as to be able to hold at least 600
-   // particles: 521 in default table, ALICE adds 54 more.
-   // To be revisited after LHC discovers SUSY.
-
    fPdgMap = new TExMap(4*TMath::Max(600, fParticleList->GetEntries())/3 + 3);
    TIter next(fParticleList);
    TParticlePDG *p;
@@ -111,7 +127,16 @@ void TDatabasePDG::BuildPdgMap() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Particle definition normal constructor. If the particle is set to be
+///  stable, the decay width parameter does have no meaning and can be set to
+///  any value. The parameters granularity, LowerCutOff and HighCutOff are
+///  used for the construction of the mean free path look up tables. The
+///  granularity will be the number of logwise energy points for which the
+///  mean free path will be calculated.
+///
+
 TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
                                         Double_t mass, Bool_t stable,
                                         Double_t width, Double_t charge,
@@ -120,15 +145,6 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
                                         Int_t Anti,
                                         Int_t TrackingCode)
 {
-  //
-  //  Particle definition normal constructor. If the particle is set to be
-  //  stable, the decay width parameter does have no meaning and can be set to
-  //  any value. The parameters granularity, LowerCutOff and HighCutOff are
-  //  used for the construction of the mean free path look up tables. The
-  //  granularity will be the number of logwise energy points for which the
-  //  mean free path will be calculated.
-  //
-
    TParticlePDG* old = GetParticle(PDGcode);
 
    if (old) {
@@ -155,11 +171,11 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assuming particle has already been defined
+
 TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 {
-   // assuming particle has already been defined
-
    TParticlePDG* old = GetParticle(PdgCode);
 
    if (old) {
@@ -189,13 +205,13 @@ TParticlePDG* TDatabasePDG::AddAntiParticle(const char* Name, Int_t PdgCode)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Get a pointer to the particle object according to the name given
+///
+
 TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
 {
-   //
-   //  Get a pointer to the particle object according to the name given
-   //
-
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TParticlePDG *def = (TParticlePDG *)fParticleList->FindObject(name);
@@ -205,24 +221,24 @@ TParticlePDG *TDatabasePDG::GetParticle(const char *name) const
    return def;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Get a pointer to the particle object according to the MC code number
+///
+
 TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
 {
-   //
-   //  Get a pointer to the particle object according to the MC code number
-   //
-
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
    if (fPdgMap       == 0)  BuildPdgMap();
 
    return (TParticlePDG*) (Long_t)fPdgMap->GetValue((Long_t)PDGcode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print contents of PDG database.
+
 void TDatabasePDG::Print(Option_t *option) const
 {
-   // Print contents of PDG database.
-
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
 
    TIter next(fParticleList);
@@ -232,22 +248,21 @@ void TDatabasePDG::Print(Option_t *option) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts Geant3 particle codes to PDG convention. (Geant4 uses
+/// PDG convention already)
+/// Source: BaBar User Guide, Neil I. Geddes,
+///
+/// see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
+///
+/// with some fixes by PB, marked with (PB) below. Checked against
+/// PDG listings from 2000.
+///
+/// Paul Balm, Nov 19, 2001
+
 Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) const
 {
-  // Converts Geant3 particle codes to PDG convention. (Geant4 uses
-  // PDG convention already)
-  // Source: BaBar User Guide, Neil I. Geddes,
-  //
-  //Begin_Html
-  /*
-   see <A href="http://www.slac.stanford.edu/BFROOT/www/Computing/Environment/NewUser/htmlbug/node51.html"> Conversion table</A>
-  */
-  //End_Html
-  // with some fixes by PB, marked with (PB) below. Checked against
-  // PDG listings from 2000.
-  //
-  // Paul Balm, Nov 19, 2001
+
 
    switch(Geant3number) {
 
@@ -305,11 +320,11 @@ Int_t TDatabasePDG::ConvertGeant3ToPdg(Int_t Geant3number) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Converts pdg code to geant3 id
+
 Int_t TDatabasePDG::ConvertPdgToGeant3(Int_t pdgNumber) const
 {
-   // Converts pdg code to geant3 id
-
    switch(pdgNumber) {
 
       case   22     : return  1;    // photon
@@ -362,12 +377,13 @@ Int_t TDatabasePDG::ConvertPdgToGeant3(Int_t pdgNumber) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+///  Converts the ISAJET Particle number into the PDG MC number
+///
+
 Int_t TDatabasePDG::ConvertIsajetToPdg(Int_t isaNumber) const
 {
-//
-//  Converts the ISAJET Particle number into the PDG MC number
-//
    switch (isaNumber) {
       case     1 : return     2; //     UP        .30000E+00       .67
       case    -1 : return    -2; //     UB        .30000E+00      -.67
@@ -531,14 +547,14 @@ Int_t TDatabasePDG::ConvertIsajetToPdg(Int_t isaNumber) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// read list of particles from a file
+/// if the particle list does not exist, it is created, otherwise
+/// particles are added to the existing list
+/// See $ROOTSYS/etc/pdg_table.txt to see the file format
+
 void TDatabasePDG::ReadPDGTable(const char *FileName)
 {
-   // read list of particles from a file
-   // if the particle list does not exist, it is created, otherwise
-   // particles are added to the existing list
-   // See $ROOTSYS/etc/pdg_table.txt to see the file format
-
    if (fParticleList == 0) {
       fParticleList  = new THashList;
       fListOfClasses = new TObjArray;
@@ -548,11 +564,8 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
    const char *fn;
 
    if (!FileName[0]) {
-#ifdef ROOTETCDIR
-      default_name.Form("%s/pdg_table.txt", ROOTETCDIR);
-#else
-      default_name.Form("%s/etc/pdg_table.txt", gSystem->Getenv("ROOTSYS"));
-#endif
+      default_name = "pdg_table.txt";
+      gSystem->PrependPathName(TROOT::GetEtcDir(), default_name);
       fn = gEnv->GetValue("Root.DatabasePDG", default_name.Data());
    } else {
       fn = FileName;
@@ -714,19 +727,20 @@ void TDatabasePDG::ReadPDGTable(const char *FileName)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///browse data base
+
 void TDatabasePDG::Browse(TBrowser* b)
 {
-   //browse data base
    if (fListOfClasses ) fListOfClasses->Browse(b);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// write contents of the particle DB into a file
+
 Int_t TDatabasePDG::WritePDGTable(const char *filename)
 {
-   // write contents of the particle DB into a file
-
    if (fParticleList == 0) {
       Error("WritePDGTable","Do not have a valid PDG particle list;"
                             " consider loading it with ReadPDGTable first.");

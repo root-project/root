@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystemFile
 #include "TSystemFile.h"
-#endif
 
 class TOrdCollection;
 class TList;

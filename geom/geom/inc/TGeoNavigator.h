@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoNavigator
 #define ROOT_TGeoNavigator
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TGeoNodeCache
 #include "TGeoCache.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
@@ -69,7 +65,7 @@ private :
    Bool_t                fIsEntering;       //! flag if current step just got into a new node
    Bool_t                fIsExiting;        //! flag that current track is about to leave current node
    Bool_t                fIsStepEntering;   //! flag that next geometric step will enter new volume
-   Bool_t                fIsStepExiting;    //! flaag that next geometric step will exit current volume
+   Bool_t                fIsStepExiting;    //! flag that next geometric step will exit current volume
    Bool_t                fIsOutside;        //! flag that current point is outside geometry
    Bool_t                fIsOnBoundary;     //! flag that current point is on some boundary
    Bool_t                fIsSameLocation;   //! flag that a new point is in the same node as previous
@@ -208,9 +204,7 @@ public :
    ClassDef(TGeoNavigator, 0)          // geometry navigator class
 };
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

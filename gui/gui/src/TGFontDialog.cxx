@@ -116,16 +116,18 @@ static const char *gFontList2[] = {
 
 ClassImp(TGFontDialog)
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create font dialog. When closed via OK button fontProp is set to
+/// the newly selected font. If closed via Cancel button or WM close box
+/// fontProp->fName == "".
+
 TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
                            FontProp_t *fontProp, const TString &sample,
                            char **fontList, Bool_t wait) :
-              TGTransientFrame(p, t, 100, 100)
+   TGTransientFrame(p, t, 100, 100), fFontNames(0), fFontSizes(0), fFontStyles(0),
+   fTextAligns(0), fColorSelect(0), fFontProp(0), fItalic(0), fBold(0), fSize(0),
+   fTextAlign(0), fTextColor(0), fNumberOfFonts(0)
 {
-   // Create font dialog. When closed via OK button fontProp is set to
-   // the newly selected font. If closed via Cancel button or WM close box
-   // fontProp->fName == "".
-
    TGLabel *lbl;
    TGHorizontalFrame *hf, *hf2;
    TGVerticalFrame *vf;
@@ -394,20 +396,20 @@ TGFontDialog::TGFontDialog(const TGWindow *p, const TGWindow *t,
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete all widgets.
+
 TGFontDialog::~TGFontDialog()
 {
-   // Delete all widgets.
-
    //fClient->FreeFont(fLabelFont);
    fClient->FreeGC(fSampleTextGC);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when window is closed via window manager.
+
 void TGFontDialog::CloseWindow()
 {
-   // Called when window is closed via window manager.
-
    if (fWaitFor) {
       UnmapWindow();
       return;
@@ -439,11 +441,11 @@ void TGFontDialog::CloseWindow()
    UnmapWindow();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle dialog events.
+
 Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Handle dialog events.
-
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
          switch (GET_SUBMSG(msg)) {
@@ -503,11 +505,11 @@ Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build font dialog.
+
 Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
 {
-   // Build font dialog.
-
    TString family;
    TString font;
 
@@ -543,11 +545,11 @@ Bool_t TGFontDialog::Build(char **fontList, Int_t cnt)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build font style and size list boxes
+
 void TGFontDialog::UpdateStyleSize(const char *family)
 {
-   // Build font style and size list boxes
-
    if (!family) {
       return;
    }
@@ -730,11 +732,11 @@ void TGFontDialog::UpdateStyleSize(const char *family)
    fFontSizes->Layout();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets fLName and other data members.
+
 void TGFontDialog::GetFontName()
 {
-   // Sets fLName and other data members.
-
    TGTextLBEntry *e;
    const char *size, *name;
    Int_t sel;
@@ -831,11 +833,11 @@ void TGFontDialog::GetFontName()
    gErrorIgnoreLevel = sav;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set font
+
 void TGFontDialog::SetFont(TGFont *font)
 {
-   // Set font
-
    if (!font) {
       return;
    }
@@ -917,11 +919,11 @@ void TGFontDialog::SetFont(TGFont *font)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color
+
 void TGFontDialog::SetColor(Pixel_t color)
 {
-   // Set color
-
    if (fSample) {
       fTextColor = color;
       fSample->SetTextColor(fTextColor);
@@ -931,11 +933,11 @@ void TGFontDialog::SetColor(Pixel_t color)
    fInitColor = color;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set align
+
 void TGFontDialog::SetAlign(Int_t align)
 {
-   // Set align
-
    if (fSample) {
       fTextAlign = align;
       fSample->SetTextJustify(fTextAlign);
@@ -950,10 +952,10 @@ void TGFontDialog::SetAlign(Int_t align)
    fClient->NeedRedraw(fTextAligns);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable align combobox
+
 void TGFontDialog::EnableAlign(Bool_t on)
 {
-   // Enable/disable align combobox
-
    fTextAligns->SetEnabled(on);
 }

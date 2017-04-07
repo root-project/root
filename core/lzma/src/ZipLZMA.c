@@ -19,7 +19,13 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
 {
    uint64_t out_size;             /* compressed size */
    unsigned in_size   = (unsigned) (*srcsize);
+   uint32_t dict_size_est = in_size/4;
    lzma_stream stream = LZMA_STREAM_INIT;
+   lzma_options_lzma opt_lzma2;
+   lzma_filter filters[] = {
+      { .id = LZMA_FILTER_LZMA2, .options = &opt_lzma2 },
+      { .id = LZMA_VLI_UNKNOWN,  .options = NULL },
+   };
    lzma_ret returnStatus;
 
    *irep = 0;
@@ -33,9 +39,24 @@ void R__zipLZMA(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    }
 
    if (cxlevel > 9) cxlevel = 9;
-   returnStatus = lzma_easy_encoder(&stream,
-                                    (uint32_t)(cxlevel),
-                                    LZMA_CHECK_CRC32);
+
+   if (lzma_lzma_preset(&opt_lzma2, cxlevel)) {
+      return;
+   }
+
+   if (LZMA_DICT_SIZE_MIN > dict_size_est) {
+      dict_size_est = LZMA_DICT_SIZE_MIN;
+   }
+   if (opt_lzma2.dict_size > dict_size_est) {
+      /* reduce the dictionary size if larger than 1/4 the input size, preset
+         dictionaries size can be expensively large
+       */
+      opt_lzma2.dict_size = dict_size_est;
+   }
+
+   returnStatus = lzma_stream_encoder(&stream,
+                                      filters,
+                                      LZMA_CHECK_CRC32);
    if (returnStatus != LZMA_OK) {
       return;
    }

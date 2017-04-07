@@ -26,9 +26,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TKey
 #include "TKey.h"
-#endif
 
 
 class TFile;
@@ -38,8 +36,8 @@ class TBranch;
 class TBasket : public TKey {
 
 private:
-   TBasket(const TBasket&);            // TBasket objects are not copiable.
-   TBasket& operator=(const TBasket&); // TBasket objects are not copiable.
+   TBasket(const TBasket&);            ///< TBasket objects are not copiable.
+   TBasket& operator=(const TBasket&); ///< TBasket objects are not copiable.
 
    // Internal corner cases for ReadBasketBuffers
    Int_t ReadBasketBuffersUnzip(char*, Int_t, Bool_t, TFile*);
@@ -49,17 +47,17 @@ private:
    void InitializeCompressedBuffer(Int_t len, TFile* file);
 
 protected:
-   Int_t       fBufferSize;      //fBuffer length in bytes
-   Int_t       fNevBufSize;      //Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
-   Int_t       fNevBuf;          //Number of entries in basket
-   Int_t       fLast;            //Pointer to last used byte in basket
-   Bool_t      fHeaderOnly;      //True when only the basket header must be read/written
-   Int_t      *fDisplacement;    //![fNevBuf] Displacement of entries in fBuffer(TKey)
-   Int_t      *fEntryOffset;     //[fNevBuf] Offset of entries in fBuffer(TKey)
-   TBranch    *fBranch;          //Pointer to the basket support branch
-   TBuffer    *fCompressedBufferRef; //! Compressed buffer.
-   Bool_t      fOwnsCompressedBuffer; //! Whether or not we own the compressed buffer.
-   Int_t       fLastWriteBufferSize; //! Size of the buffer last time we wrote it to disk
+   Int_t       fBufferSize;      ///< fBuffer length in bytes
+   Int_t       fNevBufSize;      ///< Length in Int_t of fEntryOffset OR fixed length of each entry if fEntryOffset is null!
+   Int_t       fNevBuf;          ///< Number of entries in basket
+   Int_t       fLast;            ///< Pointer to last used byte in basket
+   Bool_t      fHeaderOnly;      ///< True when only the basket header must be read/written
+   Int_t      *fDisplacement;    ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
+   Int_t      *fEntryOffset;     ///<[fNevBuf] Offset of entries in fBuffer(TKey)
+   TBranch    *fBranch;          ///<Pointer to the basket support branch
+   TBuffer    *fCompressedBufferRef; ///<! Compressed buffer.
+   Bool_t      fOwnsCompressedBuffer; ///<! Whether or not we own the compressed buffer.
+   Int_t       fLastWriteBufferSize; ///<! Size of the buffer last time we wrote it to disk
 
 public:
 

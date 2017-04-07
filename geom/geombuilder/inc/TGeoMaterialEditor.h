@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoMaterial;
 class TGeoTabManager;
@@ -85,9 +81,9 @@ public:
    void           DoPressure();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoMaterialEditor,0)   // TGeoMaterial editor
-};   
+};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -100,11 +96,11 @@ public:
 class TGCheckButton;
 class TGeoMixture;
 
-class TGeoMixtureEditor : public TGeoMaterialEditor {  
+class TGeoMixtureEditor : public TGeoMaterialEditor {
 
 protected:
 
-   TGeoMixture         *fMixture;           // Mixture object 
+   TGeoMixture         *fMixture;           // Mixture object
 
    TGComboBox          *fMixElem;           // Combo box for elements
    TGLabel             *fNelem;             // Label for number of elements
@@ -127,7 +123,7 @@ public:
    virtual ~TGeoMixtureEditor() {}
    virtual void   SetModel(TObject *obj);
    void           UpdateElements();
-  
+
    void           DoApply1();
    void           DoUndo1();
    void           DoChkFraction();
@@ -138,6 +134,6 @@ public:
    void           DoAddElem();
 
    ClassDef(TGeoMixtureEditor,0)   // TGeoMixture editor
-};   
+};
 
-#endif                    
+#endif

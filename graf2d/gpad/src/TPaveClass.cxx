@@ -16,137 +16,129 @@
 ClassImp(TPaveClass)
 
 
-//______________________________________________________________________________
-//  A PaveClass is a TPaveLabel  specialized to process classes
-//  inside a TClassTree.
-//   A TPaveClass object is used by the TClassTree to represent a class.
-//   A TPaveClass has the same graphical representation as a TPaveLabel.
-//   Using the context menu on can select additional options in the ClassTree:
-//     - Show classes using this class
-//     - Show all classes used by this class
+/** \class TPaveClass
+\ingroup gpad
 
+A TPaveLabel specialized to process classes inside a TClassTree.
+A TPaveClass object is used by the TClassTree to represent a class.
+A TPaveClass has the same graphical representation as a TPaveLabel.
 
-//______________________________________________________________________________
+Using the context menu on can select additional options in the ClassTree:
+  - Show classes using this class
+  - Show all classes used by this class
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// PaveClass default constructor.
+
 TPaveClass::TPaveClass(): TPaveLabel()
 {
-   // PaveClass default constructor.
-
    fClassTree  = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// PaveClass normal constructor.
 
-//______________________________________________________________________________
 TPaveClass::TPaveClass(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, TClassTree *classtree)
            :TPaveLabel(x1,y1,x2,y2,label,"br")
 {
-   // PaveClass normal constructor.
-
    fClassTree  = classtree;
    SetName(label);
    SetTextFont(61);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// PaveClass default destructor.
 
-//______________________________________________________________________________
 TPaveClass::~TPaveClass()
 {
-   // PaveClass default destructor.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// PaveClass copy constructor.
 
-//______________________________________________________________________________
 TPaveClass::TPaveClass(const TPaveClass &PaveClass) : TPaveLabel(PaveClass)
 {
-   // PaveClass copy constructor.
-
    ((TPaveClass&)PaveClass).Copy(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy this PaveClass to PaveClass.
 
-//______________________________________________________________________________
 void TPaveClass::Copy(TObject &obj) const
 {
-   // Copy this PaveClass to PaveClass.
-
    TPaveLabel::Copy(obj);
    ((TPaveClass&)obj).fClassTree      = fClassTree;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw classes.
 
-//______________________________________________________________________________
 void TPaveClass::DrawClasses(const char *classes)
 {
-   // Draw classes.
-
    if (!fClassTree) return;
    if (!strcmp(classes,"this")) fClassTree->Draw(GetName());
    else                         fClassTree->Draw(classes);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save as.
 
-//______________________________________________________________________________
 void TPaveClass::SaveAs(const char *filename, Option_t *option) const
 {
-   // Save as.
-
    if (!fClassTree) return;
    fClassTree->SaveAs(filename,option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set classes.
 
-//______________________________________________________________________________
 void TPaveClass::SetClasses(const char *classes, Option_t *option)
 {
-   // Set classes.
-
    if (!fClassTree) return;
    if (!strcmp(classes,"this")) fClassTree->SetClasses(GetName(),option);
    else                         fClassTree->SetClasses(classes,option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set link options in the ClassTree object.
+///
+///  - "C"  show References from code
+///  - "H"  show "Has a" relations
+///  - "M"  show Multiple Inheritance
+///  - "R"  show References from data members
 
-//______________________________________________________________________________
 void TPaveClass::ShowLinks(Option_t *option)
 {
-   // Set link options in the ClassTree object.
-   //
-   //   "C"  show References from code
-   //   "H"  show "Has a" relations
-   //   "M"  show Multiple Inheritance
-   //   "R"  show References from data members
-
    if (!fClassTree) return;
    fClassTree->ShowLinks(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Show classes used by.
 
-//______________________________________________________________________________
 void TPaveClass::ShowClassesUsedBy(const char *classes)
 {
-   // Show classes used by.
-
    if (!fClassTree) return;
    if (!strcmp(classes,"this")) fClassTree->ShowClassesUsedBy(GetName());
    else                         fClassTree->ShowClassesUsedBy(classes);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Show classes using.
 
-//______________________________________________________________________________
 void TPaveClass::ShowClassesUsing(const char *classes)
 {
-   // Show classes using.
-
    if (!fClassTree) return;
    if (!strcmp(classes,"this")) fClassTree->ShowClassesUsing(GetName());
    else                         fClassTree->ShowClassesUsing(classes);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Save primitive as a C++ statement(s) on output stream out
 
-//______________________________________________________________________________
 void TPaveClass::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   // Save primitive as a C++ statement(s) on output stream out
-
    char quote = '"';
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TPaveClass::Class())) {

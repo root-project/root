@@ -20,21 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
 
 class TClass;
 class TEnumConstant;

@@ -44,7 +44,7 @@ namespace llvm {
 
     explicit ScheduleDAGSDNodes(MachineFunction &mf);
 
-    virtual ~ScheduleDAGSDNodes() {}
+    ~ScheduleDAGSDNodes() override {}
 
     /// Run - perform scheduling.
     ///
@@ -64,6 +64,7 @@ namespace llvm {
       if (isa<TargetIndexSDNode>(Node))    return true;
       if (isa<JumpTableSDNode>(Node))      return true;
       if (isa<ExternalSymbolSDNode>(Node)) return true;
+      if (isa<MCSymbolSDNode>(Node))       return true;
       if (isa<BlockAddressSDNode>(Node))   return true;
       if (Node->getOpcode() == ISD::EntryToken ||
           isa<MDNodeSDNode>(Node)) return true;
@@ -84,12 +85,6 @@ namespace llvm {
     /// excludes nodes that aren't interesting to scheduling, and represents
     /// flagged together nodes with a single SUnit.
     void BuildSchedGraph(AliasAnalysis *AA);
-
-    /// InitVRegCycleFlag - Set isVRegCycle if this node's single use is
-    /// CopyToReg and its only active data operands are CopyFromReg within a
-    /// single block loop.
-    ///
-    void InitVRegCycleFlag(SUnit *SU);
 
     /// InitNumRegDefsLeft - Determine the # of regs defined by this node.
     ///

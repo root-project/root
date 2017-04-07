@@ -23,17 +23,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFormulaOld
-#include "TFormulaOld.h"
-#endif
+#include "v5/TFormula.h"
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <string>
 #include <vector>
@@ -61,7 +55,7 @@ class TAxis;
 class TTreeFormulaManager;
 
 
-class TTreeFormula : public TFormulaOld {
+class TTreeFormula : public ROOT::v5::TFormula {
 
 friend class TTreeFormulaManager;
 
@@ -77,7 +71,8 @@ protected:
       kIndexOfEntry, kEntries, kLength, kIteration, kLengthFunc, kSum, kEntryList,
       kTreeMember,
       kIndexOfLocalEntry,
-      kMin, kMax
+      kMin, kMax,
+      kLocalEntries
 
    };
    enum {
@@ -90,7 +85,7 @@ protected:
    };
 
    TTree       *fTree;            //! pointer to Tree
-   Short_t     fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
+   Int_t        fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
    Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or datamember.
    Int_t       fNcodes;           //  Number of leaves referenced in formula
    Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
@@ -124,7 +119,7 @@ protected:
    TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
-   LongDouble_t*        fConstLD;   // local version of fConsts able to store bigger numbers
+   LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
@@ -205,7 +200,7 @@ public:
    virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula,9)  //The Tree formula
+   ClassDef(TTreeFormula, 10);  //The Tree formula
 };
 
 #endif

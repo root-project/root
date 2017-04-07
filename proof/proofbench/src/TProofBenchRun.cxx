@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofBenchRun                                                       //
-//                                                                      //
-// Abstract base class for PROOF benchmark run.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TProofBenchRun
+\ingroup proofbench
+
+Abstract base class for PROOF benchmark runs
+
+*/
 
 #include "TProofBenchRun.h"
 #include "TList.h"
@@ -23,11 +22,11 @@
 
 ClassImp(TProofBenchRun)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor: check PROOF and load selectors PAR
+
 TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
 {
-   // Constructor: check PROOF and load selectors PAR
-
    fProof = proof;
    if (!fProof){
       fProof = gProof;
@@ -39,8 +38,9 @@ TProofBenchRun::TProofBenchRun(TProof *proof, const char *sel) : fSelName(sel)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///destructor
+
 TProofBenchRun::~TProofBenchRun()
 {
-   //destructor
 }

@@ -1,8 +1,14 @@
-//Author: Timur Pocheptsov, 19/03/2014.
-//Gradient fill with transparency and the "SAME" option.
-//To use this macro you need OpenGL enabled in pad:
-//either set OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc;
-//or call gStyle->SetCanvasPreferGL(kTRUE); before canvas created.
+/// \file
+/// \ingroup tutorial_gl
+/// Gradient fill with transparency and the "SAME" option.
+/// To use this macro you need OpenGL enabled in pad:
+/// either set OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc;
+/// or call `gStyle->SetCanvasPreferGL(kTRUE);` before canvas created.
+///
+/// \macro_image(nobatch)
+/// \macro_code
+///
+/// \author  Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"

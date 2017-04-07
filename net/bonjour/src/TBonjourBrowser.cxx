@@ -40,11 +40,11 @@
 
 ClassImp(TBonjourBrowser)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TBonjourBrowser::TBonjourBrowser() : fDNSRef(0), fBonjourSocketHandler(0)
 {
-   // Default ctor.
-
    fBonjourRecords = new TList;
    fBonjourRecords->SetOwner();
 
@@ -52,11 +52,11 @@ TBonjourBrowser::TBonjourBrowser() : fDNSRef(0), fBonjourSocketHandler(0)
    gSystem->Setenv("AVAHI_COMPAT_NOWARN", "1");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TBonjourBrowser::~TBonjourBrowser()
 {
-   // Cleanup.
-
    delete fBonjourRecords;
    delete fBonjourSocketHandler;
 
@@ -66,12 +66,12 @@ TBonjourBrowser::~TBonjourBrowser()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tell Bonjour to start browsing for a specific type of service.
+/// Returns -1 in case of error, 0 otherwise.
+
 Int_t TBonjourBrowser::BrowseForServiceType(const char *serviceType)
 {
-   // Tell Bonjour to start browsing for a specific type of service.
-   // Returns -1 in case of error, 0 otherwise.
-
    DNSServiceErrorType err = DNSServiceBrowse(&fDNSRef, 0,
                                               0, serviceType, 0,
                                               (DNSServiceBrowseReply)BonjourBrowseReply,
@@ -94,21 +94,21 @@ Int_t TBonjourBrowser::BrowseForServiceType(const char *serviceType)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit CurrentBonjourRecordsChanged signal.
+
 void TBonjourBrowser::CurrentBonjourRecordsChanged(TList *bonjourRecords)
 {
-   // Emit CurrentBonjourRecordsChanged signal.
-
    Emit("CurrentBonjourRecordsChanged(TList*)", (Long_t)bonjourRecords);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Bonjour socket is ready for reading. Tell Bonjour to process the
+/// information on the socket, this will invoke the BonjourBrowseReply
+/// callback. This is a private slot, used in BrowseForServiceType.
+
 void TBonjourBrowser::BonjourSocketReadyRead()
 {
-   // The Bonjour socket is ready for reading. Tell Bonjour to process the
-   // information on the socket, this will invoke the BonjourBrowseReply
-   // callback. This is a private slot, used in BrowseForServiceType.
-
    // in case the browser has already been deleted
    if (!fDNSRef) return;
 
@@ -117,15 +117,15 @@ void TBonjourBrowser::BonjourSocketReadyRead()
       Error("BonjourSocketReadyRead", "error in DNSServiceProcessResult");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static Bonjour browser callback function.
+
 void TBonjourBrowser::BonjourBrowseReply(DNSServiceRef,
                                          DNSServiceFlags flags, UInt_t,
                                          DNSServiceErrorType errorCode,
                                          const char *serviceName, const char *regType,
                                          const char *replyDomain, void *context)
 {
-   // Static Bonjour browser callback function.
-
    TBonjourBrowser *browser = static_cast<TBonjourBrowser*>(context);
    if (errorCode != kDNSServiceErr_NoError) {
       ::Error("TBonjourBrowser::BonjourBrowseReply", "error in BonjourBrowseReply");

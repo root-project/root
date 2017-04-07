@@ -43,6 +43,7 @@
 #pragma link C++ class RooBernstein+ ;
 #pragma link C++ class RooChiSquarePdf+ ;
 #pragma link C++ class RooIntegralMorph+ ;
+#pragma link C++ class RooIntegralMorph::MorphCacheElem+ ;
 #pragma link C++ class RooMomentMorph+ ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;

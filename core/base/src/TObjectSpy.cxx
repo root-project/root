@@ -13,29 +13,28 @@
 #include "TROOT.h"
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TObjectSpy, TObjectRefSpy                                            //
-//                                                                      //
-// Monitors objects for deletion and reflects the deletion by reverting //
-// the internal pointer to zero. When this pointer is zero we know the  //
-// object has been deleted. This avoids the unsafe TestBit(kNotDeleted) //
-// hack. The spied object must have the kMustCleanup bit set otherwise  //
-// you will get an error.                                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TObjectRefSpy
+    \class TObjectSpy
+\ingroup Base
+
+Monitors objects for deletion and reflects the deletion by reverting
+the internal pointer to zero. When this pointer is zero we know the
+object has been deleted. This avoids the unsafe TestBit(kNotDeleted)
+hack. The spied object must have the kMustCleanup bit set otherwise
+you will get an error.
+*/
 
 ClassImp(TObjectSpy)
 ClassImp(TObjectRefSpy)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the object that must be spied. The object must have the
+/// kMustCleanup bit set. If the object has been deleted during a
+/// RecusiveRemove() operation, GetObject() will return 0.
+
 TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
    TObject(), fObj(obj), fResetMustCleanupBit(kFALSE)
 {
-   // Register the object that must be spied. The object must have the
-   // kMustCleanup bit set. If the object has been deleted during a
-   // RecusiveRemove() operation, GetObject() will return 0.
-
    gROOT->GetListOfCleanups()->Add(this);
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
@@ -47,33 +46,33 @@ TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TObjectSpy::~TObjectSpy()
 {
-   // Cleanup.
-
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the object pointer to zero if the object is deleted in the
+/// RecursiveRemove() operation.
+
 void TObjectSpy::RecursiveRemove(TObject *obj)
 {
-   // Sets the object pointer to zero if the object is deleted in the
-   // RecursiveRemove() operation.
-
    if (obj == fObj) {
       fObj = 0;
       fResetMustCleanupBit = kFALSE;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set obj as the spy target.
+
 void TObjectSpy::SetObject(TObject *obj, Bool_t fixMustCleanupBit)
 {
-   // Set obj as the spy target.
-
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
    fResetMustCleanupBit = kFALSE;
@@ -91,14 +90,14 @@ void TObjectSpy::SetObject(TObject *obj, Bool_t fixMustCleanupBit)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register the object that must be spied. The object must have the
+/// kMustCleanup bit set. If the object has been deleted during a
+/// RecusiveRemove() operation, GetObject() will return 0.
+
 TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
    fObj(obj), fResetMustCleanupBit(kFALSE)
 {
-   // Register the object that must be spied. The object must have the
-   // kMustCleanup bit set. If the object has been deleted during a
-   // RecusiveRemove() operation, GetObject() will return 0.
-
    gROOT->GetListOfCleanups()->Add(this);
    if (fObj && !fObj->TestBit(kMustCleanup)) {
       if (fixMustCleanupBit) {
@@ -110,22 +109,22 @@ TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TObjectRefSpy::~TObjectRefSpy()
 {
-   // Cleanup.
-
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the object pointer to zero if the object is deleted in the
+/// RecursiveRemove() operation.
+
 void TObjectRefSpy::RecursiveRemove(TObject *obj)
 {
-   // Sets the object pointer to zero if the object is deleted in the
-   // RecursiveRemove() operation.
-
    if (obj == fObj) {
       fObj = 0;
       fResetMustCleanupBit = kFALSE;

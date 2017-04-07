@@ -27,7 +27,7 @@ CXX           ?= g++
 CC            ?= gcc
 CXXFLAGS      = -pipe -m64 $(CXX11FLAGS) -Wshadow -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) \
-                -Wno-deprecated-declarations $(USERCONF_CXXFLAGS)
+                $(USERCONF_CXXFLAGS)
 CFLAGS        = -pipe -m64 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS) $(USERCONF_CFLAGS)
 COMPILER      = gnu
 
@@ -62,7 +62,9 @@ F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.$(SOEXT))
 else
 F77LIBS      := $(shell $(F77) -m64 -print-file-name=libgfortran.a)
 endif
+ifneq ($(shell $(F77) -m64 -print-file-name=libgfortranbegin.a),libgfortranbegin.a)
 F77LIBS      += $(shell $(F77) -m64 -print-file-name=libgfortranbegin.a)
+endif
 endif
 
 ifneq ($(findstring g77, $(F77)),)
@@ -80,9 +82,3 @@ endif
 
 # Extras
 GLIBC_MALLOC_DEPRECATED = yes
-
-ifneq ($(CXX:%clang++=),$(CXX))
-ifneq ($(CXXMODULES),)
-  CXXFLAGS += -fmodules
-endif
-endif

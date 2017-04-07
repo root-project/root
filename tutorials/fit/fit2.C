@@ -1,18 +1,29 @@
+/// \file
+/// \ingroup tutorial_fit
+/// \notebook
+/// Fitting a 2-D histogram
+/// This tutorial illustrates :
+///  - how to create a 2-d function
+///  - fill a 2-d histogram randomly from this function
+///  - fit the histogram
+///  - display the fitted function on top of the histogram
+///
+/// This example can be executed via the interpreter or ACLIC
+///
+/// ~~~{.cpp}
+///   root > .x fit2.C
+///   root > .x fit2.C++
+/// ~~~
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \author Rene Brun
+
 #include "TF2.h"
 #include "TH2.h"
 #include "TMath.h"
-
-// Fitting a 2-D histogram
-// This tutorial illustrates :
-//  - how to create a 2-d function
-//  - fill a 2-d histogram randomly from this function
-//  - fit the histogram
-//  - display the fitted function on top of the histogram
-//
-// This example can be executed via the interpreter or ACLIC
-//   root > .x fit2.C
-//   root > .x fit2.C++
-//Author: Rene Brun
 
 Double_t g2(Double_t *x, Double_t *par) {
    Double_t r1 = Double_t((x[0]-par[1])/par[2]);

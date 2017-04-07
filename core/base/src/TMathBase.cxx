@@ -9,28 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMath Base functions                                                 //
-//                                                                      //
-// Define the functions Min, Max, Abs, Sign, Range for all types.       //
-// NB: These functions are unfortunately not available in a portable    //
-// way in std::.                                                        //
-//                                                                      //
-// More functions are defined in TMath.h. TMathBase.h is designed to be //
-// a stable file and used in place of TMath.h in the ROOT miniCore.     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** TMath Base functions
+\ingroup Base
+
+Define the functions Min, Max, Abs, Sign, Range for all types.
+NB: These functions are unfortunately not available in a portable
+way in std::.
+
+More functions are defined in TMath.h. TMathBase.h is designed to be
+a stable file and used in place of TMath.h in the ROOT miniCore.
+*/
 
 #include "TMathBase.h"
 #include <math.h>
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return next prime number after x, unless x is a prime in which case
+/// x is returned.
+
 Long_t TMath::NextPrime(Long_t x)
 {
-   // Return next prime number after x, unless x is a prime in which case
-   // x is returned.
-
    if (x <= 2)
       return 2;
    if (x == 3)

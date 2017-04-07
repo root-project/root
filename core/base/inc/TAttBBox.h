@@ -12,9 +12,7 @@
 #ifndef ROOT_TAttBBox
 #define ROOT_TAttBBox
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttBBox
 {
@@ -47,6 +45,8 @@ public:
    Float_t* AssertBBox()      { if(fBBox == 0) ComputeBBox(); return fBBox; }
    void     ResetBBox()       { if(fBBox != 0) BBoxClear(); }
 
+   void     SetupBBoxCube(Float_t extent, Float_t x, Float_t y, Float_t z);
+
    virtual void ComputeBBox() = 0;
 
    ClassDef(TAttBBox,1); // Helper for management of bounding-box information
@@ -57,9 +57,12 @@ public:
 
 inline void TAttBBox::BBoxCheckPoint(Float_t x, Float_t y, Float_t z)
 {
-   if(x < fBBox[0]) fBBox[0] = x;   if(x > fBBox[1]) fBBox[1] = x;
-   if(y < fBBox[2]) fBBox[2] = y;   if(y > fBBox[3]) fBBox[3] = y;
-   if(z < fBBox[4]) fBBox[4] = z;   if(z > fBBox[5]) fBBox[5] = z;
+   if(x < fBBox[0]) fBBox[0] = x;
+   if(x > fBBox[1]) fBBox[1] = x;
+   if(y < fBBox[2]) fBBox[2] = y;
+   if(y > fBBox[3]) fBBox[3] = y;
+   if(z < fBBox[4]) fBBox[4] = z;
+   if(z > fBBox[5]) fBBox[5] = z;
 }
 
 inline void TAttBBox::BBoxCheckPoint(const Float_t* p)

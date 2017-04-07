@@ -14,29 +14,11 @@
 #define ROOT_TGX11TTF
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGX11TTF                                                             //
-//                                                                      //
-// Interface to low level X11 (Xlib). This class gives access to basic  //
-// X11 graphics via the parent class TGX11. However, all text and font  //
-// handling is done via the Freetype TrueType library. When the         //
-// shared library containing this class is loaded the global gVirtualX  //
-// is redirected to point to this class.                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TGX11
 #include "TGX11.h"
-#endif
 
-#ifndef ROOT_TTF
 #include "TTF.h"
-#endif
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #ifdef R__HAS_XFT
 class TXftFontHash;
@@ -48,9 +30,9 @@ private:
    enum EAlign { kNone, kTLeft, kTCenter, kTRight, kMLeft, kMCenter, kMRight,
                         kBLeft, kBCenter, kBRight };
 
-   FT_Vector   fAlign;                 // alignment vector
+   FT_Vector   fAlign;                 ///< alignment vector
 #ifdef R__HAS_XFT
-   TXftFontHash  *fXftFontHash;        // hash table for Xft fonts
+   TXftFontHash  *fXftFontHash;        ///< hash table for Xft fonts
 #endif
 
    void     Align(void);
@@ -78,9 +60,13 @@ public:
    //void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
    FontStruct_t LoadQueryFont(const char *font_name);
    void         DeleteFont(FontStruct_t fs);
+   void         DeleteGC(GContext_t gc);
    void         DrawString(Drawable_t id, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
    Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
    void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
+   FontH_t      GetFontHandle(FontStruct_t fs);
+   FontStruct_t GetGCFont(GContext_t gc);
+   void         MapGCFont(GContext_t gc, FontStruct_t font);
 #endif
 
    static void  Activate();

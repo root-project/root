@@ -13,28 +13,15 @@
 #define ROOT_TSlider
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSlider                                                              //
-//                                                                      //
-//  A TSlider object is a specialized TPad including a TSliderBox object//
-//  The TSliderBox can be moved in the pad.                             //
-//  Slider drawing options include the possibility to change the slider //
-//  starting and ending positions or only one of them.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 
 class TSlider : public TPad {
 
 protected:
-   Double_t      fMinimum;      //Slider minimum value in [0,1]
-   Double_t      fMaximum;      //Slider maximum value in [0,1]
-   TObject      *fObject;       //!Pointer to associated object
-   TString       fMethod;       //command to be executed when slider is changed
+   Double_t      fMinimum;      ///< Slider minimum value in [0,1]
+   Double_t      fMaximum;      ///< Slider maximum value in [0,1]
+   TObject      *fObject;       ///<!Pointer to associated object
+   TString       fMethod;       ///< command to be executed when slider is changed
 
 private:
    TSlider(const TSlider &org);             // no copy, use TObject::Clone()

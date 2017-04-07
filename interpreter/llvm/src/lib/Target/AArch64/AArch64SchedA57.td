@@ -30,6 +30,7 @@ def CortexA57Model : SchedMachineModel {
   // Enable partial & runtime unrolling. The magic number is chosen based on
   // experiments and benchmarking data.
   let LoopMicroOpBufferSize = 16;
+  let CompleteModel = 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -60,7 +61,12 @@ include "AArch64SchedA57WriteRes.td"
 // Cortex-A57. The Cortex-A57 types are directly associated with resources, so
 // defining the aliases precludes the need for mapping them using WriteRes. The
 // aliases are sufficient for creating a coarse, working model. As the model
-// evolves, InstRWs will be used to override these SchedAliases.
+// evolves, InstRWs will be used to override some of these SchedAliases.
+//
+// WARNING: Using SchedAliases is convenient and works well for latency and
+//          resource lookup for instructions. However, this creates an entry in
+//          AArch64WriteLatencyTable with a WriteResourceID of 0, breaking
+//          any SchedReadAdvance since the lookup will fail.
 
 def : SchedAlias<WriteImm,   A57Write_1cyc_1I>;
 def : SchedAlias<WriteI,     A57Write_1cyc_1I>;
@@ -70,8 +76,8 @@ def : SchedAlias<WriteExtr,  A57Write_1cyc_1I>;
 def : SchedAlias<WriteIS,    A57Write_1cyc_1I>;
 def : SchedAlias<WriteID32,  A57Write_19cyc_1M>;
 def : SchedAlias<WriteID64,  A57Write_35cyc_1M>;
-def : SchedAlias<WriteIM32,  A57Write_3cyc_1M>;
-def : SchedAlias<WriteIM64,  A57Write_5cyc_1M>;
+def : WriteRes<WriteIM32, [A57UnitM]> { let Latency = 3; }
+def : WriteRes<WriteIM64, [A57UnitM]> { let Latency = 5; }
 def : SchedAlias<WriteBr,    A57Write_1cyc_1B>;
 def : SchedAlias<WriteBrReg, A57Write_1cyc_1B>;
 def : SchedAlias<WriteLD,    A57Write_4cyc_1L>;
@@ -90,6 +96,8 @@ def : SchedAlias<WriteFDiv,  A57Write_18cyc_1X>;
 def : SchedAlias<WriteV,     A57Write_3cyc_1V>;
 def : SchedAlias<WriteVLD,   A57Write_5cyc_1L>;
 def : SchedAlias<WriteVST,   A57Write_1cyc_1S>;
+
+def : WriteRes<WriteAtomic,  []> { let Unsupported = 1; }
 
 def : WriteRes<WriteSys,     []> { let Latency = 1; }
 def : WriteRes<WriteBarrier, []> { let Latency = 1; }
@@ -125,6 +133,15 @@ def : InstRW<[WriteI], (instrs COPY)>;
 
 def : InstRW<[A57Write_1cyc_1B_1I], (instrs BL)>;
 def : InstRW<[A57Write_2cyc_1B_1I], (instrs BLR)>;
+
+
+// Shifted Register with Shift == 0
+// ----------------------------------------------------------------------------
+
+def A57WriteISReg : SchedWriteVariant<[
+       SchedVar<RegShiftedPred, [WriteISReg]>,
+       SchedVar<NoSchedPred, [WriteI]>]>;
+def : InstRW<[A57WriteISReg], (instregex ".*rs$")>;
 
 
 // Divide and Multiply Instructions

@@ -1,22 +1,21 @@
-// tutorial illustrating the new statistical  distributions functions (pdf, cdf and quantile)
+/// \file
+/// \ingroup tutorial_math
+/// \notebook
+/// Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Anna Kreshuk
 
-#ifndef __CINT__
 #include "Math/DistFunc.h"
 #include "TF1.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TLegend.h"
 #include "TAxis.h"
-#endif
-
-
 
 void normalDist() {
-
-// #ifdef __CINT__
-//    gSystem->Load("libMathCore");
-//    gSystem->Load("libMathMore");
-// #endif
 
    TF1 *pdfunc  = new TF1("pdf","ROOT::Math::normal_pdf(x, [0],[1])",-5,5);
    TF1 *cdfunc  = new TF1("cdf","ROOT::Math::normal_cdf(x, [0],[1])",-5,5);
@@ -33,10 +32,6 @@ void normalDist() {
    pdfunc->GetXaxis()->SetTitleSize(0.07);
    pdfunc->GetXaxis()->SetTitleOffset(0.55);
    pdfunc->GetYaxis()->SetLabelSize(0.06);
-
-
-
-
 
    cdfunc->SetParameters(1.0,0.0);  // set sigma to 1 and mean to zero
    cdfunc->SetTitle("");
@@ -75,7 +70,6 @@ void normalDist() {
    cqfunc->SetLineColor(kGreen);
    cqfunc->SetNpx(1000);
 
-
    TCanvas * c1 = new TCanvas("c1","Normal Distributions",100,10,600,800);
 
    c1->Divide(1,3);
@@ -101,7 +95,4 @@ void normalDist() {
    legend3->AddEntry(qfunc,"normal_quantile","l");
    legend3->AddEntry(cqfunc,"normal_quantile_c","l");
    legend3->Draw();
-
-
-
 }

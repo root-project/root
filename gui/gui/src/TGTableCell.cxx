@@ -38,7 +38,9 @@ ClassImp(TGTableCell)
 const TGGC *TGTableCell::fgDefaultGC = 0;
 const TGFont *TGTableCell::fgDefaultFont = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableCell constructor.
+
 TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGString *label,
                          UInt_t row, UInt_t column, UInt_t width, UInt_t height,
                          GContext_t norm, FontStruct_t font, UInt_t option,
@@ -48,8 +50,6 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGString *label,
      fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
-   // TGTableCell constructor.
-
    if (label) {
       fLabel = label;
    } else {
@@ -60,7 +60,9 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, TGString *label,
    Init(resize);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableCell constructor
+
 TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
                          UInt_t row, UInt_t column, UInt_t width, UInt_t height,
                          GContext_t norm, FontStruct_t font, UInt_t option,
@@ -70,8 +72,6 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
      fFontStruct(font), fHasOwnFont(kFALSE), fColumn(column), fRow(row),
      fTable(table)
 {
-   // TGTableCell constructor
-
    if (label) {
       fLabel = new TGString(label);
    } else {
@@ -123,21 +123,21 @@ TGTableCell::TGTableCell(const TGWindow *p, TGTable *table, const char *label,
 // }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGTableCell destructor.
+
 TGTableCell::~TGTableCell()
 {
-   // TGTableCell destructor.
-
    if (fImage) delete fImage;
    if (fLabel) delete fLabel;
    if (fTip) delete fTip;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the TGTableCell.
+
 void TGTableCell::Init(Bool_t resize)
 {
-   // Initialise the TGTableCell.
-
    Int_t max_ascent = 0, max_descent = 0;
 
    fTWidth  = gVirtualX->TextWidth(fFontStruct, fLabel->GetString(), fLabel->GetLength());
@@ -170,11 +170,11 @@ void TGTableCell::Init(Bool_t resize)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw the TGTableCell.
+
 void TGTableCell::DoRedraw()
 {
-   // Redraw the TGTableCell.
-
    TGFrame::DoRedraw();
 
    Int_t x = 0, y = 0;
@@ -204,78 +204,78 @@ void TGTableCell::DoRedraw()
    fLabel->Draw(fId, fNormGC, x, y);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move the TGTableCell and redraw it.
+
 void TGTableCell::MoveDraw(Int_t x, Int_t y)
 {
-   // Move the TGTableCell and redraw it.
-
    // Note, this method is unused.
 
    TGFrame::Move(x, y);
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableCell.
+
 void TGTableCell::Resize(UInt_t width, UInt_t height)
 {
-   // Resize the TGTableCell.
-
    fWidth = width;
    fHeight = height;
    TGFrame::Resize(width, height);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the TGTableCell.
+
 void TGTableCell::Resize(TGDimension newsize)
 {
-   // Resize the TGTableCell.
-
    Resize(newsize.fWidth, newsize.fHeight);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default font structure.
+
 FontStruct_t TGTableCell::GetDefaultFontStruct()
 {
-   // Return default font structure.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetDefaultFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return default graphics context.
+
 const TGGC &TGTableCell::GetDefaultGC()
 {
-   // Return default graphics context.
-
    if (!fgDefaultGC)
       fgDefaultGC = gClient->GetResourcePool()->GetFrameGC();
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw the cell border.
+
 void TGTableCell::DrawBorder()
 {
-   // Draw the cell border.
-
    // FIXME Borders are drawn very crudely. There is much room for improvement.
    gVirtualX->DrawRectangle(fId, fNormGC, 0, 0, fWidth - 1, fHeight - 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// DrawBorder called from DrawCopy.
+
 void TGTableCell::DrawBorder(Handle_t id, Int_t x, Int_t y)
 {
-   // DrawBorder called from DrawCopy.
-
    gVirtualX->DrawRectangle(id, fNormGC, x, y, x + fWidth - 1, y +fHeight - 1);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Highlight the this TGTableCell.
+
 void TGTableCell::Highlight()
 {
-   // Highlight the this TGTableCell.
-
    // Currently not implemented.
 }
 
@@ -291,13 +291,13 @@ void TGTableCell::Highlight()
 //    fColumn = column;
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw list view item in other window.
+/// List view item is placed and layout in the container frame,
+/// but is drawn in viewport.
+
 void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Draw list view item in other window.
-   // List view item is placed and layout in the container frame,
-   // but is drawn in viewport.
-
    // FIXME this method is only needed if the table container frame is a
    // TGContainer. It is broken and not used in the current implementation.
 
@@ -337,11 +337,11 @@ void TGTableCell::DrawCopy(Handle_t id, Int_t x, Int_t y)
    fLabel->Draw(id, fNormGC, x + lx, y + ly);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the label of this cell to label.
+
 void TGTableCell::SetLabel(const char *label)
 {
-   // Set the label of this cell to label.
-
    fLabel->SetString(label);
 
    Int_t max_ascent = 0, max_descent = 0;
@@ -352,11 +352,11 @@ void TGTableCell::SetLabel(const char *label)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the image that this cell contains to image.
+
 void TGTableCell::SetImage(TGPicture *image)
 {
-   // Set the image that this cell contains to image.
-
    // Note: currently not used.
    if (fImage) delete fImage;
    fImage = image;
@@ -367,12 +367,12 @@ void TGTableCell::SetImage(TGPicture *image)
 // {
 // }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font.
+/// If global is kTRUE font is changed globally, otherwise - locally.
+
 void TGTableCell::SetFont(FontStruct_t font)
 {
-   // Changes text font.
-   // If global is kTRUE font is changed globally, otherwise - locally.
-
    if (font != fFontStruct) {
       FontH_t v = gVirtualX->GetFontHandle(font);
       if (!v) return;
@@ -391,46 +391,46 @@ void TGTableCell::SetFont(FontStruct_t font)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Changes text font specified by name.
+/// If global is true color is changed globally, otherwise - locally.
+
 void TGTableCell::SetFont(const char *fontName)
 {
-   // Changes text font specified by name.
-   // If global is true color is changed globally, otherwise - locally.
-
    TGFont *font = fClient->GetFont(fontName);
    if (font) {
       SetFont(font->GetFontStruct());
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the text justify mode of the cell to mode.
+
 void TGTableCell::SetTextJustify(Int_t tmode)
 {
-   // Set the text justify mode of the cell to mode.
-
    fTMode = tmode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select this TGTableCell.
+
 void TGTableCell::Select()
 {
-   // Select this TGTableCell.
-
    // Note: currently not implemented.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the row that this TGTableCell belongs to.
+
 void TGTableCell::SelectRow()
 {
-   // Select the row that this TGTableCell belongs to.
-
    // Note: currently not implemented.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select the column that this TGTableCell belongs to.
+
 void TGTableCell::SelectColumn()
 {
-   // Select the column that this TGTableCell belongs to.
-
    // Note: currently not implemented.
 }

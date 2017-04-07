@@ -30,34 +30,34 @@ ClassImp(MyEvent)
 
 TClonesArray *MyEvent::fgParticles = 0;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an Event object.
+/// When the constructor is invoked for the first time, the
+/// class static variables fgParticles and fgTracks is 0 and
+/// the TClonesArray fgParticles is created.
+
 MyEvent::MyEvent()
 {
-   // Create an Event object.
-   // When the constructor is invoked for the first time, the
-   // class static variables fgParticles and fgTracks is 0 and
-   // the TClonesArray fgParticles is created.
-
    if (!fgParticles) fgParticles = new TClonesArray("MyParticle", 1000);
    fgParticles->BypassStreamer(kFALSE);
    fParticles = fgParticles;
    fNparticles = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 MyEvent::~MyEvent()
 {
-   // Destructor
-
    Clear();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize event ...
+/// creates detector and set initial values
+
 void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
 {
-   // Initialize event ...
-   // creates detector and set initial values
-
    Char_t  strtmp[80];
    Int_t i;
    fId = id;
@@ -97,45 +97,45 @@ void MyEvent::Init(Int_t id, Int_t first_particle, Double_t E_0, Double_t B_0)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear tracks and particles arrays
+
 void MyEvent::Clear(Option_t *option)
 {
-   // Clear tracks and particles arrays
-
    fgParticles->Delete(option);
    fNparticles = 0;
    fMatter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to reset all static objects for this event
+
 void MyEvent::Reset(Option_t *option)
 {
-   // Static function to reset all static objects for this event
-
    fgParticles->Delete(option);
    fNparticles = 0;
    fMatter = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set event header with event identification and startup parameters
+
 void MyEvent::SetHeader(Int_t i, Int_t run, TDatime date, Int_t primary,
                         Double_t energy)
 {
-   // set event header with event identification and startup parameters
-
    fEvtHdr.Set(i, run, date, primary, energy);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new particle to the list of particles for this event.
+/// To avoid calling the very time consuming operator new for each track,
+/// the standard but not well know C++ operator "new with placement"
+/// is called. If particle[i] is 0, a new MyParticle object will be created
+/// otherwise the previous particle[i] will be overwritten.
+
 MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
                                  const TVector3 &mom)
 {
-   // Add a new particle to the list of particles for this event.
-   // To avoid calling the very time consuming operator new for each track,
-   // the standard but not well know C++ operator "new with placement"
-   // is called. If particle[i] is 0, a new MyParticle object will be created
-   // otherwise the previous particle[i] will be overwritten.
-
    TClonesArray &parts = *fParticles;
    MyParticle *part = new(parts[fNparticles++])
                           MyParticle(id, pdg_code, CREATED, UNDEFINE, pos, mom);
@@ -145,11 +145,11 @@ MyParticle *MyEvent::AddParticle(Int_t id, Int_t pdg_code, const TVector3 &pos,
    return part;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// main event's action
+
 Int_t MyEvent::Action(Int_t id)
 {
-   // main event's action
-
    Int_t  nchild;
    CheckMatter(id);
    if (GetParticle(id)->GetDecayType() == UNDEFINE)
@@ -251,13 +251,13 @@ Int_t MyEvent::Action(Int_t id)
    return(ALIVE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if bremsstrahlung is allowed and generate
+/// a random decay length related to detector's material
+/// radiation length (X0)
+
 Double_t MyEvent::BremsProb(Int_t id)
 {
-   // Check if bremsstrahlung is allowed and generate
-   // a random decay length related to detector's material
-   // radiation length (X0)
-
    Double_t p, retval;
 
    if (GetParticle(id)->Energy() > GetParticle(id)->GetMass()) {
@@ -268,11 +268,11 @@ Double_t MyEvent::BremsProb(Int_t id)
    else return (-1.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compute bremsstrahlung for particle "id"
+
 Int_t MyEvent::Bremsstrahlung(Int_t id)
 {
-    // compute bremsstrahlung for particle "id"
-
    Double_t  ratio;
    Int_t     d_num1,d_num2;
    Char_t    strtmp[80];
@@ -329,11 +329,11 @@ Int_t MyEvent::Bremsstrahlung(Int_t id)
    else return(DEAD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check decay time for particle "id".
+
 Int_t MyEvent::CheckDecayTime(Int_t id)
 {
-   // Check decay time for particle "id".
-
    if ( (GetParticle(id)->GetPdgCode() == PHOTON) ||
         (GetParticle(id)->GetPdgCode() == ELECTRON) ||
         (GetParticle(id)->GetPdgCode() == POSITRON ))
@@ -348,11 +348,11 @@ Int_t MyEvent::CheckDecayTime(Int_t id)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check material into which the particle "id" is.
+
 void MyEvent::CheckMatter(Int_t id)
 {
-   // Check material into which the particle "id" is.
-
    TGeoNode *Node = gGeoManager->FindNode(
              GetParticle(id)->GetvLocation().x(),
              GetParticle(id)->GetvLocation().y(),
@@ -360,11 +360,11 @@ void MyEvent::CheckMatter(Int_t id)
    if (Node) fMatter = Node->GetNumber();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decay the particle "id".
+
 Int_t MyEvent::Decay(Int_t id)
 {
-   // Decay the particle "id".
-
    Char_t   strtmp[80];
    Int_t    d_num[5];
    Int_t    n_daughters;
@@ -438,11 +438,11 @@ again:
    return(n_daughters);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define decay type for particle "id", then check decay length for it
+
 void MyEvent::DefineDecay(Int_t id)
 {
-   // Define decay type for particle "id", then check decay length for it
-
    Double_t idecay_length = -1.;
    Double_t iactual_length;
    Int_t    idecay_type = CONVERSION;
@@ -477,11 +477,11 @@ void MyEvent::DefineDecay(Int_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the particle id
+
 void MyEvent::DeleteParticle(Int_t id)
 {
-   // Delete the particle id
-
    // To be sure that the last track has at least two points
    if (GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetN() < 2) {
       GetParticle(id)->SetNextPoint(GetParticle(id)->GetTrack(GetParticle(id)->GetNTracks()-1)->GetLineColor());
@@ -495,13 +495,13 @@ void MyEvent::DeleteParticle(Int_t id)
    fAliveParticles --;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute de/dx for particle "id" into detector material
+/// for more infos, please refer to the particle data booklet
+/// from which the formulas has been extracted
+
 Int_t MyEvent::DEDX(Int_t id)
 {
-   // Compute de/dx for particle "id" into detector material
-   // for more infos, please refer to the particle data booklet
-   // from which the formulas has been extracted
-
    Double_t gamma,abs_beta,abs_p,abs_loss,dX;
 
    // if particle's energy is equal to its mass, it is at rest,
@@ -561,23 +561,23 @@ Int_t MyEvent::DEDX(Int_t id)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Give next available particle's id.
+
 Int_t MyEvent::FindFreeId(Int_t *FreeId)
 {
-   // Give next available particle's id.
-
    fTotalParticles++;
    *FreeId = fTotalParticles;
    if (fTotalParticles > fLast) fLast = fTotalParticles;
    return(ALIVE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Extrapolate track in a constant field oriented along X axis
+/// translated to C++ from GEANT3 routine GHELX3.
+
 void MyEvent::MagneticField(Int_t id)
 {
-   // Extrapolate track in a constant field oriented along X axis
-   // translated to C++ from GEANT3 routine GHELX3.
-
    Double_t sint, sintt, tsint, cos1t, sin2;
    Double_t f1, f2, f3, v1, v2, v3;
    Double_t pol = GetParticle(id)->GetPDG()->Charge() / 3.0;
@@ -608,12 +608,12 @@ void MyEvent::MagneticField(Int_t id)
    GetParticle(id)->SetMoment(new_mom);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move particle "id" by step dist, update the distance covered
+/// then check if out of detector's bounds.
+
 Int_t MyEvent::Move(Int_t id, TVector3 &dist)
 {
-   // Move particle "id" by step dist, update the distance covered
-   // then check if out of detector's bounds.
-
    GetParticle(id)->SetLocation(GetParticle(id)->GetvLocation() + dist);
    GetParticle(id)->SetPassed(GetParticle(id)->GetPassed() + dist.Mag());
 
@@ -640,13 +640,13 @@ Int_t MyEvent::Move(Int_t id, TVector3 &dist)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if pair production is allowed and generate
+/// a random decay length related to detector's material
+/// radiation length (X0).
+
 Double_t MyEvent::PairProb(Int_t id)
 {
-   // Check if pair production is allowed and generate
-   // a random decay length related to detector's material
-   // radiation length (X0).
-
    Double_t p;
 
    if (GetParticle(id)->Energy() > 2.0 * EMass) {
@@ -656,11 +656,11 @@ Double_t MyEvent::PairProb(Int_t id)
    return (-1.);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the pair production for particle "id"
+
 Int_t MyEvent::PairCreation(Int_t id)
 {
-   // Compute the pair production for particle "id"
-
    Int_t    d_num1, d_num2;
    Char_t   strtmp[80];
    MyParticle *part;
@@ -729,12 +729,12 @@ Int_t MyEvent::PairCreation(Int_t id)
    else return(DEAD);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return color index related to particle's energy.
+///Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
+
 Int_t MyEvent::ParticleColor(Int_t id)
 {
-   // Return color index related to particle's energy.
-   //Int_t ctable[11] = {2,50,46,45,44,43,42,41,21,19,5};
-
    Int_t i;
    for (i=0;i<16;i++)
       if (GetParticle(id)->Energy() > fEThreshold[i]) break;
@@ -742,15 +742,15 @@ Int_t MyEvent::ParticleColor(Int_t id)
    return(gColIndex + i);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute scatter angle into the detector's material
+/// for the current particle
+/// for more infos, please refer to the particle data booklet
+/// from which the formulas has been extracted :
+/// Multiple scattering through small angles.
+
 void MyEvent::ScatterAngle(Int_t id)
 {
-   // Compute scatter angle into the detector's material
-   // for the current particle
-   // for more infos, please refer to the particle data booklet
-   // from which the formulas has been extracted :
-   // Multiple scattering through small angles.
-
    Double_t alpha,beta;
    Double_t abs_p,p1,p2,r_2;
    Double_t fact1,fact2;

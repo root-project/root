@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //______________________________________________________________________________
-//                                                                      
+//
 //  TGeoTranslationEditor, TGeoRotationEditor, TGeoCombiTransEditor
 //     Editors for different types of TGeo matrices.
 //______________________________________________________________________________
@@ -35,18 +35,19 @@ enum ETGeoMatrixWid {
    kMATRIX_APPLY, kMATRIX_CANCEL, kMATRIX_UNDO
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for translation editor
+
 TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for translation editor
    fTranslation   = 0;
    fDxi = fDyi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fTransName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -68,7 +69,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDx->Associate(this);
    f1->AddFrame(fTransDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -79,7 +80,7 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDy->Associate(this);
    f2->AddFrame(fTransDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -90,10 +91,10 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fTransDz->Associate(this);
    f3->AddFrame(fTransDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "&Apply");
@@ -105,28 +106,30 @@ TGeoTranslationEditor::TGeoTranslationEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGeoTranslationEditor::~TGeoTranslationEditor()
 {
-// Destructor.
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoTranslationEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoTranslationEditor", this, "DoApply()");
    fCancel->Connect("Clicked()", "TGeoTranslationEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoTranslationEditor", this, "DoUndo()");
@@ -141,14 +144,15 @@ void TGeoTranslationEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the new matrix.
+
 void TGeoTranslationEditor::SetModel(TObject* obj)
 {
-   // Connect to the new matrix.
    if (obj == 0 || (obj->IsA()!=TGeoTranslation::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fTranslation = (TGeoTranslation*)obj;
    fDxi = fTranslation->GetTranslation()[0];
    fDyi = fTranslation->GetTranslation()[1];
@@ -158,37 +162,39 @@ void TGeoTranslationEditor::SetModel(TObject* obj)
    else {
       fTransName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fTransDx->SetNumber(fDxi);
    fTransDy->SetNumber(fDyi);
    fTransDz->SetNumber(fDzi);
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoTranslationEditor::DoName()
 {
-// Slot for name.
    const char *name = fTransName->GetText();
    if (!strcmp(name, "no_name") || !strcmp(name, fTranslation->GetName())) return;
    fTranslation->SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for checking parameters.
+
 Bool_t TGeoTranslationEditor::DoParameters()
 {
-// Slot for checking parameters.
    Double_t dx = fTransDx->GetNumber();
    Double_t dy = fTransDy->GetNumber();
    Double_t dz = fTransDz->GetNumber();
    Bool_t changed = kFALSE;
-   if (dx != fTranslation->GetTranslation()[0] || 
-       dy != fTranslation->GetTranslation()[1] || 
+   if (dx != fTranslation->GetTranslation()[0] ||
+       dy != fTranslation->GetTranslation()[1] ||
        dz != fTranslation->GetTranslation()[2]) changed = kTRUE;
    if (!changed) return kFALSE;
    fUndo->SetEnabled();
@@ -196,26 +202,28 @@ Bool_t TGeoTranslationEditor::DoParameters()
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying changes.
+
 void TGeoTranslationEditor::DoApply()
 {
-// Slot for applying changes.
    DoName();
    if (DoParameters()) {
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for cancelling last modifications non-applied.
+
 void TGeoTranslationEditor::DoCancel()
 {
-// Slot for cancelling last modifications non-applied.
    if (!fNamei.Length()) fTransName->SetText("no_name");
    else fTransName->SetText(fNamei.Data());
    fTransDx->SetNumber(fDxi);
@@ -226,43 +234,48 @@ void TGeoTranslationEditor::DoCancel()
    fCancel->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying changes.
+
 void TGeoTranslationEditor::DoModified()
 {
-// Slot for notifying changes.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoTranslationEditor::DoUndo()
 {
-// Slot for undoing last operation.
    DoCancel();
    DoParameters();
    fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx.
+
 void TGeoTranslationEditor::DoDx()
 {
-// Slot for dx.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx.
+
 void TGeoTranslationEditor::DoDy()
 {
-// Slot for dx.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for dx.
+
 void TGeoTranslationEditor::DoDz()
 {
-// Slot for dx.
    DoModified();
 }
 
@@ -276,19 +289,20 @@ void TGeoTranslationEditor::DoDz()
 
 ClassImp(TGeoRotationEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for rotation editor
+
 TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for rotation editor
    fRotation   = 0;
    fPhii = fThetai = fPsii = 0.0;
    fAngleX = fAngleY = fAngleZ = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fRotName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -311,7 +325,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotPhi->Resize(90, fRotPhi->GetDefaultHeight());
    f1->AddFrame(fRotPhi, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for theta angle
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -323,7 +337,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotTheta->Resize(90, fRotTheta->GetDefaultHeight());
    f2->AddFrame(fRotTheta, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for psi angle
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -338,7 +352,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-   
+
    MakeTitle("Rotate about axis");
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
@@ -352,7 +366,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fRotAxis->Resize(90, fRotAxis->GetDefaultHeight());
    f1->AddFrame(fRotAxis, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
    fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
@@ -365,7 +379,7 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "Apply");
@@ -377,28 +391,30 @@ TGeoRotationEditor::TGeoRotationEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoRotationEditor::~TGeoRotationEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoRotationEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoRotationEditor", this, "DoApply()");
    fCancel->Connect("Clicked()", "TGeoRotationEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoRotationEditor", this, "DoUndo()");
@@ -411,14 +427,15 @@ void TGeoRotationEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected rotation.
+
 void TGeoRotationEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected rotation.
    if (obj == 0 || (obj->IsA()!=TGeoRotation::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fRotation = (TGeoRotation*)obj;
    fRotation->GetAngles(fPhii, fThetai, fPsii);
    const char *sname = fRotation->GetName();
@@ -426,7 +443,7 @@ void TGeoRotationEditor::SetModel(TObject* obj)
    else {
       fRotName->SetText(sname);
       fNamei = sname;
-   }   
+   }
    fRotPhi->SetNumber(fPhii);
    fRotTheta->SetNumber(fThetai);
    fRotPsi->SetNumber(fPsii);
@@ -435,60 +452,66 @@ void TGeoRotationEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoRotationEditor::DoName()
 {
-// Slot for name.
    const char *name = fRotName->GetText();
    if (!strcmp(name, "no_name") || !strcmp(name, fRotation->GetName())) return;
    fRotation->SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi (Euler X convention)
+
 void TGeoRotationEditor::DoRotPhi()
 {
-// Slot for phi (Euler X convention)
    if (fRotPhi->GetNumber() < 0.) fRotPhi->SetNumber(fRotPhi->GetNumber()+360.);
    if (fRotPhi->GetNumber() >= 360.) fRotPhi->SetNumber(fRotPhi->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta (Euler X convention)
+
 void TGeoRotationEditor::DoRotTheta()
 {
-// Slot for theta (Euler X convention)
    if (fRotTheta->GetNumber() < 0.) fRotTheta->SetNumber(fRotTheta->GetNumber()+360.);
    if (fRotTheta->GetNumber() >= 360.) fRotTheta->SetNumber(fRotTheta->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for psi (Euler X convention)
+
 void TGeoRotationEditor::DoRotPsi()
 {
-// Slot for psi (Euler X convention)
    if (fRotPsi->GetNumber() < 0.) fRotPsi->SetNumber(fRotPsi->GetNumber()+360.);
    if (fRotPsi->GetNumber() >= 360.) fRotPsi->SetNumber(fRotPsi->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for additional rotation about one axis.
+
 void TGeoRotationEditor::DoRotAngle()
 {
-// Slot for additional rotation about one axis.
    if (fRotAxis->GetNumber() < 0.) fRotAxis->SetNumber(fRotAxis->GetNumber()+360.);
    if (fRotAxis->GetNumber() >= 360.) fRotAxis->SetNumber(fRotAxis->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for checking parameters.
+
 Bool_t TGeoRotationEditor::DoParameters()
 {
-// Slot for checking parameters.
    Double_t phi = fRotPhi->GetNumber();
    Double_t theta = fRotTheta->GetNumber();
    Double_t psi = fRotPsi->GetNumber();
@@ -503,33 +526,35 @@ Bool_t TGeoRotationEditor::DoParameters()
       if (fRotX->IsOn()) {fRotation->RotateX(angle); changed = kTRUE;}
       if (fRotY->IsOn()) {fRotation->RotateY(angle); changed = kTRUE;}
       if (fRotZ->IsOn()) {fRotation->RotateZ(angle); changed = kTRUE;}
-   }   
-   if (!changed) return kFALSE;   
+   }
+   if (!changed) return kFALSE;
    fRotAxis->SetNumber(0.0);
    fUndo->SetEnabled();
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoRotationEditor::DoApply()
 {
-// Slot for applying modifications.
    DoName();
    if (DoParameters()) {
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for cancelling last un-applied operations.
+
 void TGeoRotationEditor::DoCancel()
 {
-// Slot for cancelling last un-applied operations.
    if (!fNamei.Length()) fRotName->SetText("no_name");
    else fRotName->SetText(fNamei.Data());
    fRotPhi->SetNumber(fPhii);
@@ -541,18 +566,20 @@ void TGeoRotationEditor::DoCancel()
    fCancel->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying changes.
+
 void TGeoRotationEditor::DoModified()
 {
-// Slot for notifying changes.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last changes.
+
 void TGeoRotationEditor::DoUndo()
 {
-// Slot for undoing last changes.
    DoCancel();
    DoParameters();
    fCancel->SetEnabled(kFALSE);
@@ -560,7 +587,7 @@ void TGeoRotationEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
-   
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 //  TGeoCombiTransEditor                                                //
@@ -571,12 +598,13 @@ void TGeoRotationEditor::DoUndo()
 
 ClassImp(TGeoCombiTransEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for combi matrix editor
+
 TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
                                    Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for combi matrix editor
    fCombi   = 0;
    fPhii = fThetai = fPsii = 0.0;
    fDxi = fDyi = fDzi = 0.0;
@@ -584,7 +612,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fNamei = "";
    fIsModified = kFALSE;
    fIsEditable = kFALSE;
-      
+
    // TextEntry for name
    MakeTitle("Name");
    fRotName = new TGTextEntry(this, new TGTextBuffer(50), kMATRIX_NAME);
@@ -606,7 +634,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDx->Associate(this);
    f1->AddFrame(fTransDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -617,7 +645,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDy->Associate(this);
    f2->AddFrame(fTransDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -628,7 +656,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fTransDz->Associate(this);
    f3->AddFrame(fTransDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    compxyz->Resize(150,30);
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
@@ -646,7 +674,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotPhi->Resize(90, fRotPhi->GetDefaultHeight());
    f1->AddFrame(fRotPhi, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for theta angle
    f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -658,7 +686,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotTheta->Resize(90, fRotTheta->GetDefaultHeight());
    f2->AddFrame(fRotTheta, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Number entry for psi angle
    f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                                  kLHintsExpandX | kFixedWidth | kOwnBackground);
@@ -673,7 +701,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
 
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
-   
+
    MakeTitle("Rotate about axis");
    compxyz = new TGCompositeFrame(this, 140, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for rotation angle about one axis
@@ -687,7 +715,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fRotAxis->Resize(90, fRotAxis->GetDefaultHeight());
    f1->AddFrame(fRotAxis, new TGLayoutHints(kLHintsRight , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 2, 2));
-   
+
    // Radio buttons group for axis selection
    TGHButtonGroup *bg1 = new TGHButtonGroup(compxyz, " Axis ");
    fRotX = new TGRadioButton(bg1, " &X ", kMATRIX_DX);
@@ -700,7 +728,7 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    compxyz->Resize(150,compxyz->GetDefaultHeight());
    AddFrame(compxyz, new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
 
-      
+
    // Buttons
    TGCompositeFrame *f23 = new TGCompositeFrame(this, 118, 20, kHorizontalFrame | kSunkenFrame | kDoubleBorder);
    fApply = new TGTextButton(f23, "&Apply");
@@ -712,28 +740,30 @@ TGeoCombiTransEditor::TGeoCombiTransEditor(const TGWindow *p, Int_t width,
    fUndo = new TGTextButton(f23, " &Undo ");
    f23->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));  
+   AddFrame(f23,  new TGLayoutHints(kLHintsLeft, 6, 6, 2, 2));
    fUndo->SetSize(fCancel->GetSize());
    fApply->SetSize(fCancel->GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoCombiTransEditor::~TGeoCombiTransEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGeoCombiTransEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
    fApply->Connect("Clicked()", "TGeoCombiTransEditor", this, "DoApply()");
    fCancel->Connect("Clicked()", "TGeoCombiTransEditor", this, "DoCancel()");
    fUndo->Connect("Clicked()", "TGeoCombiTransEditor", this, "DoUndo()");
@@ -752,14 +782,15 @@ void TGeoCombiTransEditor::ConnectSignals2Slots()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to the selected combi matrix.
+
 void TGeoCombiTransEditor::SetModel(TObject* obj)
 {
-   // Connect to the selected combi matrix.
    if (obj == 0 || (obj->IsA()!=TGeoCombiTrans::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fCombi = (TGeoCombiTrans*)obj;
    TGeoRotation *rot = fCombi->GetRotation();
    if (rot) rot->GetAngles(fPhii, fThetai, fPsii);
@@ -768,8 +799,8 @@ void TGeoCombiTransEditor::SetModel(TObject* obj)
    else {
       fRotName->SetText(sname);
       fNamei = sname;
-   }   
-   
+   }
+
    fDxi = fCombi->GetTranslation()[0];
    fDyi = fCombi->GetTranslation()[1];
    fDzi = fCombi->GetTranslation()[2];
@@ -785,66 +816,72 @@ void TGeoCombiTransEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fCancel->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for name.
+
 void TGeoCombiTransEditor::DoName()
 {
-// Slot for name.
    const char *name = fRotName->GetText();
    if (!strcmp(name, "no_name") || !strcmp(name, fCombi->GetName())) return;
    fCombi->SetName(name);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for phi (Euler X convention)
+
 void TGeoCombiTransEditor::DoRotPhi()
 {
-// Slot for phi (Euler X convention)
    if (fRotPhi->GetNumber() < 0.) fRotPhi->SetNumber(fRotPhi->GetNumber()+360.);
    if (fRotPhi->GetNumber() >= 360.) fRotPhi->SetNumber(fRotPhi->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for theta (Euler X convention)
+
 void TGeoCombiTransEditor::DoRotTheta()
 {
-// Slot for theta (Euler X convention)
    if (fRotTheta->GetNumber() < 0.) fRotTheta->SetNumber(fRotTheta->GetNumber()+360.);
    if (fRotTheta->GetNumber() >= 360.) fRotTheta->SetNumber(fRotTheta->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for psi (Euler X convention)
+
 void TGeoCombiTransEditor::DoRotPsi()
 {
-// Slot for psi (Euler X convention)
    if (fRotPsi->GetNumber() < 0.) fRotPsi->SetNumber(fRotPsi->GetNumber()+360.);
    if (fRotPsi->GetNumber() >= 360.) fRotPsi->SetNumber(fRotPsi->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for additional rotation about one axis.
+
 void TGeoCombiTransEditor::DoRotAngle()
 {
-// Slot for additional rotation about one axis.
    if (fRotAxis->GetNumber() < 0.) fRotAxis->SetNumber(fRotAxis->GetNumber()+360.);
    if (fRotAxis->GetNumber() >= 360.) fRotAxis->SetNumber(fRotAxis->GetNumber()-360.);
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for checking parameters.
+
 Bool_t TGeoCombiTransEditor::DoParameters()
 {
-// Slot for checking parameters.
    Double_t dx = fTransDx->GetNumber();
    Double_t dy = fTransDy->GetNumber();
    Double_t dz = fTransDz->GetNumber();
    Bool_t changedtr = kFALSE;
-   if (dx != fCombi->GetTranslation()[0] || 
-       dy != fCombi->GetTranslation()[1] || 
+   if (dx != fCombi->GetTranslation()[0] ||
+       dy != fCombi->GetTranslation()[1] ||
        dz != fCombi->GetTranslation()[2]) changedtr = kTRUE;
    if (changedtr) fCombi->SetTranslation(dx, dy, dz);
    Double_t phi = fRotPhi->GetNumber();
@@ -861,7 +898,7 @@ Bool_t TGeoCombiTransEditor::DoParameters()
          rot = fCombi->GetRotation();
          rot->SetAngles(0.,0.,0.);
       }
-   }      
+   }
    Bool_t changed = kFALSE;
    if (phi != psi0 || theta != theta0 || psi != psi0) changed = kTRUE;
    if (changed && rot) rot->SetAngles(phi, theta, psi);
@@ -871,33 +908,35 @@ Bool_t TGeoCombiTransEditor::DoParameters()
       if (fRotY->IsOn()) {fCombi->RotateY(angle); changed = kTRUE;}
       if (fRotZ->IsOn()) {fCombi->RotateZ(angle); changed = kTRUE;}
    }
-   if (changedtr) changed = kTRUE;   
-   if (!changed) return kFALSE;   
+   if (changedtr) changed = kTRUE;
+   if (!changed) return kFALSE;
    fRotAxis->SetNumber(0.0);
    fUndo->SetEnabled();
    if (fPad) {
       fPad->Modified();
       fPad->Update();
-   }   
+   }
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoCombiTransEditor::DoApply()
 {
-// Slot for applying modifications.
    DoName();
    if (DoParameters()) {
       fUndo->SetEnabled();
       fCancel->SetEnabled(kFALSE);
       fApply->SetEnabled(kFALSE);
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for cancelling last un-applied operations.
+
 void TGeoCombiTransEditor::DoCancel()
 {
-// Slot for cancelling last un-applied operations.
    if (!fNamei.Length()) fRotName->SetText("no_name");
    else fRotName->SetText(fNamei.Data());
    fTransDx->SetNumber(fDxi);
@@ -912,43 +951,48 @@ void TGeoCombiTransEditor::DoCancel()
    fCancel->SetEnabled(kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for notifying changes.
+
 void TGeoCombiTransEditor::DoModified()
 {
-// Slot for notifying changes.
    fApply->SetEnabled();
    if (fUndo->GetState()==kButtonDisabled) fCancel->SetEnabled();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last changes.
+
 void TGeoCombiTransEditor::DoUndo()
 {
-// Slot for undoing last changes.
    DoCancel();
    DoParameters();
    fCancel->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
-   
-//______________________________________________________________________________
+
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for X.
+
 void TGeoCombiTransEditor::DoDx()
 {
-// Slot for X.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Y.
+
 void TGeoCombiTransEditor::DoDy()
 {
-// Slot for Y.
    DoModified();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for Z.
+
 void TGeoCombiTransEditor::DoDz()
 {
-// Slot for Z.
    DoModified();
 }
 

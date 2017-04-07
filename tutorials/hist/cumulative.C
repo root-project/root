@@ -1,7 +1,13 @@
-// illustrate use of the TH1::GetCumulative method
-//
-// M. Schiller, 2014-11-04
-//
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook -js
+/// Illustrate use of the TH1::GetCumulative method.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author M. Schiller
+
 #include <cassert>
 #include <cmath>
 
@@ -10,7 +16,7 @@
 #include "TCanvas.h"
 #include "TRandom.h"
 
-TCanvas* cumulative()
+TCanvas *cumulative()
 {
    TH1* h = new TH1D("h", "h", 100, -5., 5.);
    gRandom->SetSeed();

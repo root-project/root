@@ -63,12 +63,12 @@ public:
    void  ChangeSelected(TGFrame*);
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor) :
              TGVerticalFrame(p, 1, 1)
 {
-   // Constructor.
-
    fEditor = editor;
    fEditDisabled = 1;
    fBgndFrame = 0;
@@ -108,11 +108,11 @@ TGuiBldBorderFrame::TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor)
    AddFrame(f, new TGLayoutHints(kLHintsCenterX | kLHintsTop));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Perform actions when selected frame was changed.
+
 void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 {
-   // Perform actions when selected frame was changed.
-
    fSelected = frame;
 
    if (!frame) {
@@ -134,11 +134,11 @@ void TGuiBldBorderFrame::ChangeSelected(TGFrame *frame)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGVerticalFrame(p, 1, 1)
 {
-   // Constructor.
-
    TGHorizontalFrame *hf;
    TGVerticalFrame *vf;
    fSelected = 0;
@@ -282,44 +282,44 @@ TGuiBldEditor::TGuiBldEditor(const TGWindow *p) : TGVerticalFrame(p, 1, 1)
    fEmbedded = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGuiBldEditor::~TGuiBldEditor()
 {
-   // Destructor.
-
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove a frame.
+
 void TGuiBldEditor::RemoveFrame(TGFrame *frame)
 {
-   // Remove a frame.
-
    fNameFrame->RemoveFrame(frame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle  selected.
+
 void TGuiBldEditor::TabSelected(Int_t id)
 {
-   // Handle  selected.
-
    if (id == fLayoutId) {
       //printf("%d\n", fSelected);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide editor.
+
 void TGuiBldEditor::Hide()
 {
-   // Hide editor.
-
    UnmapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change selected frame.
+
 void TGuiBldEditor::ChangeSelected(TGFrame *frame)
 {
-   // Change selected frame.
-
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
 
    if (!frame) {
@@ -414,19 +414,19 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    MapRaised();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update selected frame.
+
 void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 {
-   // Update selected frame.
-
    Emit("UpdateSelected(TGFrame*)", (long)frame);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update border of selected frame.
+
 void TGuiBldEditor::UpdateBorder(Int_t b)
 {
-   // Update border of selected frame.
-
    if (!fSelected) return;
 
    UInt_t opt = fSelected->GetOptions();
@@ -457,33 +457,33 @@ void TGuiBldEditor::UpdateBorder(Int_t b)
    fClient->NeedRedraw(fSelected, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update background.
+
 void TGuiBldEditor::UpdateBackground(Pixel_t col)
 {
-   // Update background.
-
    if (!fSelected) return;
 
    fSelected->SetBackgroundColor(col);
    fClient->NeedRedraw(fSelected, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update foreground.
+
 void TGuiBldEditor::UpdateForeground(Pixel_t col)
 {
-   // Update foreground.
-
    if (!fSelected) return;
 
    fSelected->SetForegroundColor(col);
    fClient->NeedRedraw(fSelected, kTRUE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the editor.
+
 void TGuiBldEditor::Reset()
 {
-   // Reset the editor.
-
    fSelected = 0;
    fNameFrame->Reset();
    TGTabElement *tab = fTab->GetTabTab(fLayoutId);
@@ -493,12 +493,12 @@ void TGuiBldEditor::Reset()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup dialog to set layout of editted frame off. If layout is on, all
+/// the elements in the frame get layouted automatically.
+
 void TGuiBldEditor::SwitchLayout()
 {
-   // Popup dialog to set layout of editted frame off. If layout is on, all
-   // the elements in the frame get layouted automatically.
-
    if (!fSelected) {
       fLayoutButton->SetText("    Enable layout    ");
       fLayoutButton->SetEnabled(kFALSE);

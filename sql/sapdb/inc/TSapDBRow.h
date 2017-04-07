@@ -12,9 +12,7 @@
 #ifndef ROOT_TSapDBRow
 #define ROOT_TSapDBRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 #if !defined(__CINT__)
 #include <sys/time.h>

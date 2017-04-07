@@ -39,12 +39,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
 
 //--- sizes for vert. and horz. sliders
@@ -102,8 +98,14 @@ public:
    virtual void  SetEnabled(Bool_t flag = kTRUE) { SetState( flag ); }              //*TOGGLE* *GETTER=IsEnabled
    virtual void  SetState(Bool_t state);
    virtual void  SetScale(Int_t scale) { fScale = scale; }                          //*MENU*
-   virtual void  SetRange(Int_t min, Int_t max) { fVmin = min; fVmax = max; }       //*MENU*
-   virtual void  SetPosition(Int_t pos) { fPos = pos; fClient->NeedRedraw(this); }  //*MENU*
+   virtual void  SetRange(Int_t min, Int_t max) {
+                    if (max > min) { fVmin = min; fVmax = max; }
+                    else Warning("SetRange", "Incorrect range boundaries [%d,%d]", min, max);
+                 } //*MENU*
+   virtual void  SetPosition(Int_t pos) {
+                    if ((pos >= fVmin) && (pos <= fVmax)) { fPos = pos; fClient->NeedRedraw(this); }
+                    else Warning("SetPosition", "The position (%d) is out of range [%d,%d]", pos, fVmin, fVmax);
+                 } //*MENU*
    virtual Int_t GetPosition() const { return fPos; }
    virtual Int_t GetMinPosition() const { return fVmin; }
    virtual Int_t GetMaxPosition() const { return fVmax; }

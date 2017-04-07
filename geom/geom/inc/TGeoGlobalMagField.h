@@ -11,21 +11,9 @@
 #ifndef ROOT_TGeoGlobalMagField
 #define ROOT_TGeoGlobalMagField
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TVirtualMagField
 #include "TVirtualMagField.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoGlobalMagField - Global magnetic field manager. A field derived    //
-//   from TVirtualMagField becomes global if registered via SetField      //
-//   method.
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoGlobalMagField : public TObject
 {

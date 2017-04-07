@@ -13,13 +13,15 @@
 #include "TEveTrans.h"
 
 
-//______________________________________________________________________________
-//
-// TEveElement class used for display of a thick arrow.
+/** \class TEveArrow
+\ingroup TEve
+Class used for display of a thick arrow.
+*/
 
 ClassImp(TEveArrow);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveArrow::TEveArrow(Float_t xVec, Float_t yVec, Float_t zVec,
                      Float_t xOrg, Float_t yOrg, Float_t zOrg):
    TEveElement(fColor),
@@ -38,11 +40,11 @@ TEveArrow::TEveArrow(Float_t xVec, Float_t yVec, Float_t zVec,
    fCanEditMainTransparency = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding-box of the arrow.
+
 void TEveArrow::ComputeBBox()
 {
-   // Compute bounding-box of the arrow.
-
    TEveVector a, b;
    fVector.OrthoNormBase(a, b);
    Float_t r = TMath::Max(fTubeR, fConeR);
@@ -61,11 +63,11 @@ void TEveArrow::ComputeBBox()
    BBoxCheckPoint(end - a + b);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Paint object.
+/// This is for direct rendering (using TEveArrowGL class).
+
 void TEveArrow::Paint(Option_t*)
 {
-   // Paint object.
-   // This is for direct rendering (using TEveArrowGL class).
-
    PaintStandard(this);
 }

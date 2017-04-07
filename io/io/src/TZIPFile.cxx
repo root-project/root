@@ -9,54 +9,48 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TZIPFile                                                             //
-//                                                                      //
-// This class describes a ZIP archive file containing multiple          //
-// sub-files. Typically the sub-files are ROOT files. Notice that       //
-// the ROOT files should not be compressed when being added to the      //
-// ZIP file, since ROOT files are normally already compressed.          //
-// Such a ZIP file should be created like:                              //
-//                                                                      //
-//    zip -n root multi file1.root file2.root                           //
-//                                                                      //
-// which creates a ZIP file multi.zip.                                  //
-//                                                                      //
-// A ZIP archive consists of files compressed with the popular ZLIB     //
-// compression algorithm. The archive format is used among others by    //
-// PKZip and Info-ZIP. The compression algorithm is also used by        //
-// GZIP and the PNG graphics standard. The format of the archives is    //
-// explained briefly below. This class provides an interface to read    //
-// such archives.                                                       //
-//                                                                      //
-// A ZIP archive contains a prefix, series of archive members           //
-// (sub-files), and a central directory. In theory the archive could    //
-// span multiple disks (or files) with the central directory of the     //
-// whole archive on the last disk, but this class does not support      //
-// such multi-part archives. The prefix is only used in self-extracting //
-// executable archive files.                                            //
-//                                                                      //
-// The members are stored in the archive sequentially, each with a      //
-// local header followed by the (optionally) compressed data; the local //
-// header describes the member, including its file name and compressed  //
-// and real sizes. The central directory includes the member details    //
-// again, plus allows an extra member comment to be added. The last     //
-// member in the central directory is an end marker that can contain    //
-// a comment for the whole archive. Both the local header and the       //
-// central directory can also carry extra member-specific data; the     //
-// data in the local and global parts can be different.                 //
-// The fact that the archive has a global directory makes it efficient  //
-// and allows for only the reading of the desired data, one does not    //
-// have to scan through the whole file to find the desired sub-file.    //
-// The Zip64 extensions are supported so files larger than 2GB can be   //
-// stored in archives larger than 4 GB.                                 //
-//                                                                      //
-// Once the archive has been opened, the client can query the members   //
-// and read their contents by asking the archive for an offset where    //
-// the sub-file starts. The members can be accessed in any order.       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\class TZIPFile
+\ingroup IO
+
+Describes a ZIP archive file containing multiple sub-files.
+
+Typically the sub-files are ROOT files. Notice that
+the ROOT files should not be compressed when being added to the
+ZIP file, since ROOT files are normally already compressed.
+Such a ZIP file should be created like:
+    zip -n root multi file1.root file2.root
+which creates a ZIP file multi.zip.
+A ZIP archive consists of files compressed with the popular ZLIB
+compression algorithm. The archive format is used among others by
+PKZip and Info-ZIP. The compression algorithm is also used by
+GZIP and the PNG graphics standard. The format of the archives is
+explained briefly below. This class provides an interface to read
+such archives.
+A ZIP archive contains a prefix, series of archive members
+(sub-files), and a central directory. In theory the archive could
+span multiple disks (or files) with the central directory of the
+whole archive on the last disk, but this class does not support
+such multi-part archives. The prefix is only used in self-extracting
+executable archive files.
+The members are stored in the archive sequentially, each with a
+local header followed by the (optionally) compressed data; the local
+header describes the member, including its file name and compressed
+and real sizes. The central directory includes the member details
+again, plus allows an extra member comment to be added. The last
+member in the central directory is an end marker that can contain
+a comment for the whole archive. Both the local header and the
+central directory can also carry extra member-specific data; the
+data in the local and global parts can be different.
+The fact that the archive has a global directory makes it efficient
+and allows for only the reading of the desired data, one does not
+have to scan through the whole file to find the desired sub-file.
+The Zip64 extensions are supported so files larger than 2GB can be
+stored in archives larger than 4 GB.
+Once the archive has been opened, the client can query the members
+and read their contents by asking the archive for an offset where
+the sub-file starts. The members can be accessed in any order.
+*/
 
 #include "TZIPFile.h"
 #include "TFile.h"
@@ -65,44 +59,44 @@
 
 ClassImp(TZIPFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TZIPFile::TZIPFile() : TArchiveFile()
 {
-   // Default ctor.
-
    fDirPos     = 0;
    fDirSize    = 0;
    fDirOffset  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Specify the archive name and member name. The member can be a decimal
+/// number which allows to access the n-th member.
+
 TZIPFile::TZIPFile(const char *archive, const char *member, TFile *file)
    : TArchiveFile(archive, member, file)
 {
-   // Specify the archive name and member name. The member can be a decimal
-   // number which allows to access the n-th member.
-
    fDirPos     = 0;
    fDirSize    = 0;
    fDirOffset  = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open archive and read end-header and directory. Returns -1 in case
+/// of error, 0 otherwise.
+
 Int_t TZIPFile::OpenArchive()
 {
-   // Open archive and read end-header and directory. Returns -1 in case
-   // of error, 0 otherwise.
-
    if (ReadEndHeader(FindEndHeader()) == -1)
       return -1;
    return ReadDirectory();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the end header of the ZIP archive. Returns 0 in case of error.
+
 Long64_t TZIPFile::FindEndHeader()
 {
-   // Find the end header of the ZIP archive. Returns 0 in case of error.
-
    const Int_t kBUFSIZE = 1024;
    Long64_t    size = fFile->GetSize();
    Long64_t    limit = TMath::Min(size, Long64_t(kMAX_VAR_LEN));
@@ -135,15 +129,15 @@ Long64_t TZIPFile::FindEndHeader()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the end header of the ZIP archive including the archive comment
+/// at the current file position. Check that it really was a single-disk
+/// archive with all the entries as expected. Most importantly, figure
+/// out where the central directory begins. Returns -1 in case of error,
+/// 0 otherwise.
+
 Int_t TZIPFile::ReadEndHeader(Long64_t pos)
 {
-   // Read the end header of the ZIP archive including the archive comment
-   // at the current file position. Check that it really was a single-disk
-   // archive with all the entries as expected. Most importantly, figure
-   // out where the central directory begins. Returns -1 in case of error,
-   // 0 otherwise.
-
    char buf[kEND_HEADER_SIZE];
 
    // read and validate first the end header magic
@@ -209,13 +203,13 @@ Int_t TZIPFile::ReadEndHeader(Long64_t pos)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read Zip64 end of central directory locator. Returns -1 in case of error,
+/// -2 in case end locator magic is not found (i.e. not a zip64 file) and
+/// offset of Zip64 end of central directory record in case of success.
+
 Long64_t TZIPFile::ReadZip64EndLocator(Long64_t pos)
 {
-   // Read Zip64 end of central directory locator. Returns -1 in case of error,
-   // -2 in case end locator magic is not found (i.e. not a zip64 file) and
-   // offset of Zip64 end of central directory record in case of success.
-
    char buf[kZIP64_EDL_HEADER_SIZE];
 
    // read and validate first the end header magic
@@ -245,12 +239,12 @@ Long64_t TZIPFile::ReadZip64EndLocator(Long64_t pos)
    return recoff;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read Zip64 end of central directory record. Returns -1 in case of error
+/// and 0 in case of success.
+
 Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
 {
-   // Read Zip64 end of central directory record. Returns -1 in case of error
-   // and 0 in case of success.
-
    char buf[kZIP64_EDR_HEADER_SIZE];
 
    // read and validate first the end header magic
@@ -277,12 +271,12 @@ Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the directory of the ZIP archive. Returns -1 in case of error,
+/// 0 otherwise.
+
 Int_t TZIPFile::ReadDirectory()
 {
-   // Read the directory of the ZIP archive. Returns -1 in case of error,
-   // 0 otherwise.
-
    char   buf[kDIR_HEADER_SIZE];
    UInt_t n, i;
 
@@ -402,13 +396,13 @@ Int_t TZIPFile::ReadDirectory()
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read the member header of the ZIP archive. Sets the position where
+/// the data starts in the member object. Returns -1 in case of error,
+/// 0 otherwise.
+
 Int_t TZIPFile::ReadMemberHeader(TZIPMember *member)
 {
-   // Read the member header of the ZIP archive. Sets the position where
-   // the data starts in the member object. Returns -1 in case of error,
-   // 0 otherwise.
-
    // read file header to find start of data, since extra len might be
    // different we cannot take it from the directory data
    char buf[kENTRY_HEADER_SIZE];
@@ -437,15 +431,15 @@ Int_t TZIPFile::ReadMemberHeader(TZIPMember *member)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decode the Zip64 extended extra field. If global is true, decode the
+/// extra field coming from the central directory, if false decode the
+/// extra field coming from the local file header. Returns -1 in case of
+/// error, -2 in case Zip64 extra block was not found and 0 in case of
+/// success.
+
 Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
 {
-   // Decode the Zip64 extended extra field. If global is true, decode the
-   // extra field coming from the central directory, if false decode the
-   // extra field coming from the local file header. Returns -1 in case of
-   // error, -2 in case Zip64 extra block was not found and 0 in case of
-   // success.
-
    char  *buf;
    Int_t  len;
    Int_t  ret = -2;
@@ -485,12 +479,12 @@ Int_t TZIPFile::DecodeZip64ExtendedExtraField(TZIPMember *m, Bool_t global)
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find the desired member in the member array and make it the
+/// current member. Returns -1 in case member is not found, 0 otherwise.
+
 Int_t TZIPFile::SetCurrentMember()
 {
-   // Find the desired member in the member array and make it the
-   // current member. Returns -1 in case member is not found, 0 otherwise.
-
    fCurMember = 0;
 
    if (fMemberIndex > -1) {
@@ -514,11 +508,11 @@ Int_t TZIPFile::SetCurrentMember()
    return ReadMemberHeader((TZIPMember *)fCurMember);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a "bytes" long little-endian integer value from "buffer".
+
 UInt_t TZIPFile::Get(const void *buffer, Int_t bytes)
 {
-   // Read a "bytes" long little-endian integer value from "buffer".
-
    UInt_t value = 0;
 
    if (bytes > 4) {
@@ -535,11 +529,11 @@ UInt_t TZIPFile::Get(const void *buffer, Int_t bytes)
    return value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a 8 byte long little-endian integer value from "buffer".
+
 ULong64_t TZIPFile::Get64(const void *buffer, Int_t bytes)
 {
-   // Read a 8 byte long little-endian integer value from "buffer".
-
    ULong64_t value = 0;
 
    if (bytes != 8) {
@@ -557,11 +551,11 @@ ULong64_t TZIPFile::Get64(const void *buffer, Int_t bytes)
    return value;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pretty print ZIP archive members.
+
 void TZIPFile::Print(Option_t *) const
 {
-   // Pretty print ZIP archive members.
-
    if (fMembers)
       fMembers->Print();
 }
@@ -569,11 +563,11 @@ void TZIPFile::Print(Option_t *) const
 
 ClassImp(TZIPMember)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default ctor.
+
 TZIPMember::TZIPMember()
 {
-   // Default ctor.
-
    fLocal     = 0;
    fLocalLen  = 0;
    fGlobal    = 0;
@@ -585,12 +579,12 @@ TZIPMember::TZIPMember()
    fLevel     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create ZIP member file.
+
 TZIPMember::TZIPMember(const char *name)
    : TArchiveMember(name)
 {
-   // Create ZIP member file.
-
    fLocal     = 0;
    fLocalLen  = 0;
    fGlobal    = 0;
@@ -602,12 +596,12 @@ TZIPMember::TZIPMember(const char *name)
    fLevel     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy ctor.
+
 TZIPMember::TZIPMember(const TZIPMember &member)
    : TArchiveMember(member)
 {
-   // Copy ctor.
-
    fLocal     = 0;
    fLocalLen  = member.fLocalLen;
    fGlobal    = 0;
@@ -628,11 +622,11 @@ TZIPMember::TZIPMember(const TZIPMember &member)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TZIPMember &TZIPMember::operator=(const TZIPMember &rhs)
 {
-   // Assignment operator.
-
    if (this != &rhs) {
       TArchiveMember::operator=(rhs);
 
@@ -661,20 +655,20 @@ TZIPMember &TZIPMember::operator=(const TZIPMember &rhs)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup.
+
 TZIPMember::~TZIPMember()
 {
-   // Cleanup.
-
    delete [] (char*) fLocal;
    delete [] (char*) fGlobal;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pretty print basic ZIP member info.
+
 void TZIPMember::Print(Option_t *) const
 {
-   // Pretty print basic ZIP member info.
-
    printf("%-20lld", fDsize);
    printf(" %s   %s\n", fModTime.AsSQLString(), fName.Data());
 }

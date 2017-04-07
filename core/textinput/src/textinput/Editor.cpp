@@ -20,6 +20,7 @@
 #include "textinput/Callbacks.h"
 #include "textinput/History.h"
 #include "textinput/KeyBinding.h"
+#include "textinput/StreamReaderUnix.h"
 #include "textinput/TextInput.h"
 #include "textinput/TextInputContext.h"
 
@@ -72,7 +73,7 @@ namespace textinput {
   Range
   Editor::ResetText() {
     bool addToHist = !fContext->GetLine().empty()
-      && !fContext->GetTextInput()->IsInputHidden()
+      && !fContext->GetTextInput()->IsInputMasked()
       && fContext->GetTextInput()->IsAutoHistAddEnabled();
     if (addToHist) {
       fContext->GetHistory()->AddLine(fContext->GetLine().GetText());
@@ -449,6 +450,9 @@ namespace textinput {
         ProcessMove(kMoveEnd, R);
         std::vector<std::string> completions;
         TabCompletion* tc = fContext->GetCompletion();
+        Reader* reader = fContext->GetReaders()[0];
+        StreamReaderUnix* streamReader = (StreamReaderUnix*)(reader);
+        if (!streamReader->IsFromTTY()) return kPRSuccess;
         if (tc) {
           bool ret = tc->Complete(Line, Cursor, R, completions);
           if (ret) {

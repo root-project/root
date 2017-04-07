@@ -9,11 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::ToyMCImportanceSampler
+    \ingroup Roostats
+
+ToyMCImportanceSampler is an extension of the ToyMCSampler for Importance Sampling.
+
+Implementation based on a work by   Cranmer, Kreiss, Read (in Preparation)
+*/
+
 #include "RooStats/ToyMCImportanceSampler.h"
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooCategory.h"
 #include "TMath.h"
@@ -26,25 +32,23 @@ ClassImp(RooStats::ToyMCImportanceSampler)
 
 namespace RooStats {
 
+////////////////////////////////////////////////////////////////////////////////
 
 ToyMCImportanceSampler::~ToyMCImportanceSampler() {
    for( unsigned int i=0; i < fImportanceSnapshots.size(); i++ ) if(fImportanceSnapshots[i]) delete fImportanceSnapshots[i];
    for( unsigned int i=0; i < fNullSnapshots.size(); i++ ) if(fNullSnapshots[i]) delete fNullSnapshots[i];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 void ToyMCImportanceSampler::ClearCache(void) {
    ToyMCSampler::ClearCache();
-   
+
    for( unsigned int i=0; i < fImpNLLs.size(); i++ ) if(fImpNLLs[i]) { delete fImpNLLs[i]; fImpNLLs[i] = NULL; }
    for( unsigned int i=0; i < fNullNLLs.size(); i++ ) if(fNullNLLs[i]) { delete fNullNLLs[i]; fNullNLLs[i] = NULL; }
 }
 
-
-
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramPoint) {
    if( fNToys == 0 ) return NULL;
@@ -76,19 +80,19 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
       // apply strategy for how to distribute the #toys between the distributions
       if( fToysStrategy == EQUALTOYSPERDENSITY ) {
          // assuming alltoys = one null + N imp densities. And round up.
-         fNToys = TMath::CeilNint(  double(allToys)/(fImportanceDensities.size()+1)  ); 
+         fNToys = TMath::CeilNint(  double(allToys)/(fImportanceDensities.size()+1)  );
       }else if(fToysStrategy == EXPONENTIALTOYDISTRIBUTION ) {
          // for N densities, split the toys into (2^(N+1))-1 parts, and assign 2^0 parts to the first
          // density (which is the null), 2^1 to the second (first imp dens), etc, up to 2^N
          fNToys = TMath::CeilNint(  double(allToys) * pow( double(2) , i+1 )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
-         
+
          int largestNToys = TMath::CeilNint(  allToys * pow( double(2), int(fImportanceDensities.size()) )  /  (pow( double(2), int(fImportanceDensities.size()+1) )-1)  );
          reweight.setVal( ((double)largestNToys) / fNToys );
       }
-      
+
       ooccoutI((TObject*)NULL,InputArguments) << "Generating " << fNToys << " toys for this density." << endl;
       ooccoutI((TObject*)NULL,InputArguments) << "Reweight is " << reweight.getVal() << endl;
-      
+
 
       RooDataSet* result = ToyMCSampler::GetSamplingDistributionsSingleWorker( paramPoint );
 
@@ -98,7 +102,7 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
          result->addColumn( densityLabel );
          result->addColumn( reweight );
       }
-      
+
       if( !fullResult ) {
          RooArgSet columns( *result->get() );
          RooRealVar weightVar ( "weight", "weight", 1.0 );
@@ -122,18 +126,14 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
 
    // restore #toys
    fNToys = allToys;
-   
+
    return fullResult;
 }
 
-
-
-
-
-
+////////////////////////////////////////////////////////////////////////////////
 
 RooAbsData* ToyMCImportanceSampler::GenerateToyData(
-   RooArgSet& paramPoint, 
+   RooArgSet& paramPoint,
    double& weight
 ) const {
    if( fNullDensities.size() > 1 ) {
@@ -144,12 +144,12 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       ooccoutE((TObject*)NULL,InputArguments) << "Cannot use multiple null densities and only ask for one weight." << endl;
       return NULL;
    }
-   
+
    if( fNullDensities.size() == 0  &&  fPdf ) {
       ooccoutI((TObject*)NULL,InputArguments) << "No explicit null densities specified. Going to add one based on the given paramPoint and the global fPdf. ... but cannot do that inside const function." << endl;
-      //AddNullDensity( fPdf, &paramPoint );      
+      //AddNullDensity( fPdf, &paramPoint );
    }
-   
+
    // do not do anything if the given parameter point if fNullSnapshots[0]
    // ... which is the most common case
    if( fNullSnapshots[0] != &paramPoint ) {
@@ -158,23 +158,26 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       fNullSnapshots.clear();
       fNullSnapshots.push_back( (RooArgSet*)paramPoint.snapshot() );
    }
-   
+
    vector<double> weights;
    weights.push_back( weight );
-   
+
    vector<double> impNLLs;
    for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) impNLLs.push_back( 0.0 );
    vector<double> nullNLLs;
    for( unsigned int i=0; i < fNullDensities.size(); i++ ) nullNLLs.push_back( 0.0 );
-   
+
    RooAbsData *d = GenerateToyData( weights, impNLLs, nullNLLs );
    weight = weights[0];
    return d;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsData* ToyMCImportanceSampler::GenerateToyData(
-   RooArgSet& paramPoint, 
-   double& weight, 
-   vector<double>& impNLLs, 
+   RooArgSet& paramPoint,
+   double& weight,
+   vector<double>& impNLLs,
    double& nullNLL
 ) const {
    if( fNullDensities.size() > 1 ) {
@@ -188,51 +191,57 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
    if( fNullDensities.size() == 0  &&  fPdf ) {
       ooccoutI((TObject*)NULL,InputArguments) << "No explicit null densities specified. Going to add one based on the given paramPoint and the global fPdf. ... but cannot do that inside const function." << endl;
-      //AddNullDensity( fPdf, &paramPoint );      
+      //AddNullDensity( fPdf, &paramPoint );
    }
-   
+
    ooccoutI((TObject*)NULL,InputArguments) << "Using given parameter point. Overwrites snapshot for the only null currently defined." << endl;
    if(fNullSnapshots[0]) delete fNullSnapshots[0];
    fNullSnapshots.clear();
    fNullSnapshots.push_back( (const RooArgSet*)paramPoint.snapshot() );
-   
+
    vector<double> weights;
    weights.push_back( weight );
-   
+
    vector<double> nullNLLs;
    nullNLLs.push_back( nullNLL );
-   
+
    RooAbsData *d = GenerateToyData( weights, impNLLs, nullNLLs );
    weight = weights[0];
    nullNLL = nullNLLs[0];
    return d;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    vector<double>& weights
 ) const {
    if( fNullDensities.size() != weights.size() ) {
       ooccoutI((TObject*)NULL,InputArguments) << "weights.size() != nullDesnities.size(). You need to provide a vector with the correct size." << endl;
-      //AddNullDensity( fPdf, &paramPoint );      
+      //AddNullDensity( fPdf, &paramPoint );
    }
-   
+
    vector<double> impNLLs;
    for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) impNLLs.push_back( 0.0 );
    vector<double> nullNLLs;
    for( unsigned int i=0; i < fNullDensities.size(); i++ ) nullNLLs.push_back( 0.0 );
-   
+
    RooAbsData *d = GenerateToyData( weights, impNLLs, nullNLLs );
    return d;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// This method generates a toy data set for importance sampling for the given parameter point taking
+/// global observables into account.
+/// The values of the generated global observables remain in the pdf's variables.
+/// They have to have those values for the subsequent evaluation of the
+/// test statistics.
+
 RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    vector<double>& weights,
    vector<double>& impNLLVals,
    vector<double>& nullNLLVals
-) const {   // This method generates a toy data set for importance sampling for the given parameter point taking
-   // global observables into account.
-   // The values of the generated global observables remain in the pdf's variables.
-   // They have to have those values for the subsequent evaluation of the
-   // test statistics.
+) const {
 
 
    ooccoutD((TObject*)0,InputArguments) << endl;
@@ -247,15 +256,15 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       oocoutE((TObject*)NULL,InputArguments) << "ToyMCImportanceSampler: Need to specify the null density explicitly." << endl;
       return NULL;
    }
-   
-   // catch the case when NLLs are not created (e.g. when ToyMCSampler was streamed for Proof) 
+
+   // catch the case when NLLs are not created (e.g. when ToyMCSampler was streamed for Proof)
    if( fNullNLLs.size() == 0  &&  fNullDensities.size() > 0 ) {
       for( unsigned int i = 0; i < fNullDensities.size(); i++ ) fNullNLLs.push_back( NULL );
    }
    if( fImpNLLs.size() == 0  &&  fImportanceDensities.size() > 0 ) {
       for( unsigned int i = 0; i < fImportanceDensities.size(); i++ ) fImpNLLs.push_back( NULL );
    }
-   
+
    if( fNullDensities.size() != fNullNLLs.size() ) {
       oocoutE((TObject*)NULL,InputArguments) << "ToyMCImportanceSampler: Something wrong. NullNLLs must be of same size as null densities." << endl;
       return NULL;
@@ -267,21 +276,21 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       oocoutE((TObject*)NULL,InputArguments) << "ToyMCImportanceSampler: no importance density given or index out of range." << endl;
       return NULL;
    }
-   
-   
+
+
    // paramPoint used to be given as parameter
    // situation is clear when there is only one null.
    // WHAT TO DO FOR MANY NULL DENSITIES?
    RooArgSet paramPoint( *fNullSnapshots[0] );
    //cout << "paramPoint: " << endl;
    //paramPoint.Print("v");
-   
+
 
    // assign input paramPoint
    RooArgSet* allVars = fPdf->getVariables();
    *allVars = paramPoint;
-   
-   
+
+
    // create nuisance parameter points
    if(!fNuisanceParametersSampler && fPriorNuisance && fNuisancePars)
       fNuisanceParametersSampler = new NuisanceParametersSampler(fPriorNuisance, fNuisancePars, fNToys, fExpectedNuisancePar);
@@ -336,7 +345,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    }
    //cout << "data generated: " << data << endl;
 
-   if (!data) { 
+   if (!data) {
       oocoutE((TObject*)0,InputArguments) << "ToyMCImportanceSampler: error generating data" << endl;
       return NULL;
    }
@@ -350,7 +359,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    for( unsigned int i=0; i < fNullDensities.size(); i++ ) {
       //oocoutI((TObject*)0,InputArguments) << "Setting variables to nullSnapshot["<<i<<"]"<<endl;
       //fNullSnapshots[i]->Print("v");
-      
+
       *allVars = *fNullSnapshots[i];
       if( !fNullNLLs[i] ) {
          RooArgSet* allParams = fNullDensities[i]->getParameters(*data);
@@ -364,13 +373,13 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       // FOR DEBuGGING!!!!!!!!!!!!!!!!!
       if( !fReuseNLL ) { delete fNullNLLs[i]; fNullNLLs[i] = NULL; }
    }
-   
-   
+
+
    // for each null: find minNLLVal of null and all imp densities
    ooccoutD((TObject*)0,InputArguments) << "About to find the minimum NLLs." << endl;
    vector<double> minNLLVals;
    for( unsigned int i=0; i < nullNLLVals.size(); i++ ) minNLLVals.push_back( nullNLLVals[i] );
-   
+
    for( unsigned int i=0; i < fImportanceDensities.size(); i++ ) {
       //oocoutI((TObject*)0,InputArguments) << "Setting variables to impSnapshot["<<i<<"]"<<endl;
       //fImportanceSnapshots[i]->Print("v");
@@ -378,7 +387,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       if( fImportanceSnapshots[i] ) *allVars = *fImportanceSnapshots[i];
       if( !fImpNLLs[i] ) {
          RooArgSet* allParams = fImportanceDensities[i]->getParameters(*data);
-         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams), 
+         fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
                                                           RooFit::ConditionalObservables(fConditionalObs));
          delete allParams;
       }else{
@@ -387,13 +396,13 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       impNLLVals[i] = fImpNLLs[i]->getVal();
       // FOR DEBuGGING!!!!!!!!!!!!!!!!!
       if( !fReuseNLL ) { delete fImpNLLs[i]; fImpNLLs[i] = NULL; }
-      
+
       for( unsigned int j=0; j < nullNLLVals.size(); j++ ) {
          if( impNLLVals[i] < minNLLVals[j] ) minNLLVals[j] = impNLLVals[i];
          ooccoutD((TObject*)0,InputArguments) << "minNLLVals["<<j<<"]: " << minNLLVals[j] << "  nullNLLVals["<<j<<"]: " << nullNLLVals[j] << "    impNLLVals["<<i<<"]: " << impNLLVals[i] << endl;
       }
    }
-   
+
    // veto toys: this is a sort of "overlap removal" of the various distributions
    // if not vetoed: apply weight
    ooccoutD((TObject*)0,InputArguments) << "About to apply vetos and calculate weights." << endl;
@@ -402,7 +411,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       else if( fApplyVeto  &&  !fGenerateFromNull  &&  minNLLVals[j] != impNLLVals[fIndexGenDensity] ) weights[j] = 0.0;
       else if( !fGenerateFromNull ) {
          // apply (for fImportanceGenNorm, the weight is one, so nothing needs to be done here)
-         
+
          // L(pdf) / L(imp)  =  exp( NLL(imp) - NLL(pdf) )
          weights[j] *= exp(minNLLVals[j] - nullNLLVals[j]);
       }
@@ -419,18 +428,16 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    return data;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// poi has to be fitted beforehand. This function expects this to be the muhat value.
 
-
-
-
-// poi has to be fitted beforehand. This function expects this to be the muhat value.
 int ToyMCImportanceSampler::CreateImpDensitiesForOnePOIAdaptively( RooAbsPdf& pdf, const RooArgSet& allPOI, RooRealVar& poi, double nStdDevOverlap, double poiValueForBackground ) {
    // these might not necessarily be the same thing.
    double impMaxMu = poi.getVal();
 
    // this includes the null
    int n = 1;
-   
+
    // check whether error is trustworthy
    if( poi.getError() > 0.01  &&  poi.getError() < 5.0 ) {
       n = TMath::CeilNint( poi.getVal() / (2.*nStdDevOverlap*poi.getError()) ); // round up
@@ -439,13 +446,15 @@ int ToyMCImportanceSampler::CreateImpDensitiesForOnePOIAdaptively( RooAbsPdf& pd
       oocoutI((TObject*)0,InputArguments) << "n = " << n << endl;
       oocoutI((TObject*)0,InputArguments) << "This results in a distance of: " << impMaxMu / n << endl;
    }
-   
+
    // exclude the null, just return the number of importance snapshots
    return CreateNImpDensitiesForOnePOI( pdf, allPOI, poi, n-1, poiValueForBackground);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// n is the number of importance densities
+
 int ToyMCImportanceSampler::CreateNImpDensitiesForOnePOI( RooAbsPdf& pdf, const RooArgSet& allPOI, RooRealVar& poi, int n, double poiValueForBackground ) {
-   // n is the number of importance densities
 
    // these might not necessarily be the same thing.
    double impMaxMu = poi.getVal();
@@ -456,21 +465,14 @@ int ToyMCImportanceSampler::CreateNImpDensitiesForOnePOI( RooAbsPdf& pdf, const 
          poi.setVal( poiValueForBackground + (double)i/(n)*(impMaxMu - poiValueForBackground) );
          oocoutI((TObject*)0,InputArguments) << endl << "create point with poi: " << endl;
          poi.Print();
-         
+
          // impSnaps without first snapshot because that is null hypothesis
-         
+
          AddImportanceDensity( &pdf, &allPOI );
       }
    }
-   
+
    return n;
 }
-
-
-
-
-
-
-
 
 } // end namespace RooStats

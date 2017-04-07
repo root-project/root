@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGTextView
 #include "TGTextView.h"
-#endif
 #include <vector>
 #include <streambuf>
 #include <iostream>

@@ -12,17 +12,10 @@
 #ifndef ROOT_TGeoVoxelFinder
 #define ROOT_TGeoVoxelFinder
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoVolume;
 struct TGeoStateInfo;
-
-/*************************************************************************
- * TGeoVoxelFinder - finder class handling voxels
- *
- *************************************************************************/
 
 class TGeoVoxelFinder : public TObject
 {

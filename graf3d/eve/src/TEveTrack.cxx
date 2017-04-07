@@ -30,22 +30,20 @@
 #include <algorithm>
 #include <functional>
 
-//==============================================================================
-//==============================================================================
-// TEveTrack
-//==============================================================================
+/** \class TEveTrack
+\ingroup TEve
+Visual representation of a track.
 
-//______________________________________________________________________________
-//
-// Visual representation of a track.
-//
-// If member fDpDs is set, the momentum is reduced on all path-marks that do
-// not fix the momentum according to the distance travelled from the previous
-// pathmark.
+If member fDpDs is set, the momentum is reduced on all path-marks that do
+not fix the momentum according to the distance travelled from the previous
+pathmark.
+*/
 
 ClassImp(TEveTrack);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor.
+
 TEveTrack::TEveTrack() :
    TEveLine(),
 
@@ -64,10 +62,11 @@ TEveTrack::TEveTrack() :
    fLastPMIdx(0),
    fPropagator(0)
 {
-   // Default constructor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from TParticle.
+
 TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
    TEveLine(),
 
@@ -86,8 +85,6 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
    fLastPMIdx(0),
    fPropagator(0)
 {
-   // Constructor from TParticle.
-
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
 
@@ -100,7 +97,8 @@ TEveTrack::TEveTrack(TParticle* t, Int_t label, TEveTrackPropagator* prop):
    SetName(t->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
    TEveLine(),
 
@@ -132,7 +130,9 @@ TEveTrack::TEveTrack(TEveMCTrack* t, TEveTrackPropagator* prop):
    SetName(t->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from TEveRecTrack<double> reconstructed track.
+
 TEveTrack::TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop) :
    TEveLine(),
 
@@ -151,15 +151,17 @@ TEveTrack::TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop) :
    fLastPMIdx(0),
    fPropagator(0)
 {
-   // Constructor from TEveRecTrack<double> reconstructed track.
-
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
 
    SetName(t->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor from TEveRecTrack<float> reconstructed track.
+/// It is recommended to use constructor with  TEveRecTrack<double> since
+/// TEveTrackPropagator operates with double type.
+
 TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
    TEveLine(),
 
@@ -178,17 +180,18 @@ TEveTrack::TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop) :
    fLastPMIdx(0),
    fPropagator(0)
 {
-   // Constructor from TEveRecTrack<float> reconstructed track.
-   // It is recomended to use constructor with  TEveRecTrack<double> since
-   // TEveTrackPropagator operates with double type.
-
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
 
    SetName(t->GetName());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor. Track parameters are copied but the
+/// extrapolation is not performed so you should still call
+/// MakeTrack() to do that.
+/// If points of 't' are locked, they are cloned.
+
 TEveTrack::TEveTrack(const TEveTrack& t) :
    TEveLine(),
    fV(t.fV),
@@ -206,11 +209,6 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    fLastPMIdx(t.fLastPMIdx),
    fPropagator(0)
 {
-   // Copy constructor. Track paremeters are copied but the
-   // extrapolation is not perfermed so you should still call
-   // MakeTrack() to do that.
-   // If points of 't' are locked, they are cloned.
-
    if (fLockPoints)
       ClonePoints(t);
 
@@ -220,28 +218,28 @@ TEveTrack::TEveTrack(const TEveTrack& t) :
    CopyVizParams(&t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveTrack::~TEveTrack()
 {
-   // Destructor.
-
    SetPropagator(0);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns list-tree icon for TEveTrack.
+
 const TGPicture* TEveTrack::GetListTreeIcon(Bool_t)
 {
-   // Returns list-tree icon for TEveTrack.
-
    return fgListTreeIcons[4];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the bounding box of the track.
+
 void TEveTrack::ComputeBBox()
 {
-   // Compute the bounding box of the track.
-
    if (Size() > 0 || ! fPathMarks.empty())
    {
       BBoxInit();
@@ -262,13 +260,11 @@ void TEveTrack::ComputeBBox()
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set standard track title based on most data-member values.
 
-//______________________________________________________________________________
 void TEveTrack::SetStdTitle()
 {
-   // Set standard track title based on most data-member values.
-
    TString idx(fIndex == kMinInt ? "<undef>" : Form("%d", fIndex));
    TString lbl(fLabel == kMinInt ? "<undef>" : Form("%d", fLabel));
    SetTitle(Form("Index=%s, Label=%s\nChg=%d, Pdg=%d\n"
@@ -277,14 +273,14 @@ void TEveTrack::SetStdTitle()
                  fP.Perp(), fP.fZ, fV.fX, fV.fY, fV.fZ));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy track parameters from t. Track-propagator is set, too.
+/// PathMarks are cleared - you can copy them via SetPathMarks(t).
+/// If track 't' is locked, you should probably clone its points
+/// over - use TEvePointSet::ClonePoints(t);
+
 void TEveTrack::SetTrackParams(const TEveTrack& t)
 {
-   // Copy track parameters from t. Track-propagator is set, too.
-   // PathMarks are cleared - you can copy them via SetPathMarks(t).
-   // If track 't' is locked, you should probably clone its points
-   // over - use TEvePointSet::ClonePoints(t);
-
    fV          = t.fV;
    fP          = t.fP;
    fBeta       = t.fBeta;
@@ -297,36 +293,32 @@ void TEveTrack::SetTrackParams(const TEveTrack& t)
    SetPropagator(t.fPropagator);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy path-marks from t.
+
 void TEveTrack::SetPathMarks(const TEveTrack& t)
 {
-   // Copy path-marks from t.
-
    std::copy(t.RefPathMarks().begin(), t.RefPathMarks().end(),
              std::back_insert_iterator<vPathMark_t>(fPathMarks));
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set track's render style.
+/// Reference counts of old and new propagator are updated.
 
-//______________________________________________________________________________
 void TEveTrack::SetPropagator(TEveTrackPropagator* prop)
 {
-   // Set track's render style.
-   // Reference counts of old and new propagator are updated.
-
    if (fPropagator == prop) return;
    if (fPropagator) fPropagator->DecRefCount(this);
    fPropagator = prop;
    if (fPropagator) fPropagator->IncRefCount(this);
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set line and marker attributes from TEveTrackList.
 
-//______________________________________________________________________________
 void TEveTrack::SetAttLineAttMarker(TEveTrackList* tl)
 {
-   // Set line and marker attributes from TEveTrackList.
-
    SetRnrLine(tl->GetRnrLine());
    SetLineColor(tl->GetLineColor());
    SetLineStyle(tl->GetLineStyle());
@@ -338,15 +330,13 @@ void TEveTrack::SetAttLineAttMarker(TEveTrackList* tl)
    SetMarkerSize(tl->GetMarkerSize());
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Calculate track representation based on track data and current
+/// settings of the propagator.
+/// If recurse is true, descend into children.
 
-//______________________________________________________________________________
 void TEveTrack::MakeTrack(Bool_t recurse)
 {
-   // Calculate track representation based on track data and current
-   // settings of the propagator.
-   // If recurse is true, descend into children.
-
    if (!fLockPoints)
    {
       Reset(0);
@@ -479,13 +469,11 @@ void TEveTrack::MakeTrack(Bool_t recurse)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
 
-//______________________________________________________________________________
 void TEveTrack::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    // No local parameters.
 
    // const TEveTrack* t = dynamic_cast<const TEveTrack*>(el);
@@ -495,25 +483,23 @@ void TEveTrack::CopyVizParams(const TEveElement* el)
    TEveLine::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEveTrack::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEveLine::WriteVizParams(out, var);
 
    // TString t = "   " + var + "->";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, return TEveTrackProjected class.
+
 TClass* TEveTrack::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, return TEveTrackProjected class.
-
    return TEveTrackProjected::Class();
 }
-
-//==============================================================================
 
 namespace
 {
@@ -524,19 +510,19 @@ namespace
    };
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort registered pat-marks by time.
+
 void TEveTrack::SortPathMarksByTime()
 {
-   // Sort registered pat-marks by time.
-
    std::sort(fPathMarks.begin(), fPathMarks.end(), Cmp_pathmark_t());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print registered path-marks.
+
 void TEveTrack::PrintPathMarks()
 {
-   // Print registered path-marks.
-
    static const TEveException eh("TEveTrack::PrintPathMarks ");
 
    printf("TEveTrack '%s', number of path marks %d, label %d\n",
@@ -555,29 +541,27 @@ void TEveTrack::PrintPathMarks()
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits "SecSelected(TEveTrack*)" signal.
+/// Called from TEveTrackGL on secondary-selection.
+
 void TEveTrack::SecSelected(TEveTrack* track)
 {
-   // Emits "SecSelected(TEveTrack*)" signal.
-   // Called from TEveTrackGL on secondary-selection.
-
    Emit("SecSelected(TEveTrack*)", (Long_t)track);
 }
 
-
-//==============================================================================
-//==============================================================================
-// TEveTrackList
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// A list of tracks supporting change of common attributes and
-// selection based on track parameters.
+/** \class TEveTrackList
+\ingroup TEve
+A list of tracks supporting change of common attributes and
+selection based on track parameters.
+*/
 
 ClassImp(TEveTrackList);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. If track-propagator argument is 0, a new default
+/// one is created.
+
 TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
    TEveElementList(),
    TAttMarker(1, 20, 1),
@@ -591,8 +575,6 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
    fMinPt (0), fMaxPt (0), fLimPt (0),
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
-   // Constructor. If track-propagator argument is 0, a new default
-   // one is created.
 
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
@@ -602,7 +584,10 @@ TEveTrackList::TEveTrackList(TEveTrackPropagator* prop) :
    SetPropagator(prop);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. If track-propagator argument is 0, a new default
+/// one is created.
+
 TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
    TEveElementList(name),
    TAttMarker(1, 20, 1),
@@ -616,9 +601,6 @@ TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
    fMinPt (0), fMaxPt (0), fLimPt (0),
    fMinP  (0), fMaxP  (0), fLimP  (0)
 {
-   // Constructor. If track-propagator argument is 0, a new default
-   // one is created.
-
    fChildClass = TEveTrack::Class(); // override member from base TEveElementList
 
    fMainColorPtr = &fLineColor;
@@ -627,37 +609,33 @@ TEveTrackList::TEveTrackList(const char* name, TEveTrackPropagator* prop) :
    SetPropagator(prop);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TEveTrackList::~TEveTrackList()
 {
-   // Destructor.
-
    SetPropagator(0);
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set default propagator for tracks.
+/// This is not enforced onto the tracks themselves but this is the
+/// propagator that is shown in the TEveTrackListEditor.
 
-//______________________________________________________________________________
 void TEveTrackList::SetPropagator(TEveTrackPropagator* prop)
 {
-   // Set default propagator for tracks.
-   // This is not enforced onto the tracks themselves but this is the
-   // propagator that is shown in the TEveTrackListEditor.
-
    if (fPropagator == prop) return;
    if (fPropagator) fPropagator->DecRefCount();
    fPropagator = prop;
    if (fPropagator) fPropagator->IncRefCount();
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Regenerate the visual representations of tracks.
+/// The momentum limits are rescanned during the same traversal.
 
-//______________________________________________________________________________
 void TEveTrackList::MakeTracks(Bool_t recurse)
 {
-   // Regenerate the visual representations of tracks.
-   // The momentum limits are rescanned during the same traversal.
-
    fLimPt = fLimP = 0;
 
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
@@ -680,12 +658,12 @@ void TEveTrackList::MakeTracks(Bool_t recurse)
    SanitizeMinMaxCuts();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over children and find highest pT and p of contained TEveTracks.
+/// These are stored in members fLimPt and fLimP.
+
 void TEveTrackList::FindMomentumLimits(Bool_t recurse)
 {
-   // Loop over children and find highest pT and p of contained TEveTracks.
-   // These are stored in members fLimPt and fLimP.
-
    fLimPt = fLimP = 0;
 
    if (HasChildren())
@@ -709,12 +687,12 @@ void TEveTrackList::FindMomentumLimits(Bool_t recurse)
    SanitizeMinMaxCuts();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Loop over track elements of argument el and find highest pT and p.
+/// These are stored in members fLimPt and fLimP.
+
 void TEveTrackList::FindMomentumLimits(TEveElement* el, Bool_t recurse)
 {
-   // Loop over track elements of argument el and find highest pT and p.
-   // These are stored in members fLimPt and fLimP.
-
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
       TEveTrack* track = dynamic_cast<TEveTrack*>(*i);
@@ -728,11 +706,11 @@ void TEveTrackList::FindMomentumLimits(TEveElement* el, Bool_t recurse)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Round the momentum limit up to a nice value.
+
 Double_t TEveTrackList::RoundMomentumLimit(Double_t x)
 {
-   // Round the momentum limit up to a nice value.
-
    using namespace TMath;
 
    if (x < 1e-3) return 1e-3;
@@ -741,11 +719,11 @@ Double_t TEveTrackList::RoundMomentumLimit(Double_t x)
    return Ceil(fac*x) / fac;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set Min/Max cuts so that they are within detected limits.
+
 void TEveTrackList::SanitizeMinMaxCuts()
 {
-   // Set Min/Max cuts so that they are within detected limits.
-
    using namespace TMath;
 
    fMinPt = Min(fMinPt, fLimPt);
@@ -754,13 +732,11 @@ void TEveTrackList::SanitizeMinMaxCuts()
    fMaxP  = fMaxP  == 0 ? fLimP  : Min(fMaxP,  fLimP);
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of track as line for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetRnrLine(Bool_t rnr)
 {
-   // Set rendering of track as line for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -772,11 +748,11 @@ void TEveTrackList::SetRnrLine(Bool_t rnr)
    fRnrLine = rnr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of track as line for children of el.
+
 void TEveTrackList::SetRnrLine(Bool_t rnr, TEveElement* el)
 {
-   // Set rendering of track as line for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -788,13 +764,11 @@ void TEveTrackList::SetRnrLine(Bool_t rnr, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of track as points for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetRnrPoints(Bool_t rnr)
 {
-   // Set rendering of track as points for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -806,11 +780,11 @@ void TEveTrackList::SetRnrPoints(Bool_t rnr)
    fRnrPoints = rnr;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set rendering of track as points for children of el.
+
 void TEveTrackList::SetRnrPoints(Bool_t rnr, TEveElement* el)
 {
-   // Set rendering of track as points for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -823,13 +797,11 @@ void TEveTrackList::SetRnrPoints(Bool_t rnr, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set main (line) color for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetMainColor(Color_t col)
 {
-   // Set main (line) color for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -841,11 +813,11 @@ void TEveTrackList::SetMainColor(Color_t col)
    TEveElement::SetMainColor(col);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line color for children of el.
+
 void TEveTrackList::SetLineColor(Color_t col, TEveElement* el)
 {
-   // Set line color for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -857,13 +829,11 @@ void TEveTrackList::SetLineColor(Color_t col, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set line width for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetLineWidth(Width_t width)
 {
-   // Set line width for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -875,11 +845,11 @@ void TEveTrackList::SetLineWidth(Width_t width)
    fLineWidth = width;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line width for children of el.
+
 void TEveTrackList::SetLineWidth(Width_t width, TEveElement* el)
 {
-   // Set line width for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -891,13 +861,11 @@ void TEveTrackList::SetLineWidth(Width_t width, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set line style for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetLineStyle(Style_t style)
 {
-   // Set line style for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -909,11 +877,11 @@ void TEveTrackList::SetLineStyle(Style_t style)
    fLineStyle = style;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set line style for children of el.
+
 void TEveTrackList::SetLineStyle(Style_t style, TEveElement* el)
 {
-   // Set line style for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -925,13 +893,11 @@ void TEveTrackList::SetLineStyle(Style_t style, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetMarkerStyle(Style_t style)
 {
-   // Set marker style for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -943,11 +909,11 @@ void TEveTrackList::SetMarkerStyle(Style_t style)
    fMarkerStyle = style;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker style for children of el.
+
 void TEveTrackList::SetMarkerStyle(Style_t style, TEveElement* el)
 {
-   // Set marker style for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -959,13 +925,11 @@ void TEveTrackList::SetMarkerStyle(Style_t style, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker color for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetMarkerColor(Color_t col)
 {
-   // Set marker color for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -977,11 +941,11 @@ void TEveTrackList::SetMarkerColor(Color_t col)
    fMarkerColor = col;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker color for children of el.
+
 void TEveTrackList::SetMarkerColor(Color_t col, TEveElement* el)
 {
-   // Set marker color for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -993,13 +957,11 @@ void TEveTrackList::SetMarkerColor(Color_t col, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size for the list and the elements.
 
-//______________________________________________________________________________
 void TEveTrackList::SetMarkerSize(Size_t size)
 {
-   // Set marker size for the list and the elements.
-
    for (List_i i=BeginChildren(); i!=EndChildren(); ++i)
    {
       TEveTrack* track = (TEveTrack*)(*i);
@@ -1011,11 +973,11 @@ void TEveTrackList::SetMarkerSize(Size_t size)
    fMarkerSize = size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set marker size for children of el.
+
 void TEveTrackList::SetMarkerSize(Size_t size, TEveElement* el)
 {
-   // Set marker size for children of el.
-
    TEveTrack* track;
    for (List_i i=el->BeginChildren(); i!=el->EndChildren(); ++i)
    {
@@ -1027,15 +989,13 @@ void TEveTrackList::SetMarkerSize(Size_t size, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Select visibility of tracks by transverse momentum.
+/// If data-member fRecurse is set, the selection is applied
+/// recursively to all children.
 
-//______________________________________________________________________________
 void TEveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt)
 {
-   // Select visibility of tracks by transverse momentum.
-   // If data-member fRecurse is set, the selection is applied
-   // recursively to all children.
-
    fMinPt = min_pt;
    fMaxPt = max_pt;
 
@@ -1052,11 +1012,11 @@ void TEveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select visibility of el's children tracks by transverse momentum.
+
 void TEveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt, TEveElement* el)
 {
-   // Select visibility of el's children tracks by transverse momentum.
-
    const Double_t minptsq = min_pt*min_pt;
    const Double_t maxptsq = max_pt*max_pt;
 
@@ -1074,13 +1034,13 @@ void TEveTrackList::SelectByPt(Double_t min_pt, Double_t max_pt, TEveElement* el
    }
 }
 
-//_________ ___________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select visibility of tracks by momentum.
+/// If data-member fRecurse is set, the selection is applied
+/// recursively to all children.
+
 void TEveTrackList::SelectByP(Double_t min_p, Double_t max_p)
 {
-   // Select visibility of tracks by momentum.
-   // If data-member fRecurse is set, the selection is applied
-   // recursively to all children.
-
    fMinP = min_p;
    fMaxP = max_p;
 
@@ -1097,11 +1057,11 @@ void TEveTrackList::SelectByP(Double_t min_p, Double_t max_p)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select visibility of el's children tracks by momentum.
+
 void TEveTrackList::SelectByP(Double_t min_p, Double_t max_p, TEveElement* el)
 {
-   // Select visibility of el's children tracks by momentum.
-
    const Double_t minpsq = min_p*min_p;
    const Double_t maxpsq = max_p*max_p;
 
@@ -1119,13 +1079,11 @@ void TEveTrackList::SelectByP(Double_t min_p, Double_t max_p, TEveElement* el)
    }
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Find track by label, select it and display it in the editor.
 
-//______________________________________________________________________________
 TEveTrack* TEveTrackList::FindTrackByLabel(Int_t label)
 {
-   // Find track by label, select it and display it in the editor.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       if (((TEveTrack*)(*i))->GetLabel() == label)
@@ -1144,11 +1102,11 @@ TEveTrack* TEveTrackList::FindTrackByLabel(Int_t label)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find track by index, select it and display it in the editor.
+
 TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
 {
-   // Find track by index, select it and display it in the editor.
-
    for (List_i i=fChildren.begin(); i!=fChildren.end(); ++i)
    {
       if (((TEveTrack*)(*i))->GetIndex() == index)
@@ -1167,13 +1125,11 @@ TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
    return 0;
 }
 
-//==============================================================================
+////////////////////////////////////////////////////////////////////////////////
+/// Copy visualization parameters from element el.
 
-//______________________________________________________________________________
 void TEveTrackList::CopyVizParams(const TEveElement* el)
 {
-   // Copy visualization parameters from element el.
-
    const TEveTrackList* m = dynamic_cast<const TEveTrackList*>(el);
    if (m)
    {
@@ -1193,11 +1149,11 @@ void TEveTrackList::CopyVizParams(const TEveElement* el)
    TEveElement::CopyVizParams(el);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write visualization parameters.
+
 void TEveTrackList::WriteVizParams(std::ostream& out, const TString& var)
 {
-   // Write visualization parameters.
-
    TEveElement::WriteVizParams(out, var);
 
    TString t = "   " + var + "->";
@@ -1215,10 +1171,10 @@ void TEveTrackList::WriteVizParams(std::ostream& out, const TString& var)
    // out << t << "SetLimP("  << fLimP  << ");\n";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual from TEveProjectable, returns TEveTrackListProjected class.
+
 TClass* TEveTrackList::ProjectedClass(const TEveProjection*) const
 {
-   // Virtual from TEveProjectable, returns TEveTrackListProjected class.
-
    return TEveTrackListProjected::Class();
 }

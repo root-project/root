@@ -339,10 +339,11 @@ int main(int argc, char **argv)
    return(0);
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert a directory
+
 void convert_directory(const char *dir)
 {
-   //convert a directory
    printf(" Converting directory %s\n",dir);
    Int_t id;
 //  Int_t nastycase=0;
@@ -449,10 +450,11 @@ void convert_directory(const char *dir)
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert 1d histogram
+
 void convert_1d(Int_t id)
 {
-   //convert 1d histogram
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
@@ -502,10 +504,11 @@ void convert_1d(Int_t id)
    delete h1;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert 2d histogram
+
 void convert_2d(Int_t id)
 {
-   //convert 2d histogram
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
@@ -537,17 +540,17 @@ void convert_2d(Int_t id)
    delete h2;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// the following structure is used in Hbook
+///    lcid points to the profile in array iq
+///    lcont = lq(lcid-1)
+///    lw    = lq(lcont)
+///    ln    = lq(lw)
+///      if option S jbyt(iq(lw),1,2) = 1
+///      if option I jbyt(iq(lw),1,2) = 2
+
 void convert_profile(Int_t id)
 {
-// the following structure is used in Hbook
-//    lcid points to the profile in array iq
-//    lcont = lq(lcid-1)
-//    lw    = lq(lcont)
-//    ln    = lq(lw)
-//      if option S jbyt(iq(lw),1,2) = 1
-//      if option I jbyt(iq(lw),1,2) = 2
-
    if (id > 0) snprintf(idname,128,"h%d",id);
    else        snprintf(idname,128,"h_%d",-id);
    hnoent(id,nentries);
@@ -579,10 +582,11 @@ void convert_profile(Int_t id)
    delete p;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert row wise ntuple
+
 void convert_rwn(Int_t id)
 {
-   //convert row wise ntuple
    const int kNchar=9;
    int nvar;
    int ier=0;
@@ -646,10 +650,11 @@ void convert_rwn(Int_t id)
    delete [] chtag_out;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///convert column wise ntuple
+
 void convert_cwn(Int_t id)
 {
-   //convert column wise ntuple
    const int kNchar=9;
    int nvar;
    int ier=0;

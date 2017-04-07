@@ -13,24 +13,26 @@
 #include "TVirtualMCApplication.h"
 #include "TError.h"
 
-//______________________________________________________________________________
-//
-// Interface to a user Monte Carlo application.
-//______________________________________________________________________________
+/** \class TVirtualMCApplication
+    \ingroup vmc
+
+Interface to a user Monte Carlo application.
+
+*/
 
 ClassImp(TVirtualMCApplication)
 
 TMCThreadLocal TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Standard constructor
+///
+
 TVirtualMCApplication::TVirtualMCApplication(const char *name,
                                              const char *title)
   : TNamed(name,title)
 {
-//
-// Standard constructor
-//
-
    if (fgInstance) {
       Fatal("TVirtualMCApplication",
             "Attempt to create two instances of singleton.");
@@ -39,33 +41,33 @@ TVirtualMCApplication::TVirtualMCApplication(const char *name,
    fgInstance = this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Default constructor
+///
+
 TVirtualMCApplication::TVirtualMCApplication()
   : TNamed()
 {
-   //
-   // Default constructor
-   //
    fgInstance = this;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Destructor
+///
+
 TVirtualMCApplication::~TVirtualMCApplication()
 {
-   //
-   // Destructor
-   //
-
    fgInstance = 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Static access method
+///
+
 TVirtualMCApplication* TVirtualMCApplication::Instance()
 {
-   //
-   // Static access method
-   //
-
-   return fgInstance;
+  return fgInstance;
 }
-

@@ -55,11 +55,12 @@
 
 ClassImp(TPoints3D)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ================================
+
 TPoints3D::TPoints3D(TPoints3DABC *points) : fPoints(points)
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ================================
    DoOwner(kFALSE);
    fPoints = points;
    if (!fPoints) {
@@ -68,58 +69,63 @@ TPoints3D::TPoints3D(TPoints3DABC *points) : fPoints(points)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*3-D PolyLine normal constructor without initialisation*-*-*-*-*-*-*
+///*-*        ======================================================
+///*-*  If n < 0 the default size (2 points) is set
+///*-*
+
 TPoints3D::TPoints3D(Int_t n, Option_t *option) : fPoints( new TPointsArray3D(n,option))
 {
-//*-*-*-*-*-*3-D PolyLine normal constructor without initialisation*-*-*-*-*-*-*
-//*-*        ======================================================
-//*-*  If n < 0 the default size (2 points) is set
-//*-*
    DoOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*3-D Point3D normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ===============================
+///*-*  If n < 0 the default size (2 points) is set
+///*-*
+
 TPoints3D::TPoints3D(Int_t n, Float_t *p, Option_t *option) : fPoints(new TPointsArray3D(n,p,option))
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*3-D Point3D normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===============================
-//*-*  If n < 0 the default size (2 points) is set
-//*-*
    DoOwner();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ===============================
+///*-*  If n < 0 the default size (2 points) is set
+///*-*
+
 TPoints3D::TPoints3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option)
                        : fPoints(new TPointsArray3D(n,x,y,z,option))
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===============================
-//*-*  If n < 0 the default size (2 points) is set
-//*-*
    DoOwner();
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default destructor*-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ===============================
+
 TPoints3D::~TPoints3D()
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default destructor*-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ===============================
    Delete();
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 TPoints3D::TPoints3D(const TPoints3D &point) : TPoints3DABC(point)
 {
-   //to be documented
    ((TPoints3D&)point).Copy(*this);
 }
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*-*-*-*Copy this TPoints3D to another *-*-*-*-*-*-*-*-*-*-*-*
+///*-*                      ==============================
+
 void TPoints3D::Copy(TObject &obj) const
 {
-//*-*-*-*-*-*-*-*-*-*-*-*-*Copy this TPoints3D to another *-*-*-*-*-*-*-*-*-*-*-*
-//*-*                      ==============================
-
    TPoints3DABC::Copy(obj);
    TPoints3D &thatObject = (TPoints3D&)obj;
    thatObject.Delete();
@@ -131,48 +137,52 @@ void TPoints3D::Copy(TObject &obj) const
       thatObject.fPoints = fPoints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete only own object
+
 void TPoints3D::Delete()
 {
-   // Delete only own object
    if (fPoints && IsOwner()) delete fPoints;
    fPoints = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///to be documented
+
 Bool_t TPoints3D::DoOwner(Bool_t done)
 {
-   //to be documented
    if (done) SetBit(kIsOwner);
    else ResetBit(kIsOwner);
    return IsOwner();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
+///*-*                =========================================
+
 void TPoints3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-//*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
-//*-*                =========================================
    if (fPoints)
       fPoints->ExecuteEvent(event,px,py);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
+///*-*                ==========================================
+
 void TPoints3D::ls(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
-//*-*                ==========================================
-
    TROOT::IndentLevel();
    std::cout << IsA()->GetName() << " N=" <<GetN()<<" Option="<<option<<std::endl;
 //   IsOwner()?"Owner":"Not owner" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
+///*-*                ==========================================
+
 void TPoints3D::Print(Option_t *option) const
 {
-//*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
-//*-*                ==========================================
    std::cout <<"   " << IsA()->GetName() <<" Printing N=" <<GetN()<<" Option="<<option<<std::endl;
 //   IsOwner()?"Owner":"Not owner" << std::endl;
 }

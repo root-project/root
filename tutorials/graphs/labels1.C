@@ -1,5 +1,13 @@
-//Setting alphanumeric labels in a 1-d histogram
-//Author; Rene Brun
+/// \file
+/// \ingroup tutorial_graphs
+/// \notebook
+/// Setting alphanumeric labels in a 1-d histogram.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Rene Brun
+
 void labels1()
 {
    Int_t i;

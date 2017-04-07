@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoMedium
 #define ROOT_TGeoMedium
 
-#ifndef ROOT_TGeoMaterial
 #include "TGeoMaterial.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

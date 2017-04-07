@@ -87,8 +87,8 @@ void ExamineRange(const TAxis * axis, std::pair<double,double> range,int &hxfirs
    // ignore ranges specified outside histogram range
    int ilow = axis->FindFixBin(xlow);
    int ihigh = axis->FindFixBin(xhigh);
-   if (ilow > hxlast || ihigh < hxfirst) { 
-      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName()); 
+   if (ilow > hxlast || ihigh < hxfirst) {
+      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName());
    }
    // consider only range defined with-in histogram not oustide. Always exclude underflow/overflow
    hxfirst =  std::min( std::max( ilow, hxfirst), hxlast+1) ;
@@ -174,7 +174,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    int ndim = hdim;
    // case of function dimension less than histogram
    if (func !=0 && func->GetNdim() == hdim-1) ndim = hdim-1;
-  
+
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );
@@ -258,12 +258,12 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*Compute rough values of parameters for an  exponential
+///           ===================================================
+
 void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
 {
-   //   -*-*-*-*Compute rough values of parameters for an  exponential
-   //           ===================================================
-
    unsigned int n = data.Size();
    if (n == 0) return;
 
@@ -297,13 +297,13 @@ void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*Compute Initial values of parameters for a gaussian
+///           derivaed from function H1InitGaus defined in TH1.cxx
+///           ===================================================
+
 void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 {
-   //   -*-*-*-*Compute Initial values of parameters for a gaussian
-   //           derivaed from function H1InitGaus defined in TH1.cxx
-   //           ===================================================
-
 
    static const double sqrtpi = 2.506628;
 
@@ -380,13 +380,13 @@ void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///   -*-*-*-*Compute Initial values of parameters for a gaussian
+///           derivaed from function H1InitGaus defined in TH1.cxx
+///           ===================================================
+
 void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 {
-   //   -*-*-*-*Compute Initial values of parameters for a gaussian
-   //           derivaed from function H1InitGaus defined in TH1.cxx
-   //           ===================================================
-
 
    static const double sqrtpi = 2.506628;
 
@@ -551,7 +551,7 @@ BinData::ErrorType GetDataType(const TGraph2D * gr, const DataOptions & fitOpt) 
    // default case for graphs (when they have errors)
    BinData::ErrorType type = BinData::kValueError;
    // if all errors are zero set option of using errors to 1
-   if (ez == 0 ) {
+   if (fitOpt.fErrors1 || ez == 0 ) {
       type =  BinData::kNoError;
    }
    else if ( ex != 0 && ey!=0 && fitOpt.fCoordErrors)  {
@@ -773,9 +773,10 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
    // data.
    ROOT::Fit::DataOptions& dopt = dv.Opt();
    dopt.fUseEmpty = true;
-   // when using sparse data need to set option bin volume
+   // when using sparse data need to set option to use normalized bin volume, because sparse bins are merged together
    //if (!dopt.fIntegral) dopt.fBinVolume = true;
    dopt.fBinVolume = true;
+   dopt.fNormBinVolume = true;
 
    // Get the sparse data
    ROOT::Fit::SparseData d(ndim, &xmin[0], &xmax[0]);
@@ -810,19 +811,7 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    // if data are filled already check if there are consistent - otherwise do nothing
    if (dv.Size() > 0 && dv.NDim() == 1 ) {
       // check if size is correct otherwise flag an errors
-      if (dv.PointSize() == 2 && type != BinData::kNoError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 3 && type != BinData::kValueError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 4 && type != BinData::kCoordError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 5 && type != BinData::kAsymError ) {
+     if ( dv.GetErrorType() != type ) {
          Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
          return;
       }
@@ -938,7 +927,6 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
          (*func)( x ); // evaluate using stored function parameters
          if (TF1::RejectedPoint() ) continue;
       }
-
 
       if (type == BinData::kNoError) {
          dv.Add( x, gz[i] );

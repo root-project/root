@@ -1,11 +1,15 @@
-// Author: Valeriy Onuchin   24/08/2007
-//
-// This macro gives an example of how to use html widget
-// to display tabular data.
-//
-// To run it do either:
-// .x calendar.C
-// .x calendar.C++
+/// \file
+/// \ingroup tutorial_gui
+/// This macro gives an example of how to use html widget to display tabular data.
+/// To run it do either:
+/// ~~~ 
+/// .x calendar.C
+/// .x calendar.C++
+/// ~~~ 
+///
+/// \macro_code
+///
+/// \author Valeriy Onuchin   24/08/2007
 
 
 #include "TDatime.h"

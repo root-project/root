@@ -3,9 +3,6 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-ROOT_USE_PACKAGE(core)
-ROOT_USE_PACKAGE(net/net)
-
 include_directories(${MONALISA_INCLUDE_DIR})
 #set_directory_properties(PROPERTIES COMPILE_DEFINITIONS R__KRB5INIT="${KRB5_INIT}")
 
@@ -13,7 +10,7 @@ include_directories(${MONALISA_INCLUDE_DIR})
 ROOT_GENERATE_DICTIONARY(G__Monalisa *.h MODULE Monalisa LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Monalisa *.cxx G__Monalisa.cxx LIBRARIES ${MONALISA_LIBRARIES}
-                                                   DEPENDENCIES Net RIO MathCore )
+                                                   DEPENDENCIES Net RIO )
 
 ROOT_INSTALL_HEADERS()
 

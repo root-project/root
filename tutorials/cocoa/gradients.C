@@ -1,12 +1,16 @@
-//Author: Timur Pocheptsov, 19/03/2014
-//This macro requires OS X and ROOT
-//compiled with --enable-cocoa to run.
-
-//Features:
-//1. Radial and linear gradients
-//2. Transparent/semitransparent colours.
-//3. Shadows.
-
+/// \file
+/// \ingroup tutorial_cocoa
+/// This macro requires OS X and ROOT
+/// compiled with --enable-cocoa to run.
+///
+/// Features:
+///  1. Radial and linear gradients
+///  2. Transparent/semitransparent colours.
+///  3. Shadows.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC:
 #include "TColorGradient.h"

@@ -1,5 +1,11 @@
-// Demonstrates how to combine Timur's GL plots with other scene elements.
-// Author: Matevz Tadel, Sept 2009
+/// \file
+/// \ingroup tutorial_eve
+/// Demonstrates how to combine Timur's GL plots with other scene elements.
+///
+/// \image html eve_glplot_geom.png
+/// \macro_code
+///
+/// \author Matevz Tadel
 
 void glplot_geom()
 {

@@ -1,9 +1,12 @@
-// This macro plays a recorded ROOT session showing how to perform various
-// interactive GUI operations with the guitest.C macro
-
-// While replaying the session, several temporary macros (guitest0xx.C)
-// macros will be saved. These files will be later on compared with some
-// reference values to verify the validity of different parts of the test.
+/// \file
+/// \ingroup tutorial_gui
+/// This macro plays a recorded ROOT session showing how to perform various interactive GUI operations with the guitest.C macro
+/// While replaying the session, several temporary macros (guitest0xx.C) macros will be saved.
+/// These files will be later on compared with some reference values to verify the validity of different parts of the test.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 #include "TSystem.h"
 #include "TSystemFile.h"

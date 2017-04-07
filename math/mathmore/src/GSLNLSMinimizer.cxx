@@ -26,7 +26,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-#include <memory>
 
 namespace ROOT {
 
@@ -223,7 +222,7 @@ bool GSLNLSMinimizer::Minimize() {
    MultiNumGradFunction * gradFunction = new MultiNumGradFunction(*fChi2Func);
    MinimTransformFunction * trFuncRaw  =  CreateTransformation(startValues, gradFunction);
    // need to transform in a FitTransformFunction which is set in the residual functions
-   std::auto_ptr<FitTransformFunction> trFunc;
+   std::unique_ptr<FitTransformFunction> trFunc;
    if (trFuncRaw) {
       trFunc.reset(new FitTransformFunction(*fChi2Func, trFuncRaw) );
       //FitTransformationFunction *trFunc = new FitTransformFunction(*fChi2Func, trFuncRaw);

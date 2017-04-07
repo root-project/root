@@ -20,34 +20,33 @@
 #include "TFormLeafInfoReference.h"
 #include <iostream>
 
-//______________________________________________________________________________
-//
-// TRefProxy is a reference proxy, which allows to access ROOT references (TRef)
-// stored contained in other objects from TTree::Draw
+/** class TRefProxy
+A reference proxy, which allows to access ROOT references (TRef)
+stored contained in other objects from TTree::Draw
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Update (and propagate) cached information
 
-//______________________________________________________________________________
 Bool_t TRefProxy::Update()
 {
-   // TVirtualRefProxy overload: Update (and propagate) cached information
-
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TVirtualRefProxy overload: Access to value class
+
 TClass* TRefProxy::GetValueClass(void* data) const
 {
-   // TVirtualRefProxy overload: Access to value class
-
    TObject* obj = (TObject*)data;
    return ( obj ) ? obj->IsA() : 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Access referenced object(-data)
+
 void* TRefProxy::GetObject(TFormLeafInfoReference* info, void* data, int)
 {
-   // Access referenced object(-data)
-
    if ( data )  {
       TRef*      ref    = (TRef*)((char*)data + info->GetOffset());
       void* obj = ref->GetObject();

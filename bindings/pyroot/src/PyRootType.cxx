@@ -7,8 +7,9 @@
 #include "MethodProxy.h"
 #include "PropertyProxy.h"
 #include "RootWrapper.h"
-#include "TClassMethodHolder.h"
+#include "TFunctionHolder.h"
 #include "TemplateProxy.h"
+#include "PyStrings.h"
 
 // ROOT
 #include "TClass.h"     // for method and enum finding
@@ -33,20 +34,20 @@ namespace {
       return pyclass;
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
    void meta_dealloc( PyRootClass* pytype )
    {
-      pytype->fClass.~TClassRef();
       return PyType_Type.tp_dealloc( (PyObject*)pytype );
    }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when PyRootType acts as a metaclass; since type_new always resets
+/// tp_alloc, and since it does not call tp_init on types, the metaclass is
+/// being fixed up here, and the class is initialized here as well.
+
    PyObject* pt_new( PyTypeObject* subtype, PyObject* args, PyObject* kwds )
    {
-   // Called when PyRootType acts as a metaclass; since type_new always resets
-   // tp_alloc, and since it does not call tp_init on types, the metaclass is
-   // being fixed up here, and the class is initialized here as well.
-
    // fixup of metaclass (left permanent, and in principle only called once b/c
    // PyROOT caches python classes)
       subtype->tp_alloc   = (allocfunc)meta_alloc;
@@ -65,11 +66,13 @@ namespace {
       if ( ! mp ) {
       // there has been a user meta class override in a derived class, so do
       // the consistent thing, thus allowing user control over naming
-         new (&result->fClass) TClassRef( PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
+         result->fCppType = Cppyy::GetScope(
+            PyROOT_PyUnicode_AsString( PyTuple_GET_ITEM( args, 0 ) ) );
       } else {
       // coming here from PyROOT, use meta class name instead of given name,
       // so that it is safe to inherit python classes from the bound class
-         new (&result->fClass) TClassRef( std::string( subtype->tp_name ).substr( 0, mp-subtype->tp_name ).c_str() );
+         result->fCppType = Cppyy::GetScope(
+            std::string( subtype->tp_name ).substr( 0, mp-subtype->tp_name ).c_str() );
       }
 
       return (PyObject*)result;
@@ -90,16 +93,17 @@ namespace {
       // filter for python specials and lookup qualified class or function
          std::string name = PyROOT_PyUnicode_AsString( pyname );
          if ( name.size() <= 2 || name.substr( 0, 2 ) != "__" ) {
-
             attr = CreateScopeProxy( name, pyclass );
 
          // namespaces may have seen updates in their list of global functions, which
          // are available as "methods" even though they're not really that
             if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
-
-	       Cppyy::TCppScope_t scope = Cppyy::GetScope( ((PyTypeObject*)pyclass)->tp_name );
-               TClass* klass = TClass::GetClass( ((PyTypeObject*)pyclass)->tp_name );
+               PyObject* pycppname = PyObject_GetAttr( pyclass, PyStrings::gCppName );
+               char* cppname = PyROOT_PyUnicode_AsString(pycppname);
+               Py_DECREF(pycppname);
+               Cppyy::TCppScope_t scope = Cppyy::GetScope( cppname );
+               TClass* klass = TClass::GetClass( cppname );
                if ( Cppyy::IsNamespace( scope ) ) {
 
                // tickle lazy lookup of functions
@@ -109,9 +113,9 @@ namespace {
                         std::vector< PyCallable* > overloads;
                         const size_t nmeth = Cppyy::GetNumMethods( scope );
                         for ( size_t imeth = 0; imeth < nmeth; ++imeth ) {
-			   Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
+                           Cppyy::TCppMethod_t method = Cppyy::GetMethod( scope, imeth );
                            if ( Cppyy::GetMethodName( method ) == name )
-                              overloads.push_back( new TClassMethodHolder( scope, method ) );
+                              overloads.push_back( new TFunctionHolder( scope, method ) );
                         }
 
                      // Note: can't re-use Utility::AddClass here, as there's the risk of
@@ -165,8 +169,14 @@ namespace {
          }
 
       // if failed, then the original error is likely to be more instructive
-         if ( ! attr )
+         if ( ! attr && etype )
             PyErr_Restore( etype, value, trace );
+         else if ( ! attr ) {
+            PyObject* sklass = PyObject_Str( pyclass );
+            PyErr_Format( PyExc_AttributeError, "%s has no attribute \'%s\'",
+               PyROOT_PyUnicode_AsString( sklass ), PyROOT_PyUnicode_AsString( pyname ) );
+            Py_DECREF( sklass );
+         }
 
       // attribute is cached, if found
       }
@@ -229,6 +239,9 @@ PyTypeObject PyRootType_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
 #endif
 };
 

@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -20,13 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TVirtualPad;
 class TClass;
@@ -71,8 +67,8 @@ public:
    TGeoTabManager(TGedEditor *ged);
    virtual ~TGeoTabManager();
 
-   static TGeoTabManager *GetMakeTabManager(TGedEditor *ged); 
-   static void         Cleanup(TGCompositeFrame *frame);  
+   static TGeoTabManager *GetMakeTabManager(TGedEditor *ged);
+   static void         Cleanup(TGCompositeFrame *frame);
    TVirtualPad        *GetPad() const {return fPad;}
    TGTab              *GetTab() const {return fTab;}
    Int_t               GetTabIndex() const;
@@ -80,7 +76,7 @@ public:
    void                SetVolTabEnabled(Bool_t flag=kTRUE);
    void                SetModel(TObject *model);
    void                SetTab();
-   
+
    void                GetShapeEditor(TGeoShape *shape);
    void                GetVolumeEditor(TGeoVolume *vol);
    void                GetMatrixEditor(TGeoMatrix *matrix);
@@ -116,7 +112,7 @@ protected:
 public:
    TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoTreeDialog();
-   
+
    static TObject     *GetSelected();
    // Slots
    virtual void        DoClose() = 0;
@@ -143,7 +139,7 @@ protected:
 public:
    TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoVolumeDialog() {;}
-   
+
    // Slots
    virtual void        DoClose();
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
@@ -168,7 +164,7 @@ protected:
 public:
    TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoShapeDialog() {;}
-   
+
    // Slots
    virtual void        DoClose();
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
@@ -193,7 +189,7 @@ protected:
 public:
    TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoMediumDialog() {;}
-   
+
    // Slots
    virtual void        DoClose();
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
@@ -218,7 +214,7 @@ protected:
 public:
    TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoMaterialDialog() {;}
-   
+
    // Slots
    virtual void        DoClose();
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
@@ -243,7 +239,7 @@ protected:
 public:
    TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
    virtual ~TGeoMatrixDialog() {;}
-   
+
    // Slots
    virtual void        DoClose();
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
@@ -267,14 +263,14 @@ class TGeoTransientPanel : public TGMainFrame {
    TGCompositeFrame *fStyle;            //style tab container frame
    TObject          *fModel;            //selected object
    TGTextButton     *fClose;            //close button
-   
+
 public:
    TGeoTransientPanel(TGedEditor* ged, const char *name, TObject *obj);
    virtual ~TGeoTransientPanel();
-   
+
    virtual void        CloseWindow();
    virtual void        DeleteEditors();
-   
+
    TGTab              *GetTab() const {return fTab;}
    TGCompositeFrame   *GetStyle() const {return fStyle;}
    TObject            *GetModel() const {return fModel;}

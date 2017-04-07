@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// RooCategory represents a fundamental (non-derived) discrete value object. The class
-// has a public interface to define the possible value states.
-// END_HTML
-//
+/**
+\file RooCategory.cxx
+\class RooCategory
+\ingroup Roofitcore
+
+RooCategory represents a fundamental (non-derived) discrete value object. The class
+has a public interface to define the possible value states.
+**/
 
 
 #include "RooFit.h"
@@ -46,7 +47,8 @@ ClassImp(RooCategory)
 RooSharedPropertiesList RooCategory::_sharedPropList ;
 RooCategorySharedProperties RooCategory::_nullProp("00000000-0000-0000-0000-000000000000") ;
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 RooCategory::RooCategory() : _sharedProp(0)
 {
   TRACE_CREATE 
@@ -54,12 +56,12 @@ RooCategory::RooCategory() : _sharedProp(0)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. Types must be defined using defineType() before variable can be used
+
 RooCategory::RooCategory(const char *name, const char *title) : 
   RooAbsCategoryLValue(name,title)
 {
-  // Constructor. Types must be defined using defineType() before variable can be used
-
   _sharedProp = (RooCategorySharedProperties*) _sharedPropList.registerProperties(new RooCategorySharedProperties()) ;
 
   setValueDirty() ;  
@@ -69,21 +71,23 @@ RooCategory::RooCategory(const char *name, const char *title) :
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name)
 {
-  // Copy constructor
   _sharedProp =  (RooCategorySharedProperties*) _sharedPropList.registerProperties(other._sharedProp) ;
   TRACE_CREATE   
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooCategory::~RooCategory()
 {
-  // Destructor
   _sharedPropList.unregisterProperties(_sharedProp) ;
   TRACE_DESTROY
 }
@@ -91,13 +95,13 @@ RooCategory::~RooCategory()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set value by specifying the index code of the desired state.
+/// If printError is set, a message will be printed if
+/// the specified index does not represent a valid state.
+
 Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
 {
-  // Set value by specifying the index code of the desired state.
-  // If printError is set, a message will be printed if
-  // the specified index does not represent a valid state.
-
   const RooCatType* type = lookupType(index,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
@@ -107,13 +111,13 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set value by specifying the name of the desired state
+/// If printError is set, a message will be printed if
+/// the specified label does not represent a valid state.
+
 Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
 {
-  // Set value by specifying the name of the desired state
-  // If printError is set, a message will be printed if
-  // the specified label does not represent a valid state.
-
   const RooCatType* type = lookupType(label,printError) ;
   if (!type) return kTRUE ;
   _value = *type ;
@@ -123,15 +127,15 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a state with given name, the lowest available
+/// positive integer is assigned as index. Category
+/// state labels may not contain semicolons.
+/// Error status is return if state with given name
+/// is already defined
+
 Bool_t RooCategory::defineType(const char* label) 
 { 
-  // Define a state with given name, the lowest available
-  // positive integer is assigned as index. Category
-  // state labels may not contain semicolons.
-  // Error status is return if state with given name
-  // is already defined
-
   if (TString(label).Contains(";")) {
   coutE(InputArguments) << "RooCategory::defineType(" << GetName() 
 			<< "): semicolons not allowed in label name" << endl ;
@@ -142,14 +146,14 @@ Bool_t RooCategory::defineType(const char* label)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Define a state with given name and index. Category
+/// state labels may not contain semicolons
+/// Error status is return if state with given name
+/// or index is already defined
+
 Bool_t RooCategory::defineType(const char* label, Int_t index) 
 {
-  // Define a state with given name and index. Category
-  // state labels may not contain semicolons
-  // Error status is return if state with given name
-  // or index is already defined
-
   if (TString(label).Contains(";")) {
   coutE(InputArguments) << "RooCategory::defineType(" << GetName() 
 			<< "): semicolons not allowed in label name" << endl ;
@@ -160,11 +164,11 @@ Bool_t RooCategory::defineType(const char* label, Int_t index)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object contents from given stream
+
 Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
 {
-  // Read object contents from given stream
-
   // Read single token
   RooStreamParser parser(is) ;
   TString token = parser.readToken() ;
@@ -174,10 +178,11 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// compact only at the moment
+
 void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 {
-  // compact only at the moment
   if (compact) {
     os << getIndex() ;
   } else {
@@ -186,10 +191,11 @@ void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that both input arguments are not null pointers
+
 void RooCategory::clearRange(const char* name, Bool_t silent)
 {
-  // Check that both input arguments are not null pointers
   if (!name) {
     coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specificy valid range name" << endl ;
     return ;
@@ -207,7 +213,8 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooCategory::setRange(const char* name, const char* stateNameList) 
 {
   clearRange(name,kTRUE) ;
@@ -216,10 +223,11 @@ void RooCategory::setRange(const char* name, const char* stateNameList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that both input arguments are not null pointers
+
 void RooCategory::addToRange(const char* name, const char* stateNameList) 
 {
-  // Check that both input arguments are not null pointers
   if (!name || !stateNameList) {
     coutE(InputArguments) << "RooCategory::setRange(" << GetName() << ") ERROR: must specificy valid name and state name list" << endl ;
     return ;
@@ -260,10 +268,11 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If no range is specified [ i.e. the default range ] all category states are in range
+
 Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName) const
 {
-  // If no range is specified [ i.e. the default range ] all category states are in range
   if (!rangeName) {
     return kTRUE ;
   }
@@ -289,7 +298,8 @@ Bool_t RooCategory::isStateInRange(const char* rangeName, const char* stateName)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void RooCategory::Streamer(TBuffer &R__b)
 {
   UInt_t R__s, R__c;

@@ -27,14 +27,14 @@
 
 ClassImp(TPosixCondition)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Condition variable. Ctor must be given a pointer to an
+/// existing mutex. The condition variable is then linked to the mutex,
+/// so that there is an implicit unlock and lock around Wait() and
+/// TimedWait().
+
 TPosixCondition::TPosixCondition(TMutexImp *m)
 {
-   // Create Condition variable. Ctor must be given a pointer to an
-   // existing mutex. The condition variable is then linked to the mutex,
-   // so that there is an implicit unlock and lock around Wait() and
-   // TimedWait().
-
    fMutex = (TPosixMutex *) m;
 
    int rc = pthread_cond_init(&fCond, 0);
@@ -43,36 +43,36 @@ TPosixCondition::TPosixCondition(TMutexImp *m)
       SysError("TPosixCondition", "pthread_cond_init error");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TCondition dtor.
+
 TPosixCondition::~TPosixCondition()
 {
-   // TCondition dtor.
-
    int rc = pthread_cond_destroy(&fCond);
 
    if (rc)
       SysError("~TPosixCondition", "pthread_cond_destroy error");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Wait for the condition variable to be signalled. The mutex is
+/// implicitely released before waiting and locked again after waking up.
+/// If Wait() is called by multiple threads, a signal may wake up more
+/// than one thread. See POSIX threads documentation for details.
+
 Int_t TPosixCondition::Wait()
 {
-   // Wait for the condition variable to be signalled. The mutex is
-   // implicitely released before waiting and locked again after waking up.
-   // If Wait() is called by multiple threads, a signal may wake up more
-   // than one thread. See POSIX threads documentation for details.
-
    return pthread_cond_wait(&fCond, &(fMutex->fMutex));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TimedWait() is given an absolute time to wait until. To wait for a
+/// relative time from now, use TThread::GetTime(). See POSIX threads
+/// documentation for why absolute times are better than relative.
+/// Returns 0 if successfully signalled, 1 if time expired.
+
 Int_t TPosixCondition::TimedWait(ULong_t secs, ULong_t nanoSecs)
 {
-   // TimedWait() is given an absolute time to wait until. To wait for a
-   // relative time from now, use TThread::GetTime(). See POSIX threads
-   // documentation for why absolute times are better than relative.
-   // Returns 0 if successfully signalled, 1 if time expired.
-
    timespec rqts = { (Long_t)secs, (Long_t)nanoSecs };
 
    int rc = pthread_cond_timedwait(&fCond, &(fMutex->fMutex), &rqts);
@@ -83,20 +83,20 @@ Int_t TPosixCondition::TimedWait(ULong_t secs, ULong_t nanoSecs)
    return rc;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// If one or more threads have called Wait(), Signal() wakes up at least
+/// one of them, possibly more. See POSIX threads documentation for details.
+
 Int_t TPosixCondition::Signal()
 {
-   // If one or more threads have called Wait(), Signal() wakes up at least
-   // one of them, possibly more. See POSIX threads documentation for details.
-
    return pthread_cond_signal(&fCond);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Broadcast is like signal but wakes all threads which have called Wait().
+
 Int_t TPosixCondition::Broadcast()
 {
-   // Broadcast is like signal but wakes all threads which have called Wait().
-
    return pthread_cond_broadcast(&fCond);
 }

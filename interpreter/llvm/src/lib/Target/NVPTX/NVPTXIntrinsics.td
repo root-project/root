@@ -30,8 +30,9 @@ def immDouble1 : PatLeaf<(fpimm), [{
 
 
 //-----------------------------------
-// Synchronization Functions
+// Synchronization and shuffle functions
 //-----------------------------------
+let isConvergent = 1 in {
 def INT_CUDA_SYNCTHREADS : NVPTXInst<(outs), (ins),
                   "bar.sync \t0;",
       [(int_cuda_syncthreads)]>;
@@ -63,6 +64,48 @@ def INT_BARRIER0_OR : NVPTXInst<(outs Int32Regs:$dst), (ins Int32Regs:$pred),
       !strconcat("selp.u32 \t$dst, 1, 0, %p2; \n\t",
         !strconcat("}}", ""))))))),
       [(set Int32Regs:$dst, (int_nvvm_barrier0_or Int32Regs:$pred))]>;
+
+// shfl.{up,down,bfly,idx}.b32
+multiclass SHFL<NVPTXRegClass regclass, string mode, Intrinsic IntOp> {
+  // The last two parameters to shfl can be regs or imms.  ptxas is smart
+  // enough to inline constant registers, so strictly speaking we don't need to
+  // handle immediates here.  But it's easy enough, and it makes our ptx more
+  // readable.
+  def reg : NVPTXInst<
+      (outs regclass:$dst),
+      (ins regclass:$src, Int32Regs:$offset, Int32Regs:$mask),
+      !strconcat("shfl.", mode, ".b32 $dst, $src, $offset, $mask;"),
+      [(set regclass:$dst, (IntOp regclass:$src, Int32Regs:$offset, Int32Regs:$mask))]>;
+
+  def imm1 : NVPTXInst<
+      (outs regclass:$dst),
+      (ins regclass:$src, i32imm:$offset, Int32Regs:$mask),
+      !strconcat("shfl.", mode, ".b32 $dst, $src, $offset, $mask;"),
+      [(set regclass:$dst, (IntOp regclass:$src, imm:$offset, Int32Regs:$mask))]>;
+
+  def imm2 : NVPTXInst<
+      (outs regclass:$dst),
+      (ins regclass:$src, Int32Regs:$offset, i32imm:$mask),
+      !strconcat("shfl.", mode, ".b32 $dst, $src, $offset, $mask;"),
+      [(set regclass:$dst, (IntOp regclass:$src, Int32Regs:$offset, imm:$mask))]>;
+
+  def imm3 : NVPTXInst<
+      (outs regclass:$dst),
+      (ins regclass:$src, i32imm:$offset, i32imm:$mask),
+      !strconcat("shfl.", mode, ".b32 $dst, $src, $offset, $mask;"),
+      [(set regclass:$dst, (IntOp regclass:$src, imm:$offset, imm:$mask))]>;
+}
+
+defm INT_SHFL_DOWN_I32 : SHFL<Int32Regs, "down", int_ptx_shfl_down_i32>;
+defm INT_SHFL_DOWN_F32 : SHFL<Float32Regs, "down", int_ptx_shfl_down_f32>;
+defm INT_SHFL_UP_I32 : SHFL<Int32Regs, "up", int_ptx_shfl_up_i32>;
+defm INT_SHFL_UP_F32 : SHFL<Float32Regs, "up", int_ptx_shfl_up_f32>;
+defm INT_SHFL_BFLY_I32 : SHFL<Int32Regs, "bfly", int_ptx_shfl_bfly_i32>;
+defm INT_SHFL_BFLY_F32 : SHFL<Float32Regs, "bfly", int_ptx_shfl_bfly_f32>;
+defm INT_SHFL_IDX_I32 : SHFL<Int32Regs, "idx", int_ptx_shfl_idx_i32>;
+defm INT_SHFL_IDX_F32 : SHFL<Float32Regs, "idx", int_ptx_shfl_idx_f32>;
+
+} // isConvergent = 1
 
 
 //-----------------------------------
@@ -1379,7 +1422,11 @@ def INT_PTX_SREG_WARPSIZE : F_SREG<"mov.u32 \t$dst, WARP_SZ;", Int32Regs,
 // Support for ldu on sm_20 or later
 //-----------------------------------
 
+// Don't annotate ldu instructions as mayLoad, as they load from memory that is
+// read-only in a kernel.
+
 // Scalar
+
 multiclass LDU_G<string TyStr, NVPTXRegClass regclass> {
   def areg: NVPTXInst<(outs regclass:$result), (ins Int32Regs:$src),
                !strconcat("ldu.global.", TyStr),
@@ -1474,6 +1521,10 @@ defm INT_PTX_LDU_G_v4f32_ELE
 //-----------------------------------
 // Support for ldg on sm_35 or later 
 //-----------------------------------
+
+// Don't annotate ld.global.nc as mayLoad, because these loads go through the
+// non-coherent texture cache, and therefore the values read must be read-only
+// during the lifetime of the kernel.
 
 multiclass LDG_G<string TyStr, NVPTXRegClass regclass> {
   def areg: NVPTXInst<(outs regclass:$result), (ins Int32Regs:$src),
@@ -1836,54 +1887,61 @@ def : Pat<(int_nvvm_rotate_b32 Int32Regs:$src, Int32Regs:$amt),
           (ROTL32reg_sw Int32Regs:$src, Int32Regs:$amt)>,
       Requires<[noHWROT32]> ;
 
-def GET_LO_INT64
-  : NVPTXInst<(outs Int32Regs:$dst), (ins Int64Regs:$src),
-              !strconcat("{{\n\t",
-              !strconcat(".reg .b32 %dummy;\n\t",
-              !strconcat("mov.b64 \t{$dst,%dummy}, $src;\n\t",
-        !strconcat("}}", "")))),
-        []> ;
+let hasSideEffects = 0 in {
+  def GET_LO_INT64
+    : NVPTXInst<(outs Int32Regs:$dst), (ins Int64Regs:$src),
+                !strconcat("{{\n\t",
+                !strconcat(".reg .b32 %dummy;\n\t",
+                !strconcat("mov.b64 \t{$dst,%dummy}, $src;\n\t",
+          !strconcat("}}", "")))),
+          []> ;
 
-def GET_HI_INT64
-  : NVPTXInst<(outs Int32Regs:$dst), (ins Int64Regs:$src),
-              !strconcat("{{\n\t",
-              !strconcat(".reg .b32 %dummy;\n\t",
-              !strconcat("mov.b64 \t{%dummy,$dst}, $src;\n\t",
-        !strconcat("}}", "")))),
-        []> ;
+  def GET_HI_INT64
+    : NVPTXInst<(outs Int32Regs:$dst), (ins Int64Regs:$src),
+                !strconcat("{{\n\t",
+                !strconcat(".reg .b32 %dummy;\n\t",
+                !strconcat("mov.b64 \t{%dummy,$dst}, $src;\n\t",
+          !strconcat("}}", "")))),
+          []> ;
+}
 
-def PACK_TWO_INT32
-  : NVPTXInst<(outs Int64Regs:$dst), (ins Int32Regs:$lo, Int32Regs:$hi),
-              "mov.b64 \t$dst, {{$lo, $hi}};", []> ;
+let hasSideEffects = 0 in {
+  def PACK_TWO_INT32
+    : NVPTXInst<(outs Int64Regs:$dst), (ins Int32Regs:$lo, Int32Regs:$hi),
+                "mov.b64 \t$dst, {{$lo, $hi}};", []> ;
+}
 
 def : Pat<(int_nvvm_swap_lo_hi_b64 Int64Regs:$src),
           (PACK_TWO_INT32 (GET_HI_INT64 Int64Regs:$src),
                           (GET_LO_INT64 Int64Regs:$src))> ;
 
-// funnel shift, requires >= sm_32
-def SHF_L_WRAP_B32_IMM
-  : NVPTXInst<(outs Int32Regs:$dst),
-              (ins  Int32Regs:$lo, Int32Regs:$hi, i32imm:$amt),
-              "shf.l.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
-    Requires<[hasHWROT32]>;
+// Funnel shift, requires >= sm_32.  Does not trap if amt is out of range, so
+// no side effects.
+let hasSideEffects = 0 in {
+  def SHF_L_WRAP_B32_IMM
+    : NVPTXInst<(outs Int32Regs:$dst),
+                (ins  Int32Regs:$lo, Int32Regs:$hi, i32imm:$amt),
+                "shf.l.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
+      Requires<[hasHWROT32]>;
 
-def SHF_L_WRAP_B32_REG
-  : NVPTXInst<(outs Int32Regs:$dst),
-              (ins  Int32Regs:$lo, Int32Regs:$hi, Int32Regs:$amt),
-              "shf.l.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
-    Requires<[hasHWROT32]>;
+  def SHF_L_WRAP_B32_REG
+    : NVPTXInst<(outs Int32Regs:$dst),
+                (ins  Int32Regs:$lo, Int32Regs:$hi, Int32Regs:$amt),
+                "shf.l.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
+      Requires<[hasHWROT32]>;
 
-def SHF_R_WRAP_B32_IMM
-  : NVPTXInst<(outs Int32Regs:$dst),
-              (ins  Int32Regs:$lo, Int32Regs:$hi, i32imm:$amt),
-              "shf.r.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
-    Requires<[hasHWROT32]>;
+  def SHF_R_WRAP_B32_IMM
+    : NVPTXInst<(outs Int32Regs:$dst),
+                (ins  Int32Regs:$lo, Int32Regs:$hi, i32imm:$amt),
+                "shf.r.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
+      Requires<[hasHWROT32]>;
 
-def SHF_R_WRAP_B32_REG
-  : NVPTXInst<(outs Int32Regs:$dst),
-              (ins  Int32Regs:$lo, Int32Regs:$hi, Int32Regs:$amt),
-              "shf.r.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
-    Requires<[hasHWROT32]>;
+  def SHF_R_WRAP_B32_REG
+    : NVPTXInst<(outs Int32Regs:$dst),
+                (ins  Int32Regs:$lo, Int32Regs:$hi, Int32Regs:$amt),
+                "shf.r.wrap.b32 \t$dst, $lo, $hi, $amt;",[]>,
+      Requires<[hasHWROT32]>;
+}
 
 // HW version of rotate 64
 def : Pat<(int_nvvm_rotate_b64 Int64Regs:$src, (i32 imm:$amt)),

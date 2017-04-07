@@ -15,15 +15,9 @@
 #include <vector>
 #include <list>
 
-#ifndef ROOT_RStipples
 #include "RStipples.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TGLPadPainter;//For friend declarations.
 

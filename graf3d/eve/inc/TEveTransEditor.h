@@ -81,7 +81,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TEveTransEditor, 1); // Editor for TEveTrans class.
+   ClassDef(TEveTransEditor, 0); // Editor for TEveTrans class.
 };
 
 #endif

@@ -1,7 +1,15 @@
-{
-   // Examples showing how to use TSpectrum2Painter (the SPEC option)
-   //Authors: Olivier Couet, Miroslav Morhac
+/// \file
+/// \ingroup tutorial_spectrum
+/// \notebook
+/// Examples showing how to use TSpectrum2Painter (the SPEC option)
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author: Olivier Couet, Miroslav Morhac
 
+void spectrumpainter()
+{
    TH2 *h2 = new TH2F("h2","h2",40,-8,8,40,-9,9);
    Float_t px, py;
    for (Int_t i = 0; i < 50000; i++) {

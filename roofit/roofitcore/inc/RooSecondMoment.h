@@ -41,9 +41,10 @@ public:
 
 protected:
 
-  RooRealProxy _xf ;                     // X*F 
-  RooRealProxy _ixf ;                    // Int(X*F(X))dx ;
+  RooRealProxy _xf ;                     // (X-offset)*F 
+  RooRealProxy _ixf ;                    // Int((X-offset)*F(X))dx ;
   RooRealProxy _if ;                     // Int(F(x))dx ;
+  Double_t _xfOffset ;                   // offset
   Double_t evaluate() const;
 
   ClassDef(RooSecondMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar

@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooSegmentedIntegrator2D implements an adaptive one-dimensional 
-// numerical integration algorithm.
-// END_HTML
-//
+/**
+\file RooSegmentedIntegrator2D.cxx
+\class RooSegmentedIntegrator2D
+\ingroup Roofitcore
+
+RooSegmentedIntegrator2D implements an adaptive one-dimensional 
+numerical integration algorithm.
+**/
 
 
 #include "RooFit.h"
@@ -45,71 +46,74 @@ ClassImp(RooSegmentedIntegrator2D)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Register RooSegmentedIntegrator2D, its parameters, dependencies and capabilities with RooNumIntFactory
+
 void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 {
-  // Register RooSegmentedIntegrator2D, its parameters, dependencies and capabilities with RooNumIntFactory
-
   fact.storeProtoIntegrator(new RooSegmentedIntegrator2D(),RooArgSet(),RooSegmentedIntegrator1D::Class()->GetName()) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
   _xIntegrator(0), _xint(0)
 {
-  // Default constructor
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor of integral on given function binding and with given configuration. The
+/// integration limits are taken from the definition in the function binding
+
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
 {
-  // Constructor of integral on given function binding and with given configuration. The
-  // integration limits are taken from the definition in the function binding
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor integral on given function binding, with given configuration and
+/// explicit definition of integration range
+
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
 				 Double_t ymin, Double_t ymax,
 				 const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
-  // Constructor integral on given function binding, with given configuration and
-  // explicit definition of integration range
 } 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual constructor with given function and configuration. Needed by RooNumIntFactory
+
 RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
-  // Virtual constructor with given function and configuration. Needed by RooNumIntFactory
-
   return new RooSegmentedIntegrator2D(function,config) ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 
 {
-  // Destructor
-
   delete _xint ;
   delete _xIntegrator ;
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check that our integration range is finite and otherwise return kFALSE.
+/// Update the limits from the integrand if requested.
+
 Bool_t RooSegmentedIntegrator2D::checkLimits() const 
 {
-  // Check that our integration range is finite and otherwise return kFALSE.
-  // Update the limits from the integrand if requested.
-
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
     _xmin= integrand()->getMinLimit(0);

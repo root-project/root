@@ -29,14 +29,19 @@ public:
   const char* constStr(const TNamed* namePtr) ; 
   static const TNamed* ptr(const char* stringPtr) ;
   static const char* str(const TNamed* ptr) ;
+  static const TNamed* known(const char* stringPtr) ;
 
   static void cleanup() ;
+
+  enum {
+    kRenamedArg = BIT(19)    // TNamed flag to indicate that some RooAbsArg has been renamed (flag set in new name)
+  };
 
 protected:
 
   static RooNameReg* _instance ;
 
-  RooNameReg() : TNamed("RooNameReg","RooFit Name Registry"), _htable(31) {} 
+  RooNameReg(Int_t hashSize = 31) ;
   RooNameReg(const RooNameReg& other) ;
 
   RooHashTable _htable ; // Repository of registered names

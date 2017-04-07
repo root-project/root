@@ -13,7 +13,7 @@ namespace Cppyy {
    typedef TCppScope_t TCppType_t;
    typedef void*       TCppObject_t;
    typedef ptrdiff_t   TCppMethod_t;
-   
+
    typedef Long_t      TCppIndex_t;
    typedef void* (*TCppMethPtrGetter_t)( TCppObject_t );
 
@@ -22,6 +22,7 @@ namespace Cppyy {
    std::string GetScopeName( TCppScope_t parent, TCppIndex_t iscope );
    std::string ResolveName( const std::string& cppitem_name );
    TCppScope_t GetScope( const std::string& scope_name );
+   std::string GetName( const std::string& scope_name );
    TCppType_t  GetTemplate( const std::string& template_name );
    TCppType_t  GetActualClass( TCppType_t klass, TCppObject_t obj );
    size_t      SizeOf( TCppType_t klass );
@@ -33,8 +34,9 @@ namespace Cppyy {
 
 // memory management ---------------------------------------------------------
    TCppObject_t Allocate( TCppType_t type );
-   void         Deallocate( TCppType_t type, TCppObject_t self );
-   void         Destruct( TCppType_t type, TCppObject_t self );
+   void         Deallocate( TCppType_t type, TCppObject_t instance );
+   TCppObject_t Construct( TCppType_t type );
+   void         Destruct( TCppType_t type, TCppObject_t instance );
 
 // method/function dispatching -----------------------------------------------
    void         CallV( TCppMethod_t method, TCppObject_t self, void* args );
@@ -46,9 +48,11 @@ namespace Cppyy {
    Long64_t     CallLL( TCppMethod_t method, TCppObject_t self, void* args );
    Float_t      CallF( TCppMethod_t method, TCppObject_t self, void* args );
    Double_t     CallD( TCppMethod_t method, TCppObject_t self, void* args );
+   LongDouble_t CallLD( TCppMethod_t method, TCppObject_t self, void* args );
    void*        CallR( TCppMethod_t method, TCppObject_t self, void* args );
    Char_t*      CallS( TCppMethod_t method, TCppObject_t self, void* args );
-   TCppObject_t CallConstructor( TCppMethod_t method, TCppType_t klass, void* args );
+   TCppObject_t CallConstructor( TCppMethod_t method, TCppType_t type, void* args );
+   void         CallDestructor( TCppType_t type, TCppObject_t self );
    TCppObject_t CallO( TCppMethod_t method, TCppObject_t self, void* args, TCppType_t result_type );
 
    TCppMethPtrGetter_t GetMethPtrGetter( TCppScope_t scope, TCppIndex_t imeth );
@@ -71,9 +75,12 @@ namespace Cppyy {
    TCppIndex_t GetNumBases( TCppType_t type );
    std::string GetBaseName( TCppType_t type, TCppIndex_t ibase );
    Bool_t      IsSubtype( TCppType_t derived, TCppType_t base );
+   void        AddSmartPtrType( const std::string& );
+   Bool_t      IsSmartPtr( const std::string& );
 
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
-   ptrdiff_t GetBaseOffset( TCppType_t derived, TCppType_t base, TCppObject_t address, int direction );
+   ptrdiff_t GetBaseOffset(
+      TCppType_t derived, TCppType_t base, TCppObject_t address, int direction, bool rerror = false );
 
 // method/function reflection information ------------------------------------
    TCppIndex_t  GetNumMethods( TCppScope_t scope );
@@ -114,6 +121,7 @@ namespace Cppyy {
 // data member properties ----------------------------------------------------
    Bool_t IsPublicData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsStaticData( TCppScope_t scope, TCppIndex_t idata );
+   Bool_t IsConstData( TCppScope_t scope, TCppIndex_t idata );
    Bool_t IsEnumData( TCppScope_t scope, TCppIndex_t idata );
    Int_t  GetDimensionSize( TCppScope_t scope, TCppIndex_t idata, int dimension );
 

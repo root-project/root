@@ -21,46 +21,43 @@
 
 ClassImp(TPieSlice)
 
+/** \class TPieSlice
+\ingroup BasicGraphics
 
-//______________________________________________________________________________
-//
-// A slice of a piechart, see the TPie class.
-//
-// This class describe the property of single
-//
+A slice of a piechart, see the TPie class.
 
+This class describe the property of single
+*/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This is the default constructor, used to create the standard.
+
 TPieSlice::TPieSlice() : TNamed(), TAttFill(), TAttLine()
 {
-   // This is the default constructor, used to create the standard.
-
    fPie = 0;
    fValue = 1;
    fRadiusOffset = 0;
    fIsActive = kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This constructor create a slice with a particular value.
 
-//______________________________________________________________________________
 TPieSlice::TPieSlice(const char *name, const char *title,
                      TPie *pie, Double_t val) :
                      TNamed(name, title), TAttFill(), TAttLine()
 {
-   // This constructor create a slice with a particular value.
-
    fPie = pie;
    fValue = val;
    fRadiusOffset = 0;
    fIsActive = kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Eval if the mouse is over the area associated with this slice.
 
-//______________________________________________________________________________
 Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
-   // Eval if the mouse is over the area associated with this slice.
-
    Int_t dist = 9999;
 
    if (fIsActive) {
@@ -72,48 +69,44 @@ Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
    return dist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// return the value of the offset in radial direction for this slice.
 
-//______________________________________________________________________________
 Double_t TPieSlice::GetRadiusOffset()
 {
-   // return the value of the offset in radial direction for this slice.
-
    return fRadiusOffset;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the value of this slice.
 
-//______________________________________________________________________________
 Double_t TPieSlice::GetValue()
 {
-   // Return the value of this slice.
-
    return fValue;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Do nothing.
 
-//______________________________________________________________________________
 void TPieSlice::SavePrimitive(std::ostream &/*out*/, Option_t * /*opts*/)
 {
-   // Do nothing.
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the radial offset of this slice.
 
-//______________________________________________________________________________
 void TPieSlice::SetRadiusOffset(Double_t val)
 {
-   // Set the radial offset of this slice.
-
    fRadiusOffset = val;
    if (fRadiusOffset<.0) fRadiusOffset = .0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the value for this slice.
+/// Negative values are changed with its absolute value.
 
-//______________________________________________________________________________
 void TPieSlice::SetValue(Double_t val)
 {
-   // Set the value for this slice.
-   // Negative values are changed with its absolute value.
-
    fValue = val;
    if (fValue<.0) {
       Warning("SetValue","Invalid negative value. Absolute value taken");

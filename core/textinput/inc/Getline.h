@@ -12,9 +12,7 @@
 #ifndef ROOT_Getline
 #define ROOT_Getline
 
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 
 #ifndef __CINT__
 #ifdef __cplusplus
@@ -22,7 +20,7 @@ extern "C" {
 #endif
 #endif
 
-typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp } EGetLineMode;
+typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp, kClear } EGetLineMode;
 
 const char *Getline(const char *prompt);
 const char *Getlinem(EGetLineMode mode, const char *prompt);

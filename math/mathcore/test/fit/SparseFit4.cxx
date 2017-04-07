@@ -29,8 +29,8 @@ bool showGraphics = false;
 
 TRandom2 r(17);
 Int_t bsize[] = { 10, 10, 10 };
-Double_t xmin[] = { 0., 0., 0. };
-Double_t xmax[] = { 10., 10., 10. };
+Double_t x_min[] = { 0., 0., 0. };
+Double_t x_max[] = { 10., 10., 10. };
 
 double gaus1D(double *x, double *p)
 {
@@ -151,7 +151,7 @@ void fillSparse(THnSparse* s, TF1* f, int nEvents = 5)
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t *points = new Double_t[ndim];
       for ( UInt_t i = 0; i < ndim; ++ i )
-         points[i] = r.Uniform( xmin[0] * .9 , xmax[0] * 1.1 );
+         points[i] = r.Uniform( x_min[0] * .9 , x_max[0] * 1.1 );
       double value = gRandom->Poisson( f->EvalPar(points));
       s->Fill(points, value );
       cout << value << " " << s->GetNbins() << endl;
@@ -164,7 +164,7 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    ///////////////// CREATE THE SPARSE DATA
    cout << "DoFit: dim = " << s->GetNdimensions() << " - Retrieving the Sparse Data Structure" << endl;
    //ROOT::Fit::SparseData d(s);
-   ROOT::Fit::SparseData d(s->GetNdimensions(), xmin, xmax);
+   ROOT::Fit::SparseData d(s->GetNdimensions(), x_min, x_max);
    ROOT::Fit::FillData(d, s, 0);
    d.GetBinData(bd);
 
@@ -208,16 +208,16 @@ void fitSparse1D()
 
    const unsigned int ndim = 1;
 
-   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, xmin, xmax);
+   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, x_min, x_max);
 
-   TF1* f = new TF1("func1D", gaus1D, xmin[0] - 2, xmax[0] + 2, 3);
+   TF1* f = new TF1("func1D", gaus1D, x_min[0] - 2, x_max[0] + 2, 3);
    f->SetParameters(10., 5., 2.);
 
    fillSparse(s1,f,5);
 
    cout << "1D Fit : Retrieving the Sparse Data Structure" << endl;
    //ROOT::Fit::SparseData d(s1);
-   ROOT::Fit::SparseData d(ndim, xmin, xmax);
+   ROOT::Fit::SparseData d(ndim, x_min, x_max);
    ROOT::Fit::FillData(d, s1, 0);
 }
 
@@ -227,9 +227,9 @@ void fitSparse2D()
    std::cout << "2D SPARSE FIT \n" << std::endl;
    const unsigned int ndim = 2;
 
-   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, xmin, xmax);
+   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, x_min, x_max);
 
-   TF2* f = new TF2("func2D", gaus2D, xmin[0],xmax[0], xmin[1], xmax[1], 5);
+   TF2* f = new TF2("func2D", gaus2D, x_min[0],x_max[0], x_min[1], x_max[1], 5);
    f->SetParameters(40,5,2,5,1);
 
    for (int ix=1; ix <= bsize[0]; ++ix) {
@@ -250,8 +250,8 @@ void fitSparse2D()
    DoFit(s1, f, bd);
 
    TH2D* h2 = new TH2D("2D Blanked Hist Fit", "h1-title",
-                       bsize[0], xmin[0], xmax[0],
-                       bsize[1], xmin[1], xmax[1]);
+                       bsize[0], x_min[0], x_max[0],
+                       bsize[1], x_min[1], x_max[1]);
    //cout << "Filling second histogram" << endl;
    for ( unsigned int i = 0; i < bd.NPoints(); ++i )
    {
@@ -275,12 +275,12 @@ void fitSparse3D()
 
    std::cout << "3D SPARSE FIT \n" << std::endl;
 
-   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, xmin, xmax);
+   THnSparseD* s1 = new THnSparseD("mfND-s1", "s1-Title", ndim, bsize, x_min, x_max);
 
    TF3* f = new TF3("func3D", gaus3D,
-                    xmin[0],xmax[0],
-                    xmin[1],xmax[1],
-                    xmin[2],xmax[2],
+                    x_min[0],x_max[0],
+                    x_min[1],x_max[1],
+                    x_min[2],x_max[2],
                     7);
    f->SetParameters(100,5,2,5,1,5,2);
 

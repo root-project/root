@@ -13,26 +13,16 @@
 #ifndef ROOT_Fit_LogLikelihoodFCN
 #define ROOT_Fit_LogLikelihoodFCN
 
-#ifndef ROOT_Fit_BasicFCN
 #include "Fit/BasicFCN.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
-#ifndef ROOT_Fit_UnBinData
 #include "Fit/UnBinData.h"
-#endif
 
-#ifndef ROOT_Fit_FitUtil
 #include "Fit/FitUtil.h"
-#endif
 
 #ifdef ROOT_FIT_PARALLEL
-#ifndef ROOT_Fit_FitUtilParallel
 #include "Fit/FitUtilParallel.h"
-#endif
 #endif
 
 #include <memory>

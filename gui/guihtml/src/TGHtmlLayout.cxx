@@ -32,11 +32,11 @@
 #include "TGHtml.h"
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Html Layout Context constructor.
+
 TGHtmlLayoutContext::TGHtmlLayoutContext()
 {
-   // Html Layout Context constructor.
-
    fPStart = 0;
    fPEnd = 0;
    fLeftMargin = 0;
@@ -50,11 +50,11 @@ TGHtmlLayoutContext::TGHtmlLayoutContext()
    Reset();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the layout context.
+
 void TGHtmlLayoutContext::Reset()
 {
-   // Reset the layout context.
-
    fHeadRoom = 0;
    fTop = 0;
    fBottom = 0;
@@ -62,25 +62,25 @@ void TGHtmlLayoutContext::Reset()
    ClearMarginStack(&fRightMargin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Push a new margin onto the given margin stack.
+///
+/// If the "bottom" parameter is non-negative, then this margin will
+/// automatically expire for all text that is placed below the y-coordinate
+/// given by "bottom". This feature is used for <IMG ALIGN=left> and <IMG
+/// ALIGN=right> kinds of markup. It allows text to flow around an image.
+///
+/// If "bottom" is negative, then the margin stays in force until it is
+/// explicitly canceled by a call to PopMargin().
+///
+///  ppMargin - The margin stack onto which to push
+///  indent   - The indentation for the new margin
+///  mbottom  - The margin expires at this Y coordinate
+///  tag      - Markup that will cancel this margin
+
 void TGHtmlLayoutContext::PushMargin(SHtmlMargin_t **ppMargin,
                                     int indent, int mbottom, int tag)
 {
-   // Push a new margin onto the given margin stack.
-   //
-   // If the "bottom" parameter is non-negative, then this margin will
-   // automatically expire for all text that is placed below the y-coordinate
-   // given by "bottom". This feature is used for <IMG ALIGN=left> and <IMG
-   // ALIGN=right> kinds of markup. It allows text to flow around an image.
-   //
-   // If "bottom" is negative, then the margin stays in force until it is
-   // explicitly canceled by a call to PopMargin().
-   //
-   //  ppMargin - The margin stack onto which to push
-   //  indent   - The indentation for the new margin
-   //  mbottom  - The margin expires at this Y coordinate
-   //  tag      - Markup that will cancel this margin
-
    SHtmlMargin_t *pNew = new SHtmlMargin_t;
    pNew->fPNext = *ppMargin;
    if (pNew->fPNext) {
@@ -93,11 +93,11 @@ void TGHtmlLayoutContext::PushMargin(SHtmlMargin_t **ppMargin,
    *ppMargin = pNew;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop one margin off of the given margin stack.
+
 void TGHtmlLayoutContext::PopOneMargin(SHtmlMargin_t **ppMargin)
 {
-   // Pop one margin off of the given margin stack.
-
    if (*ppMargin) {
       SHtmlMargin_t *pOld = *ppMargin;
       *ppMargin = pOld->fPNext;
@@ -105,19 +105,19 @@ void TGHtmlLayoutContext::PopOneMargin(SHtmlMargin_t **ppMargin)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop as many margins as necessary until the margin that was
+/// created with "tag" is popped off. Update the layout context
+/// to move past obstacles, if necessary.
+///
+/// If there are some margins on the stack that contain non-negative
+/// bottom fields, that means there are some obstacles that we have
+/// not yet cleared. If these margins get popped off the stack,
+/// then we have to be careful to advance the 'bottom' value so
+/// that the next line of text will clear the obstacle.
+
 void TGHtmlLayoutContext::PopMargin(SHtmlMargin_t **ppMargin, int tag)
 {
-   // Pop as many margins as necessary until the margin that was
-   // created with "tag" is popped off. Update the layout context
-   // to move past obstacles, if necessary.
-   //
-   // If there are some margins on the stack that contain non-negative
-   // bottom fields, that means there are some obstacles that we have
-   // not yet cleared. If these margins get popped off the stack,
-   // then we have to be careful to advance the 'bottom' value so
-   // that the next line of text will clear the obstacle.
-
    int bot = -1;
    int oldTag;
    SHtmlMargin_t *pM;
@@ -139,70 +139,70 @@ void TGHtmlLayoutContext::PopMargin(SHtmlMargin_t **ppMargin, int tag)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Pop all expired margins from the stack.
+///
+/// An expired margin is one with a non-negative bottom parameter
+/// that is less than the value "y". "y" is the Y-coordinate of
+/// the top edge the next line of text to by positioned. What this
+/// function does is check to see if we have cleared any obstacles
+/// (an obstacle is an <IMG ALIGN=left> or <IMG ALIGN=right>) and
+/// expands the margins if we have.
+
 void TGHtmlLayoutContext::PopExpiredMargins(SHtmlMargin_t **ppMarginStack, int y)
 {
-   // Pop all expired margins from the stack.
-   //
-   // An expired margin is one with a non-negative bottom parameter
-   // that is less than the value "y". "y" is the Y-coordinate of
-   // the top edge the next line of text to by positioned. What this
-   // function does is check to see if we have cleared any obstacles
-   // (an obstacle is an <IMG ALIGN=left> or <IMG ALIGN=right>) and
-   // expands the margins if we have.
-
    while (*ppMarginStack && (**ppMarginStack).fBottom >= 0 &&
          (**ppMarginStack).fBottom <= y) {
       PopOneMargin(ppMarginStack);
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a margin stack to reclaim memory. This routine just blindly
+/// pops everything off the stack. Typically used when the screen is
+/// cleared or the widget is deleted, etc.
+
 void TGHtmlLayoutContext::ClearMarginStack(SHtmlMargin_t **ppMargin)
 {
-   // Clear a margin stack to reclaim memory. This routine just blindly
-   // pops everything off the stack. Typically used when the screen is
-   // cleared or the widget is deleted, etc.
-
    while (*ppMargin) PopOneMargin(ppMargin);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine gathers as many tokens as will fit on one line.
+///
+/// The candidate tokens begin with fPStart and go thru the end of
+/// the list or to fPEnd, whichever comes first. The first token
+/// at the start of the next line is returned. NULL is returned if
+/// we exhaust data.
+///
+/// "width" is the maximum allowed width of the line. The actual
+/// width is returned in *actualWidth. The actual width does not
+/// include any trailing spaces. Sometimes the actual width will
+/// be greater than the maximum width. This will happen, for example,
+/// for text enclosed in <pre>..</pre> that has lines longer than
+/// the width of the page.
+///
+/// If the list begins with text, at least one token is returned,
+/// even if that one token is longer than the allowed line length.
+/// But if the list begins with some kind of break markup (possibly
+/// preceded by white space) then the returned list may be empty.
+///
+/// The "x" coordinates of all elements are set assuming that the line
+/// begins at 0. The calling routine should adjust these coordinates
+/// to position the line horizontally. (The FixLine() procedure does
+/// this.)  Note that the "x" coordinate of <li> elements will be negative.
+/// Text within <dt>..</dt> might also have a negative "x" coordinate.
+/// But in no case will the x coordinate every be less than "minX".
+///
+/// p_start     - First token on new line
+/// p_end       - End of line. Might be NULL
+/// width       - How much space is on this line
+/// minX        - The minimum value of the X coordinate
+/// actualWidth - Return space actually required
+
 TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
                 TGHtmlElement *p_end, int width, int minX, int *actualWidth)
 {
-   // This routine gathers as many tokens as will fit on one line.
-   //
-   // The candidate tokens begin with fPStart and go thru the end of
-   // the list or to fPEnd, whichever comes first. The first token
-   // at the start of the next line is returned. NULL is returned if
-   // we exhaust data.
-   //
-   // "width" is the maximum allowed width of the line. The actual
-   // width is returned in *actualWidth. The actual width does not
-   // include any trailing spaces. Sometimes the actual width will
-   // be greater than the maximum width. This will happen, for example,
-   // for text enclosed in <pre>..</pre> that has lines longer than
-   // the width of the page.
-   //
-   // If the list begins with text, at least one token is returned,
-   // even if that one token is longer than the allowed line length.
-   // But if the list begins with some kind of break markup (possibly
-   // preceded by white space) then the returned list may be empty.
-   //
-   // The "x" coordinates of all elements are set assuming that the line
-   // begins at 0. The calling routine should adjust these coordinates
-   // to position the line horizontally. (The FixLine() procedure does
-   // this.)  Note that the "x" coordinate of <li> elements will be negative.
-   // Text within <dt>..</dt> might also have a negative "x" coordinate.
-   // But in no case will the x coordinate every be less than "minX".
-   //
-   // p_start     - First token on new line
-   // p_end       - End of line. Might be NULL
-   // width       - How much space is on this line
-   // minX        - The minimum value of the X coordinate
-   // actualWidth - Return space actually required
-
    int x;                        // Current X coordinate
    int spaceWanted = 0;          // Add this much space before next token
    TGHtmlElement *p;              // For looping over tokens
@@ -422,38 +422,38 @@ TGHtmlElement *TGHtmlLayoutContext::GetLine(TGHtmlElement *p_start,
    return p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the y coordinate for every anchor in the given list
+
 void TGHtmlLayoutContext::FixAnchors(TGHtmlElement *p, TGHtmlElement *p_end, int y)
 {
-   // Set the y coordinate for every anchor in the given list
-
    while (p && p != p_end) {
       if (p->fType == Html_A) ((TGHtmlAnchor *)p)->fY = y;
       p = p->fPNext;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This routine computes the X and Y coordinates for all elements of
+/// a line that has been gathered using GetLine() above. It also figures
+/// the ascent and descent for in-line images.
+///
+/// The value returned is the Y coordinate of the bottom edge of the
+/// new line. The X coordinates are computed by adding the left margin
+/// plus any extra space needed for centering or right-justification.
+///
+/// p_start     - Start of tokens for this line
+/// p_end       - First token past end of this line. Maybe NULL
+/// mbottom     - Put the top of this line here
+/// width       - This is the space available to the line
+/// actualWidth - This is the actual width needed by the line
+/// lMargin     - The current left margin
+/// max_x       - Write maximum X coordinate of ink here
+
 int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
                TGHtmlElement *p_end, int mbottom, int width,
                int actualWidth, int lMargin, int *max_x)
 {
-   // This routine computes the X and Y coordinates for all elements of
-   // a line that has been gathered using GetLine() above. It also figures
-   // the ascent and descent for in-line images.
-   //
-   // The value returned is the Y coordinate of the bottom edge of the
-   // new line. The X coordinates are computed by adding the left margin
-   // plus any extra space needed for centering or right-justification.
-   //
-   // p_start     - Start of tokens for this line
-   // p_end       - First token past end of this line. Maybe NULL
-   // mbottom     - Put the top of this line here
-   // width       - This is the space available to the line
-   // actualWidth - This is the actual width needed by the line
-   // lMargin     - The current left margin
-   // max_x       - Write maximum X coordinate of ink here
-
    int dx;                // Amount by which to increase all X coordinates
    int maxAscent;         // Maximum height above baseline
    int maxTextAscent;     // Maximum height above baseline for text
@@ -653,11 +653,11 @@ int TGHtmlLayoutContext::FixLine(TGHtmlElement *p_start,
    return y + maxDescent;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increase the headroom to create a paragraph break at the current token
+
 void TGHtmlLayoutContext::Paragraph(TGHtmlElement *p)
 {
-   // Increase the headroom to create a paragraph break at the current token
-
    int headroom;
 
    if (p == 0) return;
@@ -680,23 +680,23 @@ void TGHtmlLayoutContext::Paragraph(TGHtmlElement *p)
    if (fHeadRoom < headroom && fBottom > fTop) fHeadRoom = headroom;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the current margins for layout. Three values are returned:
+///
+///    *pY       The top edge of the area in which we can put ink. This
+///              takes into account any requested headroom.
+///
+///    *pX       The left edge of the inkable area. The takes into account
+///              any margin requests active at vertical position specified
+///              in pLC->bottom.
+///
+///    *pW       The width of the inkable area. This takes into account
+///              an margin requests that are active at the vertical position
+///              pLC->bottom.
+///
+
 void TGHtmlLayoutContext::ComputeMargins(int *pX, int *pY, int *pW)
 {
-   // Compute the current margins for layout. Three values are returned:
-   //
-   //    *pY       The top edge of the area in which we can put ink. This
-   //              takes into account any requested headroom.
-   //
-   //    *pX       The left edge of the inkable area. The takes into account
-   //              any margin requests active at vertical position specified
-   //              in pLC->bottom.
-   //
-   //    *pW       The width of the inkable area. This takes into account
-   //              an margin requests that are active at the vertical position
-   //              pLC->bottom.
-   //
-
    int x, y, w;
 
    y = fBottom + fHeadRoom;
@@ -720,20 +720,20 @@ void TGHtmlLayoutContext::ComputeMargins(int *pX, int *pY, int *pW)
 #define CLEAR_Right 1
 #define CLEAR_Both  2
 #define CLEAR_First 3
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear a wrap-around obstacle. The second option determines the
+/// precise behavior.
+///
+///    CLEAR_Left        Clear all obstacles on the left.
+///
+///    CLEAR_Right       Clear all obstacles on the right.
+///
+///    CLEAR_Both        Clear all obstacles on both sides.
+///
+///    CLEAR_First       Clear only the first obstacle on either side.
+
 void TGHtmlLayoutContext::ClearObstacle(int mode)
 {
-   // Clear a wrap-around obstacle. The second option determines the
-   // precise behavior.
-   //
-   //    CLEAR_Left        Clear all obstacles on the left.
-   //
-   //    CLEAR_Right       Clear all obstacles on the right.
-   //
-   //    CLEAR_Both        Clear all obstacles on both sides.
-   //
-   //    CLEAR_First       Clear only the first obstacle on either side.
-
    int newBottom = fBottom;
 
    PopExpiredMargins(&fLeftMargin, fBottom);
@@ -808,26 +808,26 @@ void TGHtmlLayoutContext::ClearObstacle(int mode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the next markup type  [TGHtmlElement::NextMarkupType]
+
 int TGHtml::NextMarkupType(TGHtmlElement *p)
 {
-   // Return the next markup type  [TGHtmlElement::NextMarkupType]
-
    while ((p = p->fPNext)) {
       if (p->IsMarkup()) return p->fType;
    }
    return Html_Unknown;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Break markup is any kind of markup that might force a line-break. This
+/// routine handles a single element of break markup and returns a pointer
+/// to the first element past that markup. If p doesn't point to break
+/// markup, then p is returned. If p is an incomplete table (a <TABLE>
+/// that lacks a </TABLE>), then NULL is returned.
+
 TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
 {
-   // Break markup is any kind of markup that might force a line-break. This
-   // routine handles a single element of break markup and returns a pointer
-   // to the first element past that markup. If p doesn't point to break
-   // markup, then p is returned. If p is an incomplete table (a <TABLE>
-   // that lacks a </TABLE>), then NULL is returned.
-
    TGHtmlElement *fPNext = p->fPNext;
    const char *z;
    int x, y, w;
@@ -1039,26 +1039,26 @@ TGHtmlElement *TGHtmlLayoutContext::DoBreakMarkup(TGHtmlElement *p)
    return fPNext;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE (non-zero) if we are currently wrapping text around
+/// one or more images.
+
 int TGHtmlLayoutContext::InWrapAround()
 {
-   // Return TRUE (non-zero) if we are currently wrapping text around
-   // one or more images.
-
    if (fLeftMargin && fLeftMargin->fBottom >= 0) return 1;
    if (fRightMargin && fRightMargin->fBottom >= 0) return 1;
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move past obstacles until a linewidth of reqWidth is obtained,
+/// or until all obstacles are cleared.
+///
+/// reqWidth   - Requested line width
+/// pX, pY, pW - The margins. See ComputeMargins()
+
 void TGHtmlLayoutContext::WidenLine(int reqWidth, int *pX, int *pY, int *pW)
 {
-   // Move past obstacles until a linewidth of reqWidth is obtained,
-   // or until all obstacles are cleared.
-   //
-   // reqWidth   - Requested line width
-   // pX, pY, pW - The margins. See ComputeMargins()
-
    ComputeMargins(pX, pY, pW);
    if (*pW < reqWidth && InWrapAround()) {
       ClearObstacle(CLEAR_First);
@@ -1071,12 +1071,12 @@ void TGHtmlLayoutContext::WidenLine(int reqWidth, int *pX, int *pY, int *pW)
 int HtmlLineWasBlank = 0;
 #endif // TABLE_TRIM_BLANK
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do as much layout as possible on the block of text defined by
+/// the HtmlLayoutContext.
+
 void TGHtmlLayoutContext::LayoutBlock()
 {
-   // Do as much layout as possible on the block of text defined by
-   // the HtmlLayoutContext.
-
    TGHtmlElement *p, *pNext;
 
    for (p = fPStart; p && p != fPEnd; p = pNext) {
@@ -1152,11 +1152,11 @@ void TGHtmlLayoutContext::LayoutBlock()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust (push) ident.
+
 void TGHtmlLayoutContext::PushIndent()
 {
-   // Adjust (push) ident.
-
    fHeadRoom += fHtml->GetMarginHeight();
    if (fHtml->GetMarginWidth()) {
       PushMargin(&fLeftMargin, fHtml->GetMarginWidth(), -1, Html_EndBLOCKQUOTE);
@@ -1164,21 +1164,21 @@ void TGHtmlLayoutContext::PushIndent()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adjust (pop) ident.
+
 void TGHtmlLayoutContext::PopIndent()
 {
-   // Adjust (pop) ident.
-
    if (fHeadRoom <= 0) return;
    fHeadRoom = 0;
    PopMargin(&fRightMargin, Html_EndBLOCKQUOTE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Advance the layout as far as possible
+
 void TGHtml::LayoutDoc()
 {
-   // Advance the layout as far as possible
-
    int btm;
 
    if (fPFirst == 0) return;

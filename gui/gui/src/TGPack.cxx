@@ -26,7 +26,9 @@
 
 ClassImp(TGPack);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGPack::TGPack(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options, Pixel_t back) :
    TGCompositeFrame(p, w, h, options, back),
    fVertical     (kTRUE),
@@ -36,12 +38,12 @@ TGPack::TGPack(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options, Pixel_t ba
    fWeightSum(0),
    fNVisible(0)
 {
-   // Constructor.
-
    SetCleanup(kLocalCleanup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGPack::TGPack(TGClient *c, Window_t id, const TGWindow *parent) :
    TGCompositeFrame(c, id, parent),
    fVertical     (kTRUE),
@@ -51,58 +53,57 @@ TGPack::TGPack(TGClient *c, Window_t id, const TGWindow *parent) :
    fWeightSum    (0.0),
    fNVisible     (0)
 {
-   // Constructor.
-
    SetCleanup(kLocalCleanup);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
 TGPack::~TGPack()
 {
-   // Destructor.
 }
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return length of entire frame without splitters.
+
 Int_t TGPack::GetAvailableLength() const
 {
-   // Return length of entire frame without splitters.
-
    Int_t len = fVertical ? GetHeight() : GetWidth();
    len -= fSplitterLen * (fNVisible - 1);
 
    return len;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pack-wise length of frame f.
+
 void TGPack::SetFrameLength(TGFrame* f, Int_t len)
 {
-   // Set pack-wise length of frame f.
-
    if (fVertical)
       f->Resize(GetWidth(), len);
    else
       f->Resize(len, GetHeight());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set pack-wise position of frame f.
+
 void TGPack::SetFramePosition(TGFrame* f, Int_t pos)
 {
-   // Set pack-wise position of frame f.
-
    if (fVertical)
       f->Move(0, pos);
    else
       f->Move(pos, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if splitter of first visible frame is hidden.
+/// Check if the next following visible splitter is visible.
+
 void TGPack::CheckSplitterVisibility()
 {
-   // Check if splitter of first visible frame is hidden.
-   // Check if the next following visible splitter is visible.
-
    TGFrameElementPack *el;
    TIter next(fList);
    Int_t rvf = 0;
@@ -131,11 +132,11 @@ void TGPack::CheckSplitterVisibility()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize (shrink or expand) existing frames by amount in total.
+
 void TGPack::ResizeExistingFrames()
 {
-   // Resize (shrink or expand) existing frames by amount in total.
-
    if (fList->IsEmpty())
       return;
 
@@ -183,11 +184,11 @@ void TGPack::ResizeExistingFrames()
    RefitFramesToPack();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refit existing frames to pack size.
+
 void TGPack::RefitFramesToPack()
 {
-   // Refit existing frames to pack size.
-
    TGFrameElement *el;
    TIter next(fList);
 
@@ -200,17 +201,17 @@ void TGPack::RefitFramesToPack()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Find frames around splitter and return them f0 (previous) and f1 (next).
+
 void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameElementPack*& f1) const
 {
-   // Find frames around splitter and return them f0 (previous) and f1 (next).
-
    TGFrameElementPack *el;
    TIter next(fList);
 
    while ((el = (TGFrameElementPack *) next()))
    {
-      if ( ! el->fState & kIsVisible)
+      if ( ! (el->fState & kIsVisible) )
          continue;
 
       if (el->fFrame == splitter)
@@ -223,12 +224,12 @@ void TGPack::FindFrames(TGFrame* splitter, TGFrameElementPack*& f0, TGFrameEleme
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame f at the end.
+/// LayoutHints are ignored in TGPack.
+
 void TGPack::AddFrameInternal(TGFrame* f, TGLayoutHints* l, Float_t weight)
 {
-   // Add frame f at the end.
-   // LayoutHints are ignored in TGPack.
-
    // add splitter
    TGFrameElementPack *sf = 0;
    if (fUseSplitters) {
@@ -267,31 +268,31 @@ void TGPack::AddFrameInternal(TGFrame* f, TGLayoutHints* l, Float_t weight)
    ResizeExistingFrames();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame f at the end with given weight.
+/// LayoutHints are ignored in TGPack.
+
 void TGPack::AddFrameWithWeight(TGFrame* f, TGLayoutHints *l, Float_t weight)
 {
-   // Add frame f at the end with given weight.
-   // LayoutHints are ignored in TGPack.
-
    AddFrameInternal(f, l, weight);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add frame f at the end with default weight.
+/// LayoutHints are ignored in TGPack.
+
 void TGPack::AddFrame(TGFrame* f, TGLayoutHints *l)
 {
-   // Add frame f at the end with default weight.
-   // LayoutHints are ignored in TGPack.
-
    AddFrameInternal(f, l, 1);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove frame f.
+
 void TGPack::RemoveFrameInternal(TGFrame* f)
 {
-   // Remove frame f.
-
    TGFrameElementPack *el = (TGFrameElementPack*)FindFrameElement(f);
 
    if (!el) return;
@@ -317,32 +318,32 @@ void TGPack::RemoveFrameInternal(TGFrame* f)
    ResizeExistingFrames();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove frame f and refit existing frames to pack size.
+/// Frame is deleted.
+
 void TGPack::DeleteFrame(TGFrame* f)
 {
-   // Remove frame f and refit existing frames to pack size.
-   // Frame is deleted.
-
    RemoveFrameInternal(f);
    delete f;
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove frame f and refit existing frames to pack size.
+/// Frame is not deleted.
+
 void TGPack::RemoveFrame(TGFrame* f)
 {
-   // Remove frame f and refit existing frames to pack size.
-   // Frame is not deleted.
-
    RemoveFrameInternal(f);
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Print sub frame info.
+
 void TGPack::Dump() const
 {
-   // Print sub frame info.
-
    printf("--------------------------------------------------------------\n");
    Int_t cnt = 0;
    TGFrameElementPack *el;
@@ -355,12 +356,12 @@ void TGPack::Dump() const
    printf("--------------------------------------------------------------\n");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show sub frame.
+/// Virtual from TGCompositeFrame.
+
 void TGPack::ShowFrame(TGFrame* f)
 {
-   // Show sub frame.
-   // Virtual from TGCompositeFrame.
-
    TGFrameElementPack *el = (TGFrameElementPack*)FindFrameElement(f);
    if (el)
    {
@@ -385,12 +386,12 @@ void TGPack::ShowFrame(TGFrame* f)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Hide sub frame.
+/// Virtual from TGCompositeFrame.
+
 void TGPack::HideFrame(TGFrame* f)
 {
-   // Hide sub frame.
-   // Virtual from TGCompositeFrame.
-
    TGFrameElementPack *el = (TGFrameElementPack*) FindFrameElement(f);
    if (el)
    {
@@ -417,12 +418,12 @@ void TGPack::HideFrame(TGFrame* f)
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Virtual method of TGcompositeFrame.
+/// Map all sub windows that are part of the composite frame.
+
 void TGPack::MapSubwindows()
 {
-   // Virtual method of TGcompositeFrame.
-   // Map all sub windows that are part of the composite frame.
-
    if (!fMapSubwindows) {
       return;
    }
@@ -442,12 +443,12 @@ void TGPack::MapSubwindows()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize the pack.
+/// Contents is resized proportionally.
+
 void TGPack::Resize(UInt_t w, UInt_t h)
 {
-   // Resize the pack.
-   // Contents is resized proportionally.
-
    if (w == fWidth && h == fHeight) return;
 
    fWidth  = w;
@@ -459,21 +460,21 @@ void TGPack::Resize(UInt_t w, UInt_t h)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move and resize the pack.
+
 void TGPack::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Move and resize the pack.
-
    TGCompositeFrame::Move(x, y);
    Resize(w, h);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reposition the frames so that they fit correctly.
+/// LayoutHints are ignored.
+
 void TGPack::Layout()
 {
-   // Reposition the frames so that they fit correctly.
-   // LayoutHints are ignored.
-
    Int_t pos = 0;
 
    TGFrameElement *el;
@@ -490,11 +491,11 @@ void TGPack::Layout()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Refit existing frames so that their lengths are equal.
+
 void TGPack::EqualizeFrames()
 {
-   // Refit existing frames so that their lengths are equal.
-
    if (fList->IsEmpty())
       return;
 
@@ -512,19 +513,19 @@ void TGPack::EqualizeFrames()
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called when splitter drag starts.
+
 void TGPack::HandleSplitterStart()
 {
-   // Called when splitter drag starts.
-
    fDragOverflow = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle resize events from splitters.
+
 void TGPack::HandleSplitterResize(Int_t delta)
 {
-   // Handle resize events from splitters.
-
    Int_t available = GetAvailableLength();
    Int_t min_dec = - (available + fNVisible*2 -1);
    if (delta <  min_dec)
@@ -589,12 +590,12 @@ void TGPack::HandleSplitterResize(Int_t delta)
 
 //------------------------------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the vertical flag and reformats the back to new stacking
+/// direction.
+
 void TGPack::SetVertical(Bool_t x)
 {
-   // Sets the vertical flag and reformats the back to new stacking
-   // direction.
-
    if (x == fVertical)
       return;
 
@@ -603,7 +604,7 @@ void TGPack::SetVertical(Bool_t x)
    {
       TGFrameElement *el = (TGFrameElement*) fList->At(1);
       TGFrame        *f  = el->fFrame;
-      if ( ! el->fState & kIsVisible)
+      if ( ! (el->fState & kIsVisible) )
          f->SetBit(kTempFrame);
       RemoveFrameInternal(f);
       list.Add(f);

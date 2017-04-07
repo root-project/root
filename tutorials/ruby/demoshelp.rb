@@ -1,5 +1,4 @@
 
-gROOT.Reset()
 
 c1 = TCanvas.new( "c1", "Help to run demos", 200, 10, 700, 500 )
 

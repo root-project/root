@@ -21,23 +21,21 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
 class TBrowser;
 
 class TNtuple : public TTree {
 
 protected:
-   Int_t       fNvar;            //  Number of columns
-   Float_t    *fArgs;            //! [fNvar] Array of variables
+   Int_t       fNvar;            ///<  Number of columns
+   Float_t    *fArgs;            ///<! [fNvar] Array of variables
 
    virtual Int_t  Fill();
 
 private:
    TNtuple(const TNtuple&);             // not implemented
-   TNtuple& operator=(const TNtuple&);  // not implmeneted
+   TNtuple& operator=(const TNtuple&);  // not implemented
 
 public:
    TNtuple();

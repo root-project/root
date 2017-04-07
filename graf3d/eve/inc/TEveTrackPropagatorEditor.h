@@ -118,7 +118,7 @@ public:
 
    virtual void SetModel(TObject* obj);
 
-   ClassDef(TEveTrackPropagatorEditor, 1); // Editor for TEveTrackPropagator class.
+   ClassDef(TEveTrackPropagatorEditor, 0); // Editor for TEveTrackPropagator class.
 };
 
 #endif

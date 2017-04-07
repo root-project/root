@@ -9,7 +9,8 @@ namespace ROOT {
 namespace iOS {
 namespace Demos {
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 ExclusionGraphDemo::ExclusionGraphDemo()
                         : fMultiGraph(new TMultiGraph)
 {
@@ -53,19 +54,22 @@ ExclusionGraphDemo::ExclusionGraphDemo()
    graph3.release();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///Just for auto_ptr's dtor.
+
 ExclusionGraphDemo::~ExclusionGraphDemo()
 {
-   //Just for auto_ptr's dtor.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ExclusionGraphDemo::AdjustPad(Pad *pad)
 {
    pad->SetFillColor(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 void ExclusionGraphDemo::PresentDemo()
 {
    fMultiGraph->Draw("AC");

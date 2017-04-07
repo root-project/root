@@ -12,38 +12,22 @@
 #ifndef ROOT_TGraphPolar
 #define ROOT_TGraphPolar
 
-#ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 #include "TGraphPolargram.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGraphPolar                                                          //
-//                                                                      //
-// Polar graph graphics class.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGraphPolar: public TGraphErrors {
 
 private:
-   Bool_t fOptionAxis;          // Force drawing of new coord system
+   Bool_t fOptionAxis;          ///< Force drawing of new coord system
 
 protected:
-   TGraphPolargram* fPolargram; // The polar coordinates system
-   Double_t* fXpol;             // [fNpoints] points in polar coordinates
-   Double_t* fYpol;             // [fNpoints] points in polar coordinates
+   TGraphPolargram* fPolargram; ///< The polar coordinates system
+   Double_t* fXpol;             ///< [fNpoints] points in polar coordinates
+   Double_t* fYpol;             ///< [fNpoints] points in polar coordinates
 
 
 public:

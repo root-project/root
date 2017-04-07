@@ -2,11 +2,9 @@
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 ///////////////////////////////////////////////////////////////////////////
-//
-// TLimitDataSource
-//
-// This class serves as interface to feed data into the TLimit routines
-//
+/** \class TLimitDataSource
+  This class serves as interface to feed data into the TLimit routines
+*/ 
 ///////////////////////////////////////////////////////////////////////////
 
 #include "TLimitDataSource.h"

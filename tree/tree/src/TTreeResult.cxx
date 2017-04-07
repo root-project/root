@@ -9,31 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTreeResult                                                          //
-//                                                                      //
-// Class defining interface to a TTree query result with the same       //
-// interface as for SQL databases. A TTreeResult is returned by         //
-// TTree::Query() (actually TTreePlayer::Query()).                      //
-//                                                                      //
-// Related classes are TTreeRow.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTreeResult
+\ingroup tree
+
+Class defining interface to a TTree query result with the same
+interface as for SQL databases. A TTreeResult is returned by
+TTree::Query() (actually TTreePlayer::Query()).
+
+Related classes are TTreeRow.
+*/
 
 #include "TTreeResult.h"
 #include "TTreeRow.h"
 #include "TString.h"
 #include "TObjArray.h"
 
-
 ClassImp(TTreeResult)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a query result object.
+
 TTreeResult::TTreeResult()
 {
-   // Create a query result object.
-
    fColumnCount = 0;
    fRowCount    = 0;
    fFields      = 0;
@@ -41,11 +38,11 @@ TTreeResult::TTreeResult()
    fNextRow     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a query result object.
+
 TTreeResult::TTreeResult(Int_t nfields)
 {
-   // Create a query result object.
-
    fColumnCount = nfields;
    fRowCount    = 0;
    fFields      = new TString [nfields];
@@ -53,22 +50,22 @@ TTreeResult::TTreeResult(Int_t nfields)
    fNextRow     = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Cleanup result object.
+
 TTreeResult::~TTreeResult()
 {
-   // Cleanup result object.
-
    if (fResult)
       Close();
 
    delete [] fFields;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close query result.
+
 void TTreeResult::Close(Option_t *)
 {
-   // Close query result.
-
    if (!fResult)
       return;
 
@@ -78,11 +75,11 @@ void TTreeResult::Close(Option_t *)
    fRowCount = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if result set is open and field index within range.
+
 Bool_t TTreeResult::IsValid(Int_t field)
 {
-   // Check if result set is open and field index within range.
-
    if (!fResult) {
       Error("IsValid", "result set closed");
       return kFALSE;
@@ -94,11 +91,11 @@ Bool_t TTreeResult::IsValid(Int_t field)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get number of fields in result.
+
 Int_t TTreeResult::GetFieldCount()
 {
-   // Get number of fields in result.
-
    if (!fResult) {
       Error("GetFieldCount", "result set closed");
       return 0;
@@ -106,24 +103,24 @@ Int_t TTreeResult::GetFieldCount()
    return fColumnCount;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get name of specified field.
+
 const char *TTreeResult::GetFieldName(Int_t field)
 {
-   // Get name of specified field.
-
    if (!IsValid(field))
       return 0;
 
    return fFields[field].Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get next query result row. The returned object must be
+/// deleted by the user and becomes invalid when the result set is
+/// closed or deleted.
+
 TSQLRow *TTreeResult::Next()
 {
-   // Get next query result row. The returned object must be
-   // deleted by the user and becomes invalid when the result set is
-   // closed or deleted.
-
    if (!fResult) {
       Error("Next", "result set closed");
       return 0;
@@ -138,24 +135,24 @@ TSQLRow *TTreeResult::Next()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add field name to result set. This is an internal method that is not
+/// exported via the abstract interface and that should not be user called.
+
 void TTreeResult::AddField(Int_t field, const char *fieldname)
 {
-   // Add field name to result set. This is an internal method that is not
-   // exported via the abstract interface and that should not be user called.
-
    if (!IsValid(field))
       return;
 
    fFields[field] = fieldname;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adopt a row to result set. This is an internal method that is not
+/// exported via the abstract interface and that should not be user called.
+
 void TTreeResult::AddRow(TSQLRow *row)
 {
-   // Adopt a row to result set. This is an internal method that is not
-   // exported via the abstract interface and that should not be user called.
-
    if (!fResult) {
       Error("AddRow", "result set closed");
       return;

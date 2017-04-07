@@ -18,18 +18,17 @@ TVirtualGraphPainter *TVirtualGraphPainter::fgPainter = 0;
 
 ClassImp(TVirtualGraphPainter)
 
-//______________________________________________________________________________
-//
-//  TVirtualGraphPainter is an abstract interface to a histogram painter.
-//
+/** \class TVirtualGraphPainter
+ \ingroup Hist
+ Abstract interface to a histogram painter
+*/
 
+////////////////////////////////////////////////////////////////////////////////
+/// Static function returning a pointer to the current graph painter.
+/// If the graph painter does not exist a default painter (singleton) is created.
 
-//______________________________________________________________________________
 TVirtualGraphPainter *TVirtualGraphPainter::GetPainter()
 {
-   // Static function returning a pointer to the current graph painter.
-   // If the graph painter does not exist a default painter (singleton) is created.
-
    // if no painter set yet, create a default painter via the PluginManager
    if (!fgPainter) {
       TPluginHandler *h;
@@ -43,10 +42,10 @@ TVirtualGraphPainter *TVirtualGraphPainter::GetPainter()
    return fgPainter;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set an alternative histogram painter.
+
 void TVirtualGraphPainter::SetPainter(TVirtualGraphPainter *painter)
 {
-   // Static function to set an alternative histogram painter.
-
    fgPainter = painter;
 }

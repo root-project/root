@@ -1,5 +1,12 @@
-// Open a FITS file and retrieve the first plane of the image array
-// as a TImage object
+/// \file
+/// \ingroup tutorial_FITS
+/// Open a FITS file and retrieve the first plane of the image array
+/// as a TImage object
+///
+/// \macro_code
+///
+/// \author Claudi Martinez
+
 void FITS_tutorial3()
 {
    printf("\n\n--------------------------------\n");
@@ -31,5 +38,3 @@ void FITS_tutorial3()
       delete hdu;
    }
 }
-
-

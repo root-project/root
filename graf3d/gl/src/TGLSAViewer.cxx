@@ -69,7 +69,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    \tCtrl-Home  --- switch external/automatic camera center\n\
 \n\
    LEFT mouse button -- ROTATE (ORBIT) the scene by holding the mouse button and moving\n\
-   the mouse (perspective camera, needs to be enabled in menu for orthograpic cameras).\n\
+   the mouse (perspective camera, needs to be enabled in menu for orthographic cameras).\n\
    By default, the scene will be rotated about its center. To select arbitrary center\n\
    bring up the viewer-editor (e.g., shift-click into empty background) and use\n\
    'Camera center' controls in the 'Guides' tab.\n\
@@ -93,7 +93,7 @@ DIRECT SCENE INTERACTIONS\n\n\
    to viewer-centric, set in your .rootrc file:\n\
       OpenGL.EventHandler.ViewerCentricControls: 1\n\
 \n\
-   Double clik will show GUI editor of the viewer (if assigned).\n\
+   Double click will show GUI editor of the viewer (if assigned).\n\
 \n\
    RESET the camera via the button in viewer-editor or Home key.\n\
 \n\
@@ -176,14 +176,10 @@ MANIPULATORS\n\
    cannot be selected/dragged.\n";
 
 
-//==============================================================================
-// TGLSAViewer
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// The top level standalone GL-viewer - created via plugin manager.
-
+/** \class TGLSAViewer
+\ingroup opengl
+The top level standalone GL-viewer - created via plugin manager.
+*/
 
 ClassImp(TGLSAViewer);
 
@@ -205,7 +201,9 @@ const char *gGLSaveAsTypes[] = {"Encapsulated PostScript", "*.eps",
                                 "PNG",                     "*.png",
                                 0, 0};
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct a standalone viewer, bound to supplied 'pad'.
+
 TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
    fFrame(0),
@@ -226,8 +224,6 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
    fMenuHidingShowMenu(kTRUE),
    fDeleteMenuBar(kFALSE)
 {
-   // Construct a standalone viewer, bound to supplied 'pad'.
-
    fFrame = new TGLSAFrame(*this);
 
    CreateMenus();
@@ -253,7 +249,14 @@ TGLSAViewer::TGLSAViewer(TVirtualPad *pad, TGLFormat* format) :
    Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Construct an embedded standalone viewer, bound to supplied 'pad'.
+/// If format is passed, it gets adopted by the viewer as it might
+/// need to be reused several times when recreating the GL-widget.
+///
+/// Modified version of the previous constructor for embedding the
+/// viewer into another frame (parent).
+
 TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged,
                          TGLFormat* format) :
    TGLViewer(pad, fgInitX, fgInitY, fgInitW, fgInitH),
@@ -272,13 +275,6 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    fMenuHidingShowMenu(kTRUE),
    fDeleteMenuBar(kFALSE)
 {
-   // Construct an embedded standalone viewer, bound to supplied 'pad'.
-   // If format is passed, it gets adopted by the viewer as it might
-   // need to be reused several times when recreating the GL-widget.
-   //
-   // Modified version of the previous constructor for embedding the
-   // viewer into another frame (parent).
-
    fGedEditor = ged;
    fFrame = new TGLSAFrame(parent, *this);
 
@@ -303,11 +299,11 @@ TGLSAViewer::TGLSAViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *g
    Show();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy standalone viewer object.
+
 TGLSAViewer::~TGLSAViewer()
 {
-   // Destroy standalone viewer object.
-
    fGedEditor->DisconnectFromCanvas();
 
    DisableMenuBarHiding();
@@ -324,20 +320,20 @@ TGLSAViewer::~TGLSAViewer()
    fGLWidget = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the main-frame.
+
 TGCompositeFrame* TGLSAViewer::GetFrame() const
 {
-   // Return the main-frame.
-
    return fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a GLwidget, it is an error if it is already created.
+/// This is needed for frame-swapping on mac.
+
 void TGLSAViewer::CreateGLWidget()
 {
-   // Create a GLwidget, it is an error if it is already created.
-   // This is needed for frame-swapping on mac.
-
    if (fGLWidget) {
       Error("CreateGLWidget", "Widget already exists.");
       return;
@@ -355,12 +351,12 @@ void TGLSAViewer::CreateGLWidget()
    fGLWidget->MapWindow();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destroy the GLwidget, it is an error if it does not exist.
+/// This is needed for frame-swapping on mac.
+
 void TGLSAViewer::DestroyGLWidget()
 {
-   // Destroy the GLwidget, it is an error if it does not exist.
-   // This is needed for frame-swapping on mac.
-
    if (fGLWidget == 0) {
       Error("DestroyGLWidget", "Widget does not exist.");
       return;
@@ -374,11 +370,11 @@ void TGLSAViewer::DestroyGLWidget()
    fGLWidget = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///File/Camera/Help menus.
+
 void TGLSAViewer::CreateMenus()
 {
-   //File/Camera/Help menus.
-
    fFileMenu = new TGPopupMenu(fFrame->GetClient()->GetDefaultRoot());
    fFileMenu->AddEntry("&Hide Menus", kGLHideMenus);
    fFileMenu->AddEntry("&Edit Object", kGLEditObject);
@@ -437,11 +433,11 @@ void TGLSAViewer::CreateMenus()
    fFrame->AddFrame(fMenuBut, new TGLayoutHints(kLHintsNormal | kLHintsExpandX, 0, 0, 1, 1));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Internal frames creation.
+
 void TGLSAViewer::CreateFrames()
 {
-   // Internal frames creation.
-
    TGCompositeFrame* compositeFrame = fFrame;
    if (fGedEditor == 0)
    {
@@ -477,12 +473,12 @@ void TGLSAViewer::CreateFrames()
    CreateGLWidget();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update GUI components for embedded viewer selection change.
+/// Override from TGLViewer.
+
 void TGLSAViewer::SelectionChanged()
 {
-   // Update GUI components for embedded viewer selection change.
-   // Override from TGLViewer.
-
    TGLPhysicalShape *selected = const_cast<TGLPhysicalShape*>(GetSelected());
 
    if (selected) {
@@ -497,45 +493,47 @@ void TGLSAViewer::SelectionChanged()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show the viewer
+
 void TGLSAViewer::Show()
 {
-   // Show the viewer
    fFrame->MapRaised();
    fGedEditor->SetModel(fPad, this, kButton1Down);
    RequestDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close the viewer - destructed.
+
 void TGLSAViewer::Close()
 {
-   // Close the viewer - destructed.
-
    // Commit suicide when contained GUI is closed.
    delete this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete the menu bar.
+
 void TGLSAViewer::DeleteMenuBar()
 {
-   // Delete the menu bar.
    fDeleteMenuBar=kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deactivate menu entries for closing the GL window and exiting ROOT.
+
 void TGLSAViewer::DisableCloseMenuEntries()
 {
-   // Deactivate menu entries for closing the GL window and exiting ROOT.
-
    fFileMenu->DeleteEntry(kGLCloseViewer);
    fFileMenu->DeleteEntry(kGLQuitROOT);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable hiding of menu bar.
+
 void TGLSAViewer::EnableMenuBarHiding()
 {
-   // Enable hiding of menu bar.
-
    if (fHideMenuBar)
       return;
 
@@ -554,11 +552,11 @@ void TGLSAViewer::EnableMenuBarHiding()
    fFileMenu->CheckEntry(kGLHideMenus);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Disable hiding of menu bar.
+
 void TGLSAViewer::DisableMenuBarHiding()
 {
-   // Disable hiding of menu bar.
-
    if (!fHideMenuBar)
       return;
 
@@ -578,11 +576,11 @@ void TGLSAViewer::DisableMenuBarHiding()
    fFileMenu->UnCheckEntry(kGLHideMenus);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Maybe switch menu-bar / menu-button.
+
 void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
 {
-   // Maybe switch menu-bar / menu-button.
-
    TGFrame *f = (TGFrame*) gTQSender;
 
    if (f == fMenuBut)
@@ -615,11 +613,11 @@ void TGLSAViewer::HandleMenuBarHiding(Event_t* ev)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the timer for menu-bar hiding.
+
 void TGLSAViewer::ResetMenuHidingTimer(Bool_t show_menu)
 {
-   // Reset the timer for menu-bar hiding.
-
    // This happens, mysteriously.
    if (fMenuHidingTimer == 0)
       return;
@@ -633,11 +631,11 @@ void TGLSAViewer::ResetMenuHidingTimer(Bool_t show_menu)
    fMenuHidingTimer->TurnOn();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Action for menu-hiding timeout.
+
 void TGLSAViewer::MenuHidingTimeout()
 {
-   // Action for menu-hiding timeout.
-
    fMenuHidingTimer->TurnOff();
    if (fMenuHidingShowMenu) {
       fFrame->HideFrame(fMenuBut);
@@ -649,20 +647,20 @@ void TGLSAViewer::MenuHidingTimeout()
    fFrame->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set global timeout for menu-hiding in mili-seconds.
+/// Static function.
+
 void TGLSAViewer::SetMenuHidingTimeout(Long_t timeout)
 {
-   // Set global timeout for menu-hiding in mili-seconds.
-   // Static function.
-
    fgMenuHidingTimeout = timeout;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process GUI message capture by the main GUI frame (TGLSAFrame).
+
 Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
 {
-   // Process GUI message capture by the main GUI frame (TGLSAFrame).
-
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
       switch (GET_SUBMSG(msg)) {
@@ -671,14 +669,7 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
          switch (parm1) {
          case kGLHelpAbout: {
 #ifdef R__UNIX
-            TString rootx;
-#ifdef ROOTBINDIR
-            rootx = ROOTBINDIR;
-#else
-            rootx = gSystem->Getenv("ROOTSYS");
-            if (!rootx.IsNull()) rootx += "/bin";
-#endif
-            rootx += "/root -a &";
+            TString rootx = TROOT::GetBinDir() + "/root -a &";
             gSystem->Exec(rootx);
 #else
 #ifdef WIN32
@@ -816,11 +807,11 @@ Bool_t TGLSAViewer::ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle state of the 'Edit Object' menu entry.
+
 void TGLSAViewer::ToggleEditObject()
 {
-   // Toggle state of the 'Edit Object' menu entry.
-
    if (fFileMenu->IsEntryChecked(kGLEditObject))
       fFileMenu->UnCheckEntry(kGLEditObject);
    else
@@ -828,11 +819,11 @@ void TGLSAViewer::ToggleEditObject()
    SelectionChanged();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle state of the 'Ortho allow rotate' menu entry.
+
 void TGLSAViewer::ToggleOrthoRotate()
 {
-   // Toggle state of the 'Ortho allow rotate' menu entry.
-
    if (fCameraMenu->IsEntryChecked(kGLOrthoRotate))
       fCameraMenu->UnCheckEntry(kGLOrthoRotate);
    else
@@ -846,11 +837,11 @@ void TGLSAViewer::ToggleOrthoRotate()
    fOrthoZnOYCamera.SetEnableRotate(state);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Toggle state of the 'Ortho allow dolly' menu entry.
+
 void TGLSAViewer::ToggleOrthoDolly()
 {
-   // Toggle state of the 'Ortho allow dolly' menu entry.
-
    if (fCameraMenu->IsEntryChecked(kGLOrthoDolly))
       fCameraMenu->UnCheckEntry(kGLOrthoDolly);
    else

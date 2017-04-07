@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -45,12 +45,13 @@ enum ETGeoPgonWid {
    kPGON_NEDGES
 };
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for polycone editor
+
 TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
    : TGeoPconEditor(p, width, height, options | kVerticalFrame, back)
 {
-   // Constructor for polycone editor
    fNedgesi = 0;
    CreateEdges();
    TGeoTabManager::MoveFrame(fDFrame, this);
@@ -59,27 +60,29 @@ TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
    fENedges->GetNumberEntry()->Connect("TextChanged(const char *)", "TGeoPgonEditor", this, "DoModified()");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoPgonEditor::~TGeoPgonEditor()
 {
-// Destructor
    TGFrameElement *el;
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
-      if (el->fFrame->IsComposite()) 
+      if (el->fFrame->IsComposite())
          TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
    }
-   Cleanup();   
+   Cleanup();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect to a given pcon.
+
 void TGeoPgonEditor::SetModel(TObject* obj)
 {
-   // Connect to a given pcon.
    if (obj == 0 || (obj->IsA()!=TGeoPgon::Class())) {
       SetActive(kFALSE);
-      return;                 
-   } 
+      return;
+   }
    fShape = (TGeoPcon*)obj;
    const char *sname = fShape->GetName();
    if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
@@ -96,18 +99,19 @@ void TGeoPgonEditor::SetModel(TObject* obj)
    fDPhii = fShape->GetDphi();
    CreateSections(nsections);
    UpdateSections();
-   
+
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
    SetActive();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for applying modifications.
+
 void TGeoPgonEditor::DoApply()
 {
-// Slot for applying modifications.
    TGeoPgon *shape = (TGeoPgon*)fShape;
    const char *name = fShapeName->GetText();
    if (strcmp(name,fShape->GetName())) fShape->SetName(name);
@@ -136,7 +140,7 @@ void TGeoPgonEditor::DoApply()
          array[6+3*isect] = sect->GetRmax();
       }
       shape->SetDimensions(array);
-      delete [] array;   
+      delete [] array;
       if (fPad) {
          if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
             TView *view = fPad->GetView();
@@ -148,12 +152,12 @@ void TGeoPgonEditor::DoApply()
                view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                               orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
                Update();
-            }                  
+            }
          } else Update();
       }
       return;
-   }           
-   // No need to call SetDimensions   
+   }
+   // No need to call SetDimensions
    if (TMath::Abs(phi1-fShape->GetPhi1())>1.e-6) fShape->Phi1() = phi1;
    if (TMath::Abs(dphi-fShape->GetDphi())>1.e-6) fShape->Dphi() = dphi;
    if (nedges != shape->GetNedges())             shape->SetNedges(nedges);
@@ -162,7 +166,7 @@ void TGeoPgonEditor::DoApply()
       fShape->Z(isect) = sect->GetZ();
       fShape->Rmin(isect) = sect->GetRmin();
       fShape->Rmax(isect) = sect->GetRmax();
-   }   
+   }
    shape->ComputeBBox();
    if (fPad) {
       if (gGeoManager && gGeoManager->GetPainter() && gGeoManager->GetPainter()->IsPaintingShape()) {
@@ -175,23 +179,25 @@ void TGeoPgonEditor::DoApply()
             view->SetRange(orig[0]-fShape->GetDX(), orig[1]-fShape->GetDY(), orig[2]-fShape->GetDZ(),
                            orig[0]+fShape->GetDX(), orig[1]+fShape->GetDY(), orig[2]+fShape->GetDZ());
             Update();
-         }                  
+         }
       } else Update();
-   }   
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for undoing last operation.
+
 void TGeoPgonEditor::DoUndo()
 {
-// Slot for undoing last operation.
    fENedges->SetNumber(fNedgesi);
    TGeoPconEditor::DoUndo();
-}   
+}
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create number entry for Nedges.
+
 void TGeoPgonEditor::CreateEdges()
 {
-// Create number entry for Nedges.
    TGTextEntry *nef;
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
    f1->AddFrame(new TGLabel(f1, "Nedges"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
@@ -206,16 +212,17 @@ void TGeoPgonEditor::CreateEdges()
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change number of edges.
+
 void TGeoPgonEditor::DoNedges()
 {
-// Change number of edges.
    Int_t nedges = fENedges->GetIntNumber();
    if (nedges < 3) {
       nedges = 3;
       fENedges->SetNumber(nedges);
-   }   
+   }
    DoModified();
    if (!IsDelayed()) DoApply();
-}   
+}
 

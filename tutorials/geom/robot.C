@@ -1,18 +1,24 @@
+/// \file
+/// \ingroup tutorial_geom
+/// Drawing a famous Korean robot, TaekwonV, using ROOT geometry class.
+///
+/// Reviewed by Sunman Kim (sunman98@hanmail.net)
+/// Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
+///
+/// How to run: `.x robot.C` in ROOT terminal, then use OpenGL
+///
+/// This macro was created for the evaluation of Computational Physics course in 2006.
+/// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
+///
+/// \macro_code
+///
+/// \author Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
+
 #include "TGeoManager.h"
 
 void robot()
 {
-  // Drawing a famous Korean robot, TaekwonV, using ROOT geometry class.
-  // Name: robot.C
-  // Author: Jin Hui Hwang, Dept. of Physics, Univ. of Seoul
-  // Reviewed by Sunman Kim (sunman98@hanmail.net)
-  // Supervisor: Prof. Inkyu Park (icpark@physics.uos.ac.kr)
-  //
-  // How to run: .x robot.C in ROOT terminal, then use OpenGL
-  //
-  // This macro was created for the evaluation of Computational Physics course in 2006.
-  // We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
-  //
+
 
    TGeoManager *Robot = new TGeoManager("Robot","This is Taegwon V");
 

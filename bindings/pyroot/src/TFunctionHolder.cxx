@@ -31,18 +31,19 @@ PyObject* PyROOT::TFunctionHolder::PreProcessArgs(
    return newArgs;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// preliminary check in case keywords are accidently used (they are ignored otherwise)
+
 PyObject* PyROOT::TFunctionHolder::Call(
-      ObjectProxy* self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
+      ObjectProxy*& self, PyObject* args, PyObject* kwds, TCallContext* ctxt )
 {
-// preliminary check in case keywords are accidently used (they are ignored otherwise)
    if ( kwds != 0 && PyDict_Size( kwds ) ) {
       PyErr_SetString( PyExc_TypeError, "keyword arguments are not yet supported" );
       return 0;
    }
 
 // setup as necessary
-   if ( ! this->Initialize() )
+   if ( ! this->Initialize( ctxt ) )
       return 0;                              // important: 0, not Py_None
 
 // reorder self into args, if necessary
@@ -57,5 +58,5 @@ PyObject* PyROOT::TFunctionHolder::Call(
       return 0;                              // important: 0, not Py_None
 
 // execute function
-   return this->Execute( 0, ctxt );
+   return this->Execute( 0, 0, ctxt );
 }

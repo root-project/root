@@ -16,6 +16,8 @@
 #ifndef ROO_POLYNOMIAL
 #define ROO_POLYNOMIAL
 
+#include <vector>
+
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
@@ -29,7 +31,7 @@ public:
   RooPolynomial() ;
   RooPolynomial(const char* name, const char* title, RooAbsReal& x) ;
   RooPolynomial(const char *name, const char *title,
-		RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=1) ;
+      RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=1) ;
 
   RooPolynomial(const RooPolynomial& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooPolynomial(*this, newname); }
@@ -43,7 +45,8 @@ protected:
   RooRealProxy _x;
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
-  TIterator* _coefIter ;  //! do not persist
+
+  mutable std::vector<Double_t> _wksp; //! do not persist
 
   Double_t evaluate() const;
 

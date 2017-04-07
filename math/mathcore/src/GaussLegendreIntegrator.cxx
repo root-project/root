@@ -9,6 +9,10 @@
  **********************************************************************/
 
 #include "Math/GaussLegendreIntegrator.h"
+#include "Math/Error.h"
+#include "Math/IFunction.h"
+#include "Math/IFunctionfwd.h"
+#include "Math/IntegratorOptions.h"
 #include <cmath>
 #include <string.h>
 #include <algorithm>

@@ -11,18 +11,10 @@
 
 #ifndef ROOT_TPie
 #define ROOT_TPie
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TNamed
 #include <TNamed.h>
-#endif
-#ifndef ROOT_TString
 #include <TString.h>
-#endif
-#ifndef ROOT_TAttText
 #include <TAttText.h>
-#endif
 
 class TH1;
 class TPieSlice;
@@ -33,25 +25,25 @@ private:
    void Init(Int_t np, Double_t ao, Double_t x, Double_t y, Double_t r);
    void DrawGhost();
 
-   Float_t  fSum;             //!Sum for the slice values
-   Float_t *fSlices;          //!Subdivisions of the slices
-   TLegend *fLegend;          //!Legend for this piechart
+   Float_t  fSum;             ///<!Sum for the slice values
+   Float_t *fSlices;          ///<!Subdivisions of the slices
+   TLegend *fLegend;          ///<!Legend for this piechart
 
 protected:
-   Double_t    fX;              // X coordinate of the pie centre
-   Double_t    fY;              // Y coordinate of the pie centre
-   Double_t    fRadius;         // Radius Pie radius
-   Double_t    fAngularOffset;  // Offset angular offset for the first slice
-   Float_t     fLabelsOffset;   // LabelsOffset offset of label
-   TString     fLabelFormat;    // Format format of the slices' label
-   TString     fValueFormat;    // Vform numeric format for the value
-   TString     fFractionFormat; // Rform numeric format for the fraction of a slice
-   TString     fPercentFormat;  // Pfrom numeric format for the percent of a slice
-   Int_t       fNvals;          // Number of elements
-   TPieSlice **fPieSlices;      //[fNvals] Slice array of this pie-chart
-   Bool_t      fIs3D;           //! true if the pseudo-3d is enabled
-   Double_t    fHeight;         // Pheight height of the slice in pixel
-   Float_t     fAngle3D;        // The angle of the pseudo-3d view
+   Double_t    fX;              ///< X coordinate of the pie centre
+   Double_t    fY;              ///< Y coordinate of the pie centre
+   Double_t    fRadius;         ///< Radius Pie radius
+   Double_t    fAngularOffset;  ///< Offset angular offset for the first slice
+   Float_t     fLabelsOffset;   ///< LabelsOffset offset of label
+   TString     fLabelFormat;    ///< Format format of the slices' label
+   TString     fValueFormat;    ///< Vform numeric format for the value
+   TString     fFractionFormat; ///< Rform numeric format for the fraction of a slice
+   TString     fPercentFormat;  ///< Pfrom numeric format for the percent of a slice
+   Int_t       fNvals;          ///< Number of elements
+   TPieSlice **fPieSlices;      ///<[fNvals] Slice array of this pie-chart
+   Bool_t      fIs3D;           ///<! true if the pseudo-3d is enabled
+   Double_t    fHeight;         ///< Height of the slice in pixel
+   Float_t     fAngle3D;        ///< The angle of the pseudo-3d view
 
 public:
    TPie();

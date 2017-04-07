@@ -1,8 +1,18 @@
-// tutorial illustrating the use of TMath::Binomial
-//  can be run with:
-// root > .x binomial.C
-// root > .x binomial.C+ with ACLIC
-//Author: Federico Carminati
+/// \file
+/// \ingroup tutorial_math
+/// \notebook -nodraw
+/// tutorial illustrating the use of TMath::Binomial
+/// can be run with:
+///
+/// ~~~{.cpp}
+/// root > .x binomial.C
+/// root > .x binomial.C+ with ACLIC
+/// ~~~
+///
+/// \macro_output
+/// \macro_code
+///
+/// \author Federico Carminati
 
 #include <TMath.h>
 #include <TRandom.h>

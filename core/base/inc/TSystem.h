@@ -31,21 +31,11 @@
 #endif
 #endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TInetAddress
 #include "TInetAddress.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
 
 class TSeqCollection;
 class TFdSet;
@@ -317,6 +307,7 @@ protected:
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
    virtual Bool_t         ConsistentWith(const char *path, void *dirptr = 0);
    virtual const char    *ExpandFileName(const char *fname);
+   virtual Bool_t         ExpandFileName(TString &fname);
    virtual void           SigAlarmInterruptsSyscalls(Bool_t) { }
    virtual const char    *GetLinkedLibraries();
    virtual void           DoBeep(Int_t /*freq*/=-1, Int_t /*duration*/=-1) const { printf("\a"); fflush(stdout); }
@@ -328,6 +319,7 @@ protected:
 private:
    TSystem(const TSystem&);              // not implemented
    TSystem& operator=(const TSystem&);   // not implemented
+   Bool_t ExpandFileName(const char *fname, char *xname, const int kBufSize);
 
 public:
    TSystem(const char *name = "Generic", const char *title = "Generic System");
@@ -405,7 +397,9 @@ public:
    virtual void           *GetDirPtr() const { return 0; }
    virtual Bool_t          ChangeDirectory(const char *path);
    virtual const char     *WorkingDirectory();
+   virtual std::string     GetWorkingDirectory() const;
    virtual const char     *HomeDirectory(const char *userName = 0);
+   virtual std::string     GetHomeDirectory(const char *userName = 0) const;
    virtual int             mkdir(const char *name, Bool_t recursive = kFALSE);
    Bool_t                  cd(const char *path) { return ChangeDirectory(path); }
    const char             *pwd() { return WorkingDirectory(); }

@@ -1,9 +1,13 @@
 #---Custom CTest settings---------------------------------------------------
 
 set(CTEST_CUSTOM_MAXIMUM_FAILED_TEST_OUTPUT_SIZE "100000")
-set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE "10000")
+set(CTEST_CUSTOM_MAXIMUM_PASSED_TEST_OUTPUT_SIZE "64000")
 
-set(CTEST_TEST_TIMEOUT 1200)
+if(CTEST_BUILD_NAME MATCHES arm64)
+  set(CTEST_TEST_TIMEOUT 2400)
+else()
+  set(CTEST_TEST_TIMEOUT 1200)
+endif()
 
 set(CTEST_CUSTOM_WARNING_EXCEPTION ${CTEST_CUSTOM_WARNING_EXCEPTION}
         "Warning: Rank mismatch in argument"
@@ -17,7 +21,8 @@ set(CTEST_CUSTOM_WARNING_EXCEPTION ${CTEST_CUSTOM_WARNING_EXCEPTION}
         "function is dangerous and should not be used"           # deprecated use of std functions cint/ROOT
     )
 set(CTEST_CUSTOM_ERROR_EXCEPTION ${CTEST_CUSTOM_ERROR_EXCEPTION}
-        "fatal error: cannot open file")
+        "fatal error: cannot open file"
+        "remark: ")
 
 #---Include other CTest Custom files----------------------------------------
 if(DEFINED CTEST_BINARY_DIRECTORY)

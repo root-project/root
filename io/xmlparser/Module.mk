@@ -28,9 +28,18 @@ XMLPARSERLIB  := $(LPATH)/libXMLParser.$(SOEXT)
 XMLPARSERMAP  := $(XMLPARSERLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLPARSERH))
+XMLPARSERH_REL := $(patsubst $(MODDIRI)/%.h,include/%.h,$(XMLPARSERH))
+ALLHDRS      += $(XMLPARSERH_REL)
 ALLLIBS      += $(XMLPARSERLIB)
 ALLMAPS      += $(XMLPARSERMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(XMLPARSERH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Io_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(XMLPARSERLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(XMLPARSERDEP)

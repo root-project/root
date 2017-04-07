@@ -37,22 +37,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
-#ifndef ROOT_TList
+#include "TError.h"
 #include "TList.h"
-#endif
+#include "TString.h"
+#include "TVirtualQConnection.h"
 
-class TObject;
-class TQConnection;
 class TClass;
 
 R__EXTERN void *gTQSender;   // the latest sender object
 
 class TQObject {
-
-friend class TQConnection;
 
 protected:
    TList   *fListOfSignals;        //! list of signals from this object
@@ -63,6 +57,7 @@ protected:
 
    virtual void       *GetSender() { return this; }
    virtual const char *GetSenderClassName() const { return ""; }
+
 
    static Bool_t ConnectToClass(TQObject *sender,
                                 const char *signal,
@@ -100,35 +95,82 @@ public:
 
    void  CollectClassSignalLists(TList& list, TClass* cls);
 
-   template <typename... T> void EmitVA(const char *signal_name, Int_t /* nargs */, const T&... params);
-   // void  EmitVA(const char *signal, Int_t nargs, ...);
-   void  EmitVA(const char *signal, Int_t nargs, va_list va) = delete;
-   void  Emit(const char *signal);
-   void  Emit(const char *signal, Long_t *paramArr);
-   void  Emit(const char *signal, const char *params);
-   void  Emit(const char *signal, Double_t param);
-   void  Emit(const char *signal, Long_t param);
-   void  Emit(const char *signal, Long64_t param);
-   void  Emit(const char *signal, Bool_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, Char_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, UChar_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, Short_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, UShort_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, Int_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, UInt_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, ULong_t param)
-         { Emit(signal, (Long_t)param); }
-   void  Emit(const char *signal, ULong64_t param)
-         { Emit(signal, (Long64_t) param); }
-   void  Emit(const char *signal, Float_t param)
-         { Emit(signal, (Double_t)param); }
+   ///////////////////////////////////////////////////////////////////////////////
+   /// Emit a signal with a varying number of arguments.
+   ///
+   template <typename... T> void EmitVA(const char *signal_name, Int_t /* nargs */, const T&... params)
+   {
+      // Activate signal with variable argument list.
+      // For internal use and for var arg EmitVA() in RQ_OBJECT.h.
+
+      if (fSignalsBlocked || fgAllSignalsBlocked) return;
+
+      TList classSigLists;
+      CollectClassSignalLists(classSigLists, IsA());
+
+      if (classSigLists.IsEmpty() && !fListOfSignals)
+         return;
+
+      TString signal = CompressName(signal_name);
+
+      TVirtualQConnection *connection = 0;
+
+      // execute class signals
+      TList *sigList;
+      TIter  nextSigList(&classSigLists);
+      while ((sigList = (TList*) nextSigList())) {
+         TIter nextcl((TList*) sigList->FindObject(signal));
+         while ((connection = static_cast<TVirtualQConnection*>(nextcl()))) {
+            gTQSender = GetSender();
+            connection->SetArgs(params...);
+            connection->SendSignal();
+         }
+      }
+      if (!fListOfSignals)
+         return;
+
+      // execute object signals
+      TIter next((TList*) fListOfSignals->FindObject(signal));
+      while (fListOfSignals && (connection = static_cast<TVirtualQConnection*>(next()))) {
+         gTQSender = GetSender();
+         connection->SetArgs(params...);
+         connection->SendSignal();
+      }
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Activate signal with single parameter.
+   /// Example:
+   /// ~~~ {.cpp}
+   ///   theButton->Emit("Progress(Long64_t)",processed)
+   /// ~~~
+   ///
+   /// If we call Emit with an array of the parameters, they should be converted
+   /// to long type.
+   /// Example:
+   /// ~~~ {.cpp}
+   ///    TQObject *processor; // data processor
+   ///    TH1F     *hist;      // filled with processor results
+   ///
+   ///    processor->Connect("Evaluated(Float_t,Float_t)",
+   ///                       "TH1F",hist,"Fill12(Axis_t,Axis_t)");
+   ///
+   ///    Long_t args[2];
+   ///    args[0] = (Long_t)processor->GetValue(1);
+   ///    args[1] = (Long_t)processor->GetValue(2);
+   ///
+   ///    processor->Emit("Evaluated(Float_t,Float_t)",args);
+   /// ~~~
+   template <typename T> void Emit(const char *signal, const T& arg) {
+      Int_t placeholder = 0;
+      EmitVA(signal, placeholder, arg);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Acitvate signal without args.
+   /// Example:
+   ///          theButton->Emit("Clicked()");
+   void  Emit(const char *signal) { EmitVA(signal, (Int_t) 0); }
 
    Bool_t Connect(const char *signal,
                   const char *receiver_class,
@@ -211,9 +253,7 @@ public:
                            //to interpreted classes, see also RQ_OBJECT.h
 };
 
-#ifndef ROOT_TQConnection
-#include "TQObjectEmitVA.h"
-#endif
+
 
 // Global function which simplifies making connections in interpreted
 // ROOT session

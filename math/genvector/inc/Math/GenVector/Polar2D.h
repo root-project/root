@@ -19,13 +19,9 @@
 #ifndef ROOT_Math_GenVector_Polar2D
 #define ROOT_Math_GenVector_Polar2D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_etaMax
 #include "Math/GenVector/etaMax.h"
-#endif
 
 
 
@@ -101,8 +97,8 @@ public :
 
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
-   Scalar X()     const { return fR*std::cos(fPhi);}
-   Scalar Y()     const { return fR*std::sin(fPhi);}
+   Scalar X() const { return fR * cos(fPhi); }
+   Scalar Y() const { return fR * sin(fPhi); }
    Scalar Mag2()  const { return fR*fR;}
 
 
@@ -138,9 +134,7 @@ private:
       restrict abgle hi to be between -PI and PI
     */
    inline void Restrict() {
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
-      return;
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 
 public:
@@ -226,14 +220,10 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_Cartesian2D
 #include "Math/GenVector/Cartesian2D.h"
-#endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 #endif
 
 namespace ROOT {

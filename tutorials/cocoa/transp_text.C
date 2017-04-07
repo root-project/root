@@ -1,7 +1,12 @@
-//This macro is based on labels1.C by Rene Brun.
-//Updated by Timur Pocheptsov to use transparent text (12/10/2012).
-//Requires OS X and ROOT configured with --enable-cocoa.
-
+/// \file
+/// \ingroup tutorial_cocoa
+/// This macro is based on labels1.C by Rene Brun.
+/// Updated by Timur Pocheptsov to use transparent text (12/10/2012).
+/// Requires OS X and ROOT configured with --enable-cocoa.
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"

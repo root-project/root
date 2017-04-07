@@ -25,6 +25,7 @@
 #include "TClass.h"
 #include "TGTab.h"
 #include "TGComboBox.h"
+#include "TError.h"
 
 #include "TGLViewerEditor.h"
 #include "TGLViewer.h"
@@ -34,13 +35,19 @@
 #include "TGLCameraOverlay.h"
 #include "TGLAutoRotator.h"
 
-//______________________________________________________________________________
-//
-// GUI editor for TGLViewer.
+/** \class TGLViewerEditor
+\ingroup opengl
+GUI editor for TGLViewer.
+*/
+
+namespace {
+
+void SetLabeledNEntryState(TGNumberEntry *entry, Bool_t enabled);
+
+}
 
 ClassImp(TGLViewerEditor);
 
-//______________________________________________________________________________
 TGLViewerEditor::TGLViewerEditor(const TGWindow *p,  Int_t width, Int_t height, UInt_t options, Pixel_t back) :
    TGedFrame(p,  width, height, options | kVerticalFrame, back),
    fGuidesFrame(0),
@@ -99,11 +106,11 @@ TGLViewerEditor::~TGLViewerEditor()
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Connect signals to slots.
+
 void TGLViewerEditor::ConnectSignals2Slots()
 {
-   // Connect signals to slots.
-
    fClearColor->Connect("ColorSelected(Pixel_t)", "TGLViewerEditor", this, "DoClearColor(Pixel_t)");
    fIgnoreSizesOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoIgnoreSizesOnUpdate()");
    fResetCamerasOnUpdate->Connect("Toggled(Bool_t)", "TGLViewerEditor", this, "DoResetCamerasOnUpdate()");
@@ -137,6 +144,10 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fCamMode->Connect("Selected(Int_t)", "TGLViewerEditor", this, "DoCameraOverlay()");
    fCamOverlayOn->Connect("Clicked()", "TGLViewerEditor", this, "DoCameraOverlay()");
 
+   //
+   fRotateSceneOn->Connect("Clicked()", "TGLViewerEditor", this, "SetRotatorMode()");
+
+   fSceneRotDt->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotDt    ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotWPhi  ->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
    fARotATheta->Connect("ValueSet(Long_t)", "TGLViewerEditor", this, "UpdateRotator()");
@@ -157,21 +168,21 @@ void TGLViewerEditor::ConnectSignals2Slots()
    fInit = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initiate redraw of the viewer.
+
 void TGLViewerEditor::ViewerRedraw()
 {
-   // Initiate redraw of the viewer.
-
    if (gGLManager && fIsInPad)
       gGLManager->MarkForDirectCopy(fViewer->GetDev(), kTRUE);
    fViewer->RequestDraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets model or disables/hides viewer.
+
 void TGLViewerEditor::SetModel(TObject* obj)
 {
-   // Sets model or disables/hides viewer.
-
    fViewer = 0;
 
    fViewer = static_cast<TGLViewer *>(obj);
@@ -217,6 +228,7 @@ void TGLViewerEditor::SetModel(TObject* obj)
    {
       TGLAutoRotator *r = fViewer->GetAutoRotator();
 
+      fSceneRotDt->SetNumber(r->GetDeltaPhi());
       fARotDt    ->SetNumber(r->GetDt());
       fARotWPhi  ->SetNumber(r->GetWPhi());
       fARotATheta->SetNumber(r->GetATheta());
@@ -226,6 +238,16 @@ void TGLViewerEditor::SetModel(TObject* obj)
 
       fASavImageGUIBaseName->SetText(r->GetImageGUIBaseName());
       fASavImageGUIOutMode ->SetButton(r->GetImageGUIOutMode());
+
+      Bool_t rotate_standard = ! fViewer->GetAutoRotator()->GetRotateScene();
+      fRotateSceneOn->SetState(rotate_standard ? kButtonUp : kButtonDown);
+      SetLabeledNEntryState(fSceneRotDt, ! rotate_standard);
+      SetLabeledNEntryState(fARotDt,     rotate_standard);
+      SetLabeledNEntryState(fARotWPhi,   rotate_standard);
+      SetLabeledNEntryState(fARotATheta, rotate_standard);
+      SetLabeledNEntryState(fARotWTheta, rotate_standard);
+      SetLabeledNEntryState(fARotADolly, rotate_standard);
+      SetLabeledNEntryState(fARotWDolly, rotate_standard);
    }
 
    if (fViewer->GetStereo())
@@ -241,64 +263,64 @@ void TGLViewerEditor::SetModel(TObject* obj)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Clear-color was changed.
+
 void TGLViewerEditor::DoClearColor(Pixel_t color)
 {
-   // Clear-color was changed.
-
    fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TColor::GetColor(color)));
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ResetCamerasOnUpdate was toggled.
+
 void TGLViewerEditor::DoIgnoreSizesOnUpdate()
 {
-   // ResetCamerasOnUpdate was toggled.
-
    fViewer->SetIgnoreSizesOnUpdate(fIgnoreSizesOnUpdate->IsOn());
    if (fIgnoreSizesOnUpdate->IsOn())
       fViewer->UpdateScene();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// ResetCamerasOnUpdate was toggled.
+
 void TGLViewerEditor::DoResetCamerasOnUpdate()
 {
-   // ResetCamerasOnUpdate was toggled.
-
    fViewer->SetResetCamerasOnUpdate(fResetCamerasOnUpdate->IsOn());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// UpdateScene was clicked.
+
 void TGLViewerEditor::DoUpdateScene()
 {
-   // UpdateScene was clicked.
-
    fViewer->UpdateScene();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// CameraHome was clicked.
+
 void TGLViewerEditor::DoCameraHome()
 {
-   // CameraHome was clicked.
-
    fViewer->ResetCurrentCamera();
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for fMaxSceneDrawTimeHQ and fMaxSceneDrawTimeLQ.
+
 void TGLViewerEditor::UpdateMaxDrawTimes()
 {
-   // Slot for fMaxSceneDrawTimeHQ and fMaxSceneDrawTimeLQ.
-
    fViewer->SetMaxSceneDrawTimeHQ(fMaxSceneDrawTimeHQ->GetNumber());
    fViewer->SetMaxSceneDrawTimeLQ(fMaxSceneDrawTimeLQ->GetNumber());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for point-sizes and line-widths.
+
 void TGLViewerEditor::UpdatePointLineStuff()
 {
-   // Slot for point-sizes and line-widths.
-
    fViewer->SetPointScale(fPointSizeScale->GetNumber());
    fViewer->SetLineScale (fLineWidthScale->GetNumber());
    fViewer->SetSmoothPoints(fPointSmooth->IsDown());
@@ -308,11 +330,11 @@ void TGLViewerEditor::UpdatePointLineStuff()
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update viewer with GUI state.
+
 void TGLViewerEditor::DoCameraOverlay()
 {
-   // Update viewer with GUI state.
-
    TGLCameraOverlay* co = fViewer->GetCameraOverlay();
 
    if (fViewer->CurrentCamera().IsPerspective())
@@ -328,11 +350,11 @@ void TGLViewerEditor::DoCameraOverlay()
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set external camera center.
+
 void TGLViewerEditor::DoCameraCenterExt()
 {
-   // Set external camera center.
-
    TGLCamera& cam = fViewer->CurrentCamera();
    cam.SetExternalCenter(fCameraCenterExt->IsDown());
 
@@ -343,47 +365,47 @@ void TGLViewerEditor::DoCameraCenterExt()
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Capture camera-center via picking.
+
 void TGLViewerEditor::DoCaptureCenter()
 {
-   // Capture camera-center via picking.
-
    fViewer->PickCameraCenter();
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw camera center.
+
 void TGLViewerEditor::DoDrawCameraCenter()
 {
-   // Draw camera center.
-
    fViewer->SetDrawCameraCenter(fDrawCameraCenter->IsDown());
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update current camera with GUI state.
+
 void TGLViewerEditor::UpdateCameraCenter()
 {
-   // Update current camera with GUI state.
-
    TGLCamera& cam = fViewer->CurrentCamera();
    cam.SetCenterVec(fCameraCenterX->GetNumber(), fCameraCenterY->GetNumber(), fCameraCenterZ->GetNumber());
    ViewerRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create annotation via picking.
+
 void TGLViewerEditor::DoAnnotation()
 {
-   // Create annotation via picking.
-
    fViewer->PickAnnotate();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update viewer with GUI state.
+
 void TGLViewerEditor::UpdateViewerAxes(Int_t id)
 {
-   // Update viewer with GUI state.
-
    if(id < 4)
    {
       fAxesType = id -1;
@@ -401,22 +423,22 @@ void TGLViewerEditor::UpdateViewerAxes(Int_t id)
    UpdateReferencePosState();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update viewer with GUI state.
+
 void TGLViewerEditor::UpdateViewerReference()
 {
-   // Update viewer with GUI state.
-
    const Double_t refPos[] = {fReferencePosX->GetNumber(), fReferencePosY->GetNumber(), fReferencePosZ->GetNumber()};
    fViewer->SetGuideState(fAxesType,  fAxesContainer->GetButton(4)->IsDown(), fReferenceOn->IsDown(), refPos);
    UpdateReferencePosState();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Helper function to create fixed width TGLabel and TGNumberEntry in same row.
+
 TGNumberEntry* TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
                                                   Int_t labelw,Int_t nd, Int_t style)
 {
-   // Helper function to create fixed width TGLabel and TGNumberEntry in same row.
-
    TGHorizontalFrame *rfr   = new TGHorizontalFrame(p);
    TGHorizontalFrame *labfr = new TGHorizontalFrame(rfr, labelw, 20, kFixedSize);
    TGLabel           *lab   = new TGLabel(labfr, name);
@@ -430,11 +452,11 @@ TGNumberEntry* TGLViewerEditor::MakeLabeledNEntry(TGCompositeFrame* p, const cha
    return ne;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates "Style" tab.
+
 void TGLViewerEditor::CreateStyleTab()
 {
-   // Creates "Style" tab.
-
    MakeTitle("Update behaviour");
    fIgnoreSizesOnUpdate  = new TGCheckButton(this, "Ignore sizes");
    fIgnoreSizesOnUpdate->SetToolTipText("Ignore bounding-box sizes on scene update");
@@ -488,10 +510,11 @@ void TGLViewerEditor::CreateStyleTab()
    fOLLineWidth->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.1, 16);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create "Guides" tab.
+
 void TGLViewerEditor::CreateGuidesTab()
 {
-   // Create "Guides" tab.
    fGuidesFrame = CreateEditorTabSubFrame("Guides");
 
    // external camera look at point
@@ -552,11 +575,11 @@ void TGLViewerEditor::CreateGuidesTab()
    fCamContainer->AddFrame(chf);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create GUI controls - clip type (none/plane/box) and plane/box properties.
+
 void TGLViewerEditor::CreateClippingTab()
 {
-   // Create GUI controls - clip type (none/plane/box) and plane/box properties.
-
    fClipFrame = CreateEditorTabSubFrame("Clipping");
 
    fClipSet = new TGLClipSetSubEditor(fClipFrame);
@@ -564,11 +587,11 @@ void TGLViewerEditor::CreateClippingTab()
    fClipFrame->AddFrame(fClipSet, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 2, 0, 0, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create Extra Tab controls - camera rotator and stereo.
+
 void TGLViewerEditor::CreateExtrasTab()
 {
-   // Create Extra Tab controls - camera rotator and stereo.
-
    Int_t labw = 80;
 
    TGCompositeFrame *tab = CreateEditorTabSubFrame("Extras"), *p = 0;
@@ -576,6 +599,14 @@ void TGLViewerEditor::CreateExtrasTab()
    // ----- Auto rotator -----
 
    p = new TGGroupFrame(tab, "Auto rotator", kVerticalFrame);
+
+   //
+   fRotateSceneOn = new TGCheckButton(p, "Rotate all objects");
+   fRotateSceneOn->SetToolTipText("This covers a very specific use-case and is most likely not what you need.\nProceed at your own risk. Sorry about that.");
+   p->AddFrame(fRotateSceneOn, new TGLayoutHints(kLHintsLeft, 4, 1, 1, 1));
+
+   fSceneRotDt = MakeLabeledNEntry(p, "Delta Phi:", labw, 5, TGNumberFormat::kNESRealThree);
+   fSceneRotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.005, 0.06);
 
    fARotDt = MakeLabeledNEntry(p, "Delta T:", labw, 5, TGNumberFormat::kNESRealThree);
    fARotDt->SetLimits(TGNumberFormat::kNELLimitMinMax, 0.001, 1);
@@ -660,22 +691,22 @@ void TGLViewerEditor::CreateExtrasTab()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Enable/disable reference position (x/y/z) number edits based on
+/// reference check box.
+
 void TGLViewerEditor::UpdateReferencePosState()
 {
-   // Enable/disable reference position (x/y/z) number edits based on
-   // reference check box.
-
    fReferencePosX->SetState(fReferenceOn->IsDown());
    fReferencePosY->SetState(fReferenceOn->IsDown());
    fReferencePosZ->SetState(fReferenceOn->IsDown());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Configuration of guides GUI called from SetModel().
+
 void TGLViewerEditor::SetGuides()
 {
-   // Configuration of guides GUI called from SetModel().
-
    Bool_t axesDepthTest = kFALSE;
    Bool_t referenceOn = kFALSE;
    Double_t referencePos[3] = {0.};
@@ -726,60 +757,98 @@ void TGLViewerEditor::SetGuides()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
+void TGLViewerEditor::SetRotatorMode()
+{
+   if (TGLAutoRotator * const r = fViewer->GetAutoRotator()) {
+      r->Stop();
+
+      if (fRotateSceneOn->IsOn()) {
+         r->SetDeltaPhi(fSceneRotDt->GetNumber());
+
+         SetLabeledNEntryState(fSceneRotDt, kTRUE);
+         SetLabeledNEntryState(fARotDt, kFALSE);
+         SetLabeledNEntryState(fARotWPhi, kFALSE);
+         SetLabeledNEntryState(fARotATheta, kFALSE);
+         SetLabeledNEntryState(fARotWTheta, kFALSE);
+         SetLabeledNEntryState(fARotADolly, kFALSE);
+         SetLabeledNEntryState(fARotWDolly, kFALSE);
+      } else {
+         SetLabeledNEntryState(fSceneRotDt, kFALSE);
+         SetLabeledNEntryState(fARotDt, kTRUE);
+         SetLabeledNEntryState(fARotWPhi, kTRUE);
+         SetLabeledNEntryState(fARotATheta, kTRUE);
+         SetLabeledNEntryState(fARotWTheta, kTRUE);
+         SetLabeledNEntryState(fARotADolly, kTRUE);
+         SetLabeledNEntryState(fARotWDolly, kTRUE);
+      }
+
+      r->SetRotateScene(fRotateSceneOn->IsOn());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Update rotator related variables.
+
 void TGLViewerEditor::UpdateRotator()
 {
-   // Update rotator related variables.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
-
-   r->SetDt    (fARotDt->GetNumber());
-   r->SetWPhi  (fARotWPhi->GetNumber());
-   r->SetATheta(fARotATheta->GetNumber());
-   r->SetWTheta(fARotWTheta->GetNumber());
-   r->SetADolly(fARotADolly->GetNumber());
-   r->SetWDolly(fARotWDolly->GetNumber());
+   if (fRotateSceneOn->IsOn()) {
+      r->SetDeltaPhi(fSceneRotDt->GetNumber());
+   } else {
+      r->SetDt    (fARotDt->GetNumber());
+      r->SetWPhi  (fARotWPhi->GetNumber());
+      r->SetATheta(fARotATheta->GetNumber());
+      r->SetWTheta(fARotWTheta->GetNumber());
+      r->SetADolly(fARotADolly->GetNumber());
+      r->SetWDolly(fARotWDolly->GetNumber());
+   }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start auto-rotator.
+
 void TGLViewerEditor::DoRotatorStart()
 {
-   // Start auto-rotator.
+   TGLAutoRotator *r = fViewer->GetAutoRotator();
+   if (!r->IsRunning())
+      r->SetRotateScene(fRotateSceneOn->IsOn());
 
-   fViewer->GetAutoRotator()->Start();
+   r->Start();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop auto-rotator.
+
 void TGLViewerEditor::DoRotatorStop()
 {
-   // Stop auto-rotator.
-
    fViewer->GetAutoRotator()->Stop();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update base-name.
+
 void TGLViewerEditor::DoASavImageGUIBaseName(const char* t)
 {
-   // Update base-name.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
    r->SetImageGUIBaseName(t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update output mode.
+
 void TGLViewerEditor::DoASavImageGUIOutMode(Int_t m)
 {
-   // Update output mode.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
    r->SetImageGUIOutMode(m);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Start auto-rotator image auto-save.
+
 void TGLViewerEditor::DoASavImageStart()
 {
-   // Start auto-rotator image auto-save.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
    if (r->GetImageAutoSave())
    {
@@ -790,11 +859,11 @@ void TGLViewerEditor::DoASavImageStart()
    r->StartImageAutoSaveWithGUISettings();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stop auto-rotator image auto-save.
+
 void TGLViewerEditor::DoASavImageStop()
 {
-   // Stop auto-rotator image auto-save.
-
    TGLAutoRotator *r = fViewer->GetAutoRotator();
    if (!r->GetImageAutoSave())
    {
@@ -805,13 +874,85 @@ void TGLViewerEditor::DoASavImageStop()
    r->StopImageAutoSave();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Update stereo related variables.
+
 void TGLViewerEditor::UpdateStereo()
 {
-   // Update stereo related variables.
-
    fViewer->SetStereoZeroParallax  (fStereoZeroParallax->GetNumber());
    fViewer->SetStereoEyeOffsetFac  (fStereoEyeOffsetFac->GetNumber());
    fViewer->SetStereoFrustumAsymFac(fStereoFrustumAsymFac->GetNumber());
    ViewerRedraw();
+}
+
+//Aux. functions that do not have to be members.
+
+namespace {
+
+//Here's how we create a number entry and its label:
+
+//   TGHorizontalFrame *rfr   = new TGHorizontalFrame(p);
+//   TGHorizontalFrame *labfr = new TGHorizontalFrame(rfr, labelw, 20, kFixedSize);
+//   TGLabel           *lab   = new TGLabel(labfr, name);
+//   labfr->AddFrame(lab, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0) );
+//   rfr->AddFrame(labfr, new TGLayoutHints(kLHintsLeft | kLHintsBottom, 0, 0, 0));
+//
+//   TGNumberEntry* ne = new TGNumberEntry(rfr, 0.0f, nd, -1, (TGNumberFormat::EStyle)style);
+//   rfr->AddFrame(ne, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsBottom, 2, 0, 0));
+//
+//   p->AddFrame(rfr, new TGLayoutHints(kLHintsLeft, 0, 0, 1, 0));
+
+////////////////////////////////////////////////////////////////////////////////
+
+TGLabel *FindLabelForNEntry(TGNumberEntry *entry)
+{
+   if (!entry) {
+      //I would prefer an assert here.
+      ::Error("FindLabelForNEntry", "parameter 'entry' is null");
+      return 0;
+   }
+
+   TGLabel *label = 0;
+
+   if (const TGHorizontalFrame * const grandpa = dynamic_cast<const TGHorizontalFrame *>(entry->GetParent())) {
+      if (TList * const parents = grandpa->GetList()) {
+         TIter next1(parents);
+         while (TGFrameElement * const frameElement = dynamic_cast<TGFrameElement *>(next1())) {
+            if (TGHorizontalFrame * const parent = dynamic_cast<TGHorizontalFrame *>(frameElement->fFrame)) {
+               if (TList * const children = parent->GetList()) {
+                  TIter next2(children);
+                  while (TGFrameElement * const candidate = dynamic_cast<TGFrameElement *>(next2())) {
+                     if ((label = dynamic_cast<TGLabel *>(candidate->fFrame)))
+                        break;
+                  }
+               }
+            }
+
+            if (label)
+               break;
+         }
+      }
+   }
+
+   return label;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///This is quite an ugly hack but still not as ugly as having 5-6 additional
+///TGLabels as data members.
+
+void SetLabeledNEntryState(TGNumberEntry *entry, Bool_t enabled)
+{
+   if (!entry) {
+      //I would prefer an assert here.
+      ::Error("SetLabeledNEntryState", "parameter 'entry' is null");
+      return;
+   }
+
+   entry->SetState(enabled);
+   if (TGLabel * const label = FindLabelForNEntry(entry))
+      //Wah!
+      label->Disable(!enabled);
+}
+
 }

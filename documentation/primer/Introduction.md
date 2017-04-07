@@ -1,6 +1,6 @@
 # Motivation and Introduction #
 
-***Welcome to data analysis!*** [^1]
+***Welcome to data analysis!***
 
 Comparison of measurements to theoretical models is one of the standard
 tasks in experimental physics. In the most simple case, a "model" is
@@ -18,7 +18,7 @@ should be provided - think for example of an integral or peak-search or
 a Fourier transformation applied to an input spectrum to obtain the
 actual measurement described by the model.
 
-One specialty of experimental physics are the inevitable errors
+One specialty of experimental physics are the inevitable uncertaintes
 affecting each measurement, and visualisation tools have to include
 these. In subsequent analysis, the statistical nature of the errors must
 be handled properly.
@@ -29,17 +29,17 @@ example of a function (model) fit to data points. Several standard methods are
 available, and a data analysis tool should provide easy access to more
 than one of them. Means to quantify the level of agreement between
 measurements and model must also be available.
-
+<!--
 [f11]: figures/examplefit.png "f11"
 <a name="f11"></a>
 
 ![Measured data points with error bars and fitted quadratic
-function.\label{f11}][f11]
+function.\label{f11}][f11]-->
 
 Quite often, the data volume to be analyzed is large - think of
 fine-granular measurements accumulated with the aid of computers. A
 usable tool therefore must contain easy-to-use and efficient methods for
-data handling.
+storing and handling data.
 
 In Quantum mechanics, models typically only predict the probability
 density function ("pdf") of measurements depending on a number of
@@ -57,49 +57,41 @@ be validated or compared. In many cases, the distribution of the
 measurement errors is not precisely known, and simulation offers the
 possibility to test the effects of different assumptions.
 
-## Welcome to ROOT ##
-
 A powerful software framework addressing all of the above requirements
-is ROOT [@ROOT], an open source project coordinated by the European
-Organisation for Nuclear Research, CERN in Geneva. ROOT is very flexible
-and provides both a programming interface to use in own applications and
-a graphical user interface for interactive data analysis. The purpose of
-this document is to serve as a beginners guide and provides extendable
+is ROOT, an open source project coordinated by the European Organisation for
+Nuclear Research, CERN in Geneva.
+
+ROOT is very flexible and provides both a programming interface to use in own
+applications and a graphical user interface for interactive data analysis. The
+purpose of this document is to serve as a beginners guide and provides extendable
 examples for your own use cases, based on typical problems addressed in
 student labs. This guide will hopefully lay the ground for more complex
 applications in your future scientific work building on a modern,
 state-of the art tool for data analysis.
 
-This guide in form of a tutorial is intended to introduce you to the
-ROOT package in about *30* pages. This goal will be accomplished using
-concrete examples, according to the "learning by doing" principle. Also
-because of this reason, this guide cannot cover the complexity of the
-ROOT package. Nevertheless, once you feel confident with the concepts
-presented in the following chapters, you will be able to appreciate the
-ROOT Users Guide [@ROOT_Users_Guide] and navigate through the Class
-Reference [@ROOT_Class_Reference] to find all the details you might be
+This guide in form of a tutorial is intended to introduce you quickly to the
+ROOT package. This goal will be accomplished using concrete examples, according
+to the "learning by doing" principle. Also because of this reason, this guide
+cannot cover all the complexity of the ROOT package. Nevertheless, once you feel
+confident with the concepts presented in the following chapters, you will be
+able to appreciate the ROOT Users Guide [@ROOT_Users_Guide] and navigate through
+the Class Reference [@ROOT_Class_Reference] to find all the details you might be
 interested in. You can even look at the code itself, since ROOT is a
 free, open-source product. Use these documents in parallel to this
 tutorial!
 
-The ROOT Data Analysis Framework itself is written in and heavily relys
-on the programming language `C++`, and therefore some knowledge about
-`C` and `C++` is required. Eventually, just profit from the immense
-available literature about `C++` if you do not have any idea of what
-object oriented programming could be.
+The ROOT Data Analysis Framework itself is written in and heavily relies
+on the `C++` programming language: some knowledge about `C++` is required.
+Jus take advantage from the immense available literature about `C++` if you do
+not have any idea of what this language is about.
 
 ROOT is available for many platforms (Linux, Mac OS X, Windows...), but
 in this guide we will implicitly assume that you are using Linux. The
-first thing you need to do with ROOT is install it, don't you? Obtaining
+first thing you need to do with ROOT is install it, don't you ? Obtaining
 the latest ROOT version is straightforward. Just seek the "Pro" version
-on this webpage <http://root.cern.ch/drupal/content/downloading-root>.
+on this webpage <http://root.cern.ch/downloading-root>.
 You will find precompiled versions for the different architectures, or
 the ROOT source code to compile yourself. Just pick up the flavour you
 need and follow the installation instructions.
 
 **Let's dive into ROOT!**
-
-[^1]: This guide was prepared for the ROOT IRMM Tutorial adapting "A
-    ROOT Guide for Students"
-    <http://www-ekp.physik.uni-karlsruhe.de/~quast>, a document by D.
-    Piparo, G. Quast and M. Zeise.

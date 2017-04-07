@@ -20,6 +20,7 @@
 #include <assert.h>
 #include "RooRefCountList.h"
 #include "RooSharedProperties.h"
+#include <map>
 
 class RooSharedPropertiesList : public TObject {
 public:
@@ -33,6 +34,7 @@ public:
 protected:
 
   RooRefCountList _propList ;
+   std::map<std::string, RooSharedProperties *> _newPropList; 
 
   ClassDef(RooSharedPropertiesList,0) // Manager for shared properties among clones of certain RooAbsArg-derived types
 };

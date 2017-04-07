@@ -5,10 +5,6 @@
 
 set(libname GeomBuilder)
 
-ROOT_USE_PACKAGE(geom/geom)
-ROOT_USE_PACKAGE(gui/gui)
-ROOT_USE_PACKAGE(gui/ged)
-
 set(headers TGeoVolumeEditor.h TGeoBBoxEditor.h TGeoMediumEditor.h
             TGeoNodeEditor.h TGeoMatrixEditor.h TGeoManagerEditor.h
             TGeoTubeEditor.h TGeoConeEditor.h TGeoTrd1Editor.h

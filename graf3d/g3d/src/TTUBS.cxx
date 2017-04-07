@@ -19,79 +19,77 @@
 
 ClassImp(TTUBS)
 
+/** \class TTUBS
+\ingroup g3d
+A segment of a tube.
 
-//______________________________________________________________________________
-// Begin_Html <P ALIGN=CENTER> <IMG SRC="gif/tubs.gif"> </P> End_Html
-// TUBS is a segment of a tube. It has 8 parameters:
-//
-//     - name       name of the shape
-//     - title      shape's title
-//     - material  (see TMaterial)
-//     - rmin       inside radius
-//     - rmax       outside radius
-//     - dz         half length in z
-//     - phi1       starting angle of the segment
-//     - phi2       ending angle of the segment
-//
-//
-// NOTE: phi1 should be smaller than phi2. If this is not the case,
-//       the system adds 360 degrees to phi2.
+\image html g3d_tubs.png
+
+It has 8 parameters:
+
+  - name:       name of the shape
+  - title:      shape's title
+  - material:  (see TMaterial)
+  - rmin:       inside radius
+  - rmax:       outside radius
+  - dz:         half length in z
+  - phi1:       starting angle of the segment
+  - phi2:       ending angle of the segment
 
 
-//______________________________________________________________________________
+NOTE: phi1 should be smaller than phi2. If this is not the case,
+the system adds 360 degrees to phi2.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape default constructor
+
 TTUBS::TTUBS()
 {
-   // TUBS shape default constructor
-
    fPhi1 = 0.;
    fPhi2 = 0.;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape normal constructor
 
-//______________________________________________________________________________
 TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t rmin,
              Float_t rmax, Float_t dz, Float_t phi1, Float_t phi2)
       : TTUBE(name,title,material,rmin,rmax,dz)
 {
-   // TUBS shape normal constructor
-
    fPhi1 = phi1;
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape "simplified" constructor
 
-//______________________________________________________________________________
 TTUBS::TTUBS(const char *name, const char *title, const char *material, Float_t rmax, Float_t dz,
                Float_t phi1, Float_t phi2)
       : TTUBE(name,title,material,rmax,dz)
 {
-   // TUBS shape "simplified" constructor
-
    fPhi1 = phi1;
    fPhi2 = phi2;
    MakeTableOfCoSin();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Make table of sine and cosine.
 
-//______________________________________________________________________________
 void TTUBS::MakeTableOfCoSin() const
 {
-   // Make table of sine and cosine.
-
    const Double_t pi  = TMath::ATan(1) * 4.0;
    const Double_t ragrad  = pi/180.0;
 
    Int_t j;
    Int_t n = GetNumberOfDivisions () + 1;
 
-   if (fCoTab)
-      delete [] fCoTab; // Delete the old tab if any
-      fCoTab = new Double_t [n];
+   if (fCoTab) delete [] fCoTab; // Delete the old tab if any
+   fCoTab = new Double_t [n];
    if (!fCoTab ) return;
 
-   if (fSiTab)
-      delete [] fSiTab; // Delete the old tab if any
+   if (fSiTab) delete [] fSiTab; // Delete the old tab if any
    fSiTab = new Double_t [n];
    if (!fSiTab ) return;
 
@@ -112,33 +110,31 @@ void TTUBS::MakeTableOfCoSin() const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TUBS shape default destructor
 
-//______________________________________________________________________________
 TTUBS::~TTUBS()
 {
-   // TUBS shape default destructor
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a TUBE
+///
+/// Compute the closest distance of approach from point px,py to each
+/// computed outline point of the TUBE.
 
-//______________________________________________________________________________
 Int_t TTUBS::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a TUBE
-   //
-   // Compute the closest distance of approach from point px,py to each
-   // computed outline point of the TUBE.
-
    Int_t n = GetNumberOfDivisions()+1;
    Int_t numPoints = n*4;
    return ShapeDistancetoPrimitive(numPoints,px,py);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create TUBS points
 
-//______________________________________________________________________________
 void TTUBS::SetPoints(Double_t *points) const
 {
-   // Create TUBS points
-
    Int_t j, n;
    Int_t indx = 0;
    Float_t dz = TTUBE::fDz;
@@ -168,12 +164,11 @@ void TTUBS::SetPoints(Double_t *points) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return total X3D needed by TNode::ls (when called with option "x")
 
-//______________________________________________________________________________
 void TTUBS::Sizeof3D() const
 {
-   // Return total X3D needed by TNode::ls (when called with option "x")
-
    Int_t n = GetNumberOfDivisions()+1;
 
    gSize3D.numPoints += n*4;
@@ -181,12 +176,11 @@ void TTUBS::Sizeof3D() const
    gSize3D.numPolys  += n*4-2;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get buffer 3d.
 
-//_______________________________________________________________________
 const TBuffer3D & TTUBS::GetBuffer3D(Int_t reqSections) const
 {
-   // Get buffer 3d.
-
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    TShape::FillBuffer3D(buffer, reqSections);

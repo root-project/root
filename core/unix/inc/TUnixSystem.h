@@ -21,20 +21,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
 
 typedef void (*SigHandler_t)(ESignals);
 
 
 class TUnixSystem : public TSystem {
+
+private:
+   void FillWithCwd(char *cwd) const;
 
 protected:
    const char    *FindDynamicLibrary(TString &lib, Bool_t quiet = kFALSE);
@@ -45,6 +42,7 @@ protected:
    static void        *UnixOpendir(const char *name);
    static const char  *UnixGetdirentry(void *dir);
    static const char  *UnixHomedirectory(const char *user = 0);
+   static const char  *UnixHomedirectory(const char *user, char *path, char *mydir);
    static Long64_t     UnixNow();
    static int          UnixWaitchild();
    static int          UnixSetitimer(Long_t ms);
@@ -129,7 +127,9 @@ public:
    const char       *GetDirEntry(void *dirp);
    Bool_t            ChangeDirectory(const char *path);
    const char       *WorkingDirectory();
+   std::string       GetWorkingDirectory() const;
    const char       *HomeDirectory(const char *userName = 0);
+   std::string       GetHomeDirectory(const char *userName = 0) const;
    const char       *TempDirectory() const;
    FILE             *TempFileName(TString &base, const char *dir = 0);
 

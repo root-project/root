@@ -9,13 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TTime                                                                //
-//                                                                      //
-// Basic time type with millisecond precision.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TTime
+\ingroup Base
+
+Basic time type with millisecond precision.
+*/
 
 #include "TTime.h"
 #include "TString.h"
@@ -24,15 +22,16 @@
 
 ClassImp(TTime)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the time as a string.
+
 const char *TTime::AsString() const
 {
-   // Return the time as a string.
-
    return Form("%lld", fMilliSec);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TTime::operator long() const
 {
 #ifndef R__B64
@@ -42,7 +41,8 @@ TTime::operator long() const
    return (Long_t) fMilliSec;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 TTime::operator unsigned long() const
 {
 #ifndef R__B64

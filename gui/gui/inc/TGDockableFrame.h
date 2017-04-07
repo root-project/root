@@ -24,21 +24,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
-#ifndef ROOT_TGWindow
 #include "TGWindow.h"
-#endif
 
 
 class TGDockableFrame;
@@ -117,7 +109,7 @@ protected:
    TGDockButton     *fDockButton;    // dock button
    TGDockHideButton *fHideButton;    // hide button
    TGUndockedFrame  *fFrame;         // undocked frame
-   TGLayoutHints    *fCl, *fHints;   // layout hints
+   TGLayoutHints    *fHints;         // layout hints
    TGLayoutHints    *fLb, *fLc;      // layout hints
 
 public:

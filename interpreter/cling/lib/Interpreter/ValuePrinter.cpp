@@ -14,6 +14,8 @@
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Output.h"
+#include "cling/Utils/Validation.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -22,412 +24,799 @@
 #include "clang/AST/Type.h"
 #include "clang/Frontend/CompilerInstance.h"
 
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/Support/Format.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 
+#include <locale>
 #include <string>
-#include <sstream>
-#include <cstdio>
 
-// Fragment copied from LLVM's raw_ostream.cpp
-#if defined(_MSC_VER)
-#ifndef STDIN_FILENO
-# define STDIN_FILENO 0
-#endif
-#ifndef STDOUT_FILENO
-# define STDOUT_FILENO 1
-#endif
-#ifndef STDERR_FILENO
-# define STDERR_FILENO 2
-#endif
+// GCC 4.x doesn't have the proper UTF-8 conversion routines. So use the
+// LLVM conversion routines (which require a buffer 4x string length).
+#if !defined(__GLIBCXX__) || (__GNUC__ >= 5)
+ #include <codecvt>
 #else
-//#if defined(HAVE_UNISTD_H)
-# include <unistd.h>
-//#endif
+ #define LLVM_UTF8
+ #include "llvm/Support/ConvertUTF.h"
 #endif
 
 using namespace cling;
 
 // Implements the CValuePrinter interface.
-extern "C" void cling_PrintValue(void* /*cling::Value**/ V) {
+extern "C" void cling_PrintValue(void * /*cling::Value**/ V) {
   //Value* value = (Value*)V;
 
-  // We need stream that doesn't close its file descriptor, thus we are not
-  // using llvm::outs. Keeping file descriptor open we will be able to use
-  // the results in pipes (Savannah #99234).
-  //llvm::raw_fd_ostream outs (STDOUT_FILENO, /*ShouldClose*/false);
-
-  //std::string typeStr = printType(value->getPtr(), value->getPtr(), *value);
-  //std::string valueStr = printValue(value->getPtr(), value->getPtr(), *value);
+  //std::string typeStr = printTypeInternal(*value);
+  //std::string valueStr = printValueInternal(*value);
 }
 
+// Exported for RuntimePrintValue.h
+namespace cling {
+  namespace valuePrinterInternal {
+    extern const char* const kEmptyCollection = "{}";
+  }
+}
 
-static void StreamValue(llvm::raw_ostream& o, const void* V, clang::QualType QT,
-                        cling::Interpreter& interp);
+namespace {
 
-static void StreamChar(llvm::raw_ostream& o, const char v) {
-  if (isprint(v))
-    o << '\'' << v << '\'';
+const static char
+  * const kNullPtrStr = "nullptr",
+  * const kNullPtrTStr = "nullptr_t",
+  * const kTrueStr = "true",
+  * const kFalseStr = "false",
+  * const kInvalidAddr = " <invalid memory address>";
+
+static std::string enclose(std::string Mid, const char* Begin,
+                           const char* End, size_t Hint = 0) {
+  Mid.reserve(Mid.size() + Hint ? Hint : (::strlen(Begin) + ::strlen(End)));
+  Mid.insert(0, Begin);
+  Mid.append(End);
+  return Mid;
+}
+
+static std::string enclose(const clang::QualType& Ty, clang::ASTContext& C,
+                           const char* Begin = "(", const char* End = "*)",
+                           size_t Hint = 3) {
+  return enclose(cling::utils::TypeName::GetFullyQualifiedName(Ty, C),
+                 Begin, End, Hint);
+}
+
+static std::string getTypeString(const Value &V) {
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType Ty = V.getType().getDesugaredType(C).getNonReferenceType();
+
+  if (llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType()))
+    return enclose(Ty, C);
+
+  if (Ty->isPointerType()) {
+    // Print char pointers as strings.
+    if (Ty->getPointeeType()->isCharType())
+      return enclose(Ty, C);
+
+    // Fallback to void pointer for other pointers and print the address.
+    return "(const void**)";
+  }
+  if (Ty->isArrayType()) {
+    const clang::ArrayType *ArrTy = Ty->getAsArrayTypeUnsafe();
+    clang::QualType ElementTy = ArrTy->getElementType();
+    if (Ty->isConstantArrayType()) {
+      const clang::ConstantArrayType *CArrTy = C.getAsConstantArrayType(Ty);
+      const llvm::APInt &APSize = CArrTy->getSize();
+
+      // typeWithOptDeref example for int[40] array: "((int(*)[40])*(void**)0x5c8f260)"
+      return enclose(ElementTy, C, "(", "(*)[", 5) +
+                     std::to_string(APSize.getZExtValue()) + "])*(void**)";
+    }
+    return "(void**)";
+  }
+  if (Ty->isObjCObjectPointerType())
+    return "(const void**)";
+
+  // In other cases, dereference the address of the object.
+  // If no overload or specific template matches,
+  // the general template will be used which only prints the address.
+  return enclose(Ty, C, "*(", "**)", 5);
+}
+
+/// RAII object to disable and then re-enable access control in the LangOptions.
+struct AccessCtrlRAII_t {
+  bool savedAccessControl;
+  clang::LangOptions& LangOpts;
+
+  AccessCtrlRAII_t(cling::Interpreter& Interp):
+    LangOpts(const_cast<clang::LangOptions&>(Interp.getCI()->getLangOpts())) {
+    savedAccessControl = LangOpts.AccessControl;
+    LangOpts.AccessControl = false;
+  }
+
+  ~AccessCtrlRAII_t() {
+    LangOpts.AccessControl = savedAccessControl;
+  }
+
+};
+
+#ifndef NDEBUG
+/// Is typenam parsable?
+bool canParseTypeName(cling::Interpreter& Interp, llvm::StringRef typenam) {
+
+  AccessCtrlRAII_t AccessCtrlRAII(Interp);
+
+  cling::Interpreter::CompilationResult Res
+    = Interp.declare("namespace { void* cling_printValue_Failure_Typename_check"
+                     " = (void*)" + typenam.str() + "nullptr; }");
+  if (Res != cling::Interpreter::kSuccess)
+    cling::errs() << "ERROR in cling::executePrintValue(): "
+                     "this typename cannot be spelled.\n";
+  return Res == cling::Interpreter::kSuccess;
+}
+#endif
+
+static std::string printDeclType(const clang::QualType& QT,
+                                 const clang::NamedDecl* D) {
+  if (!QT.hasQualifiers())
+    return D->getQualifiedNameAsString();
+  return QT.getQualifiers().getAsString() + " " + D->getQualifiedNameAsString();
+}
+
+static std::string printQualType(clang::ASTContext& Ctx, clang::QualType QT) {
+  using namespace clang;
+  const QualType QTNonRef = QT.getNonReferenceType();
+
+  std::string ValueTyStr("(");
+  if (const TagType *TTy = dyn_cast<TagType>(QTNonRef))
+    ValueTyStr += printDeclType(QTNonRef, TTy->getDecl());
+  else if (const RecordType *TRy = dyn_cast<RecordType>(QTNonRef))
+    ValueTyStr += printDeclType(QTNonRef, TRy->getDecl());
   else {
-    o << "\\0x";
-    o.write_hex(v);
-  }
-}
-
-static void StreamCharPtr(llvm::raw_ostream& o, const char* const v) {
-  if (!v) {
-    o << "<<<NULL>>>";
-    return;
-  }
-  o << '"';
-  const char* p = v;
-  for (;*p && p - v < 128; ++p) {
-    o << *p;
-  }
-  if (*p) o << "\"...";
-  else o << "\"";
-}
-
-static void StreamRef(llvm::raw_ostream& o, const void** V, clang::QualType Ty,
-                       cling::Interpreter& interp){
-  const clang::ReferenceType* RTy = llvm::dyn_cast<clang::ReferenceType>(Ty);
-  StreamValue(o, *V, RTy->getPointeeTypeAsWritten(), interp);
-}
-
-static void StreamPtr(llvm::raw_ostream& o, const void* v) {
-  o << v;
-}
-
-static void StreamArr(llvm::raw_ostream& o, const void* V, clang::QualType Ty,
-                      cling::Interpreter& interp) {
-  clang::ASTContext& C = interp.getCI()->getASTContext();
-  const clang::ArrayType* ArrTy = Ty->getAsArrayTypeUnsafe();
-  clang::QualType ElementTy = ArrTy->getElementType();
-  if (ElementTy->isCharType())
-    StreamCharPtr(o, (const char*)V);
-  else if (Ty->isConstantArrayType()) {
-    // Stream a constant array by streaming up to 5 elements.
-    const clang::ConstantArrayType* CArrTy
-      = C.getAsConstantArrayType(Ty);
-    const llvm::APInt& APSize = CArrTy->getSize();
-    size_t ElBytes = C.getTypeSize(ElementTy) / C.getCharWidth();
-    size_t Size = (size_t)APSize.getZExtValue();
-    o << "{ ";
-    for (size_t i = 0; i < Size; ++i) {
-      // Handle the case of constant size array of pointers. Eg. const char*[]
-      if (ElementTy->isPointerType())
-        StreamValue(o, *(const char* const *)V + i * ElBytes, ElementTy, interp);
+    const QualType QTCanon = QTNonRef.getCanonicalType();
+    if (QTCanon->isBuiltinType() && !QTNonRef->isFunctionPointerType()
+        && !QTNonRef->isMemberPointerType()) {
+      ValueTyStr += QTCanon.getAsString(Ctx.getPrintingPolicy());
+    }
+    else if (const TypedefType* TDTy = dyn_cast<TypedefType>(QTNonRef)) {
+      // FIXME: TemplateSpecializationType & SubstTemplateTypeParmType checks are
+      // predominately to get STL containers to print nicer and might be better
+      // handled in GetFullyQualifiedName.
+      //
+      // std::vector<Type>::iterator is a TemplateSpecializationType
+      // std::vector<Type>::value_type is a SubstTemplateTypeParmType
+      //
+      QualType SSDesugar = TDTy->getLocallyUnqualifiedSingleStepDesugaredType();
+      if (dyn_cast<SubstTemplateTypeParmType>(SSDesugar))
+        ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTCanon, Ctx);
+      else if (dyn_cast<TemplateSpecializationType>(SSDesugar))
+        ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTNonRef, Ctx);
       else
-        StreamValue(o, (const char*)V + i * ElBytes, ElementTy, interp);
-
-      if (i + 1 < Size) {
-        if (i == 4) {
-          o << "...";
-          break;
-        }
-        else o << ", ";
-      }
+        ValueTyStr += printDeclType(QTNonRef, TDTy->getDecl());
     }
-    o << " }";
-  } else
-    StreamPtr(o, V);
-}
-
-static void StreamFunction(llvm::raw_ostream& o, const void* V,
-                           clang::QualType QT, cling::Interpreter& Interp) {
-  o << "Function @" << V << '\n';
-
-  clang::ASTContext& C = Interp.getCI()->getASTContext();
-  const Transaction* T = Interp.getLastTransaction();
-  assert(T->getWrapperFD() && "Must have a wrapper.");
-  clang::FunctionDecl* WrapperFD = T->getWrapperFD();
-
-  const clang::FunctionDecl* FD = 0;
-  // CE should be the setValueNoAlloc call expr.
-  if (const clang::CallExpr* CallE
-    = llvm::dyn_cast_or_null<clang::CallExpr>(
-                                  utils::Analyze::GetOrCreateLastExpr(WrapperFD,
-                                                                /*foundAtPos*/0,
-                                                                /*omitDS*/false,
-                                                          &Interp.getSema()))) {
-    if (const clang::FunctionDecl* FDsetValue
-        = llvm::dyn_cast_or_null<clang::FunctionDecl>(CallE->getCalleeDecl())){
-      if (FDsetValue->getNameAsString() == "setValueNoAlloc" &&
-          CallE->getNumArgs() == 5) {
-        const clang::Expr* Arg4 = CallE->getArg(4);
-        while (const clang::CastExpr* CastE
-               = clang::dyn_cast<clang::CastExpr>(Arg4))
-          Arg4 = CastE->getSubExpr();
-        if (const clang::DeclRefExpr* DeclRefExp
-            = llvm::dyn_cast<clang::DeclRefExpr>(Arg4))
-          FD = llvm::dyn_cast<clang::FunctionDecl>(DeclRefExp->getDecl());
-      }
-    }
-  }
-
-  if (FD) {
-    clang::SourceRange SRange = FD->getSourceRange();
-    const char* cBegin = 0;
-    const char* cEnd = 0;
-    bool Invalid;
-    if (SRange.isValid()) {
-      clang::SourceManager& SM = C.getSourceManager();
-      clang::SourceLocation LocBegin = SRange.getBegin();
-      LocBegin = SM.getExpansionRange(LocBegin).first;
-      o << "  at " << SM.getFilename(LocBegin);
-      unsigned LineNo = SM.getSpellingLineNumber(LocBegin, &Invalid);
-      if (!Invalid)
-        o << ':' << LineNo;
-      o << ":\n";
-      bool Invalid = false;
-      cBegin = SM.getCharacterData(LocBegin, &Invalid);
-      if (!Invalid) {
-        clang::SourceLocation LocEnd = SRange.getEnd();
-        LocEnd = SM.getExpansionRange(LocEnd).second;
-        cEnd = SM.getCharacterData(LocEnd, &Invalid);
-        if (Invalid)
-          cBegin = 0;
-      } else {
-        cBegin = 0;
-      }
-    }
-    if (cBegin && cEnd && cEnd > cBegin && cEnd - cBegin < 16 * 1024) {
-      o << llvm::StringRef(cBegin, cEnd - cBegin + 1);
-    } else {
-      const clang::FunctionDecl* FDef;
-      if (FD->hasBody(FDef))
-        FD = FDef;
-      FD->print(o);
-      //const clang::FunctionDecl* FD
-      //  = llvm::cast<const clang::FunctionType>(Ty)->getDecl();
-    }
-  }
-  // type-based print() never and decl-based print() sometimes does not include
-  // a final newline:
-  o << '\n';
-}
-
-static void StreamLongDouble(llvm::raw_ostream& o, const Value* value,
-                             clang::ASTContext& C) {
-  std::stringstream sstr;
-  sstr << value->simplisticCastAs<long double>();
-  o << sstr.str() << 'L';
-}
-
-static void StreamClingValue(llvm::raw_ostream& o, const Value* value) {
-  if (!value || !value->isValid()) {
-    o << "<<<invalid>>> @" << value;
-  } else {
-    clang::ASTContext& C = value->getASTContext();
-    clang::QualType QT = value->getType();
-    o << "boxes [";
-    o << "("
-      << QT.getAsString(C.getPrintingPolicy())
-      << ") ";
-    clang::QualType valType = QT.getDesugaredType(C).getNonReferenceType();
-    if (C.hasSameType(valType, C.LongDoubleTy))
-      StreamLongDouble(o, value, C);
-    else if (valType->isFloatingType())
-      o << value->simplisticCastAs<double>();
-    else if (valType->isIntegerType()) {
-      if (valType->hasSignedIntegerRepresentation())
-        o << value->simplisticCastAs<long long>();
-      else
-        o << value->simplisticCastAs<unsigned long long>();
-    } else if (valType->isBooleanType())
-      o << (value->simplisticCastAs<bool>() ? "true" : "false");
-    else if (!valType->isVoidType())
-      StreamValue(o, value->getPtr(), valType,
-                  *const_cast<Interpreter*>(value->getInterpreter()));
-    o << "]";
-  }
-}
-
-static void StreamObj(llvm::raw_ostream& o, const void* V, clang::QualType Ty) {
-  if (clang::CXXRecordDecl* CXXRD = Ty->getAsCXXRecordDecl()) {
-    std::string QualName = CXXRD->getQualifiedNameAsString();
-    if (QualName == "cling::Value"){
-      StreamClingValue(o, (const cling::Value*)V);
-      return;
-    }
-  } // if CXXRecordDecl
-
-  // TODO: Print the object members.
-  o << "@" << V;
-}
-
-static void StreamValue(llvm::raw_ostream& o, const void* V,
-                        clang::QualType Ty, cling::Interpreter& Interp) {
-  clang::ASTContext& C = Interp.getCI()->getASTContext();
-  if (const clang::BuiltinType *BT
-           = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
-    switch (BT->getKind()) {
-    case clang::BuiltinType::Bool:
-      if (*(const bool*)V)
-        o << "true";
-      else
-        o << "false";
-      break;
-    case clang::BuiltinType::Char_U: // intentional fall through
-    case clang::BuiltinType::UChar: // intentional fall through
-    case clang::BuiltinType::Char_S: // intentional fall through
-    case clang::BuiltinType::SChar:
-      StreamChar(o, *(const char*)V); break;
-    case clang::BuiltinType::Short:
-      o << *(const short*)V; break;
-    case clang::BuiltinType::UShort:
-      o << *(const unsigned short*)V; break;
-    case clang::BuiltinType::Int:
-      o << *(const int*)V; break;
-    case clang::BuiltinType::UInt:
-      o << *(const unsigned int*)V; break;
-    case clang::BuiltinType::Long:
-      o << *(const long*)V; break;
-    case clang::BuiltinType::ULong:
-      o << *(const unsigned long*)V; break;
-    case clang::BuiltinType::LongLong:
-      o << *(const long long*)V; break;
-    case clang::BuiltinType::ULongLong:
-      o << *(const unsigned long long*)V; break;
-    case clang::BuiltinType::Float:
-      o << *(const float*)V; break;
-    case clang::BuiltinType::Double:
-      o << *(const double*)V; break;
-    case clang::BuiltinType::LongDouble: {
-      std::stringstream ssLD;
-      ssLD << *(const long double*)V;
-      o << ssLD.str() << 'L'; break;
-    }
-    default:
-      StreamObj(o, V, Ty);
-    }
-  }
-  else if (Ty.getAsString().compare("std::string") == 0) {
-    StreamObj(o, V, Ty);
-    o << " "; // force a space
-    o <<"c_str: ";
-    StreamCharPtr(o, ((const char*) (*(const std::string*)V).c_str()));
-  }
-  else if (Ty->isEnumeralType()) {
-    clang::EnumDecl* ED = Ty->getAs<clang::EnumType>()->getDecl();
-    uint64_t value = *(const uint64_t*)V;
-    bool IsFirst = true;
-    llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
-    for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
-           E = ED->enumerator_end(); I != E; ++I) {
-      if (I->getInitVal() == ValAsAPSInt) {
-        if (!IsFirst) {
-          o << " ? ";
-        }
-        o << "(" << I->getQualifiedNameAsString() << ")";
-        IsFirst = false;
-      }
-    }
-    o << " : (int) " << ValAsAPSInt.toString(/*Radix = */10);
-  }
-  else if (Ty->isReferenceType())
-    StreamRef(o, (const void**)&V, Ty, Interp);
-  else if (Ty->isPointerType()) {
-    clang::QualType PointeeTy = Ty->getPointeeType();
-    if (PointeeTy->isCharType())
-      StreamCharPtr(o, (const char*)V);
-    else if (PointeeTy->isFunctionProtoType())
-      StreamFunction(o, V, PointeeTy, Interp);
     else
-      StreamPtr(o, V);
+      ValueTyStr += utils::TypeName::GetFullyQualifiedName(QTNonRef, Ctx);
   }
-  else if (Ty->isArrayType())
-    StreamArr(o, V, Ty, Interp);
-  else if (Ty->isFunctionType())
-    StreamFunction(o, V, Ty, Interp);
-  else
-    StreamObj(o, V, Ty);
+
+  if (QT->isReferenceType())
+    ValueTyStr += " &";
+
+  return ValueTyStr + ")";
+}
+
+} // anonymous namespace
+
+template<typename T>
+static std::string executePrintValue(const Value &V, const T &val) {
+  Interpreter *Interp = V.getInterpreter();
+  Value printValueV;
+
+  {
+    // Use an llvm::raw_ostream to prepend '0x' in front of the pointer value.
+
+    cling::ostrstream Strm;
+    Strm << "cling::printValue(";
+    Strm << getTypeString(V);
+    Strm << (const void*) &val;
+    Strm << ");";
+
+    // We really don't care about protected types here (ROOT-7426)
+    AccessCtrlRAII_t AccessCtrlRAII(*Interp);
+    clang::DiagnosticsEngine& Diag = Interp->getDiagnostics();
+    bool oldSuppDiags = Diag.getSuppressAllDiagnostics();
+    Diag.setSuppressAllDiagnostics(true);
+    Interp->evaluate(Strm.str(), printValueV);
+    Diag.setSuppressAllDiagnostics(oldSuppDiags);
+  }
+
+  if (!printValueV.isValid() || printValueV.getPtr() == nullptr) {
+    // That didn't work. We probably diagnosed the issue as part of evaluate().
+    cling::errs() << "ERROR in cling::executePrintValue(): cannot pass value!\n";
+
+    // Check that the issue comes from an unparsable type name: lambdas, unnamed
+    // namespaces, types declared inside functions etc. Assert on everything
+    // else.
+    assert(!canParseTypeName(*Interp, getTypeString(V))
+           && "printValue failed on a valid type name.");
+
+    return "ERROR in cling::executePrintValue(): missing value string.";
+  }
+
+  return *(std::string *) printValueV.getPtr();
+}
+
+static std::string printEnumValue(const Value &V) {
+  cling::ostrstream enumString;
+  clang::ASTContext &C = V.getASTContext();
+  clang::QualType Ty = V.getType().getDesugaredType(C);
+  const clang::EnumType *EnumTy = Ty.getNonReferenceType()->getAs<clang::EnumType>();
+  assert(EnumTy && "ValuePrinter.cpp: ERROR, printEnumValue invoked for a non enum type.");
+  clang::EnumDecl *ED = EnumTy->getDecl();
+  uint64_t value = V.getULL();
+  bool IsFirst = true;
+  llvm::APSInt ValAsAPSInt = C.MakeIntValue(value, Ty);
+  for (clang::EnumDecl::enumerator_iterator I = ED->enumerator_begin(),
+           E = ED->enumerator_end(); I != E; ++I) {
+    if (I->getInitVal() == ValAsAPSInt) {
+      if (!IsFirst) {
+        enumString << " ? ";
+      }
+      enumString << "(" << I->getQualifiedNameAsString() << ")";
+      IsFirst = false;
+    }
+  }
+  enumString << " : " << printQualType(C, ED->getIntegerType()) << " "
+    << ValAsAPSInt.toString(/*Radix = */10);
+  return enumString.str();
+}
+
+static std::string printFunctionValue(const Value &V, const void *ptr, clang::QualType Ty) {
+  cling::largestream o;
+  o << "Function @" << ptr;
+
+  // If a function is the first thing printed in a session,
+  // getLastTransaction() will point to the transaction that loaded the
+  // ValuePrinter, and won't have a wrapper FD.
+  // Even if it did have one it wouldn't be the one that was requested to print.
+
+  Interpreter &Interp = *const_cast<Interpreter *>(V.getInterpreter());
+  const Transaction *T = Interp.getLastTransaction();
+  if (clang::FunctionDecl *WrapperFD = T->getWrapperFD()) {
+    clang::ASTContext &C = V.getASTContext();
+    const clang::FunctionDecl *FD = nullptr;
+    // CE should be the setValueNoAlloc call expr.
+    if (const clang::CallExpr *CallE
+            = llvm::dyn_cast_or_null<clang::CallExpr>(
+                    utils::Analyze::GetOrCreateLastExpr(WrapperFD,
+                                                        /*foundAtPos*/0,
+                                                        /*omitDS*/false,
+                                                        &Interp.getSema()))) {
+      if (const clang::FunctionDecl *FDsetValue
+        = llvm::dyn_cast_or_null<clang::FunctionDecl>(CallE->getCalleeDecl())) {
+        if (FDsetValue->getNameAsString() == "setValueNoAlloc" &&
+            CallE->getNumArgs() == 5) {
+          const clang::Expr *Arg4 = CallE->getArg(4);
+          while (const clang::CastExpr *CastE
+              = clang::dyn_cast<clang::CastExpr>(Arg4))
+            Arg4 = CastE->getSubExpr();
+          if (const clang::DeclRefExpr *DeclRefExp
+              = llvm::dyn_cast<clang::DeclRefExpr>(Arg4))
+            FD = llvm::dyn_cast<clang::FunctionDecl>(DeclRefExp->getDecl());
+        }
+      }
+    }
+
+    if (FD) {
+      o << '\n';
+      clang::SourceRange SRange = FD->getSourceRange();
+      const char *cBegin = 0;
+      const char *cEnd = 0;
+      bool Invalid;
+      if (SRange.isValid()) {
+        clang::SourceManager &SM = C.getSourceManager();
+        clang::SourceLocation LocBegin = SRange.getBegin();
+        LocBegin = SM.getExpansionRange(LocBegin).first;
+        o << "  at " << SM.getFilename(LocBegin);
+        unsigned LineNo = SM.getSpellingLineNumber(LocBegin, &Invalid);
+        if (!Invalid)
+          o << ':' << LineNo;
+        o << ":\n";
+        bool Invalid = false;
+        cBegin = SM.getCharacterData(LocBegin, &Invalid);
+        if (!Invalid) {
+          clang::SourceLocation LocEnd = SRange.getEnd();
+          LocEnd = SM.getExpansionRange(LocEnd).second;
+          cEnd = SM.getCharacterData(LocEnd, &Invalid);
+          if (Invalid)
+            cBegin = 0;
+        } else {
+          cBegin = 0;
+        }
+      }
+      if (cBegin && cEnd && cEnd > cBegin && cEnd - cBegin < 16 * 1024) {
+        o << llvm::StringRef(cBegin, cEnd - cBegin + 1);
+      } else {
+        const clang::FunctionDecl *FDef;
+        if (FD->hasBody(FDef))
+          FD = FDef;
+        FD->print(o);
+        //const clang::FunctionDecl* FD
+        //  = llvm::cast<const clang::FunctionType>(Ty)->getDecl();
+      }
+      // type-based print() never and decl-based print() sometimes does not
+      // include a final newline:
+      o << '\n';
+    }
+  }
+  return o.str();
+}
+
+static std::string printAddress(const void* Ptr, const char Prfx = 0) {
+  if (!Ptr)
+    return kNullPtrStr;
+
+  cling::smallstream Strm;
+  if (Prfx)
+    Strm << Prfx;
+  Strm << Ptr;
+  if (!utils::isAddressValid(Ptr))
+    Strm << kInvalidAddr;
+  return Strm.str();
+}
+
+static std::string printUnpackedClingValue(const Value &V) {
+  const clang::ASTContext &C = V.getASTContext();
+  const clang::QualType Td = V.getType().getDesugaredType(C);
+  const clang::QualType Ty = Td.getNonReferenceType();
+
+  if (Ty->isNullPtrType()) {
+    // special case nullptr_t
+    return kNullPtrTStr;
+  } else if (Ty->isEnumeralType()) {
+    // special case enum printing, using compiled information
+    return printEnumValue(V);
+  } else if (Ty->isFunctionType()) {
+    // special case function printing, using compiled information
+    return printFunctionValue(V, &V, Ty);
+  } else if ((Ty->isPointerType() || Ty->isMemberPointerType()) && Ty->getPointeeType()->isFunctionProtoType()) {
+    // special case function printing, using compiled information
+    return printFunctionValue(V, V.getPtr(), Ty->getPointeeType());
+  } else if (clang::CXXRecordDecl *CXXRD = Ty->getAsCXXRecordDecl()) {
+    if (CXXRD->isLambda())
+      return printAddress(V.getPtr(), '@');
+  } else if (const clang::BuiltinType *BT
+      = llvm::dyn_cast<clang::BuiltinType>(Td.getCanonicalType().getTypePtr())) {
+    switch (BT->getKind()) {
+      case clang::BuiltinType::Bool:
+        return executePrintValue<bool>(V, V.getLL());
+
+      case clang::BuiltinType::Char_S:
+        return executePrintValue<signed char>(V, V.getLL());
+      case clang::BuiltinType::SChar:
+        return executePrintValue<signed char>(V, V.getLL());
+      case clang::BuiltinType::Short:
+        return executePrintValue<short>(V, V.getLL());
+      case clang::BuiltinType::Int:
+        return executePrintValue<int>(V, V.getLL());
+      case clang::BuiltinType::Long:
+        return executePrintValue<long>(V, V.getLL());
+      case clang::BuiltinType::LongLong:
+        return executePrintValue<long long>(V, V.getLL());
+
+      case clang::BuiltinType::Char_U:
+        return executePrintValue<unsigned char>(V, V.getULL());
+      case clang::BuiltinType::UChar:
+        return executePrintValue<unsigned char>(V, V.getULL());
+      case clang::BuiltinType::UShort:
+        return executePrintValue<unsigned short>(V, V.getULL());
+      case clang::BuiltinType::UInt:
+        return executePrintValue<unsigned int>(V, V.getULL());
+      case clang::BuiltinType::ULong:
+        return executePrintValue<unsigned long>(V, V.getULL());
+      case clang::BuiltinType::ULongLong:
+        return executePrintValue<unsigned long long>(V, V.getULL());
+
+      case clang::BuiltinType::Float:
+        return executePrintValue<float>(V, V.getFloat());
+      case clang::BuiltinType::Double:
+        return executePrintValue<double>(V, V.getDouble());
+      case clang::BuiltinType::LongDouble:
+        return executePrintValue<long double>(V, V.getLongDouble());
+
+      default:
+        break;
+    }
+  } else
+    assert(!Ty->isIntegralOrEnumerationType() && "Bad Type.");
+
+  if (!V.getPtr())
+    return kNullPtrStr;
+
+  // Print all the other cases by calling into runtime 'cling::printValue()'.
+  // Ty->isPointerType() || Ty->isReferenceType() || Ty->isArrayType()
+  // Ty->isObjCObjectPointerType()
+  return executePrintValue<void*>(V, V.getPtr());
 }
 
 namespace cling {
-namespace valuePrinterInternal {
-  void printValue_Default(llvm::raw_ostream& o, const Value& V) {
-    clang::ASTContext& C = V.getASTContext();
-    clang::QualType Ty = V.getType().getDesugaredType(C);
-    Interpreter& Interp = *const_cast<Interpreter*>(V.getInterpreter());
-    if (const clang::BuiltinType *BT
-        = llvm::dyn_cast<clang::BuiltinType>(Ty.getCanonicalType())) {
-      switch (BT->getKind()) {
-      case clang::BuiltinType::Bool: // intentional fall through
-      case clang::BuiltinType::Char_U: // intentional fall through
-      case clang::BuiltinType::Char_S: // intentional fall through
-      case clang::BuiltinType::SChar: // intentional fall through
-      case clang::BuiltinType::Short: // intentional fall through
-      case clang::BuiltinType::Int: // intentional fall through
-      case clang::BuiltinType::Long: // intentional fall through
-      case clang::BuiltinType::LongLong: {
-        long long res = V.getLL();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::UChar: // intentional fall through
-      case clang::BuiltinType::UShort: // intentional fall through
-      case clang::BuiltinType::UInt: // intentional fall through
-      case clang::BuiltinType::ULong: // intentional fall through
-      case clang::BuiltinType::ULongLong: {
-        unsigned long long res = V.getULL();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::Float: {
-        float res = V.getFloat();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::Double: {
-        double res = V.getDouble();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      case clang::BuiltinType::LongDouble: {
-        long double res = V.getLongDouble();
-        StreamValue(o, (const void*)&res, Ty, Interp);
-      }
-        break;
-      default:
-        StreamValue(o, V.getPtr(), Ty, Interp);
-        break;
-      }
-    }
-    else if (Ty->isIntegralOrEnumerationType()) {
-      long long res = V.getLL();
-      StreamValue(o, &res, Ty, Interp);
-    }
-    else if (Ty->isFunctionType())
-      StreamValue(o, &V, Ty, Interp);
-    else if (Ty->isPointerType() || Ty->isReferenceType()
-              || Ty->isArrayType())
-      StreamValue(o, V.getPtr(), Ty, Interp);
-    else {
-      // struct case.
-      StreamValue(o, V.getPtr(), Ty, Interp);
-    }
+
+  // General fallback - prints the address
+  std::string printValue(const void *ptr) {
+    return printAddress(ptr, '@');
   }
 
-  void printType_Default(llvm::raw_ostream& o, const Value& V) {
-    using namespace clang;
-    QualType QT = V.getType().getNonReferenceType();
-    std::string ValueTyStr;
-    if (const TypedefType* TDTy = dyn_cast<TypedefType>(QT))
-      ValueTyStr = TDTy->getDecl()->getQualifiedNameAsString();
-    else if (const TagType* TTy = dyn_cast<TagType>(QT))
-      ValueTyStr = TTy->getDecl()->getQualifiedNameAsString();
-
-    if (ValueTyStr.empty())
-      ValueTyStr = QT.getAsString();
-    else if (QT.hasQualifiers())
-      ValueTyStr = QT.getQualifiers().getAsString() + " " + ValueTyStr;
-
-    o << "(";
-    o << ValueTyStr;
-    if (V.getType()->isReferenceType())
-      o << " &";
-    o << ") ";
+  // void pointer
+  std::string printValue(const void **ptr) {
+    return printAddress(*ptr);
   }
-} // end namespace valuePrinterInternal
+
+  // Bool
+  std::string printValue(const bool *val) {
+    return *val ? kTrueStr : kFalseStr;
+  }
+
+  // Chars
+  static std::string printOneChar(char Val,
+                                  const std::locale& Locale = std::locale()) {
+    llvm::SmallString<128> Buf;
+    llvm::raw_svector_ostream Strm(Buf);
+    Strm << "'";
+    if (!std::isprint(Val, Locale)) {
+      switch (std::isspace(Val, Locale) ? Val : 0) {
+        case '\t': Strm << "\\t"; break;
+        case '\n': Strm << "\\n"; break;
+        case '\r': Strm << "\\r"; break;
+        case '\f': Strm << "\\f"; break;
+        case '\v': Strm << "\\v"; break;
+        default:
+          Strm << llvm::format_hex(uint64_t(Val)&0xff, 4);
+      }
+    }
+    else
+      Strm << Val;
+    Strm << "'";
+    return Strm.str();
+  }
+
+  std::string printValue(const char *val) {
+    return printOneChar(*val);
+  }
+
+  std::string printValue(const signed char *val) {
+    return printOneChar(*val);
+  }
+
+  std::string printValue(const unsigned char *val) {
+    return printOneChar(*val);
+  }
+
+  // Ints
+  std::string printValue(const short *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned short *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const int *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned int *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const long *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned long *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const long long *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  std::string printValue(const unsigned long long *val) {
+    cling::smallstream strm;
+    strm << *val;
+    return strm.str();
+  }
+
+  // Reals
+  std::string printValue(const float *val) {
+    cling::smallstream strm;
+    strm << llvm::format("%.5f", *val) << 'f';
+    return strm.str();
+  }
+
+  std::string printValue(const double *val) {
+    cling::smallstream strm;
+    strm << llvm::format("%.6f", *val);
+    return strm.str();
+  }
+
+  std::string printValue(const long double *val) {
+    cling::smallstream strm;
+    strm << llvm::format("%.8Lf", *val) << 'L';
+    //strm << llvm::format("%Le", *val) << 'L';
+    return strm.str();
+  }
+
+  // Char pointers
+  std::string printString(const char *const *Ptr, size_t N = 10000) {
+    // Assumption is this is a string.
+    // N is limit to prevent endless loop if Ptr is not really a string.
+
+    const char* Start = *Ptr;
+    if (!Start)
+      return kNullPtrStr;
+
+    const char* End = Start + N;
+    bool IsValid = utils::isAddressValid(Start);
+    if (IsValid) {
+      // If we're gonnd do this, better make sure the end is valid too
+      // FIXME: getpagesize() & GetSystemInfo().dwPageSize might be better
+      enum { PAGE_SIZE = 1024 };
+      while (!(IsValid = utils::isAddressValid(End)) && N > 1024) {
+        N -= PAGE_SIZE;
+        End = Start + N;
+      }
+    }
+    if (!IsValid) {
+      cling::smallstream Strm;
+      Strm << static_cast<const void*>(Start) << kInvalidAddr;
+      return Strm.str();
+    }
+
+    if (*Start == 0)
+      return "\"\"";
+
+    // Copy the bytes until we get a null-terminator
+    llvm::SmallString<1024> Buf;
+    llvm::raw_svector_ostream Strm(Buf);
+    Strm << "\"";
+    while (Start < End && *Start)
+      Strm << *Start++;
+    Strm << "\"";
+
+    return Strm.str();
+  }
+
+  std::string printValue(const char *const *val) {
+    return printString(val);
+  }
+
+  std::string printValue(const char **val) {
+    return printString(val);
+  }
+
+  // std::string
+  std::string printValue(const std::string *val) {
+    return "\"" + *val + "\"";
+  }
+  
+  static std::string quoteString(std::string Str, const char Prefix) {
+    // No wrap
+    if (!Prefix)
+      return Str;
+    // Quoted wrap
+    if (Prefix==1)
+      return enclose(std::move(Str), "\"", "\"", 2);
+
+    // Prefix quoted wrap
+    char Begin[3] = { Prefix, '"', 0 };
+    return enclose(std::move(Str), Begin, &Begin[1], 3);
+  }
+
+  static std::string quoteString(const char* Str, size_t N, const char Prefix) {
+    return quoteString(std::string(Str, Str[N-1] == 0 ? (N-1) : N), Prefix);
+  }
+
+#ifdef LLVM_UTF8
+
+  template <class T> struct CharTraits;
+  template <> struct CharTraits<char16_t> {
+    static ConversionResult convert(const char16_t** begin, const char16_t* end,
+                                    char** d, char* dEnd, ConversionFlags F ) {
+      return ConvertUTF16toUTF8(reinterpret_cast<const UTF16**>(begin),
+                                reinterpret_cast<const UTF16*>(end),
+                                reinterpret_cast<UTF8**>(d),
+                                reinterpret_cast<UTF8*>(dEnd), F);
+    }
+  };
+  template <> struct CharTraits<char32_t> {
+    static ConversionResult convert(const char32_t** begin, const char32_t* end,
+                                    char** d, char* dEnd, ConversionFlags F ) {
+      return ConvertUTF32toUTF8(reinterpret_cast<const UTF32**>(begin),
+                                reinterpret_cast<const UTF32*>(end),
+                                reinterpret_cast<UTF8**>(d),
+                                reinterpret_cast<UTF8*>(dEnd), F);
+    }
+  };
+  template <> struct CharTraits<wchar_t> {
+    static ConversionResult convert(const wchar_t** src, const wchar_t* srcEnd,
+                                    char** dst, char* dEnd, ConversionFlags F) {
+      switch (sizeof(wchar_t)) {
+        case sizeof(char16_t):
+          return CharTraits<char16_t>::convert(
+                            reinterpret_cast<const char16_t**>(src),
+                            reinterpret_cast<const char16_t*>(srcEnd),
+                            dst, dEnd, F);
+        case sizeof(char32_t):
+          return CharTraits<char32_t>::convert(
+                            reinterpret_cast<const char32_t**>(src),
+                            reinterpret_cast<const char32_t*>(srcEnd),
+                            dst, dEnd, F);
+        default: break;
+      }
+      llvm_unreachable("wchar_t conversion failure");
+    }
+  };
+
+  template <typename T>
+  static std::string encodeUTF8(const T* const Str, size_t N, const char Prfx) {
+    const T *Bgn = Str,
+            *End = Str + N;
+    std::string Result;
+    Result.resize(UNI_MAX_UTF8_BYTES_PER_CODE_POINT * N);
+    char *ResultPtr = &Result[0],
+         *ResultEnd = ResultPtr + Result.size();
+    
+    CharTraits<T>::convert(&Bgn, End, &ResultPtr, ResultEnd, lenientConversion);
+    Result.resize(ResultPtr - &Result[0]);
+    return quoteString(std::move(Result), Prfx);
+  }
+
+#else // !LLVM_UTF8
+
+  template <class T> struct CharTraits { typedef T value_type; };
+#if defined(LLVM_ON_WIN32) // Likely only to be needed when _MSC_VER < 19??
+  template <> struct CharTraits<char16_t> { typedef unsigned short value_type; };
+  template <> struct CharTraits<char32_t> { typedef unsigned int value_type; };
+#endif
+
+  template <typename T>
+  static std::string encodeUTF8(const T* const Str, size_t N, const char Prfx) {
+    typedef typename CharTraits<T>::value_type value_type;
+    std::wstring_convert<std::codecvt_utf8_utf16<value_type>, value_type> Convert;
+    const value_type* Src = reinterpret_cast<const value_type*>(Str);
+    return quoteString(Convert.to_bytes(Src, Src + N), Prfx);
+  }
+#endif // LLVM_UTF8
+
+  template <typename T>
+  std::string utf8Value(const T* const Str, size_t N, const char Prefix,
+                        std::string (*Func)(const T* const Str, size_t N,
+                        const char Prfx) ) {
+    if (!Str)
+      return kNullPtrStr;
+    if (N==0)
+      return printAddress(Str, '@');
+
+    // Drop the null terminator or else it will be encoded into the std::string.
+    return Func(Str, Str[N-1] == 0 ? (N-1) : N, Prefix);
+  }
+
+  // declaration: cling/Utils/UTF8.h & cling/Interpreter/RuntimePrintValue.h
+  template <class T>
+  std::string toUTF8(const T* const Str, size_t N, const char Prefix);
+
+  template <>
+  std::string toUTF8<char16_t>(const char16_t* const Str, size_t N,
+                               const char Prefix) {
+    return utf8Value(Str, N, Prefix, encodeUTF8);
+  }
+
+  template <>
+  std::string toUTF8<char32_t>(const char32_t* const Str, size_t N,
+                               const char Prefix) {
+    return utf8Value(Str, N, Prefix, encodeUTF8);
+  }
+
+  template <>
+  std::string toUTF8<wchar_t>(const wchar_t* const Str, size_t N,
+                              const char Prefix) {
+    return utf8Value(Str, N, Prefix, encodeUTF8);
+  }
+
+  template <>
+  std::string toUTF8<char>(const char* const Str, size_t N, const char Prefix) {
+    return utf8Value(Str, N, Prefix, quoteString);
+  }
+
+  template <typename T>
+  static std::string toUTF8(
+      const std::basic_string<T, std::char_traits<T>, std::allocator<T>>* Src,
+      const char Prefix) {
+    if (!Src)
+      return kNullPtrStr;
+    return encodeUTF8(Src->data(), Src->size(), Prefix);
+  }
+
+  std::string printValue(const std::u16string* Val) {
+    return toUTF8(Val, 'u');
+  }
+
+  std::string printValue(const std::u32string* Val) {
+    return toUTF8(Val, 'U');
+  }
+
+  std::string printValue(const std::wstring* Val) {
+    return toUTF8(Val, 'L');
+  }
+
+  // Unicode chars
+  template <typename T>
+  static std::string toUnicode(const T* Src, const char Prefix, char Esc = 0) {
+    if (!Src)
+      return kNullPtrStr;
+    if (!Esc)
+      Esc = Prefix;
+
+    llvm::SmallString<128> Buf;
+    llvm::raw_svector_ostream Strm(Buf);
+    Strm << Prefix << "'\\" << Esc
+         << llvm::format_hex_no_prefix(unsigned(*Src), sizeof(T)*2) << "'";
+    return Strm.str();
+  }
+
+  std::string printValue(const char16_t *Val) {
+    return toUnicode(Val, 'u');
+  }
+
+  std::string printValue(const char32_t *Val) {
+    return toUnicode(Val, 'U');
+  }
+
+  std::string printValue(const wchar_t *Val) {
+    return toUnicode(Val, 'L', 'x');
+  }
+
+  // cling::Value
+  std::string printValue(const Value *value) {
+    cling::smallstream strm;
+
+    if (value->isValid()) {
+      clang::ASTContext &C = value->getASTContext();
+      clang::QualType QT = value->getType();
+      strm << "boxes [";
+      strm << enclose(QT, C, "(", ") ", 3);
+      if (!QT->isVoidType()) {
+        strm << printUnpackedClingValue(*value);
+      }
+      strm << "]";
+    } else
+      strm << "<<<invalid>>> " << printAddress(value, '@');
+
+    return strm.str();
+  }
+
+  namespace valuePrinterInternal {
+
+    std::string printTypeInternal(const Value &V) {
+      return printQualType(V.getASTContext(), V.getType());
+    }
+
+    std::string printValueInternal(const Value &V) {
+      static bool includedRuntimePrintValue = false; // initialized only once as a static function variable
+      // Include "RuntimePrintValue.h" only on the first printing.
+      // This keeps the interpreter lightweight and reduces the startup time.
+      if (!includedRuntimePrintValue) {
+        V.getInterpreter()->declare("#include \"cling/Interpreter/RuntimePrintValue.h\"");
+        includedRuntimePrintValue = true;
+      }
+      return printUnpackedClingValue(V);
+    }
+  } // end namespace valuePrinterInternal
 } // end namespace cling

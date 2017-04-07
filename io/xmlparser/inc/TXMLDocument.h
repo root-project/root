@@ -12,22 +12,9 @@
 #ifndef ROOT_TXMLDocument
 #define ROOT_TXMLDocument
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TXMLDocument                                                         //
-//                                                                      //
-// TXMLDocument contains a pointer to an xmlDoc structure, after the    //
-// parser returns a tree built during the document analysis.            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 struct _xmlDoc;

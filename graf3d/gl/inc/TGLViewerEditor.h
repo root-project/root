@@ -14,14 +14,10 @@
 
 #include <memory>
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
-
+ 
 class TGCheckButton;
 class TGNumberEntry;
 class TGButtonGroup;
@@ -92,6 +88,10 @@ private:
 
    TGLClipSetSubEditor *fClipSet;
 
+   //'Extras' tab.
+   TGCheckButton    *fRotateSceneOn;
+   TGNumberEntry    *fSceneRotDt;
+   
    TGNumberEntry    *fARotDt,     *fARotWPhi;
    TGNumberEntry    *fARotATheta, *fARotWTheta;
    TGNumberEntry    *fARotADolly, *fARotWDolly;
@@ -146,6 +146,7 @@ public:
    void UpdateViewerReference();
    void DoCameraOverlay();
    // Extras
+   void SetRotatorMode();
    void UpdateRotator();
    void DoRotatorStart();
    void DoRotatorStop();

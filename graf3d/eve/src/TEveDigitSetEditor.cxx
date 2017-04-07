@@ -29,14 +29,16 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//______________________________________________________________________________
-// TEveDigitSetEditor
-//
-// Editor for TEveDigitSet class.
+/** \class TEveDigitSetEditor
+\ingroup TEve
+Editor for TEveDigitSet class.
+*/
 
 ClassImp(TEveDigitSetEditor)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
@@ -46,8 +48,6 @@ TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t hei
    fHistoButtFrame(0),
    fInfoFrame(0)
 {
-   // Constructor.
-
    MakeTitle("Palette controls");
 
    fPalette = new TEveRGBAPaletteSubEditor(this);
@@ -57,13 +57,11 @@ TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t hei
    CreateInfoTab();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Create information tab.
 
-//______________________________________________________________________________
 void TEveDigitSetEditor::CreateInfoTab()
 {
-   // Create information tab.
-
    fInfoFrame = CreateEditorTabSubFrame("Info");
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fInfoFrame, 180, 10,
@@ -93,13 +91,11 @@ void TEveDigitSetEditor::CreateInfoTab()
    fInfoFrame->AddFrame(fHistoButtFrame, new TGLayoutHints(kLHintsExpandX, 2, 0, 0, 0));
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveDigitSetEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveDigitSet*>(obj);
 
    if (fM->fValueIsColor || fM->fPalette == 0) {
@@ -115,13 +111,11 @@ void TEveDigitSetEditor::SetModel(TObject* obj)
       fHistoButtFrame->UnmapWindow();
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Show histogram slot.
 
-//______________________________________________________________________________
 void TEveDigitSetEditor::DoHisto()
 {
-   // Show histogram slot.
-
    Int_t min, max;
    if (fM->fPalette) {
       min = fM->fPalette->GetLowLimit();
@@ -132,11 +126,11 @@ void TEveDigitSetEditor::DoHisto()
    PlotHisto(min, max);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Show ranged histogram slot.
+
 void TEveDigitSetEditor::DoRangeHisto()
 {
-   // Show ranged histogram slot.
-
    Int_t min, max;
    if (fM->fPalette) {
       min = fM->fPalette->GetMinVal();
@@ -147,11 +141,11 @@ void TEveDigitSetEditor::DoRangeHisto()
    PlotHisto(min, max);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Plots a histogram from digit vales with given range.
+
 void TEveDigitSetEditor::PlotHisto(Int_t min, Int_t max)
 {
-   // Plots a histogram from digit vales with given range.
-
    Int_t nbins = max-min+1;
    while (nbins > 200)
       nbins /= 2;

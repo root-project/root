@@ -22,18 +22,12 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
-#ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
-#endif
 
-#ifndef ROOT_Rtypeinfo
-#include "Rtypeinfo.h"
-#endif
-
+#include <map>
+#include <typeinfo>
 #include <vector>
 
 class TClass;
@@ -56,6 +50,9 @@ protected:
    friend class SuspendAutoParsing;
 
 public:
+   // See as in TSchemaType.h.
+   typedef class std::map<std::string, std::string> MembersMap_t;
+
    enum EErrorCode {
       kNoError     = 0,
       kRecoverable = 1,
@@ -156,7 +153,8 @@ public:
                                    const char* /*fwdDeclsCode*/,
                                    void (* /*triggerFunc*/)(),
                                    const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
-                                   const char** classesHeaders) = 0;
+                                   const char** classesHeaders,
+                                   Bool_t lateRegistration = false) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
@@ -209,8 +207,6 @@ public:
    virtual void  *FindSym(const char * /* entry */) const {return 0;}
    virtual void   GenericError(const char * /* error */) const {;}
    virtual Long_t GetExecByteCode() const {return 0;}
-   virtual Long_t Getgvp() const {return 0;}
-   virtual const char *Getp2f2funcname(void * /* receiver */) const {return 0;}
    virtual const char *GetTopLevelMacroName() const {return 0;};
    virtual const char *GetCurrentMacroName()  const {return 0;};
    virtual int    GetSecurityError() const{return 0;}
@@ -222,16 +218,17 @@ public:
    virtual int    SetClassAutoloading(int) const {return 0;}
    virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
-   virtual void   Setgvp(Long_t) const {;}
-   virtual void   SetRTLD_NOW() const {;}
-   virtual void   SetRTLD_LAZY() const {;}
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
    virtual TInterpreterValue *CreateTemporary() { return 0; }
+   virtual void   CodeComplete(const std::string&, size_t&,
+                               std::vector<std::string>&) {;}
+   virtual int Evaluate(const char*, TInterpreterValue&) {return 0;}
 
    // core/meta helper functions.
    virtual EReturnType MethodCallReturnType(TFunction *func) const = 0;
    virtual ULong64_t GetInterpreterStateMarker() const = 0;
+   virtual bool DiagnoseIfInterpreterException(const std::exception &e) const = 0;
 
    typedef TDictionary::DeclId_t DeclId_t;
    virtual DeclId_t GetDeclId(CallFunc_t *info) const = 0;

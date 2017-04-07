@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoNode;
 class TGeoVolume;
@@ -47,7 +43,7 @@ protected:
 
    Bool_t               fIsEditable;        // Flag that the medium can be changed
    TGTextEntry         *fNodeName;          // Node name text entry
-   TGNumberEntry       *fNodeNumber;        // Copy number 
+   TGNumberEntry       *fNodeNumber;        // Copy number
    TGeoVolume          *fSelectedVolume;    // Selected volume
    TGLabel             *fLSelVolume;        // Selected volume label
    TGPictureButton     *fBSelVolume;        // Button for selecting a volume
@@ -84,8 +80,8 @@ public:
    void           DoNodeNumber();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoNodeEditor,0)   // TGeoNode editor
-};   
-  
-#endif                    
+};
+
+#endif

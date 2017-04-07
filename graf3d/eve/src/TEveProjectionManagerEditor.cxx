@@ -17,18 +17,16 @@
 #include "TGComboBox.h"
 #include "TGLabel.h"
 
-//==============================================================================
-// TEveProjectionManagerEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// GUI editor for TEveProjectionManager class.
-//
+/** \class TEveProjectionManagerEditor
+\ingroup TEve
+GUI editor for TEveProjectionManager class.
+*/
 
 ClassImp(TEveProjectionManagerEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
                                                          Int_t width, Int_t height,
                                                          UInt_t options, Pixel_t back) :
@@ -46,8 +44,6 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fCenterY(0),
    fCenterZ(0)
 {
-   // Constructor.
-
    MakeTitle("TEveProjection");
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -133,7 +129,7 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    fMaxTrackStep->SetLabelWidth(labelW);
    fMaxTrackStep->Build();
    fMaxTrackStep->SetLimits(1, 100, 100, TGNumberFormat::kNESRealOne);
-   fMaxTrackStep->SetToolTip("Maximum step between two consequtive track-points to avoid artefacts due to projective distortions.\nTaken into account automatically during projection procedure.");
+   fMaxTrackStep->SetToolTip("Maximum step between two consecutive track-points to avoid artefacts due to projective distortions.\nTaken into account automatically during projection procedure.");
    fMaxTrackStep->Connect("ValueSet(Double_t)", "TEveProjectionManagerEditor",
                          this, "DoMaxTrackStep()");
    AddFrame(fMaxTrackStep, new TGLayoutHints(kLHintsTop, 1, 1, 1, 3));
@@ -176,11 +172,11 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
    AddFrame(fCenterFrame, new TGLayoutHints(kLHintsTop, 1, 1, 1, 0));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+
 void TEveProjectionManagerEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveProjectionManager*>(obj);
 
    fType->Select(fM->GetProjection()->GetType(), kFALSE);
@@ -197,11 +193,11 @@ void TEveProjectionManagerEditor::SetModel(TObject* obj)
    fCenterZ->SetValue(fM->GetCenter().fZ);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting of projection type.
+
 void TEveProjectionManagerEditor::DoType(Int_t type)
 {
-   // Slot for setting of projection type.
-
    try
    {
       fM->SetProjection((TEveProjection::EPType_e)type);
@@ -215,82 +211,82 @@ void TEveProjectionManagerEditor::DoType(Int_t type)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting distortion.
+
 void TEveProjectionManagerEditor::DoDistortion()
 {
-   // Slot for setting distortion.
-
    fM->GetProjection()->SetDistortion(0.001f * fDistortion->GetValue());
    fM->UpdateName();
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting fixed radius.
+
 void TEveProjectionManagerEditor::DoFixR()
 {
-   // Slot for setting fixed radius.
-
    fM->GetProjection()->SetFixR(fFixR->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting fixed z-coordinate.
+
 void TEveProjectionManagerEditor::DoFixZ()
 {
-   // Slot for setting fixed z-coordinate.
-
    fM->GetProjection()->SetFixZ(fFixZ->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting fixed radius.
+
 void TEveProjectionManagerEditor::DoPastFixRFac()
 {
-   // Slot for setting fixed radius.
-
    fM->GetProjection()->SetPastFixRFac(fPastFixRFac->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting fixed z-coordinate.
+
 void TEveProjectionManagerEditor::DoPastFixZFac()
 {
-   // Slot for setting fixed z-coordinate.
-
    fM->GetProjection()->SetPastFixZFac(fPastFixZFac->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting current depth.
+
 void TEveProjectionManagerEditor::DoCurrentDepth()
 {
-   // Slot for setting current depth.
-
    fM->SetCurrentDepth(fCurrentDepth->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting fixed z-coordinate.
+
 void TEveProjectionManagerEditor::DoMaxTrackStep()
 {
-   // Slot for setting fixed z-coordinate.
-
    fM->GetProjection()->SetMaxTrackStep(fMaxTrackStep->GetValue());
    fM->ProjectChildren();
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for setting center of distortion.
+
 void TEveProjectionManagerEditor::DoCenter()
 {
-   // Slot for setting center of distortion.
-
    fM->SetCenter(fCenterX->GetValue(), fCenterY->GetValue(), fCenterZ->GetValue());
    Update();
 }

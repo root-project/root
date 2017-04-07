@@ -8,9 +8,7 @@
 #ifndef ROOT_TIndArray
 #define ROOT_TIndArray
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TIndArray
@@ -39,9 +37,9 @@ class TIndArray
       void     Clear() { fElems = 0; }
 
    private:
-      UInt_t   fElems;     // Number of elements stored in the array
-      UInt_t   fCapacity;  //!Capacity of the array
-      UChar_t *fArr;       //[fElems] The array
+      UInt_t   fElems;     ///<  Number of elements stored in the array
+      UInt_t   fCapacity;  ///<! Capacity of the array
+      UChar_t *fArr;       ///<[fElems] The array
 
 };
 

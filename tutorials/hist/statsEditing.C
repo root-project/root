@@ -1,10 +1,18 @@
-TCanvas *statsEditing() {
-// This example shows:
-//    - how to remove a stat element from the stat box
-//    - how to add a new one
-//
-//  Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Edit statistics box.
+///
+/// This example shows:
+///  - how to remove a stat element from the stat box
+///  - how to add a new one
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author  Olivier Couet
 
+TCanvas *statsEditing() {
    // Create and plot a test histogram with stats
    TCanvas *se = new TCanvas;
    TH1F *h = new TH1F("h","test",100,-3,3);
@@ -16,11 +24,11 @@ TCanvas *statsEditing() {
    // Retrieve the stat box
    TPaveStats *ps = (TPaveStats*)se->GetPrimitive("stats");
    ps->SetName("mystats");
-   TList *list = ps->GetListOfLines();
+   TList *listOfLines = ps->GetListOfLines();
 
    // Remove the RMS line
    TText *tconst = ps->GetLineWith("RMS");
-   list->Remove(tconst);
+   listOfLines->Remove(tconst);
 
    // Add a new line in the stat box.
    // Note that "=" is a control character
@@ -28,7 +36,7 @@ TCanvas *statsEditing() {
    myt ->SetTextFont(42);
    myt ->SetTextSize(0.04);
    myt ->SetTextColor(kRed);
-   list->Add(myt);
+   listOfLines->Add(myt);
 
    // the following line is needed to avoid that the automatic redrawing of stats
    h->SetStats(0);

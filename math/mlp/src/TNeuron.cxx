@@ -45,13 +45,14 @@
 
 ClassImp(TNeuron)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Usual constructor
+
 TNeuron::TNeuron(TNeuron::ENeuronType type /*= kSigmoid*/,
                  const char* name /*= ""*/, const char* title /*= ""*/,
                  const char* extF /*= ""*/, const char* extD  /*= ""*/ )
    :TNamed(name, title)
 {
-   // Usual constructor
    fpre.SetOwner(false);
    fpost.SetOwner(false);
    flayer.SetOwner(false);
@@ -78,21 +79,21 @@ TNeuron::TNeuron(TNeuron::ENeuronType type /*= kSigmoid*/,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Sigmoid.
+/// Fast computation of the values of the sigmoid function.
+/// Uses values of the function up  to the seventh order
+/// tabulated at 700 points.
+/// Values were computed in long double precision (16 bytes,
+/// precision to about 37 digits) on a hp computer.
+/// Some values were checked with Mathematica.
+/// Result should be correct to ~ 15 digits (about double
+/// precision)
+///
+/// From the mlpfit package (J.Schwindling   20-Jul-1999)
+
 Double_t TNeuron::Sigmoid(Double_t x) const
 {
-   // The Sigmoid.
-   // Fast computation of the values of the sigmoid function.
-   // Uses values of the function up  to the seventh order
-   // tabulated at 700 points.
-   // Values were computed in long double precision (16 bytes,
-   // precision to about 37 digits) on a hp computer.
-   // Some values were checked with Mathematica.
-   // Result should be correct to ~ 15 digits (about double
-   // precision)
-   //
-   // From the mlpfit package (J.Schwindling   20-Jul-1999)
-
    static Double_t sigval[7000] = {
    -3.500000e+01, 6.30511676014698530e-16, 6.30511676014698130e-16, 3.15255838007348670e-16, 1.05085279335782620e-16, 2.62713198339455210e-17, 5.25426396678905190e-18, 8.75710661131491060e-19, 1.25101523018779380e-19, 1.56376903773461590e-20,
    -3.490000e+01, 6.96823167838580650e-16, 6.96823167838580160e-16, 3.48411583919289640e-16, 1.16137194639762880e-16, 2.90342986599405540e-17, 5.80685973198804710e-18, 9.67809955331319670e-19, 1.38258565047325200e-19, 1.72823206309141090e-20,
@@ -811,11 +812,11 @@ Double_t TNeuron::Sigmoid(Double_t x) const
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The Derivative of the Sigmoid.
+
 Double_t TNeuron::DSigmoid(Double_t x) const
 {
-   // The Derivative of the Sigmoid.
-
    //if (x>2.1972246) return x/(1+TMath::Exp(x));
    //Double_t a = Sigmoid(x);
    //return a-a*a;
@@ -825,52 +826,57 @@ Double_t TNeuron::DSigmoid(Double_t x) const
    return expmx / ((1 + expmx) * (1 + expmx));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a synapse to the neuron as an input
+/// This method is used by the TSynapse while
+/// connecting two neurons.
+
 void TNeuron::AddPre(TSynapse * pre)
 {
-   // Adds a synapse to the neuron as an input
-   // This method is used by the TSynapse while
-   // connecting two neurons.
    fpre.AddLast(pre);
    if (fpre.GetEntriesFast() == fpre.GetSize())
       fpre.Expand(2 * fpre.GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a synapse to the neuron as an output
+/// This method is used by the TSynapse while
+/// connecting two neurons.
+
 void TNeuron::AddPost(TSynapse * post)
 {
-   // Adds a synapse to the neuron as an output
-   // This method is used by the TSynapse while
-   // connecting two neurons.
    fpost.AddLast(post);
    if (fpost.GetEntriesFast() == fpost.GetSize())
       fpost.Expand(2 * fpost.GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tells a neuron which neurons form its layer (including itself).
+/// This is needed for self-normalizing functions, like Softmax.
+
 void TNeuron::AddInLayer(TNeuron * nearP)
 {
-   // Tells a neuron which neurons form its layer (including itself).
-   // This is needed for self-normalizing functions, like Softmax.
    flayer.AddLast(nearP);
    if (flayer.GetEntriesFast() == flayer.GetSize())
       flayer.Expand(2 * flayer.GetSize());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the neuron type.
+
 TNeuron::ENeuronType TNeuron::GetType() const
 {
-   // Returns the neuron type.
    return fType;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets a formula that can be used to make the neuron an input.
+/// The formula is automatically normalized to mean=0, RMS=1.
+/// This normalisation is used by GetValue() (input neurons)
+/// and GetError() (output neurons)
+
 TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
 {
-   // Sets a formula that can be used to make the neuron an input.
-   // The formula is automatically normalized to mean=0, RMS=1.
-   // This normalisation is used by GetValue() (input neurons)
-   // and GetError() (output neurons)
    if (fFormula) delete fFormula;
    // Set the formula
    // One checks for {}: defined as instance in TMultiLayerPerceptron
@@ -902,20 +908,22 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    return fFormula;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the formula value.
+
 Double_t TNeuron::GetBranch() const
 {
-   // Returns the formula value.
    Double_t branch = fFormula->EvalInstance(fIndex);
    if (TMath::IsNaN(branch))
       branch = 0.;
    return branch;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns neuron input
+
 Double_t TNeuron::GetInput() const
 {
-   // Returns neuron input
    if (!fNewInput) {
       return fInput;
    }
@@ -932,12 +940,13 @@ Double_t TNeuron::GetInput() const
    return (((TNeuron*)this)->fInput = input);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the output using the appropriate function and all
+/// the weighted inputs, or uses the branch as input.
+/// In that case, the branch normalisation is also used.
+
 Double_t TNeuron::GetValue() const
 {
-   // Computes the output using the appropriate function and all
-   // the weighted inputs, or uses the branch as input.
-   // In that case, the branch normalisation is also used.
    if (!fNewValue) {
       return fValue;
    }
@@ -995,11 +1004,12 @@ Double_t TNeuron::GetValue() const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// computes the derivative for the appropriate function
+/// at the working point
+
 Double_t TNeuron::GetDerivative() const
 {
-   // computes the derivative for the appropriate function
-   // at the working point
    if (!fNewDeriv)
       return fDerivative;
    ((TNeuron*)this)->fNewDeriv = false;
@@ -1046,30 +1056,33 @@ Double_t TNeuron::GetDerivative() const
    return (((TNeuron*)this)->fDerivative = derivative);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the error for output neurons.
+/// Returns 0 for other neurons.
+
 Double_t TNeuron::GetError() const
 {
-   // Computes the error for output neurons.
-   // Returns 0 for other neurons.
    if (!fpost.GetEntriesFast())
       return (GetValue() - (GetBranch() - fNorm[1]) / fNorm[0]);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the normalized target pattern for output neurons.
+/// Returns 0 for other neurons.
+
 Double_t TNeuron::GetTarget() const
 {
-   // Computes the normalized target pattern for output neurons.
-   // Returns 0 for other neurons.
    if (!fpost.GetEntriesFast())
       return ((GetBranch() - fNorm[1]) / fNorm[0]);
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the derivative of the error wrt the neuron weight.
+
 Double_t TNeuron::GetDeDw() const
 {
-   // Computes the derivative of the error wrt the neuron weight.
    if (!fNewDeDw)
       return fDeDw;
    ((TNeuron*)this)->fNewDeDw = false;
@@ -1106,48 +1119,53 @@ Double_t TNeuron::GetDeDw() const
    return fDeDw;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Uses the branch type to force an external value.
+
 void TNeuron::ForceExternalValue(Double_t value)
 {
-   // Uses the branch type to force an external value.
    fNewValue = false;
    fValue = (value - fNorm[1]) / fNorm[0];
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the normalization variables.
+/// Any input neuron will return (branch-mean)/RMS.
+/// When UseBranch is called, mean and RMS are automatically set
+/// to the actual branch mean and RMS.
+
 void TNeuron::SetNormalisation(Double_t mean, Double_t RMS)
 {
-   // Sets the normalization variables.
-   // Any input neuron will return (branch-mean)/RMS.
-   // When UseBranch is called, mean and RMS are automatically set
-   // to the actual branch mean and RMS.
    fNorm[0] = RMS;
    fNorm[1] = mean;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the neuron weight to w.
+/// The neuron weight corresponds to the bias in the
+/// linear combination of the inputs.
+
 void TNeuron::SetWeight(Double_t w)
 {
-   // Sets the neuron weight to w.
-   // The neuron weight corresponds to the bias in the
-   // linear combination of the inputs.
    fWeight = w;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Inform the neuron that inputs of the network have changed,
+/// so that the buffered values have to be recomputed.
+
 void TNeuron::SetNewEvent() const
 {
-   // Inform the neuron that inputs of the network have changed,
-   // so that the buffered values have to be recomputed.
    ((TNeuron*)this)->fNewInput = true;
    ((TNeuron*)this)->fNewValue = true;
    ((TNeuron*)this)->fNewDeriv = true;
    ((TNeuron*)this)->fNewDeDw = true;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the derivative of the total error wrt the neuron weight.
+
 void TNeuron::SetDEDw(Double_t in)
 {
-   // Sets the derivative of the total error wrt the neuron weight.
    fDEDw = in;
 }

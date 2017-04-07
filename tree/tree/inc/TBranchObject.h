@@ -21,17 +21,15 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
 class TBranchObject : public TBranch {
 
 protected:
    enum { kWarn = BIT(12) };
 
-   TString     fClassName;        //Class name of referenced object
-   TObject     *fOldObject;       //!Pointer to old object
+   TString     fClassName;        ///< Class name of referenced object
+   TObject     *fOldObject;       ///< !Pointer to old object
 
    void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr);
 
@@ -42,7 +40,6 @@ public:
    virtual ~TBranchObject();
 
    virtual void        Browse(TBrowser *b);
-   virtual Int_t       Fill();
    virtual const char* GetClassName() const { return fClassName.Data(); };
    virtual const char* GetObjClassName() { return fClassName.Data(); };
    virtual Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0);
@@ -56,6 +53,9 @@ public:
    virtual void        SetBasketSize(Int_t buffsize);
    virtual void        SetupAddresses();
    virtual void        UpdateAddress();
+
+private:
+   virtual Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
    ClassDef(TBranchObject,1);  //Branch in case of an object
 };

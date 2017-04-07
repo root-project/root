@@ -83,6 +83,12 @@ namespace cling {
        }
      }
 
+     void TransactionRollback(const Transaction& T) override {
+        for (auto&& cb : m_Callbacks) {
+           cb->TransactionRollback(T);
+        }
+     }
+
      void DeclDeserialized(const clang::Decl* D) override {
        for (auto&& cb : m_Callbacks) {
          cb->DeclDeserialized(D);
@@ -111,6 +117,11 @@ namespace cling {
       InterpreterCallbacks::SetIsRuntime(val);
       for (auto&& cb : m_Callbacks)
         cb->SetIsRuntime(val);
+    }
+
+    void PrintStackTrace() override {
+      for (auto&& cb : m_Callbacks)
+        cb->PrintStackTrace();
     }
   };
 } // end namespace cling

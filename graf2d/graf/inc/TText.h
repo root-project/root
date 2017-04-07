@@ -13,42 +13,25 @@
 #define ROOT_TText
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TText                                                                //
-//                                                                      //
-// Text.                                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 
 class TText : public TNamed, public TAttText, public TAttBBox2D {
 
 protected:
-   Double_t     fX;           // X position of text (left,center,etc..)
-   Double_t     fY;           // Y position of text (left,center,etc..)
-   void         *fWcsTitle;   //!Used by TMathText
+   Double_t     fX;           ///< X position of text (left,center,etc..)
+   Double_t     fY;           ///< Y position of text (left,center,etc..)
+   void         *fWcsTitle;   ///<!Used by TMathText
 
 public:
    // TText status bits
-   enum { kTextNDC = BIT(14) };
+   enum {
+      kTextNDC = BIT(14)  ///< The text position is in the NDC space
+   };
 
    TText();
    TText(Double_t x, Double_t y, const char *text);

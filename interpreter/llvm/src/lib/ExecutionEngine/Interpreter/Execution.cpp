@@ -23,6 +23,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <cmath>
 using namespace llvm;
@@ -315,7 +316,7 @@ void Interpreter::visitICmpInst(ICmpInst &I) {
 
 #define IMPLEMENT_VECTOR_FCMP(OP)                                   \
   case Type::VectorTyID:                                            \
-    if(dyn_cast<VectorType>(Ty)->getElementType()->isFloatTy()) {   \
+    if (cast<VectorType>(Ty)->getElementType()->isFloatTy()) {      \
       IMPLEMENT_VECTOR_FCMP_T(OP, Float);                           \
     } else {                                                        \
         IMPLEMENT_VECTOR_FCMP_T(OP, Double);                        \
@@ -362,7 +363,7 @@ static GenericValue executeFCMP_OEQ(GenericValue Src1, GenericValue Src2,
 
 #define MASK_VECTOR_NANS(TY, X,Y, FLAG)                                     \
   if (TY->isVectorTy()) {                                                   \
-    if (dyn_cast<VectorType>(TY)->getElementType()->isFloatTy()) {          \
+    if (cast<VectorType>(TY)->getElementType()->isFloatTy()) {              \
       MASK_VECTOR_NANS_T(X, Y, Float, FLAG)                                 \
     } else {                                                                \
       MASK_VECTOR_NANS_T(X, Y, Double, FLAG)                                \
@@ -464,14 +465,14 @@ static GenericValue executeFCMP_OGT(GenericValue Src1, GenericValue Src2,
     return Dest;                                                         \
   }
 
-#define IMPLEMENT_VECTOR_UNORDERED(TY, X,Y, _FUNC)                       \
-  if (TY->isVectorTy()) {                                                \
-    GenericValue DestMask = Dest;                                        \
-    Dest = _FUNC(Src1, Src2, Ty);                                        \
-      for( size_t _i=0; _i<Src1.AggregateVal.size(); _i++)               \
-        if (DestMask.AggregateVal[_i].IntVal == true)                    \
-          Dest.AggregateVal[_i].IntVal = APInt(1,true);                  \
-      return Dest;                                                       \
+#define IMPLEMENT_VECTOR_UNORDERED(TY, X, Y, FUNC)                             \
+  if (TY->isVectorTy()) {                                                      \
+    GenericValue DestMask = Dest;                                              \
+    Dest = FUNC(Src1, Src2, Ty);                                               \
+    for (size_t _i = 0; _i < Src1.AggregateVal.size(); _i++)                   \
+      if (DestMask.AggregateVal[_i].IntVal == true)                            \
+        Dest.AggregateVal[_i].IntVal = APInt(1, true);                         \
+    return Dest;                                                               \
   }
 
 static GenericValue executeFCMP_UEQ(GenericValue Src1, GenericValue Src2,
@@ -535,7 +536,7 @@ static GenericValue executeFCMP_ORD(GenericValue Src1, GenericValue Src2,
   if(Ty->isVectorTy()) {
     assert(Src1.AggregateVal.size() == Src2.AggregateVal.size());
     Dest.AggregateVal.resize( Src1.AggregateVal.size() );
-    if(dyn_cast<VectorType>(Ty)->getElementType()->isFloatTy()) {
+    if (cast<VectorType>(Ty)->getElementType()->isFloatTy()) {
       for( size_t _i=0;_i<Src1.AggregateVal.size();_i++)
         Dest.AggregateVal[_i].IntVal = APInt(1,
         ( (Src1.AggregateVal[_i].FloatVal ==
@@ -566,7 +567,7 @@ static GenericValue executeFCMP_UNO(GenericValue Src1, GenericValue Src2,
   if(Ty->isVectorTy()) {
     assert(Src1.AggregateVal.size() == Src2.AggregateVal.size());
     Dest.AggregateVal.resize( Src1.AggregateVal.size() );
-    if(dyn_cast<VectorType>(Ty)->getElementType()->isFloatTy()) {
+    if (cast<VectorType>(Ty)->getElementType()->isFloatTy()) {
       for( size_t _i=0;_i<Src1.AggregateVal.size();_i++)
         Dest.AggregateVal[_i].IntVal = APInt(1,
         ( (Src1.AggregateVal[_i].FloatVal !=
@@ -592,7 +593,7 @@ static GenericValue executeFCMP_UNO(GenericValue Src1, GenericValue Src2,
 }
 
 static GenericValue executeFCMP_BOOL(GenericValue Src1, GenericValue Src2,
-                                    const Type *Ty, const bool val) {
+                                     Type *Ty, const bool val) {
   GenericValue Dest;
     if(Ty->isVectorTy()) {
       assert(Src1.AggregateVal.size() == Src2.AggregateVal.size());
@@ -712,10 +713,10 @@ void Interpreter::visitBinaryOperator(BinaryOperator &I) {
     // Macros to choose appropriate TY: float or double and run operation
     // execution
 #define FLOAT_VECTOR_OP(OP) {                                         \
-  if (dyn_cast<VectorType>(Ty)->getElementType()->isFloatTy())        \
+  if (cast<VectorType>(Ty)->getElementType()->isFloatTy())            \
     FLOAT_VECTOR_FUNCTION(OP, FloatVal)                               \
   else {                                                              \
-    if (dyn_cast<VectorType>(Ty)->getElementType()->isDoubleTy())     \
+    if (cast<VectorType>(Ty)->getElementType()->isDoubleTy())         \
       FLOAT_VECTOR_FUNCTION(OP, DoubleVal)                            \
     else {                                                            \
       dbgs() << "Unhandled type for OP instruction: " << *Ty << "\n"; \
@@ -744,12 +745,12 @@ void Interpreter::visitBinaryOperator(BinaryOperator &I) {
     case Instruction::FMul:  FLOAT_VECTOR_OP(*) break;
     case Instruction::FDiv:  FLOAT_VECTOR_OP(/) break;
     case Instruction::FRem:
-      if (dyn_cast<VectorType>(Ty)->getElementType()->isFloatTy())
+      if (cast<VectorType>(Ty)->getElementType()->isFloatTy())
         for (unsigned i = 0; i < R.AggregateVal.size(); ++i)
           R.AggregateVal[i].FloatVal = 
           fmod(Src1.AggregateVal[i].FloatVal, Src2.AggregateVal[i].FloatVal);
       else {
-        if (dyn_cast<VectorType>(Ty)->getElementType()->isDoubleTy())
+        if (cast<VectorType>(Ty)->getElementType()->isDoubleTy())
           for (unsigned i = 0; i < R.AggregateVal.size(); ++i)
             R.AggregateVal[i].DoubleVal = 
             fmod(Src1.AggregateVal[i].DoubleVal, Src2.AggregateVal[i].DoubleVal);
@@ -787,7 +788,7 @@ void Interpreter::visitBinaryOperator(BinaryOperator &I) {
 }
 
 static GenericValue executeSelectInst(GenericValue Src1, GenericValue Src2,
-                                      GenericValue Src3, const Type *Ty) {
+                                      GenericValue Src3, Type *Ty) {
     GenericValue Dest;
     if(Ty->isVectorTy()) {
       assert(Src1.AggregateVal.size() == Src2.AggregateVal.size());
@@ -804,7 +805,7 @@ static GenericValue executeSelectInst(GenericValue Src1, GenericValue Src2,
 
 void Interpreter::visitSelectInst(SelectInst &I) {
   ExecutionContext &SF = ECStack.back();
-  const Type * Ty = I.getOperand(0)->getType();
+  Type * Ty = I.getOperand(0)->getType();
   GenericValue Src1 = getOperandValue(I.getOperand(0), SF);
   GenericValue Src2 = getOperandValue(I.getOperand(1), SF);
   GenericValue Src3 = getOperandValue(I.getOperand(2), SF);
@@ -967,7 +968,7 @@ void Interpreter::visitAllocaInst(AllocaInst &I) {
   unsigned NumElements = 
     getOperandValue(I.getOperand(0), SF).IntVal.getZExtValue();
 
-  unsigned TypeSize = (size_t)TD.getTypeAllocSize(Ty);
+  unsigned TypeSize = (size_t)getDataLayout().getTypeAllocSize(Ty);
 
   // Avoid malloc-ing zero bytes, use max()...
   unsigned MemToAlloc = std::max(1U, NumElements * TypeSize);
@@ -999,7 +1000,7 @@ GenericValue Interpreter::executeGEPOperation(Value *Ptr, gep_type_iterator I,
 
   for (; I != E; ++I) {
     if (StructType *STy = dyn_cast<StructType>(*I)) {
-      const StructLayout *SLO = TD.getStructLayout(STy);
+      const StructLayout *SLO = getDataLayout().getStructLayout(STy);
 
       const ConstantInt *CPU = cast<ConstantInt>(I.getOperand());
       unsigned Index = unsigned(CPU->getZExtValue());
@@ -1019,7 +1020,7 @@ GenericValue Interpreter::executeGEPOperation(Value *Ptr, gep_type_iterator I,
         assert(BitWidth == 64 && "Invalid index type for getelementptr");
         Idx = (int64_t)IdxGV.IntVal.getZExtValue();
       }
-      Total += TD.getTypeAllocSize(ST->getElementType())*Idx;
+      Total += getDataLayout().getTypeAllocSize(ST->getElementType()) * Idx;
     }
   }
 
@@ -1138,7 +1139,7 @@ void Interpreter::visitShl(BinaryOperator &I) {
   GenericValue Src1 = getOperandValue(I.getOperand(0), SF);
   GenericValue Src2 = getOperandValue(I.getOperand(1), SF);
   GenericValue Dest;
-  const Type *Ty = I.getType();
+  Type *Ty = I.getType();
 
   if (Ty->isVectorTy()) {
     uint32_t src1Size = uint32_t(Src1.AggregateVal.size());
@@ -1165,7 +1166,7 @@ void Interpreter::visitLShr(BinaryOperator &I) {
   GenericValue Src1 = getOperandValue(I.getOperand(0), SF);
   GenericValue Src2 = getOperandValue(I.getOperand(1), SF);
   GenericValue Dest;
-  const Type *Ty = I.getType();
+  Type *Ty = I.getType();
 
   if (Ty->isVectorTy()) {
     uint32_t src1Size = uint32_t(Src1.AggregateVal.size());
@@ -1192,7 +1193,7 @@ void Interpreter::visitAShr(BinaryOperator &I) {
   GenericValue Src1 = getOperandValue(I.getOperand(0), SF);
   GenericValue Src2 = getOperandValue(I.getOperand(1), SF);
   GenericValue Dest;
-  const Type *Ty = I.getType();
+  Type *Ty = I.getType();
 
   if (Ty->isVectorTy()) {
     size_t src1Size = Src1.AggregateVal.size();
@@ -1236,10 +1237,10 @@ GenericValue Interpreter::executeTruncInst(Value *SrcVal, Type *DstTy,
 
 GenericValue Interpreter::executeSExtInst(Value *SrcVal, Type *DstTy,
                                           ExecutionContext &SF) {
-  const Type *SrcTy = SrcVal->getType();
+  Type *SrcTy = SrcVal->getType();
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
   if (SrcTy->isVectorTy()) {
-    const Type *DstVecTy = DstTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
     unsigned DBitWidth = cast<IntegerType>(DstVecTy)->getBitWidth();
     unsigned size = Src.AggregateVal.size();
     // the sizes of src and dst vectors must be equal.
@@ -1247,7 +1248,7 @@ GenericValue Interpreter::executeSExtInst(Value *SrcVal, Type *DstTy,
     for (unsigned i = 0; i < size; i++)
       Dest.AggregateVal[i].IntVal = Src.AggregateVal[i].IntVal.sext(DBitWidth);
   } else {
-    const IntegerType *DITy = cast<IntegerType>(DstTy);
+    auto *DITy = cast<IntegerType>(DstTy);
     unsigned DBitWidth = DITy->getBitWidth();
     Dest.IntVal = Src.IntVal.sext(DBitWidth);
   }
@@ -1256,10 +1257,10 @@ GenericValue Interpreter::executeSExtInst(Value *SrcVal, Type *DstTy,
 
 GenericValue Interpreter::executeZExtInst(Value *SrcVal, Type *DstTy,
                                           ExecutionContext &SF) {
-  const Type *SrcTy = SrcVal->getType();
+  Type *SrcTy = SrcVal->getType();
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
   if (SrcTy->isVectorTy()) {
-    const Type *DstVecTy = DstTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
     unsigned DBitWidth = cast<IntegerType>(DstVecTy)->getBitWidth();
 
     unsigned size = Src.AggregateVal.size();
@@ -1268,7 +1269,7 @@ GenericValue Interpreter::executeZExtInst(Value *SrcVal, Type *DstTy,
     for (unsigned i = 0; i < size; i++)
       Dest.AggregateVal[i].IntVal = Src.AggregateVal[i].IntVal.zext(DBitWidth);
   } else {
-    const IntegerType *DITy = cast<IntegerType>(DstTy);
+    auto *DITy = cast<IntegerType>(DstTy);
     unsigned DBitWidth = DITy->getBitWidth();
     Dest.IntVal = Src.IntVal.zext(DBitWidth);
   }
@@ -1326,8 +1327,8 @@ GenericValue Interpreter::executeFPToUIInst(Value *SrcVal, Type *DstTy,
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
 
   if (SrcTy->getTypeID() == Type::VectorTyID) {
-    const Type *DstVecTy = DstTy->getScalarType();
-    const Type *SrcVecTy = SrcTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
+    Type *SrcVecTy = SrcTy->getScalarType();
     uint32_t DBitWidth = cast<IntegerType>(DstVecTy)->getBitWidth();
     unsigned size = Src.AggregateVal.size();
     // the sizes of src and dst vectors must be equal.
@@ -1364,8 +1365,8 @@ GenericValue Interpreter::executeFPToSIInst(Value *SrcVal, Type *DstTy,
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
 
   if (SrcTy->getTypeID() == Type::VectorTyID) {
-    const Type *DstVecTy = DstTy->getScalarType();
-    const Type *SrcVecTy = SrcTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
+    Type *SrcVecTy = SrcTy->getScalarType();
     uint32_t DBitWidth = cast<IntegerType>(DstVecTy)->getBitWidth();
     unsigned size = Src.AggregateVal.size();
     // the sizes of src and dst vectors must be equal
@@ -1400,7 +1401,7 @@ GenericValue Interpreter::executeUIToFPInst(Value *SrcVal, Type *DstTy,
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
 
   if (SrcVal->getType()->getTypeID() == Type::VectorTyID) {
-    const Type *DstVecTy = DstTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
     unsigned size = Src.AggregateVal.size();
     // the sizes of src and dst vectors must be equal
     Dest.AggregateVal.resize(size);
@@ -1432,7 +1433,7 @@ GenericValue Interpreter::executeSIToFPInst(Value *SrcVal, Type *DstTy,
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
 
   if (SrcVal->getType()->getTypeID() == Type::VectorTyID) {
-    const Type *DstVecTy = DstTy->getScalarType();
+    Type *DstVecTy = DstTy->getScalarType();
     unsigned size = Src.AggregateVal.size();
     // the sizes of src and dst vectors must be equal
     Dest.AggregateVal.resize(size);
@@ -1476,7 +1477,7 @@ GenericValue Interpreter::executeIntToPtrInst(Value *SrcVal, Type *DstTy,
   GenericValue Dest, Src = getOperandValue(SrcVal, SF);
   assert(DstTy->isPointerTy() && "Invalid PtrToInt instruction");
 
-  uint32_t PtrSize = TD.getPointerSizeInBits();
+  uint32_t PtrSize = getDataLayout().getPointerSizeInBits();
   if (PtrSize != Src.IntVal.getBitWidth())
     Src.IntVal = Src.IntVal.zextOrTrunc(PtrSize);
 
@@ -1496,10 +1497,10 @@ GenericValue Interpreter::executeBitCastInst(Value *SrcVal, Type *DstTy,
       (DstTy->getTypeID() == Type::VectorTyID)) {
     // vector src bitcast to vector dst or vector src bitcast to scalar dst or
     // scalar src bitcast to vector dst
-    bool isLittleEndian = TD.isLittleEndian();
+    bool isLittleEndian = getDataLayout().isLittleEndian();
     GenericValue TempDst, TempSrc, SrcVec;
-    const Type *SrcElemTy;
-    const Type *DstElemTy;
+    Type *SrcElemTy;
+    Type *DstElemTy;
     unsigned SrcBitSize;
     unsigned DstBitSize;
     unsigned SrcNum;
@@ -2072,13 +2073,12 @@ GenericValue Interpreter::getOperandValue(Value *V, ExecutionContext &SF) {
 //===----------------------------------------------------------------------===//
 // callFunction - Execute the specified function...
 //
-void Interpreter::callFunction(Function *F,
-                               const std::vector<GenericValue> &ArgVals) {
+void Interpreter::callFunction(Function *F, ArrayRef<GenericValue> ArgVals) {
   assert((ECStack.empty() || !ECStack.back().Caller.getInstruction() ||
           ECStack.back().Caller.arg_size() == ArgVals.size()) &&
          "Incorrect number of arguments passed into function call!");
   // Make a new stack frame... and fill it in.
-  ECStack.push_back(ExecutionContext());
+  ECStack.emplace_back();
   ExecutionContext &StackFrame = ECStack.back();
   StackFrame.CurFunction = F;
 
@@ -2091,7 +2091,7 @@ void Interpreter::callFunction(Function *F,
   }
 
   // Get pointers to first LLVM BB & Instruction in function.
-  StackFrame.CurBB     = F->begin();
+  StackFrame.CurBB     = &F->front();
   StackFrame.CurInst   = StackFrame.CurBB->begin();
 
   // Run through the function arguments and initialize their values...
@@ -2103,7 +2103,7 @@ void Interpreter::callFunction(Function *F,
   unsigned i = 0;
   for (Function::arg_iterator AI = F->arg_begin(), E = F->arg_end(); 
        AI != E; ++AI, ++i)
-    SetValue(AI, ArgVals[i], StackFrame);
+    SetValue(&*AI, ArgVals[i], StackFrame);
 
   // Handle varargs arguments...
   StackFrame.VarArgs.assign(ArgVals.begin()+i, ArgVals.end());
@@ -2121,27 +2121,5 @@ void Interpreter::run() {
 
     DEBUG(dbgs() << "About to interpret: " << I);
     visit(I);   // Dispatch to one of the visit* methods...
-#if 0
-    // This is not safe, as visiting the instruction could lower it and free I.
-DEBUG(
-    if (!isa<CallInst>(I) && !isa<InvokeInst>(I) && 
-        I.getType() != Type::VoidTy) {
-      dbgs() << "  --> ";
-      const GenericValue &Val = SF.Values[&I];
-      switch (I.getType()->getTypeID()) {
-      default: llvm_unreachable("Invalid GenericValue Type");
-      case Type::VoidTyID:    dbgs() << "void"; break;
-      case Type::FloatTyID:   dbgs() << "float " << Val.FloatVal; break;
-      case Type::DoubleTyID:  dbgs() << "double " << Val.DoubleVal; break;
-      case Type::PointerTyID: dbgs() << "void* " << intptr_t(Val.PointerVal);
-        break;
-      case Type::IntegerTyID: 
-        dbgs() << "i" << Val.IntVal.getBitWidth() << " "
-               << Val.IntVal.toStringUnsigned(10)
-               << " (0x" << Val.IntVal.toStringUnsigned(16) << ")\n";
-        break;
-      }
-    });
-#endif
   }
 }

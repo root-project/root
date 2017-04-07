@@ -1,3 +1,46 @@
+/// \file
+/// \ingroup tutorial_fft
+/// \notebook -js
+/// This tutorial illustrates the Fast Fourier Transforms interface in ROOT.
+/// FFT transform types provided in ROOT:
+///
+///  - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT)
+/// in one or more dimensions, -1 in the exponent
+///  - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT)
+///  in one or more dimensions, +1 in the exponent
+///  - "R2C"        - a real-input/complex-output discrete Fourier transform (DFT)
+///  in one or more dimensions,
+///  - "C2R"        - inverse transforms to "R2C", taking complex input
+///  (storing the non-redundant half of a logically Hermitian array)
+///  to real output
+///  - "R2HC"       - a real-input DFT with output in "halfcomplex" format,
+///  i.e. real and imaginary parts for a transform of size n stored as
+///  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
+///  - "HC2R"       - computes the reverse of FFTW_R2HC, above
+///  - "DHT"        - computes a discrete Hartley transform
+///
+///
+///
+/// Sine/cosine transforms:
+///
+///  - DCT-I  (REDFT00 in FFTW3 notation)
+///  - DCT-II (REDFT10 in FFTW3 notation)
+///  - DCT-III(REDFT01 in FFTW3 notation)
+///  - DCT-IV (REDFT11 in FFTW3 notation)
+///  - DST-I  (RODFT00 in FFTW3 notation)
+///  - DST-II (RODFT10 in FFTW3 notation)
+///  - DST-III(RODFT01 in FFTW3 notation)
+///  - DST-IV (RODFT11 in FFTW3 notation)
+///
+/// First part of the tutorial shows how to transform the histograms
+/// Second part shows how to transform the data arrays directly
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+///
+/// \authors Anna Kreshuk, Jens Hoffmann
+
 #include "TH1D.h"
 #include "TVirtualFFT.h"
 #include "TF1.h"
@@ -6,40 +49,8 @@
 
 void FFT()
 {
-
-//This tutorial illustrates the Fast Fourier Transforms interface in ROOT.
-//FFT transform types provided in ROOT:
-// - "C2CFORWARD" - a complex input/output discrete Fourier transform (DFT)
-//                  in one or more dimensions, -1 in the exponent
-// - "C2CBACKWARD"- a complex input/output discrete Fourier transform (DFT)
-//                  in one or more dimensions, +1 in the exponent
-// - "R2C"        - a real-input/complex-output discrete Fourier transform (DFT)
-//                  in one or more dimensions,
-// - "C2R"        - inverse transforms to "R2C", taking complex input
-//                  (storing the non-redundant half of a logically Hermitian array)
-//                  to real output
-// - "R2HC"       - a real-input DFT with output in ¡Èhalfcomplex¡É format,
-//                  i.e. real and imaginary parts for a transform of size n stored as
-//                  r0, r1, r2, ..., rn/2, i(n+1)/2-1, ..., i2, i1
-// - "HC2R"       - computes the reverse of FFTW_R2HC, above
-// - "DHT"        - computes a discrete Hartley transform
-// Sine/cosine transforms:
-//  DCT-I  (REDFT00 in FFTW3 notation)
-//  DCT-II (REDFT10 in FFTW3 notation)
-//  DCT-III(REDFT01 in FFTW3 notation)
-//  DCT-IV (REDFT11 in FFTW3 notation)
-//  DST-I  (RODFT00 in FFTW3 notation)
-//  DST-II (RODFT10 in FFTW3 notation)
-//  DST-III(RODFT01 in FFTW3 notation)
-//  DST-IV (RODFT11 in FFTW3 notation)
-//First part of the tutorial shows how to transform the histograms
-//Second part shows how to transform the data arrays directly
-//Authors: Anna Kreshuk and Jens Hoffmann
-
-
-//********* Histograms ********//
-
-
+   // Histograms
+   // =========
    //prepare the canvas for drawing
    TCanvas *myc = new TCanvas("myc", "Fast Fourier Transform", 800, 600);
    myc->SetFillColor(45);
@@ -145,7 +156,8 @@ void FFT()
    delete fft_back;
    fft_back=0;
 
-//********* Data array - same transform ********//
+// Data array - same transform
+// ===========================
 
    //Allocate an array big enough to hold the transform output
    //Transform output in 1d contains, for a transform of size N,
@@ -161,12 +173,12 @@ void FFT()
 
    //Make our own TVirtualFFT object (using option "K")
    //Third parameter (option) consists of 3 parts:
-   //-transform type:
+   //- transform type:
    // real input/complex output in our case
-   //-transform flag:
+   //- transform flag:
    // the amount of time spent in planning
    // the transform (see TVirtualFFT class description)
-   //-to create a new TVirtualFFT object (option "K") or use the global (default)
+   //- to create a new TVirtualFFT object (option "K") or use the global (default)
    Int_t n_size = n+1;
    TVirtualFFT *fft_own = TVirtualFFT::FFT(1, &n_size, "R2C ES K");
    if (!fft_own) return;

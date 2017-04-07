@@ -21,9 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TBranch;
 
@@ -35,16 +33,17 @@ class TChainElement : public TNamed {
    };
 
 protected:
-   Long64_t      fEntries;          //Number of entries in the tree of this chain element
-   Int_t         fNPackets;         //Number of packets
-   Int_t         fPacketSize;       //Number of events in one packet for parallel root
-   Int_t         fStatus;           //branch status when used as a branch
-   void         *fBaddress;         //!branch address when used as a branch
-   TString       fBaddressClassName;//!Name of the class pointed to by fBaddress
-   UInt_t        fBaddressType;     //!Type of the value pointed to by fBaddress
-   Bool_t        fBaddressIsPtr;    //!True if the address is a pointer to an address
-   char         *fPackets;          //!Packet descriptor string
-   TBranch     **fBranchPtr;        //!Address of user branch pointer (to updated upon loading a file)
+   Long64_t      fEntries;           ///<  Number of entries in the tree of this chain element
+   Int_t         fNPackets;          ///<  Number of packets
+   Int_t         fPacketSize;        ///<  Number of events in one packet for parallel root
+   Int_t         fStatus;            ///<  branch status when used as a branch
+   void         *fBaddress;          ///<! branch address when used as a branch
+   TString       fBaddressClassName; ///<! Name of the class pointed to by fBaddress
+   UInt_t        fBaddressType;      ///<! Type of the value pointed to by fBaddress
+   Bool_t        fBaddressIsPtr;     ///<! True if the address is a pointer to an address
+   char         *fPackets;           ///<! Packet descriptor string
+   TBranch     **fBranchPtr;         ///<! Address of user branch pointer (to updated upon loading a file)
+   Int_t         fLoadResult;        ///<! Return value of TChain::LoadTree(); 0 means success
 
 public:
    TChainElement();
@@ -57,6 +56,7 @@ public:
    virtual UInt_t      GetBaddressType() const { return fBaddressType; }
    virtual TBranch   **GetBranchPtr() const { return fBranchPtr; }
    virtual Long64_t    GetEntries() const {return fEntries;}
+           Int_t       GetLoadResult() const { return fLoadResult; }
    virtual char       *GetPackets() const {return fPackets;}
    virtual Int_t       GetPacketSize() const {return fPacketSize;}
    virtual Int_t       GetStatus() const {return fStatus;}
@@ -67,6 +67,7 @@ public:
    virtual void        SetBaddressIsPtr(Bool_t isptr) { fBaddressIsPtr = isptr; }
    virtual void        SetBaddressType(UInt_t type) { fBaddressType = type; }
    virtual void        SetBranchPtr(TBranch **ptr) { fBranchPtr = ptr; }
+           void        SetLoadResult(Int_t result) { fLoadResult = result; }
    virtual void        SetLookedUp(Bool_t y = kTRUE);
    virtual void        SetNumberEntries(Long64_t n) {fEntries=n;}
    virtual void        SetPacketSize(Int_t size = 100);

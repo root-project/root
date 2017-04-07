@@ -18,9 +18,7 @@
  *                                                                       *
  *************************************************************************/
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 //--- globals
 const Double_t kNullVector[3]       =       {0.0,  0.0,  0.0};
@@ -119,12 +117,10 @@ public :
    ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
 };
 
-
-
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
 // TGeoTranslation - class describing translations. A translation is      //
-//    basicaly an array of 3 doubles matching the positions 12, 13        //
+//    basically an array of 3 doubles matching the positions 12, 13       //
 //    and 14 in the homogenous matrix description.                        //
 //                                                                        //
 //                                                                        //

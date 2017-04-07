@@ -44,12 +44,8 @@
 #define ROOT_TQpLinSolverDens
 
 #include "TQpLinSolverBase.h"
-#ifndef ROOT_TQpProbDens
 #include "TQpProbDens.h"
-#endif
-#ifndef ROOT_TQpDataDens
 #include "TQpDataDens.h"
-#endif
 
 #include "TDecompLU.h"
 

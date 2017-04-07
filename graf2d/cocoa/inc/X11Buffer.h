@@ -17,12 +17,8 @@
 
 #include <Cocoa/Cocoa.h>
 
-#ifndef ROOT_CocoaGuiTypes
 #include "CocoaGuiTypes.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////////////
 //                                                                              //

@@ -9,14 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TBufferFile                                                          //
-//                                                                      //
-// The concrete implementation of TBuffer for writing/reading to/from a //
-// ROOT file or socket.                                                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TBufferFile.cxx
+\class TBufferFile
+\ingroup IO
+
+The concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
+*/
 
 #include <string.h>
 #include <typeinfo>
@@ -39,6 +38,7 @@
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
 #include "TArrayC.h"
+#include "TROOT.h"
 
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
      defined(__GNUC__)
@@ -64,19 +64,19 @@ Int_t TBufferFile::fgMapSize   = kMapSize;
 
 ClassImp(TBufferFile)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return hash value for this object.
+
 static inline ULong_t Void_Hash(const void *ptr)
 {
-   // Return hash value for this object.
-
    return TString::Hash(&ptr, sizeof(void*));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Thread-safe check on StreamerInfos of a TClass
+
 static inline bool Class_Has_StreamerInfo(const TClass* cl)
 {
-   // Thread-safe check on StreamerInfos of a TClass
-
    // NOTE: we do not need a R__LOCKGUARD2 since we know the
    //   mutex is available since the TClass constructor will make
    //   it
@@ -84,16 +84,16 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
    return cl->GetStreamerInfos()->GetLast()>1;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite. By default the I/O buffer has a size of
+/// TBuffer::kInitialSize (1024) bytes.
+
 TBufferFile::TBufferFile(TBuffer::EMode mode)
             :TBuffer(mode),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes.
-
    fMapCount     = 0;
    fMapSize      = fgMapSize;
    fMap          = 0;
@@ -102,15 +102,15 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
    fDisplacement = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object. Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite.
+
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
             :TBuffer(mode,bufsiz),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite.
-
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
@@ -118,21 +118,22 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
    fDisplacement = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an I/O buffer object.
+/// Mode should be either TBuffer::kRead or
+/// TBuffer::kWrite. By default the I/O buffer has a size of
+/// TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
+/// to TBuffer via the buf argument. By default this buffer will be adopted
+/// unless adopt is false.
+/// If the new buffer is <b>not</b> adopted and no memory allocation routine
+/// is provided, a Fatal error will be issued if the Buffer attempts to
+/// expand.
+
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
    TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
    fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
    fInfo(0), fInfoStack()
 {
-   // Create an I/O buffer object. Mode should be either TBuffer::kRead or
-   // TBuffer::kWrite. By default the I/O buffer has a size of
-   // TBuffer::kInitialSize (1024) bytes. An external buffer can be passed
-   // to TBuffer via the buf argument. By default this buffer will be adopted
-   // unless adopt is false.
-   // If the new buffer is _not_ adopted and no memory allocation routine
-   // is provided, a Fatal error will be issued if the Buffer attempts to
-   // expand.
-
    fMapCount = 0;
    fMapSize  = fgMapSize;
    fMap      = 0;
@@ -140,30 +141,30 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
    fDisplacement = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete an I/O buffer object.
+
 TBufferFile::~TBufferFile()
 {
-   // Delete an I/O buffer object.
-
    delete fMap;
    delete fClassMap;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the version number of the owner file.
+
 Int_t TBufferFile::GetVersionOwner() const
 {
-   // Return the version number of the owner file.
-
    TFile *file = (TFile*)GetParent();
    if (file) return file->GetVersion();
    else return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the classindex of the current file as using this TStreamerInfo
+
 void TBufferFile::TagStreamerInfo(TVirtualStreamerInfo* info)
 {
-   // Mark the classindex of the current file as using this TStreamerInfo
-
    TFile *file = (TFile*)GetParent();
    if (file) {
       TArrayC *cindex = file->GetClassIndex();
@@ -181,33 +182,35 @@ void TBufferFile::TagStreamerInfo(TVirtualStreamerInfo* info)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Increment level.
+
 void TBufferFile::IncrementLevel(TVirtualStreamerInfo* info)
 {
-   // Increment level.
-
    fInfoStack.push_back(fInfo);
    fInfo = (TStreamerInfo*)info;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decrement level.
+
 void TBufferFile::DecrementLevel(TVirtualStreamerInfo* /*info*/)
 {
-   // Decrement level.
-
    fInfo = fInfoStack.back();
    fInfoStack.pop_back();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle old file formats.
+///
+/// Files written with versions older than 3.00/06 had a non-portable
+/// implementation of Long_t/ULong_t. These types should not have been
+/// used at all. However, because some users had already written many
+/// files with these types we provide this dirty patch for "backward
+/// compatibility"
+
 static void frombufOld(char *&buf, Long_t *x)
 {
-   // Files written with versions older than 3.00/06 had a non-portable
-   // implementation of Long_t/ULong_t. These types should not have been
-   // used at all. However, because some users had already written many
-   // files with these types we provide this dirty patch for "backward
-   // compatibility"
-
 #ifdef R__BYTESWAP
 #ifdef R__B64
    char *sw = (char *)x;
@@ -232,11 +235,11 @@ static void frombufOld(char *&buf, Long_t *x)
    buf += sizeof(Long_t);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read Long from TBuffer.
+
 void TBufferFile::ReadLong(Long_t &l)
 {
-   // Read Long from TBuffer.
-
    TFile *file = (TFile*)fParent;
    if (file && file->GetVersion() < 30006) {
       frombufOld(fBufCur, &l);
@@ -245,11 +248,11 @@ void TBufferFile::ReadLong(Long_t &l)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read TString from TBuffer.
+
 void TBufferFile::ReadTString(TString &s)
 {
-   // Read TString from TBuffer.
-
    Int_t   nbig;
    UChar_t nwh;
    *this >> nwh;
@@ -270,11 +273,11 @@ void TBufferFile::ReadTString(TString &s)
    }
 }
 
-//_______________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write TString to TBuffer.
+
 void TBufferFile::WriteTString(const TString &s)
 {
-   // Write TString to TBuffer.
-
    Int_t nbig = s.Length();
    UChar_t nwh;
    if (nbig > 254) {
@@ -289,12 +292,15 @@ void TBufferFile::WriteTString(const TString &s)
    WriteFastArray(data, nbig);
 }
 
-//_______________________________________________________________________
-void TBufferFile::ReadStdString(std::string &s)
-{
-   // Read std::string from TBuffer.
+////////////////////////////////////////////////////////////////////////////////
+/// Read std::string from TBuffer.
 
-   std::string *obj = &s;
+void TBufferFile::ReadStdString(std::string *obj)
+{
+   if (obj == 0) {
+      Error("TBufferFile::ReadStdString","The std::string address is nullptr but should not");
+      return;
+   }
    Int_t   nbig;
    UChar_t nwh;
    *this >> nwh;
@@ -317,13 +323,17 @@ void TBufferFile::ReadStdString(std::string &s)
    }
 }
 
-//_______________________________________________________________________
-void TBufferFile::WriteStdString(const std::string &s)
-{
-   // Write std::string to TBuffer.
+////////////////////////////////////////////////////////////////////////////////
+/// Write std::string to TBuffer.
 
-   if (s==0) return;
-   const std::string *obj = &s;
+void TBufferFile::WriteStdString(const std::string *obj)
+{
+   if (obj==0) {
+      *this << (UChar_t)0;
+      WriteFastArray("",0);
+      return;
+   }
+
    UChar_t nwh;
    Int_t nbig = obj->length();
    if (nbig > 254) {
@@ -337,12 +347,45 @@ void TBufferFile::WriteStdString(const std::string &s)
    WriteFastArray(obj->data(),nbig);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read char* from TBuffer.
+
+void TBufferFile::ReadCharStar(char* &s)
+{
+   delete [] s;
+   s = 0;
+
+   Int_t nch;
+   *this >> nch;
+   if (nch > 0) {
+      s = new char[nch+1];
+      ReadFastArray(s, nch);
+      s[nch] = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write char* into TBuffer.
+
+void TBufferFile::WriteCharStar(char *s)
+{
+   Int_t nch = 0;
+   if (s) {
+      nch = strlen(s);
+      *this  << nch;
+      WriteFastArray(s,nch);
+   } else {
+      *this << nch;
+   }
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set byte count at position cntpos in the buffer. Generate warning if
+/// count larger than kMaxMapCount. The count is excluded its own size.
+
 void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
 {
-   // Set byte count at position cntpos in the buffer. Generate warning if
-   // count larger than kMaxMapCount. The count is excluded its own size.
-
    UInt_t cnt = UInt_t(fBufCur - fBuffer) - cntpos - sizeof(UInt_t);
    char  *buf = (char *)(fBuffer + cntpos);
 
@@ -370,16 +413,16 @@ void TBufferFile::SetByteCount(UInt_t cntpos, Bool_t packInVersion)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check byte count with current buffer position. They should
+/// match. If not print warning and position buffer in correct
+/// place determined by the byte count. Startpos is position of
+/// first byte where the byte count is written in buffer.
+/// Returns 0 if everything is ok, otherwise the bytecount offset
+/// (< 0 when read too little, >0 when read too much).
+
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char *classname)
 {
-   // Check byte count with current buffer position. They should
-   // match. If not print warning and position buffer in correct
-   // place determined by the byte count. Startpos is position of
-   // first byte where the byte count is written in buffer.
-   // Returns 0 if everything is ok, otherwise the bytecount offset
-   // (< 0 when read too little, >0 when read too much).
-
    if (!bcnt) return 0;
 
    Int_t  offset = 0;
@@ -423,40 +466,40 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
    return offset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check byte count with current buffer position. They should
+/// match. If not print warning and position buffer in correct
+/// place determined by the byte count. Startpos is position of
+/// first byte where the byte count is written in buffer.
+/// Returns 0 if everything is ok, otherwise the bytecount offset
+/// (< 0 when read too little, >0 when read too much).
+
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
 {
-   // Check byte count with current buffer position. They should
-   // match. If not print warning and position buffer in correct
-   // place determined by the byte count. Startpos is position of
-   // first byte where the byte count is written in buffer.
-   // Returns 0 if everything is ok, otherwise the bytecount offset
-   // (< 0 when read too little, >0 when read too much).
-
    if (!bcnt) return 0;
    return CheckByteCount( startpos, bcnt, clss, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check byte count with current buffer position. They should
+/// match. If not print warning and position buffer in correct
+/// place determined by the byte count. Startpos is position of
+/// first byte where the byte count is written in buffer.
+/// Returns 0 if everything is ok, otherwise the bytecount offset
+/// (< 0 when read too little, >0 when read too much).
+
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname)
 {
-   // Check byte count with current buffer position. They should
-   // match. If not print warning and position buffer in correct
-   // place determined by the byte count. Startpos is position of
-   // first byte where the byte count is written in buffer.
-   // Returns 0 if everything is ok, otherwise the bytecount offset
-   // (< 0 when read too little, >0 when read too much).
-
    if (!bcnt) return 0;
    return CheckByteCount( startpos, bcnt, 0, classname);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Float16_t from the buffer,
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+
 void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *ele)
 {
-   // Read a Float16_t from the buffer,
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-
    if (ele && ele->GetFactor() != 0) {
       ReadWithFactor(f, ele->GetFactor(), ele->GetXmin());
    } else {
@@ -467,12 +510,12 @@ void TBufferFile::ReadFloat16(Float_t *f, TStreamerElement *ele)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer,
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+
 void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *ele)
 {
-   // Read a Double32_t from the buffer,
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-
    if (ele && ele->GetFactor() != 0) {
       ReadWithFactor(d, ele->GetFactor(), ele->GetXmin());
    } else {
@@ -489,24 +532,24 @@ void TBufferFile::ReadDouble32(Double_t *d, TStreamerElement *ele)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Float16_t from the buffer when the factor and minimum value have been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+
 void TBufferFile::ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue)
 {
-   // Read a Float16_t from the buffer when the factor and minimun value have been specified
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-
    //a range was specified. We read an integer and convert it back to a double.
    UInt_t aint;
    frombuf(this->fBufCur,&aint);
    ptr[0] = (Float_t)(aint/factor + minvalue);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+
 void TBufferFile::ReadWithNbits(Float_t *ptr, Int_t nbits)
 {
-   // Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-
    //we read the exponent and the truncated mantissa of the float
    //and rebuild the float.
    union {
@@ -524,24 +567,24 @@ void TBufferFile::ReadWithNbits(Float_t *ptr, Int_t nbits)
    ptr[0] = temp.fFloatValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the factor and minimum value have been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+
 void TBufferFile::ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue)
 {
-   // Read a Double32_t from the buffer when the factor and minimun value have been specified
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-
    //a range was specified. We read an integer and convert it back to a double.
    UInt_t aint;
    frombuf(this->fBufCur,&aint);
    ptr[0] = (Double_t)(aint/factor + minvalue);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+
 void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 {
-   // Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-
    //we read the exponent and the truncated mantissa of the float
    //and rebuild the float.
    union {
@@ -559,64 +602,61 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
    ptr[0] = (Double_t)temp.fFloatValue;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a Float16_t to the buffer.
+///
+/// The following cases are supported for streaming a Float16_t type
+/// depending on the range declaration in the comment field of the data member:
+/// Case | Example |
+/// -----|---------|
+///  A   | Float16_t     fNormal; |
+///  B   | Float16_t     fTemperature; //[0,100]|
+///  C   | Float16_t     fCharge;      //[-1,1,2]|
+///  D   | Float16_t     fVertex[3];   //[-30,30,10]|
+///  E   | Float16_t     fChi2;        //[0,0,6]|
+///  F   | Int_t         fNsp;<br>Float16_t*    fPointValue;   //[fNsp][0,3]|
+///
+///   - In case A fNormal is converted from a Float_t to a Float_t with mantissa truncated to 12 bits
+///   - In case B fTemperature is converted to a 32 bit unsigned integer
+///   - In case C fCharge is converted to a 2 bits unsigned integer
+///   - In case D the array elements of fVertex are converted to an unsigned 10 bits integer
+///   - In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
+///   - In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+/// Note that the range specifier must follow the dimension specifier.
+/// Case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+///
+/// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
+///   - [0,1];
+///   - [-10,100];
+///   - [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
+///   - [-10,100,16]
+///   - [0,0,8]
+/// if nbits is not specified, or nbits <2 or nbits>16 it is set to 16. If
+/// (xmin==0 and xmax==0 and nbits <=14) the float word will have
+/// its mantissa truncated to nbits significative bits.
+///
+/// ## IMPORTANT NOTE
+/// ### NOTE 1
+/// Lets assume an original variable float x:
+/// When using the format [0,0,8] (ie range not specified) you get the best
+/// relative precision when storing and reading back the truncated x, say xt.
+/// The variance of (x-xt)/x will be better than when specifying a range
+/// for the same number of bits. However the precision relative to the
+/// range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
+/// The format [0,0,8] is also interesting when the range of x is infinite
+/// or unknown.
+///
+/// ### NOTE 2
+/// It is important to understand the difference with the meaning of nbits
+///   - in case of [-1,1,nbits], nbits is the total number of bits used to make
+/// the conversion from a float to an integer
+///   - in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+///
+///  See example of use of the Float16_t data type in tutorial double32.C
+///  \image html tbufferfile_double32.gif
+
 void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
 {
-   // write a Float16_t to the buffer.
-   // The following cases are supported for streaming a Float16_t type
-   // depending on the range declaration in the comment field of the data member:
-   //  A-    Float16_t     fNormal;
-   //  B-    Float16_t     fTemperature; //[0,100]
-   //  C-    Float16_t     fCharge;      //[-1,1,2]
-   //  D-    Float16_t     fVertex[3];   //[-30,30,10]
-   //  E-    Float16_t     fChi2;        //[0,0,6]
-   //  F-    Int_t          fNsp;
-   //        Float16_t*    fPointValue;   //[fNsp][0,3]
-   //
-   // In case A fNormal is converted from a Float_t to a Float_t with mantissa truncated to 12 bits
-   // In case B fTemperature is converted to a 32 bit unsigned integer
-   // In case C fCharge is converted to a 2 bits unsigned integer
-   // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-   // In case E fChi2 is converted to a Float_t with truncated precision at 6 bits
-   // In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
-   //           Note that the range specifier must follow the dimension specifier.
-   // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
-   //
-   // The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
-   //  [0,1]
-   //  [-10,100];
-   //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
-   //  [-10,100,16]
-   //  [0,0,8]
-   // if nbits is not specified, or nbits <2 or nbits>16 it is set to 16
-   // if (xmin==0 and xmax==0 and nbits <=14) the float word will have
-   // its mantissa truncated to nbits significative bits.
-   //
-   // IMPORTANT NOTE
-   // --------------
-   // --NOTE 1
-   // Lets assume an original variable float x:
-   // When using the format [0,0,8] (ie range not specified) you get the best
-   // relative precision when storing and reading back the truncated x, say xt.
-   // The variance of (x-xt)/x will be better than when specifying a range
-   // for the same number of bits. However the precision relative to the
-   // range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
-   // The format [0,0,8] is also interesting when the range of x is infinite
-   // or unknown.
-   //
-   // --NOTE 2
-   // It is important to understand the difference with the meaning of nbits
-   //  -in case of [-1,1,nbits], nbits is the total number of bits used to make
-   //    the conversion from a float to an integer
-   //  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
-   //
-   //  see example of use of the Float16_t data type in tutorial double32.C
-   //
-   //Begin_Html
-   /*
-     <img src="gif/double32.gif">
-   */
-   //End_Html
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -652,64 +692,35 @@ void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write a Double32_t to the buffer.
+///
+/// The following cases are supported for streaming a Double32_t type
+/// depending on the range declaration in the comment field of the data member:
+/// Case | Example |
+/// -----|---------|
+///  A   | Double32_t     fNormal; |
+///  B   | Double32_t     fTemperature; //[0,100]|
+///  C   | Double32_t     fCharge;      //[-1,1,2]|
+///  D   | Double32_t     fVertex[3];   //[-30,30,10]|
+///  E   | Double32_t     fChi2;        //[0,0,6]|
+///  F   | Int_t         fNsp;<br>Double32_t*    fPointValue;   //[fNsp][0,3]|
+///
+/// In case A fNormal is converted from a Double_t to a Float_t
+/// In case B fTemperature is converted to a 32 bit unsigned integer
+/// In case C fCharge is converted to a 2 bits unsigned integer
+/// In case D the array elements of fVertex are converted to an unsigned 10 bits integer
+/// In case E fChi2 is converted to a Float_t with mantissa truncated precision at 6 bits
+/// In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
+///           Note that the range specifier must follow the dimension specifier.
+/// Case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+/// See TBufferFile::WriteFloat16 for more information.
+///
+///  see example of use of the Double32_t data type in tutorial double32.C
+///  \image html tbufferfile_double32.gif
+
 void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *ele)
 {
-   // write a Double32_t to the buffer.
-   // The following cases are supported for streaming a Double32_t type
-   // depending on the range declaration in the comment field of the data member:
-   //  A-    Double32_t     fNormal;
-   //  B-    Double32_t     fTemperature; //[0,100]
-   //  C-    Double32_t     fCharge;      //[-1,1,2]
-   //  D-    Double32_t     fVertex[3];   //[-30,30,10]
-   //  E-    Double32_t     fChi2;        //[0,0,6]
-   //  F-    Int_t          fNsp;
-   //        Double32_t*    fPointValue;   //[fNsp][0,3]
-   //
-   // In case A fNormal is converted from a Double_t to a Float_t
-   // In case B fTemperature is converted to a 32 bit unsigned integer
-   // In case C fCharge is converted to a 2 bits unsigned integer
-   // In case D the array elements of fVertex are converted to an unsigned 10 bits integer
-   // In case E fChi2 is converted to a Float_t with mantissa truncated precision at 6 bits
-   // In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
-   //           Note that the range specifier must follow the dimension specifier.
-   // the case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
-   //
-   // The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
-   //  [0,1]
-   //  [-10,100];
-   //  [-pi,pi], [-pi/2,pi/4],[-2pi,2*pi]
-   //  [-10,100,16]
-   //  [0,0,8]
-   // if nbits is not specified, or nbits <2 or nbits>32 it is set to 32
-   // if (xmin==0 and xmax==0 and nbits <=14) the double word will be converted
-   // to a float and its mantissa truncated to nbits significative bits.
-   //
-   // IMPORTANT NOTEs
-   // --------------
-   // --NOTE 1
-   // Lets assume an original variable double x:
-   // When using the format [0,0,8] (ie range not specified) you get the best
-   // relative precision when storing and reading back the truncated x, say xt.
-   // The variance of (x-xt)/x will be better than when specifying a range
-   // for the same number of bits. However the precision relative to the
-   // range (x-xt)/(xmax-xmin) will be worst, and vice-versa.
-   // The format [0,0,8] is also interesting when the range of x is infinite
-   // or unknown.
-   //
-   // --NOTE 2
-   // It is important to understand the difference with the meaning of nbits
-   //  -in case of [-1,1,nbits], nbits is the total number of bits used to make
-   //    the conversion from a double to an integer
-   //  -in case of [0,0,nbits], nbits is the number of bits used for the mantissa
-   //
-   //  see example of use of the Double32_t data type in tutorial double32.C
-   //
-   //Begin_Html
-   /*
-     <img src="gif/double32.gif">
-   */
-   //End_Html
 
    if (ele && ele->GetFactor() != 0) {
       //A range is specified. We normalize the double to the range and
@@ -750,13 +761,13 @@ void TBufferFile::WriteDouble32(Double_t *d, TStreamerElement *ele)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of bools from the I/O buffer. Returns the number of
+/// bools read. If argument is a 0 pointer then space will be
+/// allocated for the array.
+
 Int_t TBufferFile::ReadArray(Bool_t *&b)
 {
-   // Read array of bools from the I/O buffer. Returns the number of
-   // bools read. If argument is a 0 pointer then space will be
-   // allocated for the array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -778,13 +789,13 @@ Int_t TBufferFile::ReadArray(Bool_t *&b)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of characters from the I/O buffer. Returns the number of
+/// characters read. If argument is a 0 pointer then space will be
+/// allocated for the array.
+
 Int_t TBufferFile::ReadArray(Char_t *&c)
 {
-   // Read array of characters from the I/O buffer. Returns the number of
-   // characters read. If argument is a 0 pointer then space will be
-   // allocated for the array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -801,13 +812,13 @@ Int_t TBufferFile::ReadArray(Char_t *&c)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of shorts from the I/O buffer. Returns the number of shorts
+/// read. If argument is a 0 pointer then space will be allocated for the
+/// array.
+
 Int_t TBufferFile::ReadArray(Short_t *&h)
 {
-   // Read array of shorts from the I/O buffer. Returns the number of shorts
-   // read. If argument is a 0 pointer then space will be allocated for the
-   // array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -834,13 +845,13 @@ Int_t TBufferFile::ReadArray(Short_t *&h)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of ints from the I/O buffer. Returns the number of ints
+/// read. If argument is a 0 pointer then space will be allocated for the
+/// array.
+
 Int_t TBufferFile::ReadArray(Int_t *&ii)
 {
-   // Read array of ints from the I/O buffer. Returns the number of ints
-   // read. If argument is a 0 pointer then space will be allocated for the
-   // array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -867,13 +878,13 @@ Int_t TBufferFile::ReadArray(Int_t *&ii)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of longs from the I/O buffer. Returns the number of longs
+/// read. If argument is a 0 pointer then space will be allocated for the
+/// array.
+
 Int_t TBufferFile::ReadArray(Long_t *&ll)
 {
-   // Read array of longs from the I/O buffer. Returns the number of longs
-   // read. If argument is a 0 pointer then space will be allocated for the
-   // array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -893,13 +904,13 @@ Int_t TBufferFile::ReadArray(Long_t *&ll)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of long longs from the I/O buffer. Returns the number of
+/// long longs read. If argument is a 0 pointer then space will be
+/// allocated for the array.
+
 Int_t TBufferFile::ReadArray(Long64_t *&ll)
 {
-   // Read array of long longs from the I/O buffer. Returns the number of
-   // long longs read. If argument is a 0 pointer then space will be
-   // allocated for the array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -921,13 +932,13 @@ Int_t TBufferFile::ReadArray(Long64_t *&ll)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of floats from the I/O buffer. Returns the number of floats
+/// read. If argument is a 0 pointer then space will be allocated for the
+/// array.
+
 Int_t TBufferFile::ReadArray(Float_t *&f)
 {
-   // Read array of floats from the I/O buffer. Returns the number of floats
-   // read. If argument is a 0 pointer then space will be allocated for the
-   // array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -954,13 +965,13 @@ Int_t TBufferFile::ReadArray(Float_t *&f)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of doubles from the I/O buffer. Returns the number of doubles
+/// read. If argument is a 0 pointer then space will be allocated for the
+/// array.
+
 Int_t TBufferFile::ReadArray(Double_t *&d)
 {
-   // Read array of doubles from the I/O buffer. Returns the number of doubles
-   // read. If argument is a 0 pointer then space will be allocated for the
-   // array.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -982,14 +993,14 @@ Int_t TBufferFile::ReadArray(Double_t *&d)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of floats (written as truncated float) from the I/O buffer.
+/// Returns the number of floats read.
+/// If argument is a 0 pointer then space will be allocated for the array.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 Int_t TBufferFile::ReadArrayFloat16(Float_t *&f, TStreamerElement *ele)
 {
-   // Read array of floats (written as truncated float) from the I/O buffer.
-   // Returns the number of floats read.
-   // If argument is a 0 pointer then space will be allocated for the array.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1004,14 +1015,14 @@ Int_t TBufferFile::ReadArrayFloat16(Float_t *&f, TStreamerElement *ele)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of doubles (written as float) from the I/O buffer.
+/// Returns the number of doubles read.
+/// If argument is a 0 pointer then space will be allocated for the array.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 Int_t TBufferFile::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
 {
-   // Read array of doubles (written as float) from the I/O buffer.
-   // Returns the number of doubles read.
-   // If argument is a 0 pointer then space will be allocated for the array.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1026,12 +1037,12 @@ Int_t TBufferFile::ReadArrayDouble32(Double_t *&d, TStreamerElement *ele)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of bools from the I/O buffer. Returns the number of bools
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Bool_t *b)
 {
-   // Read array of bools from the I/O buffer. Returns the number of bools
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1053,12 +1064,12 @@ Int_t TBufferFile::ReadStaticArray(Bool_t *b)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of characters from the I/O buffer. Returns the number of
+/// characters read.
+
 Int_t TBufferFile::ReadStaticArray(Char_t *c)
 {
-   // Read array of characters from the I/O buffer. Returns the number of
-   // characters read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1075,12 +1086,12 @@ Int_t TBufferFile::ReadStaticArray(Char_t *c)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of shorts from the I/O buffer. Returns the number of shorts
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Short_t *h)
 {
-   // Read array of shorts from the I/O buffer. Returns the number of shorts
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1107,12 +1118,12 @@ Int_t TBufferFile::ReadStaticArray(Short_t *h)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of ints from the I/O buffer. Returns the number of ints
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Int_t *ii)
 {
-   // Read array of ints from the I/O buffer. Returns the number of ints
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1139,12 +1150,12 @@ Int_t TBufferFile::ReadStaticArray(Int_t *ii)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of longs from the I/O buffer. Returns the number of longs
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Long_t *ll)
 {
-   // Read array of longs from the I/O buffer. Returns the number of longs
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1164,12 +1175,12 @@ Int_t TBufferFile::ReadStaticArray(Long_t *ll)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of long longs from the I/O buffer. Returns the number of
+/// long longs read.
+
 Int_t TBufferFile::ReadStaticArray(Long64_t *ll)
 {
-   // Read array of long longs from the I/O buffer. Returns the number of
-   // long longs read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1191,12 +1202,12 @@ Int_t TBufferFile::ReadStaticArray(Long64_t *ll)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of floats from the I/O buffer. Returns the number of floats
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Float_t *f)
 {
-   // Read array of floats from the I/O buffer. Returns the number of floats
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1223,12 +1234,12 @@ Int_t TBufferFile::ReadStaticArray(Float_t *f)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of doubles from the I/O buffer. Returns the number of doubles
+/// read.
+
 Int_t TBufferFile::ReadStaticArray(Double_t *d)
 {
-   // Read array of doubles from the I/O buffer. Returns the number of doubles
-   // read.
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1250,13 +1261,13 @@ Int_t TBufferFile::ReadStaticArray(Double_t *d)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of floats (written as truncated float) from the I/O buffer.
+/// Returns the number of floats read.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 Int_t TBufferFile::ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele)
 {
-   // Read array of floats (written as truncated float) from the I/O buffer.
-   // Returns the number of floats read.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1271,13 +1282,13 @@ Int_t TBufferFile::ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of doubles (written as float) from the I/O buffer.
+/// Returns the number of doubles read.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 Int_t TBufferFile::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
 {
-   // Read array of doubles (written as float) from the I/O buffer.
-   // Returns the number of doubles read.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    R__ASSERT(IsReading());
 
    Int_t n;
@@ -1292,11 +1303,11 @@ Int_t TBufferFile::ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n bools from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Bool_t *b, Int_t n)
 {
-   // Read array of n bools from the I/O buffer.
-
    if (n <= 0 || n > fBufSize) return;
 
    if (sizeof(Bool_t) > 1) {
@@ -1309,11 +1320,11 @@ void TBufferFile::ReadFastArray(Bool_t *b, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n characters from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Char_t *c, Int_t n)
 {
-   // Read array of n characters from the I/O buffer.
-
    if (n <= 0 || n > fBufSize) return;
 
    Int_t l = sizeof(Char_t)*n;
@@ -1321,11 +1332,11 @@ void TBufferFile::ReadFastArray(Char_t *c, Int_t n)
    fBufCur += l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n characters from the I/O buffer.
+
 void TBufferFile::ReadFastArrayString(Char_t *c, Int_t n)
 {
-   // Read array of n characters from the I/O buffer.
-
    Int_t len;
    UChar_t lenchar;
    *this >> lenchar;
@@ -1349,11 +1360,11 @@ void TBufferFile::ReadFastArrayString(Char_t *c, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n shorts from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Short_t *h, Int_t n)
 {
-   // Read array of n shorts from the I/O buffer.
-
    Int_t l = sizeof(Short_t)*n;
    if (n <= 0 || l > fBufSize) return;
 
@@ -1371,11 +1382,11 @@ void TBufferFile::ReadFastArray(Short_t *h, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n ints from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Int_t *ii, Int_t n)
 {
-   // Read array of n ints from the I/O buffer.
-
    Int_t l = sizeof(Int_t)*n;
    if (l <= 0 || l > fBufSize) return;
 
@@ -1393,11 +1404,11 @@ void TBufferFile::ReadFastArray(Int_t *ii, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n longs from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Long_t *ll, Int_t n)
 {
-   // Read array of n longs from the I/O buffer.
-
    Int_t l = sizeof(Long_t)*n;
    if (l <= 0 || l > fBufSize) return;
 
@@ -1409,11 +1420,11 @@ void TBufferFile::ReadFastArray(Long_t *ll, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n long longs from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Long64_t *ll, Int_t n)
 {
-   // Read array of n long longs from the I/O buffer.
-
    Int_t l = sizeof(Long64_t)*n;
    if (l <= 0 || l > fBufSize) return;
 
@@ -1426,11 +1437,11 @@ void TBufferFile::ReadFastArray(Long64_t *ll, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n floats from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
 {
-   // Read array of n floats from the I/O buffer.
-
    Int_t l = sizeof(Float_t)*n;
    if (l <= 0 || l > fBufSize) return;
 
@@ -1448,11 +1459,11 @@ void TBufferFile::ReadFastArray(Float_t *f, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n doubles from the I/O buffer.
+
 void TBufferFile::ReadFastArray(Double_t *d, Int_t n)
 {
-   // Read array of n doubles from the I/O buffer.
-
    Int_t l = sizeof(Double_t)*n;
    if (l <= 0 || l > fBufSize) return;
 
@@ -1465,12 +1476,12 @@ void TBufferFile::ReadFastArray(Double_t *d, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n floats (written as truncated float) from the I/O buffer.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele)
 {
-   // Read array of n floats (written as truncated float) from the I/O buffer.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
@@ -1505,12 +1516,12 @@ void TBufferFile::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *el
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n floats (written as truncated float) from the I/O buffer.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 void TBufferFile::ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue)
 {
-   // Read array of n floats (written as truncated float) from the I/O buffer.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    //a range was specified. We read an integer and convert it back to a float
@@ -1519,12 +1530,12 @@ void TBufferFile::ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n floats (written as truncated float) from the I/O buffer.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 void TBufferFile::ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits)
 {
-   // Read array of n floats (written as truncated float) from the I/O buffer.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    if (!nbits) nbits = 12;
@@ -1547,12 +1558,12 @@ void TBufferFile::ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n doubles (written as float) from the I/O buffer.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele)
 {
-   // Read array of n doubles (written as float) from the I/O buffer.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    if (ele && ele->GetFactor() != 0) {
@@ -1595,12 +1606,12 @@ void TBufferFile::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n doubles (written as float) from the I/O buffer.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 void TBufferFile::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t factor, Double_t minvalue)
 {
-   // Read array of n doubles (written as float) from the I/O buffer.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    //a range was specified. We read an integer and convert it back to a double.
@@ -1609,12 +1620,12 @@ void TBufferFile::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t factor,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n doubles (written as float) from the I/O buffer.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 void TBufferFile::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t nbits)
 {
-   // Read array of n doubles (written as float) from the I/O buffer.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    if (n <= 0 || 3*n > fBufSize) return;
 
    if (!nbits) {
@@ -1645,14 +1656,14 @@ void TBufferFile::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t nbits)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read an array of 'n' objects from the I/O buffer.
+/// Stores the objects read starting at the address 'start'.
+/// The objects in the array are assume to be of class 'cl'.
+
 void TBufferFile::ReadFastArray(void  *start, const TClass *cl, Int_t n,
                                 TMemberStreamer *streamer, const TClass* onFileClass )
 {
-   // Read an array of 'n' objects from the I/O buffer.
-   // Stores the objects read starting at the address 'start'.
-   // The objects in the array are assume to be of class 'cl'.
-
    if (streamer) {
       streamer->SetOnFileClass(onFileClass);
       (*streamer)(*this,start,0);
@@ -1666,15 +1677,16 @@ void TBufferFile::ReadFastArray(void  *start, const TClass *cl, Int_t n,
    for(; obj<end; obj+=objectSize) ((TClass*)cl)->Streamer(obj,*this, onFileClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read an array of 'n' objects from the I/O buffer.
+///
+/// The objects read are stored starting at the address '*start'
+/// The objects in the array are assumed to be of class 'cl' or a derived class.
+/// 'mode' indicates whether the data member is marked with '->'
+
 void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
                                 Bool_t isPreAlloc, TMemberStreamer *streamer, const TClass* onFileClass)
 {
-   // Read an array of 'n' objects from the I/O buffer.
-   // The objects read are stored starting at the address '*start'
-   // The objects in the array are assumed to be of class 'cl' or a derived class.
-   // 'mode' indicates whether the data member is marked with '->'
-
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer (*start)
    // is never 0.
 
@@ -1728,11 +1740,11 @@ void TBufferFile::ReadFastArray(void **start, const TClass *cl, Int_t n,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n bools into the I/O buffer.
+
 void TBufferFile::WriteArray(const Bool_t *b, Int_t n)
 {
-   // Write array of n bools into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1753,11 +1765,11 @@ void TBufferFile::WriteArray(const Bool_t *b, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n characters into the I/O buffer.
+
 void TBufferFile::WriteArray(const Char_t *c, Int_t n)
 {
-   // Write array of n characters into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1773,11 +1785,11 @@ void TBufferFile::WriteArray(const Char_t *c, Int_t n)
    fBufCur += l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n shorts into the I/O buffer.
+
 void TBufferFile::WriteArray(const Short_t *h, Int_t n)
 {
-   // Write array of n shorts into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1803,11 +1815,11 @@ void TBufferFile::WriteArray(const Short_t *h, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n ints into the I/O buffer.
+
 void TBufferFile::WriteArray(const Int_t *ii, Int_t n)
 {
-   // Write array of n ints into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1833,11 +1845,11 @@ void TBufferFile::WriteArray(const Int_t *ii, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n longs into the I/O buffer.
+
 void TBufferFile::WriteArray(const Long_t *ll, Int_t n)
 {
-   // Write array of n longs into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1851,13 +1863,13 @@ void TBufferFile::WriteArray(const Long_t *ll, Int_t n)
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n unsigned longs into the I/O buffer.
+/// This is an explicit case for unsigned longs since signed longs
+/// have a special tobuf().
+
 void TBufferFile::WriteArray(const ULong_t *ll, Int_t n)
 {
-   // Write array of n unsigned longs into the I/O buffer.
-   // This is an explicit case for unsigned longs since signed longs
-   // have a special tobuf().
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1871,11 +1883,11 @@ void TBufferFile::WriteArray(const ULong_t *ll, Int_t n)
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n long longs into the I/O buffer.
+
 void TBufferFile::WriteArray(const Long64_t *ll, Int_t n)
 {
-   // Write array of n long longs into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1896,11 +1908,11 @@ void TBufferFile::WriteArray(const Long64_t *ll, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n floats into the I/O buffer.
+
 void TBufferFile::WriteArray(const Float_t *f, Int_t n)
 {
-   // Write array of n floats into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1926,11 +1938,11 @@ void TBufferFile::WriteArray(const Float_t *f, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n doubles into the I/O buffer.
+
 void TBufferFile::WriteArray(const Double_t *d, Int_t n)
 {
-   // Write array of n doubles into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1951,12 +1963,12 @@ void TBufferFile::WriteArray(const Double_t *d, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n floats (as truncated float) into the I/O buffer.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 void TBufferFile::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele)
 {
-   // Write array of n floats (as truncated float) into the I/O buffer.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1971,12 +1983,12 @@ void TBufferFile::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement 
    WriteFastArrayFloat16(f,n,ele);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n doubles (as float) into the I/O buffer.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 void TBufferFile::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
 {
-   // Write array of n doubles (as float) into the I/O buffer.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    R__ASSERT(IsWriting());
 
    *this << n;
@@ -1991,11 +2003,11 @@ void TBufferFile::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
    WriteFastArrayDouble32(d,n,ele);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n bools into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Bool_t *b, Int_t n)
 {
-   // Write array of n bools into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(UChar_t)*n;
@@ -2010,11 +2022,11 @@ void TBufferFile::WriteFastArray(const Bool_t *b, Int_t n)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n characters into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Char_t *c, Int_t n)
 {
-   // Write array of n characters into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Char_t)*n;
@@ -2024,11 +2036,11 @@ void TBufferFile::WriteFastArray(const Char_t *c, Int_t n)
    fBufCur += l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n characters into the I/O buffer.
+
 void TBufferFile::WriteFastArrayString(const Char_t *c, Int_t n)
 {
-   // Write array of n characters into the I/O buffer.
-
    if (n < 255) {
       *this << (UChar_t)n;
    } else {
@@ -2045,11 +2057,11 @@ void TBufferFile::WriteFastArrayString(const Char_t *c, Int_t n)
    fBufCur += l;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n shorts into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Short_t *h, Int_t n)
 {
-   // Write array of n shorts into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Short_t)*n;
@@ -2069,11 +2081,11 @@ void TBufferFile::WriteFastArray(const Short_t *h, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n ints into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Int_t *ii, Int_t n)
 {
-   // Write array of n ints into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Int_t)*n;
@@ -2093,11 +2105,11 @@ void TBufferFile::WriteFastArray(const Int_t *ii, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n longs into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Long_t *ll, Int_t n)
 {
-   // Write array of n longs into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = 8*n;
@@ -2106,13 +2118,13 @@ void TBufferFile::WriteFastArray(const Long_t *ll, Int_t n)
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n unsigned longs into the I/O buffer.
+/// This is an explicit case for unsigned longs since signed longs
+/// have a special tobuf().
+
 void TBufferFile::WriteFastArray(const ULong_t *ll, Int_t n)
 {
-   // Write array of n unsigned longs into the I/O buffer.
-   // This is an explicit case for unsigned longs since signed longs
-   // have a special tobuf().
-
    if (n <= 0) return;
 
    Int_t l = 8*n;
@@ -2121,11 +2133,11 @@ void TBufferFile::WriteFastArray(const ULong_t *ll, Int_t n)
    for (int i = 0; i < n; i++) tobuf(fBufCur, ll[i]);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n long longs into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Long64_t *ll, Int_t n)
 {
-   // Write array of n long longs into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Long64_t)*n;
@@ -2140,11 +2152,11 @@ void TBufferFile::WriteFastArray(const Long64_t *ll, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n floats into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Float_t *f, Int_t n)
 {
-   // Write array of n floats into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
@@ -2164,11 +2176,11 @@ void TBufferFile::WriteFastArray(const Float_t *f, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n doubles into the I/O buffer.
+
 void TBufferFile::WriteFastArray(const Double_t *d, Int_t n)
 {
-   // Write array of n doubles into the I/O buffer.
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Double_t)*n;
@@ -2183,12 +2195,12 @@ void TBufferFile::WriteFastArray(const Double_t *d, Int_t n)
 #endif
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n floats (as truncated float) into the I/O buffer.
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16
+
 void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele)
 {
-   // Write array of n floats (as truncated float) into the I/O buffer.
-   // see comments about Float16_t encoding at TBufferFile::WriteFloat16
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
@@ -2234,12 +2246,12 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n doubles (as float) into the I/O buffer.
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32
+
 void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele)
 {
-   // Write array of n doubles (as float) into the I/O buffer.
-   // see comments about Double32_t encoding at TBufferFile::WriteDouble32
-
    if (n <= 0) return;
 
    Int_t l = sizeof(Float_t)*n;
@@ -2292,13 +2304,13 @@ void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write an array of object starting at the address 'start' and of length 'n'
+/// the objects in the array are assumed to be of class 'cl'
+
 void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
                                  TMemberStreamer *streamer)
 {
-   // Write an array of object starting at the address 'start' and of length 'n'
-   // the objects in the array are assumed to be of class 'cl'
-
    if (streamer) {
       (*streamer)(*this, start, 0);
       return;
@@ -2313,17 +2325,17 @@ void TBufferFile::WriteFastArray(void  *start, const TClass *cl, Int_t n,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write an array of object starting at the address '*start' and of length 'n'
+/// the objects in the array are of class 'cl'
+/// 'isPreAlloc' indicates whether the data member is marked with '->'
+/// Return:
+///   - 0: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+
 Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
                                   Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
-   // Write an array of object starting at the address '*start' and of length 'n'
-   // the objects in the array are of class 'cl'
-   // 'isPreAlloc' indicates whether the data member is marked with '->'
-   // Return:
-   //  0: success
-   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
-
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer
    // is never 0.
 
@@ -2364,42 +2376,46 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object from I/O buffer. clReq is NOT used.
+///
+/// The value returned is the address of the actual start in memory of
+/// the object. Note that if the actual class of the object does not
+/// inherit first from TObject, the type of the pointer is NOT 'TObject*'.
+/// [More accurately, the class needs to start with the TObject part, for
+/// the pointer to be a real TObject*].
+/// We recommend using ReadObjectAny instead of ReadObject
+
 TObject *TBufferFile::ReadObject(const TClass * /*clReq*/)
 {
-   // Read object from I/O buffer. clReq is NOT used.
-   // The value returned is the address of the actual start in memory of
-   // the object. Note that if the actual class of the object does not
-   // inherit first from TObject, the type of the pointer is NOT 'TObject*'.
-   // [More accurately, the class needs to start with the TObject part, for
-   // the pointer to be a real TObject*].
-   // We recommend using ReadObjectAny instead of ReadObject
-
    return (TObject*) ReadObjectAny(0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Skip any kind of object from buffer
+
 void TBufferFile::SkipObjectAny()
 {
-   // Skip any kind of object from buffer
-
    UInt_t start, count;
    ReadVersion(&start, &count);
    SetBufferOffset(start+count+sizeof(UInt_t));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read object from I/O buffer.
+///
+/// A typical use for this function is:
+///
+///     MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
+///
+/// I.e. clCast should point to a TClass object describing the class pointed
+/// to by your pointer.
+/// In case of multiple inheritance, the return value might not be the
+/// real beginning of the object in memory.  You will need to use a
+/// dynamic_cast later if you need to retrieve it.
+
 void *TBufferFile::ReadObjectAny(const TClass *clCast)
 {
-   // Read object from I/O buffer.
-   // A typical use for this function is:
-   //    MyClass *ptr = (MyClass*)b.ReadObjectAny(MyClass::Class());
-   // I.e. clCast should point to a TClass object describing the class pointed
-   // to by your pointer.
-   // In case of multiple inheritance, the return value might not be the
-   // real beginning of the object in memory.  You will need to use a
-   // dynamic_cast later if you need to retrieve it.
-
    R__ASSERT(IsReading());
 
    // make sure fMap is initialized
@@ -2528,21 +2544,21 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    return obj+baseOffset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+
 void TBufferFile::WriteObject(const TObject *obj)
 {
-   // Write object to I/O buffer.
-
    WriteObjectAny(obj, TObject::Class());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+/// This function assumes that the value of 'actualObjectStart' is the actual start of
+/// the object of class 'actualClass'
+
 void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *actualClass)
 {
-   // Write object to I/O buffer.
-   // This function assumes that the value of 'actualObjectStart' is the actual start of
-   // the object of class 'actualClass'
-
    R__ASSERT(IsWriting());
 
    if (!actualObjectStart) {
@@ -2619,18 +2635,19 @@ namespace {
    };
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+///
+/// This function assumes that the value in 'obj' is the value stored in
+/// a pointer to a "ptrClass". The actual type of the object pointed to
+/// can be any class derived from "ptrClass".
+/// Return:
+///   - 0: failure
+///   - 1: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+
 Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
 {
-   // Write object to I/O buffer.
-   // This function assumes that the value in 'obj' is the value stored in
-   // a pointer to a "ptrClass". The actual type of the object pointed to
-   // can be any class derived from "ptrClass".
-   // Return:
-   //  0: failure
-   //  1: success
-   //  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
-
    if (!obj) {
       WriteObjectClass(0, 0);
       return 1;
@@ -2664,13 +2681,14 @@ Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read class definition from I/O buffer.
+///
+/// \param[in] clReq Can be used to cross check if the actually read object is of the requested class.
+/// \param[in] objTag Set in case the object is a reference to an already read object.
+
 TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
 {
-   // Read class definition from I/O buffer. clReq can be used to cross check
-   // if the actually read object is of the requested class. objTag is
-   // set in case the object is a reference to an already read object.
-
    R__ASSERT(IsReading());
 
    // read byte count and/or tag (older files don't have byte count)
@@ -2751,11 +2769,11 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
    return cl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write class description to I/O buffer.
+
 void TBufferFile::WriteClass(const TClass *cl)
 {
-   // Write class description to I/O buffer.
-
    R__ASSERT(IsWriting());
 
    ULong_t idx;
@@ -2789,11 +2807,11 @@ void TBufferFile::WriteClass(const TClass *cl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Skip class version from I/O buffer.
+
 void TBufferFile::SkipVersion(const TClass *cl)
 {
-   // Skip class version from I/O buffer.
-
    Version_t version;
 
    // not interested in byte count
@@ -2860,11 +2878,11 @@ void TBufferFile::SkipVersion(const TClass *cl)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read class version from I/O buffer.
+
 Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass *cl)
 {
-   // Read class version from I/O buffer.
-
    Version_t version;
 
    if (startpos) {
@@ -2965,12 +2983,12 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
    return version;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read class version from I/O buffer, when the caller knows for sure that
+/// there is no checksum written/involved.
+
 Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
 {
-   // Read class version from I/O buffer, when the caller knows for sure that
-   // there is no checksum written/involved.
-
    Version_t version;
 
    if (startpos) {
@@ -3005,14 +3023,15 @@ Version_t TBufferFile::ReadVersionNoCheckSum(UInt_t *startpos, UInt_t *bcnt)
    return version;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read class version from I/O buffer
+///
+/// To be used when streaming out member-wise streamed collection where we do not
+/// care (not save) about the byte count and can safely ignore missing streamerInfo
+/// (since they usually indicate empty collections).
+
 Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
 {
-   // Read class version from I/O buffer ; to be used when streaming out
-   // memberwise streamed collection where we do not care (not save) about
-   // the byte count and can safely ignore missing streamerInfo (since they
-   // usually indicate empty collections).
-
    Version_t version;
 
    // not interested in byte count
@@ -3036,7 +3055,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
                      version = cl->GetClassVersion();
                   } else {
                      // If we can not find the streamerInfo this means that
-                     // we do not actully need it (the collection is always empty
+                     // we do not actually need it (the collection is always empty
                      // in this file), so no need to issue a warning.
                      return 0;
                   }
@@ -3060,7 +3079,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
                   version = vinfo->GetClassVersion();
                } else {
                   // If we can not find the streamerInfo this means that
-                  // we do not actully need it (the collection is always empty
+                  // we do not actually need it (the collection is always empty
                   // in this file), so no need to issue a warning.
                   return 0;
                }
@@ -3076,11 +3095,11 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
    return version;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write class version to I/O buffer.
+
 UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
 {
-   // Write class version to I/O buffer.
-
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
@@ -3105,12 +3124,12 @@ UInt_t TBufferFile::WriteVersion(const TClass *cl, Bool_t useBcnt)
    return cntpos;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write class version to I/O buffer after setting the kStreamedMemberWise
+/// bit in the version number.
+
 UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
 {
-   // Write class version to I/O buffer after setting the kStreamedMemberWise
-   // bit in the version number.
-
    UInt_t cntpos = 0;
    if (useBcnt) {
       // reserve space for leading byte count
@@ -3137,47 +3156,47 @@ UInt_t TBufferFile::WriteVersionMemberWise(const TClass *cl, Bool_t useBcnt)
    return cntpos;
 }
 
-//______________________________________________________________________________
-void TBufferFile::StreamObject(void *obj, const type_info &typeinfo, const TClass* onFileClass )
-{
-   // Stream an object given its C++ typeinfo information.
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object given its C++ typeinfo information.
 
+void TBufferFile::StreamObject(void *obj, const std::type_info &typeinfo, const TClass* onFileClass )
+{
    TClass *cl = TClass::GetClass(typeinfo);
    if (cl) cl->Streamer(obj, *this, (TClass*)onFileClass );
    else Warning("StreamObject","No TClass for the type %s is available, the object was not read.", typeinfo.name());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object given the name of its actual class.
+
 void TBufferFile::StreamObject(void *obj, const char *className, const TClass* onFileClass)
 {
-   // Stream an object given the name of its actual class.
-
    TClass *cl = TClass::GetClass(className);
    if (cl) cl->Streamer(obj, *this, (TClass*)onFileClass );
    else Warning("StreamObject","No TClass for the type %s is available, the object was not read.", className);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object given a pointer to its actual class.
+
 void TBufferFile::StreamObject(void *obj, const TClass *cl, const TClass* onFileClass )
 {
-   // Stream an object given a pointer to its actual class.
-
    ((TClass*)cl)->Streamer(obj, *this, (TClass*)onFileClass );
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Stream an object inheriting from TObject using its streamer.
+
 void TBufferFile::StreamObject(TObject *obj)
 {
-   // Stream an object inheriting from TObject using its streamer.
-
    obj->Streamer(*this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if offset is not too large (< kMaxMapCount) when writing.
+
 void TBufferFile::CheckCount(UInt_t offset)
 {
-   // Check if offset is not too large (< kMaxMapCount) when writing.
-
    if (IsWriting()) {
       if (offset >= kMaxMapCount) {
          Error("CheckCount", "buffer offset too large (larger than %d)", kMaxMapCount);
@@ -3186,14 +3205,14 @@ void TBufferFile::CheckCount(UInt_t offset)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check for object in the read map. If the object is 0 it still has to be
+/// read. Try to read it from the buffer starting at location offset. If the
+/// object is -1 then it really does not exist and we return 0. If the object
+/// exists just return the offset.
+
 UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass)
 {
-   // Check for object in the read map. If the object is 0 it still has to be
-   // read. Try to read it from the buffer starting at location offset. If the
-   // object is -1 then it really does not exist and we return 0. If the object
-   // exists just return the offset.
-
    // in position 0 we always have the reference to the null object
    if (!offset) return offset;
 
@@ -3263,23 +3282,23 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
    return offset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object is already in the buffer.
+/// Returns kTRUE if object already in the buffer, kFALSE otherwise
+/// (also if obj is 0 or TBuffer not in writing mode).
+
 Bool_t TBufferFile::CheckObject(const TObject *obj)
 {
-   // Check if the specified object is already in the buffer.
-   // Returns kTRUE if object already in the buffer, kFALSE otherwise
-   // (also if obj is 0 or TBuffer not in writing mode).
-
    return CheckObject(obj, TObject::Class());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
 Bool_t TBufferFile::CheckObject(const void *obj, const TClass *ptrClass)
 {
-   // Check if the specified object of the specified class is already in
-   // the buffer. Returns kTRUE if object already in the buffer,
-   // kFALSE otherwise (also if obj is 0 ).
-
    if (!obj || !fMap || !ptrClass) return kFALSE;
 
    TClass *clActual = ptrClass->GetActualClass(obj);
@@ -3297,26 +3316,26 @@ Bool_t TBufferFile::CheckObject(const void *obj, const TClass *ptrClass)
    return idx ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This offset is used when a key (or basket) is transfered from one
+/// file to the other.  In this case the TRef and TObject might have stored a
+/// pid index (to retrieve TProcessIDs) which referred to their order on the original
+/// file, the fPidOffset is to be added to those values to correctly find the
+/// TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+/// and need to be zero for new key/basket.
+
 void TBufferFile::SetPidOffset(UShort_t offset)
 {
-   // This offset is used when a key (or basket) is transfered from one
-   // file to the other.  In this case the TRef and TObject might have stored a
-   // pid index (to retrieve TProcessIDs) which refered to their order on the original
-   // file, the fPidOffset is to be added to those values to correctly find the
-   // TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
-   // and need to be zero for new key/basket.
-
    fPidOffset = offset;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the object stored in the buffer's object map at 'tag'
+/// Set ptr and ClassPtr respectively to the address of the object and
+/// a pointer to its TClass.
+
 void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const
 {
-   // Retrieve the object stored in the buffer's object map at 'tag'
-   // Set ptr and ClassPtr respectively to the address of the object and
-   // a pointer to its TClass.
-
    if (tag > (UInt_t)fMap->GetSize()) {
       ptr = 0;
       ClassPtr = 0;
@@ -3326,16 +3345,17 @@ void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) con
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the fMap container.
+///
+/// If obj is not 0 add object to the map (in read mode also add 0 objects to
+/// the map). This method may only be called outside this class just before
+/// calling obj->Streamer() to prevent self reference of obj, in case obj
+/// contains (via via) a pointer to itself. In that case offset must be 1
+/// (default value for offset).
+
 void TBufferFile::MapObject(const TObject *obj, UInt_t offset)
 {
-   // Add object to the fMap container.
-   // If obj is not 0 add object to the map (in read mode also add 0 objects to
-   // the map). This method may only be called outside this class just before
-   // calling obj->Streamer() to prevent self reference of obj, in case obj
-   // contains (via via) a pointer to itself. In that case offset must be 1
-   // (default value for offset).
-
    if (IsWriting()) {
       if (!fMap) InitMap();
 
@@ -3357,16 +3377,17 @@ void TBufferFile::MapObject(const TObject *obj, UInt_t offset)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the fMap container.
+///
+/// If obj is not 0 add object to the map (in read mode also add 0 objects to
+/// the map). This method may only be called outside this class just before
+/// calling obj->Streamer() to prevent self reference of obj, in case obj
+/// contains (via via) a pointer to itself. In that case offset must be 1
+/// (default value for offset).
+
 void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
 {
-   // Add object to the fMap container.
-   // If obj is not 0 add object to the map (in read mode also add 0 objects to
-   // the map). This method may only be called outside this class just before
-   // calling obj->Streamer() to prevent self reference of obj, in case obj
-   // contains (via via) a pointer to itself. In that case offset must be 1
-   // (default value for offset).
-
    if (IsWriting()) {
       if (!fMap) InitMap();
 
@@ -3387,51 +3408,51 @@ void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading. The default size is TBufferFile::kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the map does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// This method can only be called directly after the creation of
+/// the TBuffer, before any reading is done. Globally this option
+/// can be changed using SetGlobalReadParam().
+
 void TBufferFile::SetReadParam(Int_t mapsize)
 {
-   // Set the initial size of the map used to store object and class
-   // references during reading. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when reading many
-   // small objects the map does not need to be resized too often
-   // (the system is always dynamic, even with the default everything
-   // will work, only the initial resizing will cost some time).
-   // This method can only be called directly after the creation of
-   // the TBuffer, before any reading is done. Globally this option
-   // can be changed using SetGlobalReadParam().
-
    R__ASSERT(IsReading());
    R__ASSERT(fMap == 0);
 
    fMapSize = mapsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the hashtable used to store object and class
+/// references during writing. The default size is TBufferFile::kMapSize.
+/// Increasing the default has the benefit that when writing many
+/// small objects the hashtable does not get too many collisions
+/// (the system is always dynamic, even with the default everything
+/// will work, only a large number of collisions will cost performance).
+/// For optimal performance hashsize should always be a prime.
+/// This method can only be called directly after the creation of
+/// the TBuffer, before any writing is done. Globally this option
+/// can be changed using SetGlobalWriteParam().
+
 void TBufferFile::SetWriteParam(Int_t mapsize)
 {
-   // Set the initial size of the hashtable used to store object and class
-   // references during writing. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when writing many
-   // small objects the hashtable does not get too many collisions
-   // (the system is always dynamic, even with the default everything
-   // will work, only a large number of collisions will cost performance).
-   // For optimal performance hashsize should always be a prime.
-   // This method can only be called directly after the creation of
-   // the TBuffer, before any writing is done. Globally this option
-   // can be changed using SetGlobalWriteParam().
-
    R__ASSERT(IsWriting());
    R__ASSERT(fMap == 0);
 
    fMapSize = mapsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the fMap container and initialize them
+/// with the null object.
+
 void TBufferFile::InitMap()
 {
-   // Create the fMap container and initialize them
-   // with the null object.
-
    if (IsWriting()) {
       if (!fMap) {
          fMap = new TExMap(fMapSize);
@@ -3455,11 +3476,11 @@ void TBufferFile::InitMap()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete existing fMap and reset map counter.
+
 void TBufferFile::ResetMap()
 {
-   // Delete existing fMap and reset map counter.
-
    if (fMap) fMap->Delete();
    if (fClassMap) fClassMap->Delete();
    fMapCount     = 0;
@@ -3471,12 +3492,12 @@ void TBufferFile::ResetMap()
    ResetBit(kUser3);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read max bytes from the I/O buffer into buf. The function returns
+/// the actual number of bytes read.
+
 Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
 {
-   // Read max bytes from the I/O buffer into buf. The function returns
-   // the actual number of bytes read.
-
    R__ASSERT(IsReading());
 
    if (max == 0) return 0;
@@ -3489,11 +3510,11 @@ Int_t TBufferFile::ReadBuf(void *buf, Int_t max)
    return n;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write max bytes from buf into the I/O buffer.
+
 void TBufferFile::WriteBuf(const void *buf, Int_t max)
 {
-   // Write max bytes from buf into the I/O buffer.
-
    R__ASSERT(IsWriting());
 
    if (max == 0) return;
@@ -3504,14 +3525,14 @@ void TBufferFile::WriteBuf(const void *buf, Int_t max)
    fBufCur += max;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read string from I/O buffer. String is read till 0 character is
+/// found or till max-1 characters are read (i.e. string s has max
+/// bytes allocated). If max = -1 no check on number of character is
+/// made, reading continues till 0 character is found.
+
 char *TBufferFile::ReadString(char *s, Int_t max)
 {
-   // Read string from I/O buffer. String is read till 0 character is
-   // found or till max-1 characters are read (i.e. string s has max
-   // bytes allocated). If max = -1 no check on number of character is
-   // made, reading continues till 0 character is found.
-
    R__ASSERT(IsReading());
 
    char  ch;
@@ -3533,20 +3554,20 @@ char *TBufferFile::ReadString(char *s, Int_t max)
    return s;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write string to I/O buffer. Writes string upto and including the
+/// terminating 0.
+
 void TBufferFile::WriteString(const char *s)
 {
-   // Write string to I/O buffer. Writes string upto and including the
-   // terminating 0.
-
    WriteBuf(s, (strlen(s)+1)*sizeof(char));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the last TProcessID in the file.
+
 TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
 {
-   // Return the last TProcessID in the file.
-
    TFile *file = (TFile*)GetParent();
    // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
    if (file && !reftable->TestBit(TRefTable::kHaveWarnedReadingOld) && file->GetNProcessIDs()>1) {
@@ -3564,38 +3585,45 @@ TProcessID *TBufferFile::GetLastProcessID(TRefTable *reftable) const
    return fileProcessID;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The TProcessID with number pidf is read from file.
+/// If the object is not already entered in the gROOT list, it is added.
+
 TProcessID *TBufferFile::ReadProcessID(UShort_t pidf)
 {
-   // The TProcessID with number pidf is read from file.
-   // If the object is not already entered in the gROOT list, it is added.
-
    TFile *file = (TFile*)GetParent();
    if (!file) {
       if (!pidf) return TProcessID::GetPID(); //may happen when cloning an object
       return 0;
    }
-   return file->ReadProcessID(pidf);
+
+   TProcessID *pid = nullptr;
+   {
+      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
+      pid = file->ReadProcessID(pidf);
+   }
+
+   return pid;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the exec id stored in the current TStreamerInfo element.
+/// The execid has been saved in the unique id of the TStreamerElement
+/// being read by TStreamerElement::Streamer.
+/// The current element (fgElement) is set as a static global
+/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
+
 UInt_t TBufferFile::GetTRefExecId()
 {
-   // Return the exec id stored in the current TStreamerInfo element.
-   // The execid has been saved in the unique id of the TStreamerElement
-   // being read by TStreamerElement::Streamer.
-   // The current element (fgElement) is set as a static global
-   // by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
-
    return TStreamerInfo::GetCurrentElement()->GetUniqueID();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the ProcessID pid is already in the file.
+/// If not, add it and return the index number in the local file list.
+
 UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
 {
-   // Check if the ProcessID pid is already in the file.
-   // If not, add it and return the index number in the local file list.
-
    TFile *file = (TFile*)GetParent();
    if (!file) return 0;
    return file->WriteProcessID(pid);
@@ -3603,32 +3631,32 @@ UShort_t TBufferFile::WriteProcessID(TProcessID *pid)
 
 //---- Utilities for TStreamerInfo ----------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// force writing the TStreamerInfo to the file
+
 void TBufferFile::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
 {
-   // force writing the TStreamerInfo to the file
-
    if (info) info->ForceWriteInfo((TFile*)GetParent(),force);
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure TStreamerInfo is not optimized, otherwise it will not be
+/// possible to support schema evolution in read mode.
+/// In case the StreamerInfo has already been computed and optimized,
+/// one must disable the option BypassStreamer.
+
 void TBufferFile::ForceWriteInfoClones(TClonesArray *a)
 {
-   // Make sure TStreamerInfo is not optimized, otherwise it will not be
-   // possible to support schema evolution in read mode.
-   // In case the StreamerInfo has already been computed and optimized,
-   // one must disable the option BypassStreamer.
-
    TStreamerInfo *sinfo = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
    ForceWriteInfo(sinfo,kFALSE);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::ReadBufferClones.
+
 Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
 {
-   // Interface to TStreamerInfo::ReadBufferClones.
-
    char **arr = (char **)a->GetObjectRef(0);
    char **end = arr + nobjects;
    //a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
@@ -3637,11 +3665,11 @@ Int_t TBufferFile::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers
    return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)),arr,end);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::WriteBufferClones.
+
 Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
 {
-   // Interface to TStreamerInfo::WriteBufferClones.
-
    char **arr = reinterpret_cast<char**>(a->GetObjectRef(0));
    //a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
    TStreamerInfo *info = (TStreamerInfo*)a->GetClass()->GetStreamerInfo();
@@ -3651,11 +3679,11 @@ Int_t TBufferFile::WriteClones(TClonesArray *a, Int_t nobjects)
    return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)),arr,end);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read emulated class.
+
 Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClass *onFileClass)
 {
-   // Read emulated class.
-
    UInt_t start,count;
    //We assume that the class was written with a standard streamer
    //We attempt to recover if a version count was not written
@@ -3681,38 +3709,26 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer() functions in
+/// rootcint-generated dictionaries.
+/// This function assumes that the class version and the byte count
+/// information have been read.
+///
+/// \param[in] version The version number of the class
+/// \param[in] start   The starting position in the buffer b
+/// \param[in] count   The number of bytes for this object in the buffer
+///
+
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)
 {
-   // Deserialize information from a buffer into an object.
-   //
-   // Note: This function is called by the xxx::Streamer()
-   //       functions in rootcint-generated dictionaries.
-   //   // This function assumes that the class version and the byte count
-   // information have been read.
-   //
-   //   version  is the version number of the class
-   //   start    is the starting position in the buffer b
-   //   count    is the number of bytes for this object in the buffer
-   //
-
-   const TObjArray* infos;
-   Int_t ninfos;
-   {
-      R__LOCKGUARD(gInterpreterMutex);
-      infos = cl->GetStreamerInfos();
-      ninfos = infos->GetSize();
-   }
-   if (version < -1 || version >= ninfos) {
-      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-            cl->GetName(), version, Length() );
-      CheckByteCount(start, count, cl);
-      return 0;
-   }
 
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    TStreamerInfo *sinfo = 0;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
@@ -3726,11 +3742,19 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    }
    //---------------------------------------------------------------------------
    // Get local streamer info
-   //---------------------------------------------------------------------------
-   else {
-      // The StreamerInfo should exist at this point.
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
 
+   else {
       R__LOCKGUARD(gInterpreterMutex);
+      auto infos = cl->GetStreamerInfos();
+      auto ninfos = infos->GetSize();
+      if (version < -1 || version >= ninfos) {
+         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+               cl->GetName(), version, Length() );
+         CheckByteCount(start, count, cl);
+         return 0;
+      }
       sinfo = (TStreamerInfo*)infos->At(version);
       if (sinfo == 0) {
          // Unless the data is coming via a socket connection from with schema evolution
@@ -3740,6 +3764,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          // AND the checksum is the same.
          if ( version == cl->GetClassVersion() || version == 1 ) {
             const_cast<TClass*>(cl)->BuildRealData(pointer);
+            // This creation is alright since we just checked within the
+            // current 'locked' section.
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
@@ -3773,15 +3799,15 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer()
+/// functions in rootcint-generated dictionaries.
+///
+
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
 {
-   // Deserialize information from a buffer into an object.
-   //
-   // Note: This function is called by the xxx::Streamer()
-   //       functions in rootcint-generated dictionaries.
-   //
-
    // Read the class version from the buffer.
    UInt_t R__s = 0; // Start of object.
    UInt_t R__c = 0; // Count of bytes.
@@ -3801,7 +3827,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
 
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+
    TStreamerInfo *sinfo = 0;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
@@ -3815,9 +3842,10 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    }
    //---------------------------------------------------------------------------
    // Get local streamer info
-   //---------------------------------------------------------------------------
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
+
    else {
-      // The StreamerInfo should exist at this point.
       TStreamerInfo *guess = (TStreamerInfo*)cl->GetLastReadInfo();
       if (guess && guess->GetClassVersion() == version) {
          sinfo = guess;
@@ -3862,17 +3890,30 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             if (v2file || version == cl->GetClassVersion() || version == 1 ) {
                R__LOCKGUARD(gInterpreterMutex);
 
-               const_cast<TClass*>(cl)->BuildRealData(pointer);
-               sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-               sinfo->SetClassVersion(version);
-               const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-               if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-               if (v2file) {
-                  sinfo->Build(); // Get the elements.
-                  sinfo->Clear("build"); // Undo compilation.
-                  sinfo->BuildEmulated(file); // Fix the types and redo compilation.
-               } else {
-                  sinfo->Build();
+               // We need to check if another thread did not get here first
+               // and did the StreamerInfo creation already.
+               auto infos = cl->GetStreamerInfos();
+               auto ninfos = infos->GetSize();
+               if (!(version < -1 || version >= ninfos)) {
+                  sinfo = (TStreamerInfo *) infos->At(version);
+               }
+               if (!sinfo) {
+                  const_cast<TClass *>(cl)->BuildRealData(pointer);
+                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+                  sinfo->SetClassVersion(version);
+                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+                  if (gDebug > 0)
+                     printf(
+                           "Creating StreamerInfo for class: %s, version: %d\n",
+                           cl->GetName(), version);
+                  if (v2file) {
+                     sinfo->Build(); // Get the elements.
+                     sinfo->Clear("build"); // Undo compilation.
+                     sinfo->BuildEmulated(
+                           file); // Fix the types and redo compilation.
+                  } else {
+                     sinfo->Build();
+                  }
                }
             } else if (version==0) {
                // When the object was written the class was version zero, so
@@ -3902,15 +3943,15 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by the Streamer functions to serialize object at p
+/// to buffer b. The optional argument info may be specified to give an
+/// alternative StreamerInfo instead of using the default StreamerInfo
+/// automatically built from the class definition.
+/// For more information, see class TStreamerInfo.
+
 Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 {
-   // Function called by the Streamer functions to serialize object at p
-   // to buffer b. The optional argument info may be specified to give an
-   // alternative StreamerInfo instead of using the default StreamerInfo
-   // automatically built from the class definition.
-   // For more information, see class TStreamerInfo.
-
    //build the StreamerInfo if first time for the class
    TStreamerInfo *sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
    if (sinfo == 0) {
@@ -3949,12 +3990,12 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+/// The collection needs to be a split TClonesArray or a split vector of pointers.
+
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
 {
-   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-   // The collection needs to be a split TClonesArray or a split vector of pointers.
-
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -3978,12 +4019,12 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+/// The collection needs to be a split TClonesArray or a split vector of pointers.
+
 Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
-   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-   // The collection needs to be a split TClonesArray or a split vector of pointers.
-
    if (gDebug) {
       //loop on all active members
       TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
@@ -4007,11 +4048,11 @@ Int_t TBufferFile::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequen
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
+
 Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection)
 {
-   // Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-
    TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
    if (gDebug) {
 
@@ -4043,47 +4084,50 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
 
 //---- Static functions --------------------------------------------------------
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading.
+///
+/// The default size is kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the array does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// Per TBuffer object this option can be changed using SetReadParam().
+
 void TBufferFile::SetGlobalReadParam(Int_t mapsize)
 {
-   // Set the initial size of the map used to store object and class
-   // references during reading. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when reading many
-   // small objects the array does not need to be resized too often
-   // (the system is always dynamic, even with the default everything
-   // will work, only the initial resizing will cost some time).
-   // Per TBuffer object this option can be changed using SetReadParam().
-
    fgMapSize = mapsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading.
+///
+/// The default size is kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the array does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// Per TBuffer object this option can be changed using SetReadParam().
+
 void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
 {
-   // Set the initial size of the hashtable used to store object and class
-   // references during writing. The default size is kMapSize=503.
-   // Increasing the default has the benefit that when writing many
-   // small objects the hashtable does not get too many collisions
-   // (the system is always dynamic, even with the default everything
-   // will work, only a large number of collisions will cost performance).
-   // For optimal performance hashsize should always be a prime.
-   // Per TBuffer object this option can be changed using SetWriteParam().
-
    fgMapSize = mapsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default read map size.
+
 Int_t TBufferFile::GetGlobalReadParam()
 {
-   // Get default read map size.
-
    return fgMapSize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default write map size.
+
 Int_t TBufferFile::GetGlobalWriteParam()
 {
-   // Get default write map size.
-
    return fgMapSize;
 }

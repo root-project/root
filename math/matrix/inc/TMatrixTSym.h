@@ -24,12 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
-#ifndef ROOT_TMatrixTUtils
 #include "TMatrixTUtils.h"
-#endif
 
 template<class Element>class TMatrixT;
 template<class Element>class TMatrixTSymLazy;
@@ -94,7 +90,8 @@ public:
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void   Clear      (Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                           else fElements = 0; this->fNelems = 0; }
+                                                           else fElements = 0;
+                                                           this->fNelems = 0; }
    virtual Bool_t IsSymmetric() const { return kTRUE; }
 
            TMatrixTSym <Element> &Use           (Int_t row_lwb,Int_t row_upb,Element *data);
@@ -178,6 +175,16 @@ public:
 
    ClassDef(TMatrixTSym,2) // Template of Symmetric Matrix class
 };
+#ifndef __CINT__
+// When building with -fmodules, it instantiates all pending instantiations,
+// instead of delaying them until the end of the translation unit.
+// We 'got away with' probably because the use and the definition of the
+// explicit specialization do not occur in the same TU.
+//
+// In case we are building with -fmodules, we need to forward declare the
+// specialization in order to compile the dictionary G__Matrix.cxx.
+template <> TClass *TMatrixTSym<double>::Class();
+#endif // __CINT__
 
 template <class Element> inline const Element               *TMatrixTSym<Element>::GetMatrixArray() const { return fElements; }
 template <class Element> inline       Element               *TMatrixTSym<Element>::GetMatrixArray()       { return fElements; }
@@ -205,11 +212,11 @@ template <class Element> inline Element TMatrixTSym<Element>::operator()(Int_t r
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return 0.0;
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return 0.0;
+      return TMatrixTBase<Element>::NaNValue();      
    }
    return (fElements[arown*this->fNcols+acoln]);
 }
@@ -221,11 +228,11 @@ template <class Element> inline Element &TMatrixTSym<Element>::operator()(Int_t 
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return fElements[0];
+      return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }

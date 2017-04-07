@@ -24,12 +24,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
-#ifndef ROOT_Riosfwd
-#include "Riosfwd.h"
-#endif
 
 class TClonesArray;
 class TBrowser;
@@ -38,14 +33,14 @@ class TLeaf : public TNamed {
 
 protected:
 
-   Int_t       fNdata;           //! Number of elements in fAddress data buffer
-   Int_t       fLen;             //  Number of fixed length elements
-   Int_t       fLenType;         //  Number of bytes for this data type
-   Int_t       fOffset;          //  Offset in ClonesArray object (if one)
-   Bool_t      fIsRange;         //  (=kTRUE if leaf has a range, kFALSE otherwise)
-   Bool_t      fIsUnsigned;      //  (=kTRUE if unsigned, kFALSE otherwise)
-   TLeaf      *fLeafCount;       //  Pointer to Leaf count if variable length (we do not own the counter)
-   TBranch    *fBranch;          //! Pointer to supporting branch (we do not own the branch)
+   Int_t       fNdata;           ///<! Number of elements in fAddress data buffer
+   Int_t       fLen;             ///<  Number of fixed length elements
+   Int_t       fLenType;         ///<  Number of bytes for this data type
+   Int_t       fOffset;          ///<  Offset in ClonesArray object (if one)
+   Bool_t      fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise)
+   Bool_t      fIsUnsigned;      ///<  (=kTRUE if unsigned, kFALSE otherwise)
+   TLeaf      *fLeafCount;       ///<  Pointer to Leaf count if variable length (we do not own the counter)
+   TBranch    *fBranch;          ///<! Pointer to supporting branch (we do not own the branch)
 
    TLeaf(const TLeaf&);
    TLeaf& operator=(const TLeaf&);
@@ -56,8 +51,8 @@ protected:
 
 public:
    enum {
-      kIndirectAddress = BIT(11), // Data member is a pointer to an array of basic types.
-      kNewValue = BIT(12)         // Set if we own the value buffer and so must delete it ourselves.
+      kIndirectAddress = BIT(11), ///< Data member is a pointer to an array of basic types.
+      kNewValue = BIT(12)         ///< Set if we own the value buffer and so must delete it ourselves.
    };
 
    TLeaf();

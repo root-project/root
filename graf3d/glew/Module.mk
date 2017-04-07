@@ -13,7 +13,13 @@ GLEWDIRS     := $(GLEWDIR)/src
 GLEWDIRI     := $(GLEWDIR)/inc
 
 ##### libGLEW #####
-GLEWH        := $(filter-out $(MODDIRI)/GL/LinkDef%,$(wildcard $(MODDIRI)/GL/*.h))
+GLEWH        := $(MODDIRI)/GL/glew.h
+ifeq ($(BUILDX11),yes)
+GLEWH        += $(MODDIRI)/GL/glxew.h
+endif
+ifeq ($(ARCH),win32)
+GLEWH        += $(MODDIRI)/GL/wglew.h
+endif
 GLEWS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.c))
 GLEWO        := $(call stripsrc,$(GLEWS:.c=.o))
 
@@ -22,15 +28,12 @@ GLEWDEP      := $(GLEWO:.o=.d)
 GLEWLIB      := $(LPATH)/libGLEW.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+GLEWH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLEWH))
+ALLHDRS     += $(GLEWH_REL)
 ALLLIBS     += $(GLEWLIB)
 
 # include all dependency files
 INCLUDEFILES += $(GLEWDEP)
-
-ifeq ($(MACOSX_MINOR),3)
-GLEWLIBEXTRA += -lz
-endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
@@ -62,4 +65,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(GLEWO):     CFLAGS += $(OPENGLINCDIR:%=-I%)
+$(GLEWO): CFLAGS += $(OPENGLINCDIR:%=-I%)

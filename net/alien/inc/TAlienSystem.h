@@ -24,9 +24,7 @@
 #include <stdio.h>
 #endif
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class TAlienSystem : public TSystem {
 

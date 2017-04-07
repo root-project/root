@@ -8,19 +8,21 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/ClangInternalState.h"
+#include "cling/Utils/Output.h"
+#include "cling/Utils/Platform.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/Basic/Builtins.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Basic/TargetInfo.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 
 #include "llvm/ADT/SmallString.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Signals.h"
 
 #include <cstdio>
@@ -28,20 +30,22 @@
 #include <string>
 #include <time.h>
 
-#ifdef WIN32
-#define popen _popen
-#define pclose _pclose
-#endif
-
 using namespace clang;
 
 namespace cling {
 
-  ClangInternalState::ClangInternalState(ASTContext& AC, Preprocessor& PP,
-                                         llvm::Module* M, CodeGenerator* CG,
+  ClangInternalState::ClangInternalState(const ASTContext& AC,
+                                         const Preprocessor& PP,
+                                         const llvm::Module* M,
+                                         CodeGenerator* CG,
                                          const std::string& name)
     : m_ASTContext(AC), m_Preprocessor(PP), m_CodeGen(CG), m_Module(M),
-      m_DiffCommand("diff -u --text "), m_Name(name), m_DiffPair(nullptr) {
+#if defined(LLVM_ON_WIN32)
+      m_DiffCommand("diff.exe -u --text "),
+#else
+      m_DiffCommand("diff -u --text "),
+#endif
+      m_Name(name), m_DiffPair(nullptr) {
     store();
   }
 
@@ -129,93 +133,91 @@ namespace cling {
     return OS.release();
   }
 
-  void ClangInternalState::compare(const std::string& name) {
+  void ClangInternalState::compare(const std::string& name, bool verbose) {
     assert(name == m_Name && "Different names!?");
     m_DiffPair.reset(new ClangInternalState(m_ASTContext, m_Preprocessor,
                                             m_Module, m_CodeGen, name));
     std::string differences = "";
     // Ignore the builtins
-    typedef llvm::SmallVector<const char*, 1024> Builtins;
-    Builtins builtinNames;
-    m_ASTContext.BuiltinInfo.GetBuiltinNames(builtinNames);
-    for (Builtins::iterator I = builtinNames.begin();
-         I != builtinNames.end();) {
-      if (llvm::StringRef(*I).startswith("__builtin"))
-        I = builtinNames.erase(I);
-      else
-        ++I;
+    llvm::SmallVector<llvm::StringRef, 1024> builtinNames;
+    const clang::Builtin::Context& BuiltinCtx = m_ASTContext.BuiltinInfo;
+    for (auto i = clang::Builtin::NotBuiltin+1;
+         i != clang::Builtin::FirstTSBuiltin; ++i) {
+      llvm::StringRef Name(BuiltinCtx.getName(i));
+      if (Name.startswith("__builtin"))
+        builtinNames.emplace_back(Name);
+    }
+
+    for (auto&& BuiltinInfo: m_ASTContext.getTargetInfo().getTargetBuiltins()) {
+      llvm::StringRef Name(BuiltinInfo.Name);
+      if (!Name.startswith("__builtin"))
+        builtinNames.emplace_back(Name);
+#ifndef NDEBUG
+      else // Make sure it's already in the list
+        assert(std::find(builtinNames.begin(), builtinNames.end(),
+                         Name) == builtinNames.end() && "Not in list!");
+#endif
     }
 
     builtinNames.push_back(".*__builtin.*");
 
-    if (differentContent(m_LookupTablesFile, m_DiffPair->m_LookupTablesFile,
-                         differences, &builtinNames)) {
-      llvm::errs() << "Differences in the lookup tables\n";
-      llvm::errs() << differences << "\n";
-      differences = "";
-    }
-    if (differentContent(m_IncludedFilesFile, m_DiffPair->m_IncludedFilesFile,
-                         differences)) {
-      llvm::errs() << "Differences in the included files\n";
-      llvm::errs() << differences << "\n";
-      differences = "";
-    }
-    if (differentContent(m_ASTFile, m_DiffPair->m_ASTFile, differences)) {
-      llvm::errs() << "Differences in the AST \n";
-      llvm::errs() << differences << "\n";
-      differences = "";
-    }
+    differentContent(m_LookupTablesFile, m_DiffPair->m_LookupTablesFile,
+                     "lookup tables", verbose, &builtinNames);
+
+    differentContent(m_IncludedFilesFile, m_DiffPair->m_IncludedFilesFile,
+                     "included files", verbose);
+
+    differentContent(m_ASTFile, m_DiffPair->m_ASTFile, "AST", verbose);
+
     if (m_Module) {
       assert(m_CodeGen && "Must have CodeGen set");
       // We want to skip the intrinsics
       builtinNames.clear();
-      for (llvm::Module::const_iterator I = m_Module->begin(),
-             E = m_Module->end(); I != E; ++I)
-        if (I->isIntrinsic())
-          builtinNames.push_back(I->getName().data());
-
-      if (differentContent(m_LLVMModuleFile, m_DiffPair->m_LLVMModuleFile,
-                           differences, &builtinNames)) {
-        llvm::errs() << "Differences in the llvm Module \n";
-        llvm::errs() << differences << "\n";
-        differences = "";
+      for (const auto& Func : m_Module->getFunctionList()) {
+        if (Func.isIntrinsic())
+          builtinNames.emplace_back(Func.getName());
       }
+      differentContent(m_LLVMModuleFile, m_DiffPair->m_LLVMModuleFile,
+                       "llvm Module", verbose, &builtinNames);
     }
-    if (differentContent(m_MacrosFile, m_DiffPair->m_MacrosFile, differences)){
-      llvm::errs() << "Differences in the Macro Definitions \n";
-      llvm::errs() << differences << "\n";
-      differences = "";
-    }
+
+    differentContent(m_MacrosFile, m_DiffPair->m_MacrosFile,
+                     "Macro Definitions", verbose);
   }
 
   bool ClangInternalState::differentContent(const std::string& file1,
                                             const std::string& file2,
-                                            std::string& differences,
-                const llvm::SmallVectorImpl<const char*>* ignores/*=0*/) const {
+                                            const char* type,
+                                            bool verbose,
+            const llvm::SmallVectorImpl<llvm::StringRef>* ignores/*=0*/) const {
+
     std::string diffCall = m_DiffCommand;
     if (ignores) {
-      for (size_t i = 0, e = ignores->size(); i < e; ++i) {
+      for (const llvm::StringRef& ignore : *ignores) {
         diffCall += " --ignore-matching-lines=\".*";
-        diffCall += (*ignores)[i];
+        diffCall += ignore;
         diffCall += ".*\"";
       }
     }
+    diffCall += " ";
+    diffCall += file1;
+    diffCall += " ";
+    diffCall += file2;
 
-    FILE* pipe = popen((diffCall + " " + file1 + " " + file2).c_str() , "r");
-    assert(pipe && "Error creating the pipe");
-    assert(differences.empty() && "Must be empty");
+    llvm::SmallString<1024> Difs;
+    platform::Popen(diffCall, Difs);
 
-    char buffer[128];
-    while(!feof(pipe)) {
-      if(fgets(buffer, 128, pipe) != NULL)
-        differences += buffer;
+    if (verbose)
+      cling::log() << diffCall << "\n";
+
+    if (Difs.empty())
+      return false;
+
+    if (type) {
+      cling::log() << "Differences in the " << type << ":\n";
+      cling::log() << Difs << "\n";
     }
-    pclose(pipe);
-
-    if (!differences.empty())
-      llvm::errs() << diffCall << " " << file1 << " " << file2 << "\n";
-
-    return !differences.empty();
+    return true;
   }
 
   class DumpLookupTables : public RecursiveASTVisitor<DumpLookupTables> {
@@ -239,13 +241,13 @@ namespace cling {
   };
 
   void ClangInternalState::printLookupTables(llvm::raw_ostream& Out,
-                                             ASTContext& C) {
+                                             const ASTContext& C) {
     DumpLookupTables dumper(Out);
     dumper.TraverseDecl(C.getTranslationUnitDecl());
   }
 
   void ClangInternalState::printIncludedFiles(llvm::raw_ostream& Out,
-                                              SourceManager& SM) {
+                                              const SourceManager& SM) {
     Out << "Legend: [p] parsed; [P] parsed and open; [r] from AST file\n\n";
     for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
            E = SM.fileinfo_end(); I != E; ++I) {
@@ -274,7 +276,7 @@ namespace cling {
     }
   }
 
-  void ClangInternalState::printAST(llvm::raw_ostream& Out, ASTContext& C) {
+  void ClangInternalState::printAST(llvm::raw_ostream& Out, const ASTContext& C) {
     TranslationUnitDecl* TU = C.getTranslationUnitDecl();
     unsigned Indentation = 0;
     bool PrintInstantiation = false;
@@ -289,24 +291,22 @@ namespace cling {
   }
 
   void ClangInternalState::printLLVMModule(llvm::raw_ostream& Out,
-                                           llvm::Module& M,
+                                           const llvm::Module& M,
                                            CodeGenerator& CG) {
     M.print(Out, /*AssemblyAnnotationWriter*/ 0);
     CG.print(Out);
   }
 
   void ClangInternalState::printMacroDefinitions(llvm::raw_ostream& Out,
-                            clang::Preprocessor& PP) {
-    std::string contents;
-    llvm::raw_string_ostream contentsOS(contents);
+                                                const clang::Preprocessor& PP) {
+    stdstrstream contentsOS;
     PP.printMacros(contentsOS);
-    contentsOS.flush();
     Out << "Ordered Alphabetically:\n";
     std::vector<std::string> elems;
     {
       // Split the string into lines.
       char delim = '\n';
-      std::stringstream ss(contents);
+      std::stringstream ss(contentsOS.str());
       std::string item;
       while (std::getline(ss, item, delim)) {
         elems.push_back(item);

@@ -9,13 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSelVerifyDataSet                                                    //
-//                                                                      //
-// Selector to verify dataset in parallel on workers                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TSelVerifyDataSet
+\ingroup proofkernel
+
+Selector to verify dataset in parallel on workers
+
+*/
 
 #define TSelVerifyDataSet_cxx
 
@@ -37,25 +36,27 @@
 
 ClassImp(TSelVerifyDataSet)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TSelVerifyDataSet::TSelVerifyDataSet(TTree *)
 {
-   // Constructor
    InitMembers();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
 TSelVerifyDataSet::TSelVerifyDataSet()
 {
-   // Constructor
    InitMembers();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize members
+
 void TSelVerifyDataSet::InitMembers()
 {
-   // Initialize members
-
    fFopt = -1;
    fSopt = 0;
    fRopt = 0;
@@ -82,11 +83,11 @@ void TSelVerifyDataSet::InitMembers()
    fSubDataSet = 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Worker Begin
+
 void TSelVerifyDataSet::SlaveBegin(TTree *)
 {
-   // Worker Begin
-
    TString dsname, opts;
 
    TNamed* par = dynamic_cast<TNamed*>(fInput->FindObject("PROOF_VerifyDataSet"));
@@ -222,11 +223,11 @@ void TSelVerifyDataSet::SlaveBegin(TTree *)
    fSubDataSet= new TFileCollection(dsname, title);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process a single entry
+
 Bool_t TSelVerifyDataSet::Process(Long64_t entry)
 {
-   // Process a single entry
-
    TDSetElement *fCurrent = 0;
    TPair *elemPair = 0;
    if (fInput && (elemPair = dynamic_cast<TPair *>
@@ -333,11 +334,11 @@ Bool_t TSelVerifyDataSet::Process(Long64_t entry)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Worker Terminate
+
 void TSelVerifyDataSet::SlaveTerminate()
 {
-   // Worker Terminate
-
    if (fSubDataSet) {
       fSubDataSet->Update();
       if (fSubDataSet->GetNFiles() > 0) {

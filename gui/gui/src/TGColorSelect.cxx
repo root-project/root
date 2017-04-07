@@ -61,13 +61,13 @@ ClassImp(TGColorPopup)
 ClassImp(TGColorSelect)
 
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGColorFrame constructor.
+/// The TGColorFrame is a small frame with border showing a specific color.
+
 TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
    TGFrame(p, 20, 20, kOwnBackground, color)
 {
-   // TGColorFrame constructor.
-   // The TGColorFrame is a small frame with border showing a specific color.
-
    SetBackgroundColor(color);
 
    fPixel = fColor = color;
@@ -80,11 +80,11 @@ TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
    fEditDisabled = kEditDisable;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button events in TGColorFrame.
+
 Bool_t TGColorFrame::HandleButton(Event_t *event)
 {
-   // Handle button events in TGColorFrame.
-
    if (event->fType == kButtonPress) {
       SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_CLICK), event->fCode, fColor);
    } else {    // kButtonRelease
@@ -94,22 +94,22 @@ Bool_t TGColorFrame::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TGColorFrame border.
+
 void TGColorFrame::DrawBorder()
 {
-   // Draw TGColorFrame border.
-
    gVirtualX->DrawRectangle(fId, GetBckgndGC()(), 0, 0, fWidth - 1, fHeight - 1);
    Draw3dRectangle(kDoubleBorder | kSunkenFrame, 1, 1, fWidth - 2, fHeight - 2);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TG16ColorSelector constructor.
+/// The TG16ColorSelector is a composite frame with 16 TGColorFrames.
+
 TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
    TGCompositeFrame(p, 10, 10)
 {
-   // TG16ColorSelector constructor.
-   // The TG16ColorSelector is a composite frame with 16 TGColorFrames.
-
    SetLayoutManager(new TGMatrixLayout(this, 4, 4, 1, 1));
 
    fCe[0]  = new TGColorFrame(this, TColor::Number2Pixel(0), 0);
@@ -138,19 +138,19 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
    SetEditDisabled(kEditDisable);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TG16ColorSelector destructor.
+
 TG16ColorSelector::~TG16ColorSelector()
 {
-   // TG16ColorSelector destructor.
-
    Cleanup();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set active color frame.
+
 void TG16ColorSelector::SetActive(Int_t newat)
 {
-   // Set active color frame.
-
    if (fActive != newat) {
       if ((fActive >= 0) && (fActive < 16)) {
          fCe[fActive]->SetActive(kFALSE);
@@ -162,11 +162,11 @@ void TG16ColorSelector::SetActive(Int_t newat)
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for TG16ColorSelector.
+
 Bool_t TG16ColorSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process messages for TG16ColorSelector.
-
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -193,15 +193,15 @@ Bool_t TG16ColorSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGColorPopup constructor.
+/// The TGColorPopup is a popup containing a TG16ColorSelector and a "More..."
+/// button which popups up a TGColorDialog allowing custom color selection.
+
 TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) :
    TGCompositeFrame(p, 10, 10, kDoubleBorder | kRaisedFrame | kOwnBackground,
                     GetDefaultFrameBackground())
 {
-   // TGColorPopup constructor.
-   // The TGColorPopup is a popup containing a TG16ColorSelector and a "More..."
-   // button which popups up a TGColorDialog allowing custom color selection.
-
    fMsgWindow = m;
    fCurrentColor = color;
 
@@ -233,28 +233,28 @@ TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) 
    SetEditDisabled(kEditDisable);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGColorPopup destructor.
+
 TGColorPopup::~TGColorPopup()
 {
-   // TGColorPopup destructor.
-
    Cleanup();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Ungrab pointer and unmap window.
+
 void TGColorPopup::EndPopup()
 {
-   // Ungrab pointer and unmap window.
-
    gVirtualX->GrabPointer(0, 0, 0, 0, kFALSE);  // ungrab pointer
    UnmapWindow();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Popup TGColorPopup at x,y position
+
 void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   // Popup TGColorPopup at x,y position
-
    Int_t rx, ry;
    UInt_t rw, rh;
 
@@ -295,11 +295,11 @@ void TGColorPopup::PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h)
    DeleteWindow();
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button events for TGColorPopup.
+
 Bool_t TGColorPopup::HandleButton(Event_t *event)
 {
-   // Handle mouse button events for TGColorPopup.
-
    if (event->fX < 0 || event->fX >= (Int_t) fWidth ||
        event->fY < 0 || event->fY >= (Int_t) fHeight) {
       if (event->fType == kButtonRelease)
@@ -314,11 +314,11 @@ Bool_t TGColorPopup::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for TGColorPopup.
+
 Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process messages for TGColorPopup.
-
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -347,22 +347,22 @@ Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit a signal to see preview.
+
 void TGColorPopup::PreviewColor(Pixel_t color)
 {
-   // Emit a signal to see preview.
-
    if (fClient->IsEditable()) return;
 
    fCurrentColor = color;
    SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), -1, color);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit a signal to see preview.
+
 void TGColorPopup::PreviewAlphaColor(ULong_t color)
 {
-   // Emit a signal to see preview.
-
    if (fClient->IsEditable()) return;
 
    TColor *tcolor = (TColor *)color;
@@ -370,15 +370,15 @@ void TGColorPopup::PreviewAlphaColor(ULong_t color)
    SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULong_t)tcolor);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGColorSelect constructor.
+/// The TGColorSelect widget is like a checkbutton but instead of the check
+/// mark there is color area with a little down arrow.
+/// When clicked on the arrow the TGColorPopup pops up.
+
 TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
-   // TGColorSelect constructor.
-   // The TGColorSelect widget is like a checkbutton but instead of the check
-   // mark there is color area with a little down arrow.
-   // When clicked on the arrow the TGColorPopup pops up.
-
    if (!p && fClient->IsEditable() && !color) {
       color = TColor::Number2Pixel(6); // magenta
    }
@@ -395,19 +395,19 @@ TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    fEditDisabled = kEditDisable;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGColorSelect destructor.
+
 TGColorSelect::~TGColorSelect()
 {
-   // TGColorSelect destructor.
-
    delete fColorPopup;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Process messages for TGColorSelect.
+
 Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Process messages for TGColorSelect.
-
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
@@ -436,11 +436,11 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return kTRUE;
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle button events for TGColorSelect.
+
 Bool_t TGColorSelect::HandleButton(Event_t *event)
 {
-   // Handle button events for TGColorSelect.
-
    TGFrame::HandleButton(event);
    if (!IsEnabled()) return kTRUE;
 
@@ -485,11 +485,11 @@ Bool_t TGColorSelect::HandleButton(Event_t *event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of widget as enabled.
+
 void TGColorSelect::Enable(Bool_t on)
 {
-   // Set state of widget as enabled.
-
    if (on) {
       SetFlags(kWidgetIsEnabled);
    } else {
@@ -498,20 +498,20 @@ void TGColorSelect::Enable(Bool_t on)
    fClient->NeedRedraw(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set state of widget as disabled.
+
 void TGColorSelect::Disable()
 {
-   // Set state of widget as disabled.
-
    ClearFlags(kWidgetIsEnabled);
    fClient->NeedRedraw(this);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw TGColorSelect widget.
+
 void TGColorSelect::DoRedraw()
 {
-   // Redraw TGColorSelect widget.
-
    Int_t  x, y;
    UInt_t w, h;
 
@@ -592,11 +592,11 @@ void TGColorSelect::DoRedraw()
    }
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw triangle (arrow) on which user can click to open TGColorPopup.
+
 void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
 {
-   // Draw triangle (arrow) on which user can click to open TGColorPopup.
-
    Point_t points[3];
 
 #ifdef R__HAS_COCOA
@@ -621,11 +621,11 @@ void TGColorSelect::DrawTriangle(GContext_t gc, Int_t x, Int_t y)
    gVirtualX->FillPolygon(fId, gc, points, 3);
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color.
+
 void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 {
-   // Set color.
-
    fColor = color;
    fDrawGC.SetForeground(color);
    gClient->NeedRedraw(this);
@@ -633,21 +633,22 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
       ColorSelected(fColor);   // emit a signal
 }
 
-//________________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set color.
+
 void TGColorSelect::SetAlphaColor(ULong_t color, Bool_t emit)
 {
-   // Set color.
    if (emit) {
       AlphaColorSelected(color); //emit opacity signal
    }
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a color select widget as a C++ statement(s) on output stream out
+
 void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-    // Save a color select widget as a C++ statement(s) on output stream out
-
    char quote = '"';
    static Int_t nn = 1;
    TString cvar = TString::Format("ColPar%d",nn);

@@ -60,15 +60,15 @@ ClassImp(TGLVEntry)
 ClassImp(TGLVContainer)
 ClassImp(TGListView)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view item.
+
 TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
                      const TGPicture *smallpic, TGString *name,
                      TGString **subnames, EListViewMode viewMode,
                      UInt_t options, ULong_t back) :
    TGFrame(p, 10, 10, options, back)
 {
-   // Create a list view item.
-
    fSelPic = 0;
 
    fCurrent  =
@@ -115,18 +115,18 @@ TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
    SetViewMode(viewMode);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view item.
+///
+/// name - is name of item.
+/// cname - is name of icon. In most cases this is class name of object
+///         associated with this item.
+
 TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
                      const TString& cname, TGString **subnames,
                      UInt_t options, Pixel_t back) :
    TGFrame(p, 10, 10, options, back)
 {
-   // Create a list view item.
-   //
-   // name - is name of item.
-   // cname - is name of icon. In most cases this is class name of object
-   //         associated with this item.
-
    fSelPic = 0;
 
    fCurrent  =
@@ -177,11 +177,11 @@ TGLVEntry::TGLVEntry(const TGLVContainer *p, const TString& name,
    SetViewMode((EListViewMode)p->GetViewMode());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a list view item.
+
 TGLVEntry::~TGLVEntry()
 {
-   // Delete a list view item.
-
    if (fItemName) delete fItemName;
    if (fSelPic) delete fSelPic;
    if (fSubnames) {
@@ -191,14 +191,14 @@ TGLVEntry::~TGLVEntry()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sets new subnames.
+
 void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
                             const char* n4,const char* n5,const char* n6,
                             const char* n7,const char* n8,const char* n9,
                             const char* n10,const char* n11,const char* n12)
 {
-   // Sets new subnames.
-
    if (fSubnames) {
       for (Int_t i = 0; fSubnames[i] != 0; ++i) delete fSubnames[i];
       delete [] fSubnames;
@@ -248,11 +248,11 @@ void TGLVEntry::SetSubnames(const char* n1,const char* n2,const char* n3,
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make list view item active.
+
 void TGLVEntry::Activate(Bool_t a)
 {
-   // Make list view item active.
-
    if (fActive == a) return;
    fActive = a;
 
@@ -265,11 +265,11 @@ void TGLVEntry::Activate(Bool_t a)
    DoRedraw();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set the view mode for this list item.
+
 void TGLVEntry::SetViewMode(EListViewMode viewMode)
 {
-   // Set the view mode for this list item.
-
    if (viewMode != fViewMode) {
       fViewMode = viewMode;
       if (viewMode == kLVLargeIcons)
@@ -286,11 +286,11 @@ void TGLVEntry::SetViewMode(EListViewMode viewMode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// change pictures
+
 void TGLVEntry::SetPictures(const TGPicture *bigpic, const TGPicture *smallpic)
 {
-   // change pictures
-
    if (!bigpic || !smallpic) return;
 
    gVirtualX->ClearWindow(fId);
@@ -306,23 +306,23 @@ void TGLVEntry::SetPictures(const TGPicture *bigpic, const TGPicture *smallpic)
    gVirtualX->ClearWindow(fId);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Redraw list view item.
+/// List view item is placed and layouted in the container frame,
+/// but is drawn in viewport.
+
 void TGLVEntry::DoRedraw()
 {
-   // Redraw list view item.
-   // List view item is placed and layouted in the container frame,
-   // but is drawn in viewport.
-
    DrawCopy(fId, 0, 0);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw list view item in other window.
+/// List view item is placed and layout in the container frame,
+/// but is drawn in viewport.
+
 void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
 {
-   // Draw list view item in other window.
-   // List view item is placed and layout in the container frame,
-   // but is drawn in viewport.
-
    Int_t ix, iy, lx, ly;
    Int_t max_ascent, max_descent;
 
@@ -457,11 +457,11 @@ void TGLVEntry::DrawCopy(Handle_t id, Int_t x, Int_t y)
    gVirtualX->SetForeground(fNormGC, fgBlackPixel);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get default size of list item.
+
 TGDimension TGLVEntry::GetDefaultSize() const
 {
-   // Get default size of list item.
-
    TGDimension size;
    TGDimension isize(fCurrent ? fCurrent->GetWidth() : 0,
                      fCurrent ? fCurrent->GetHeight() : 0);
@@ -484,21 +484,21 @@ TGDimension TGLVEntry::GetDefaultSize() const
    return size;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default font structure in use.
+
 FontStruct_t TGLVEntry::GetDefaultFontStruct()
 {
-   // Return the default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default graphics context in use.
+
 const TGGC &TGLVEntry::GetDefaultGC()
 {
-   // Return the default graphics context in use.
-
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -507,15 +507,15 @@ const TGGC &TGLVEntry::GetDefaultGC()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view container. This is the (large) frame that contains
+/// all the list items. It will be shown through a TGViewPort (which is
+/// created by the TGCanvas derived TGListView).
+
 TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
                              UInt_t options, ULong_t back) :
    TGContainer(p, w, h, options, back)
 {
-   // Create a list view container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas derived TGListView).
-
    fListView = 0;
    fLastActive = 0;
    fCpos = fJmode = 0;
@@ -527,14 +527,14 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
    SetLayoutManager(new TGTileLayout(this, 8));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view container. This is the (large) frame that contains
+/// all the list items. It will be shown through a TGViewPort (which is
+/// created by the TGCanvas derived TGListView).
+
 TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
    TGContainer(p,options, back)
 {
-   // Create a list view container. This is the (large) frame that contains
-   // all the list items. It will be shown through a TGViewPort (which is
-   // created by the TGCanvas derived TGListView).
-
    fListView = 0;
    fLastActive = 0;
    fCpos = fJmode = 0;
@@ -548,25 +548,25 @@ TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
    if (p->InheritsFrom(TGListView::Class())) fListView = (TGListView*)p;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete list view container.
+
 TGLVContainer::~TGLVContainer()
 {
-   // Delete list view container.
-
    if (!MustCleanup()) {
       RemoveAll();
       delete fItemLayout;
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set columns headers
+
 void  TGLVContainer::SetColHeaders(const char* n1,const char* n2,const char* n3,
                                    const char* n4,const char* n5,const char* n6,
                                    const char* n7,const char* n8,const char* n9,
                                    const char* n10,const char* n11,const char* n12)
 {
-   // set columns headers
-
    if (!fListView) return;
 
    Int_t ncol = -1;
@@ -602,11 +602,11 @@ void  TGLVContainer::SetColHeaders(const char* n1,const char* n2,const char* n3,
    fListView->Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set list view mode for container.
+
 void TGLVContainer::SetViewMode(EListViewMode viewMode)
 {
-   // Set list view mode for container.
-
    if (fViewMode != viewMode) {
       TGLayoutHints *oldLayout = fItemLayout;
 
@@ -668,11 +668,11 @@ void TGLVContainer::SetViewMode(EListViewMode viewMode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set column information for list items.
+
 void TGLVContainer::SetColumns(Int_t *cpos, Int_t *jmode)
 {
-   // Set column information for list items.
-
    fCpos  = cpos;
    fJmode = jmode;
 
@@ -684,11 +684,11 @@ void TGLVContainer::SetColumns(Int_t *cpos, Int_t *jmode)
    Layout();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get size of largest item in container.
+
 TGDimension TGLVContainer::GetMaxItemSize() const
 {
-   // Get size of largest item in container.
-
    TGDimension csize, maxsize(0,0);
 
    TGFrameElement *el;
@@ -708,11 +708,11 @@ TGDimension TGLVContainer::GetMaxItemSize() const
    return maxsize;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get width of largest subname in container.
+
 Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
 {
-   // Get width of largest subname in container.
-
    if (idx == 0) {
       return GetMaxItemSize().fWidth;
    }
@@ -729,11 +729,11 @@ Int_t TGLVContainer::GetMaxSubnameWidth(Int_t idx) const
    return maxwidth;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Remove item with fUserData == userData from container.
+
 void TGLVContainer::RemoveItemWithData(void *userData)
 {
-   // Remove item with fUserData == userData from container.
-
    TGFrameElement *el;
    TIter next(fList);
    while ((el = (TGFrameElement *) next())) {
@@ -745,29 +745,29 @@ void TGLVContainer::RemoveItemWithData(void *userData)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Select/activate item.
+
 void TGLVContainer::ActivateItem(TGFrameElement* el)
 {
-   // Select/activate item.
-
    TGContainer::ActivateItem(el);
    fLastActive = (TGLVEntry*)el->fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Unselect/deactivate item.
+
 void TGLVContainer::DeActivateItem(TGFrameElement* el)
 {
-   // Unselect/deactivate item.
-
    TGContainer::DeActivateItem(el);
    fLastActive = (TGLVEntry*)el->fFrame;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle mouse button event in container.
+
 Bool_t TGLVContainer::HandleButton(Event_t* event)
 {
-   // Handle mouse button event in container.
-
    if ( !fMultiSelect ) {
       return TGContainer::HandleButton(event);
    }
@@ -913,11 +913,11 @@ Bool_t TGLVContainer::HandleButton(Event_t* event)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of selected items in container.
+
 TList *TGLVContainer::GetSelectedEntries()
 {
-   // Get list of selected items in container.
-
    TGFrameElement *el;
    TIter next(fList);
    TList *ret = new TList();
@@ -930,11 +930,11 @@ TList *TGLVContainer::GetSelectedEntries()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get list of selected items in container.
+
 TList *TGLVContainer::GetSelectedItems()
 {
-   // Get list of selected items in container.
-
    TGFrameElement *el;
    TIter next(fList);
    TList *ret = new TList();
@@ -947,11 +947,11 @@ TList *TGLVContainer::GetSelectedItems()
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move current position one column left.
+
 void TGLVContainer::LineLeft(Bool_t select)
 {
-   // Move current position one column left.
-
    // in details mode just move one line up
    if (fViewMode == kLVDetails) return LineUp(select);
 
@@ -1013,11 +1013,11 @@ void TGLVContainer::LineLeft(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move current position one column right.
+
 void TGLVContainer::LineRight(Bool_t select)
 {
-   // Move current position one column right.
-
    // in details mode just move one line down
    if (fViewMode == kLVDetails) return LineDown(select);
 
@@ -1070,11 +1070,11 @@ void TGLVContainer::LineRight(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Make current position first line in window by scrolling up.
+
 void TGLVContainer::LineUp(Bool_t select)
 {
-   // Make current position first line in window by scrolling up.
-
    TGFrameElement *fe = (TGFrameElement*)fList->First();
    if (!fe) return;
 
@@ -1101,11 +1101,11 @@ void TGLVContainer::LineUp(Bool_t select)
    AdjustPosition();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move one line down.
+
 void TGLVContainer::LineDown(Bool_t select)
 {
-   // Move one line down.
-
    TGFrameElement *fe = (TGFrameElement*)fList->Last();
    if (!fe) return;
 
@@ -1130,11 +1130,11 @@ void TGLVContainer::LineDown(Bool_t select)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns page dimension.
+
 TGDimension TGLVContainer::GetPageDimension() const
 {
-   // Returns page dimension.
-
    TGDimension ret;
    if (!fViewPort) return ret;
 
@@ -1143,13 +1143,13 @@ TGDimension TGLVContainer::GetPageDimension() const
    return ret;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list view widget.
+
 TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
                        UInt_t options, ULong_t back) :
    TGCanvas(p, w, h, options, back)
 {
-   // Create a list view widget.
-
    fViewMode    = kLVLargeIcons;
    fNColumns    = 0;
    fColumns     = 0;
@@ -1169,11 +1169,11 @@ TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
    SetDefaultHeaders();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Delete a list view widget.
+
 TGListView::~TGListView()
 {
-   // Delete a list view widget.
-
    if (fNColumns) {
       delete [] fColumns;
       delete [] fJmode;
@@ -1188,11 +1188,11 @@ TGListView::~TGListView()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Scroll header buttons with horizontal scrollbar
+
 void TGListView::ScrollHeader(Int_t pos)
 {
-   // Scroll header buttons with horizontal scrollbar
-
    Int_t  i, xl = - pos;
    if (fViewMode == kLVDetails) {
       for (i = 0; i < fNColumns-1; ++i) {
@@ -1206,14 +1206,14 @@ void TGListView::ScrollHeader(Int_t pos)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set number of headers, i.e. columns that will be shown in detailed view.
+/// This method must be followed by exactly ncolumns SetHeader() calls,
+/// making sure that every header (i.e. idx) is set (for and example see
+/// SetDefaultHeaders()).
+
 void TGListView::SetHeaders(Int_t ncolumns)
 {
-   // Set number of headers, i.e. columns that will be shown in detailed view.
-   // This method must be followed by exactly ncolumns SetHeader() calls,
-   // making sure that every header (i.e. idx) is set (for and example see
-   // SetDefaultHeaders()).
-
    if (ncolumns <= 0) {
       Error("SetHeaders", "number of columns must be > 0");
       return;
@@ -1267,13 +1267,13 @@ void TGListView::SetHeaders(Int_t ncolumns)
    fJustChanged = kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set header button idx [0-fNColumns>, hmode is the x text alignmode
+/// (ETextJustification) for the header text and cmode is the x text
+/// alignmode for the item text.
+
 void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
 {
-   // Set header button idx [0-fNColumns>, hmode is the x text alignmode
-   // (ETextJustification) for the header text and cmode is the x text
-   // alignmode for the item text.
-
    if (idx < 0 || idx >= fNColumns-1) {
       Error("SetHeader", "header index must be [0 - %d>", fNColumns-1);
       return;
@@ -1309,23 +1309,23 @@ void TGListView::SetHeader(const char *s, Int_t hmode, Int_t cmode, Int_t idx)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of header idx. If illegal idx or header not set for idx
+/// 0 is returned.
+
 const char *TGListView::GetHeader(Int_t idx) const
 {
-   // Returns name of header idx. If illegal idx or header not set for idx
-   // 0 is returned.
-
    if (idx >= 0 && idx < fNColumns-1 && fColHeader[idx])
       return (const char*) fColNames[idx];
    return 0;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default headers are: Name, Attributes, Size, Owner, Group, Modified.
+/// The default is good for file system items.
+
 void TGListView::SetDefaultHeaders()
 {
-   // Default headers are: Name, Attributes, Size, Owner, Group, Modified.
-   // The default is good for file system items.
-
    SetHeaders(6);
    SetHeader("Name",       kTextLeft,    kTextLeft,    0);
    SetHeader("Attributes", kTextCenterX, kTextCenterX, 1);
@@ -1335,11 +1335,11 @@ void TGListView::SetDefaultHeaders()
    SetHeader("Modified",   kTextCenterX, kTextCenterX, 5);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set list view mode.
+
 void TGListView::SetViewMode(EListViewMode viewMode)
 {
-   // Set list view mode.
-
    TGLVContainer *container;
 
    if (fViewMode != viewMode) {
@@ -1351,12 +1351,12 @@ void TGListView::SetViewMode(EListViewMode viewMode)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set list view container. Container must be at least of type
+/// TGLVContainer.
+
 void TGListView::SetContainer(TGFrame *f)
 {
-   // Set list view container. Container must be at least of type
-   // TGLVContainer.
-
    if (f->InheritsFrom(TGLVContainer::Class())) {
       TGCanvas::SetContainer(f);
       ((TGLVContainer *) f)->SetColumns(fColumns, fJmode);
@@ -1365,20 +1365,20 @@ void TGListView::SetContainer(TGFrame *f)
       Error("SetContainer", "frame must inherit from TGLVContainer");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set horizontal and vertical scrollbar increments.
+
 void TGListView::SetIncrements(Int_t hInc, Int_t vInc)
 {
-   // Set horizontal and vertical scrollbar increments.
-
    fHScrollbar->SetSmallIncrement(hInc);
    fVScrollbar->SetSmallIncrement(vInc);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set default column width of the columns headers.
+
 void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
 {
-   // Set default column width of the columns headers.
-
    TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
 
    if (!container) {
@@ -1401,11 +1401,11 @@ void TGListView::SetDefaultColumnWidth(TGVFileSplitter* splitter)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Resize column headers to show whole item names.
+
 void TGListView::ResizeColumns()
 {
-   // Resize column headers to show whole item names.
-
    for (int i = 0; i < fNColumns; ++i) {
       TGLVContainer *container = (TGLVContainer *) fVport->GetContainer();
       if (!container) {
@@ -1417,11 +1417,11 @@ void TGListView::ResizeColumns()
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout list view components (container and contents of container).
+
 void TGListView::Layout()
 {
-   // Layout list view components (container and contents of container).
-
    Int_t  i, xl = 0;
    UInt_t w, h = 0;
 
@@ -1508,11 +1508,11 @@ void TGListView::Layout()
    fJustChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Layout list view components (container and contents of container).
+
 void TGListView::LayoutHeader(TGFrame *head)
 {
-   // Layout list view components (container and contents of container).
-
    Int_t  i, xl = 0;
    UInt_t w, h = 0;
    static Int_t oldPos = 0;
@@ -1577,11 +1577,11 @@ void TGListView::LayoutHeader(TGFrame *head)
    fJustChanged = kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle messages generated by the list view components.
+
 Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
-   // Handle messages generated by the list view components.
-
    TGLVContainer *cnt = (TGLVContainer*)GetContainer();
 
    const TGLVEntry *entry;
@@ -1615,11 +1615,11 @@ Bool_t TGListView::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    return TGCanvas::ProcessMessage(msg, parm1, parm2);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGListView::Clicked(TGLVEntry *entry, Int_t btn)
 {
-   // Emit Clicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -1628,11 +1628,11 @@ void TGListView::Clicked(TGLVEntry *entry, Int_t btn)
    Emit("Clicked(TGLVEntry*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Clicked() signal.
+
 void TGListView::Clicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit Clicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -1643,11 +1643,11 @@ void TGListView::Clicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
    Emit("Clicked(TGLVEntry*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[2];
 
    args[0] = (Long_t)entry;
@@ -1656,11 +1656,11 @@ void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn)
    Emit("DoubleClicked(TGLVEntry*,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emit DoubleClicked() signal.
+
 void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
 {
-   // Emit DoubleClicked() signal.
-
    Long_t args[4];
 
    args[0] = (Long_t)entry;
@@ -1671,21 +1671,21 @@ void TGListView::DoubleClicked(TGLVEntry *entry, Int_t btn, Int_t x, Int_t y)
    Emit("DoubleClicked(TGLVEntry*,Int_t,Int_t,Int_t)", args);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default font structure in use.
+
 FontStruct_t TGListView::GetDefaultFontStruct()
 {
-   // Return the default font structure in use.
-
    if (!fgDefaultFont)
       fgDefaultFont = gClient->GetResourcePool()->GetIconFont();
    return fgDefaultFont->GetFontStruct();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return the default graphics context in use.
+
 const TGGC &TGListView::GetDefaultGC()
 {
-   // Return the default graphics context in use.
-
    if (!fgDefaultGC) {
       fgDefaultGC = new TGGC(*gClient->GetResourcePool()->GetFrameGC());
       fgDefaultGC->SetFont(fgDefaultFont->GetFontHandle());
@@ -1693,11 +1693,11 @@ const TGGC &TGListView::GetDefaultGC()
    return *fgDefaultGC;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list view widget as a C++ statement(s) on output stream out.
+
 void TGListView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a list view widget as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // list view" << std::endl;
@@ -1752,11 +1752,11 @@ void TGListView::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a list view container as a C++ statement(s) on output stream out.
+
 void TGLVContainer::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a list view container as a C++ statement(s) on output stream out.
-
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);
 
    out << std::endl << "   // list view container" << std::endl;

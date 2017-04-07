@@ -27,13 +27,9 @@
 
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TColor
 #include "TColor.h"
-#endif
 
 
 class TColorGradient : public TColor {
@@ -97,7 +93,7 @@ public:
 private:
    void RegisterColor(Color_t colorIndex);
 
-   ClassDef(TColorGradient, 1) //Gradient fill.
+   ClassDef(TColorGradient, 0); //Gradient fill.
 };
 
 class TLinearGradient : public TColorGradient {
@@ -118,7 +114,7 @@ private:
    Point fStart;
    Point fEnd;
 
-   ClassDef(TLinearGradient, 1)//Linear gradient fill.
+   ClassDef(TLinearGradient, 0); //Linear gradient fill.
 };
 
 //
@@ -170,7 +166,7 @@ private:
 
    EGradientType fType = kSimple;
 
-   ClassDef(TRadialGradient, 1)//Radial gradient fill.
+   ClassDef(TRadialGradient, 0); //Radial gradient fill.
 };
 
 

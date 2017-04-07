@@ -21,18 +21,16 @@
 #include "TGColorSelect.h"
 #include "TGDoubleSlider.h"
 
-//==============================================================================
-//==============================================================================
-// TEveLineEditor
-//==============================================================================
-
-//______________________________________________________________________________
-//
-// Editor for TEveLine class.
+/** \class TEveLineEditor
+\ingroup TEve
+Editor for TEveLine class.
+*/
 
 ClassImp(TEveLineEditor);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
                                UInt_t options, Pixel_t back) :
    TGedFrame  (p, width, height, options | kVerticalFrame, back),
@@ -41,15 +39,13 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fRnrPoints (0),
    fSmooth    (0)
 {
-   // Constructor.
-
    fPriority = 20;
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
 
       fRnrPoints = new TGCheckButton(f, "Draw Marker");
       f->AddFrame(fRnrPoints, new TGLayoutHints(kLHintsLeft, 2,1,0,0));
-      fRnrPoints->Connect("Toggled(Bool_t)"," TEveLineEditor", this, "DoRnrPoints()");
+      fRnrPoints->Connect("Toggled(Bool_t)", "TEveLineEditor", this, "DoRnrPoints()");
 
       fRnrLine  = new TGCheckButton(f, "Draw Line");
       f->AddFrame(fRnrLine, new TGLayoutHints(kLHintsLeft, 1,2,0,0));
@@ -62,13 +58,11 @@ TEveLineEditor::TEveLineEditor(const TGWindow *p, Int_t width, Int_t height,
    fSmooth->Connect("Toggled(Bool_t)", "TEveLineEditor", this, "DoSmooth()");
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
 
-//______________________________________________________________________________
 void TEveLineEditor::SetModel(TObject* obj)
 {
-   // Set model object.
-
    fM = dynamic_cast<TEveLine*>(obj);
 
    fRnrLine  ->SetState(fM->fRnrLine  ? kButtonDown : kButtonUp);
@@ -76,31 +70,29 @@ void TEveLineEditor::SetModel(TObject* obj)
    fSmooth->SetState(fM->fSmooth ? kButtonDown : kButtonUp);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrLine.
 
-//______________________________________________________________________________
 void TEveLineEditor::DoRnrLine()
 {
-   // Slot for RnrLine.
-
    fM->SetRnrLine(fRnrLine->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for RnrPoints.
+
 void TEveLineEditor::DoRnrPoints()
 {
-   // Slot for RnrPoints.
-
    fM->SetRnrPoints(fRnrPoints->IsOn());
    Update();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Slot for anti-alias.
+
 void TEveLineEditor::DoSmooth()
 {
-   // Slot for anti-alias.
-
    fM->SetSmooth(fSmooth->IsOn());
    Update();
 }

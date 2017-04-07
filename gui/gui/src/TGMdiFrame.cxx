@@ -46,104 +46,104 @@
 
 ClassImp(TGMdiFrame)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMdiFrame constructor.
+
 TGMdiFrame::TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h, UInt_t options,
                        Pixel_t back) :
    TGCompositeFrame(main->GetContainer(), w, h,
                     options | kOwnBackground | kMdiFrame, back)
 {
-   // TGMdiFrame constructor.
-
    fMain = main;
    fMain->AddMdiFrame(this);  // this reparents the window
    fMdiHints = kMdiDefaultHints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// TGMdiFrame destructor.
+
 TGMdiFrame::~TGMdiFrame()
 {
-   // TGMdiFrame destructor.
-
    Cleanup();
    fMain->RemoveMdiFrame(this);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close MDI frame window.
+
 Bool_t TGMdiFrame::CloseWindow()
 {
-   // Close MDI frame window.
-
    DeleteWindow();
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Typically call this method in the slot connected to the CloseWindow()
+/// signal to prevent the calling of the default or any derived CloseWindow()
+/// methods to prevent premature or double deletion of this window.
+
 void TGMdiFrame::DontCallClose()
 {
-   // Typically call this method in the slot connected to the CloseWindow()
-   // signal to prevent the calling of the default or any derived CloseWindow()
-   // methods to prevent premature or double deletion of this window.
-
    SetBit(kDontCallClose);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MDI hints, also used to identify titlebar buttons.
+
 void TGMdiFrame::SetMdiHints(ULong_t mdihints)
 {
-   // Set MDI hints, also used to identify titlebar buttons.
-
    fMdiHints = mdihints;
    ((TGMdiDecorFrame *)fParent)->SetMdiButtons(mdihints);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MDI window name (set titlebar title).
+
 void TGMdiFrame::SetWindowName(const char *name)
 {
-   // Set MDI window name (set titlebar title).
-
    ((TGMdiDecorFrame *)fParent)->SetWindowName(name);
    fMain->UpdateWinListMenu();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MDI window icon (titlebar icon).
+
 void TGMdiFrame::SetWindowIcon(const TGPicture *pic)
 {
-   // Set MDI window icon (titlebar icon).
-
    ((TGMdiDecorFrame *)fParent)->SetWindowIcon(pic);
    fMain->UpdateWinListMenu();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return MDI window name.
+
 const char *TGMdiFrame::GetWindowName()
 {
-   // Return MDI window name.
-
    return ((TGMdiDecorFrame *)fParent)->GetWindowName();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to picture used as MDI window icon (on titlebar).
+
 const TGPicture *TGMdiFrame::GetWindowIcon()
 {
-   // Return pointer to picture used as MDI window icon (on titlebar).
-
    return ((TGMdiDecorFrame *)fParent)->GetWindowIcon();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Move MDI window at position x, y.
+
 void TGMdiFrame::Move(Int_t x, Int_t y)
 {
-   // Move MDI window at position x, y.
-
    ((TGMdiDecorFrame *)fParent)->Move(x, y);
    fX = x; fY = y;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a MDI option string - used in SavePrimitive().
+
 TString TGMdiFrame::GetMdiHintsString() const
 {
-   // Returns a MDI option string - used in SavePrimitive().
-
    TString hints;
    if (fMdiHints == kMdiDefaultHints)
       hints = "kMdiDefaultHints";
@@ -184,11 +184,11 @@ TString TGMdiFrame::GetMdiHintsString() const
    return hints;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a MDIframe as a C++ statement(s) on output stream out
+
 void TGMdiFrame::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
-   // Save a MDIframe as a C++ statement(s) on output stream out
-
    char quote = '"';
 
    if (fBackground != GetDefaultFrameBackground()) SaveUserColor(out, option);

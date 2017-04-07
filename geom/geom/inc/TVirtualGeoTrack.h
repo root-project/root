@@ -12,31 +12,13 @@
 #ifndef ROOT_TVirtualGeoTrack
 #define ROOT_TVirtualGeoTrack
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TVirtualGeoTrack - Base class for user-defined tracks attached to a    //
-//             geometry. Tracks are 3D objects made of points and they    //
-//             store a pointer to a TParticle. The geometry manager holds //
-//             a list of all tracks that will be deleted on destruction   //
-//             of TGeoManager object.                                     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TVirtualGeoTrack : public TObject,
                          public TGeoAtt,

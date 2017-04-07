@@ -61,6 +61,7 @@ private:
    TRegexp   *fReg;      // pattern regular expression
 
 public:
+   TQMime() : TObject(), fIcon(0), fReg(0) { }
   ~TQMime();
 };
 

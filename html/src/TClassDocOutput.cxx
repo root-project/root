@@ -45,30 +45,31 @@
 
 ClassImp(TClassDocOutput);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an object given the invoking THtml object, and the TClass
+/// object that we will generate output for.
+
 TClassDocOutput::TClassDocOutput(THtml& html, TClass* cl, TList* typedefs):
    TDocOutput(html), fHierarchyLines(0), fCurrentClass(cl),
    fCurrentClassesTypedefs(typedefs), fParser(0)
 {
-   // Create an object given the invoking THtml object, and the TClass
-   // object that we will generate output for.
-
    fParser = new TDocParser(*this, fCurrentClass);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor, deletes fParser
+
 TClassDocOutput::~TClassDocOutput()
 {
-   // Destructor, deletes fParser
    delete fParser;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create HTML files for a single class.
+///
+
 void TClassDocOutput::Class2Html(Bool_t force)
 {
-// Create HTML files for a single class.
-//
-
    gROOT->GetListOfGlobals(kTRUE);
 
    // create a filename
@@ -114,11 +115,11 @@ void TClassDocOutput::Class2Html(Bool_t force)
       fParser->GetSourceInfo(TDocParser::kInfoCopyright));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the list of functions
+
 void TClassDocOutput::ListFunctions(std::ostream& classFile)
 {
-   // Write the list of functions
-
    // loop to get a pointers to method names
 
    classFile << std::endl << "<div id=\"functions\">" << std::endl;
@@ -239,11 +240,11 @@ void TClassDocOutput::ListFunctions(std::ostream& classFile)
    classFile << "</div>" << std::endl; // class="functions"
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write the list of data members and enums
+
 void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
 {
-   // Write the list of data members and enums
-
    // make a loop on data members
    Bool_t haveDataMembers = (fParser->GetDataMembers(TDocParser::kPrivate)->GetEntries() ||
                              fParser->GetDataMembers(TDocParser::kProtected)->GetEntries() ||
@@ -383,15 +384,15 @@ void  TClassDocOutput::ListDataMembers(std::ostream& classFile)
    classFile << "</div>" << std::endl; // datamembers
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function builds the class charts for one class in GraphViz/Dot format,
+/// i.e. the inheritance diagram, the include dependencies, and the library
+/// dependency.
+///
+/// Input: out      - output file stream
+
 Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
 {
-// This function builds the class charts for one class in GraphViz/Dot format,
-// i.e. the inheritance diagram, the include dependencies, and the library
-// dependency.
-//
-// Input: out      - output file stream
-
    if (!fHtml->HaveDot())
       return kFALSE;
 
@@ -454,19 +455,19 @@ Bool_t TClassDocOutput::ClassDotCharts(std::ostream& out)
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// This function builds the class tree for one class in HTML
+/// (inherited and succeeding classes, called recursively)
+///
+///
+/// Input: out      - output file stream
+///        classPtr - pointer to the class
+///        dir      - direction to traverse tree: up, down or both
+///
+
 void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
                           ETraverse dir, int depth)
 {
-// This function builds the class tree for one class in HTML
-// (inherited and succeeding classes, called recursively)
-//
-//
-// Input: out      - output file stream
-//        classPtr - pointer to the class
-//        dir      - direction to traverse tree: up, down or both
-//
-
    if (dir == kBoth) {
       out << "<!--INHERITANCE TREE-->" << std::endl;
 
@@ -576,16 +577,16 @@ void TClassDocOutput::ClassHtmlTree(std::ostream& out, TClass * classPtr,
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// It makes a graphical class tree
+///
+///
+/// Input: psCanvas - pointer to the current canvas
+///        classPtr - pointer to the class
+///
+
 void TClassDocOutput::ClassTree(TVirtualPad * psCanvas, Bool_t force)
 {
-// It makes a graphical class tree
-//
-//
-// Input: psCanvas - pointer to the current canvas
-//        classPtr - pointer to the class
-//
-
    if (!psCanvas || !fCurrentClass)
       return;
 
@@ -609,14 +610,14 @@ void TClassDocOutput::ClassTree(TVirtualPad * psCanvas, Bool_t force)
       Printf(fHtml->GetCounterFormat(), "-no change-", "", filename.Data());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build the class tree for one class in GraphViz/Dot format
+///
+///
+/// Input: filename - output dot file incl. path
+
 Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
 {
-// Build the class tree for one class in GraphViz/Dot format
-//
-//
-// Input: filename - output dot file incl. path
-
    std::ofstream outdot(filename);
    outdot << "strict digraph G {" << std::endl
       << "rankdir=RL;" << std::endl
@@ -718,12 +719,12 @@ Bool_t TClassDocOutput::CreateDotClassChartInh(const char* filename)
    return kTRUE;
 }
 
-//______________________________________________________________________________
-Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
-// Build the class tree of inherited members for one class in GraphViz/Dot format
-//
-// Input: filename - output dot file incl. path
+////////////////////////////////////////////////////////////////////////////////
+/// Build the class tree of inherited members for one class in GraphViz/Dot format
+///
+/// Input: filename - output dot file incl. path
 
+Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
    std::ofstream outdot(filename);
    outdot << "strict digraph G {" << std::endl
       << "ratio=auto;" << std::endl
@@ -899,13 +900,13 @@ Bool_t TClassDocOutput::CreateDotClassChartInhMem(const char* filename) {
    return kTRUE;
 }
 
-//______________________________________________________________________________
-Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
-// Build the include dependency graph for one class in
-// GraphViz/Dot format
-//
-// Input: filename - output dot file incl. path
+////////////////////////////////////////////////////////////////////////////////
+/// Build the include dependency graph for one class in
+/// GraphViz/Dot format
+///
+/// Input: filename - output dot file incl. path
 
+Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
    R__LOCKGUARD(GetHtml()->GetMakeClassMutex());
 
    std::map<std::string, std::string> filesToParse;
@@ -983,13 +984,13 @@ Bool_t TClassDocOutput::CreateDotClassChartIncl(const char* filename) {
    return kTRUE;
 }
 
-//______________________________________________________________________________
-Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
-// Build the library dependency graph for one class in
-// GraphViz/Dot format
-//
-// Input: filename - output dot file incl. path
+////////////////////////////////////////////////////////////////////////////////
+/// Build the library dependency graph for one class in
+/// GraphViz/Dot format
+///
+/// Input: filename - output dot file incl. path
 
+Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
    std::ofstream outdot(filename);
    outdot << "strict digraph G {" << std::endl
       << "ratio=auto;" << std::endl
@@ -1053,13 +1054,13 @@ Bool_t TClassDocOutput::CreateDotClassChartLib(const char* filename) {
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create the hierarchical class list part for the current class's
+/// base classes. docFileName contains doc for fCurrentClass.
+///
+
 void TClassDocOutput::CreateClassHierarchy(std::ostream& out, const char* docFileName)
 {
-// Create the hierarchical class list part for the current class's
-// base classes. docFileName contains doc for fCurrentClass.
-//
-
    // Find basic base classes
    TList *bases = fCurrentClass->GetListOfBases();
    if (!bases || bases->IsEmpty())
@@ -1085,15 +1086,15 @@ void TClassDocOutput::CreateClassHierarchy(std::ostream& out, const char* docFil
    out << "</tr></table>" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create a hierarchical class list
+/// The algorithm descends from the base classes and branches into
+/// all derived classes. Mixing classes are displayed several times.
+///
+///
+
 Bool_t TClassDocOutput::CreateHierarchyDot()
 {
-// Create a hierarchical class list
-// The algorithm descends from the base classes and branches into
-// all derived classes. Mixing classes are displayed several times.
-//
-//
-
    const char* title = "ClassHierarchy";
    TString filename(title);
    gSystem->PrependPathName(fHtml->GetOutputDir(), filename);
@@ -1168,13 +1169,13 @@ Bool_t TClassDocOutput::CreateHierarchyDot()
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open a Class.cxx.html file, where Class is defined by classPtr, and .cxx.html by extension
+/// It's created in fHtml->GetOutputDir()/src. If successful, the HTML header is written to out.
+
 void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* extension,
                                      TString& sourceHtmlFileName)
 {
-   // Open a Class.cxx.html file, where Class is defined by classPtr, and .cxx.html by extension
-   // It's created in fHtml->GetOutputDir()/src. If successful, the HTML header is written to out.
-
    TString sourceHtmlDir("src");
    gSystem->PrependPathName(fHtml->GetOutputDir(), sourceHtmlDir);
    // create directory if necessary
@@ -1203,12 +1204,12 @@ void TClassDocOutput::CreateSourceOutputStream(std::ostream& out, const char* ex
    out << "<div id=\"codeAndLineNumbers\"><pre class=\"listing\">" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Descend hierarchy recursively
+/// loop over all classes and look for classes with base class basePtr
+
 void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t maxLines, Int_t depth)
 {
-// Descend hierarchy recursively
-// loop over all classes and look for classes with base class basePtr
-
    if (maxLines)
       if (fHierarchyLines >= maxLines) {
          out << "<td></td>" << std::endl;
@@ -1278,14 +1279,14 @@ void TClassDocOutput::DescendHierarchy(std::ostream& out, TClass* basePtr, Int_t
       out << "<td></td>" << std::endl;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Create an output file with a graphical representation of the class
+/// inheritance. If force, replace existing output file.
+/// This routine does nothing if fHtml->HaveDot() is true - use
+/// ClassDotCharts() instead!
+
 void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
 {
-   // Create an output file with a graphical representation of the class
-   // inheritance. If force, replace existing output file.
-   // This routine does nothing if fHtml->HaveDot() is true - use
-   // ClassDotCharts() instead!
-
    // class tree only if no dot, otherwise it's part of charts
    if (!fCurrentClass || fHtml->HaveDot())
       return;
@@ -1329,16 +1330,16 @@ void TClassDocOutput::MakeTree(Bool_t force /*= kFALSE*/)
    delete psCanvas;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Called by TDocParser::LocateMethods(), this hook writes out the class description
+/// found by TDocParser. It's even called if none is found, i.e. if the first method
+/// has occurred before a class description is found, so missing class descriptions
+/// can be handled.
+/// For HTML, its creates the description block, the list of functions and data
+/// members, and the inheritance tree or, if Graphviz's dot is found, the class charts.
+
 void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& description)
 {
-   // Called by TDocParser::LocateMethods(), this hook writes out the class description
-   // found by TDocParser. It's even called if none is found, i.e. if the first method
-   // has occurred before a class description is found, so missing class descriptions
-   // can be handled.
-   // For HTML, its creates the description block, the list of functions and data
-   // members, and the inheritance tree or, if Graphviz's dot is found, the class charts.
-
    // Class Description Title
    out << "<div class=\"dropshadow\"><div class=\"withshadow\">";
    TString anchor(fCurrentClass->GetName());
@@ -1425,11 +1426,11 @@ void TClassDocOutput::WriteClassDescription(std::ostream& out, const TString& de
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write out the introduction of a class description (shortcuts and links)
+
 void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 {
-   // Write out the introduction of a class description (shortcuts and links)
-
    classFile << "<a name=\"TopOfPage\"></a>" << std::endl;
 
 
@@ -1581,19 +1582,19 @@ void TClassDocOutput::WriteClassDocHeader(std::ostream& classFile)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Write method name with return type ret and parameters param to out.
+/// Build a link using file and anchor. Cooment it with comment, and
+/// show the code codeOneLiner (set if the func consists of only one line
+/// of code, immediately surrounded by "{","}"). Also updates fMethodNames's
+/// count of method names.
+
 void TClassDocOutput::WriteMethod(std::ostream& out, TString& ret,
                                   TString& name, TString& params,
                                   const char* filename, TString& anchor,
                                   TString& comment, TString& codeOneLiner,
                                   TDocMethodWrapper* guessedMethod)
 {
-   // Write method name with return type ret and parameters param to out.
-   // Build a link using file and anchor. Cooment it with comment, and
-   // show the code codeOneLiner (set if the func consists of only one line
-   // of code, immediately surrounded by "{","}"). Also updates fMethodNames's
-   // count of method names.
-
    fParser->DecorateKeywords(ret);
    out << "<div class=\"funcdoc\"><span class=\"funcname\">"
       << ret << " <a class=\"funcname\" name=\"";

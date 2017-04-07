@@ -35,31 +35,30 @@ static Int_t gGeomLevel = 0;
 
 TNode *gNode;
 
-
 ClassImp(TNode)
 
+/** \class TNode
+\ingroup g3d
+TNode description
 
-//______________________________________________________________________________
-//                    T N O D E  description
-//                    ======================
-//
-//    A TNode object is used to build the geometry hierarchy (see TGeometry).
-//    A node may contain other nodes.
-//
-//    A geometry node has attributes:
-//      - name and title
-//      - pointer to the referenced shape (see TShape).
-//      - x,y,z offset with respect to the mother node.
-//      - pointer to the rotation matrix (see TRotMatrix).
-//
-//    A node can be drawn.
+A TNode object is used to build the geometry hierarchy (see TGeometry).
+A node may contain other nodes.
 
+A geometry node has attributes:
 
-//______________________________________________________________________________
+  - name and title
+  - pointer to the referenced shape (see TShape).
+  - x,y,z offset with respect to the mother node.
+  - pointer to the rotation matrix (see TRotMatrix).
+
+A node can be drawn.
+*/
+
+////////////////////////////////////////////////////////////////////////////////
+/// Node default constructor.
+
 TNode::TNode()
 {
-   // Node default constructor.
-
    fMatrix = 0;
    fParent = 0;
    fShape  = 0;
@@ -68,21 +67,20 @@ TNode::TNode()
    fX = fY = fZ = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Node normal constructor.
+///
+///  - name        is the name of the node
+///  - title       is title
+///  - shapename   is the name of the referenced shape
+///  - x,y,z       are the offsets of the volume with respect to his mother
+///  - matrixname  is the name of the rotation matrix
+///
+///    This new node is added into the list of sons of the current node
 
-//______________________________________________________________________________
 TNode::TNode(const char *name, const char *title, const char *shapename, Double_t x, Double_t y, Double_t z, const char *matrixname, Option_t *option)
        :TNamed(name,title),TAttLine(), TAttFill()
 {
-   // Node normal constructor.
-   //
-   //    name    is the name of the node
-   //    title   is title
-   //    shapename is the name of the referenced shape
-   //    x,y,z   are the offsets of the volume with respect to his mother
-   //    matrixname  is the name of the rotation matrix
-   //
-   //    This new node is added into the list of sons of the current node
-
 #ifdef WIN32
    // The color "1" - default produces a very bad 3D image with OpenGL
    Color_t lcolor = 16;
@@ -121,23 +119,22 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Node normal constructor.
+///
+///  - name    is the name of the node
+///  - title   is title
+///  - shape   is the pointer to the shape definition
+///  - x,y,z   are the offsets of the volume with respect to his mother
+///  - matrix  is the pointer to the rotation matrix
+///
+///    This new node is added into the list of sons of the current node
 
-//______________________________________________________________________________
 TNode::TNode(const char *name, const char *title, TShape *shape, Double_t x, Double_t y, Double_t z, TRotMatrix *matrix, Option_t *option)
                 :TNamed(name,title),TAttLine(),TAttFill()
 {
-   // Node normal constructor.
-   //
-   //    name    is the name of the node
-   //    title   is title
-   //    shape   is the pointer to the shape definition
-   //    x,y,z   are the offsets of the volume with respect to his mother
-   //    matrix  is the pointer to the rotation matrix
-   //
-   //    This new node is added into the list of sons of the current node
-
 #ifdef WIN32
-//*-* The color "1" - default produces a very bad 3D image with OpenGL
+// The color "1" - default produces a very bad 3D image with OpenGL
    Color_t lcolor = 16;
    SetLineColor(lcolor);
 #endif
@@ -170,7 +167,9 @@ TNode::TNode(const char *name, const char *title, TShape *shape, Double_t x, Dou
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// copy constructor
+
 TNode::TNode(const TNode& no) :
   TNamed(no),
   TAttLine(no),
@@ -186,13 +185,13 @@ TNode::TNode(const TNode& no) :
   fOption(no.fOption),
   fVisibility(no.fVisibility)
 {
-//copy constructor
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// assignment operator
+
 TNode& TNode::operator=(const TNode& no)
 {
-   //assignement operator
    if(this!=&no) {
       TNamed::operator=(no);
       TAttLine::operator=(no);
@@ -211,11 +210,11 @@ TNode& TNode::operator=(const TNode& no)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Node default destructor.
+
 TNode::~TNode()
 {
-   // Node default destructor.
-
    if (fParent)     fParent->GetListOfNodes()->Remove(this);
    else    {if (gGeometry) gGeometry->GetListOfNodes()->Remove(this);}
    if (fNodes) fNodes->Delete();
@@ -224,12 +223,11 @@ TNode::~TNode()
    fNodes = 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Browse.
 
-//______________________________________________________________________________
 void TNode::Browse(TBrowser *b)
 {
-   // Browse.
-
    if( fNodes ) {
       fNodes->Browse( b );
    } else {
@@ -238,33 +236,30 @@ void TNode::Browse(TBrowser *b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create the list to support sons of this node.
 
-//______________________________________________________________________________
 void TNode::BuildListOfNodes()
 {
-   // Create the list to support sons of this node.
-
    if (!fNodes) fNodes   = new TList;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change Current Reference node to this.
 
-//______________________________________________________________________________
 void TNode::cd(const char *)
 {
-   // Change Current Reference node to this.
-
    gGeometry->SetCurrentNode(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from point px,py to a Node.
+///
+///  Compute the closest distance of approach from point px,py to this node.
+///  The distance is computed in pixels units.
 
-//______________________________________________________________________________
 Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   // Compute distance from point px,py to a Node.
-   //
-   //  Compute the closest distance of approach from point px,py to this node.
-   //  The distance is computed in pixels units.
-
    const Int_t big = 9999;
    const Int_t inaxis = 7;
    const Int_t maxdist = 5;
@@ -322,12 +317,11 @@ Int_t TNode::DistancetoPrimitive(Int_t px, Int_t py)
    return dnode;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw Referenced node with current parameters.
 
-//______________________________________________________________________________
 void TNode::Draw(Option_t *option)
 {
-   // Draw Referenced node with current parameters.
-
    TString opt = option;
    opt.ToLower();
 
@@ -357,34 +351,32 @@ void TNode::Draw(Option_t *option)
    gPad->GetViewer3D(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw only Sons of this node.
 
-//______________________________________________________________________________
 void TNode::DrawOnly(Option_t *option)
 {
-   // Draw only Sons of this node.
-
    SetVisibility(2);
    Draw(option);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function must be implemented to realize the action
+///  corresponding to the mouse click on the object in the window
 
-//______________________________________________________________________________
 void TNode::ExecuteEvent(Int_t, Int_t, Int_t)
 {
-   // Execute action corresponding to one event.
-   //
-   //  This member function must be implemented to realize the action
-   //  corresponding to the mouse click on the object in the window
-
+   if (!gPad) return;
    gPad->SetCursor(kHand);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return pointer to node with name in the node tree.
 
-//______________________________________________________________________________
 TNode *TNode::GetNode(const char *name) const
 {
-   // Return pointer to node with name in the node tree.
-
    if (!strcmp(name, GetName())) return (TNode*)this;
    TNode *node, *nodefound;
    if (!fNodes) return 0;
@@ -400,12 +392,11 @@ TNode *TNode::GetNode(const char *name) const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get object info.
 
-//______________________________________________________________________________
 char *TNode::GetObjectInfo(Int_t, Int_t) const
 {
-   // Get object info.
-
    const char *snull = "";
    if (!gPad) return (char*)snull;
    static TString info;
@@ -413,12 +404,11 @@ char *TNode::GetObjectInfo(Int_t, Int_t) const
    return const_cast<char*>(info.Data());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Copy shape attributes as node attributes.
 
-//______________________________________________________________________________
 void TNode::ImportShapeAttributes()
 {
-   // Copy shape attributes as node attributes.
-
    SetLineColor(fShape->GetLineColor());
    SetLineStyle(fShape->GetLineStyle());
    SetLineWidth(fShape->GetLineWidth());
@@ -436,27 +426,25 @@ void TNode::ImportShapeAttributes()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return TRUE if node contains nodes, FALSE otherwise.
 
-//______________________________________________________________________________
 Bool_t TNode::IsFolder() const
 {
-   // Return TRUE if node contains nodes, FALSE otherwise.
-
    if (fNodes) return kTRUE;
    else        return kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TNode::Local2Master(const Double_t *local, Double_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    Double_t x,y,z;
    Float_t bomb = gGeometry->GetBomb();
 
@@ -481,17 +469,16 @@ void TNode::Local2Master(const Double_t *local, Double_t *master)
    master[0] = x; master[1] = y; master[2] = z;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from local system to master reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TNode::Local2Master(const Float_t *local, Float_t *master)
 {
-   // Convert one point from local system to master reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    Float_t x,y,z;
    Float_t bomb = gGeometry->GetBomb();
 
@@ -516,12 +503,11 @@ void TNode::Local2Master(const Float_t *local, Float_t *master)
    master[0] = x; master[1] = y; master[2] = z;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// List Referenced object with current parameters.
 
-//______________________________________________________________________________
 void TNode::ls(Option_t *option) const
 {
-   // List Referenced object with current parameters.
-
    Int_t sizeX3D = 0;
    TString opt = option;
    opt.ToLower();
@@ -571,17 +557,16 @@ void TNode::ls(Option_t *option) const
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TNode::Master2Local(const Double_t *master, Double_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    Double_t x,y,z;
    Float_t bomb = gGeometry->GetBomb();
 
@@ -599,17 +584,16 @@ void TNode::Master2Local(const Double_t *master, Double_t *local)
    local[0] = x; local[1] = y; local[2] = z;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Convert one point from master system to local reference system.
+///
+///  Note that before invoking this function, the global rotation matrix
+///  and translation vector for this node must have been computed.
+///  This is automatically done by the Paint functions.
+///  Otherwise TNode::UpdateMatrix should be called before.
 
-//______________________________________________________________________________
 void TNode::Master2Local(const Float_t *master, Float_t *local)
 {
-   // Convert one point from master system to local reference system.
-   //
-   //  Note that before invoking this function, the global rotation matrix
-   //  and translation vector for this node must have been computed.
-   //  This is automatically done by the Paint functions.
-   //  Otherwise TNode::UpdateMatrix should be called before.
-
    Float_t x,y,z;
    Float_t bomb = gGeometry->GetBomb();
 
@@ -627,17 +611,16 @@ void TNode::Master2Local(const Float_t *master, Float_t *local)
    local[0] = x; local[1] = y; local[2] = z;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint Referenced node with current parameters.
+///
+///  - vis = 1  (default) shape is drawn
+///  - vis = 0  shape is not drawn but its sons may be not drawn
+///  - vis = -1 shape is not drawn. Its sons are not drawn
+///  - vis = -2 shape is drawn. Its sons are not drawn
 
-//______________________________________________________________________________
 void TNode::Paint(Option_t *option)
 {
-   // Paint Referenced node with current parameters.
-   //
-   //  vis = 1  (default) shape is drawn
-   //  vis = 0  shape is not drawn but its sons may be not drawn
-   //  vis = -1 shape is not drawn. Its sons are not drawn
-   //  vis = -2 shape is drawn. Its sons are not drawn
-
    Int_t level = 0;
    if (gGeometry) level = gGeometry->GeomLevel();
 
@@ -697,21 +680,19 @@ void TNode::Paint(Option_t *option)
    gGeometry->PopLevel();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove object from the list of nodes of this node.
 
-//______________________________________________________________________________
 void TNode::RecursiveRemove(TObject *obj)
 {
-   // Recursively remove object from the list of nodes of this node.
-
    if (fNodes && dynamic_cast<TNode*>(obj) ) fNodes->RecursiveRemove(obj);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name of this Node
 
-//______________________________________________________________________________
 void TNode::SetName(const char *name)
 {
-   // Change the name of this Node
-
    if (gPad) gPad->Modified();
 
    //  Nodes are named objects in a THashList.
@@ -721,12 +702,11 @@ void TNode::SetName(const char *name)
    if (fParent) fParent->GetListOfNodes()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Change the name and title of this Node
 
-//______________________________________________________________________________
 void TNode::SetNameTitle(const char *name, const char *title)
 {
-   // Change the name and title of this Node
-
    if (gPad) gPad->Modified();
 
    //  Nodes are named objects in a THashList.
@@ -737,12 +717,11 @@ void TNode::SetNameTitle(const char *name, const char *title)
    if (fParent) fParent->GetListOfNodes()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the pointer to the parent, keep parents informed about who they have
 
-//______________________________________________________________________________
 void TNode::SetParent(TNode *parent)
 {
-   // Set the pointer to the parent, keep parents informed about who they have
-
    TNode *pp = parent;
    while(pp) {
       if (pp == this) {
@@ -765,21 +744,20 @@ void TNode::SetParent(TNode *parent)
    else gGeometry->GetListOfNodes()->Add(this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set visibility for this node and its sons.
+///
+///  - vis = 3  node is drawn and its sons are drawn
+///  - vis = 2  node is not drawn but its sons are drawn
+///  - vis = 1  (default) node is drawn
+///  - vis = 0  node is not drawn
+///  - vis = -1 node is not drawn. Its sons are not drawn
+///  - vis = -2 node is drawn. Its sons are not drawn
+///  - vis = -3 Only node leaves are drawn
+///  - vis = -4 Node is not drawn. Its immediate sons are drawn
 
-//______________________________________________________________________________
 void TNode::SetVisibility(Int_t vis)
 {
-   // Set visibility for this node and its sons.
-   //
-   //  vis = 3  node is drawn and its sons are drawn
-   //  vis = 2  node is not drawn but its sons are drawn
-   //  vis = 1  (default) node is drawn
-   //  vis = 0  node is not drawn
-   //  vis = -1 node is not drawn. Its sons are not drawn
-   //  vis = -2 node is drawn. Its sons are not drawn
-   //  vis = -3 Only node leaves are drawn
-   //  vis = -4 Node is not drawn. Its immediate sons are drawn
-
    ResetBit(kSonsInvisible);
    TNode *node;
    if (vis == -4 ) {         //Node is not drawn. Its immediate sons are drawn
@@ -815,12 +793,11 @@ void TNode::SetVisibility(Int_t vis)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return total size of this 3-D Node with its attributes.
 
-//______________________________________________________________________________
 void TNode::Sizeof3D() const
 {
-   // Return total size of this 3-D Node with its attributes.
-
    if (fVisibility && fShape && fShape->GetVisibility()) {
       fShape->Sizeof3D();
    }
@@ -836,12 +813,11 @@ void TNode::Sizeof3D() const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Stream a class object.
 
-//_______________________________________________________________________
 void TNode::Streamer(TBuffer &b)
 {
-   // Stream a class object.
-
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
@@ -871,13 +847,12 @@ void TNode::Streamer(TBuffer &b)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Update global rotation matrix/translation vector for this node
+/// this function must be called before invoking Local2Master
 
-//______________________________________________________________________________
 void TNode::UpdateMatrix()
 {
-   // Update global rotation matrix/translation vector for this node
-   // this function must be called before invoking Local2Master
-
    TNode *nodes[kMAXLEVELS], *node;
    Int_t i;
    for (i=0;i<kVectorSize;i++) gTranslation[0][i] = 0;
@@ -902,20 +877,19 @@ void TNode::UpdateMatrix()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Compute new translation vector and global matrix.
+///
+///  - dx      old translation vector
+///  - rmat    old global matrix
+///  - x,y,z   offset of new local system with respect to mother
+///  - dxnew   new translation vector
+///  - rmatnew new global rotation matrix
 
-//______________________________________________________________________________
 void TNode::UpdateTempMatrix(const Double_t *dx,const Double_t *rmat
                          , Double_t x, Double_t y, Double_t z, Double_t *matrix
                          , Double_t *dxnew, Double_t *rmatnew)
 {
-   // Compute new translation vector and global matrix.
-   //
-   //  dx      old translation vector
-   //  rmat    old global matrix
-   //  x,y,z   offset of new local system with respect to mother
-   //  dxnew   new translation vector
-   //  rmatnew new global rotation matrix
-
    dxnew[0] = dx[0] + x*rmat[0] + y*rmat[3] + z*rmat[6];
    dxnew[1] = dx[1] + x*rmat[1] + y*rmat[4] + z*rmat[7];
    dxnew[2] = dx[2] + x*rmat[2] + y*rmat[5] + z*rmat[8];

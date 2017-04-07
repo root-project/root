@@ -1,8 +1,13 @@
-//Author: Timur Pocheptsov, 25/09/2012
-//This demo shows how to use transparency.
-//On MacOS X you can see the transparency in a canvas,
-//you can save canvas contents as pdf/png
-//(and thus you'll have an image with transparency on every platform).
+/// \file
+/// \ingroup tutorial_cocoa
+/// This demo shows how to use transparency.
+/// On MacOS X you can see the transparency in a canvas,
+/// you can save canvas contents as pdf/png
+/// (and thus you'll have an image with transparency on every platform).
+///
+/// \macro_code
+///
+/// \author Timur Pocheptsov
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"
@@ -33,7 +38,7 @@ void transp()
    new TColor(greeIndex, 0., 1., 0., "green", 0.5);
 
    //3. Test that back-end is TGCocoa.
-   TCanvas * const cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+   TCanvas * const cnv = new TCanvas("transparency", "transparency demo", 600, 400);
    //After we created a canvas, gVirtualX in principle should be initialized
    //and we can check its type:
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {

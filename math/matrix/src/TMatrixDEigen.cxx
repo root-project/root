@@ -9,48 +9,53 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMatrixDEigen                                                        //
-//                                                                      //
-// Eigenvalues and eigenvectors of a real matrix.                       //
-//                                                                      //
-// If A is not symmetric, then the eigenvalue matrix D is block         //
-// diagonal with the real eigenvalues in 1-by-1 blocks and any complex  //
-// eigenvalues, a + i*b, in 2-by-2 blocks, [a, b; -b, a].  That is, if  //
-// the complex eigenvalues look like                                    //
-//                                                                      //
-//     u + iv     .        .          .      .    .                     //
-//       .      u - iv     .          .      .    .                     //
-//       .        .      a + ib       .      .    .                     //
-//       .        .        .        a - ib   .    .                     //
-//       .        .        .          .      x    .                     //
-//       .        .        .          .      .    y                     //
-//                                                                      //
-// then D looks like                                                    //
-//                                                                      //
-//       u        v        .          .      .    .                     //
-//      -v        u        .          .      .    .                     //
-//       .        .        a          b      .    .                     //
-//       .        .       -b          a      .    .                     //
-//       .        .        .          .      x    .                     //
-//       .        .        .          .      .    y                     //
-//                                                                      //
-// This keeps V a real matrix in both symmetric and non-symmetric       //
-// cases, and A*V = V*D.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TMatrixDEigen
+    \ingroup Matrix
+
+ TMatrixDEigen
+
+ Eigenvalues and eigenvectors of a real matrix.
+
+ If A is not symmetric, then the eigenvalue matrix D is block
+ diagonal with the real eigenvalues in 1-by-1 blocks and any complex
+ eigenvalues, a + i*b, in 2-by-2 blocks, [a, b; -b, a].  That is, if
+ the complex eigenvalues look like
+
+~~~
+     u + iv     .        .          .      .    .
+       .      u - iv     .          .      .    .
+       .        .      a + ib       .      .    .
+       .        .        .        a - ib   .    .
+       .        .        .          .      x    .
+       .        .        .          .      .    y
+~~~
+
+ then D looks like
+
+~~~
+       u        v        .          .      .    .
+      -v        u        .          .      .    .
+       .        .        a          b      .    .
+       .        .       -b          a      .    .
+       .        .        .          .      x    .
+       .        .        .          .      .    y
+~~~
+
+ This keeps V a real matrix in both symmetric and non-symmetric
+ cases, and A*V = V*D.
+
+*/
 
 #include "TMatrixDEigen.h"
 #include "TMath.h"
 
 ClassImp(TMatrixDEigen)
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor for eigen-problem of matrix A .
+
 TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
 {
-// Constructor for eigen-problem of matrix A .
-
    R__ASSERT(a.IsValid());
 
    const Int_t nRows  = a.GetNrows();
@@ -87,22 +92,22 @@ TMatrixDEigen::TMatrixDEigen(const TMatrixD &a)
    Sort(fEigenVectors,fEigenValuesRe,fEigenValuesIm);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 TMatrixDEigen::TMatrixDEigen(const TMatrixDEigen &another)
 {
-// Copy constructor
-
    *this = another;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Nonsymmetric reduction to Hessenberg form.
+/// This is derived from the Algol procedures orthes and ortran, by Martin and Wilkinson,
+/// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutines in EISPACK.
+
 void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
 {
-// Nonsymmetric reduction to Hessenberg form.
-// This is derived from the Algol procedures orthes and ortran, by Martin and Wilkinson,
-// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutines in EISPACK.
-
    Double_t *pV = v.GetMatrixArray();
    Double_t *pO = ortho.GetMatrixArray();
    Double_t *pH = H.GetMatrixArray();
@@ -201,10 +206,11 @@ void TMatrixDEigen::MakeHessenBerg(TMatrixD &v,TVectorD &ortho,TMatrixD &H)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Complex scalar division.
+
 static Double_t gCdivr, gCdivi;
 static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
-// Complex scalar division.
    Double_t r,d;
    if (TMath::Abs(yr) > TMath::Abs(yi)) {
       r = yi/yr;
@@ -219,14 +225,14 @@ static void cdiv(Double_t xr,Double_t xi,Double_t yr,Double_t yi) {
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Nonsymmetric reduction from Hessenberg to real Schur form.
+/// This is derived from the Algol procedure hqr2, by Martin and Wilkinson,
+/// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
+/// Fortran subroutine in EISPACK.
+
 void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 {
-// Nonsymmetric reduction from Hessenberg to real Schur form.
-// This is derived from the Algol procedure hqr2, by Martin and Wilkinson,
-// Handbook for Auto. Comp., Vol.ii-Linear Algebra, and the corresponding
-// Fortran subroutine in EISPACK.
-
    // Initialize
 
    const Int_t nn = v.GetNrows();
@@ -431,126 +437,126 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
                eps*(TMath::Abs(p)*(TMath::Abs(pH[off_m_1+m-1])+TMath::Abs(z)+
                TMath::Abs(pH[off_m1+m+1]))))
                break;
-               m--;
+            m--;
+         }
+
+         for (i = m+2; i <= n; i++) {
+            const Int_t off_i = i*nn;
+            pH[off_i+i-2] = 0.0;
+            if (i > m+2)
+               pH[off_i+i-3] = 0.0;
+         }
+
+         // Double QR step involving rows l:n and columns m:n
+
+         for (k = m; k <= n-1; k++) {
+            const Int_t off_k  = k*nn;
+            const Int_t off_k1 = (k+1)*nn;
+            const Int_t off_k2 = (k+2)*nn;
+            const Int_t notlast = (k != n-1);
+            if (k != m) {
+               p = pH[off_k+k-1];
+               q = pH[off_k1+k-1];
+               r = (notlast ? pH[off_k2+k-1] : 0.0);
+               x = TMath::Abs(p)+TMath::Abs(q)+TMath::Abs(r);
+               if (x != 0.0) {
+                  p = p/x;
+                  q = q/x;
+                  r = r/x;
+               }
             }
-
-            for (i = m+2; i <= n; i++) {
-               const Int_t off_i = i*nn;
-               pH[off_i+i-2] = 0.0;
-               if (i > m+2)
-                  pH[off_i+i-3] = 0.0;
+            if (x == 0.0)
+               break;
+            s = TMath::Sqrt(p*p+q*q+r*r);
+            if (p < 0) {
+               s = -s;
             }
+            if (s != 0) {
+              if (k != m)
+                 pH[off_k+k-1] = -s*x;
+              else if (l != m)
+                 pH[off_k+k-1] = -pH[off_k+k-1];
+              p = p+s;
+              x = p/s;
+              y = q/s;
+              z = r/s;
+              q = q/p;
+              r = r/p;
 
-            // Double QR step involving rows l:n and columns m:n
+              // Row modification
 
-            for (k = m; k <= n-1; k++) {
-               const Int_t off_k  = k*nn;
-               const Int_t off_k1 = (k+1)*nn;
-               const Int_t off_k2 = (k+2)*nn;
-               const Int_t notlast = (k != n-1);
-               if (k != m) {
-                  p = pH[off_k+k-1];
-                  q = pH[off_k1+k-1];
-                  r = (notlast ? pH[off_k2+k-1] : 0.0);
-                  x = TMath::Abs(p)+TMath::Abs(q)+TMath::Abs(r);
-                  if (x != 0.0) {
-                     p = p/x;
-                     q = q/x;
-                     r = r/x;
-                  }
-               }
-               if (x == 0.0)
-                  break;
-               s = TMath::Sqrt(p*p+q*q+r*r);
-               if (p < 0) {
-                  s = -s;
-               }
-               if (s != 0) {
-                  if (k != m)
-                     pH[off_k+k-1] = -s*x;
-                  else if (l != m)
-                     pH[off_k+k-1] = -pH[off_k+k-1];
-                  p = p+s;
-                  x = p/s;
-                  y = q/s;
-                  z = r/s;
-                  q = q/p;
-                  r = r/p;
+              for (j = k; j < nn; j++) {
+                 p = pH[off_k+j]+q*pH[off_k1+j];
+                 if (notlast) {
+                    p = p+r*pH[off_k2+j];
+                    pH[off_k2+j] = pH[off_k2+j]-p*z;
+                 }
+                 pH[off_k+j]  = pH[off_k+j]-p*x;
+                 pH[off_k1+j] = pH[off_k1+j]-p*y;
+              }
 
-                  // Row modification
+              // Column modification
 
-                  for (j = k; j < nn; j++) {
-                     p = pH[off_k+j]+q*pH[off_k1+j];
-                     if (notlast) {
-                        p = p+r*pH[off_k2+j];
-                        pH[off_k2+j] = pH[off_k2+j]-p*z;
-                     }
-                     pH[off_k+j]  = pH[off_k+j]-p*x;
-                     pH[off_k1+j] = pH[off_k1+j]-p*y;
-                  }
+              for (i = 0; i <= TMath::Min(n,k+3); i++) {
+                 const Int_t off_i = i*nn;
+                 p = x*pH[off_i+k]+y*pH[off_i+k+1];
+                 if (notlast) {
+                    p = p+z*pH[off_i+k+2];
+                    pH[off_i+k+2] = pH[off_i+k+2]-p*r;
+                 }
+                 pH[off_i+k]   = pH[off_i+k]-p;
+                 pH[off_i+k+1] = pH[off_i+k+1]-p*q;
+              }
 
-                  // Column modification
+              // Accumulate transformations
 
-                  for (i = 0; i <= TMath::Min(n,k+3); i++) {
-                     const Int_t off_i = i*nn;
-                     p = x*pH[off_i+k]+y*pH[off_i+k+1];
-                     if (notlast) {
-                        p = p+z*pH[off_i+k+2];
-                        pH[off_i+k+2] = pH[off_i+k+2]-p*r;
-                     }
-                     pH[off_i+k]   = pH[off_i+k]-p;
-                     pH[off_i+k+1] = pH[off_i+k+1]-p*q;
-                  }
+              for (i = low; i <= high; i++) {
+                 const Int_t off_i = i*nn;
+                 p = x*pV[off_i+k]+y*pV[off_i+k+1];
+                 if (notlast) {
+                    p = p+z*pV[off_i+k+2];
+                    pV[off_i+k+2] = pV[off_i+k+2]-p*r;
+                 }
+                 pV[off_i+k]   = pV[off_i+k]-p;
+                 pV[off_i+k+1] = pV[off_i+k+1]-p*q;
+              }
+            }  // (s != 0)
+         }  // k loop
+      }  // check convergence
+   }  // while (n >= low)
 
-                  // Accumulate transformations
+   // Backsubstitute to find vectors of upper triangular form
 
-                  for (i = low; i <= high; i++) {
-                     const Int_t off_i = i*nn;
-                     p = x*pV[off_i+k]+y*pV[off_i+k+1];
-                     if (notlast) {
-                        p = p+z*pV[off_i+k+2];
-                        pV[off_i+k+2] = pV[off_i+k+2]-p*r;
-                     }
-                     pV[off_i+k]   = pV[off_i+k]-p;
-                     pV[off_i+k+1] = pV[off_i+k+1]-p*q;
-                  }
-               }  // (s != 0)
-            }  // k loop
-         }  // check convergence
-      }  // while (n >= low)
+   if (norm == 0.0)
+      return;
 
-      // Backsubstitute to find vectors of upper triangular form
+   for (n = nn-1; n >= 0; n--) {
+      p = pD[n];
+      q = pE[n];
 
-      if (norm == 0.0)
-         return;
+      // Double_t vector
 
-      for (n = nn-1; n >= 0; n--) {
-         p = pD[n];
-         q = pE[n];
-
-         // Double_t vector
-
-         const Int_t off_n = n*nn;
-         if (q == 0) {
-            Int_t l = n;
-            pH[off_n+n] = 1.0;
-            for (i = n-1; i >= 0; i--) {
-               const Int_t off_i  = i*nn;
-               const Int_t off_i1 = (i+1)*nn;
-               w = pH[off_i+i]-p;
-               r = 0.0;
-               for (j = l; j <= n; j++) {
-                  const Int_t off_j = j*nn;
-                  r = r+pH[off_i+j]*pH[off_j+n];
-               }
-               if (pE[i] < 0.0) {
-                  z = w;
-                  s = r;
-               } else {
-                  l = i;
-                  if (pE[i] == 0.0) {
-                     if (w != 0.0)
-                        pH[off_i+n] = -r/w;
+      const Int_t off_n = n*nn;
+      if (q == 0) {
+         Int_t l = n;
+         pH[off_n+n] = 1.0;
+         for (i = n-1; i >= 0; i--) {
+            const Int_t off_i  = i*nn;
+            const Int_t off_i1 = (i+1)*nn;
+            w = pH[off_i+i]-p;
+            r = 0.0;
+            for (j = l; j <= n; j++) {
+               const Int_t off_j = j*nn;
+               r = r+pH[off_i+j]*pH[off_j+n];
+            }
+            if (pE[i] < 0.0) {
+               z = w;
+               s = r;
+            } else {
+               l = i;
+               if (pE[i] == 0.0) {
+                  if (w != 0.0)
+                     pH[off_i+n] = -r/w;
                   else
                      pH[off_i+n] = -r/(eps*norm);
 
@@ -686,12 +692,12 @@ void TMatrixDEigen::MakeSchurr(TMatrixD &v,TVectorD &d,TVectorD &e,TMatrixD &H)
 
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
+/// of the complex eigenvalues .
+
 void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
 {
-// Sort eigenvalues and corresponding vectors in descending order of Re^2+Im^2
-// of the complex eigenvalues .
-
    // Sort eigenvalues and corresponding vectors.
    Double_t *pV = v.GetMatrixArray();
    Double_t *pD = d.GetMatrixArray();
@@ -728,11 +734,11 @@ void TMatrixDEigen::Sort(TMatrixD &v,TVectorD &d,TVectorD &e)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
 TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
 {
-// Assignment operator
-
    if (this != &source) {
       fEigenVectors.ResizeTo(source.fEigenVectors);
       fEigenValuesRe.ResizeTo(source.fEigenValuesRe);
@@ -741,42 +747,47 @@ TMatrixDEigen &TMatrixDEigen::operator=(const TMatrixDEigen &source)
    return *this;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the block diagonal eigenvalue matrix.
+/// If the original matrix A is not symmetric, then the eigenvalue
+/// matrix D is block diagonal with the real eigenvalues in 1-by-1
+/// blocks and any complex eigenvalues,
+///    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
+///  That is, if the complex eigenvalues look like
+///
+/// ~~~
+///     u + iv     .        .          .      .    .
+///       .      u - iv     .          .      .    .
+///       .        .      a + ib       .      .    .
+///       .        .        .        a - ib   .    .
+///       .        .        .          .      x    .
+///       .        .        .          .      .    y
+/// ~~~
+///
+/// then D looks like
+///
+/// ~~~
+///     u        v        .          .      .    .
+///    -v        u        .          .      .    .
+///     .        .        a          b      .    .
+///     .        .       -b          a      .    .
+///     .        .        .          .      x    .
+///     .        .        .          .      .    y
+/// ~~~
+///
+/// This keeps V a real matrix in both symmetric and non-symmetric
+/// cases, and A*V = V*D.
+///
+/// Indexing:
+///  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
+///  each eigen-vector must have the shape (rowLwb,rowUpb) .
+///  For convenience, the column index of the eigen-vector matrix
+///  also runs from rowLwb to rowUpb so that the returned matrix
+///  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
+///
+
 const TMatrixD TMatrixDEigen::GetEigenValues() const
 {
-// Computes the block diagonal eigenvalue matrix.
-// If the original matrix A is not symmetric, then the eigenvalue
-// matrix D is block diagonal with the real eigenvalues in 1-by-1
-// blocks and any complex eigenvalues,
-//    a + i*b, in 2-by-2 blocks, [a, b; -b, a].
-//  That is, if the complex eigenvalues look like
-//
-//     u + iv     .        .          .      .    .
-//       .      u - iv     .          .      .    .
-//       .        .      a + ib       .      .    .
-//       .        .        .        a - ib   .    .
-//       .        .        .          .      x    .
-//       .        .        .          .      .    y
-//
-// then D looks like
-//
-//     u        v        .          .      .    .
-//    -v        u        .          .      .    .
-//     .        .        a          b      .    .
-//     .        .       -b          a      .    .
-//     .        .        .          .      x    .
-//     .        .        .          .      .    y
-//
-// This keeps V a real matrix in both symmetric and non-symmetric
-// cases, and A*V = V*D.
-//
-// Indexing:
-//  If matrix A has the index/shape (rowLwb,rowUpb,rowLwb,rowUpb)
-//  each eigen-vector must have the shape (rowLwb,rowUpb) .
-//  For convinience, the column index of the eigen-vector matrix
-//  also runs from rowLwb to rowUpb so that the returned matrix
-//  has also index/shape (rowLwb,rowUpb,rowLwb,rowUpb) .
-//
    const Int_t nrows  = fEigenVectors.GetNrows();
    const Int_t rowLwb = fEigenVectors.GetRowLwb();
    const Int_t rowUpb = rowLwb+nrows-1;

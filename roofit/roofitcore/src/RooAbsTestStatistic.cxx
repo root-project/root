@@ -14,24 +14,25 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-//
-// BEGIN_HTML
-// RooAbsTestStatistic is the abstract base class for all test
-// statistics. Test statistics that evaluate the PDF at each data
-// point should inherit from the RooAbsOptTestStatistic class which
-// implements several generic optimizations that can be done for such
-// quantities.
-//
-// This test statistic base class organizes calculation of test
-// statistic values for RooSimultaneous PDF as a combination of test
-// statistic values for the PDF components of the simultaneous PDF and
-// organizes multi-processor parallel calculation of test statistic
-// values. For the latter, the test statistic value is calculated in
-// partitions in parallel executing processes and a posteriori
-// combined in the main thread.
-// END_HTML
-//
+/**
+\file RooAbsTestStatistic.cxx
+\class RooAbsTestStatistic
+\ingroup Roofitcore
+
+RooAbsTestStatistic is the abstract base class for all test
+statistics. Test statistics that evaluate the PDF at each data
+point should inherit from the RooAbsOptTestStatistic class which
+implements several generic optimizations that can be done for such
+quantities.
+
+This test statistic base class organizes calculation of test
+statistic values for RooSimultaneous PDF as a combination of test
+statistic values for the PDF components of the simultaneous PDF and
+organizes multi-processor parallel calculation of test statistic
+values. For the latter, the test statistic value is calculated in
+partitions in parallel executing processes and a posteriori
+combined in the main thread.
+**/
 
 
 #include "RooFit.h"
@@ -59,7 +60,9 @@ ClassImp(RooAbsTestStatistic)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 RooAbsTestStatistic::RooAbsTestStatistic() :
   _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
   _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
@@ -67,12 +70,24 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
   _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE), _offset(0),
   _offsetCarry(0), _evalCarry(0)
 {
-      // Default constructor
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
+/// rangeName is not null, only events in the dataset inside the range will be used in the test
+/// statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
+/// instructed to fix their fraction definitions to the given named range. If nCPU is greater than
+/// 1 the test statistic calculation will be paralellized over multiple processes. By default the data
+/// is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+/// of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
+/// in each processing block many vary greatly thereby distributing the workload rather unevenly.
+/// If interleave is set to true, the interleave partitioning strategy is used where each partition
+/// i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
+/// If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
+/// as range definition for each index state of a RooSimultaneous
+
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
 					 Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange) :
@@ -96,19 +111,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _offsetCarry(0),
   _evalCarry(0)
 {
-  // Constructor taking function (real), a dataset (data), a set of projected observables (projSet). If
-  // rangeName is not null, only events in the dataset inside the range will be used in the test
-  // statistic calculation. If addCoefRangeName is not null, all RooAddPdf component of 'real' will be
-  // instructed to fix their fraction definitions to the given named range. If nCPU is greater than
-  // 1 the test statistic calculation will be paralellized over multiple processes. By default the data
-  // is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
-  // of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
-  // in each processing block many vary greatly thereby distributing the workload rather unevenly.
-  // If interleave is set to true, the interleave partitioning strategy is used where each partition
-  // i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
-  // If splitCutRange is true, a different rangeName constructed as rangeName_{catName} will be used
-  // as range definition for each index state of a RooSimultaneous
-
   // Register all parameters as servers
   RooArgSet* params = real.getParameters(&data) ;
   _paramSet.add(*params) ;
@@ -143,7 +145,9 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
 RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name) :
   RooAbsReal(other,name),
   _paramSet("paramSet","Set of parameters",this),
@@ -166,8 +170,6 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _offsetCarry(other._offsetCarry),
   _evalCarry(other._evalCarry)
 {
-  // Copy constructor
-
   // Our parameters are those of original
   _paramSet.add(other._paramSet) ;
 
@@ -202,11 +204,11 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 RooAbsTestStatistic::~RooAbsTestStatistic()
 {
-  // Destructor
-
   if (MPMaster == _gofOpMode && _init) {
     for (Int_t i = 0; i < _nCPU; ++i) delete _mpfeArray[i];
     delete[] _mpfeArray ;
@@ -223,15 +225,15 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates and return value of test statistic. If the test statistic
+/// is calculated from on a RooSimultaneous, the test statistic calculation
+/// is performed separately on each simultaneous p.d.f component and associated
+/// data and then combined. If the test statistic calculation is parallelized
+/// partitions are calculated in nCPU processes and a posteriori combined.
+
 Double_t RooAbsTestStatistic::evaluate() const
 {
-  // Calculates and return value of test statistic. If the test statistic
-  // is calculated from on a RooSimultaneous, the test statistic calculation
-  // is performed separately on each simultaneous p.d.f component and associated
-  // data and then combined. If the test statistic calculation is parallelized
-  // partitions are calculated in nCPU processes and a posteriori combined.
-
   // One-time Initialization
   if (!_init) {
     const_cast<RooAbsTestStatistic*>(this)->initialize() ;
@@ -332,13 +334,13 @@ Double_t RooAbsTestStatistic::evaluate() const
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// One-time initialization of the test statistic. Setup
+/// infrastructure for simultaneous p.d.f processing and/or
+/// parallelized processing if requested
+
 Bool_t RooAbsTestStatistic::initialize()
 {
-  // One-time initialization of the test statistic. Setup
-  // infrastructure for simultaneous p.d.f processing and/or
-  // parallelized processing if requested
-  
   if (_init) return kFALSE;
   
   if (MPMaster == _gofOpMode) {
@@ -352,10 +354,11 @@ Bool_t RooAbsTestStatistic::initialize()
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward server redirect calls to component test statistics
+
 Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t)
 {
-  // Forward server redirect calls to component test statistics
   if (SimMaster == _gofOpMode && _gofArray) {
     // Forward to slaves
     for (Int_t i = 0; i < _nGof; ++i) {
@@ -377,11 +380,12 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add extra information on component test statistics when printing
+/// itself as part of a tree structure
+
 void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 {
-  // Add extra information on component test statistics when printing
-  // itself as part of a tree structure
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
     os << indent << "RooAbsTestStatistic begin GOF contents" << endl ;
@@ -400,11 +404,12 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Forward constant term optimization management calls to component
+/// test statistics
+
 void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt)
 {
-  // Forward constant term optimization management calls to component
-  // test statistics
   initialize();
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
@@ -424,10 +429,11 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set MultiProcessor set number identification of this instance
+
 void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 {
-  // Set MultiProcessor set number identification of this instance
   _setNum = inSetNum; _numSets = inNumSets;
   _extSet = _mpinterl==RooFit::SimComponents ? _setNum : (_numSets - 1);
   
@@ -442,12 +448,12 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize multi-processor calculation mode. Create component test statistics in separate
+/// processed that are connected to this process through a RooAbsRealMPFE front-end class.
+
 void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
-  // Initialize multi-processor calculation mode. Create component test statistics in separate
-  // processed that are connected to this process through a RooAbsRealMPFE front-end class.
-
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
   // Create proto-goodness-of-fit
@@ -475,15 +481,15 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Initialize simultaneous p.d.f processing mode. Strip simultaneous
+/// p.d.f into individual components, split dataset in subset
+/// matching each component and create component test statistics for
+/// each of them.
+
 void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 				      const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName)
 {
-  // Initialize simultaneous p.d.f processing mode. Strip simultaneous
-  // p.d.f into individual components, split dataset in subset
-  // matching each component and create component test statistics for
-  // each of them.
-
 
   RooAbsCategoryLValue& simCat = (RooAbsCategoryLValue&) simpdf->indexCat();
 
@@ -526,17 +532,25 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 		     << " (" << dset->numEntries() << " dataset entries)" << endl;
 
       
+      // *** START HERE
       // WVE HACK determine if we have a RooRealSumPdf and then treat it like a binned likelihood
       RooAbsPdf* binnedPdf = 0 ;
+      Bool_t binnedL = kFALSE ;
       if (pdf->getAttribute("BinnedLikelihood") && pdf->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
 	// Simplest case: top-level of component is a RRSP
 	binnedPdf = pdf ;
+	binnedL = kTRUE ;
       } else if (pdf->IsA()->InheritsFrom(RooProdPdf::Class())) {
 	// Default case: top-level pdf is a product of RRSP and other pdfs
 	RooFIter iter = ((RooProdPdf*)pdf)->pdfList().fwdIterator() ;
 	RooAbsArg* component ;
 	while ((component = iter.next())) {
 	  if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+	    binnedPdf = (RooAbsPdf*) component ;
+	    binnedL = kTRUE ;
+	  }
+	  if (component->getAttribute("MAIN_MEASUREMENT")) {
+	    // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
 	    binnedPdf = (RooAbsPdf*) component ;
 	  }
 	}
@@ -546,12 +560,13 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
       // and omitting them reduces model complexity and associated handling/cloning times
       if (_splitRange && rangeName) {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
+			      Form("%s_%s",rangeName,type->GetName()),addCoefRangeName,_nCPU*(_mpinterl?-1:1),_mpinterl,_verbose,_splitRange,binnedL);
       } else {
 	_gofArray[n] = create(type->GetName(),type->GetName(),(binnedPdf?*binnedPdf:*pdf),*dset,*projDeps,
-			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,(binnedPdf?kTRUE:kFALSE));
+			      rangeName,addCoefRangeName,_nCPU,_mpinterl,_verbose,_splitRange,binnedL);
       }
       _gofArray[n]->setSimCount(_nGof);
+      // *** END HERE
 
       // Fill per-component split mode with Bulk Partition for now so that Auto will map to bulk-splitting of all components
       if (_mpinterl==RooFit::Hybrid) {
@@ -601,14 +616,14 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 }
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Change dataset that is used to given one. If cloneData is kTRUE, a clone of
+/// in the input dataset is made.  If the test statistic was constructed with
+/// a range specification on the data, the cloneData argument is ignore and
+/// the data is always cloned.
+
 Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData) 
 { 
-  // Change dataset that is used to given one. If cloneData is kTRUE, a clone of
-  // in the input dataset is made.  If the test statistic was constructed with
-  // a range specification on the data, the cloneData argument is ignore and
-  // the data is always cloned.
-
   // Trigger refresh of likelihood offsets 
   if (isOffsetting()) {
     enableOffsetting(kFALSE);

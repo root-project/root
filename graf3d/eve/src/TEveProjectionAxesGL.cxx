@@ -21,45 +21,47 @@
 
 #include "TMath.h"
 
-//______________________________________________________________________________
-//
-// OpenGL renderer class for TEveProjectionAxes.
-//
+/** \class TEveProjectionAxesGL
+\ingroup TEve
+OpenGL renderer class for TEveProjectionAxes.
+*/
 
 ClassImp(TEveProjectionAxesGL);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TEveProjectionAxesGL::TEveProjectionAxesGL() :
    TGLObject(),
    fM(0),
    fProjection(0)
 {
-   // Constructor.
-
    fDLCache    = kFALSE; // Disable display list.
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set model object.
+/// Virtual from TGLObject.
+
 Bool_t TEveProjectionAxesGL::SetModel(TObject* obj, const Option_t* /*opt*/)
 {
-   // Set model object.
-   // Virtual from TGLObject.
-
    fM = SetModelDynCast<TEveProjectionAxes>(obj);
    fAxisPainter.SetAttAxis(fM);
    return fM->GetManager() ? kTRUE : kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the bounding-box data of the logical-shape.
+/// Virtual from TGLObject.
+
 void TEveProjectionAxesGL::SetBBox()
 {
-   // Fill the bounding-box data of the logical-shape.
-   // Virtual from TGLObject.
-
    SetAxisAlignedBBox(((TEveProjectionAxes*)fExternalObj)->AssertBBox());
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Filter overlapping labels.
+
 void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
 {
    TGLAxisPainter::LabVec_t &orig = fAxisPainter.RefLabVec();
@@ -68,7 +70,7 @@ void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
    Float_t center = fM->GetManager()->GetProjection()->GetProjectedCenter()[idx];
 
    // Get index of label closest to the distortion center.
-   // Needed to keep simetry around center.
+   // Needed to keep symmetry around center.
    Int_t minIdx = 0;
    Int_t cnt = 0;
    Float_t currD = 0;
@@ -135,11 +137,11 @@ void TEveProjectionAxesGL::FilterOverlappingLabels(Int_t idx, Float_t ref) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Build an array of tick-mark position-value pairs.
+
 void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
 {
-   // Build an array of tick-mark position-value pairs.
-
    fAxisPainter.RefLabVec().clear();
    fAxisPainter.RefTMVec().clear();
 
@@ -159,11 +161,11 @@ void TEveProjectionAxesGL::SplitInterval(Float_t p1, Float_t p2, Int_t ax) const
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add tick-marks at equidistant position.
+
 void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) const
 {
-   // Add tick-marks at equidistant position.
-
    // Limits.
    Int_t n1a = TMath::FloorNint(fM->GetNdivisions() / 100);
    Int_t n2a = fM->GetNdivisions() - n1a * 100;
@@ -207,11 +209,11 @@ void TEveProjectionAxesGL::SplitIntervalByPos(Float_t p1, Float_t p2, Int_t ax) 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Add tick-marks on fixed value step.
+
 void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) const
 {
-   // Add tick-marks on fixed value step.
-
 
    TGLAxisPainter::LabVec_t &labVec =  fAxisPainter.RefLabVec();
    TGLAxisPainter::TMVec_t  &tmVec  =  fAxisPainter.RefTMVec();
@@ -227,7 +229,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    THLimitsFinder::Optimize(v1,  v2,      n1a, bl1, bh1, bn1, bw1);
    THLimitsFinder::Optimize(bl1, bl1+bw1, n2a, bl2, bh2, bn2, bw2);
 
-   Float_t pFirst, pSecond; // position of first, second order of tickmarks
+   Float_t pFirst, pSecond; // position of first, second order of tick-marks
    Float_t v = bl1;
 
    // cache values here
@@ -244,7 +246,7 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
       labVec.push_back(TGLAxisPainter::Lab_t(pFirst , v));
       tmVec.push_back(TGLAxisPainter::TM_t(pFirst, 0));
 
-      // Tickmarks.
+      // Tick-marks.
       for (Int_t k=1; k<bn2; k++)
       {
          pSecond = fProjection->GetScreenVal(ax, v+k*bw2, dirVec, oCenter);
@@ -265,11 +267,11 @@ void TEveProjectionAxesGL::SplitIntervalByVal(Float_t p1, Float_t p2, Int_t ax) 
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range from bounding box of projection manager and frustum size.
+
 void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax, Float_t& min, Float_t& max) const
 {
-   // Get range from bounding box of projection manager and furstum size.
-
    Float_t* bb = fM->fManager->GetBBox();
    // enlarge bbox times 2
    Float_t bbMin = bb[ax*2];
@@ -298,23 +300,23 @@ void TEveProjectionAxesGL::GetRange(Int_t ax, Float_t frustMin, Float_t frustMax
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Draw function for TEveProjectionAxesGL. Skips line-pass of outline mode.
+
 void TEveProjectionAxesGL::Draw(TGLRnrCtx& rnrCtx) const
 {
-   // Draw function for TEveProjectionAxesGL. Skips line-pass of outline mode.
-
    if (rnrCtx.IsDrawPassOutlineLine())
       return;
 
    TGLObject::Draw(rnrCtx);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Actual rendering code.
+/// Virtual from TGLLogicalShape.
+
 void TEveProjectionAxesGL::DirectDraw(TGLRnrCtx& rnrCtx) const
 {
-   // Actual rendering code.
-   // Virtual from TGLLogicalShape.
-
    if (rnrCtx.Selection() || rnrCtx.Highlight() || fM->fManager->GetBBox() == 0) return;
 
    glPushAttrib(GL_ENABLE_BIT | GL_POLYGON_BIT);

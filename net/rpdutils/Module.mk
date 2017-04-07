@@ -10,24 +10,21 @@ MODDIRI      := $(MODDIR)/inc
 
 RPDUTILDIR   := $(MODDIR)
 RPDUTILDIRS  := $(RPDUTILDIR)/src
-RPDUTILDIRI  := $(RPDUTILDIR)/inc
+RPDUTILDIRR  := $(RPDUTILDIR)/res
 
 ##### $(RPDUTILO) #####
-RPDUTILH     := $(filter-out $(MODDIRI)/rpdpriv.h, $(filter-out $(MODDIRI)/rpdconn.h, $(wildcard $(MODDIRI)/*.h)))
 RPDUTILS     := $(filter-out $(MODDIRS)/rpdpriv.cxx, $(filter-out $(MODDIRS)/rpdconn.cxx, $(wildcard $(MODDIRS)/*.cxx)))
 RPDUTILO     := $(call stripsrc,$(RPDUTILS:.cxx=.o))
 
 RPDUTILDEP   := $(RPDUTILO:.o=.d)
 
 ##### $(RPDCONNO) #####
-RPDCONNH     := $(MODDIRI)/rpdconn.h
 RPDCONNS     := $(MODDIRS)/rpdconn.cxx
 RPDCONNO     := $(call stripsrc,$(RPDCONNS:.cxx=.o))
 
 RPDCONNDEP   := $(RPDCONNO:.o=.d)
 
 ##### $(RPDPRIVO) #####
-RPDPRIVH     := $(MODDIRI)/rpdpriv.h
 RPDPRIVS     := $(MODDIRS)/rpdpriv.cxx
 RPDPRIVO     := $(call stripsrc,$(RPDPRIVS:.cxx=.o))
 
@@ -76,6 +73,7 @@ GLBSLIBS      += $(SSLLIBDIR) $(SSLLIB)
 endif
 
 # Combined...
+RPDALLO       := $(RPDUTILO) $(RPDCONNO) $(RPDPRIVO) $(SRVAUTHO)
 AUTHFLAGS     := $(EXTRA_AUTHFLAGS) $(SHADOWFLAGS) $(AFSFLAGS) $(SRPFLAGS) \
                  $(KRB5FLAGS) $(GLBSFLAGS)
 AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) \
@@ -87,19 +85,23 @@ AUTHLIBS      += -lz
 endif
 
 # used in the main Makefile
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH))
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDCONNH))
-ALLHDRS       += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDPRIVH))
+RPDH_REL      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(RPDUTILH) $(RPDCONNH) $(RPDPRIVH))
+ALLHDRS       += $(RPDH_REL)
 ALLLIBS       += $(SRVAUTHLIB)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(RPDH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Net_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(SRVAUTHLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES  += $(RPDUTILDEP) $(RPDCONNDEP) $(RPDPRIVDEP)
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
-
-include/%.h:    $(RPDUTILDIRI)/%.h
-		cp $< $@
 
 $(SRVAUTHLIB):  $(SRVAUTHO) $(RSAO) $(DAEMONUTILSO) $(STRLCPYO) $(ORDER_) $(MAINLIBS) $(SRVAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -119,6 +121,7 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
+$(RPDALLO):  CXXFLAGS += -I$(RPDUTILDIRR) -I$(AUTHDIRR)
 $(RPDUTILO): CXXFLAGS += $(AUTHFLAGS)
 ifeq ($(MACOSX_SSL_DEPRECATED),yes)
 $(call stripsrc,$(RPDUTILDIRS)/rpdutils.o): CXXFLAGS += -Wno-deprecated-declarations

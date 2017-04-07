@@ -14,19 +14,7 @@
 
 #include <cassert>
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-
-//______________________________________________________________________________
-//   TGeoExtension - ABC for user objects attached to TGeoVolume or TGeoNode.
-//                   Provides interface for getting a reference (grab) and
-//                   releasing the extension object (release), allowing for
-//                   derived classes to implement reference counted sharing.
-//                   The user who should attach extensions to logical volumes
-//                   or nodes BEFORE applying misalignment information so that
-//                   these will be available to all copies.
-//______________________________________________________________________________
 
 class TGeoExtension : public TObject
 {
@@ -44,14 +32,6 @@ public:
 
    ClassDef(TGeoExtension, 1)       // User extension for volumes and nodes
 };
-
-
-//______________________________________________________________________________
-//   TGeoRCExtension - Reference counted extension which has a pointer to and
-//                   owns a user defined TObject. This class can be used as
-//                   model for a reference counted derivation from TGeoExtension.
-//                   The user object becomes owned by the extension.
-//______________________________________________________________________________
 
 class TGeoRCExtension : public TGeoExtension
 {

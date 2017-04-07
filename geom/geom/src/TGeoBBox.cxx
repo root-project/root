@@ -10,66 +10,110 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//--------------------------------------------------------------------------
-// TGeoBBox - box class. All shape primitives inherit from this, their
-//   constructor filling automatically the parameters of the box that bounds
-//   the given shape. Defined by 6 parameters :
-//      fDX, fDY, fDZ - half lengths on X, Y and Z axis
-//      fOrigin[3]    - position of box origin
-//
-//--------------------------------------------------------------------------
-//
-//
-//--- Building boxes
-//  ==================
-//  Normally a box has to be build only with 3 parameters : dx, dy, dz
-// representing the half lengths on X, Y and Z axis. In this case, the origin
-// of the box will match the one of its reference frame. The translation of the
-// origin is used only by the constructors of all other shapes in order to
-// define their own bounding boxes. Users should be aware that building a
-// translated box that will represent a physical shape by itself will affect any
-// further positioning of other shapes inside. Therefore in order to build a
-// positioned box one should follow the recipe described in class TGeoNode.
-//
-// Creation of boxes
-// 1.   TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
-//Begin_Html
-/*
-<img src="gif/t_box.gif">
+/** \class TGeoBBox
+\ingroup Geometry_classes
+
+Box class. All shape primitives inherit from this, their
+  constructor filling automatically the parameters of the box that bounds
+  the given shape. Defined by 6 parameters :
+    - fDX, fDY, fDZ - half lengths on X, Y and Z axis
+    - fOrigin[3]    - position of box origin
+
+
+### Building boxes
+
+ Normally a box has to be build only with 3 parameters : dx, dy, dz
+representing the half lengths on X, Y and Z axis. In this case, the origin
+of the box will match the one of its reference frame. The translation of the
+origin is used only by the constructors of all other shapes in order to
+define their own bounding boxes. Users should be aware that building a
+translated box that will represent a physical shape by itself will affect any
+further positioning of other shapes inside. Therefore in order to build a
+positioned box one should follow the recipe described in class TGeoNode.
+
+#### Creation of boxes
+
+  - TGeoBBox *box = new TGeoBBox("BOX", 20, 30, 40);
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+  - A volume having a box shape can be built in one step:
+    `TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);`
+
+#### Divisions of boxes.
+
+  Volumes having box shape can be divided with equal-length slices on
+X, Y or Z axis. The following options are supported:
+
+  - Dividing the full range of one axis in N slices
+    `TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);`
+    - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   TGeoVolume *divx = vol->Divide("SLICE",1,8,0,0);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+  - Dividing in a limited range - general case.
+    `TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);`
+    - start = starting offset within (-fDY, fDY)
+    - step  = slicing step
+
+Begin_Macro(source)
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("box", "poza1");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeBox("BOX",med, 20,30,40);
+   vol->SetLineWidth(2);
+   top->AddNode(vol,1);
+   TGeoVolume *divx = vol->Divide("SLICE",2,8,2,3);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
+
+Both cases are supported by all shapes.
+See also class TGeoShape for utility methods provided by any particular shape.
 */
-//End_Html
-//
-// 2. A volume having a box shape can be built in one step:
-//      TGeoVolume *vbox = gGeoManager->MakeBox("vbox", ptrMed, 20,30,40);
-//
-// Divisions of boxes.
-//
-//   Volumes having box shape can be divided with equal-length slices on
-// X, Y or Z axis. The following options are supported:
-// a) Dividing the full range of one axis in N slices
-//      TGeoVolume *divx = vbox->Divide("SLICEX", 1, N);
-//   - here 1 stands for the division axis (1-X, 2-Y, 3-Z)
-//Begin_Html
-/*
-<img src="gif/t_boxdivX.gif">
-*/
-//End_Html
-//
-// b) Dividing in a limited range - general case.
-//      TGeoVolume *divy = vbox->Divide("SLICEY",2,N,start,step);
-//   - start = starting offset within (-fDY, fDY)
-//   - step  = slicing step
-//
-//Begin_Html
-/*
-<img src="gif/t_boxdivstepZ.gif">
-*/
-//End_Html
-//
-// Both cases are supported by all shapes.
-//   See also class TGeoShape for utility methods provided by any particular
-// shape.
-//_____________________________________________________________________________
 
 #include "Riostream.h"
 
@@ -86,58 +130,64 @@
 
 ClassImp(TGeoBBox)
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Default constructor
+
 TGeoBBox::TGeoBBox()
 {
-// Default constructor
    SetShapeBit(TGeoShape::kGeoBox);
    fDX = fDY = fDZ = 0;
    fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor where half-lengths are provided.
+
 TGeoBBox::TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
          :TGeoShape("")
 {
-// Constructor where half-lengths are provided.
    SetShapeBit(TGeoShape::kGeoBox);
    fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor with shape name.
+
 TGeoBBox::TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
          :TGeoShape(name)
 {
-// Constructor with shape name.
    SetShapeBit(TGeoShape::kGeoBox);
    fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetBoxDimensions(dx, dy, dz, origin);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor based on the array of parameters
+/// param[0] - half-length in x
+/// param[1] - half-length in y
+/// param[2] - half-length in z
+
 TGeoBBox::TGeoBBox(Double_t *param)
          :TGeoShape("")
 {
-// Constructor based on the array of parameters
-// param[0] - half-length in x
-// param[1] - half-length in y
-// param[2] - half-length in z
    SetShapeBit(TGeoShape::kGeoBox);
    fOrigin[0] = fOrigin[1] = fOrigin[2] = 0.0;
    SetDimensions(param);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+
 TGeoBBox::~TGeoBBox()
 {
-// Destructor
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check if 2 positioned boxes overlap.
+
 Bool_t TGeoBBox::AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, const TGeoBBox *box2, const TGeoMatrix *mat2)
 {
-// Check if 2 positioned boxes overlap.
    Double_t master[3];
    Double_t local[3];
    Double_t ldir1[3], ldir2[3];
@@ -174,17 +224,19 @@ Bool_t TGeoBBox::AreOverlapping(const TGeoBBox *box1, const TGeoMatrix *mat1, co
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes capacity of the shape in [length^3].
+
 Double_t TGeoBBox::Capacity() const
 {
-// Computes capacity of the shape in [length^3].
    return (8.*fDX*fDY*fDZ);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes normal to closest surface from POINT.
+
 void TGeoBBox::ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm)
 {
-// Computes normal to closest surface from POINT.
    memset(norm,0,3*sizeof(Double_t));
    Double_t saf[3];
    Int_t i;
@@ -195,10 +247,11 @@ void TGeoBBox::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
    norm[i] = (dir[i]>0)?1:(-1);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Decides fast if the bounding box could be crossed by a vector.
+
 Bool_t TGeoBBox::CouldBeCrossed(const Double_t *point, const Double_t *dir) const
 {
-// Decides fast if the bounding box could be crossed by a vector.
    Double_t mind = fDX;
    if (fDY<mind) mind=fDY;
    if (fDZ<mind) mind=fDZ;
@@ -218,22 +271,24 @@ Bool_t TGeoBBox::CouldBeCrossed(const Double_t *point, const Double_t *dir) cons
    return kFALSE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute closest distance from point px,py to each corner.
+
 Int_t TGeoBBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
-// Compute closest distance from point px,py to each corner.
    const Int_t numPoints = 8;
    return ShapeDistancetoPrimitive(numPoints, px, py);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+///--- Divide this box shape belonging to volume "voldiv" into ndiv equal volumes
+/// called divname, from start position with the given step. Returns pointer
+/// to created division cell volume. In case a wrong division axis is supplied,
+/// returns pointer to volume to be divided.
+
 TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                              Double_t start, Double_t step)
 {
-//--- Divide this box shape belonging to volume "voldiv" into ndiv equal volumes
-// called divname, from start position with the given step. Returns pointer
-// to created division cell volume. In case a wrong division axis is supplied,
-// returns pointer to volume to be divided.
    TGeoShape *shape;           //--- shape to be created
    TGeoVolume *vol;            //--- division volume to be created
    TGeoVolumeMulti *vmulti;    //--- generic divided volume
@@ -272,38 +327,42 @@ TGeoVolume *TGeoBBox::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxi
    return vmulti;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute bounding box - nothing to do in this case.
+
 void TGeoBBox::ComputeBBox()
 {
-// Compute bounding box - nothing to do in this case.
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Test if point is inside this shape.
+
 Bool_t TGeoBBox::Contains(const Double_t *point) const
 {
-// Test if point is inside this shape.
    if (TMath::Abs(point[2]-fOrigin[2]) > fDZ) return kFALSE;
    if (TMath::Abs(point[0]-fOrigin[0]) > fDX) return kFALSE;
    if (TMath::Abs(point[1]-fOrigin[1]) > fDY) return kFALSE;
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Static method to check if point[3] is located inside a box of having dx, dy, dz
+/// as half-lengths.
+
 Bool_t TGeoBBox::Contains(const Double_t *point, Double_t dx, Double_t dy, Double_t dz, const Double_t *origin)
 {
-// Static method to check if point[3] is located inside a box of having dx, dy, dz
-// as half-lengths.
    if (TMath::Abs(point[2]-origin[2]) > dz) return kFALSE;
    if (TMath::Abs(point[0]-origin[0]) > dx) return kFALSE;
    if (TMath::Abs(point[1]-origin[1]) > dy) return kFALSE;
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the box.
+/// Boundary safe algorithm.
+
 Double_t TGeoBBox::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from inside point to surface of the box.
-// Boundary safe algorithm.
    Double_t s,smin,saf[6];
    Double_t newpt[3];
    Int_t i;
@@ -335,12 +394,13 @@ Double_t TGeoBBox::DistFromInside(const Double_t *point, const Double_t *dir, In
    return smin;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from inside point to surface of the box.
+/// Boundary safe algorithm.
+
 Double_t TGeoBBox::DistFromInside(const Double_t *point,const Double_t *dir,
                                   Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t /*stepmax*/)
 {
-// Compute distance from inside point to surface of the box.
-// Boundary safe algorithm.
    Double_t s,smin,saf[6];
    Double_t newpt[3];
    Int_t i;
@@ -363,11 +423,12 @@ Double_t TGeoBBox::DistFromInside(const Double_t *point,const Double_t *dir,
    return smin;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from outside point to surface of the box.
+/// Boundary safe algorithm.
+
 Double_t TGeoBBox::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-// Compute distance from outside point to surface of the box.
-// Boundary safe algorithm.
    Bool_t in = kTRUE;
    Double_t saf[3];
    Double_t par[3];
@@ -427,12 +488,13 @@ Double_t TGeoBBox::DistFromOutside(const Double_t *point, const Double_t *dir, I
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from outside point to surface of the box.
+/// Boundary safe algorithm.
+
 Double_t TGeoBBox::DistFromOutside(const Double_t *point,const Double_t *dir,
                                    Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t stepmax)
 {
-// Compute distance from outside point to surface of the box.
-// Boundary safe algorithm.
    Bool_t in = kTRUE;
    Double_t saf[3];
    Double_t par[3];
@@ -469,10 +531,11 @@ Double_t TGeoBBox::DistFromOutside(const Double_t *point,const Double_t *dir,
    return TGeoShape::Big();
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns name of axis IAXIS.
+
 const char *TGeoBBox::GetAxisName(Int_t iaxis) const
 {
-// Returns name of axis IAXIS.
    switch (iaxis) {
       case 1:
          return "X";
@@ -485,10 +548,11 @@ const char *TGeoBBox::GetAxisName(Int_t iaxis) const
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get range of shape for a given axis.
+
 Double_t TGeoBBox::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 {
-// Get range of shape for a given axis.
    xlo = 0;
    xhi = 0;
    Double_t dx = 0;
@@ -512,24 +576,26 @@ Double_t TGeoBBox::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
    return dx;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill vector param[4] with the bounding cylinder parameters. The order
+/// is the following : Rmin, Rmax, Phi1, Phi2
+
 void TGeoBBox::GetBoundingCylinder(Double_t *param) const
 {
-// Fill vector param[4] with the bounding cylinder parameters. The order
-// is the following : Rmin, Rmax, Phi1, Phi2
    param[0] = 0.;                  // Rmin
    param[1] = fDX*fDX+fDY*fDY;     // Rmax
    param[2] = 0.;                  // Phi1
    param[3] = 360.;                // Phi2
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Get area in internal units of the facet with a given index.
+/// Possible index values:
+///   - 0 - all facets together
+///   - 1 to 6 - facet index from bottom to top Z
+
 Double_t TGeoBBox::GetFacetArea(Int_t index) const
 {
-// Get area in internal units of the facet with a given index.
-// Possible index values:
-//    0 - all facets togeather
-//    1 to 6 - facet index from bottom to top Z
    Double_t area = 0.;
    switch (index) {
       case 0:
@@ -551,15 +617,16 @@ Double_t TGeoBBox::GetFacetArea(Int_t index) const
    return area;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the surface of indexed facet.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation succeeded.
+/// Possible index values:
+///   - 0 - all facets together
+///   - 1 to 6 - facet index from bottom to top Z
+
 Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) const
 {
-// Fills array with n random points located on the surface of indexed facet.
-// The output array must be provided with a length of minimum 3*npoints. Returns
-// true if operation succeeded.
-// Possible index values:
-//    0 - all facets togeather
-//    1 to 6 - facet index from bottom to top Z
    if (index<0 || index>6) return kFALSE;
    Double_t surf[6];
    Double_t area = 0.;
@@ -616,12 +683,13 @@ Bool_t TGeoBBox::GetPointsOnFacet(Int_t index, Int_t npoints, Double_t *array) c
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills array with n random points located on the line segments of the shape mesh.
+/// The output array must be provided with a length of minimum 3*npoints. Returns
+/// true if operation is implemented.
+
 Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
 {
-// Fills array with n random points located on the line segments of the shape mesh.
-// The output array must be provided with a length of minimum 3*npoints. Returns
-// true if operation is implemented.
    if (npoints<GetNmeshVertices()) {
       Error("GetPointsOnSegments", "You should require at least %d points", GetNmeshVertices());
       return kFALSE;
@@ -654,10 +722,11 @@ Bool_t TGeoBBox::GetPointsOnSegments(Int_t npoints, Double_t *array) const
    return kTRUE;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills real parameters of a positioned box inside this one. Returns 0 if successful.
+
 Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_t &dx, Double_t &dy, Double_t &dz) const
 {
-// Fills real parameters of a positioned box inside this one. Returns 0 if successfull.
    dx=dy=dz=0;
    if (mat->IsRotation()) {
       Error("GetFittingBox", "cannot handle parametrized rotated volumes");
@@ -692,11 +761,12 @@ Int_t TGeoBBox::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    return 0;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// In case shape has some negative parameters, these has to be computed
+/// in order to fit the mother
+
 TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const
 {
-// In case shape has some negative parameters, these has to be computed
-// in order to fit the mother
    if (!TestShapeBit(kGeoRunTimeShape)) return 0;
    Double_t dx, dy, dz;
    Int_t ierr = mother->GetFittingBox(this, mat, dx, dy, dz);
@@ -707,19 +777,21 @@ TGeoShape *TGeoBBox::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) con
    return (new TGeoBBox(dx, dy, dz));
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Returns numbers of vertices, segments and polygons composing the shape mesh.
+
 void TGeoBBox::GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const
 {
-// Returns numbers of vertices, segments and polygons composing the shape mesh.
    nvert = 8;
    nsegs = 12;
    npols = 6;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Prints shape parameters
+
 void TGeoBBox::InspectShape() const
 {
-// Prints shape parameters
    printf("*** Shape %s: TGeoBBox ***\n", GetName());
    printf("    dX = %11.5f\n", fDX);
    printf("    dY = %11.5f\n", fDY);
@@ -727,11 +799,12 @@ void TGeoBBox::InspectShape() const
    printf("    origin: x=%11.5f y=%11.5f z=%11.5f\n", fOrigin[0], fOrigin[1], fOrigin[2]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Creates a TBuffer3D describing *this* shape.
+/// Coordinates are in local reference frame.
+
 TBuffer3D *TGeoBBox::MakeBuffer3D() const
 {
-// Creates a TBuffer3D describing *this* shape.
-// Coordinates are in local reference frame.
    TBuffer3D* buff = new TBuffer3D(TBuffer3DTypes::kGeneric, 8, 24, 12, 36, 6, 36);
    if (buff)
    {
@@ -742,10 +815,11 @@ TBuffer3D *TGeoBBox::MakeBuffer3D() const
    return buff;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills TBuffer3D structure for segments and polygons.
+
 void TGeoBBox::SetSegsAndPols(TBuffer3D &buff) const
 {
-// Fills TBuffer3D structure for segments and polygons.
    Int_t c = GetBasicColor();
 
    buff.fSegs[ 0] = c   ; buff.fSegs[ 1] = 0   ; buff.fSegs[ 2] = 1   ;
@@ -775,11 +849,11 @@ void TGeoBBox::SetSegsAndPols(TBuffer3D &buff) const
    buff.fPols[33] = 5   ; buff.fPols[34] = 6   ;  buff.fPols[35] = 7  ;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Computes the closest distance from given point to this shape.
+
 Double_t TGeoBBox::Safety(const Double_t *point, Bool_t in) const
 {
-// Computes the closest distance from given point to this shape.
-
    Double_t safe, safy, safz;
    if (in) {
       safe = fDX - TMath::Abs(point[0]-fOrigin[0]);
@@ -797,10 +871,11 @@ Double_t TGeoBBox::Safety(const Double_t *point, Bool_t in) const
    return safe;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Save a primitive as a C++ statement(s) on output stream "out".
+
 void TGeoBBox::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
-// Save a primitive as a C++ statement(s) on output stream "out".
    if (TObject::TestBit(kGeoSavePrimitive)) return;
    out << "   // Shape: " << GetName() << " type: " << ClassName() << std::endl;
    out << "   dx = " << fDX << ";" << std::endl;
@@ -819,10 +894,11 @@ void TGeoBBox::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set parameters of the box.
+
 void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin)
 {
-// Set parameters of the box.
    fDX = dx;
    fDY = dy;
    fDZ = dz;
@@ -837,13 +913,14 @@ void TGeoBBox::SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t 
    if ((fDX<0) || (fDY<0) || (fDZ<0)) SetShapeBit(kGeoRunTimeShape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Set dimensions based on the array of parameters
+/// param[0] - half-length in x
+/// param[1] - half-length in y
+/// param[2] - half-length in z
+
 void TGeoBBox::SetDimensions(Double_t *param)
 {
-// Set dimensions based on the array of parameters
-// param[0] - half-length in x
-// param[1] - half-length in y
-// param[2] - half-length in z
    if (!param) {
       Error("SetDimensions", "null parameters");
       return;
@@ -857,17 +934,19 @@ void TGeoBBox::SetDimensions(Double_t *param)
    if ((fDX<0) || (fDY<0) || (fDZ<0)) SetShapeBit(kGeoRunTimeShape);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill box vertices to an array.
+
 void TGeoBBox::SetBoxPoints(Double_t *points) const
 {
-// Fill box vertices to an array.
    TGeoBBox::SetPoints(points);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill box points.
+
 void TGeoBBox::SetPoints(Double_t *points) const
 {
-// Fill box points.
    if (!points) return;
    Double_t xmin,xmax,ymin,ymax,zmin,zmax;
    xmin = -fDX+fOrigin[0];
@@ -886,10 +965,11 @@ void TGeoBBox::SetPoints(Double_t *points) const
    points[21] = xmax; points[22] = ymin; points[23] = zmax;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fill box points.
+
 void TGeoBBox::SetPoints(Float_t *points) const
 {
-// Fill box points.
    if (!points) return;
    Double_t xmin,xmax,ymin,ymax,zmin,zmax;
    xmin = -fDX+fOrigin[0];
@@ -908,18 +988,20 @@ void TGeoBBox::SetPoints(Float_t *points) const
    points[21] = xmax; points[22] = ymin; points[23] = zmax;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+////// fill size of this 3-D object
+////    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
+////    if (painter) painter->AddSize3D(8, 12, 6);
+
 void TGeoBBox::Sizeof3D() const
 {
-///// fill size of this 3-D object
-///    TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-///    if (painter) painter->AddSize3D(8, 12, 6);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills a static 3D buffer and returns a reference.
+
 const TBuffer3D & TGeoBBox::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
-// Fills a static 3D buffer and returns a reference.
    static TBuffer3D buffer(TBuffer3DTypes::kGeneric);
 
    FillBuffer3D(buffer, reqSections, localFrame);
@@ -944,11 +1026,12 @@ const TBuffer3D & TGeoBBox::GetBuffer3D(Int_t reqSections, Bool_t localFrame) co
    return buffer;
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Fills the supplied buffer, with sections in desired frame
+/// See TBuffer3D.h for explanation of sections, frame etc.
+
 void TGeoBBox::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localFrame) const
 {
-// Fills the supplied buffer, with sections in desired frame
-// See TBuffer3D.h for explanation of sections, frame etc.
    TGeoShape::FillBuffer3D(buffer, reqSections, localFrame);
 
    if (reqSections & TBuffer3D::kBoundingBox) {
@@ -962,43 +1045,48 @@ void TGeoBBox::FillBuffer3D(TBuffer3D & buffer, Int_t reqSections, Bool_t localF
    }
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Check the inside status for each of the points in the array.
+/// Input: Array of point coordinates + vector size
+/// Output: Array of Booleans for the inside of each point
+
 void TGeoBBox::Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const
 {
-// Check the inside status for each of the points in the array.
-// Input: Array of point coordinates + vector size
-// Output: Array of Booleans for the inside of each point
    for (Int_t i=0; i<vecsize; i++) inside[i] = Contains(&points[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute the normal for an array o points so that norm.dot.dir is positive
+/// Input: Arrays of point coordinates and directions + vector size
+/// Output: Array of normal directions
+
 void TGeoBBox::ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize)
 {
-// Compute the normal for an array o points so that norm.dot.dir is positive
-// Input: Arrays of point coordinates and directions + vector size
-// Output: Array of normal directions
    for (Int_t i=0; i<vecsize; i++) ComputeNormal(&points[3*i], &dirs[3*i], &norms[3*i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
+
 void TGeoBBox::DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromInside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute distance from array of input points having directions specified by dirs. Store output in dists
+
 void TGeoBBox::DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t* step) const
 {
-// Compute distance from array of input points having directions specisied by dirs. Store output in dists
    for (Int_t i=0; i<vecsize; i++) dists[i] = DistFromOutside(&points[3*i], &dirs[3*i], 3, step[i]);
 }
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Compute safe distance from each of the points in the input array.
+/// Input: Array of point coordinates, array of statuses for these points, size of the arrays
+/// Output: Safety values
+
 void TGeoBBox::Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const
 {
-// Compute safe distance from each of the points in the input array.
-// Input: Array of point coordinates, array of statuses for these points, size of the arrays
-// Output: Safety values
    for (Int_t i=0; i<vecsize; i++) safe[i] = Safety(&points[3*i], inside[i]);
 }

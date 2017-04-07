@@ -13,22 +13,17 @@
 #ifndef ROOT_TGWin32InterpreterProxy
 #define ROOT_TGWin32InterpreterProxy
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWin32InterpreterProxy                                              //
-//                                                                      //
-// This class defines thread-safe interface to a command line           //
-// interpreter.                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGWin32InterpreterProxy
+\ingroup win32
 
-#ifndef ROOT_TInterpreter
+This class defines thread-safe interface to a command line interpreter.
+*/
+
 #include "TInterpreter.h"
-#endif
 
-#ifndef ROOT_TGWin32ProxyBase
+#if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
+
 #include "TGWin32ProxyBase.h"
-#endif
 
 
 class TGWin32InterpreterProxy : public TInterpreter , public TGWin32ProxyBase {
@@ -94,8 +89,8 @@ public:
    void     SetProcessLineLock(Bool_t lock = kTRUE);
    Int_t    GetExitCode() const { return RealObject()->GetExitCode(); }
    TClass  *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE);
-   TClass  *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE); 
-   Int_t    GenerateDictionary(const char *classes, const char *includes = 0, const char *options = 0); 
+   TClass  *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE);
+   Int_t    GenerateDictionary(const char *classes, const char *includes = 0, const char *options = 0);
    Int_t    GetMore() const {  return RealObject()->GetMore(); }
    Bool_t   IsLoaded(const char *filename) const {  return RealObject()->IsLoaded(filename); }
    char    *GetPrompt();
@@ -115,5 +110,7 @@ public:
    static TInterpreter *RealObject();
    static TInterpreter *ProxyObject();
 };
+
+#endif
 
 #endif

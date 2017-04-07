@@ -8,17 +8,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
+/** \class RooStats::HypoTestCalculatorGeneric
+    \ingroup Roostats
+
+Common base class for the Hypothesis Test Calculators.
+It is not designed to use directly but via its derived classes
+
 Same purpose as HybridCalculatorOriginal, but different implementation.
 
 This is the "generic" version that works with any TestStatSampler. The
 HybridCalculator derives from this class but explicitly uses the
 ToyMCSampler as its TestStatSampler.
+
 */
 
 #include "RooStats/HypoTestCalculatorGeneric.h"
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/RatioOfProfiledLikelihoodsTestStat.h"
+#include "RooStats/HypoTestCalculator.h"
+#include "RooStats/HypoTestInverterResult.h"
 
 #include "RooAddPdf.h"
 
@@ -30,7 +38,12 @@ ClassImp(RooStats::HypoTestCalculatorGeneric)
 using namespace RooStats;
 using namespace std;
 
-//___________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor. When test stat sampler is not provided
+/// uses ToyMCSampler and RatioOfProfiledLikelihoodsTestStat
+/// and nToys = 1000.
+/// User can : GetTestStatSampler()->SetNToys( # )
+
 HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
                                      const RooAbsData &data,
                                      const ModelConfig &altModel,
@@ -45,10 +58,6 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
    fDefaultTestStat(0),
    fAltToysSeed(0)
 {
-   // Constructor. When test stat sampler is not provided
-   // uses ToyMCSampler and RatioOfProfiledLikelihoodsTestStat
-   // and nToys = 1000.
-   // User can : GetTestStatSampler()->SetNToys( # )
    if(!sampler){
       fDefaultTestStat
          = new RatioOfProfiledLikelihoodsTestStat(*nullModel.GetPdf(),
@@ -62,9 +71,10 @@ HypoTestCalculatorGeneric::HypoTestCalculatorGeneric(
 
 }
 
-//_____________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// common setup for both models
+
 void HypoTestCalculatorGeneric::SetupSampler(const ModelConfig& model) const {
-   // common setup for both models
    fNullModel->LoadSnapshot();
    fTestStatSampler->SetObservables(*fNullModel->GetObservables());
    fTestStatSampler->SetParametersForTestStat(*fNullModel->GetParametersOfInterest());
@@ -74,25 +84,26 @@ void HypoTestCalculatorGeneric::SetupSampler(const ModelConfig& model) const {
    fTestStatSampler->SetSamplingDistName(model.GetName());
    fTestStatSampler->SetPdf(*model.GetPdf());
    fTestStatSampler->SetNuisanceParameters(*model.GetNuisanceParameters());
-   // global observables or nuisanance pdf will be set by the derived classes
+   // global observables or nuisance pdf will be set by the derived classes
    // (e.g. Frequentist or HybridCalculator)
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 HypoTestCalculatorGeneric::~HypoTestCalculatorGeneric()  {
    if(fDefaultSampler)    delete fDefaultSampler;
    if(fDefaultTestStat)   delete fDefaultTestStat;
 }
 
-//____________________________________________________
-HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
+////////////////////////////////////////////////////////////////////////////////
+/// several possibilities:
+/// no prior nuisance given and no nuisance parameters: ok
+/// no prior nuisance given but nuisance parameters: error
+/// prior nuisance given for some nuisance parameters:
+///   - nuisance parameters are constant, so they don't float in test statistic
+///   - nuisance parameters are floating, so they do float in test statistic
 
-   // several possibilities:
-   // no prior nuisance given and no nuisance parameters: ok
-   // no prior nuisance given but nuisance parameters: error
-   // prior nuisance given for some nuisance parameters:
-   //   - nuisance parameters are constant, so they don't float in test statistic
-   //   - nuisance parameters are floating, so they do float in test statistic
+HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    // initial setup
    PreHook();
@@ -111,7 +122,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
       return 0;
    }
 
-   if (!fTestStatSampler  || !fTestStatSampler->GetTestStatistic() ) { 
+   if (!fTestStatSampler  || !fTestStatSampler->GetTestStatistic() ) {
       oocoutE((TObject*)0,InputArguments) << "Test Statistic Sampler or Test Statistics not defined. Stop." << endl;
       return 0;
    }
@@ -130,8 +141,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    // evaluate test statistic on data
    RooArgSet nullP(*nullSnapshot);
-   double obsTestStat; 
-   
+   double obsTestStat;
+
    RooArgList* allTS = NULL;
    if( toymcs ) {
       allTS = toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP);
@@ -153,7 +164,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    // modified something (e.g. a nuisance parameter that is not randomized
    // must be set here)
    *bothParams = *saveAll;
-   
+
 
 
    // Generate sampling distribution for null
@@ -189,9 +200,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    if(toymcs) {
 
       // case of re-using same toys for every points
-      // set a given seed 
+      // set a given seed
       unsigned int prevSeed = 0;
-      if (fAltToysSeed > 0) { 
+      if (fAltToysSeed > 0) {
          prevSeed = RooRandom::integer(std::numeric_limits<unsigned int>::max()-1)+1;  // want to avoid zero value
          RooRandom::randomGenerator()->SetSeed(fAltToysSeed);
       }
@@ -205,8 +216,8 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
         }
       }
 
-      // restore the seed 
-      if (prevSeed > 0) { 
+      // restore the seed
+      if (prevSeed > 0) {
          RooRandom::randomGenerator()->SetSeed(prevSeed);
       }
 
@@ -242,11 +253,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    return res;
 }
 
-//____________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// to re-use same toys for alternate hypothesis
+
 void HypoTestCalculatorGeneric::UseSameAltToys()  {
-   // to re-use same toys for alternate hypothesis
    fAltToysSeed = RooRandom::integer(std::numeric_limits<unsigned int>::max()-1)+1;
 }
-   
-
-

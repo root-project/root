@@ -1,5 +1,15 @@
-//Create an image from a 2-D histogram and manipulate it
-//Author: Valeriy Onuchin
+/// \file
+/// \ingroup tutorial_image
+/// \notebook
+/// Create an image from a 2-D histogram and manipulate it.
+///
+/// \image html image_hist2image.png
+/// \macro_code
+///
+/// \author Valeriy Onuchin
+
+#include <TAttImage.h>
+
 void hist2image()
 {
 

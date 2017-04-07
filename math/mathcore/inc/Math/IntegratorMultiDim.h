@@ -15,27 +15,17 @@
 #define ROOT_Math_IntegratorMultiDim
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IntegratorOptions
 #include "Math/IntegratorOptions.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 #ifndef __CINT__
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 #endif
 
@@ -74,8 +64,8 @@ public:
        In case no parameter  values are passed the default ones used in IntegratorMultiDimOptions are used
     */
    explicit
-   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int ncall = 0) :
-      fIntegrator(0), fFunc(0)
+   IntegratorMultiDim(IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
+      fIntegrator(0)
    {
        fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
    }
@@ -89,8 +79,8 @@ public:
        @param ncall  number of function calls (apply only to MC integratioon methods)
     */
    explicit
-   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = 0, double relTol = 0, unsigned int ncall = 0) :
-      fIntegrator(0), fFunc(0)
+   IntegratorMultiDim(const IMultiGenFunction &f, IntegrationMultiDim::Type type = IntegrationMultiDim::kDEFAULT, double absTol = -1, double relTol = -1, unsigned int ncall = 0) :
+      fIntegrator(0)
    {
       fIntegrator = CreateIntegrator(type, absTol, relTol, ncall);
       SetFunction(f);
@@ -123,7 +113,7 @@ public:
    // disable copy constructur and assignment operator
 
 private:
-   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(0) {}
+   IntegratorMultiDim(const IntegratorMultiDim &) : fIntegrator(0), fFunc(nullptr) {}
    IntegratorMultiDim & operator=(const IntegratorMultiDim &) { return *this; }
 
 public:
@@ -156,7 +146,7 @@ public:
    */
    template <class Function>
    void SetFunction(Function & f, unsigned int dim) {
-      fFunc = std::auto_ptr<IMultiGenFunction>(new  WrappedMultiFunction<Function &> (f, dim) );
+      fFunc.reset(new  WrappedMultiFunction<Function &> (f, dim) );
       fIntegrator->SetFunction(*fFunc);
    }
 
@@ -208,7 +198,7 @@ protected:
  private:
 
    VirtualIntegratorMultiDim * fIntegrator;     // pointer to multi-dimensional integrator base class
-   std::auto_ptr<IMultiGenFunction> fFunc;       // pointer to owned function
+   std::unique_ptr<IMultiGenFunction> fFunc;    // pointer to owned function
 
 
 };

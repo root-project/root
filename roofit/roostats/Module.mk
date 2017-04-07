@@ -28,9 +28,18 @@ ROOSTATSLIB  := $(LPATH)/libRooStats.$(SOEXT)
 ROOSTATSMAP  := $(ROOSTATSLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-ALLHDRS      += $(patsubst $(MODDIRI)/RooStats/%.h,include/RooStats/%.h,$(ROOSTATSH))
+ROOSTATSH_REL := $(patsubst $(MODDIRI)/RooStats/%.h,include/RooStats/%.h,$(ROOSTATSH))
+ALLHDRS      += $(ROOSTATSH_REL)
 ALLLIBS      += $(ROOSTATSLIB)
 ALLMAPS      += $(ROOSTATSMAP)
+ifeq ($(CXXMODULES),yes)
+  CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(ROOSTATSH_REL))
+  CXXMODULES_MODULEMAP_CONTENTS += module Roofit_$(MODNAME) { \\n
+  CXXMODULES_MODULEMAP_CONTENTS += $(CXXMODULES_HEADERS)
+  CXXMODULES_MODULEMAP_CONTENTS += "export \* \\n"
+  CXXMODULES_MODULEMAP_CONTENTS += link \"$(ROOSTATSLIB)\" \\n
+  CXXMODULES_MODULEMAP_CONTENTS += } \\n
+endif
 
 # include all dependency files
 INCLUDEFILES += $(ROOSTATSDEP)
@@ -57,15 +66,15 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,ROOSTATS)
 	$(noop)
 
-$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
+$(ROOSTATSDS):  $(ROOSTATSH_REL) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c -writeEmptyRootPCM $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c -writeEmptyRootPCM $(ROOSTATSH_REL) $(ROOSTATSL)
 
-$(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
+$(ROOSTATSMAP): $(ROOSTATSH_REL) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGSTAGE2) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH_REL) $(ROOSTATSL)
 
 all-$(MODNAME): $(ROOSTATSLIB)
 

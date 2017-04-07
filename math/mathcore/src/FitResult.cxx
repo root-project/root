@@ -448,7 +448,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    // need to add also minos errors , globalCC, etc..
    unsigned int npar = fParams.size();
    if (npar == 0) {
-      std::cout << "FitResult::Print - Error: Empty  FitResult  ! " << std::endl;
+      os << "<Empty FitResult>\n";
       return;
    }
    os << "\n****************************************\n";
@@ -565,11 +565,9 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    // confidence intervals are returned in array ci
 
    if (!fFitFunc) {
-      // try to get model function from objective function 
-      if (!FittedBinData() ) {
-         MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without fitter function");
-         return;
-      }
+      // check if model function exists
+      MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without fit model function");
+      return;
    }
    assert(fFitFunc);
    
@@ -654,6 +652,9 @@ std::vector<double> FitResult::GetConfidenceIntervals(double cl, bool norm ) con
     if (data) {
        result.resize(data->NPoints() );
        GetConfidenceIntervals(*data, result.data(), cl, norm);      
+    }
+    else {
+      MATH_ERROR_MSG("FitResult::GetConfidenceIntervals","Cannot compute Confidence Intervals without the fit bin data");
     }
     return result; 
 }

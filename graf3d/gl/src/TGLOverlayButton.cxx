@@ -20,16 +20,16 @@
 #include <TGLCamera.h>
 #include <TGLViewerBase.h>
 
-//______________________________________________________________________________
-//
-//
-// GL-overaly button.
-//
-//
+/** \class TGLOverlayButton
+\ingroup opengl
+GL-overlay button.
+*/
 
 ClassImp(TGLOverlayButton);
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
 TGLOverlayButton::TGLOverlayButton(TGLViewerBase *parent, const char *text,
    Float_t posx, Float_t posy, Float_t width, Float_t height) :
    TGLOverlayElement(),
@@ -44,17 +44,15 @@ TGLOverlayButton::TGLOverlayButton(TGLViewerBase *parent, const char *text,
    fWidth(width),
    fHeight(height)
 {
-   // Constructor.
-
    if (parent)
       parent->AddOverlayElement(this);
 }
 
-/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+/// Render the overlay elements.
+
 void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
 {
-   // Render the overlay elements.
-
    Float_t r, g, b;
    glMatrixMode(GL_PROJECTION);
    glPushMatrix();
@@ -137,12 +135,12 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
    glPopMatrix();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Emits "Clicked(TGLViewerBase*)" signal.
+/// Called when user click on the GL button.
+
 void TGLOverlayButton::Clicked(TGLViewerBase *viewer)
 {
-   // Emits "Clicked(TGLViewerBase*)" signal.
-   // Called when user click on the GL button.
-
    Emit("Clicked(TGLViewerBase*)", (Long_t)viewer);
 }
 
@@ -150,14 +148,14 @@ void TGLOverlayButton::Clicked(TGLViewerBase *viewer)
 // Virtual event handlers from TGLOverlayElement
 /******************************************************************************/
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Handle overlay event.
+/// Return TRUE if event was handled.
+
 Bool_t TGLOverlayButton::Handle(TGLRnrCtx         & rnrCtx,
                                TGLOvlSelectRecord & rec,
                                Event_t            * event)
 {
-   // Handle overlay event.
-   // Return TRUE if event was handled.
-
    if (event->fCode != kButton1) {
       return kFALSE;
    }
@@ -179,19 +177,19 @@ Bool_t TGLOverlayButton::Handle(TGLRnrCtx         & rnrCtx,
    return kFALSE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has entered overlay area.
+
 Bool_t TGLOverlayButton::MouseEnter(TGLOvlSelectRecord& /*rec*/)
 {
-   // Mouse has entered overlay area.
-
    fActiveID = 1;
    return kTRUE;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Mouse has left overlay area.
+
 void TGLOverlayButton::MouseLeave()
 {
-   // Mouse has left overlay area.
-
    fActiveID = -1;
 }

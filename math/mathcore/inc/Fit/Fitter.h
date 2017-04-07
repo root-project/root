@@ -17,30 +17,16 @@
 @defgroup Fit Fitting and Parameter Estimation
 
 Classes used for fitting (regression analysis) and estimation of parameter values given a data sample.
+
+@ingroup MathCore
+
 */
 
-// #ifndef ROOT_Fit_DataVectorfwd
-// #include "Fit/DataVectorfwd.h"
-// #endif
-#ifndef ROOT_Fit_BinData
 #include "Fit/BinData.h"
-#endif
-#ifndef ROOT_Fit_UnBinData
 #include "Fit/UnBinData.h"
-#endif
-
-#ifndef ROOT_Fit_FitConfig
 #include "Fit/FitConfig.h"
-#endif
-
-#ifndef ROOT_Fit_FitResult
 #include "Fit/FitResult.h"
-#endif
-
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
-
 #include <memory>
 
 
@@ -451,31 +437,31 @@ protected:
    void SetData(const FitData & data) {
       fData = std::shared_ptr<FitData>(const_cast<FitData*>(&data),DummyDeleter<FitData>());
    }
-   // set data and function without cloning them 
+   // set data and function without cloning them
    void SetFunctionAndData(const IModelFunction & func, const FitData & data) {
       SetData(data);
       fFunc = std::shared_ptr<IModelFunction>(const_cast<IModelFunction*>(&func),DummyDeleter<IModelFunction>());
    }
 
    //set data for the fit using a shared ptr
-   template <class Data> 
-   void SetData(const std::shared_ptr<Data> & data) { 
+   template <class Data>
+   void SetData(const std::shared_ptr<Data> & data) {
       fData = std::static_pointer_cast<Data>(data);
    }
 
    /// look at the user provided FCN and get data and model function is
-   /// they derive from ROOT::Fit FCN classes 
-   void ExamineFCN(); 
+   /// they derive from ROOT::Fit FCN classes
+   void ExamineFCN();
 
-   
+
    /// internal functions to get data set and model function from FCN
-   /// useful for fits done with customized FCN classes 
+   /// useful for fits done with customized FCN classes
    template <class ObjFuncType>
-   bool GetDataFromFCN();  
+   bool GetDataFromFCN();
 
 
 private:
-   
+
    bool fUseGradient;       // flag to indicate if using gradient or not
 
    bool fBinFit;            // flag to indicate if fit is binned
@@ -488,7 +474,7 @@ private:
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
 
-   std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result 
+   std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
 
    std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
 
@@ -502,21 +488,21 @@ private:
 
 
 // internal functions to get data set and model function from FCN
-// useful for fits done with customized FCN classes 
+// useful for fits done with customized FCN classes
 template <class ObjFuncType>
 bool Fitter::GetDataFromFCN()  {
    ObjFuncType * objfunc = dynamic_cast<ObjFuncType*>(fObjFunction.get() );
    if (objfunc) {
       fFunc = objfunc->ModelFunctionPtr();
       fData = objfunc->DataPtr();
-      return true; 
+      return true;
    }
    else {
-      return false; 
+      return false;
    }
 }
 
-      
+
    } // end namespace Fit
 
 } // end namespace ROOT
@@ -526,10 +512,7 @@ bool Fitter::GetDataFromFCN()  {
 
 #ifndef __CINT__
 
-
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 template<class Function>
 bool ROOT::Fit::Fitter::FitFCN(unsigned int npar, Function & f, const double * par, unsigned int datasize,bool chi2fit) {

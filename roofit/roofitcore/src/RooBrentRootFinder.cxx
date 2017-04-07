@@ -14,14 +14,15 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////////
-// 
-// BEGIN_HTML
-// Implement the abstract 1-dimensional root finding interface using
-// the Brent-Decker method. This implementation is based on the one
-// in the GNU scientific library (v0.99).
-// END_HTML
-//
+/**
+\file RooBrentRootFinder.cxx
+\class RooBrentRootFinder
+\ingroup Roofitcore
+
+Implement the abstract 1-dimensional root finding interface using
+the Brent-Decker method. This implementation is based on the one
+in the GNU scientific library (v0.99).
+**/
 
 #include "RooFit.h"
 
@@ -38,24 +39,25 @@ ClassImp(RooBrentRootFinder)
 ;
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor taking function binding as input
+
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
   RooAbsRootFinder(function),
   _tol(2.2204460492503131e-16)
 {
-  // Constructor taking function binding as input
 }
 
 
 
-//_____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Do the root finding using the Brent-Decker method. Returns a boolean status and
+/// loads 'result' with our best guess at the root if true.
+/// Prints a warning if the initial interval does not bracket a single
+/// root or if the root is not found after a fixed number of iterations.
+
 Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value) const
 {
-  // Do the root finding using the Brent-Decker method. Returns a boolean status and
-  // loads 'result' with our best guess at the root if true.
-  // Prints a warning if the initial interval does not bracket a single
-  // root or if the root is not found after a fixed number of iterations.
-
   _function->saveXVec() ;
 
   Double_t a(xlo),b(xhi);

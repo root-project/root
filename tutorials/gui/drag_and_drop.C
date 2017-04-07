@@ -1,11 +1,14 @@
-// This tutorial illustrates how to use drag and drop within ROOT.
-// Select a list tree item with a mouse press, drag it (move the mouse
-// while keeping the mouse button pressed) and release the mouse button
-// in any pad inside the canvas or in the top list tree item ("Base").
-// When the button is released the selected data is \"dropped\" at that
-// location, displaying the object in the canvas or adding (copying) it
-// in the list tree
-// Author: Bertrand Bellenot
+/// \file
+/// \ingroup tutorial_gui
+/// This tutorial illustrates how to use drag and drop within ROOT.
+/// Select a list tree item with a mouse press, drag it (move the mouse while keeping the mouse button pressed)
+/// and release the mouse button in any pad inside the canvas or in the top list tree item ("Base").
+/// When the button is released, the selected data is "dropped" at that location, 
+/// displaying the object in the canvas or adding (copying) it in the list tree.
+///
+/// \macro_code
+///
+/// \author Bertrand Bellenot
 
 #include "TROOT.h"
 #include "TApplication.h"

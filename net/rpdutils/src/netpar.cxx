@@ -66,11 +66,11 @@ static char **gWritePtr;
 static char **gReadPtr;
 static fd_set gFdSet;
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Setup select masks.
+
 static void InitSelect(int nsock)
 {
-   // Setup select masks.
-
    FD_ZERO(&gFdSet);
    gMaxFd = -1;
    for (int i = 0; i < nsock; i++) {
@@ -80,12 +80,12 @@ static void InitSelect(int nsock)
    }
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Send buffer of specified length over the parallel sockets.
+/// Returns len in case of success and -1 in case of error.
+
 int NetParSend(const void *buf, int len)
 {
-   // Send buffer of specified length over the parallel sockets.
-   // Returns len in case of success and -1 in case of error.
-
    int i, alen = len, nsock = gParallel;
 
    // If data buffer is < 4K use only one socket
@@ -135,12 +135,12 @@ again:
    return alen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Receive buffer of specified length over parallel sockets.
+/// Returns len in case of success and -1 in case of error.
+
 int NetParRecv(void *buf, int len)
 {
-   // Receive buffer of specified length over parallel sockets.
-   // Returns len in case of success and -1 in case of error.
-
    int i, alen = len, nsock = gParallel;
 
    // If data buffer is < 4K use only one socket
@@ -190,12 +190,12 @@ int NetParRecv(void *buf, int len)
    return alen;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Open size parallel sockets back to client. Returns 0 in case of error,
+/// and number of parallel sockets in case of success.
+
 int NetParOpen(int port, int size)
 {
-   // Open size parallel sockets back to client. Returns 0 in case of error,
-   // and number of parallel sockets in case of success.
-
    struct sockaddr_in remote_addr;
    memset(&remote_addr, 0, sizeof(remote_addr));
 
@@ -252,11 +252,11 @@ int NetParOpen(int port, int size)
    return gParallel;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Close parallel sockets.
+
 void NetParClose()
 {
-   // Close parallel sockets.
-
    for (int i = 0; i < gParallel; i++)
       close(gPSockFd[i]);
 

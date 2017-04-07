@@ -1,5 +1,13 @@
-//Example illustrating how to draw TGaxis with labels defined by a function.
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_graphics
+/// \notebook
+/// Example illustrating how to draw TGaxis with labels defined by a function.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author  Olivier Couet
+
 void gaxis2(){
    gStyle->SetOptStat(0);
 

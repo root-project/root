@@ -66,6 +66,9 @@ PyTypeObject TCustomFloat_Type = {     // python float is a C/C++ double
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
+#endif
 };
 
 //= long type allowed for reference passing ==================================
@@ -122,6 +125,9 @@ PyTypeObject TCustomInt_Type = {       // python int is a C/C++ long
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
 #endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
+#endif
 };
 
 //= instancemethod object with a more efficient call function ================
@@ -131,7 +137,11 @@ static int numfree = 0;
 #define PyMethod_MAXFREELIST 256
 #endif
 
-PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* pyclass )
+PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject*
+#if PY_VERSION_HEX < 0x03000000
+      pyclass
+#endif
+   )
 {
 // from instancemethod, but with custom type (at issue is that instancemethod is not
 // meant to be derived from)
@@ -167,11 +177,12 @@ PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* p
    return (PyObject*)im;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// from instancemethod, but with custom type (at issue is that instancemethod is not
+/// meant to be derived from)
+
 static void im_dealloc( PyMethodObject* im )
 {
-// from instancemethod, but with custom type (at issue is that instancemethod is not
-// meant to be derived from)
    PyObject_GC_UnTrack( im );
 
    if ( im->im_weakreflist != NULL )
@@ -192,14 +203,14 @@ static void im_dealloc( PyMethodObject* im )
    }
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The mapping from a method to a function involves reshuffling of self back
+/// into the list of arguments. However, the pythonized methods will then have
+/// to undo that shuffling, which is inefficient. This method is the same as
+/// the one for the instancemethod object, except for the shuffling.
+
 static PyObject* im_call( PyObject* meth, PyObject* args, PyObject* kw )
 {
-// The mapping from a method to a function involves reshuffling of self back
-// into the list of arguments. However, the pythonized methods will then have
-// to undo that shuffling, which is inefficient. This method is the same as
-// the one for the instancemethod object, except for the shuffling.
-
    PyObject* self = PyMethod_GET_SELF( meth );
 
    if ( ! self ) {
@@ -237,11 +248,12 @@ static PyObject* im_call( PyObject* meth, PyObject* args, PyObject* kw )
    return result;
 }
 
-//____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// from instancemethod: don't rebind an already bound method, or an unbound method
+/// of a class that's not a base class of pyclass
+
 static PyObject* im_descr_get( PyObject* meth, PyObject* obj, PyObject* pyclass )
 {
-// from instancemethod: don't rebind an already bound method, or an unbound method
-// of a class that's not a base class of pyclass
    if ( PyMethod_GET_SELF( meth ) != NULL
 #if PY_VERSION_HEX < 0x03000000
         || ( PyMethod_GET_CLASS( meth ) != NULL &&
@@ -311,6 +323,9 @@ PyTypeObject TCustomInstanceMethod_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x02060000
    , 0                        // tp_version_tag
+#endif
+#if PY_VERSION_HEX >= 0x03040000
+   , 0                        // tp_finalize
 #endif
 };
 

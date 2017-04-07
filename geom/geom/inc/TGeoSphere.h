@@ -12,24 +12,11 @@
 #ifndef ROOT_TGeoSphere
 #define ROOT_TGeoSphere
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
-
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoSphere - spherical shell class. It takes 6 parameters :            //
-//           - inner and outer radius Rmin, Rmax                          //
-//           - the theta limits Tmin, Tmax                                //
-//           - the phi limits Pmin, Pmax (the sector in phi is considered //
-//             starting from Pmin to Pmax counter-clockwise               //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoSphere : public TGeoBBox
 {
 protected :
-// data members
    Int_t                 fNz;     // number of z planes for drawing
    Int_t                 fNseg;   // number of segments for drawing
    Double_t              fRmin;   // inner radius
@@ -38,7 +25,6 @@ protected :
    Double_t              fTheta2; // higher theta limit
    Double_t              fPhi1;   // lower phi limit
    Double_t              fPhi2;   // higher phi limit
-// methods
 
 public:
    // constructors

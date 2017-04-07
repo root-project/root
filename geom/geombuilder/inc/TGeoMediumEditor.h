@@ -1,5 +1,5 @@
 // @(#):$Id$
-// Author: M.Gheata 
+// Author: M.Gheata
 
 /*************************************************************************
  * Copyright (C) 1995-2002, Rene Brun and Fons Rademakers.               *
@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGeoGedFrame
 #include "TGeoGedFrame.h"
-#endif
 
 class TGeoMedium;
 class TGeoMaterial;
@@ -89,8 +85,8 @@ public:
    void           DoStmin();
    void           DoApply();
    void           DoUndo();
-   
+
    ClassDef(TGeoMediumEditor,0)   // TGeoMedium editor
-};   
-  
-#endif                    
+};
+
+#endif

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Object
 #include "TVirtualGraphPainter.h"
-#endif
 
 class TGraph;
 class TF1;
@@ -53,6 +51,11 @@ public:
    void           PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y);
    void           PaintStats(TGraph *theGraph, TF1 *fit);
    void           Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
+   static void    SetMaxPointsPerLine(Int_t maxp=50);
+
+protected:
+
+   static Int_t   fgMaxPointsPerLine;  //Number of points per chunks' line when drawing a graph.
 
    ClassDef(TGraphPainter,0)  // TGraph painter
 };

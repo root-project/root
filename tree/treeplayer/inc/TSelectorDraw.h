@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
 
 class TTreeFormula;
 class TTreeFormulaManager;

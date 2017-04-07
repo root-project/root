@@ -28,12 +28,18 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#ifndef ROOT_TAtomicCount
+# error This should be #included only by TAtomicCount.h. Please #include TAtomicCount.h.
+#endif //ROOT_TAtomicCount
+
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 2) || \
     (defined(__APPLE_CC__) && __APPLE_CC__ > 5000  && !defined(MAC_OS_X_VERSION_10_6))
 #include <bits/atomicity.h>
 #else
 #include <ext/atomicity.h>
 #endif
+
+#include "Rtypes.h"
 
 #if defined(__GLIBCXX__) // g++ 3.4+
 

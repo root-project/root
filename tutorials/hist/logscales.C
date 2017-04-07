@@ -1,7 +1,14 @@
-void logscales() {
-//Draw parametric functions with log scales
-//Author: Olivier Couet
+/// \file
+/// \ingroup tutorial_hist
+/// \notebook
+/// Draw parametric functions with log scales.
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Olivier Couet
 
+void logscales() {
    TCanvas *c1 = new TCanvas("c1", "Various options on LOG scales plots",0,0,700,900);
    c1->SetFillColor(30);
 
@@ -19,7 +26,7 @@ void logscales() {
    pave->SetFillColor(42);
    pave->SetTextAlign(12);
    pave->SetTextFont(42);
-   pave->AddText("When more Log labels are requested, the overlaping labels are removed");
+   pave->AddText("When more Log labels are requested, the overlapping labels are removed");
    pave->Draw();
 
    pad1->cd();

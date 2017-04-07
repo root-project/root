@@ -49,17 +49,17 @@ ClassImp(TSQLServer)
 const char* TSQLServer::fgFloatFmt = "%e";
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// The db should be of the form:  <dbms>://<host>[:<port>][/<database>],
+/// e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main,
+/// pgsql://... or sapdb://...
+/// The uid is the username and pw the password that should be used for
+/// the connection. Depending on the <dbms> the shared library (plugin)
+/// for the selected system will be loaded. When the connection could not
+/// be opened 0 is returned.
+
 TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
 {
-   // The db should be of the form:  <dbms>://<host>[:<port>][/<database>],
-   // e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main,
-   // pgsql://... or sapdb://...
-   // The uid is the username and pw the password that should be used for
-   // the connection. Depending on the <dbms> the shared library (plugin)
-   // for the selected system will be loaded. When the connection could not
-   // be opened 0 is returned.
-
    TPluginHandler *h;
    TSQLServer *serv = 0;
 
@@ -77,13 +77,13 @@ TSQLServer *TSQLServer::Connect(const char *db, const char *uid, const char *pw)
    return serv;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Execute sql query.
+/// Usefull for commands like DROP TABLE or INSERT, where result set
+/// is not interested. Return kTRUE if no error
+
 Bool_t TSQLServer::Exec(const char* sql)
 {
-   // Execute sql query.
-   // Usefull for commands like DROP TABLE or INSERT, where result set
-   // is not interested. Return kTRUE if no error
-
    TSQLResult* res = Query(sql);
    if (res==0) return kFALSE;
 
@@ -93,94 +93,94 @@ Bool_t TSQLServer::Exec(const char* sql)
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns error code of last operation
+/// if res==0, no error
+/// Each specific implementation of TSQLServer provides its own error coding
+
 Int_t TSQLServer::GetErrorCode() const
 {
-   // returns error code of last operation
-   // if res==0, no error
-   // Each specific implementation of TSQLServer provides its own error coding
-
    return fErrorCode;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// returns error message of last operation
+/// if no errors, return 0
+/// Each specific implementation of TSQLServer provides its own error messages
+
 const char* TSQLServer::GetErrorMsg() const
 {
-   // returns error message of last operation
-   // if no errors, return 0
-   // Each specific implementation of TSQLServer provides its own error messages
-
    return GetErrorCode()==0 ? 0 : fErrorMsg.Data();
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// reset error fields
+
 void TSQLServer::ClearError()
 {
-   // reset error fields
-
    fErrorCode = 0;
    fErrorMsg = "";
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set new values for error fields
+/// if method is specified, displays error message
+
 void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
 {
-   // set new values for error fields
-   // if method is specified, displays error message
-
    fErrorCode = code;
    fErrorMsg = msg;
    if ((method!=0) && fErrorOut)
       Error(method,"Code: %d  Msg: %s", code, (msg ? msg : "No message"));
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// submit "START TRANSACTION" query to database
+/// return kTRUE, if successful
+
 Bool_t TSQLServer::StartTransaction()
 {
-   // submit "START TRANSACTION" query to database
-   // return kTRUE, if successful
-
    return Exec("START TRANSACTION");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// submit "COMMIT" query to database
+/// return kTRUE, if successful
+
 Bool_t TSQLServer::Commit()
 {
-   // submit "COMMIT" query to database
-   // return kTRUE, if successful
-
    return Exec("COMMIT");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// submit "ROLLBACK" query to database
+/// return kTRUE, if successful
+
 Bool_t TSQLServer::Rollback()
 {
-   // submit "ROLLBACK" query to database
-   // return kTRUE, if successful
-
    return Exec("ROLLBACK");
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Return list of user tables
+/// Parameter wild specifies wildcard for table names.
+/// It either contains exact table name to verify that table is exists or
+/// wildcard with "%" (any number of symbols) and "_" (exactly one symbol).
+/// Example of vaild wildcards: "%", "%name","___user__".
+/// If wild=="", list of all available tables will be produced.
+/// List contain just tables names in the TObjString.
+/// List must be deleted by the user.
+/// Example code of method usage:
+///
+/// TList* lst = serv->GetTablesList();
+/// TIter next(lst);
+/// TObject* obj;
+/// while (obj = next())
+///   std::cout << "Table: " << obj->GetName() << std::endl;
+/// delete lst;
+
 TList* TSQLServer::GetTablesList(const char* wild)
 {
-   // Return list of user tables
-   // Parameter wild specifies wildcard for table names.
-   // It either contains exact table name to verify that table is exists or
-   // wildcard with "%" (any number of symbols) and "_" (exactly one symbol).
-   // Example of vaild wildcards: "%", "%name","___user__".
-   // If wild=="", list of all available tables will be produced.
-   // List contain just tables names in the TObjString.
-   // List must be deleted by the user.
-   // Example code of method usage:
-   //
-   // TList* lst = serv->GetTablesList();
-   // TIter next(lst);
-   // TObject* obj;
-   // while (obj = next())
-   //   std::cout << "Table: " << obj->GetName() << std::endl;
-   // delete lst;
-
    TSQLResult* res = GetTables(fDB.Data(), wild);
    if (res==0) return 0;
 
@@ -201,12 +201,12 @@ TList* TSQLServer::GetTablesList(const char* wild)
    return lst;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Tests if table of that name exists in database
+/// Return kTRUE, if table exists
+
 Bool_t TSQLServer::HasTable(const char* tablename)
 {
-   // Tests if table of that name exists in database
-   // Return kTRUE, if table exists
-
    if ((tablename==0) || (strlen(tablename)==0)) return kFALSE;
 
    TList* lst = GetTablesList(tablename);
@@ -228,13 +228,13 @@ Bool_t TSQLServer::HasTable(const char* tablename)
    return res;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Producec TSQLTableInfo object, which contain info about
+/// table itself and each table column
+/// Object must be deleted by user.
+
 TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
 {
-   // Producec TSQLTableInfo object, which contain info about
-   // table itself and each table column
-   // Object must be deleted by user.
-
    if ((tablename==0) || (*tablename==0)) return 0;
 
    TSQLResult* res = GetColumns(fDB.Data(), tablename);
@@ -254,19 +254,19 @@ TSQLTableInfo* TSQLServer::GetTableInfo(const char* tablename)
    return new TSQLTableInfo(tablename, lst);
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// set printf format for float/double members, default "%e"
+
 void TSQLServer::SetFloatFormat(const char* fmt)
 {
-   // set printf format for float/double members, default "%e"
-
    if (fmt==0) fmt = "%e";
    fgFloatFmt = fmt;
 }
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// return current printf format for float/double members, default "%e"
+
 const char* TSQLServer::GetFloatFormat()
 {
-   // return current printf format for float/double members, default "%e"
-
    return fgFloatFmt;
 }

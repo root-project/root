@@ -19,7 +19,6 @@
 #include <list>
 #include <string>
 
-#include "Riosfwd.h"
 #include "Rtypes.h"
 
 class RooAbsBinning ;

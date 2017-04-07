@@ -1,5 +1,11 @@
-//Geometry detector assembly example
-//Author: Andrei Gheata
+/// \file
+/// \ingroup tutorial_geom
+/// Geometry detector assembly example
+///
+/// \macro_image
+/// \macro_code
+///
+/// \author Andrei Gheata
 
 void assembly()
 {
@@ -47,7 +53,7 @@ void assembly()
    TGeoRotation *rot1 = new TGeoRotation();
    rot1->RotateX(90);
    TGeoRotation *rot;
-   // Make a hexagone cell out of 6 toothplates. These can zip togeather
+   // Make a hexagone cell out of 6 tooth plates. These can zip together
    // without generating overlaps (they are self-contained)
    TGeoVolume *cell = new TGeoVolumeAssembly("CELL");
    for (i=0; i<6; i++) {
