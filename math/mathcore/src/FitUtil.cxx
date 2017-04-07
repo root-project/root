@@ -483,7 +483,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
    std::cout << "evaluate effective chi2 using function " << &func << "  " << p << std::endl;
 #endif
 
-   assert(data.HaveCoordErrors() );
+   assert(data.HaveCoordErrors()  || data.HaveAsymErrors());
 
    double chi2 = 0;
    //int nRejected = 0;
