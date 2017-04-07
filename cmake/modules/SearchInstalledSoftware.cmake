@@ -1261,8 +1261,8 @@ elseif(vc)
   else()
     find_package(Vc 1.3.0 CONFIG QUIET)
     if(NOT Vc_FOUND)
-      message(STATUS "Vc library not found, support for it disabled.")
-      message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
+      message(STATUS  "Vc library not found, support for it disabled.")
+      message(STATUS  "Please enable the option 'builtin_vc' to build Vc internally.")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
@@ -1311,8 +1311,8 @@ if(vc AND NOT Vc_FOUND)
 endif()
 
 if(Vc_FOUND)
-  # Missing from VcConfig.cmake
-  set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+	# Missing from VcConfig.cmake
+	set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------
