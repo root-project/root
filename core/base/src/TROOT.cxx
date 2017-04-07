@@ -1934,6 +1934,8 @@ void TROOT::InitInterpreter()
          fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
          exit(1);
       }
+      delete libRIOHandle;
+      libRIOHandle = nullptr;
       dlerror();   // reset error message
    } else {
       gInterpreterLib = RTLD_DEFAULT;
