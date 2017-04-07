@@ -118,7 +118,8 @@ int testDerivation() {
 //   WrappedFunc fy(*f2d,0,vx);
 //   std::cout << "df/dy  = " << der->EvalCentral(fy,2.) << std::endl;
 // #endif
-
+  delete der;       //fix memory leak
+  der = nullptr;
   return status;
 }
 
