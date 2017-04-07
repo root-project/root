@@ -527,6 +527,8 @@ void RooRealMPFE::serverLoop() {
         std::string name;
         *_pipe >> name;
 
+        std::cout << name << std::endl;
+
         _findComponent(name)->setAttribute("timing_on");
 
         break;
@@ -1208,13 +1210,8 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
 
   *_pipe << RetrieveTimings << BidirMMapPipe::flush;
 
-  std::cout << "hier? 1" << std::endl;
-
   unsigned long numTimings;
   *_pipe >> numTimings;
-
-  std::cout << "hier? 2" << std::endl;
-
 
   for (unsigned long i = 0; i < numTimings; ++i) {
     std::string name;
@@ -1222,9 +1219,6 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
     *_pipe >> name >> timing_s;
     server_timings.insert({name, timing_s});
   }
-
-  std::cout << "hier? 3" << std::endl;
-
 
   return server_timings;
 }
