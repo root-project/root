@@ -540,24 +540,23 @@ Int_t TGeoPgon::GetPhiCrossList(const Double_t *point, const Double_t *dir, Int_
    if (shootorig) {
       Double_t rdotn = point[0]*dir[0]+point[1]*dir[1];
       if (rdotn>0) {
-         sphi[icrossed] = stepmax;
-         iphi[icrossed++] = istart;
-         return icrossed;
+         sphi[0] = stepmax;
+         iphi[0] = istart;
+         return 1;
       }
-      sphi[icrossed] = TMath::Sqrt((point[0]*point[0]+point[1]*point[1])/(1.-dir[2]*dir[2]));
-      iphi[icrossed++] = istart;
-      if (sphi[icrossed-1]>stepmax) {
-         sphi[icrossed-1] = stepmax;
-         return icrossed;
+      sphi[0] = TMath::Sqrt((point[0]*point[0]+point[1]*point[1])/(1.-dir[2]*dir[2]));
+      iphi[0] = istart;
+      if (sphi[0]>stepmax) {
+         sphi[0] = stepmax;
+         return 1;
       }
       phi = TMath::ATan2(dir[1], dir[0])*TMath::RadToDeg();
       while (phi<fPhi1) phi+=360.;
       istart = Int_t((phi-fPhi1)/divphi);
       if (istart>fNedges-1) istart=-1;
-      iphi[icrossed] = istart;
-      sphi[icrossed] = stepmax;
-      icrossed++;
-      return icrossed;
+      iphi[0] = istart;
+      sphi[0] = stepmax;
+      return 1;
    }
    Int_t incsec = Int_t(TMath::Sign(1., point[0]*dir[1]-point[1]*dir[0]));
    Int_t ist;
