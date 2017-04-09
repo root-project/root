@@ -105,7 +105,7 @@ int main( int argc, char **argv )
       std::cout << "If the option -O is used, when merging TTree, the basket size is re-optimized" <<std::endl;
       std::cout << "If the option -v is used, explicitly set the verbosity level;\n"\
                    "   0 request no output, 99 is the default" <<std::endl;
-      std::cout << "If the option -m is used, the execution will be parallelized in multiple processes\n" << std::endl;
+      std::cout << "If the option -j is used, the execution will be parallelized in multiple processes\n" << std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
                    "   to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
