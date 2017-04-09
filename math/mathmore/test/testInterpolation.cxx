@@ -29,10 +29,14 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
 
    std::cout << "x[i]     y[i]     deriv[i]     deriv2[i]    integral[i] \n" << std::endl;
    // print result of interpolation
-   const Int_t n = 51;
+   const Int_t n = 50;  //JH replacing n = 51;
    Int_t i = 0;
+   double xi = 0.;
    Float_t xcoord[n], ycoord[n];
-   for ( double xi = 0; xi < 10.01; xi += 0.2) {
+
+   for ( i = 0; i < 50; ++i) { 
+      xi = 0.2 * i;
+      // JH replacing for ( double xi = 0; xi < 10.01; xi += 0.2) {
       xcoord[i] = xi;
       ycoord[i] = itp.Eval(xi);
       double dyi = itp.Deriv(xi);

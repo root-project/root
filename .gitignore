@@ -26,6 +26,9 @@ etc/allDict.h
 xcuserdata
 project.xcworkspace
 
+# MacOS metadata
+.DS_Store
+
 # Visual Code
 .vscode/*
 
