@@ -184,7 +184,7 @@ Bool_t TFormulaTests::SetVars()
          successful = false;
       }
    }
-   delete vars;
+   delete[] vars;
    return successful;
 }
 
