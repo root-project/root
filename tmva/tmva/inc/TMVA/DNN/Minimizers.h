@@ -13,7 +13,8 @@
 
 #include "DataLoader.h"
 #include "Functions.h"
-#include <chrono>
+
+#include <limits>
 
 namespace TMVA {
 namespace DNN {
@@ -75,8 +76,14 @@ public:
    TGradientDescent(Scalar_t learningRate,
                     size_t   convergenceSteps,
                     size_t   testInterval);
-   /** Reset minimizer object to initial state. Does nothing for this minimizer. */
-   void Reset() {};
+
+   /** Reset minimizer object to default state. */
+   void Reset()
+   {
+      fMinimumError = std::numeric_limits<Scalar_t>::infinity();
+      fConvergenceCount = 0;
+      fStepCount = 0;
+   };
 
    /** Train the given net using the given training input data (events), training
        output data (labels), test input data (events), test output data (labels). */
@@ -166,23 +173,19 @@ public:
 //
 // Implementation
 //______________________________________________________________________________
-template<typename Architecture_t>
-    TGradientDescent<Architecture_t>::TGradientDescent()
-   : fBatchSize(0), fStepCount(0), fConvergenceSteps(0),
-     fConvergenceCount(0), fTestInterval(0), fLearningRate(0),
-     fMinimumError(1e100)
+template <typename Architecture_t>
+TGradientDescent<Architecture_t>::TGradientDescent()
+   : fBatchSize(0), fStepCount(0), fConvergenceSteps(0), fConvergenceCount(0), fTestInterval(0), fLearningRate(0),
+     fMinimumError(std::numeric_limits<Scalar_t>::infinity())
 {
    // Nothing to do here.
 }
 
 //______________________________________________________________________________
-template<typename Architecture_t>
-TGradientDescent<Architecture_t>::TGradientDescent(Scalar_t learningRate,
-                                                   size_t   convergenceSteps,
-                                                   size_t   testInterval)
-   : fBatchSize(0), fStepCount(0), fConvergenceSteps(convergenceSteps),
-     fConvergenceCount(0), fTestInterval(testInterval), fLearningRate(learningRate),
-     fMinimumError(1e100)
+template <typename Architecture_t>
+TGradientDescent<Architecture_t>::TGradientDescent(Scalar_t learningRate, size_t convergenceSteps, size_t testInterval)
+   : fBatchSize(0), fStepCount(0), fConvergenceSteps(convergenceSteps), fConvergenceCount(0),
+     fTestInterval(testInterval), fLearningRate(learningRate), fMinimumError(std::numeric_limits<Scalar_t>::infinity())
 {
    // Nothing to do here.
 }
@@ -198,14 +201,9 @@ template <typename Data_t, typename Net_t>
                                                  size_t nThreads)
    -> Scalar_t
 {
-   // Reset iteration state.
-   fMinimumError = 1e100;
-   fConvergenceCount = 0;
-   fStepCount = 0;
+   Reset();
 
    // Prepare training data.
-   bool converged = false;
-
    TDataLoader<Data_t, Architecture_t> trainLoader(trainingData, nTrainingSamples,
                                                    net.GetBatchSize(),
                                                    net.GetInputWidth(),
@@ -230,49 +228,27 @@ template <typename Data_t, typename Net_t>
        }
    }
 
-   std::chrono::time_point<std::chrono::system_clock> start, end;
-   start = std::chrono::system_clock::now();
+   size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
+   std::vector<TBatch<Architecture_t>> batches{};
+   batches.reserve(nThreads);
 
-   while (!converged)
-   {
-      fStepCount++;
-
-      trainLoader.Shuffle();
-      std::vector<TBatch<Architecture_t>> batches{};
-      for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
-         batches.clear();
-         for (size_t j = 0; j < nThreads; j++) {
-            batches.reserve(nThreads);
-            batches.push_back(trainLoader.GetBatch());
+   do {
+      for (fStepCount = 0; fStepCount < fTestInterval; fStepCount++) {
+         trainLoader.Shuffle();
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+            batches.clear();
+            for (size_t j = 0; j < nThreads; j++) batches.push_back(trainLoader.GetBatch());
+            Step(net, nets, batches);
          }
-         Step(net, nets, batches);
       }
 
-      // Compute test error.
-      if ((fStepCount % fTestInterval) == 0) {
+      auto b = *testLoader.begin();
+      auto inputMatrix = b.GetInput();
+      auto outputMatrix = b.GetOutput();
+      fTestError = testNet.Loss(inputMatrix, outputMatrix);
 
-         end   = std::chrono::system_clock::now();
-         std::chrono::duration<double> elapsed_seconds = end - start;
-         start = std::chrono::system_clock::now();
-         double seconds = elapsed_seconds.count();
-         double batchesInEpoch = (double) (nTrainingSamples / net.GetBatchSize());
-         double nFlops  = batchesInEpoch * fTestInterval;
-         nFlops *= net.GetNFlops();
-         std::cout << "Elapsed time for " << fTestInterval << " Epochs: "
-                   << seconds << " [s] => " << nFlops * 1e-9 / seconds
-                   << " GFlop/s" << std::endl;
+   } while (!HasConverged());
 
-         auto b = *testLoader.begin();
-         auto inputMatrix  = b.GetInput();
-         auto outputMatrix = b.GetOutput();
-         Scalar_t loss = testNet.Loss(inputMatrix, outputMatrix);
-
-         std::cout << "Step " << fStepCount << ": Training Error = "
-                   << loss << std::endl;
-         converged = HasConverged();
-      }
-
-   }
    return fMinimumError;
 }
 
@@ -288,14 +264,9 @@ auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData
                                                      size_t nThreads)
    -> Scalar_t
 {
-   // Reset iteration state.
-   fMinimumError = 1e100;
-   fConvergenceCount = 0;
-   fStepCount = 0;
+   Reset();
 
    // Prepare training data.
-   bool converged = false;
-
    TDataLoader<Data_t, Architecture_t> trainLoader(trainingData, nTrainingSamples,
                                                    net.GetBatchSize(),
                                                    net.GetInputWidth(),
@@ -322,43 +293,33 @@ auto TGradientDescent<Architecture_t>::TrainMomentum(const Data_t & trainingData
        }
    }
 
-   std::chrono::time_point<std::chrono::system_clock> start, end;
-   start = std::chrono::system_clock::now();
+   size_t batchesInEpoch = nTrainingSamples / net.GetBatchSize();
+   std::vector<TBatch<Architecture_t>> batches{};
+   batches.reserve(nThreads);
 
-   while (!converged)
-   {
-      fStepCount++;
-
-      trainLoader.Shuffle();
-      // Iterate over epoch.
-      std::vector<TBatch<Architecture_t>> batches{};
-      for (size_t i = 0; i < nTrainingSamples / net.GetBatchSize(); i += nThreads) {
-         batches.clear();
-         batches.reserve(nThreads);
-         for (size_t j = 0; j < nThreads; j++) {
-            batches.push_back(trainLoader.GetBatch());
-         }
-         if (momentum != 0.0) {
-            StepMomentum(net, nets, batches, momentum);
-         } else {
-            Step(net, nets, batches);
+   do {
+      for (fStepCount = 0; fStepCount < fTestInterval; fStepCount++) {
+         trainLoader.Shuffle();
+         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+            batches.clear();
+            for (size_t j = 0; j < nThreads; j++) batches.push_back(trainLoader.GetBatch());
+            if (momentum != 0.0) {
+               StepMomentum(net, nets, batches, momentum);
+            } else {
+               Step(net, nets, batches);
+            }
          }
       }
 
-      // Compute test error.
-      if ((fStepCount % fTestInterval) == 0) {
-         fTestError = 0.0;
-         for (size_t i = 0; i < nTestSamples / net.GetBatchSize(); i += nThreads) {
-            auto b = testLoader.GetBatch();
-            auto inputMatrix  = b.GetInput();
-            auto outputMatrix = b.GetOutput();
-            fTestError += testNet.Loss(inputMatrix, outputMatrix);
-         }
-         fTestError /= (Double_t) nTestSamples / net.GetBatchSize();
-         converged = HasConverged();
+      fTestError = 0.0;
+      for (size_t i = 0; i < batchesInEpoch; i++) {
+         auto b = testLoader.GetBatch();
+         auto inputMatrix = b.GetInput();
+         auto outputMatrix = b.GetOutput();
+         fTestError += testNet.Loss(inputMatrix, outputMatrix);
       }
-
-   }
+      fTestError /= (Double_t)batchesInEpoch;
+   } while (!HasConverged());
    return fMinimumError;
 }
 
@@ -369,8 +330,6 @@ template<typename Architecture_t>
                                                        Matrix_t &input,
                                                        const Matrix_t &output)
 {
-   //Scalar_t loss = net.Loss(input, output);
-   //fTrainingError = loss;
    net.Forward(input, true);
    net.Backward(input, output);
 
@@ -394,8 +353,6 @@ auto inline TGradientDescent<Architecture_t>::StepLoss(Net_t & net,
                                                        const Matrix_t &output)
    -> Scalar_t
 {
-   //Scalar_t loss = net.Loss(input, output);
-   //fTrainingError = loss;
    Scalar_t loss = net.Loss(input, output);
    net.Backward(input, output);
 
