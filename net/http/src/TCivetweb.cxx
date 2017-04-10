@@ -39,7 +39,7 @@ public:
 
    virtual ~TCivetwebWSEngine() {}
 
-   virtual void *GetId() const { return (void *)fWSconn; }
+   virtual UInt_t GetId() const { return TString::Hash((void *)fWSconn, sizeof(void *)); }
 
    virtual void ClearHandle() { fWSconn = 0; }
 
@@ -64,7 +64,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
    arg.SetQuery(request_info->query_string);  // query arguments
-   arg.SetWSId((void *)conn);
+   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_CONNECT");
 
    Bool_t execres = serv->ExecuteHttp(&arg);
@@ -88,7 +88,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    arg.SetQuery(request_info->query_string);  // query arguments
    arg.SetMethod("WS_READY");
 
-   arg.SetWSId((void *)conn);
+   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetWSHandle(new TCivetwebWSEngine("websocket", "title", conn));
 
    serv->ExecuteHttp(&arg);
@@ -108,7 +108,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
    arg.SetQuery(request_info->query_string);  // query arguments
-   arg.SetWSId((void *)conn);
+   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_DATA");
 
    void *buf = malloc(len + 1); // one byte more for null-termination
@@ -134,7 +134,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
    arg.SetQuery(request_info->query_string);  // query arguments
-   arg.SetWSId((void *)conn);
+   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_CLOSE");
 
    serv->ExecuteHttp(&arg);
