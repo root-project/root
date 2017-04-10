@@ -166,10 +166,6 @@ D: updates in PDG codes and eventgenerator interface classes
 D: TSpline classes
 D: Support for gcc option -weffc++
 
-N: Evgeni Chernyaev
-E: Evgeni.Chernyaev@cern.ch
-D: Paint3DAlgorithms used by the LEGO and SURF options
-
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
@@ -907,6 +903,10 @@ D: development of class TGraphSmooth + many suggestions
 N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
 D: Several contributions to the 3-d graphics and GL interface
+
+N: Evgueni Tcherniaev
+E: Evgueni.Tcherniaev@cern.ch
+D: Paint3DAlgorithms used by the LEGO and SURF options
 
 N: Jan Therhaag
 E: therhaag@users.sourceforge.net
