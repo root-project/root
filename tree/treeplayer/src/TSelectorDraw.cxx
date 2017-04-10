@@ -377,6 +377,7 @@ void TSelectorDraw::Begin(TTree *tree)
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
             return;
+            delete [] varexp;
          }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
@@ -398,6 +399,7 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
+               delete [] varexp;
                return;
             }
             if (!enlist) {
@@ -530,6 +532,7 @@ void TSelectorDraw::Begin(TTree *tree)
       gROOT->MakeDefCanvas();
       if (!gPad) {
          Abort("Creation of default canvas failed");
+         delete [] varexp;
          return;
       }
    }
