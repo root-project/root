@@ -10,7 +10,8 @@ if(testing)
 endif()
 
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h 
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h 
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h)
 if(root7)
