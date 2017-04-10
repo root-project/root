@@ -9,6 +9,10 @@
 ///
 /// \author Rene Brun
 
+#ifdef __CLING__
+#pragma cling optimize(0)
+#endif
+
 #include "TMaterial.h"
 #include "TMixture.h"
 #include "TNode.h"
