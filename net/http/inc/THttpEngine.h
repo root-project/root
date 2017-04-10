@@ -60,7 +60,7 @@ protected:
 public:
    virtual ~THttpWSEngine();
 
-   virtual void *GetId() const = 0;
+   virtual UInt_t GetId() const = 0;
 
    virtual void ClearHandle() = 0;
 

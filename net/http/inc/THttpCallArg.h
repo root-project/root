@@ -37,7 +37,7 @@ protected:
    Long_t fPostDataLength; ///<! length of binary data
 
    TNamed *fWSHandle; ///<!  web-socket handle, derived from TNamed class
-   void *  fWSId;     ///<! websocket identifier, used in web-socket related operations
+   UInt_t  fWSId;     ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
@@ -89,10 +89,10 @@ public:
    TNamed *TakeWSHandle();
 
    /** set web-socket id */
-   void SetWSId(void *id) { fWSId = id; }
+   void SetWSId(UInt_t id) { fWSId = id; }
 
    /** get web-socket id */
-   void *GetWSId() const { return fWSId; }
+   UInt_t GetWSId() const { return fWSId; }
 
    /** set full set of request header */
    void SetRequestHeader(const char *h) { fRequestHeader = h ? h : ""; }
