@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   21/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "THttpServer.h"
 
 #include "TThread.h"
@@ -107,6 +115,16 @@ ClassImp(THttpServer)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
+///
+/// As argument, one specifies engine kind which should be
+/// created like "http:8080". One could specify several engines
+/// at once, separating them with ; like "http:8080;fastcgi:9000"
+/// One also can configure readonly flag for sniffer like
+/// "http:8080;readonly" or "http:8080;readwrite"
+///
+/// Also searches for JavaScript ROOT sources, which are used in web clients
+/// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
+/// but one could set JSROOTSYS variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine) :
    TNamed("http", "ROOT http server"),
@@ -124,19 +142,7 @@ THttpServer::THttpServer(const char *engine) :
    fDrawPageCont(),
    fCallArgs()
 {
-   // As argument, one specifies engine kind which should be
-   // created like "http:8080". One could specify several engines
-   // at once, separating them with ; like "http:8080;fastcgi:9000"
-   // One also can configure readonly flag for sniffer like
-   // "http:8080;readonly" or "http:8080;readwrite"
-   //
-   // Also searches for JavaScript ROOT sources, which are used in web clients
-   // Typically JSROOT sources located in $ROOTSYS/etc/http directory,
-   // but one could set JSROOTSYS variable to specify alternative location
-
    fLocations.SetOwner(kTRUE);
-
-   // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
@@ -298,7 +304,7 @@ void THttpServer::SetDrawPage(const char* filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// factory method to create different http engines
 /// At the moment two engine kinds are supported:
-///  civetweb (default) and fastcgi
+///   civetweb (default) and fastcgi
 /// Examples:
 ///   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
 ///   "fastcgi:9000" - creates fastcgi server with port 9000

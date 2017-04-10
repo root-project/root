@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   28/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TFastCgi.h"
 
 #include "TThread.h"
@@ -131,8 +139,6 @@ Bool_t TFastCgi::Create(const char *args)
 #ifndef HTTP_WITHOUT_FASTCGI
    FCGX_Init();
 
-//   Info("Create", "Analyze url %s", s.Data());
-
    TString sport = ":9000";
 
    if ((args != 0) && (strlen(args) > 0)) {
@@ -158,8 +164,6 @@ Bool_t TFastCgi::Create(const char *args)
             if (top != 0) fTopName = top;
          }
       }
-
-//      Info("Create", "valid url opt %s debug = %d", url.GetOptions(), fDebugMode);
    }
 
    Info("Create", "Starting FastCGI server on port %s", sport.Data() + 1);
@@ -265,9 +269,6 @@ void *TFastCgi::run_func(void *args)
          FCGX_Finish_r(&request);
          continue;
       }
-
-//      printf("PATHNAME %s FILENAME %s QUERY %s \n",
-//             arg.GetPathName(), arg.GetFileName(), arg.GetQuery());
 
       TString hdr;
 

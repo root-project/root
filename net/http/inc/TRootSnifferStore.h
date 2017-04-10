@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   22/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TRootSnifferStore
 #define ROOT_TRootSnifferStore
 
@@ -15,11 +23,11 @@ class TFolder;
 
 class TRootSnifferStore : public TObject {
 protected:
-   void         *fResPtr;       //! pointer on found item
-   TClass       *fResClass;     //! class of found item
-   TDataMember  *fResMember;    //! datamember pointer of found item
-   Int_t         fResNumChilds; //! count of found childs, -1 by default
-   Int_t         fResRestrict;  //! restriction for result, 0-default, 1-readonly, 2-full
+   void         *fResPtr;       ///<! pointer on found item
+   TClass       *fResClass;     ///<! class of found item
+   TDataMember  *fResMember;    ///<! datamember pointer of found item
+   Int_t         fResNumChilds; ///<! count of found childs, -1 by default
+   Int_t         fResRestrict;  ///<! restriction for result, 0-default, 1-readonly, 2-full
 public:
    TRootSnifferStore();
    virtual ~TRootSnifferStore();
@@ -66,8 +74,8 @@ public:
 
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
-   TString *fBuf;          //! output buffer
-   Bool_t fCompact;        //! produce compact xml code
+   TString *fBuf;          ///<! output buffer
+   Bool_t fCompact;        ///<! produce compact xml code
 
 public:
    TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) :
@@ -96,8 +104,8 @@ public:
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
-   TString *fBuf;     //! output buffer
-   Bool_t fCompact;   //! produce compact json code
+   TString *fBuf;     ///<! output buffer
+   Bool_t fCompact;   ///<! produce compact json code
 public:
    TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) :
       TRootSnifferStore(),
