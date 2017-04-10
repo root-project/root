@@ -32,17 +32,17 @@ namespace DNN {
 *   independent implementation of the gradient descent minimization algorithm.
 *
 *   Provides Train(...) and TrainMomentum(...) functions that perform a complete
-*   training of a neural network. Thos are mainly used for testing since for
+*   training of a neural network. Those are mainly used for testing since for
 *   production a more fine grained control of the training process is desirable.
 *   This is provided by the Step(...), StepMomentum(...) and StepNesterov(...)
 *   functions that perform a single minimization step.
 *
 *   The main training characteristics are defined by the provided learning rate,
-*   the test interval and the convergence steps required for convergence. The
-*   test interval defines how often the error on the validation set is computed
-*   and is the values with which the step counter is increased each time
-*   the HasConverged() member function is called. A convergence step is defined as
-*   a step in which the test error is NOT less thatn 0.995 times the current
+*   the test interval, and the convergence steps required for convergence. The
+*   test interval defines how often the error on the validation set is computed,
+*   and the values with which the step counter is increased each time the
+*   HasConverged() member function is called. A convergence step is defined as
+*   a step in which the test error is NOT less than 0.999 times the current
 *   minimal test error that has been reached. If between two subsequent calls
 *   to HasConverged(Double_t) the test error has not been sufficiently reduced
 *   it is assumed that a number of convergence steps equal to the test interval
@@ -58,8 +58,7 @@ public:
 
 private:
    size_t   fBatchSize; ///< Batch size to use for the training.
-   size_t   fStepCount; ///< Number of steps performed in the current
-   ///< training sessiong.
+   size_t   fStepCount; ///< Number of steps performed in the current training session
    size_t   fConvergenceSteps; ///< Number of training epochs without considerable
    ///< decrease in the test error for convergence.
    size_t   fConvergenceCount; ///< Current number of training epochs without
@@ -148,8 +147,8 @@ public:
     *  determine if the minimization has converged. */
    bool HasConverged();
    /** Increases the minimization step counter by the test error evaluation
-    * period and uses the provided test error value of to determine if
-    * the minimization has converged. */
+    *  period and uses the provided test error value to determine if the
+    *  minimization has converged. */
    bool HasConverged(Scalar_t testError);
 
    size_t   GetConvergenceCount() const {return fConvergenceCount;}
