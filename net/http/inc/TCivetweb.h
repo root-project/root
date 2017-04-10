@@ -17,10 +17,10 @@
 
 class TCivetweb : public THttpEngine {
 protected:
-   void     *fCtx;           ///<! civetweb context
-   void     *fCallbacks;     ///<! call-back table for civetweb webserver
-   TString   fTopName;       ///<! name of top item
-   Bool_t    fDebug;         ///<! debug mode
+   void *  fCtx;       ///<! civetweb context
+   void *  fCallbacks; ///<! call-back table for civetweb webserver
+   TString fTopName;   ///<! name of top item
+   Bool_t  fDebug;     ///<! debug mode
 
 public:
    TCivetweb();
@@ -32,10 +32,9 @@ public:
 
    Bool_t IsDebugMode() const { return fDebug; }
 
-   Int_t ProcessLog(const char* message);
+   Int_t ProcessLog(const char *message);
 
    ClassDef(TCivetweb, 0) // http server implementation, based on civetweb embedded server
 };
-
 
 #endif
