@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   21/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "THttpEngine.h"
 
 #include <string.h>
@@ -179,7 +187,6 @@ void THttpWSEngine::ProcessData(THttpCallArg* arg)
 
          TString exec;
          exec.Form("((%s*) %p)->%s;", fCanv->ClassName(), fCanv, cdata+4);
-         // printf("Execute %s\n", exec.Data());
 
          gROOT->ProcessLine(exec);
       }

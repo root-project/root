@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   21/05/2015
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "THttpCallArg.h"
 
 #include <string.h>

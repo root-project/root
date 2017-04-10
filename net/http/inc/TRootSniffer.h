@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   22/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TRootSniffer
 #define ROOT_TRootSniffer
 
@@ -32,19 +40,19 @@ protected:
    };
 
 
-   TRootSnifferScanRec *fParent;      //! pointer on parent record
-   UInt_t               fMask;        //! defines operation kind
-   const char          *fSearchPath;  //! current path searched
-   Int_t                fLevel;       //! current level of hierarchy
-   TString              fItemName;    //! name of current item
-   TList                fItemsNames;  //! list of created items names, need to avoid duplication
-   Int_t                fRestriction; //! restriction 0 - default, 1 - read-only, 2 - full access
+   TRootSnifferScanRec *fParent;      ///<! pointer on parent record
+   UInt_t               fMask;        ///<! defines operation kind
+   const char          *fSearchPath;  ///<! current path searched
+   Int_t                fLevel;       ///<! current level of hierarchy
+   TString              fItemName;    ///<! name of current item
+   TList                fItemsNames;  ///<! list of created items names, need to avoid duplication
+   Int_t                fRestriction; ///<! restriction 0 - default, 1 - read-only, 2 - full access
 
-   TRootSnifferStore   *fStore;       //! object to store results
-   Bool_t               fHasMore;     //! indicates that potentially there are more items can be found
-   Bool_t               fNodeStarted; //! indicate if node was started
-   Int_t                fNumFields;   //! number of fields
-   Int_t                fNumChilds;   //! number of childs
+   TRootSnifferStore   *fStore;       ///<! object to store results
+   Bool_t               fHasMore;     ///<! indicates that potentially there are more items can be found
+   Bool_t               fNodeStarted; ///<! indicate if node was started
+   Int_t                fNumFields;   ///<! number of fields
+   Int_t                fNumChilds;   ///<! number of childs
 
 public:
 
@@ -54,15 +62,10 @@ public:
    void CloseNode();
 
    /** return true when fields could be set to the hierarchy item */
-   Bool_t CanSetFields() const
-   {
-      return (fMask & kScan) && (fStore != 0);
-   }
+   Bool_t CanSetFields() const { return (fMask & kScan) && (fStore != 0); }
 
-   Bool_t ScanOnlyFields() const
-   {
-      return (fMask & kOnlyFields) && (fMask & kScan);
-   }
+   /** return true when only fields are scanned by the sniffer */
+   Bool_t ScanOnlyFields() const { return (fMask & kOnlyFields) && (fMask & kScan); }
 
    /** Starts new node, must be closed at the end */
    void CreateNode(const char *_node_name);
@@ -81,7 +84,7 @@ public:
    /** Checks if result will be accepted. Used to verify if sniffer should read object from the file */
    Bool_t IsReadyForResult() const;
 
-      /** Obsolete, use SetFoundResult instead */
+   /** Obsolete, use SetFoundResult instead */
    Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0);
 
    /** Set found element with class and datamember (optional) */
@@ -114,16 +117,16 @@ class TRootSniffer : public TNamed {
       kItemField = BIT(21)  // item property stored as TNamed
    };
 protected:
-   TString        fObjectsPath;     //! default path for registered objects
-   TMemFile      *fMemFile;         //! file used to manage streamer infos
-   TList         *fSinfo;           //! last produced streamer info
-   Bool_t         fReadOnly;        //! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
-   Bool_t         fScanGlobalDir;   //! when enabled (default), scan gROOT for histograms, canvases, open files
-   THttpCallArg  *fCurrentArg;      //! current http arguments (if any)
-   Int_t          fCurrentRestrict; //! current restriction for last-found object
-   TString        fCurrentAllowedMethods;  //! list of allowed methods, extracted when analyzed object restrictions
-   TList          fRestrictions;    //! list of restrictions for different locations
-   TString        fAutoLoad;        //! scripts names, which are add as _autoload parameter to h.json request
+   TString        fObjectsPath;     ///<! default path for registered objects
+   TMemFile      *fMemFile;         ///<! file used to manage streamer infos
+   TList         *fSinfo;           ///<! last produced streamer info
+   Bool_t         fReadOnly;        ///<! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
+   Bool_t         fScanGlobalDir;   ///<! when enabled (default), scan gROOT for histograms, canvases, open files
+   THttpCallArg  *fCurrentArg;      ///<! current http arguments (if any)
+   Int_t          fCurrentRestrict; ///<! current restriction for last-found object
+   TString        fCurrentAllowedMethods;  ///<! list of allowed methods, extracted when analyzed object restrictions
+   TList          fRestrictions;    ///<! list of restrictions for different locations
+   TString        fAutoLoad;        ///<! scripts names, which are add as _autoload parameter to h.json request
 
    void ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 
@@ -134,7 +137,7 @@ protected:
    void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst,
                        const char *foldername = 0, TCollection *keys_lst = 0);
 
-   /* Method is used to scan ROOT objects.
+   /** Method is used to scan ROOT objects.
     * Can be reimplemented to extend scanning */
    virtual void ScanRoot(TRootSnifferScanRec &rec);
 
@@ -162,20 +165,12 @@ public:
 
    static Bool_t IsDrawableClass(TClass *cl);
 
-   void  SetReadOnly(Bool_t on = kTRUE)
-   {
-      // When readonly on (default), sniffer is not allowed to change ROOT structures
-      // For instance, it is not allowed to read new objects from files
+   /** When readonly on (default), sniffer is not allowed to change ROOT structures
+     * For instance, it is not allowed to read new objects from files */
+   void SetReadOnly(Bool_t on = kTRUE) { fReadOnly = on; }
 
-      fReadOnly = on;
-   }
-
-   Bool_t IsReadOnly() const
-   {
-      // Returns readonly mode
-
-      return fReadOnly;
-   }
+   /** Returns readonly mode */
+   Bool_t IsReadOnly() const { return fReadOnly; }
 
    void Restrict(const char* path, const char* options);
 
@@ -183,17 +178,14 @@ public:
 
    Int_t CheckRestriction(const char* item_name);
 
-   void SetScanGlobalDir(Bool_t on = kTRUE)
-   {
-      // When enabled (default), sniffer scans gROOT for files, canvases, histograms
-
-      fScanGlobalDir = on;
-   }
+   /** When enabled (default), sniffer scans gROOT for files, canvases, histograms */
+   void SetScanGlobalDir(Bool_t on = kTRUE) { fScanGlobalDir = on; }
 
    void SetAutoLoad(const char* scripts = "");
 
    const char* GetAutoLoad() const;
 
+   /** Returns true when sniffer allowed to scan global directories */
    Bool_t IsScanGlobalDir() const { return fScanGlobalDir; }
 
    Bool_t RegisterObject(const char *subfolder, TObject *obj);

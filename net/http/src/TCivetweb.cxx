@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   21/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TCivetweb.h"
 
 #include "../civetweb/civetweb.h"
@@ -64,8 +72,6 @@ int websocket_connect_handler(const struct mg_connection *conn, void*)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
    if (request_info == 0) return 1;
 
-   // printf("Request websocket for uri:%s\n", request_info->uri);
-
    TCivetweb *engine = (TCivetweb *) request_info->user_data;
    if (engine == 0) return 1;
    THttpServer *serv = engine->GetServer();
@@ -79,8 +85,6 @@ int websocket_connect_handler(const struct mg_connection *conn, void*)
 
    Bool_t execres = serv->ExecuteHttp(&arg);
 
-   // printf("res %d 404 %d\n", execres, arg.Is404());
-
    return execres && !arg.Is404() ? 0 : 1;
 }
 
@@ -89,8 +93,6 @@ int websocket_connect_handler(const struct mg_connection *conn, void*)
 void websocket_ready_handler(struct mg_connection *conn, void*)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
-
-   // printf("Websocket connection established url:%s\n", request_info->uri);
 
    TCivetweb *engine = (TCivetweb *) request_info->user_data;
    if (engine == 0) return;
@@ -129,18 +131,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    memcpy(buf, data, len);
    arg.SetPostData(buf, len);
 
-   //if ((bits & 0xF) == 1)
-   //   printf("Get string len %d %s\n", (int) len, (char*) arg.GetPostData());
-   //else
-   //   printf("Get data from web socket len bits %d %d\n", bits, (int) len);
-
    serv->ExecuteHttp(&arg);
-
-   // static int wscnt = 0;
-   //if (++wscnt >= 20000) {
-   //   const char* reply = "Send close message";
-   //   mg_websocket_write(conn, WEBSOCKET_OPCODE_CONNECTION_CLOSE, reply, strlen(reply));
-   //}
 
    return 1;
 }
@@ -150,8 +141,6 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
 void websocket_close_handler(const struct mg_connection *conn, void*)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
-
-   // printf("Websocket connection closed url:%s\n", request_info->uri);
 
    TCivetweb *engine = (TCivetweb *) request_info->user_data;
    if (engine == 0) return;

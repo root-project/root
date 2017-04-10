@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   22/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "TRootSniffer.h"
 
 #include "TH1.h"
@@ -53,8 +61,6 @@ const char *item_prop_user = "_username";
 const char *item_prop_autoload = "_autoload";
 const char *item_prop_rootversion = "_root_version";
 
-
-// ============================================================================
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
