@@ -240,7 +240,7 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
          return kFALSE;
       }
       newfile = TFile::Open(localcopy, "READ");
-      // Zombie files should also be skipped 
+      // Zombie files should also be skipped
       if (newfile && newfile->IsZombie()) {
          delete newfile;
          newfile = 0;
