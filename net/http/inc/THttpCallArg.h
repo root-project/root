@@ -26,38 +26,37 @@ class THttpCallArg : public TObject {
 protected:
    friend class THttpServer;
 
-   TString fTopName;            ///<! top item name
-   TString fMethod;             ///<! request method like GET or POST
-   TString fPathName;           ///<! item path
-   TString fFileName;           ///<! file name
-   TString fUserName;           ///<! authenticated user name (if any)
-   TString fQuery;              ///<! additional arguments
+   TString fTopName;  ///<! top item name
+   TString fMethod;   ///<! request method like GET or POST
+   TString fPathName; ///<! item path
+   TString fFileName; ///<! file name
+   TString fUserName; ///<! authenticated user name (if any)
+   TString fQuery;    ///<! additional arguments
 
-   void *fPostData;              ///<! binary data received with post request
-   Long_t fPostDataLength;       ///<! length of binary data
+   void * fPostData;       ///<! binary data received with post request
+   Long_t fPostDataLength; ///<! length of binary data
 
-   TNamed *fWSHandle;            ///<!  web-socket handle, derived from TNamed class
-   void   *fWSId;                ///<! websocket identifier, used in web-socket related operations
+   TNamed *fWSHandle; ///<!  web-socket handle, derived from TNamed class
+   void *  fWSId;     ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
-   TString fContentType;        ///<! type of content
-   TString fRequestHeader;      ///<! complete header, provided with request
-   TString fHeader;             ///<! response header like ContentEncoding, Cache-Control and so on
-   TString fContent;            ///<! text content (if any)
-   Int_t   fZipping;            ///<! indicate if content should be zipped
+   TString fContentType;   ///<! type of content
+   TString fRequestHeader; ///<! complete header, provided with request
+   TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
+   TString fContent;       ///<! text content (if any)
+   Int_t   fZipping;       ///<! indicate if content should be zipped
 
-   void *fBinData;              ///<! binary data, assigned with http call
-   Long_t fBinDataLength;       ///<! length of binary data
+   void * fBinData;       ///<! binary data, assigned with http call
+   Long_t fBinDataLength; ///<! length of binary data
 
    Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
 
-   TString AccessHeader(TString& buf, const char* name, const char* value = 0, Bool_t doing_set = kFALSE);
+   TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
 
-   TString CountHeader(const TString& buf, Int_t number = -1111) const;
+   TString CountHeader(const TString &buf, Int_t number = -1111) const;
 
 public:
-
    THttpCallArg();
    ~THttpCallArg();
 
@@ -85,18 +84,18 @@ public:
 
    void SetPostData(void *data, Long_t length);
 
-   void SetWSHandle(TNamed* handle);
+   void SetWSHandle(TNamed *handle);
 
-   TNamed* TakeWSHandle();
+   TNamed *TakeWSHandle();
 
    /** set web-socket id */
-   void SetWSId(void* id) { fWSId = id; }
+   void SetWSId(void *id) { fWSId = id; }
 
    /** get web-socket id */
-   void* GetWSId() const { return fWSId; }
+   void *GetWSId() const { return fWSId; }
 
    /** set full set of request header */
-   void SetRequestHeader(const char* h) { fRequestHeader = h ? h : ""; }
+   void SetRequestHeader(const char *h) { fRequestHeader = h ? h : ""; }
 
    /** returns number of fields in request header */
    Int_t NumRequestHeader() const { return CountHeader(fRequestHeader).Atoi(); }
@@ -105,7 +104,7 @@ public:
    TString GetRequestHeaderName(Int_t number) const { return CountHeader(fRequestHeader, number); }
 
    /** get named field from request header */
-   TString GetRequestHeader(const char* name) { return AccessHeader(fRequestHeader, name); }
+   TString GetRequestHeader(const char *name) { return AccessHeader(fRequestHeader, name); }
 
    /** returns engine-specific top-name */
    const char *GetTopName() const { return fTopName.Data(); }
@@ -114,10 +113,10 @@ public:
    const char *GetMethod() const { return fMethod.Data(); }
 
    /** returns kTRUE if post method is used */
-   Bool_t IsPostMethod() const { return fMethod.CompareTo("POST")==0; }
+   Bool_t IsPostMethod() const { return fMethod.CompareTo("POST") == 0; }
 
    /** return pointer on posted with request data */
-   void* GetPostData() const { return fPostData; }
+   void *GetPostData() const { return fPostData; }
 
    /** return length of posted with request data */
    Long_t GetPostDataLength() const { return fPostDataLength; }
@@ -163,7 +162,7 @@ public:
    /** returns field name in header */
    TString GetHeaderName(Int_t number) const { return CountHeader(fHeader, number); }
 
-   TString GetHeader(const char* name);
+   TString GetHeader(const char *name);
 
    /** Set Content-Encoding header like gzip */
    void SetEncoding(const char *typ) { AccessHeader(fHeader, "Content-Encoding", typ, kTRUE); }
@@ -192,9 +191,9 @@ public:
    // these methods used to return results of http request processing
 
    Bool_t IsContentType(const char *typ) const { return fContentType == typ; }
-   Bool_t Is404() const { return IsContentType("_404_"); }
-   Bool_t IsFile() const { return IsContentType("_file_"); }
-   const char *GetContentType() const { return fContentType.Data(); }
+   Bool_t                           Is404() const { return IsContentType("_404_"); }
+   Bool_t                           IsFile() const { return IsContentType("_file_"); }
+   const char *                     GetContentType() const { return fContentType.Data(); }
 
    void SetBinData(void *data, Long_t length);
 

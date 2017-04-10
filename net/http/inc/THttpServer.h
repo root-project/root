@@ -26,29 +26,27 @@ class THttpEngine;
 class THttpTimer;
 class TRootSniffer;
 
-
 class THttpServer : public TNamed {
 
 protected:
+   TList         fEngines; ///<! engines which runs http server
+   THttpTimer *  fTimer;   ///<! timer used to access main thread
+   TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
 
-   TList        fEngines;     ///<! engines which runs http server
-   THttpTimer  *fTimer;       ///<! timer used to access main thread
-   TRootSniffer *fSniffer;    ///<! sniffer provides access to ROOT objects hierarchy
+   Long_t fMainThrdId; ///<! id of the main ROOT process
 
-   Long_t       fMainThrdId;  ///<! id of the main ROOT process
+   TString fJSROOTSYS; ///<! location of local JSROOT files
+   TString fTopName;   ///<! name of top folder, default - "ROOT"
+   TString fJSROOT;    ///<! location of external JSROOT files
+   TList   fLocations; ///<! list of local directories, which could be accessed via server
 
-   TString      fJSROOTSYS;   ///<! location of local JSROOT files
-   TString      fTopName;     ///<! name of top folder, default - "ROOT"
-   TString      fJSROOT;      ///<! location of external JSROOT files
-   TList        fLocations;   ///<! list of local directories, which could be accessed via server
+   TString fDefaultPage;     ///<! file name for default page name
+   TString fDefaultPageCont; ///<! content of the file content
+   TString fDrawPage;        ///<! file name for drawing of single element
+   TString fDrawPageCont;    ///<! content of draw page
 
-   TString      fDefaultPage; ///<! file name for default page name
-   TString      fDefaultPageCont; ///<! content of the file content
-   TString      fDrawPage;    ///<! file name for drawing of single element
-   TString      fDrawPageCont; ///<! content of draw page
-
-   std::mutex   fMutex;       ///<! mutex to protect list with arguments
-   TList        fCallArgs;    ///<! submitted arguments
+   std::mutex fMutex;    ///<! mutex to protect list with arguments
+   TList      fCallArgs; ///<! submitted arguments
 
    /** Function called for every processed request */
    virtual void ProcessRequest(THttpCallArg *arg);
@@ -56,7 +54,6 @@ protected:
    static Bool_t VerifyFilePath(const char *fname);
 
 public:
-
    THttpServer(const char *engine = "civetweb:8080");
    virtual ~THttpServer();
 
@@ -90,7 +87,7 @@ public:
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
 
    /** Check if file is requested, thread safe */
-   Bool_t  IsFileRequested(const char *uri, TString &res) const;
+   Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
    Bool_t ExecuteHttp(THttpCallArg *arg);
@@ -105,7 +102,7 @@ public:
    Bool_t Unregister(TObject *obj);
 
    /** Restrict access to specified object */
-   void Restrict(const char *path, const char* options);
+   void Restrict(const char *path, const char *options);
 
    Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
 
