@@ -66,13 +66,14 @@ public:
     SetCpuAffinity,
     EnableTimingRATS, DisableTimingRATS,
     EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
+    EnableTimingNamedNumInt, DisableTimingNamedNumInt,
     MeasureCommunicationTime,
     RetrieveTimings
   };
 
   friend std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
 
-  void initialize() ; 
+  void initialize() ;
   void initVars() ;
   void serverLoop() ;
 

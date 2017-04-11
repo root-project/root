@@ -259,9 +259,6 @@ namespace RooFit {
   using TimePoint = WallClock::time_point;
   using Duration = WallClock::duration;
 
-//  template<> BidirMMapPipe& BidirMMapPipe::operator>> (TimePoint * &);
-//  template<> BidirMMapPipe& BidirMMapPipe::operator<< (const TimePoint *);
-
   BidirMMapPipe& BidirMMapPipe::operator<< (const TimePoint& wall) {
     Duration::rep const ns = wall.time_since_epoch().count();
     write(&ns, sizeof(ns));
@@ -277,7 +274,6 @@ namespace RooFit {
 
     return *this;
   }
-
 }
 
 
@@ -291,6 +287,16 @@ RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
 
   RooAbsArg* component = _components->find(name.c_str());
 
+  cout << "component: " << component <<endl << endl;
+  cout << "components size: " << _components->getSize() << endl << endl;
+
+  RooFIter iter = _components->fwdIterator();
+  RooAbsArg* node;
+  int i = 0;
+  while((node = iter.next())) {
+    cout << "name of component " << i << ": " << node->GetName() << endl << endl;
+    ++i;
+  }
   return component;
 }
 
@@ -527,9 +533,13 @@ void RooRealMPFE::serverLoop() {
         std::string name;
         *_pipe >> name;
 
-        std::cout << name << std::endl;
-
-        _findComponent(name)->setAttribute("timing_on");
+        RooAbsArg * absArg = _findComponent(name);
+        if (absArg) {
+          absArg->setAttribute("timing_on");
+        } else {
+          std::cout << "_findComponent for component " << name << " returned null pointer in process " << getpid() << "!" << std::endl;
+          msg = Terminate;
+        }
 
         break;
       }
@@ -544,6 +554,34 @@ void RooRealMPFE::serverLoop() {
         break;
       }
 
+
+      case EnableTimingNamedNumInt: {
+        std::string name;
+        *_pipe >> name;
+
+        _numIntSet.Print("v");
+        std::cout << "_numIntSet contains " << _numIntSet.getSize() << " elements in process " << getpid() << std::endl;
+
+        RooAbsArg * absArg = _numIntSet.find(name.c_str());
+        if (absArg) {
+          absArg->setAttribute("timing_on");
+        } else {
+          std::cout << "find for component " << name << " returned null pointer in process " << getpid() << "!" << std::endl;
+          msg = Terminate;
+        }
+
+        break;
+      }
+
+
+      case DisableTimingNamedNumInt: {
+        std::string name;
+        *_pipe >> name;
+
+        _numIntSet.find(name.c_str())->setAttribute("timing_on", kFALSE);
+
+        break;
+      }
 
       case MeasureCommunicationTime: {
         // Measure end time asap, since time of arrival at this case block is what we need to measure
@@ -599,6 +637,13 @@ void RooRealMPFE::serverLoop() {
 
     }
 
+    if (Terminate == msg) {
+      if (_verboseServer)
+        cout << "RooRealMPFE::serverLoop(" << GetName()
+             << ") Terminate from inside loop itself" << endl;
+      break;
+    }
+
   }
 
   // end timing
@@ -643,29 +688,29 @@ void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
 
     // Retrieve normalization integral object for branch nodes that are pdfs
     const RooAbsReal* normint = pdfNode->getNormIntegral(obs);
+    if (!normint) continue;
 
     // Integral expressions can be composite objects (in case of disjoint normalization ranges)
     // Therefore: retrieve list of branch nodes of integral expression
-    if (!normint) continue;
     RooArgList bi;
     normint->branchNodeServerList(&bi);
     RooFIter ibiter = bi.fwdIterator();
     RooAbsArg* inode;
     while((inode = ibiter.next())) {
       // If a RooRealIntegal component is found...
-      if (inode->IsA()==RooRealIntegral::Class()) {
+      if (inode->IsA() == RooRealIntegral::Class()) {
         // Retrieve the number of real dimensions that is integrated numerically,
         RooRealIntegral* rri = (RooRealIntegral*)inode;
         Int_t numIntDim = rri->numIntRealVars().getSize();
         // .. and add to list if numeric integration occurs
-        if (numIntDim>0) {
+        if (numIntDim > 0) {
           _numIntSet.add(*rri);
         }
       }
     }
   }
 
-  ccoutD(Generation) << "RooRealMPFE::_initNumIntSet: found " << _numIntSet.getSize() << " numerical integrals." << std::endl;
+  ccoutD(Generation) << "RooRealMPFE::_initNumIntSet: found " << _numIntSet.getSize() << " numerical integrals. Process " << getpid() << std::endl;
 
 }
 
@@ -677,11 +722,11 @@ void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
   RooFIter iter = _numIntSet.fwdIterator();
   if (flag == kTRUE) {
     while(RooAbsArg* node = iter.next()) {
-      *_pipe << EnableTimingNamedAbsArg << node->GetName();
+      *_pipe << EnableTimingNamedNumInt << node->GetName();
     }
   } else if (flag == kFALSE) {
     while(RooAbsArg* node = iter.next()) {
-      *_pipe << DisableTimingNamedAbsArg << node->GetName();
+      *_pipe << DisableTimingNamedNumInt << node->GetName();
     }
   }
 }
@@ -912,7 +957,8 @@ Double_t RooRealMPFE::evaluate() const
     }
 
     bool needflush = false;
-    int msg;
+    int msg_i;
+    Message msg;
     Double_t value;
 
     // If current error loggin state is not the same as remote state
@@ -920,14 +966,14 @@ Double_t RooRealMPFE::evaluate() const
     if (evalErrorLoggingMode() != _remoteEvalErrorLoggingState) {
       msg = LogEvalError ;
       RooAbsReal::ErrorLoggingMode flag = evalErrorLoggingMode() ;
-      *_pipe << msg << flag;
+      *_pipe << static_cast<int>(msg) << flag;
       needflush = true;
       _remoteEvalErrorLoggingState = evalErrorLoggingMode() ;
     }
 
     if (!_retrieveDispatched) {
       msg = Retrieve ;
-      *_pipe << msg;
+      *_pipe << static_cast<int>(msg);
       needflush = true;
       if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
 			       << ") IPC toServer> Retrieve " << endl ;
@@ -947,7 +993,8 @@ Double_t RooRealMPFE::evaluate() const
       ctimer_retrieve.start();
     }
 
-    *_pipe >> msg >> value >> _evalCarry >> numError;
+    *_pipe >> msg_i >> value >> _evalCarry >> numError;
+    msg = static_cast<Message>(msg_i);
 
     if (RooTrace::timing_flag == 5) {
       wtimer_retrieve.stop();
@@ -1266,6 +1313,8 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::DisableTimingNamedAbsArg);
     PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
     PROCESS_VAL(RooRealMPFE::RetrieveTimings);
+    PROCESS_VAL(RooRealMPFE::EnableTimingNamedNumInt);
+    PROCESS_VAL(RooRealMPFE::DisableTimingNamedNumInt)
     default: {
       s = "unknown Message!";
       break;

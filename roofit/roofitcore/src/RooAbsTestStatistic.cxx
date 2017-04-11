@@ -436,7 +436,20 @@ Double_t RooAbsTestStatistic::evaluate() const
 Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
-  
+
+
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+  // numIntSet initialisatie hier naartoe verhuizen!
+
+
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   } else if (SimMaster == _gofOpMode) {
