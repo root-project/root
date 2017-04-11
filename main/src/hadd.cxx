@@ -107,6 +107,8 @@ int main( int argc, char **argv )
       std::cout << "If the option -v is used, explicitly set the verbosity level;\n"\
                    "   0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -j is used, the execution will be parallelized in multiple processes\n" << std::endl;
+      std::cout << "If the option -jdbg is used, the execution will be parallelized in multiple processes in debug mode."\
+                   " This will not delete the partial files stored in the working directory\n" << std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
                    "   to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
@@ -143,6 +145,7 @@ int main( int argc, char **argv )
    Bool_t keepCompressionAsIs = kFALSE;
    Bool_t useFirstInputCompression = kFALSE;
    Bool_t multiproc = kFALSE;
+   Bool_t debug = kFALSE;
    Int_t maxopenedfiles = 0;
    Int_t verbosity = 99;
    TString cacheSize;
@@ -169,7 +172,12 @@ int main( int argc, char **argv )
       } else if ( strcmp(argv[a],"-O") == 0 ) {
          reoptimize = kTRUE;
          ++ffirst;
-      } else if (strcmp(argv[a], "-j") == 0) {
+      } else if (strcmp(argv[a], "-jdbg") == 0) {
+         debug = kTRUE;
+         verbosity = kTRUE;
+         multiproc = kTRUE;
+         ++ffirst;
+      } else if (strcmp(argv[a], "-j") == 0 || multiproc) {
          // If the number of processes is not specified, use the default.
          if (a + 1 != argc && argv[a + 1][0] != '-') {
             // number of processes specified
@@ -494,8 +502,10 @@ int main( int argc, char **argv )
       } else {
          std::cout << "hadd failed at the parallel stage" << std::endl;
       }
-      for (auto pf : partialFiles) {
-         gSystem->Unlink(pf.c_str());
+      if (!debug) {
+         for (auto pf : partialFiles) {
+            gSystem->Unlink(pf.c_str());
+         }
       }
    } else {
       status = sequentialMerge(fileMerger, ffirst, filesToProcess);
