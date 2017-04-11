@@ -170,7 +170,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="", Option_t *option = ""); // *MENU*
+   virtual TLegend  *BuildLegend(Double_t x1=0.3, Double_t y1=0.21, Double_t x2=0.3, Double_t y2=0.21, const char *title="", Option_t *option = ""); // *MENU*
    TVirtualPad*      cd(Int_t subpadnumber=0); // *MENU*
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
