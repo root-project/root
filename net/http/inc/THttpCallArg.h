@@ -33,11 +33,11 @@ protected:
    TString fUserName; ///<! authenticated user name (if any)
    TString fQuery;    ///<! additional arguments
 
-   void * fPostData;       ///<! binary data received with post request
+   void *fPostData;        ///<! binary data received with post request
    Long_t fPostDataLength; ///<! length of binary data
 
    TNamed *fWSHandle; ///<!  web-socket handle, derived from TNamed class
-   UInt_t  fWSId;     ///<! websocket identifier, used in web-socket related operations
+   UInt_t fWSId;      ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
@@ -45,9 +45,9 @@ protected:
    TString fRequestHeader; ///<! complete header, provided with request
    TString fHeader;        ///<! response header like ContentEncoding, Cache-Control and so on
    TString fContent;       ///<! text content (if any)
-   Int_t   fZipping;       ///<! indicate if content should be zipped
+   Int_t fZipping;         ///<! indicate if content should be zipped
 
-   void * fBinData;       ///<! binary data, assigned with http call
+   void *fBinData;        ///<! binary data, assigned with http call
    Long_t fBinDataLength; ///<! length of binary data
 
    Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
@@ -191,9 +191,9 @@ public:
    // these methods used to return results of http request processing
 
    Bool_t IsContentType(const char *typ) const { return fContentType == typ; }
-   Bool_t                           Is404() const { return IsContentType("_404_"); }
-   Bool_t                           IsFile() const { return IsContentType("_file_"); }
-   const char *                     GetContentType() const { return fContentType.Data(); }
+   Bool_t Is404() const { return IsContentType("_404_"); }
+   Bool_t IsFile() const { return IsContentType("_file_"); }
+   const char *GetContentType() const { return fContentType.Data(); }
 
    void SetBinData(void *data, Long_t length);
 

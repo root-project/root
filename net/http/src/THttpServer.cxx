@@ -130,11 +130,11 @@ ClassImp(THttpServer)
    fLocations.SetOwner(kTRUE);
 
 #ifdef COMPILED_WITH_DABC
-   const char *dabcsys          = gSystem->Getenv("DABCSYS");
+   const char *dabcsys = gSystem->Getenv("DABCSYS");
    if (dabcsys != 0) fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
 #endif
 
-   const char *jsrootsys          = gSystem->Getenv("JSROOTSYS");
+   const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
    if (jsrootsys != 0) fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
@@ -153,7 +153,7 @@ ClassImp(THttpServer)
    AddLocation("rootsys/", TROOT::GetRootSys());
 
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
-   fDrawPage    = fJSROOTSYS + "/files/draw.htm";
+   fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    SetSniffer(new TRootSniffer("sniff"));
 
@@ -410,7 +410,7 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname = uri;
 
-   TIter    iter(&fLocations);
+   TIter iter(&fLocations);
    TObject *obj(0);
    while ((obj = iter()) != 0) {
       Ssiz_t pos = fname.Index(obj->GetName());
@@ -491,7 +491,7 @@ void THttpServer::ProcessRequests()
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
-   TIter        iter(&fEngines);
+   TIter iter(&fEngines);
    THttpEngine *engine = 0;
    while ((engine = (THttpEngine *)iter()) != 0) engine->Process();
 }
@@ -529,9 +529,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          // add h.json caching
          if (arg->fContent.Index(hjsontag) != kNPOS) {
-            TString               h_json;
+            TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
-            const char *          topname           = fTopName.Data();
+            const char *topname = fTopName.Data();
             if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
             fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
 
@@ -558,7 +558,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->Set404();
       } else {
          const char *rootjsontag = "\"$$$root.json$$$\"";
-         const char *hjsontag    = "\"$$$h.json$$$\"";
+         const char *hjsontag = "\"$$$h.json$$$\"";
 
          arg->fContent = fDrawPageCont;
 
@@ -570,9 +570,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          }
 
          if (arg->fContent.Index(hjsontag) != kNPOS) {
-            TString               h_json;
+            TString h_json;
             TRootSnifferStoreJson store(h_json, kTRUE);
-            const char *          topname           = fTopName.Data();
+            const char *topname = fTopName.Data();
             if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
             fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, kTRUE);
 
@@ -581,8 +581,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          if (arg->fContent.Index(rootjsontag) != kNPOS) {
             TString str;
-            void *  bindata    = 0;
-            Long_t  bindatalen = 0;
+            void *bindata = 0;
+            Long_t bindatalen = 0;
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
                arg->fContent.ReplaceAll(rootjsontag, str);
             }
@@ -601,14 +601,14 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
-   filename     = arg->fFileName;
+   filename = arg->fFileName;
    Bool_t iszip = kFALSE;
    if (filename.EndsWith(".gz")) {
       filename.Resize(filename.Length() - 3);
       iszip = kTRUE;
    }
 
-   void * bindata(0);
+   void *bindata(0);
    Long_t bindatalen(0);
 
    if ((filename == "h.xml") || (filename == "get.xml")) {
@@ -622,7 +622,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       {
          TRootSnifferStoreXml store(arg->fContent, compact);
 
-         const char *topname                     = fTopName.Data();
+         const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store, filename == "get.xml");
       }
@@ -631,17 +631,13 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (!compact) arg->fContent.Append("\n");
 
       arg->SetXml();
-   } else
-
-      if (filename == "h.json") {
+   } else if (filename == "h.json") {
       TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
-      const char *          topname           = fTopName.Data();
+      const char *topname = fTopName.Data();
       if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetJson();
-   } else
-
-      if (filename == "root.websocket") {
+   } else if (filename == "root.websocket") {
       // handling of web socket
 
       TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
@@ -685,10 +681,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       return;
 
-   } else
-
-      if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
-                            arg->fContent)) {
+   } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
+                                arg->fContent)) {
       if (bindata != 0) arg->SetBinData(bindata, bindatalen);
 
       // define content type base on extension
@@ -824,7 +818,7 @@ const char *THttpServer::GetMimeType(const char *path)
 {
    static const struct {
       const char *extension;
-      int         ext_len;
+      int ext_len;
       const char *mime_type;
    } builtin_mime_types[] = {{".xml", 4, "text/xml"},
                              {".json", 5, "application/json"},

@@ -41,11 +41,11 @@ TRootSnifferStore::~TRootSnifferStore()
 
 void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb, Int_t _res_chld, Int_t _restr)
 {
-   fResPtr       = _res;
-   fResClass     = _rescl;
-   fResMember    = _resmemb;
+   fResPtr = _res;
+   fResClass = _rescl;
+   fResMember = _resmemb;
    fResNumChilds = _res_chld;
-   fResRestrict  = _restr;
+   fResRestrict = _restr;
 }
 
 // =================================================================================

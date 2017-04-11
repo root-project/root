@@ -152,7 +152,7 @@ Bool_t TFastCgi::Create(const char *args)
 
             if (url.GetValueFromOptions("debug") != 0) fDebugMode = kTRUE;
 
-            const char *top        = url.GetValueFromOptions("top");
+            const char *top = url.GetValueFromOptions("top");
             if (top != 0) fTopName = top;
          }
       }
@@ -161,7 +161,7 @@ Bool_t TFastCgi::Create(const char *args)
    Info("Create", "Starting FastCGI server on port %s", sport.Data() + 1);
 
    fSocket = FCGX_OpenSocket(sport.Data(), 10);
-   fThrd   = new TThread("FastCgiThrd", TFastCgi::run_func, this);
+   fThrd = new TThread("FastCgiThrd", TFastCgi::run_func, this);
    fThrd->Run();
 
    return kTRUE;
@@ -194,8 +194,8 @@ void *TFastCgi::run_func(void *args)
 
       count++;
 
-      const char *inp_path   = FCGX_GetParam("PATH_INFO", request.envp);
-      const char *inp_query  = FCGX_GetParam("QUERY_STRING", request.envp);
+      const char *inp_path = FCGX_GetParam("PATH_INFO", request.envp);
+      const char *inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
       const char *inp_method = FCGX_GetParam("REQUEST_METHOD", request.envp);
       const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
@@ -204,11 +204,11 @@ void *TFastCgi::run_func(void *args)
       if (inp_query != 0) arg.SetQuery(inp_query);
       if (inp_method != 0) arg.SetMethod(inp_method);
       if (engine->fTopName.Length() > 0) arg.SetTopName(engine->fTopName.Data());
-      int len                  = 0;
+      int len = 0;
       if (inp_length != 0) len = strtol(inp_length, NULL, 10);
       if (len > 0) {
-         void *buf   = malloc(len + 1); // one myte more for null-termination
-         int   nread = FCGX_GetStr((char *)buf, len, request.in);
+         void *buf = malloc(len + 1); // one myte more for null-termination
+         int nread = FCGX_GetStr((char *)buf, len, request.in);
          if (nread > 0)
             arg.SetPostData(buf, nread);
          else
