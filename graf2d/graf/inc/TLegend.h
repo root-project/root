@@ -29,6 +29,7 @@ public:
    TLegend();
    TLegend( Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             const char* header = "", Option_t* option="brNDC" );
+   TLegend( Double_t w, Double_t h, const char* header = "", Option_t* option="brNDC" );
    virtual ~TLegend();
    TLegend( const TLegend &legend );
 
