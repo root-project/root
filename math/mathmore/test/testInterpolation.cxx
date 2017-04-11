@@ -43,7 +43,6 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
       double dy2i = itp.Deriv2(xi);
       double igyi = itp.Integ(0, xi);
       std::cout << xcoord[i]  << "  " << ycoord[i] << "  " << dyi << "  " << dy2i << "  " <<  igyi << std::endl;
-      i++;
    }
 
    if (showGraphics) {
