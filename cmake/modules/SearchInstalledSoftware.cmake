@@ -1386,6 +1386,11 @@ if (testing)
     ${_byproduct_binary_dir}/libgmock.a
     ${_byproduct_binary_dir}/libgmock_main.a
     )
+
+  # Workaround clang/gcc ABI compatiability issue.
+  if(gcctoolchain)
+    set(GTEST_CMAKE_ARGS "CMAKE_ARGS -DCMAKE_CXX_FLAGS=--gcc-toolchain=${gcctoolchain}")
+  endif(gcctoolchain)
   ExternalProject_Add(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -1396,6 +1401,7 @@ if (testing)
     # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
     #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
     #            -Dgtest_force_shared_crt=ON
+    ${GTEST_CMAKE_ARGS}
     # Disable install step
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${_byproducts}
