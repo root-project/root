@@ -649,10 +649,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (canv == 0) {
          // for the moment only TCanvas is used for web sockets
          arg->Set404();
-      } else if (canv->GetCanvasImp() && canv->GetCanvasImp()->ProcessWSRequest(arg)) {
-         // do nothing - this is web canvas
       } else if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
-
          if (canv->GetPrimitive("websocket")) {
             // websocket already exists, ignore all other requests
             arg->Set404();
