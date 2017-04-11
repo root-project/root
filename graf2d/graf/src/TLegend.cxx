@@ -195,18 +195,10 @@ Begin_Macro(source)
    hpx->GetYaxis()->SetTitle("Y Axis title");
    hpx->GetXaxis()->SetTitle("X Axis title");
 
-   auto h1 = new TH1D("h1","h1",100,-2.,2.);
+   auto h1 = new TH1D("h1","A green histogram",100,-2.,2.);
    h1->FillRandom("gaus", 10000);
-   h1->SetLineColor(kRed+3);
+   h1->SetLineColor(kGreen);
    h1->Draw("same");
-
-   // Define the legend without specifying the position. Only width and height.
-   // In this example the default values set by the default constructor. 0.3 and
-   // 0.15 are used for the width and height
-   auto legend = new TLegend();
-   legend->AddEntry(h1,"Random numbers","l");
-   legend->AddEntry(hpx,"Histogram with error bars","l");
-   legend->Draw();
 
    auto g = new TGraph();
    g->SetPoint(0, -3.5, 100 );
@@ -217,7 +209,13 @@ Begin_Macro(source)
    g->SetPoint(5,  3.0, 200 );
    g->SetPoint(6,  3.0, 700 );
    g->Draw("L");
+   g->SetTitle("This is a TGraph");
    g->SetLineColor(kRed);
+   g->SetFillColor(0);
+
+   // TPad::BuildLegend() default placement values are such that they trigger
+   // the automatic placement.
+   c4->BuildLegend();
 }
 End_Macro
 
