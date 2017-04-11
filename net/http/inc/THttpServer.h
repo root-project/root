@@ -29,8 +29,8 @@ class TRootSniffer;
 class THttpServer : public TNamed {
 
 protected:
-   TList         fEngines; ///<! engines which runs http server
-   THttpTimer *  fTimer;   ///<! timer used to access main thread
+   TList fEngines;         ///<! engines which runs http server
+   THttpTimer *fTimer;     ///<! timer used to access main thread
    TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
 
    Long_t fMainThrdId; ///<! id of the main ROOT process
@@ -38,15 +38,15 @@ protected:
    TString fJSROOTSYS; ///<! location of local JSROOT files
    TString fTopName;   ///<! name of top folder, default - "ROOT"
    TString fJSROOT;    ///<! location of external JSROOT files
-   TList   fLocations; ///<! list of local directories, which could be accessed via server
+   TList fLocations;   ///<! list of local directories, which could be accessed via server
 
    TString fDefaultPage;     ///<! file name for default page name
    TString fDefaultPageCont; ///<! content of the file content
    TString fDrawPage;        ///<! file name for drawing of single element
    TString fDrawPageCont;    ///<! content of draw page
 
-   std::mutex fMutex;    ///<! mutex to protect list with arguments
-   TList      fCallArgs; ///<! submitted arguments
+   std::mutex fMutex; ///<! mutex to protect list with arguments
+   TList fCallArgs;   ///<! submitted arguments
 
    /** Function called for every processed request */
    virtual void ProcessRequest(THttpCallArg *arg);

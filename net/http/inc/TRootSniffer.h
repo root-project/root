@@ -31,27 +31,27 @@ class TRootSnifferScanRec {
 protected:
    // different bits used to scan hierarchy
    enum {
-      kScan        = 0x0001, ///< normal scan of hierarchy
-      kExpand      = 0x0002, ///< expand of specified item - allowed to scan object members
-      kSearch      = 0x0004, ///< search for specified item (only objects and collections)
+      kScan = 0x0001,        ///< normal scan of hierarchy
+      kExpand = 0x0002,      ///< expand of specified item - allowed to scan object members
+      kSearch = 0x0004,      ///< search for specified item (only objects and collections)
       kCheckChilds = 0x0008, ///< check if there childs, very similar to search
-      kOnlyFields  = 0x0010, ///< if set, only fields for specified item will be set (but all fields)
-      kActions     = 0x001F  ///< mask for actions, only actions copied to child rec
+      kOnlyFields = 0x0010,  ///< if set, only fields for specified item will be set (but all fields)
+      kActions = 0x001F      ///< mask for actions, only actions copied to child rec
    };
 
-   TRootSnifferScanRec *fParent;      ///<! pointer on parent record
-   UInt_t               fMask;        ///<! defines operation kind
-   const char *         fSearchPath;  ///<! current path searched
-   Int_t                fLevel;       ///<! current level of hierarchy
-   TString              fItemName;    ///<! name of current item
-   TList                fItemsNames;  ///<! list of created items names, need to avoid duplication
-   Int_t                fRestriction; ///<! restriction 0 - default, 1 - read-only, 2 - full access
+   TRootSnifferScanRec *fParent; ///<! pointer on parent record
+   UInt_t fMask;                 ///<! defines operation kind
+   const char *fSearchPath;      ///<! current path searched
+   Int_t fLevel;                 ///<! current level of hierarchy
+   TString fItemName;            ///<! name of current item
+   TList fItemsNames;            ///<! list of created items names, need to avoid duplication
+   Int_t fRestriction;           ///<! restriction 0 - default, 1 - read-only, 2 - full access
 
-   TRootSnifferStore *fStore;       ///<! object to store results
-   Bool_t             fHasMore;     ///<! indicates that potentially there are more items can be found
-   Bool_t             fNodeStarted; ///<! indicate if node was started
-   Int_t              fNumFields;   ///<! number of fields
-   Int_t              fNumChilds;   ///<! number of childs
+   TRootSnifferStore *fStore; ///<! object to store results
+   Bool_t fHasMore;           ///<! indicates that potentially there are more items can be found
+   Bool_t fNodeStarted;       ///<! indicate if node was started
+   Int_t fNumFields;          ///<! number of fields
+   Int_t fNumChilds;          ///<! number of childs
 
 public:
    TRootSnifferScanRec();
@@ -116,16 +116,16 @@ class TRootSniffer : public TNamed {
    };
 
 protected:
-   TString   fObjectsPath; ///<! default path for registered objects
-   TMemFile *fMemFile;     ///<! file used to manage streamer infos
-   TList *   fSinfo;       ///<! last produced streamer info
+   TString fObjectsPath; ///<! default path for registered objects
+   TMemFile *fMemFile;   ///<! file used to manage streamer infos
+   TList *fSinfo;        ///<! last produced streamer info
    Bool_t fReadOnly; ///<! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
-   Bool_t fScanGlobalDir;                ///<! when enabled (default), scan gROOT for histograms, canvases, open files
-   THttpCallArg *fCurrentArg;            ///<! current http arguments (if any)
-   Int_t         fCurrentRestrict;       ///<! current restriction for last-found object
-   TString       fCurrentAllowedMethods; ///<! list of allowed methods, extracted when analyzed object restrictions
-   TList         fRestrictions;          ///<! list of restrictions for different locations
-   TString       fAutoLoad;              ///<! scripts names, which are add as _autoload parameter to h.json request
+   Bool_t fScanGlobalDir;          ///<! when enabled (default), scan gROOT for histograms, canvases, open files
+   THttpCallArg *fCurrentArg;      ///<! current http arguments (if any)
+   Int_t fCurrentRestrict;         ///<! current restriction for last-found object
+   TString fCurrentAllowedMethods; ///<! list of allowed methods, extracted when analyzed object restrictions
+   TList fRestrictions;            ///<! list of restrictions for different locations
+   TString fAutoLoad;              ///<! scripts names, which are add as _autoload parameter to h.json request
 
    void ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 

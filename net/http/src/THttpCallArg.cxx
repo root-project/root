@@ -141,8 +141,8 @@ void THttpCallArg::SetPostData(void *data, Long_t length)
 {
    if (fPostData) free(fPostData);
    if (data != 0) *(((char *)data) + length) = 0;
-   fPostData                                 = data;
-   fPostDataLength                           = length;
+   fPostData = data;
+   fPostDataLength = length;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ void THttpCallArg::SetWSHandle(TNamed *handle)
 TNamed *THttpCallArg::TakeWSHandle()
 {
    TNamed *res = fWSHandle;
-   fWSHandle   = 0;
+   fWSHandle = 0;
    return res;
 }
 
@@ -171,7 +171,7 @@ TNamed *THttpCallArg::TakeWSHandle()
 void THttpCallArg::SetBinData(void *data, Long_t length)
 {
    if (fBinData) free(fBinData);
-   fBinData       = data;
+   fBinData = data;
    fBinDataLength = length;
 
    // string content must be cleared in any case
@@ -257,14 +257,14 @@ void THttpCallArg::FillHttpHeader(TString &hdr, const char *kind)
 
 Bool_t THttpCallArg::CompressWithGzip()
 {
-   char * objbuf = (char *)GetContent();
+   char *objbuf = (char *)GetContent();
    Long_t objlen = GetContentLength();
 
    unsigned long objcrc = R__crc32(0, NULL, 0);
-   objcrc               = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
+   objcrc = R__crc32(objcrc, (const unsigned char *)objbuf, objlen);
 
    // 10 bytes (ZIP header), compressed data, 8 bytes (CRC and original length)
-   Int_t buflen             = 10 + objlen + 8;
+   Int_t buflen = 10 + objlen + 8;
    if (buflen < 512) buflen = 512;
 
    void *buffer = malloc(buflen);

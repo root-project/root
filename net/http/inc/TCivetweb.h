@@ -17,10 +17,10 @@
 
 class TCivetweb : public THttpEngine {
 protected:
-   void *  fCtx;       ///<! civetweb context
-   void *  fCallbacks; ///<! call-back table for civetweb webserver
-   TString fTopName;   ///<! name of top item
-   Bool_t  fDebug;     ///<! debug mode
+   void *fCtx;       ///<! civetweb context
+   void *fCallbacks; ///<! call-back table for civetweb webserver
+   TString fTopName; ///<! name of top item
+   Bool_t fDebug;    ///<! debug mode
 
 public:
    TCivetweb();

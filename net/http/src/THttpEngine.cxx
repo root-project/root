@@ -93,9 +93,9 @@ void THttpWSEngine::CheckModifiedFlag()
 
       // TBufferJSON::ConvertToJSON(lst, 3);
 
-      TIter    iter(lst);
-      TMethod *m   = 0;
-      Int_t    cnt = 0;
+      TIter iter(lst);
+      TMethod *m = 0;
+      Int_t cnt = 0;
 
       buf = "MENU[";
       while ((m = (TMethod *)iter()) != 0) {

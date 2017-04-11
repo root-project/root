@@ -23,11 +23,11 @@ class TFolder;
 
 class TRootSnifferStore : public TObject {
 protected:
-   void *       fResPtr;       ///<! pointer on found item
-   TClass *     fResClass;     ///<! class of found item
-   TDataMember *fResMember;    ///<! datamember pointer of found item
-   Int_t        fResNumChilds; ///<! count of found childs, -1 by default
-   Int_t        fResRestrict;  ///<! restriction for result, 0-default, 1-readonly, 2-full
+   void *fResPtr;           ///<! pointer on found item
+   TClass *fResClass;       ///<! class of found item
+   TDataMember *fResMember; ///<! datamember pointer of found item
+   Int_t fResNumChilds;     ///<! count of found childs, -1 by default
+   Int_t fResRestrict;      ///<! restriction for result, 0-default, 1-readonly, 2-full
 public:
    TRootSnifferStore();
    virtual ~TRootSnifferStore();
@@ -39,11 +39,11 @@ public:
 
    void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb, Int_t _res_chld, Int_t restr = 0);
 
-   void *         GetResPtr() const { return fResPtr; }
-   TClass *       GetResClass() const { return fResClass; }
-   TDataMember *  GetResMember() const { return fResMember; }
-   Int_t          GetResNumChilds() const { return fResNumChilds; }
-   Int_t          GetResRestrict() const { return fResRestrict; }
+   void *GetResPtr() const { return fResPtr; }
+   TClass *GetResClass() const { return fResClass; }
+   TDataMember *GetResMember() const { return fResMember; }
+   Int_t GetResNumChilds() const { return fResNumChilds; }
+   Int_t GetResRestrict() const { return fResRestrict; }
    virtual Bool_t IsXml() const { return kFALSE; }
 
    ClassDef(TRootSnifferStore, 0) // structure for results store of objects sniffer
@@ -55,8 +55,8 @@ public:
 
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
-   TString *fBuf;     ///<! output buffer
-   Bool_t   fCompact; ///<! produce compact xml code
+   TString *fBuf;   ///<! output buffer
+   Bool_t fCompact; ///<! produce compact xml code
 
 public:
    TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
@@ -81,8 +81,8 @@ public:
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
-   TString *fBuf;     ///<! output buffer
-   Bool_t   fCompact; ///<! produce compact json code
+   TString *fBuf;   ///<! output buffer
+   Bool_t fCompact; ///<! produce compact json code
 public:
    TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
    {
