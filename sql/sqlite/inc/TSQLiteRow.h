@@ -14,12 +14,7 @@
 
 #include "TSQLRow.h"
 
-#if !defined(__CINT__)
-#include <sqlite3.h>
-#else
 struct sqlite3_stmt;
-#endif
-
 
 class TSQLiteRow : public TSQLRow {
 
