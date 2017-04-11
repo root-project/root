@@ -86,10 +86,7 @@ int execTestMultiMerge()
    } else {
       result += testSimpleFile("hsimpleK202.root",5*25000,202,1938720,16);
    } 
-   int hsimpleFTolerance = 5;
-#ifdef __FAST_MATH__
-   hsimpleFTolerance = 6
-#endif
+   int hsimpleFTolerance = 6; // 5 for non fst builds
    result += testSimpleFile("hsimpleF.root",5*25000,9,2108440,hsimpleFTolerance);
    return result;
 }
