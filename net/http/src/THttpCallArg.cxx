@@ -294,15 +294,17 @@ Bool_t THttpCallArg::CompressWithGzip()
 
    bufcur += (ziplen - 6); // jump over compressed data (6 byte is extra ROOT header)
 
-   *bufcur++ = objcrc & 0xff; // CRC32
+   // write CRC32
+   *bufcur++ = objcrc & 0xff;
    *bufcur++ = (objcrc >> 8) & 0xff;
    *bufcur++ = (objcrc >> 16) & 0xff;
    *bufcur++ = (objcrc >> 24) & 0xff;
 
-   *bufcur++ = objlen & 0xff;         // original data length
-   *bufcur++ = (objlen >> 8) & 0xff;  // original data length
-   *bufcur++ = (objlen >> 16) & 0xff; // original data length
-   *bufcur++ = (objlen >> 24) & 0xff; // original data length
+   // write original data length
+   *bufcur++ = objlen & 0xff;
+   *bufcur++ = (objlen >> 8) & 0xff;
+   *bufcur++ = (objlen >> 16) & 0xff;
+   *bufcur++ = (objlen >> 24) & 0xff;
 
    SetBinData(buffer, bufcur - (char *)buffer);
 
