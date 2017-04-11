@@ -79,6 +79,7 @@
 #include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
+#include "TUUID.h"
 #include "ROOT/StringConv.hxx"
 #include <stdlib.h>
 #include <climits>
@@ -405,9 +406,11 @@ int main( int argc, char **argv )
    std::vector<std::string> partialFiles;
 
    if (multiproc) {
+      auto uuid = TUUID();
+      auto partialTail = uuid.AsString();
       for (auto i = 0; (i * step) < filesToProcess; i++) {
          std::stringstream buffer;
-         buffer << "partial" << i << ".root";
+         buffer << "partial" << i << "_" << partialTail << ".root";
          partialFiles.emplace_back(buffer.str());
       }
    }
