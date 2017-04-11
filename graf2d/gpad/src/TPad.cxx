@@ -182,6 +182,8 @@ TPad::TPad()
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
    fCollideGrid = 0;
+   fCGnx = 0;
+   fCGny = 0;
 
    fLogx  = 0;
    fLogy  = 0;
@@ -303,6 +305,8 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
    fCollideGrid = 0;
+   fCGnx = 0;
+   fCGny = 0;
 
    fViewer3D = 0;
 
@@ -618,6 +622,8 @@ void TPad::Clear(Option_t *option)
    if (fCollideGrid) {
       delete [] fCollideGrid;
       fCollideGrid = 0;
+      fCGnx = 0;
+      fCGny = 0;
    }
    ResetBit(TGraph::kClipFrame);
 }
@@ -2960,8 +2966,19 @@ void TPad::FillCollideGrid(TObject *oi)
 {
    Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
 
-   fCGnx   = gPad->GetWw()/cellSize;
-   fCGny   = gPad->GetWh()/cellSize;
+   if (fCGnx == 0 && fCGny == 0) {
+      fCGnx   = gPad->GetWw()/cellSize;
+      fCGny   = gPad->GetWh()/cellSize;
+   } else {
+      Int_t CGnx   = gPad->GetWw()/cellSize;
+      Int_t CGny   = gPad->GetWh()/cellSize;
+      if (fCGnx != CGnx || fCGny != CGny) {
+         fCGnx = CGnx;
+         fCGny = CGny;
+         delete [] fCollideGrid;
+         fCollideGrid = 0;
+      }
+   }
 
    // Initialise the collide grid
    if (!fCollideGrid) {
@@ -2997,7 +3014,6 @@ Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
 {
    for (int r=i; r<w+i; r++) {
       for (int c=j; c<h+j; c++) {
-         if (r + c*fCGnx >= fCGnx*fCGny) printf("oops in Collide!");
          if (!fCollideGrid[r + c*fCGnx]) return kTRUE;
       }
    }
