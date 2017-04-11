@@ -1261,29 +1261,29 @@ elseif(vc)
   else()
     find_package(Vc 1.3.0 CONFIG QUIET)
     if(NOT Vc_FOUND)
-      message(STATUS  "Vc library not found, support for it disabled.")
-      message(STATUS  "Please enable the option 'builtin_vc' to build Vc internally.")
+      message(STATUS "Vc library not found, support for it disabled.")
+      message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
 endif()
 
-if(vc AND NOT Vc_FOUND)
+if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
   set(Vc_VERSION "1.3.0")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
   set(Vc_SRC_MD5 "a248e904f0b1a330ad8f37ec50cbad30")
-  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals/install/${Vc_PROJECT}")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/VC-prefix/install")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
   set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
 
-  ExternalProject_Add(${Vc_PROJECT}
-    PREFIX externals
+  ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
     URL_MD5 ${Vc_SRC_MD5}
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -1294,9 +1294,10 @@ if(vc AND NOT Vc_FOUND)
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
+  set(VC_TARGET VC)
   add_library(Vc STATIC IMPORTED)
   set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
-  add_dependencies(Vc ${Vc_PROJECT})
+  add_dependencies(Vc VC)
 
   set(Vc_LIBRARIES Vc)
   set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
@@ -1311,8 +1312,104 @@ if(vc AND NOT Vc_FOUND)
 endif()
 
 if(Vc_FOUND)
-	# Missing from VcConfig.cmake
-	set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+  # Missing from VcConfig.cmake
+  set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+endif()
+
+#---Check for VecCore--------------------------------------------------------------------
+if(veccore AND builtin_vc)
+  message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
+  set(builtin_veccore ON CACHE BOOL "" FORCE)
+endif()
+
+if(builtin_veccore)
+  unset(VecCore_FOUND)
+  unset(VecCore_FOUND CACHE)
+  set(veccore ON CACHE BOOL "" FORCE)
+elseif(veccore)
+  if(vc)
+    set(VecCore_COMPONENTS Vc)
+  endif()
+  if(fail-on-missing)
+    find_package(VecCore 0.4.0 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  else()
+    find_package(VecCore 0.4.0 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
+    if(NOT VecCore_FOUND)
+      message(STATUS "VecCore not found, support for it disabled.")
+      message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
+      set(veccore OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+if(veccore AND NOT VecCore_FOUND)
+  set(VecCore_VERSION "0.4.0")
+  set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
+  set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
+  set(VecCore_SRC_MD5 "c719909eaffbcc1d7a7680b25b6e5019")
+  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/VECCORE-prefix/install")
+  set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
+
+  if(builtin_vc)
+    set(Vc_VERSION "1.3.1") # version built by VecCore
+    set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(Vc_LIBRARY "${VecCore_ROOTDIR}/lib/${Vc_LIBNAME}")
+  endif()
+
+  ExternalProject_Add(VECCORE
+    URL     ${VecCore_SRC_URI}
+    URL_MD5 ${VecCore_SRC_MD5}
+    BUILD_IN_SOURCE 0
+    BUILD_BYPRODUCTS ${Vc_LIBRARY}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DBUILD_TESTING=OFF -DBUILD_VC=${builtin_vc}
+               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+  )
+
+  set(VECCORE_TARGET VECCORE)
+
+  if(builtin_vc)
+    add_library(Vc STATIC IMPORTED)
+    set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+    add_dependencies(Vc VECCORE)
+
+    set(Vc_LIBRARIES Vc)
+    set(Vc_INCLUDE_DIR ${VecCore_ROOTDIR}/include)
+    set(Vc_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
+    set(Vc_CMAKE_MODULES_DIR "${VecCore_ROOTDIR}/lib/cmake/Vc")
+
+    find_package_handle_standard_args(Vc
+      FOUND_VAR Vc_FOUND
+      REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
+      VERSION_VAR Vc_VERSION)
+  endif()
+
+  if (vc OR builtin_vc)
+    set(VecCore_Vc_FOUND True)
+    set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
+    set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
+    set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
+
+    set(VecCore_DEFINITIONS -DVECCORE_ENABLE_VC)
+    set(VecCore_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+    set(VecCore_LIBRARIES ${Vc_LIBRARIES})
+  endif()
+
+  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
+
+  find_package_handle_standard_args(VecCore
+    FOUND_VAR VecCore_FOUND
+    REQUIRED_VARS VecCore_INCLUDE_DIRS
+    VERSION_VAR VecCore_VERSION)
+
+  install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------
