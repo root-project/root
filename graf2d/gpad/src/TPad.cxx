@@ -2967,11 +2967,11 @@ void TPad::FillCollideGrid(TObject *oi)
    Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
 
    if (fCGnx == 0 && fCGny == 0) {
-      fCGnx   = gPad->GetWw()/cellSize;
-      fCGny   = gPad->GetWh()/cellSize;
+      fCGnx = gPad->GetWw()/cellSize;
+      fCGny = gPad->GetWh()/cellSize;
    } else {
-      Int_t CGnx   = gPad->GetWw()/cellSize;
-      Int_t CGny   = gPad->GetWh()/cellSize;
+      Int_t CGnx = gPad->GetWw()/cellSize;
+      Int_t CGny = gPad->GetWh()/cellSize;
       if (fCGnx != CGnx || fCGny != CGny) {
          fCGnx = CGnx;
          fCGny = CGny;
