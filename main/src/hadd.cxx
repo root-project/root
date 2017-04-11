@@ -107,8 +107,12 @@ int main( int argc, char **argv )
       std::cout << "If the option -v is used, explicitly set the verbosity level;\n"\
                    "   0 request no output, 99 is the default" <<std::endl;
       std::cout << "If the option -j is used, the execution will be parallelized in multiple processes\n" << std::endl;
-      std::cout << "If the option -jdbg is used, the execution will be parallelized in multiple processes in debug mode."\
-                   " This will not delete the partial files stored in the working directory\n" << std::endl;
+      std::cout << "If the option -dbg is used, the execution will be parallelized in multiple processes in debug mode."
+                   " This will not delete the partial files stored in the working directory\n"
+                << std::endl;
+      std::cout << "If the option -d is used, the partial multiprocess execution will be carried out in the specified "
+                   "directory\n"
+                << std::endl;
       std::cout << "If the option -n is used, hadd will open at most 'maxopenedfiles' at once, use 0\n"
                    "   to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
@@ -152,7 +156,7 @@ int main( int argc, char **argv )
    SysInfo_t s;
    gSystem->GetSysInfo(&s);
    auto nProcesses = s.fCpus;
-
+   auto workingDir = gSystem->TempDirectory();
    int outputPlace = 0;
    int ffirst = 2;
    Int_t newcomp = -1;
@@ -172,12 +176,25 @@ int main( int argc, char **argv )
       } else if ( strcmp(argv[a],"-O") == 0 ) {
          reoptimize = kTRUE;
          ++ffirst;
-      } else if (strcmp(argv[a], "-jdbg") == 0) {
+      } else if (strcmp(argv[a], "-dbg") == 0) {
          debug = kTRUE;
          verbosity = kTRUE;
-         multiproc = kTRUE;
          ++ffirst;
-      } else if (strcmp(argv[a], "-j") == 0 || multiproc) {
+      } else if (strcmp(argv[a], "-d") == 0) {
+         if (a + 1 != argc && argv[a + 1][0] != '-') {
+            if (gSystem->AccessPathName(argv[a + 1])) {
+               std::cerr << "Error: could not access the directory specified: " << argv[a + 1]
+                         << ". We will use the system's temporal directory.\n";
+            } else {
+               workingDir = argv[a + 1];
+            }
+            ++a;
+            ++ffirst;
+         } else {
+            std::cout << "-d: no directory specified.  We will use the system's temporal directory.\n";
+         }
+         ++ffirst;
+      } else if (strcmp(argv[a], "-j") == 0) {
          // If the number of processes is not specified, use the default.
          if (a + 1 != argc && argv[a + 1][0] != '-') {
             // number of processes specified
@@ -418,7 +435,7 @@ int main( int argc, char **argv )
       auto partialTail = uuid.AsString();
       for (auto i = 0; (i * step) < filesToProcess; i++) {
          std::stringstream buffer;
-         buffer << "partial" << i << "_" << partialTail << ".root";
+         buffer << workingDir << "/partial" << i << "_" << partialTail << ".root";
          partialFiles.emplace_back(buffer.str());
       }
    }
