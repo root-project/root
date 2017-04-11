@@ -701,7 +701,9 @@ int testTransform3D() {
      Transform3D tr(EulerAngles(10, -10, 10), XYZVector(10, -10, 0));
      auto r1 = tr.ApplyInverse(vector);
      auto r2 = tr.Inverse()(vector);
-     iret |= compare((r1 == r2), true, "ApplyInverse/Vector");
+     iret |= compare(r1.X(), r2.X(), "ApplyInverse/Vector", 10);
+     iret |= compare(r1.Y(), r2.Y(), "ApplyInverse/Vector", 10);
+     iret |= compare(r1.Z(), r2.Z(), "ApplyInverse/Vector", 10);
   }
 
   if (iret == 0) std::cout << "OK\n";
