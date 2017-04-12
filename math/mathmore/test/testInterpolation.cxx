@@ -31,10 +31,9 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
    // print result of interpolation
    const Int_t n = 50;  //JH replacing n = 51;
    Int_t i = 0;
-   double xi = 0.;
    Float_t xcoord[n], ycoord[n];
 
-   for ( i = 0; i < 50; ++i) { 
+   for ( i = 0; i < n; ++i) { 
       xi = 0.2 * i;
       // JH replacing for ( double xi = 0; xi < 10.01; xi += 0.2) {
       xcoord[i] = xi;
@@ -43,7 +42,7 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
       double dy2i = itp.Deriv2(xi);
       double igyi = itp.Integ(0, xi);
       std::cout << xcoord[i]  << "  " << ycoord[i] << "  " << dyi << "  " << dy2i << "  " <<  igyi << std::endl;
-      i++;
+      //remove duplicate loop increment i++;
    }
 
    if (showGraphics) {
