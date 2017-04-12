@@ -220,6 +220,15 @@ endmacro()
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
 
+  # Check if OPTIONS starts with a dash
+  if (ARG_OPTIONS)
+    foreach(ARG_O ${ARG_OPTIONS})
+      if (NOT ARG_O MATCHES "^-*")
+        message(FATAL_ERROR "Wrong rootcling option: ${ARG_OPTIONS}")
+      endif()
+    endforeach()
+  endif(ARG_OPTIONS)
+
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
