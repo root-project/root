@@ -73,15 +73,17 @@ BackendPasses::~BackendPasses() {
   //delete m_PMBuilder->Inliner;
 }
 
-void BackendPasses::CreatePasses(llvm::Module& M)
+void BackendPasses::CreatePasses(llvm::Module& M, int OptLevel)
 {
   // From BackEndUtil's clang::EmitAssemblyHelper::CreatePasses().
 
+  CodeGenOptions::InliningMethod Inlining = m_CGOpts.getInlining();
+
+#if 0
   CodeGenOptions& CGOpts_ = const_cast<CodeGenOptions&>(m_CGOpts);
   // DON'T: we will not find our symbols...
   //CGOpts_.CXXCtorDtorAliases = 1;
 
-#if 0
   // Default clang -O2 on Linux 64bit also has the following, but see
   // CIFactory.cpp.
   CGOpts_.DisableFPElim = 0;
@@ -94,14 +96,13 @@ void BackendPasses::CreatePasses(llvm::Module& M)
   CGOpts_.VectorizeSLP = 1;
 #endif
 
+#ifdef __GNUC__
   // Better inlining is pending https://bugs.llvm.org//show_bug.cgi?id=19668
   // and its consequence https://sft.its.cern.ch/jira/browse/ROOT-7111
   // shown e.g. by roottest/cling/stl/map/badstringMap
-  CGOpts_.setInlining(CodeGenOptions::NormalInlining);
-
-  unsigned OptLevel = m_CGOpts.OptimizationLevel;
-
-  CodeGenOptions::InliningMethod Inlining = m_CGOpts.getInlining();
+  if (Inlining > CodeGenOptions::NormalInlining)
+    Inlining = CodeGenOptions::NormalInlining;
+#endif
 
   // Handle disabling of LLVM optimization, where we want to preserve the
   // internal module before any optimization.
@@ -114,12 +115,12 @@ void BackendPasses::CreatePasses(llvm::Module& M)
   llvm::PassManagerBuilder PMBuilder;
   PMBuilder.OptLevel = OptLevel;
   PMBuilder.SizeLevel = m_CGOpts.OptimizeSize;
-  PMBuilder.BBVectorize = m_CGOpts.VectorizeBB;
-  PMBuilder.SLPVectorize = m_CGOpts.VectorizeSLP;
-  PMBuilder.LoopVectorize = m_CGOpts.VectorizeLoop;
+  PMBuilder.BBVectorize = 0; // m_CGOpts.VectorizeBB;
+  PMBuilder.SLPVectorize = OptLevel > 1 ? 1 : 0; // m_CGOpts.VectorizeSLP
+  PMBuilder.LoopVectorize = OptLevel > 1 ? 1 : 0; // m_CGOpts.VectorizeLoop
 
   PMBuilder.DisableTailCalls = m_CGOpts.DisableTailCalls;
-  PMBuilder.DisableUnitAtATime = !m_CGOpts.UnitAtATime;
+  PMBuilder.DisableUnitAtATime = OptLevel == 2 ? !m_CGOpts.UnitAtATime : 1;
   PMBuilder.DisableUnrollLoops = !m_CGOpts.UnrollLoops;
   PMBuilder.MergeFunctions = m_CGOpts.MergeFunctions;
   PMBuilder.RerollLoops = m_CGOpts.RerollLoops;
@@ -149,10 +150,11 @@ void BackendPasses::CreatePasses(llvm::Module& M)
   }
 
   // Set up the per-module pass manager.
-  m_MPM.reset(new legacy::PassManager());
+  m_MPM[OptLevel].reset(new legacy::PassManager());
 
-  m_MPM->add(new KeepLocalGVPass());
-  m_MPM->add(createTargetTransformInfoWrapperPass(m_TM.getTargetIRAnalysis()));
+  m_MPM[OptLevel]->add(new KeepLocalGVPass());
+  m_MPM[OptLevel]->add(createTargetTransformInfoWrapperPass(
+                                                   m_TM.getTargetIRAnalysis()));
 
   // Add target-specific passes that need to run as early as possible.
   PMBuilder.addExtension(
@@ -171,27 +173,41 @@ void BackendPasses::CreatePasses(llvm::Module& M)
   //if (!CGOpts.RewriteMapFiles.empty())
   //  addSymbolRewriterPass(CGOpts, m_MPM);
 
-  PMBuilder.populateModulePassManager(*m_MPM);
+  PMBuilder.populateModulePassManager(*m_MPM[OptLevel]);
 
-  m_FPM.reset(new legacy::FunctionPassManager(&M));
-  m_FPM->add(createTargetTransformInfoWrapperPass(m_TM.getTargetIRAnalysis()));
+  m_FPM[OptLevel].reset(new legacy::FunctionPassManager(&M));
+  m_FPM[OptLevel]->add(createTargetTransformInfoWrapperPass(
+                                                   m_TM.getTargetIRAnalysis()));
   if (m_CGOpts.VerifyModule)
-      m_FPM->add(createVerifierPass());
-  PMBuilder.populateFunctionPassManager(*m_FPM);
+      m_FPM[OptLevel]->add(createVerifierPass());
+  PMBuilder.populateFunctionPassManager(*m_FPM[OptLevel]);
 }
 
-void BackendPasses::runOnModule(Module& M) {
+void BackendPasses::runOnModule(Module& M, int OptLevel) {
 
-  if (!m_MPM)
-    CreatePasses(M);
-  // Set up the per-function pass manager.
+  if (OptLevel < 0)
+    OptLevel = 0;
+  if (OptLevel > 3)
+    OptLevel = 3;
+
+  if (!m_MPM[OptLevel])
+    CreatePasses(M, OptLevel);
+
+  static constexpr std::array<llvm::CodeGenOpt::Level, 4> CGOptLevel {
+    llvm::CodeGenOpt::None,
+    llvm::CodeGenOpt::Less,
+    llvm::CodeGenOpt::Default,
+    llvm::CodeGenOpt::Aggressive
+  };
+  // TM's OptLevel is used to build orc::SimpleCompiler passes for every Module.
+  m_TM.setOptLevel(CGOptLevel[OptLevel]);
 
   // Run the per-function passes on the module.
-  m_FPM->doInitialization();
+  m_FPM[OptLevel]->doInitialization();
   for (auto&& I: M.functions())
     if (!I.isDeclaration())
-      m_FPM->run(I);
-  m_FPM->doFinalization();
+      m_FPM[OptLevel]->run(I);
+  m_FPM[OptLevel]->doFinalization();
 
-  m_MPM->run(M);
+  m_MPM[OptLevel]->run(M);
 }
