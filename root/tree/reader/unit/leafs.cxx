@@ -87,6 +87,7 @@ void WriteData() {
    data.fSize = 4;
    data.fUArray = new float[2]{42., 43.};
    data.fUSize = 2;
+   data.fVec = { 17., 18., 19., 20., 21., 22.};
    tree->Fill();
    tree->Fill();
    tree->Write();
@@ -101,11 +102,15 @@ TEST(TTreeReaderLeafs, LeafList) {
    TTreeReader tr(tree);
    TTreeReaderArray<double> arr(tr, "fArray");
    TTreeReaderArray<float> arrU(tr, "fUArray");
+   TTreeReaderArray<double> vec(tr, "fVec");
 
    tr.Next();
-   EXPECT_FLOAT_EQ(4, arr.GetSize());
-   EXPECT_FLOAT_EQ(2, arrU.GetSize());
+   EXPECT_EQ(4u, arr.GetSize());
+   EXPECT_EQ(2u, arrU.GetSize());
+   EXPECT_EQ(6u, vec.GetSize());
    //FAILS EXPECT_FLOAT_EQ(13., arr[1]);
    //FAILS EXPECT_DOUBLE_EQ(43., arrU[1]);
+   EXPECT_DOUBLE_EQ(19., vec[2]);
+   EXPECT_DOUBLE_EQ(17., vec[0]);
    // T->Scan("fUArray") claims fUArray only has one instance per row.
 }
