@@ -7,6 +7,24 @@
 
 #include <fstream>
 
+TEST(TTreeReaderArray, Vector) {
+   TTree* tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
+   std::vector<float> vecf{17.f, 18.f, 19.f, 20.f, 21.f};
+   tree->Branch("vec", &vecf);
+
+   tree->Fill();
+   tree->Fill();
+   tree->Fill();
+
+   TTreeReader tr(tree);
+   TTreeReaderArray<double> vec(tr, "vec");
+
+   EXPECT_EQ(5u, vec.GetSize());
+   EXPECT_DOUBLE_EQ(19., vec[2]);
+   EXPECT_DOUBLE_EQ(17., vec[0]);
+}
+
+
 TEST(TTreeReaderArray, MultiReaders) {
    // See https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22790
    TTree* tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
