@@ -16,8 +16,12 @@ TEST(TTreeReaderArray, Vector) {
    tree->Fill();
    tree->Fill();
 
+   tree->ResetBranchAddresses();
+
    TTreeReader tr(tree);
-   TTreeReaderArray<double> vec(tr, "vec");
+   TTreeReaderArray<float> vec(tr, "vec");
+
+   tr.SetEntry(1);
 
    EXPECT_EQ(5u, vec.GetSize());
    EXPECT_DOUBLE_EQ(19., vec[2]);
@@ -34,6 +38,8 @@ TEST(TTreeReaderArray, MultiReaders) {
    tree->Fill();
    tree->Fill();
    tree->Fill();
+
+   tree->ResetBranchAddresses();
 
    TTreeReader TR(tree);
    TTreeReaderArray<double> trDouble0(TR, "D");
