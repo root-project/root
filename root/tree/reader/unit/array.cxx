@@ -5,8 +5,6 @@
 
 #include "gtest/gtest.h"
 
-#include "data.h"
-
 #include <fstream>
 
 TEST(TTreeReaderArray, MultiReaders) {
