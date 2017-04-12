@@ -71,6 +71,3 @@ In file included from input_line_23:1:
 expressiveErrorMessages dictionary forward declarations' payload:5:7: note: forward declaration of 'AexprMsg'
 class AexprMsg;
       ^
-In file included from input_line_23:1:
-   return 0;
-   ^      ~
