@@ -3058,33 +3058,34 @@ void TPad::LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2)
    NotFree(x2, y2);
    Int_t i, j, xt, yt;
 
-   if (x1>x2) {xt = x1; x1 = x2; x2 = xt;}
-   if (y1>y2) {yt = y1; y1 = y2; y2 = yt;}
-
    // horizontal lines
    if (y1==y2) {
-      for (i=x1+1; i<x2; i++) {
-         NotFree(i,y1);
-      }
+      for (i=x1+1; i<x2; i++) NotFree(i,y1);
       return;
    }
 
    // vertical lines
    if (x1==x2) {
-      for (i=y1+1; i<y2; i++) {
-         NotFree(x1,i);
-      }
+      for (i=y1+1; i<y2; i++) NotFree(x1,i);
       return;
    }
 
    // other lines
-   if (x2-x1>y2-y1) {
+   if (TMath::Abs(x2-x1)>TMath::Abs(y2-y1)) {
+      if (x1>x2) {
+         xt = x1; x1 = x2; x2 = xt;
+         yt = y1; y1 = y2; y2 = yt;
+      }
       for (i=x1+1; i<x2; i++) {
          j = (Int_t)((Double_t)(y2-y1)*(Double_t)((i-x1)/(Double_t)(x2-x1))+y1);
          NotFree(i,j);
          NotFree(i,(j+1));
       }
    } else {
+      if (y1>y2) {
+         yt = y1; y1 = y2; y2 = yt;
+         xt = x1; x1 = x2; x2 = xt;
+      }
       for (j=y1+1; j<y2; j++) {
          i = (Int_t)((Double_t)(x2-x1)*(Double_t)((j-y1)/(Double_t)(y2-y1))+x1);
          NotFree(i,j);
