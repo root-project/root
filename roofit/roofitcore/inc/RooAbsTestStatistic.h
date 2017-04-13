@@ -149,6 +149,9 @@ protected:
 private:
   void _collectNumIntSetTimings() const;
 
+  void _initNumIntSet();
+  RooArgSet _numIntSet;
+
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };
 

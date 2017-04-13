@@ -52,6 +52,7 @@ combined in the main thread.
 #include "RooProdPdf.h"
 #include "RooRealSumPdf.h"
 #include "RooConstVar.h"
+#include "RooRealIntegral.h"
 
 #include <string>
 #include <fstream>
@@ -437,18 +438,9 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
-
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-  // numIntSet initialisatie hier naartoe verhuizen!
-
+  if (RooTrace::time_numIntSet()) {
+    _initNumIntSet();
+  }
 
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
@@ -459,6 +451,53 @@ Bool_t RooAbsTestStatistic::initialize()
   return kFALSE;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find all numerical integrals in pdf given a set of observables
+
+void RooAbsTestStatistic::_initNumIntSet() {
+  // Get list of branch nodes in expression
+  RooArgSet blist;
+
+  _func->branchNodeServerList(&blist);
+
+  // Iterator over branch nodes
+  RooFIter iter = blist.fwdIterator();
+  RooAbsArg* node;
+  while((node = iter.next())) {
+    RooAbsPdf* pdfNode = dynamic_cast<RooAbsPdf*>(node);
+    if (!pdfNode) continue;
+    // Skip self-normalized nodes
+    if (pdfNode->selfNormalized()) continue;
+
+    // Retrieve normalization integral object for branch nodes that are pdfs
+    const RooAbsReal* normint = pdfNode->getNormIntegral(*(_data->get()));
+    if (!normint) continue;
+
+    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
+    // Therefore: retrieve list of branch nodes of integral expression
+    RooArgList bi;
+    normint->branchNodeServerList(&bi);
+    RooFIter ibiter = bi.fwdIterator();
+    RooAbsArg* inode;
+    while((inode = ibiter.next())) {
+      // If a RooRealIntegal component is found...
+      if (inode->IsA() == RooRealIntegral::Class()) {
+        // Retrieve the number of real dimensions that is integrated numerically,
+        RooRealIntegral* rri = (RooRealIntegral*)inode;
+        Int_t numIntDim = rri->numIntRealVars().getSize();
+        // .. and add to list if numeric integration occurs
+        if (numIntDim > 0) {
+          _numIntSet.add(*rri);
+        }
+      }
+    }
+  }
+
+  ccoutD(Generation) << "RooAbsTestStatistic::_initNumIntSet: found " << _numIntSet.getSize()
+                     << " numerical integral(s). Process " << getpid() << std::endl;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -55,6 +55,11 @@ public:
   // TODO: for windows version, change to private _timing_flag and use public method that returns its value
   static int timing_flag;
 
+  static Bool_t time_numIntSet();
+
+private:
+  static Bool_t _time_numIntSet;
+
 protected:
 
   static RooTrace* _instance ;

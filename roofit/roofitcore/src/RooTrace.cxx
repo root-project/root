@@ -330,3 +330,9 @@ std::map<std::string,double> RooTrace::objectTiming;
 /// 9: timing_RRMPFE_serverloop_while_p
 /// 10: time communication overhead
 int RooTrace::timing_flag = 0;
+
+Bool_t RooTrace::time_numIntSet() {
+  return _time_numIntSet;
+}
+
+Bool_t RooTrace::_time_numIntSet = true;
