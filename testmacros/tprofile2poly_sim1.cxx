@@ -12,12 +12,7 @@ void tprofile2poly_sim1() {
 
   TH2Poly*       abso = new TH2Poly[NUM_LS];
   TProfile2Poly* avgs = new TProfile2Poly[NUM_LS];
-
-  TProfile2Poly* toMerge1 = new TProfile2Poly();
-  TProfile2Poly* toMerge2 = new TProfile2Poly();
-  TProfile2Poly* empty    = new TProfile2Poly();
-
-
+  
   float minx = -4; float maxx = 4;
   float miny = -4; float maxy = 4;
   float binsz = 0.5;
@@ -25,18 +20,11 @@ void tprofile2poly_sim1() {
   for(float i=minx; i<maxx; i+=binsz){
     for(float j=miny; j<maxy; j+=binsz){
       whole_avg->AddBin(i, j, i+binsz, j+binsz);
-
       whole->AddBin(i, j, i+binsz, j+binsz);
-      toMerge1->AddBin(i, j, i+binsz, j+binsz);
-      toMerge2->AddBin(i, j, i+binsz, j+binsz);
-
-      empty->AddBin(i, j, i+binsz, j+binsz);
-
       for (int kk = 0; kk <= NUM_LS-1; ++kk) {
         avgs[kk].AddBin(i, j, i+binsz, j+binsz);
         abso[kk].AddBin(i, j, i+binsz, j+binsz);
       }
-
     }
   }
 
@@ -71,18 +59,10 @@ void tprofile2poly_sim1() {
 
         whole->Fill(std::get<0>(e), std::get<1>(e)); // actual number of hits per bin
         whole_avg->Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e)); // actual number of hits per bin
-
         abso[i].Fill(std::get<0>(e), std::get<1>(e)); // weight/charge
         avgs[i].Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e)); // weight/charge
 
-
         events.push_back(e);
-
-        if(i==0)
-          toMerge1->Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e));
-        if(i==2)
-          toMerge2->Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e));
-
       }
       lumisection.push_back(events);
 
@@ -116,20 +96,4 @@ void tprofile2poly_sim1() {
   whole->SetStats(0);
   whole->SetTitle("total hits");
   whole->Draw("COLZ TEXT");
-
-  // std::vector<TH2Poly*> vecToAvg;
-  //
-  // vecToAvg.push_back(&abso[0]);
-  // vecToAvg.push_back(&abso[1]);
-  // vecToAvg.push_back(&abso[2]);
-  //
-  //
-  // c1->cd(7);
-  // empty->MakeAverage(vecToAvg);
-  // empty->Draw("COLZ TEXT");
-
-
-  // c1->cd(4);
-  // empty->AddnProf(toMerge1);
-  // empty->Draw("COLZ");
 }
