@@ -26,7 +26,7 @@ sliceSet.
 
 #include "RooFit.h"
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,04)
+#if __cplusplus < 201103L
 #ifndef nullptr
 #define nullptr 0
 #endif
