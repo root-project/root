@@ -438,10 +438,10 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
-  if (RooTrace::time_numIntSet()) {
-    _initNumIntSet();
-    _setTimingNumIntSet();
-  }
+//  if (RooTrace::time_numIntSet()) {
+//    _initNumIntSet();
+//    _setTimingNumIntSet();
+//  }
 
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
@@ -624,7 +624,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
       _mpfeArray[i]->setCpuAffinity(i);
     }
 
-    if (timeNumInts) {
+//    if (timeNumInts) {
       // FIXME
       // Seems wasteful to initialize the NumIntSet for each mpfeArray, but it should contain the MPFE-local nodes,
       // so I'm not sure whether it would be a lot faster to create this list in RATS, because then you would also
@@ -632,6 +632,10 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
       // do name lookups in MPFE...
 //      _mpfeArray[i]->_initNumIntSet(*(data->get()));
 //      _mpfeArray[i]->_setTimingNumIntSet();
+//    }
+
+    if (RooTrace::time_numIntSet()) {
+      _mpfeArray[i]->setTimingNumInts();
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);
@@ -648,6 +652,7 @@ void RooAbsTestStatistic::_setTimingNumIntSet(Bool_t flag) {
 
   if (flag == kTRUE) {
     while(RooAbsArg* node = iter.next()) {
+      std::cout << "setting timing_on in integral " << node->GetName() << " at " << node << std::endl;
       node->setAttribute("timing_on");
     }
   } else if (flag == kFALSE) {

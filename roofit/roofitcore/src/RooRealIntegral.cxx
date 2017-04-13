@@ -51,6 +51,8 @@ integration is performed in the various implemenations of the RooAbsIntegrator b
 #include "RooDouble.h"
 #include "RooTrace.h"
 #include "RooTimer.h"
+// getpid and getppid:
+#include "unistd.h"
 
 using namespace std;
 
@@ -891,7 +893,7 @@ Double_t RooRealIntegral::evaluate() const
   switch (_intOperMode) {    
     
   case Hybrid: 
-    {      
+    {
       // Cache numeric integrals in >1d expensive object cache
       RooDouble* cacheVal(0) ;
       if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
@@ -993,7 +995,10 @@ Double_t RooRealIntegral::evaluate() const
 
   if (getAttribute("timing_on")) {
     timer.stop();
+    std::cout << "timed integral " << GetName() << " at " << this << " on process " << getpid() << ", yay" << std::endl;
     timer.store_timing_in_RooTrace(GetName());
+  } else {
+    std::cout << "did not time integral " << GetName() << " at " << this << " on process " << getpid() << ", boohoo" << std::endl;
   }
 
   return retVal ;

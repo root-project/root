@@ -67,6 +67,7 @@ public:
     EnableTimingRATS, DisableTimingRATS,
     EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
     EnableTimingNamedNumInt, DisableTimingNamedNumInt,
+    EnableTimingNumInts, DisableTimingNumInts,
     MeasureCommunicationTime,
     RetrieveTimings
   };
@@ -113,6 +114,8 @@ private:
   std::map<std::string, double> collectTimingsFromServer() const;
 
   void _time_communication_overhead() const;
+
+  void setTimingNumInts(Bool_t flag = kTRUE);
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };

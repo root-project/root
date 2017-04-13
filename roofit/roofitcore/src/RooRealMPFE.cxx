@@ -583,6 +583,24 @@ void RooRealMPFE::serverLoop() {
         break;
       }
 
+
+      case EnableTimingNumInts: {
+        // This must be done server-side, otherwise you have to copy all timing_on flags to server manually anyway
+        // FIXME: make this more general than just RooAbsTestStatistic (when needed)
+        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_initNumIntSet();
+        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setTimingNumIntSet();
+        break;
+      }
+
+
+      case DisableTimingNumInts: {
+        // This assumes _initNumIntSet to be run. If not, it will still iterate over the empty _numIntSet, which will
+        // do nothing, but that's fine, because apparently timing was not enabled.
+        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setTimingNumIntSet(kFALSE);
+        break;
+      }
+
+
       case MeasureCommunicationTime: {
         // Measure end time asap, since time of arrival at this case block is what we need to measure
         // communication overhead, i.e. time between sending message and corresponding action taken.
@@ -734,7 +752,13 @@ void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
+void RooRealMPFE::setTimingNumInts(Bool_t flag) {
+  if (flag == kTRUE) {
+    *_pipe << EnableTimingNumInts;
+  } else {
+    *_pipe << DisableTimingNumInts;
+  }
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1314,7 +1338,9 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
     PROCESS_VAL(RooRealMPFE::RetrieveTimings);
     PROCESS_VAL(RooRealMPFE::EnableTimingNamedNumInt);
-    PROCESS_VAL(RooRealMPFE::DisableTimingNamedNumInt)
+    PROCESS_VAL(RooRealMPFE::DisableTimingNamedNumInt);
+    PROCESS_VAL(RooRealMPFE::EnableTimingNumInts);
+    PROCESS_VAL(RooRealMPFE::DisableTimingNumInts);
     default: {
       s = "unknown Message!";
       break;
