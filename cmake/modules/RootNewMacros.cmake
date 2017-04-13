@@ -376,9 +376,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 
+  set(genverbosity "")
+  # Set -v2 when generating modules in cxxmodules mode to get warnings if the
+  # modulemap doesn't fit to the structure of our dictionaries.
+  if (cxxmodules)
+      set(genverbosity "-v2")
+  endif(cxxmodules)
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
+                     COMMAND ${command} ${genverbosity} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
                      IMPLICIT_DEPENDS CXX ${_linkdef} ${fullheaderfiles}
                      DEPENDS ${fullheaderfiles} ${_linkdef} ${ROOTCINTDEP})
