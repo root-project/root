@@ -152,6 +152,8 @@ private:
   void _initNumIntSet();
   RooArgSet _numIntSet;
 
+  void _setTimingNumIntSet(Bool_t flag = kTRUE);
+
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };
 

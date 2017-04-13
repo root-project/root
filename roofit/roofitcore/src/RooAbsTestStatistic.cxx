@@ -440,6 +440,7 @@ Bool_t RooAbsTestStatistic::initialize()
 
   if (RooTrace::time_numIntSet()) {
     _initNumIntSet();
+    _setTimingNumIntSet();
   }
 
   if (MPMaster == _gofOpMode) {
@@ -629,8 +630,8 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
       // so I'm not sure whether it would be a lot faster to create this list in RATS, because then you would also
       // have to reinitialize the list in each MPFE but then with the MPFE-local nodes again, meaning you will have to
       // do name lookups in MPFE...
-      _mpfeArray[i]->_initNumIntSet(*(data->get()));
-      _mpfeArray[i]->_setTimingNumIntSet();
+//      _mpfeArray[i]->_initNumIntSet(*(data->get()));
+//      _mpfeArray[i]->_setTimingNumIntSet();
     }
   }
   _mpfeArray[_nCPU - 1]->addOwnedComponents(*gof);
@@ -639,7 +640,22 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   return ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Activate timing in all NumIntSet integral nodes
 
+void RooAbsTestStatistic::_setTimingNumIntSet(Bool_t flag) {
+  RooFIter iter = _numIntSet.fwdIterator();
+
+  if (flag == kTRUE) {
+    while(RooAbsArg* node = iter.next()) {
+      node->setAttribute("timing_on");
+    }
+  } else if (flag == kFALSE) {
+    while(RooAbsArg* node = iter.next()) {
+      node->setAttribute("timing_on", kFALSE);
+    }
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize simultaneous p.d.f processing mode. Strip simultaneous
