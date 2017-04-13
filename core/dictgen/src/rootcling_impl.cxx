@@ -226,6 +226,7 @@ const char *rootClingHelp =
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/ModuleMap.h"
 #include "clang/Lex/Pragma.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Serialization/ASTWriter.h"
@@ -2188,86 +2189,154 @@ static bool InjectModuleUtilHeader(const char *argv0,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the clang module given the arguments.
-/// Two codepaths are present:
-/// If the inlining of the input header is required, the necessary lines are
-/// added to the dictionary and the function returns.
-/// If not, full blown procedure is followed and the the pcm module is created
-/// Returns != 0 on error.
-
-int GenerateModule(TModuleGenerator &modGen,
-                   clang::CompilerInstance *CI,
-                   const std::string &currentDirectory,
-                   const std::string &fwdDeclnArgsToKeepString,
-                   const std::string &headersClassesMapString,
-                   const std::string &fwdDeclString,
-                   std::ostream &dictStream,
-                   bool inlineInputHeader)
+/// Write the AST of the given CompilerInstance to the given File while
+/// respecting the given isysroot.
+/// If module is not a null pointer, we only write the given module to the
+/// given file and not the whole AST.
+static void WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+                     clang::Module *module = nullptr)
 {
-
-   modGen.WriteRegistrationSource(dictStream,
-                                  fwdDeclnArgsToKeepString,
-                                  headersClassesMapString,
-                                  fwdDeclString);
-
-   // Disable clang::Modules for now.
-   if (!modGen.IsPCH())
-      return 0;
-
-   if (inlineInputHeader) return 0;
-
-   if (!modGen.IsPCH()) {
-      clang::HeaderSearch &HS = CI->getPreprocessor().getHeaderSearchInfo();
-      HS.loadTopLevelSystemModules();
-      HS.setModuleCachePath(modGen.GetModuleDirName().c_str());
-   }
-
-   clang::Module *module = 0;
-   if (!modGen.IsPCH()) {
-      std::vector<const char *> headersCStr;
-      for (auto & iH : modGen.GetHeaders()) {
-         headersCStr.push_back(iH.c_str());
-      }
-      headersCStr.push_back(0);
-      module = ROOT::TMetaUtils::declareModuleMap(CI, modGen.GetModuleFileName().c_str(), &headersCStr[0]);
-   }
-
    // From PCHGenerator and friends:
-   llvm::SmallString<128> Buffer;
-   llvm::BitstreamWriter Stream(Buffer);
-   clang::MemoryBufferCache PCMCache;
-   clang::ASTWriter Writer(Stream, Buffer, PCMCache, {});
-   auto OS
-      = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
-                             /*Binary=*/true,
-                             /*RemoveFileOnSignal=*/false, /*InFile*/"",
-                             /*Extension=*/"", /*useTemporary=*/false,
-                             /*CreateMissingDirectories*/false);
-   if (OS) {
-      // Emit the PCH file
+   llvm::SmallVector<char, 128> buffer;
+   llvm::BitstreamWriter stream(buffer);
+   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> extensions;
+   clang::ASTWriter writer(stream, extensions);
+   llvm::raw_ostream *out = compilerInstance->createOutputFile(fileName, /*Binary=*/true,
+                                                               /*RemoveFileOnSignal=*/false, /*InFile*/ "",
+                                                               /*Extension=*/"", /*useTemporary=*/false,
+                                                               /*CreateMissingDirectories*/ false);
+   assert(!out && "Couldn't open output PCM file");
 
-      CI->getFrontendOpts().RelocatablePCH = true;
-      std::string ISysRoot("/DUMMY_SYSROOT/include/");
-      if (gBuildingROOT)
-         ISysRoot = (currentDirectory + "/").c_str();
+   compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
-      Writer.WriteAST(CI->getSema(), modGen.GetModuleFileName().c_str(),
-                      module, ISysRoot.c_str());
+   writer.WriteAST(compilerInstance->getSema(), fileName, module, iSysRoot);
 
-      // Write the generated bitstream to "Out".
-      OS->write((char *)&Buffer.front(), Buffer.size());
+   // Write the generated bitstream to "Out".
+   out->write(&buffer.front(), buffer.size());
 
-      // Make sure it hits disk now.
-      OS->flush();
-      bool deleteOutputFile =  CI->getDiagnostics().hasErrorOccurred();
-      CI->clearOutputFiles(deleteOutputFile);
+   // Make sure it hits disk now.
+   out->flush();
+   bool deleteOutputFile = compilerInstance->getDiagnostics().hasErrorOccurred();
+   compilerInstance->clearOutputFiles(deleteOutputFile);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Generates a PCH from the given ModuleGenerator and CompilerInstance.
+/// Returns true iff the PCH was succesfully generated.
+static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *compilerInstance,
+                            const std::string &currentDirectory)
+{
+   assert(modGen.IsPCH() && "modGen must be in PCH mode");
+
+   std::string iSysRoot("/DUMMY_SYSROOT/include/");
+   if (gBuildingROOT) iSysRoot = (currentDirectory + "/");
+   WriteAST(modGen.GetModuleFileName(), compilerInstance, iSysRoot);
+
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true iff a given module (and its submodules) contains all headers
+/// needed by the given ModuleGenerator.
+/// The names of all header files that are needed by the ModuleGenerator but are
+/// not in the given module will be inserted into the MissingHeader variable.
+/// Returns true iff the PCH was succesfully generated.
+static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
+                                  std::vector<std::string> &missingHeaders)
+{
+   // Make a list of modules and submodules that we can check for headers.
+   // We use a SetVector to prevent an infinite loop in unlikely case the
+   // modules somehow are messed up and don't form a tree...
+   llvm::SetVector<clang::Module *> modules;
+   modules.insert(module);
+   for (size_t i = 0; i < modules.size(); ++i) {
+      clang::Module *M = modules[i];
+      for (clang::Module *subModule : M->submodules()) modules.insert(subModule);
+   }
+   // Now we collect all header files from the previously collected modules.
+   std::set<std::string> moduleHeaders;
+   for (clang::Module *module : modules) {
+      // Iterate over all header types in a module.
+      // FIXME: We currently have to hardcode '4' to do this. Maybe we
+      // will have a nicer way to do this in the future.
+      // NOTE: This is on purpose '4', not '5' which is the size of the
+      // vector. The last element is the list of excluded headers which we
+      // obviously don't want to check here.
+      for (int i = 0; i < 4; i++) {
+         auto &headerList = module->Headers[i];
+         for (const clang::Module::Header &moduleHeader : headerList) {
+            moduleHeaders.insert(moduleHeader.NameAsWritten);
+         }
+      }
    }
 
-   // Free up some memory, in case the process is kept alive.
-   Buffer.clear();
+   // Go through the list of headers that are required by the ModuleGenerator
+   // and check for each header if it's in one of the modules we loaded.
+   // If not, make sure we fail at the end and mark the header as missing.
+   bool foundAllHeaders = true;
+   for (const std::string &header : modGen.GetHeaders()) {
+      if (moduleHeaders.find(header) == moduleHeaders.end()) {
+         missingHeaders.push_back(header);
+         foundAllHeaders = false;
+      }
+   }
+   return foundAllHeaders;
+}
 
-   return 0;
+////////////////////////////////////////////////////////////////////////////////
+/// Generates a module from the given ModuleGenerator and CompilerInstance.
+/// Returns true iff the PCM was succesfully generated.
+static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI)
+{
+   assert(!modGen.IsPCH() && "modGen must not be in PCH mode");
+
+   std::string outputFile = modGen.GetModuleFileName();
+   std::string includeDir = gDriverConfig->fTROOT__GetIncludeDir();
+   clang::HeaderSearch &headerSearch = CI->getPreprocessor().getHeaderSearchInfo();
+   auto &fileMgr = headerSearch.getFileMgr();
+
+   // Load the modulemap from the ROOT include directory.
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+   auto moduleFile = fileMgr.getFile(includeDir + "/module.modulemap");
+   moduleMap.parseModuleMapFile(moduleFile, false, fileMgr.getDirectory(includeDir));
+
+   // Try to get the module name in the modulemap based on the filepath.
+   std::string moduleName = llvm::sys::path::filename(outputFile);
+   // For module "libCore.so" we have the file name "libCore_rdict.pcm".
+   // We replace this suffix with ".so" to get the name in the modulefile.
+   if (StringRef(moduleName).endswith("_rdict.pcm")) {
+      auto lengthWithoutSuffix = moduleName.size() - strlen("_rdict.pcm");
+      moduleName = moduleName.substr(0, lengthWithoutSuffix) + ".so";
+   }
+
+   // Actually lookup the module on the computed module name.
+   clang::Module *module = moduleMap.findModule(moduleName);
+
+   // Inform the user and abort if we can't find a module with a given name.
+   if (module == nullptr) {
+      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
+                              moduleName.c_str());
+      return false;
+   }
+
+   // Check if the loaded module covers all headers that were specified
+   // by the user on the command line. This is an integrity check to
+   // ensure that our used module map is
+   std::vector<std::string> missingHeaders;
+   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
+      // FIXME: Upgrade this to an error once modules are stable.
+      std::stringstream msgStream;
+      msgStream << "warning: Couldn't find the following specified headers in "
+                << "the module " << module->Name << ":\n";
+      for (auto &H : missingHeaders) {
+         msgStream << "  " << H << "\n";
+      }
+      std::string warningMessage = msgStream.str();
+      ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
+   }
+
+   WriteAST(outputFile, CI, includeDir, module);
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4775,14 +4844,18 @@ int RootClingMain(int argc,
             fwdDeclsString = GenerateFwdDeclString(scan, interp);
          }
       }
-      GenerateModule(modGen,
-                     CI,
-                     currentDirectory,
-                     fwdDeclnArgsToKeepString,
-                     headersClassesMapString,
-                     fwdDeclsString,
-                     dictStream,
-                     inlineInputHeader);
+
+      modGen.WriteRegistrationSource(dictStream, fwdDeclnArgsToKeepString, headersClassesMapString, fwdDeclsString);
+      // If we just want to inline the input header, we don't need
+      // to generate any files.
+      if (!inlineInputHeader) {
+         // Write the module/PCH depending on what mode we are on
+         if (modGen.IsPCH()) {
+            if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
+         } else {
+            if (!GenerateModule(modGen, CI)) return 1;
+         }
+      }
    }
 
 
