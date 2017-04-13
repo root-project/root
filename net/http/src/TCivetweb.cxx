@@ -405,7 +405,7 @@ Bool_t TCivetweb::Create(const char *args)
             if (adomain != 0) auth_domain = adomain;
 
             Int_t wtmout = url.GetIntValueFromOptions("websocket_timeout");
-            if (wtmout>0) websocket_timeout.Format("%d", wtmout*1000);
+            if (wtmout > 0) websocket_timeout.Format("%d", wtmout * 1000);
 
             if (url.HasOption("debug")) fDebug = kTRUE;
 
