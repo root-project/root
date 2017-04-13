@@ -995,10 +995,11 @@ Double_t RooRealIntegral::evaluate() const
 
   if (getAttribute("timing_on")) {
     timer.stop();
-    std::cout << "timed integral " << GetName() << " at " << this << " on process " << getpid() << ", yay" << std::endl;
+    std::cout << "timed integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " on process " << getpid() << ", yay" << std::endl;
     timer.store_timing_in_RooTrace(GetName());
   } else {
-    std::cout << "did not time integral " << GetName() << " at " << this << " on process " << getpid() << ", boohoo" << std::endl;
+    std::cout << "did not time integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " which is a " << ClassName()
+              << " on process " << getpid() << ", boohoo" << std::endl;
   }
 
   return retVal ;

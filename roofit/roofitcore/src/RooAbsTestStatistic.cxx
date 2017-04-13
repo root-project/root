@@ -652,7 +652,8 @@ void RooAbsTestStatistic::_setTimingNumIntSet(Bool_t flag) {
 
   if (flag == kTRUE) {
     while(RooAbsArg* node = iter.next()) {
-      std::cout << "setting timing_on in integral " << node->GetName() << " at " << node << std::endl;
+      std::cout << "setting timing_on in integral " << node->GetName() << " at " << node
+                << " which is a " << node->ClassName() << " on process " << getpid() << std::endl;
       node->setAttribute("timing_on");
     }
   } else if (flag == kFALSE) {
