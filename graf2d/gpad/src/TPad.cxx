@@ -3047,7 +3047,7 @@ Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t
    return kFALSE;
 }
 
-#define NotFree(i, j) fCollideGrid[TMath::Min(i+j*fCGnx,fCGnx*fCGny)] = kFALSE;
+#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i+j*fCGnx,fCGnx*fCGny),0)] = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark as "not free" the cells along a line.
