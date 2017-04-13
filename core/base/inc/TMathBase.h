@@ -33,65 +33,286 @@
 
 namespace TMath {
 
-   // Abs
-   inline Short_t  Abs(Short_t d);
-   inline Int_t    Abs(Int_t d);
-   inline Long_t   Abs(Long_t d);
-   inline Long64_t Abs(Long64_t d);
-   inline Float_t  Abs(Float_t d);
-   inline Double_t Abs(Double_t d);
-   inline LongDouble_t Abs(LongDouble_t d);
+/* ************************* */
+/* * Fundamental constants * */
+/* ************************* */
 
-   // Even/Odd
-   inline Bool_t   Even(Long_t a);
-   inline Bool_t   Odd(Long_t a);
+constexpr Double_t Pi()
+{
+   return 3.14159265358979323846;
+}
+constexpr Double_t TwoPi()
+{
+   return 2.0 * Pi();
+}
+constexpr Double_t PiOver2()
+{
+   return Pi() / 2.0;
+}
+constexpr Double_t PiOver4()
+{
+   return Pi() / 4.0;
+}
+constexpr Double_t InvPi()
+{
+   return 1.0 / Pi();
+}
+constexpr Double_t RadToDeg()
+{
+   return 180.0 / Pi();
+}
+constexpr Double_t DegToRad()
+{
+   return Pi() / 180.0;
+}
+constexpr Double_t Sqrt2()
+{
+   return 1.4142135623730950488016887242097;
+}
 
-   // SignBit
-   template<typename Integer>
-   inline Bool_t SignBit(Integer a);
-   inline Bool_t SignBit(Float_t a);
-   inline Bool_t SignBit(Double_t a);
-   inline Bool_t SignBit(LongDouble_t a);
+// e (base of natural log)
+constexpr Double_t E()
+{
+   return 2.71828182845904523536;
+}
 
-   // Sign
-   template<typename T1, typename T2>
-   inline T1 Sign( T1 a, T2 b);
-   inline Float_t  Sign(Float_t a, Float_t b);
-   inline Double_t Sign(Double_t a, Double_t b);
-   inline LongDouble_t Sign(LongDouble_t a, LongDouble_t b);
+// natural log of 10 (to convert log to ln)
+constexpr Double_t Ln10()
+{
+   return 2.30258509299404568402;
+}
 
-   // Min, Max of two scalars
-   inline Short_t   Min(Short_t a, Short_t b);
-   inline UShort_t  Min(UShort_t a, UShort_t b);
-   inline Int_t     Min(Int_t a, Int_t b);
-   inline UInt_t    Min(UInt_t a, UInt_t b);
-   inline Long_t    Min(Long_t a, Long_t b);
-   inline ULong_t   Min(ULong_t a, ULong_t b);
-   inline Long64_t  Min(Long64_t a, Long64_t b);
-   inline ULong64_t Min(ULong64_t a, ULong64_t b);
-   inline Float_t   Min(Float_t a, Float_t b);
-   inline Double_t  Min(Double_t a, Double_t b);
+// base-10 log of e  (to convert ln to log)
+constexpr Double_t LogE()
+{
+   return 0.43429448190325182765;
+}
 
-   inline Short_t   Max(Short_t a, Short_t b);
-   inline UShort_t  Max(UShort_t a, UShort_t b);
-   inline Int_t     Max(Int_t a, Int_t b);
-   inline UInt_t    Max(UInt_t a, UInt_t b);
-   inline Long_t    Max(Long_t a, Long_t b);
-   inline ULong_t   Max(ULong_t a, ULong_t b);
-   inline Long64_t  Max(Long64_t a, Long64_t b);
-   inline ULong64_t Max(ULong64_t a, ULong64_t b);
-   inline Float_t   Max(Float_t a, Float_t b);
-   inline Double_t  Max(Double_t a, Double_t b);
+// velocity of light
+constexpr Double_t C()
+{
+   return 2.99792458e8;
+} // m s^-1
+constexpr Double_t Ccgs()
+{
+   return 100.0 * C();
+} // cm s^-1
+constexpr Double_t CUncertainty()
+{
+   return 0.0;
+} // exact
 
-   // Range
-   inline Short_t   Range(Short_t lb, Short_t ub, Short_t x);
-   inline Int_t     Range(Int_t lb, Int_t ub, Int_t x);
-   inline Long_t    Range(Long_t lb, Long_t ub, Long_t x);
-   inline ULong_t   Range(ULong_t lb, ULong_t ub, ULong_t x);
-   inline Double_t  Range(Double_t lb, Double_t ub, Double_t x);
+// gravitational constant
+constexpr Double_t G()
+{
+   return 6.673e-11;
+} // m^3 kg^-1 s^-2
+constexpr Double_t Gcgs()
+{
+   return G() / 1000.0;
+} // cm^3 g^-1 s^-2
+constexpr Double_t GUncertainty()
+{
+   return 0.010e-11;
+}
 
-   //NextPrime is used by the Core classes.
-   Long_t   NextPrime(Long_t x);   // Least prime number greater than x
+// G over h-bar C
+constexpr Double_t GhbarC()
+{
+   return 6.707e-39;
+} // (GeV/c^2)^-2
+constexpr Double_t GhbarCUncertainty()
+{
+   return 0.010e-39;
+}
+
+// standard acceleration of gravity
+constexpr Double_t Gn()
+{
+   return 9.80665;
+} // m s^-2
+constexpr Double_t GnUncertainty()
+{
+   return 0.0;
+} // exact
+
+// Planck's constant
+constexpr Double_t H()
+{
+   return 6.62606876e-34;
+} // J s
+constexpr Double_t Hcgs()
+{
+   return 1.0e7 * H();
+} // erg s
+constexpr Double_t HUncertainty()
+{
+   return 0.00000052e-34;
+}
+
+// h-bar (h over 2 pi)
+constexpr Double_t Hbar()
+{
+   return 1.054571596e-34;
+} // J s
+constexpr Double_t Hbarcgs()
+{
+   return 1.0e7 * Hbar();
+} // erg s
+constexpr Double_t HbarUncertainty()
+{
+   return 0.000000082e-34;
+}
+
+// hc (h * c)
+constexpr Double_t HC()
+{
+   return H() * C();
+} // J m
+constexpr Double_t HCcgs()
+{
+   return Hcgs() * Ccgs();
+} // erg cm
+
+// Boltzmann's constant
+constexpr Double_t K()
+{
+   return 1.3806503e-23;
+} // J K^-1
+constexpr Double_t Kcgs()
+{
+   return 1.0e7 * K();
+} // erg K^-1
+constexpr Double_t KUncertainty()
+{
+   return 0.0000024e-23;
+}
+
+// Stefan-Boltzmann constant
+constexpr Double_t Sigma()
+{
+   return 5.6704e-8;
+} // W m^-2 K^-4
+constexpr Double_t SigmaUncertainty()
+{
+   return 0.000040e-8;
+}
+
+// Avogadro constant (Avogadro's Number)
+constexpr Double_t Na()
+{
+   return 6.02214199e+23;
+} // mol^-1
+constexpr Double_t NaUncertainty()
+{
+   return 0.00000047e+23;
+}
+
+// universal gas constant (Na * K)
+// http://scienceworld.wolfram.com/physics/UniversalGasConstant.html
+constexpr Double_t R()
+{
+   return K() * Na();
+} // J K^-1 mol^-1
+constexpr Double_t RUncertainty()
+{
+   return R() * ((KUncertainty() / K()) + (NaUncertainty() / Na()));
+}
+
+// Molecular weight of dry air
+// 1976 US Standard Atmosphere,
+// also see http://atmos.nmsu.edu/jsdap/encyclopediawork.html
+constexpr Double_t MWair()
+{
+   return 28.9644;
+} // kg kmol^-1 (or gm mol^-1)
+
+// Dry Air Gas Constant (R / MWair)
+// http://atmos.nmsu.edu/education_and_outreach/encyclopedia/gas_constant.htm
+constexpr Double_t Rgair()
+{
+   return (1000.0 * R()) / MWair();
+} // J kg^-1 K^-1
+
+// Euler-Mascheroni Constant
+constexpr Double_t EulerGamma()
+{
+   return 0.577215664901532860606512090082402431042;
+}
+
+// Elementary charge
+constexpr Double_t Qe()
+{
+   return 1.602176462e-19;
+} // C
+constexpr Double_t QeUncertainty()
+{
+   return 0.000000063e-19;
+}
+
+/* ************************** */
+/* * Mathematical Functions * */
+/* ************************** */
+
+// Abs
+inline Short_t Abs(Short_t d);
+inline Int_t Abs(Int_t d);
+inline Long_t Abs(Long_t d);
+inline Long64_t Abs(Long64_t d);
+inline Float_t Abs(Float_t d);
+inline Double_t Abs(Double_t d);
+inline LongDouble_t Abs(LongDouble_t d);
+
+// Even/Odd
+inline Bool_t Even(Long_t a);
+inline Bool_t Odd(Long_t a);
+
+// SignBit
+template <typename Integer>
+inline Bool_t SignBit(Integer a);
+inline Bool_t SignBit(Float_t a);
+inline Bool_t SignBit(Double_t a);
+inline Bool_t SignBit(LongDouble_t a);
+
+// Sign
+template <typename T1, typename T2>
+inline T1 Sign(T1 a, T2 b);
+inline Float_t Sign(Float_t a, Float_t b);
+inline Double_t Sign(Double_t a, Double_t b);
+inline LongDouble_t Sign(LongDouble_t a, LongDouble_t b);
+
+// Min, Max of two scalars
+inline Short_t Min(Short_t a, Short_t b);
+inline UShort_t Min(UShort_t a, UShort_t b);
+inline Int_t Min(Int_t a, Int_t b);
+inline UInt_t Min(UInt_t a, UInt_t b);
+inline Long_t Min(Long_t a, Long_t b);
+inline ULong_t Min(ULong_t a, ULong_t b);
+inline Long64_t Min(Long64_t a, Long64_t b);
+inline ULong64_t Min(ULong64_t a, ULong64_t b);
+inline Float_t Min(Float_t a, Float_t b);
+inline Double_t Min(Double_t a, Double_t b);
+
+inline Short_t Max(Short_t a, Short_t b);
+inline UShort_t Max(UShort_t a, UShort_t b);
+inline Int_t Max(Int_t a, Int_t b);
+inline UInt_t Max(UInt_t a, UInt_t b);
+inline Long_t Max(Long_t a, Long_t b);
+inline ULong_t Max(ULong_t a, ULong_t b);
+inline Long64_t Max(Long64_t a, Long64_t b);
+inline ULong64_t Max(ULong64_t a, ULong64_t b);
+inline Float_t Max(Float_t a, Float_t b);
+inline Double_t Max(Double_t a, Double_t b);
+
+// Range
+inline Short_t Range(Short_t lb, Short_t ub, Short_t x);
+inline Int_t Range(Int_t lb, Int_t ub, Int_t x);
+inline Long_t Range(Long_t lb, Long_t ub, Long_t x);
+inline ULong_t Range(ULong_t lb, ULong_t ub, ULong_t x);
+inline Double_t Range(Double_t lb, Double_t ub, Double_t x);
+
+// NextPrime is used by the Core classes.
+Long_t NextPrime(Long_t x); // Least prime number greater than x
 }
 
 
