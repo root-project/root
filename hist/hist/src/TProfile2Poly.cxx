@@ -1,4 +1,5 @@
 #include "TProfile2Poly.h"
+#include "TProfileHelper.h"
 
 #include "TMultiGraph.h"
 #include "TGraph.h"
@@ -32,6 +33,10 @@ TProfile2PolyBin::TProfile2PolyBin(TObject* poly, Int_t bin_number)
 TProfile2PolyBin::~TProfile2PolyBin(){
 }
 
+void TProfile2PolyBin::UpdateAverage(){
+    fContent =  fSumV / fNumEntries;
+    SetChanged(true);
+}
 
 // -------------- TProfile2Poly  --------------
 
@@ -132,7 +137,7 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
         return -5;
     }
 
-    TProfile2PolyBin *bin;
+    TProfile2PolyBin* bin;
 
     TIter next(&fCells[n+fCellX*m]);
     TObject *obj;
@@ -158,7 +163,40 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
     return -5;
 }
 
-void TProfile2PolyBin::UpdateAverage(){
-    fContent =  fSumV / fNumEntries;
-    SetChanged(true);
+void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
+
+    TIter next(list[0]->fBins);
+    TObject* obj;
+
+    Int_t n=0;
+    while ((obj = next())) {
+        n++;
+    }
+
+    Int_t current_element=0;
+    for(auto& e : list ){
+        for(Int_t i=0; i<n; i++){
+
+            TProfile2PolyBin* dst = (TProfile2PolyBin*)fBins->At(i);
+            TProfile2PolyBin* src  = ((TProfile2PolyBin*)list[current_element]->fBins->At(i));
+
+            /* DEBUG INFO
+            std::cout << "fCont | current " << dst->GetContent() << "\t"
+                      << "to_merge "        << src->GetContent() << std::endl;
+
+            std::cout << "fEntr | current " << dst->getFNumEntries() << "\t"
+                      << "to_merge "        << src->getFNumEntries() << std::endl;
+
+            std::cout << "fSumV | current " << dst->getFSumV() << "\t"
+                      << "to_merge "        << src->getFSumV() << std::endl;
+
+            std::cout << std::endl;
+            */
+
+            dst->setFSumV(dst->fSumV + src->fSumV);
+            dst->setFNumEntries(dst->fNumEntries + src->fNumEntries);
+            dst->UpdateAverage();
+        }
+     current_element++;
+    }
 }

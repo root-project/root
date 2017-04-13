@@ -1,12 +1,3 @@
-/*
-In this testcase we create a TProfile2D and randomly shoot particles with charge
-1 at it. Simultaniously we keep are creating an average of hits in the
-TProfile2Poly. For now it is just a approximation, since the generated bins in
-TProfile2Poly are honeycomb shaped and are not 1:1 the geometry used by TProfile2D.
-
-Its good enough for a rough approxmation...
-*/
-
 void tprofile2poly_tprofile2d_sim2()
 {
   // CREATE PLOT STURCTURES
