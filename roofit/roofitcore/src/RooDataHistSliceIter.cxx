@@ -26,12 +26,6 @@ sliceSet.
 
 #include "RooFit.h"
 
-#if __cplusplus < 201103L
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
 #include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooAbsLValue.h"
