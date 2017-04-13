@@ -23,7 +23,6 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
 
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "TMVA/Configurable.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
@@ -61,40 +60,40 @@ MethodPyGTB::MethodPyGTB(const TString &jobName,
                          DataSetInfo &dsi,
                          const TString &theOption) :
    PyMethodBase(jobName, Types::kPyGTB, methodTitle, dsi, theOption),
-   loss("deviance"),
-   learning_rate(0.1),
-   n_estimators(100),
-   subsample(1.0),
-   min_samples_split(2),
-   min_samples_leaf(1),
-   min_weight_fraction_leaf(0.0),
-   max_depth(3),
-   init("None"),
-   random_state("None"),
-   max_features("None"),
-   verbose(0),
-   max_leaf_nodes("None"),
-   warm_start(kFALSE)
+   fLoss("deviance"),
+   fLearningRate(0.1),
+   fNestimators(100),
+   fSubsample(1.0),
+   fMinSamplesSplit(2),
+   fMinSamplesLeaf(1),
+   fMinWeightFractionLeaf(0.0),
+   fMaxDepth(3),
+   fInit("None"),
+   fRandomState("None"),
+   fMaxFeatures("None"),
+   fVerbose(0),
+   fMaxLeafNodes("None"),
+   fWarmStart(kFALSE)
 {
 }
 
 //_______________________________________________________________________
 MethodPyGTB::MethodPyGTB(DataSetInfo &theData, const TString &theWeightFile)
    : PyMethodBase(Types::kPyGTB, theData, theWeightFile),
-     loss("deviance"),
-     learning_rate(0.1),
-     n_estimators(100),
-     subsample(1.0),
-     min_samples_split(2),
-     min_samples_leaf(1),
-     min_weight_fraction_leaf(0.0),
-     max_depth(3),
-     init("None"),
-     random_state("None"),
-     max_features("None"),
-     verbose(0),
-     max_leaf_nodes("None"),
-     warm_start(kFALSE)
+   fLoss("deviance"),
+   fLearningRate(0.1),
+   fNestimators(100),
+   fSubsample(1.0),
+   fMinSamplesSplit(2),
+   fMinSamplesLeaf(1),
+   fMinWeightFractionLeaf(0.0),
+   fMaxDepth(3),
+   fInit("None"),
+   fRandomState("None"),
+   fMaxFeatures("None"),
+   fVerbose(0),
+   fMaxLeafNodes("None"),
+   fWarmStart(kFALSE)
 {
 }
 
@@ -105,9 +104,10 @@ MethodPyGTB::~MethodPyGTB(void)
 }
 
 //_______________________________________________________________________
-Bool_t MethodPyGTB::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets)
+Bool_t MethodPyGTB::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   if (type == Types::kMulticlass && numberClasses >= 2) return kTRUE;
    return kFALSE;
 }
 
@@ -117,160 +117,164 @@ void MethodPyGTB::DeclareOptions()
 {
    MethodBase::DeclareCompatibilityOptions();
 
-   DeclareOptionRef(loss, "Loss", "{'deviance', 'exponential'}, optional (default='deviance')\
-    loss function to be optimized. 'deviance' refers to\
-    deviance (= logistic regression) for classification\
-    with probabilistic outputs. For loss 'exponential' gradient\
-    boosting recovers the AdaBoost algorithm.");
+   DeclareOptionRef(fLoss, "Loss", "{'deviance', 'exponential'}, optional (default='deviance')\
+      loss function to be optimized. 'deviance' refers to\
+      deviance (= logistic regression) for classification\
+      with probabilistic outputs. For loss 'exponential' gradient\
+      boosting recovers the AdaBoost algorithm.");
 
-   DeclareOptionRef(learning_rate, "LearningRate", "float, optional (default=0.1)\
-    learning rate shrinks the contribution of each tree by `learning_rate`.\
-    There is a trade-off between learning_rate and n_estimators.");
+   DeclareOptionRef(fLearningRate, "LearningRate", "float, optional (default=0.1)\
+      learning rate shrinks the contribution of each tree by `learning_rate`.\
+      There is a trade-off between learning_rate and n_estimators.");
 
-   DeclareOptionRef(n_estimators, "NEstimators", "int (default=100)\
-    The number of boosting stages to perform. Gradient boosting\
-    is fairly robust to over-fitting so a large number usually\
-    results in better performance.");
+   DeclareOptionRef(fNestimators, "NEstimators", "int (default=100)\
+      The number of boosting stages to perform. Gradient boosting\
+      is fairly robust to over-fitting so a large number usually\
+      results in better performance.");
 
-   DeclareOptionRef(subsample, "Subsample", "float, optional (default=1.0)\
-    The fraction of samples to be used for fitting the individual base\
-    learners. If smaller than 1.0 this results in Stochastic Gradient\
-    Boosting. `subsample` interacts with the parameter `n_estimators`.\
-    Choosing `subsample < 1.0` leads to a reduction of variance\
-    and an increase in bias.");
+   DeclareOptionRef(fSubsample, "Subsample", "float, optional (default=1.0)\
+      The fraction of samples to be used for fitting the individual base\
+      learners. If smaller than 1.0 this results in Stochastic Gradient\
+      Boosting. `subsample` interacts with the parameter `n_estimators`.\
+      Choosing `subsample < 1.0` leads to a reduction of variance\
+      and an increase in bias.");
 
-   DeclareOptionRef(min_samples_split, "MinSamplesSplit", "integer, optional (default=2)\
-    The minimum number of samples required to split an internal node.");
+   DeclareOptionRef(fMinSamplesSplit, "MinSamplesSplit", "integer, optional (default=2)\
+      The minimum number of samples required to split an internal node.");
 
-   DeclareOptionRef(min_samples_leaf, "MinSamplesLeaf", "integer, optional (default=1) \
-    The minimum number of samples in newly created leaves.  A split is \
-    discarded if after the split, one of the leaves would contain less then \
-    ``min_samples_leaf`` samples.");
+   DeclareOptionRef(fMinSamplesLeaf, "MinSamplesLeaf", "integer, optional (default=1) \
+      The minimum number of samples in newly created leaves.  A split is \
+      discarded if after the split, one of the leaves would contain less then \
+      ``min_samples_leaf`` samples.");
 
-   DeclareOptionRef(min_weight_fraction_leaf, "MinWeightFractionLeaf", "//float, optional (default=0.) \
-    The minimum weighted fraction of the input samples required to be at a \
-    leaf node.");
+   DeclareOptionRef(fMinWeightFractionLeaf, "MinWeightFractionLeaf", "//float, optional (default=0.) \
+      The minimum weighted fraction of the input samples required to be at a \
+      leaf node.");
 
-   DeclareOptionRef(max_depth, "MaxDepth", "integer or None, optional (default=None) \
-                                             The maximum depth of the tree. If None, then nodes are expanded until \
-                                             all leaves are pure or until all leaves contain less than \
-                                             min_samples_split samples. \
-                                             Ignored if ``max_leaf_nodes`` is not None.");
+   DeclareOptionRef(fMaxDepth, "MaxDepth", "integer or None, optional (default=None) \
+      The maximum depth of the tree. If None, then nodes are expanded until \
+      all leaves are pure or until all leaves contain less than \
+      min_samples_split samples. \
+      Ignored if ``max_leaf_nodes`` is not None.");
 
-   DeclareOptionRef(init, "Init", "BaseEstimator, None, optional (default=None)\
-    An estimator object that is used to compute the initial\
-    predictions. ``init`` has to provide ``fit`` and ``predict``.\
-    If None it uses ``loss.init_estimator`");
+   DeclareOptionRef(fInit, "Init", "BaseEstimator, None, optional (default=None)\
+      An estimator object that is used to compute the initial\
+      predictions. ``init`` has to provide ``fit`` and ``predict``.\
+      If None it uses ``loss.init_estimator`");
 
-   DeclareOptionRef(random_state, "RandomState", "int, RandomState instance or None, optional (default=None)\
-    If int, random_state is the seed used by the random number generator;\
-    If RandomState instance, random_state is the random number generator;\
-    If None, the random number generator is the RandomState instance used\
-    by `np.random`.");
-   DeclareOptionRef(max_features, "MaxFeatures", "The number of features to consider when looking for the best split");
-   DeclareOptionRef(verbose, "Verbose", "int, optional (default=0)\
-    Controls the verbosity of the tree building process.");
-   DeclareOptionRef(max_leaf_nodes, "MaxLeafNodes", "int or None, optional (default=None)\
-    Grow trees with ``max_leaf_nodes`` in best-first fashion.\
-    Best nodes are defined as relative reduction in impurity.\
-    If None then unlimited number of leaf nodes.\
-    If not None then ``max_depth`` will be ignored.");
-   DeclareOptionRef(warm_start, "WarmStart", "bool, optional (default=False)\
-    When set to ``True``, reuse the solution of the previous call to fit\
-    and add more estimators to the ensemble, otherwise, just fit a whole\
-    new forest.");
+   DeclareOptionRef(fRandomState, "RandomState", "int, RandomState instance or None, optional (default=None)\
+      If int, random_state is the seed used by the random number generator;\
+      If RandomState instance, random_state is the random number generator;\
+      If None, the random number generator is the RandomState instance used\
+      by `np.random`.");
 
+   DeclareOptionRef(fMaxFeatures, "MaxFeatures", "The number of features to consider when looking for the best split");
 
+   DeclareOptionRef(fVerbose, "Verbose", "int, optional (default=0)\
+      Controls the verbosity of the tree building process.");
 
+   DeclareOptionRef(fMaxLeafNodes, "MaxLeafNodes", "int or None, optional (default=None)\
+      Grow trees with ``max_leaf_nodes`` in best-first fashion.\
+      Best nodes are defined as relative reduction in impurity.\
+      If None then unlimited number of leaf nodes.\
+      If not None then ``max_depth`` will be ignored.");
 
+   DeclareOptionRef(fWarmStart, "WarmStart", "bool, optional (default=False)\
+      When set to ``True``, reuse the solution of the previous call to fit\
+      and add more estimators to the ensemble, otherwise, just fit a whole\
+      new forest.");
+
+   DeclareOptionRef(fFilenameClassifier, "FilenameClassifier",
+      "Store trained classifier in this file");
 }
 
 //_______________________________________________________________________
+// Check options and load them to local python namespace
 void MethodPyGTB::ProcessOptions()
 {
-   if (loss != "deviance" && loss != "exponential") {
-      Log() << kFATAL << Form(" Loss = %s... that does not work !! ", loss.Data())
-            << " The options are deviance of exponential."
-            << Endl;
+   if (fLoss != "deviance" && fLoss != "exponential") {
+      Log() << kFATAL << Form("Loss = %s ... that does not work!", fLoss.Data())
+            << " The options are 'deviance' or 'exponential'." << Endl;
    }
+   pLoss = Eval(Form("'%s'", fLoss.Data()));
+   PyDict_SetItemString(fLocalNS, "loss", pLoss);
 
-   if (learning_rate <= 0) {
-      Log() << kERROR << " LearningRate <=0... that does not work !! "
-            << " I set it to 0.1 .. just so that the program does not crash"
-            << Endl;
-      learning_rate = 0.1;
+   if (fLearningRate <= 0) {
+      Log() << kFATAL << "LearningRate <= 0 ... that does not work!" << Endl;
    }
-   if (n_estimators <= 0) {
-      Log() << kERROR << " NEstimators <=0... that does not work !! "
-            << " I set it to 100 .. just so that the program does not crash"
-            << Endl;
-      n_estimators = 100;
-   }
-   if (min_samples_split < 0) {
-      Log() << kERROR << " MinSamplesSplit <0... that does not work !! "
-            << " I set it to 2 .. just so that the program does not crash"
-            << Endl;
-      min_samples_split = 2;
-   }
-   if (subsample < 0) {
-      Log() << kERROR << " Subsample <0... that does not work !! "
-            << " I set it to 1.0 .. just so that the program does not crash"
-            << Endl;
-      subsample = 1.0;
-   }
+   pLearningRate = Eval(Form("%f", fLearningRate));
+   PyDict_SetItemString(fLocalNS, "learningRate", pLearningRate);
 
-   if (min_samples_leaf < 0) {
-      Log() << kERROR << " MinSamplesLeaf <0... that does not work !! "
-            << " I set it to 1.0 .. just so that the program does not crash"
-            << Endl;
-      min_samples_leaf = 1;
+   if (fNestimators <= 0) {
+      Log() << kFATAL << "NEstimators <= 0 ... that does not work!" << Endl;
    }
+   pNestimators = Eval(Form("%i", fNestimators));
+   PyDict_SetItemString(fLocalNS, "nEstimators", pNestimators);
 
-   if (min_samples_leaf < 0) {
-      Log() << kERROR << " MinSamplesLeaf <0... that does not work !! "
-            << " I set it to 1.0 .. just so that the program does not crash"
-            << Endl;
-      min_samples_leaf = 1;
+   if (fMinSamplesSplit < 0) {
+      Log() << kFATAL << "MinSamplesSplit < 0 ... that does not work!" << Endl;
    }
+   pMinSamplesSplit = Eval(Form("%i", fMinSamplesSplit));
+   PyDict_SetItemString(fLocalNS, "minSamplesSplit", pMinSamplesSplit);
 
-   if (min_weight_fraction_leaf < 0) {
-      Log() << kERROR << " MinWeightFractionLeaf <0... that does not work !! "
-            << " I set it to 0.0 .. just so that the program does not crash"
-            << Endl;
-      min_weight_fraction_leaf = 0.0;
+   if (fSubsample < 0) {
+      Log() << kFATAL << "Subsample < 0 ... that does not work!" << Endl;
    }
+   pSubsample = Eval(Form("%f", fSubsample));
+   PyDict_SetItemString(fLocalNS, "subsample", pSubsample);
 
-   if (max_depth < 0) {
-      Log() << kERROR << " MaxDepth <0... that does not work !! "
-            << " I set it to 3 .. just so that the program does not crash"
-            << Endl;
-      max_depth = 3;
+   if (fMinSamplesLeaf < 0) {
+      Log() << kFATAL << "MinSamplesLeaf < 0 ... that does not work!" << Endl;
    }
+   pMinSamplesLeaf = Eval(Form("%i", fMinSamplesLeaf));
+   PyDict_SetItemString(fLocalNS, "minSamplesLeaf", pMinSamplesLeaf);
 
-   PyObject *poinit = Eval(init);
-   if (!poinit) {
-      Log() << kFATAL << Form(" Init = %s... that does not work !! ", init.Data())
-            << " The options are None or  BaseEstimator. An estimator object that is used to compute the initial"
-            << " predictions. ``init`` has to provide ``fit`` and ``predict``."
-            << " If None it uses ``loss.init_estimator``."
+   if (fMinSamplesSplit < 0) {
+      Log() << kFATAL << "MinSamplesSplit < 0 ... that does not work!" << Endl;
+   }
+   pMinSamplesSplit = Eval(Form("%i", fMinSamplesSplit));
+   PyDict_SetItemString(fLocalNS, "minSamplesSplit", pMinSamplesSplit);
+
+   if (fMinWeightFractionLeaf < 0) {
+      Log() << kFATAL << "MinWeightFractionLeaf < 0 ... that does not work !" << Endl;
+   }
+   pMinWeightFractionLeaf = Eval(Form("%f", fMinWeightFractionLeaf));
+   PyDict_SetItemString(fLocalNS, "minWeightFractionLeaf", pMinWeightFractionLeaf);
+
+   if (fMaxDepth <= 0) {
+      Log() << kFATAL << " MaxDepth <= 0 ... that does not work !! " << Endl;
+   }
+   pMaxDepth = Eval(Form("%i", fMaxDepth));
+   PyDict_SetItemString(fLocalNS, "maxDepth", pMaxDepth);
+
+   pInit = Eval(fInit);
+   if (!pInit) {
+      Log() << kFATAL << Form("Init = %s ... that does not work!", fInit.Data())
+            << " The options are None or BaseEstimator, which is an estimator object that"
+            << "is used to compute the initial predictions. "
+            << "'init' has to provide 'fit' and 'predict' methods."
+            << " If None it uses 'loss.init_estimator'." << Endl;
+   }
+   PyDict_SetItemString(fLocalNS, "init", pInit);
+
+   pRandomState = Eval(fRandomState);
+   if (!pRandomState) {
+      Log() << kFATAL << Form(" RandomState = %s ... that does not work! ", fRandomState.Data())
+            << " If int, random_state is the seed used by the random number generator;"
+            << " If RandomState instance, random_state is the random number generator;"
+            << " If None, the random number generator is the RandomState instance used by 'np.random'."
             << Endl;
    }
-   Py_DECREF(poinit);
+   PyDict_SetItemString(fLocalNS, "randomState", pRandomState);
 
-   PyObject *porandom_state = Eval(random_state);
-   if (!porandom_state) {
-      Log() << kFATAL << Form(" RandomState = %s... that does not work !! ", random_state.Data())
-            << "If int, random_state is the seed used by the random number generator;"
-            << "If RandomState instance, random_state is the random number generator;"
-            << "If None, the random number generator is the RandomState instance used by `np.random`."
-            << Endl;
+   if (fMaxFeatures == "auto" || fMaxFeatures == "sqrt" || fMaxFeatures == "log2"){
+      fMaxFeatures = Form("'%s'", fMaxFeatures.Data());
    }
-   Py_DECREF(porandom_state);
+   pMaxFeatures = Eval(fMaxFeatures);
+   PyDict_SetItemString(fLocalNS, "maxFeatures", pMaxFeatures);
 
-   if (max_features == "auto" || max_features == "sqrt" || max_features == "log2")max_features = Form("'%s'", max_features.Data());
-   PyObject *pomax_features = Eval(max_features);
-   if (!pomax_features) {
-      Log() << kFATAL << Form(" MaxFeatures = %s... that does not work !! ", max_features.Data())
+   if (!pMaxFeatures) {
+      Log() << kFATAL << Form(" MaxFeatures = %s... that does not work !! ", fMaxFeatures.Data())
             << "int, float, string or None, optional (default='auto')"
             << "The number of features to consider when looking for the best split:"
             << "If int, then consider `max_features` features at each split."
@@ -279,127 +283,98 @@ void MethodPyGTB::ProcessOptions()
             << "If 'auto', then `max_features=sqrt(n_features)`."
             << "If 'sqrt', then `max_features=sqrt(n_features)`."
             << "If 'log2', then `max_features=log2(n_features)`."
-            << "If None, then `max_features=n_features`."
-            << Endl;
+            << "If None, then `max_features=n_features`." << Endl;
    }
-   Py_DECREF(pomax_features);
 
-//    verbose(0),
-   PyObject *pomax_leaf_nodes = Eval(max_leaf_nodes);
-   if (!pomax_leaf_nodes) {
-      Log() << kFATAL << Form(" MaxLeafNodes = %s... that does not work !! ", max_leaf_nodes.Data())
-            << " The options are None or integer."
-            << Endl;
+   pMaxLeafNodes = Eval(fMaxLeafNodes);
+   if (!pMaxLeafNodes) {
+      Log() << kFATAL << Form(" MaxLeafNodes = %s... that does not work!", fMaxLeafNodes.Data())
+            << " The options are None or integer." << Endl;
    }
-   Py_DECREF(pomax_leaf_nodes);
+   PyDict_SetItemString(fLocalNS, "maxLeafNodes", pMaxLeafNodes);
 
+   pVerbose = Eval(Form("%i", fVerbose));
+   PyDict_SetItemString(fLocalNS, "verbose", pVerbose);
+
+   pWarmStart = Eval(Form("%i", UInt_t(fWarmStart)));
+   PyDict_SetItemString(fLocalNS, "warmStart", pWarmStart);
+
+   // If no filename is given, set default
+   if(fFilenameClassifier.IsNull()) {
+      fFilenameClassifier = GetWeightFileDir() + "/PyGTBModel_" + GetName() + ".PyData";
+   }
 }
-
 
 //_______________________________________________________________________
 void  MethodPyGTB::Init()
 {
+   _import_array(); //require to use numpy arrays
+
+   // Check options and load them to local python namespace
    ProcessOptions();
-   _import_array();//require to use numpy arrays
 
-   //Import sklearn
-   // Convert the file name to a Python string.
-   PyObject *pName = PyUnicode_FromString("sklearn.ensemble");
-   // Import the file as a Python module.
-   fModule = PyImport_Import(pName);
-   Py_DECREF(pName);
+   // Import module for gradient tree boosting classifier
+   PyRunString("import sklearn.ensemble");
 
-   if (!fModule) {
-      Log() << kFATAL << "Can't import sklearn.ensemble" << Endl;
-      Log() << Endl;
-   }
-
-
-   //Training data
-   UInt_t fNvars = Data()->GetNVariables();
-   int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
-   int *dims = new int[2];
-   dims[0] = fNrowsTraining;
-   dims[1] = fNvars;
-   fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
-   float *TrainData = (float *)(PyArray_DATA(fTrainData));
-
-
-   fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
-
-   fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
-   float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
-
-   for (int i = 0; i < fNrowsTraining; i++) {
-      const TMVA::Event *e = Data()->GetTrainingEvent(i);
-      for (UInt_t j = 0; j < fNvars; j++) {
-         TrainData[j + i * fNvars] = e->GetValue(j);
-      }
-      if (e->GetClass() == TMVA::Types::kSignal) TrainDataClasses[i] = TMVA::Types::kSignal;
-      else TrainDataClasses[i] = TMVA::Types::kBackground;
-
-      TrainDataWeights[i] = e->GetWeight();
-   }
+   // Get data properties
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
 }
 
 void MethodPyGTB::Train()
 {
-   //NOTE: max_features must have 3 defferents variables int, float and string
-   //search a solution with PyObject
-   PyObject *poinit = Eval(init);
-   PyObject *porandom_state = Eval(random_state);
-   PyObject *pomax_features = Eval(max_features);
-   PyObject *pomax_leaf_nodes = Eval(max_leaf_nodes);
+   // Load training data (data, classes, weights) to python arrays
+   int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
+   npy_intp dimsData[2];
+   dimsData[0] = fNrowsTraining;
+   dimsData[1] = fNvars;
+   fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
+   float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
-   PyObject *args = Py_BuildValue("(sfifiifiOOOiOi)", loss.Data(), \
-                                  learning_rate, n_estimators, subsample, min_samples_split, min_samples_leaf, min_weight_fraction_leaf, \
-                                  max_depth, poinit, porandom_state, pomax_features, verbose, pomax_leaf_nodes, warm_start);
+   npy_intp dimsClasses = (npy_intp) fNrowsTraining;
+   fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
+   float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   PyObject_Print(args, stdout, 0);
-   std::cout << std::endl;
+   fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainDataWeights", (PyObject*)fTrainDataWeights);
+   float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 
-   PyObject *pDict = PyModule_GetDict(fModule);
-   PyObject *fClassifierClass = PyDict_GetItemString(pDict, "GradientBoostingClassifier");
+   for (int i = 0; i < fNrowsTraining; i++) {
+      // Fill training data matrix
+      const TMVA::Event *e = Data()->GetTrainingEvent(i);
+      for (UInt_t j = 0; j < fNvars; j++) {
+         TrainData[j + i * fNvars] = e->GetValue(j);
+      }
 
-   // Create an instance of the class
-   if (PyCallable_Check(fClassifierClass)) {
-      //instance
-      fClassifier = PyObject_CallObject(fClassifierClass , args);
-      PyObject_Print(fClassifier, stdout, 0);
-      std::cout << std::endl;
+      // Fill target classes
+      TrainDataClasses[i] = e->GetClass();
 
-      Py_DECREF(poinit);
-      Py_DECREF(porandom_state);
-      Py_DECREF(pomax_features);
-      Py_DECREF(pomax_leaf_nodes);
-      Py_DECREF(args);
-   } else {
-      PyErr_Print();
-      Py_DECREF(poinit);
-      Py_DECREF(porandom_state);
-      Py_DECREF(pomax_features);
-      Py_DECREF(pomax_leaf_nodes);
-      Py_DECREF(args);
-      Py_DECREF(pDict);
-      Py_DECREF(fClassifierClass);
-      Log() << kFATAL << "Can't call function GradientBoostingClassifier" << Endl;
-      Log() << Endl;
-
+      // Get event weight
+      TrainDataWeights[i] = e->GetWeight();
    }
 
-   fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
-//     PyObject_Print(fClassifier, stdout, 0);
-//     std::cout<<std::endl;
-   //     pValue =PyObject_CallObject(fClassifier, PyUnicode_FromString("classes_"));
-   //     PyObject_Print(pValue, stdout, 0);
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
+   // Create classifier object
+   PyRunString("classifier = sklearn.ensemble.GradientBoostingClassifier(loss=loss, learning_rate=learningRate, n_estimators=nEstimators, max_depth=maxDepth, min_samples_split=minSamplesSplit, min_samples_leaf=minSamplesLeaf, min_weight_fraction_leaf=minWeightFractionLeaf, subsample=subsample, max_features=maxFeatures, max_leaf_nodes=maxLeafNodes, init=init, verbose=verbose, warm_start=warmStart, random_state=randomState)",
+      "Failed to setup classifier");
+
+   // Fit classifier
+   // NOTE: We dump the output to a variable so that the call does not pollute stdout
+   PyRunString("dump = classifier.fit(trainData, trainDataClasses, trainDataWeights)", "Failed to train classifier");
+
+   // Store classifier
+   fClassifier = PyDict_GetItemString(fLocalNS, "classifier");
+   if(fClassifier == 0) {
+      Log() << kFATAL << "Can't create classifier object from GradientBoostingClassifier" << Endl;
+      Log() << Endl;
+   }
+
+   if (IsModelPersistence()) {
+      Log() << Endl;
+      Log() << gTools().Color("bold") << "Saving state file: " << gTools().Color("reset") << fFilenameClassifier << Endl;
+      Log() << Endl;
+      Serialize(fFilenameClassifier, fClassifier);
    }
 }
 
@@ -409,7 +384,48 @@ void MethodPyGTB::TestClassification()
    MethodBase::TestClassification();
 }
 
+//_______________________________________________________________________
+std::vector<Double_t> MethodPyGTB::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t)
+{
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
 
+   // Determine number of events
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   nEvents = lastEvt-firstEvt;
+
+   // Get data
+   npy_intp dims[2];
+   dims[0] = nEvents;
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
+
+   for (Int_t ievt=0; ievt<nEvents; ievt++) {
+      Data()->SetCurrentEvent(ievt);
+      const TMVA::Event *e = Data()->GetEvent();
+      for (UInt_t i = 0; i < fNvars; i++) {
+         pValue[ievt * fNvars + i] = e->GetValue(i);
+      }
+   }
+
+   // Get prediction from classifier
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
+   double *proba = (double *)(PyArray_DATA(result));
+
+   // Return signal probabilities
+   if(Long64_t(mvaValues.size()) != nEvents) mvaValues.resize(nEvents);
+   for (int i = 0; i < nEvents; ++i) {
+      mvaValues[i] = proba[fNoutputs*i + TMVA::Types::kSignal];
+   }
+
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
+   return mvaValues;
+}
 
 //_______________________________________________________________________
 Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
@@ -417,29 +433,60 @@ Double_t MethodPyGTB::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (IsModelPersistence()) ReadModelFromFile();
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
 
-   Double_t mvaValue;
+   // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
-   UInt_t nvars = e->GetNVariables();
-   int dims[2];
+   npy_intp dims[2];
    dims[0] = 1;
-   dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
+   for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
 
-   for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
-   
+   // Get prediction from classifier
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue = proba[0]; //getting signal prob
+
+   // Return MVA value
+   Double_t mvaValue;
+   mvaValue = proba[TMVA::Types::kSignal]; // getting signal probability
+
    Py_DECREF(result);
    Py_DECREF(pEvent);
 
    return mvaValue;
 }
 
+//_______________________________________________________________________
+std::vector<Float_t>& MethodPyGTB::GetMulticlassValues()
+{
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
 
+   // Get current event and load to python array
+   const TMVA::Event *e = Data()->GetEvent();
+   npy_intp dims[2];
+   dims[0] = 1;
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
+   for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
+
+   // Get prediction from classifier
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
+   double *proba = (double *)(PyArray_DATA(result));
+
+   // Return MVA values
+   if(UInt_t(classValues.size()) != fNoutputs) classValues.resize(fNoutputs);
+   for(UInt_t i = 0; i < fNoutputs; i++) classValues[i] = proba[i];
+
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
+   return classValues;
+}
 
 //_______________________________________________________________________
 void MethodPyGTB::ReadModelFromFile()
@@ -448,31 +495,56 @@ void MethodPyGTB::ReadModelFromFile()
       PyInitialize();
    }
 
-   TString path = GetWeightFileDir() + "/PyGTBModel.PyData";
    Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
+   Log() << gTools().Color("bold") << "Loading state file: " << gTools().Color("reset") << fFilenameClassifier << Endl;
    Log() << Endl;
-   UnSerialize(path,&fClassifier);
+
+   // Load classifier from file
+   Int_t err = UnSerialize(fFilenameClassifier, &fClassifier);
+   if(err != 0)
+   {
+       Log() << kFATAL << Form("Failed to load classifier from file (error code: %i): %s", err, fFilenameClassifier.Data()) << Endl;
+   }
+
+   // Book classifier object in python dict
+   PyDict_SetItemString(fLocalNS, "classifier", fClassifier);
+
+   // Load data properties
+   // NOTE: This has to be repeated here for the reader application
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
+}
+
+//_______________________________________________________________________
+const Ranking* MethodPyGTB::CreateRanking()
+{
+   // Get feature importance from classifier as an array with length equal
+   // number of variables, higher value signals a higher importance
+   PyArrayObject* pRanking = (PyArrayObject*) PyObject_GetAttrString(fClassifier, "feature_importances_");
+   if(pRanking == 0) Log() << kFATAL << "Failed to get ranking from classifier" << Endl;
+
+   // Fill ranking object and return it
+   fRanking = new Ranking(GetName(), "Variable Importance");
+   Double_t* rankingData = (Double_t*) PyArray_DATA(pRanking);
+   for(UInt_t iVar=0; iVar<fNvars; iVar++){
+      fRanking->AddRank(Rank(GetInputLabel(iVar), rankingData[iVar]));
+   }
+
+   Py_DECREF(pRanking);
+
+   return fRanking;
 }
 
 //_______________________________________________________________________
 void MethodPyGTB::GetHelpMessage() const
 {
-   // get help message text
-   //
    // typical length of text line:
-   //         "|--------------------------------------------------------------|"
+   //       "|--------------------------------------------------------------|"
+   Log() << "A gradient tree boosting classifier builds a model from an ensemble" << Endl;
+   Log() << "of decision trees, which are adapted each boosting step to fit better" << Endl;
+   Log() << "to previously misclassified events." << Endl;
    Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << "Decision Trees and Rule-Based Models " << Endl;
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << "<None>" << Endl;
+   Log() << "Check out the scikit-learn documentation for more information." << Endl;
 }
 
 

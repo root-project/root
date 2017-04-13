@@ -202,7 +202,7 @@ Bool_t TRInterface::Install(TString pkg, TString repos)
 void TRInterface::ProcessEventsLoop()
 {
    if (!statusEventLoop) {
-      th = new TThread([](void *args) {
+      th = new TThread([](void */*args */) {
          while (statusEventLoop) {
             fd_set *fd;
             Int_t usec = 10000;

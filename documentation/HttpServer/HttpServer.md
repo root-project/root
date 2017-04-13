@@ -14,7 +14,7 @@ To start the http server, at any time, create an instance of the [THttpServer](h
 
 This will start a [civetweb](https://github.com/civetweb/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
+There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-project/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
 
 One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
 
@@ -83,7 +83,7 @@ string to the icon name to let browser show command as extra button. In last cas
 
     serv->Hide("/DoSomething");
 
-One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpcontrol.C) macro.
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
 
 
 

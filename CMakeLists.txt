@@ -53,6 +53,16 @@ if(ccache)
    endif()
 endif()
 
+#---Enable test coverage -----------------------------------------------------------------------
+if(coverage)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+  set(GCC_COVERAGE_LINK_FLAGS    "-fprofile-arcs")
+  set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)
@@ -146,7 +156,7 @@ if(cxxmodules)
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
   if (APPLE)
@@ -192,6 +202,7 @@ if(cxxmodules)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
   endif()
 
   # These vars are useful when we want to compile things without cxxmodules.
@@ -241,9 +252,11 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
-get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+if(cxxmodules)
+  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+endif(cxxmodules)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})

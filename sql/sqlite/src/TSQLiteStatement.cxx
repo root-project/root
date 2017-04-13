@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TSQLiteStatement.h"
+#include "TSQLiteResult.h"
 #include "TDataType.h"
 #include "TDatime.h"
 #include "TTimeStamp.h"

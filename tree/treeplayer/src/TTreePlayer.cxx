@@ -79,7 +79,7 @@ extra libraries (Histogram, display, etc).
 
 #include "HFitInterface.h"
 #include "Foption.h"
-#include "Fit/DataVector.h"
+#include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 

@@ -349,6 +349,10 @@ namespace TMVA {
       static bool fgIsTraining; // static variable to flag training phase in which we need fTrainInfo
       static UInt_t fgTmva_Version_Code;  // set only when read from weightfile 
 
+      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual void ReadContent(std::stringstream& s);
+
    protected:
 
       static MsgLogger& Log();
@@ -369,10 +373,6 @@ namespace TMVA {
       mutable DTNodeTrainingInfo* fTrainInfo;
 
    private:
-
-      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-      virtual void ReadContent(std::stringstream& s);
 
       ClassDef(DecisionTreeNode,0); // Node for the Decision Tree 
    };

@@ -426,11 +426,10 @@ Int_t TMVA::TMVAGlob::GetNumberOfInputVariables( TDirectory *dir )
    return noVars;
 }
 
-std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir )
+std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir)
 {
    TIter next(dir->GetListOfKeys());
    TKey* key = 0;
-   //set<std::string> varnames;
    std::vector<TString> names;
       
    while ((key = (TKey*)next())) {
@@ -438,8 +437,10 @@ std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir )
       TClass *cl = gROOT->GetClass(key->GetClassName());
       if (!cl->InheritsFrom("TH1")) continue;
       TString name(key->GetName());
-      Int_t pos = name.First("__");
-      name.Remove(pos);
+      Int_t pos = name.Index("__");
+      if (pos != -1) {
+         name.Remove(pos);
+      }
       Bool_t hasname = false;
       std::vector<TString>::const_iterator iter = names.begin();
       while(iter != names.end()){

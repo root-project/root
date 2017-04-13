@@ -249,7 +249,6 @@ TLayer<Architecture_t>::TLayer(const TLayer &layer)
 {
    Architecture_t::Copy(fWeights, layer.GetWeights());
    Architecture_t::Copy(fBiases,  layer.GetBiases());
-   fDropoutProbability = 0.;
 }
 
 //______________________________________________________________________________
@@ -336,7 +335,6 @@ TSharedLayer<Architecture_t>::TSharedLayer(const TSharedLayer &layer)
     fBiasGradients(fWidth, 1), fActivationGradients(layer.fBatchSize, fWidth),
     fF(layer.fF)
 {
-    fDropoutProbability = 0.;
 }
 
 //______________________________________________________________________________

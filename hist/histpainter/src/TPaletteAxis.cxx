@@ -461,12 +461,12 @@ void TPaletteAxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out << "palette = new " << ClassName() << "(" << fX1 << "," << fY1 << "," << fX2 << "," << fY2
           << "," << fH->GetName() << ");" << std::endl;
    }
-   out << "palette->SetLabelColor(" << fAxis.GetLabelColor() << ");" << std::endl;
-   out << "palette->SetLabelFont("  << fAxis.GetLabelFont() << ");" << std::endl;
-   out << "palette->SetLabelOffset(" << fAxis.GetLabelOffset() << ");" << std::endl;
-   out << "palette->SetLabelSize("  << fAxis.GetLabelSize() << ");" << std::endl;
-   out << "palette->SetTitleOffset(" << fAxis.GetTitleOffset() << ");" << std::endl;
-   out << "palette->SetTitleSize("  << fAxis.GetTitleSize() << ");" << std::endl;
+   out << "   palette->SetLabelColor(" << fAxis.GetLabelColor() << ");" << std::endl;
+   out << "   palette->SetLabelFont("  << fAxis.GetLabelFont() << ");" << std::endl;
+   out << "   palette->SetLabelOffset(" << fAxis.GetLabelOffset() << ");" << std::endl;
+   out << "   palette->SetLabelSize("  << fAxis.GetLabelSize() << ");" << std::endl;
+   out << "   palette->SetTitleOffset(" << fAxis.GetTitleOffset() << ");" << std::endl;
+   out << "   palette->SetTitleSize("  << fAxis.GetTitleSize() << ");" << std::endl;
    SaveFillAttributes(out, "palette", -1, -1);
    SaveLineAttributes(out, "palette", 1, 1, 1);
 }

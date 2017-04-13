@@ -219,7 +219,7 @@ Bool_t TFileMerger::AddAdoptFile(TFile *source, Bool_t cpProgress)
 
 Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
 {
-   if (source == 0) {
+   if (source == 0 || source->IsZombie()) {
       return kFALSE;
    }
 
@@ -240,14 +240,13 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
          return kFALSE;
       }
       newfile = TFile::Open(localcopy, "READ");
+      // Zombie files should also be skipped
+      if (newfile && newfile->IsZombie()) {
+         delete newfile;
+         newfile = 0;
+      }
    } else {
       newfile = source;
-   }
-
-   // Zombie files should also be skipped 
-   if (newfile && newfile->IsZombie()) {
-      delete newfile;
-      newfile = 0;
    }
 
    if (!newfile) {
