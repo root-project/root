@@ -20,8 +20,8 @@ void tprofile2poly_tprofile2d_sim2()
       TP2P->Fill(px,py,value);
    }
    c1->cd(1);
-   TP2D->Draw("COLZ TEXT");
+   TP2D->Draw("COLZ");
 
    c1->cd(2);
-   TP2P->Draw("COLZ TEXT");
+   TP2P->Draw("COLZ");
 }

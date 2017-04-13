@@ -165,6 +165,8 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
 
 void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
 
+    // TODO: Build checks to see if merge is allowed on "this" / "list"
+
     TIter next(list[0]->fBins);
     TObject* obj;
 
@@ -173,30 +175,28 @@ void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
         n++;
     }
 
-    Int_t current_element=0;
-    for(auto& e : list ){
-        for(Int_t i=0; i<n; i++){
+    TProfile2PolyBin* dst = nullptr;
+    TProfile2PolyBin* src = nullptr;
 
-            TProfile2PolyBin* dst = (TProfile2PolyBin*)fBins->At(i);
-            TProfile2PolyBin* src  = ((TProfile2PolyBin*)list[current_element]->fBins->At(i));
+    // for each bin
+    for(Int_t i=0; i<n; i++){
+        dst = (TProfile2PolyBin*)fBins->At(i);
 
-            /* DEBUG INFO
-            std::cout << "fCont | current " << dst->GetContent() << "\t"
-                      << "to_merge "        << src->GetContent() << std::endl;
+        Int_t current_element    = 0;
+        Double_t SumV_srcs       = 0;
+        Double_t NumEntries_srcs = 0;
 
-            std::cout << "fEntr | current " << dst->getFNumEntries() << "\t"
-                      << "to_merge "        << src->getFNumEntries() << std::endl;
-
-            std::cout << "fSumV | current " << dst->getFSumV() << "\t"
-                      << "to_merge "        << src->getFSumV() << std::endl;
-
-            std::cout << std::endl;
-            */
-
-            dst->setFSumV(dst->fSumV + src->fSumV);
-            dst->setFNumEntries(dst->fNumEntries + src->fNumEntries);
-            dst->UpdateAverage();
+        // accumulate values of interest in the input vector
+        for(const auto& e : list){
+            src  = ((TProfile2PolyBin*)list[current_element]->fBins->At(i));
+            SumV_srcs += src->fSumV;
+            NumEntries_srcs += src->fNumEntries;
+            current_element++;
         }
-     current_element++;
+
+        // set values of accumulation
+        dst->setFSumV(SumV_srcs + dst->getFSumV());
+        dst->setFNumEntries(NumEntries_srcs + dst->getFNumEntries());
+        dst->UpdateAverage();
     }
 }
