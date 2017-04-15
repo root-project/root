@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
    if (argc > 1) verbose = atoi(argv[1]);
    opt = argv[1];
 
+   if (argc > 2) opt += argv[2];
+
    if (opt.Contains("-h")) {
       printf("Usage: stressGraphics [-h] [-r] [-k]\n");
       printf("Options:\n");
