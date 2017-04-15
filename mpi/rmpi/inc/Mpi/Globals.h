@@ -12,6 +12,8 @@
 
 #include<Mpi/TOp.h>
 
+#define MPICH_ERROR_MSG_LEVEL MPICH_ERROR_MSG_NONE
+
 #include<mpi.h>
 #include<typeinfo>
 #include<string>
@@ -61,6 +63,8 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
    Int_t _errcode = MPI_FUNCTION ARGS;               \
    if(_errcode!=MPI_SUCCESS) TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,_errcode,Form("Calling function %s%s",#MPI_FUNCTION,#ARGS));
 
+   
+   
 namespace ROOT {
    namespace Mpi {
 

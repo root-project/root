@@ -25,7 +25,18 @@ TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
       if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
-      MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
+      Int_t errcode = MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
+      if (errcode != SUCCESS) {
+         TString msg;
+         msg += Form("\nHost = %s", GetProcessorName().Data());
+         msg += Form("\nCode = %d", errcode);
+         msg += Form("\nName = %s", TErrorHandler::GetErrorString(errcode).Data());
+         msg += Form("\nMessage = %s", "Error setting ErrorHandler to COMM_WORLD.");
+         msg += "\nAborting, finishing the remaining processes.";
+         msg += "\n--------------------------------------------------------------------------\n";
+         Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "%s", msg.Data());
+         gSystem->Exit(errcode);
+      }
    } else {
       //TODO: added error handling here
    }
@@ -49,8 +60,18 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(
    if (IsInitialized()) {
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
-      if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
-      MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
+      Int_t errcode = MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
+      if (errcode != SUCCESS) {
+         TString msg;
+         msg += Form("\nHost = %s", GetProcessorName().Data());
+         msg += Form("\nCode = %d", errcode);
+         msg += Form("\nName = %s", TErrorHandler::GetErrorString(errcode).Data());
+         msg += Form("\nMessage = %s", "Error setting ErrorHandler to COMM_WORLD.");
+         msg += "\nAborting, finishing the remaining processes.";
+         msg += "\n--------------------------------------------------------------------------\n";
+         Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "%s", msg.Data());
+         gSystem->Exit(errcode);
+      }
    } else {
       //TODO: added error handling here
    }
