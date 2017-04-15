@@ -5,7 +5,7 @@
 #include<TStringLong.h>
 #include <TApplication.h>
 #include<TROOT.h>
-
+#include<mpi.h>
 using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
@@ -45,7 +45,12 @@ Int_t TRootMpi::Launch()
 Int_t TRootMpi::ProcessArgs()
 {
    fCompilerParams.Clear();
-   fMpirunParams.Clear();
+#if OPEN_MPI
+   fMpirunParams = " -q ";
+#else
+   fMpirunParams = " ";
+#endif
+
    if ((TString(fArgv[1]) == TString("-h")) || (TString(fArgv[1]) == TString("--help"))) {
       std::cout << fHelpMsg;
       return 0;
