@@ -41,11 +41,8 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 
 //NOTE: the macros to check the errors can be changed by exceptions if is wanted.
 
-#define ROOT_MPI_ASSERT(EXPRESSION,comm)\
-   if(!(EXPRESSION)){\
-      comm->Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Assertion %s ",#EXPRESSION);\
-      comm->Abort(ERR_UNKNOWN);\
-   }
+#define ROOT_MPI_ASSERT(EXPRESSION,_comm)\
+   if(!(EXPRESSION)){ TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,MPI_ERR_ASSERT,Form("assertion expression was %s",#EXPRESSION)); }
 
 #define ROOT_MPI_CHECK_DATATYPE(T)\
    if (GetDataType<T>() == DATATYPE_NULL) {\

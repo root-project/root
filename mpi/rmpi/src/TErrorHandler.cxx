@@ -9,7 +9,7 @@
 // }
 
 using namespace ROOT::Mpi;
-
+Bool_t TErrorHandler::fVerbose=kFALSE;
 //______________________________________________________________________________
 TErrorHandler::TErrorHandler(): fErrorHandler(MPI_ERRORS_ARE_FATAL) {}
 

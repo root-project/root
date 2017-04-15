@@ -3,11 +3,13 @@
 #define ROOT_Mpi_TErrorHandler
 
 #include<Mpi/Globals.h>
+#include<Mpi/TEnvironment.h>
 
 namespace ROOT {
    namespace Mpi {
       class TErrorHandler: public TObject {
          MPI_Errhandler fErrorHandler;
+         static Bool_t fVerbose;
       public:
          TErrorHandler();
          TErrorHandler(const TErrorHandler &err);
@@ -37,6 +39,19 @@ namespace ROOT {
             return (Bool_t)!(*this == errhanlder);
          }
          virtual void Free();
+
+         static void SetVerbose(Bool_t status = kTRUE)
+         {
+            fVerbose = status;
+         }
+
+         static Bool_t IsVerbose()
+         {
+            return fVerbose;
+         }
+
+         template<class T> static void TraceBack(T *comm, const Char_t *function, const Char_t *file,Int_t line, Int_t errcode, const Char_t *msg);
+
       protected:
          // inter-language operability
          inline TErrorHandler &operator= (const MPI_Errhandler &errhanlder)
@@ -52,6 +67,26 @@ namespace ROOT {
 
          ClassDef(TErrorHandler, 0)
       };
+
+      template<class T> void TErrorHandler::TraceBack(T *comm, const Char_t *function,const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+      {
+         TString msg;
+         if (TErrorHandler::IsVerbose()) {
+            msg += Form("\nRank = %d", comm->GetRank());
+            msg += Form("\nSize = %d", comm->GetSize());
+            msg += Form("\nComm = %s", comm->ClassName());
+            msg += Form("\nHost = %s", TEnvironment::GetProcessorName().Data());
+         }
+
+         msg += Form("\nCode = %d", errcode);
+         msg += Form("\nName = %s", GetErrorString(errcode).Data());
+         msg += Form("\nMessage = %s", _msg);
+         msg += "\nAborting, finishing the remaining processes.";
+         msg += "\n--------------------------------------------------------------------------\n";
+
+         comm->Error(Form("%s(...) %s[%d]", function, file, line), "%s", msg.Data());
+         comm->Abort(errcode);
+      }
    }
 }
 #endif

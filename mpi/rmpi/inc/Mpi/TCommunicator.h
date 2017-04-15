@@ -3,6 +3,7 @@
 #define ROOT_Mpi_TCommunicator
 
 #include<Mpi/Globals.h>
+#include<Mpi/TErrorHandler.h>
 #include<Mpi/TMpiMessage.h>
 #include<Mpi/TStatus.h>
 #include<Mpi/TRequest.h>
