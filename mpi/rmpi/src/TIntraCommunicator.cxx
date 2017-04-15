@@ -36,9 +36,9 @@ TIntraCommunicator &TIntraCommunicator::Clone() const
 TIntraCommunicator TIntraCommunicator::Create(const TGroup &group) const
 {
    MPI_Comm ncomm;
-   ROOT_MPI_CHECK_GROUP(group);
+   ROOT_MPI_CHECK_GROUP(group, this);
    MPI_Comm_create(fComm, group, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return  ncomm;
 }
 
@@ -47,7 +47,7 @@ TIntraCommunicator TIntraCommunicator::Split(Int_t color, Int_t key) const
 {
    MPI_Comm ncomm;
    MPI_Comm_split(fComm, color, key, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -56,7 +56,7 @@ TInterCommunicator TIntraCommunicator::CreateIntercomm(Int_t local_leader, const
 {
    MPI_Comm ncomm;
    MPI_Intercomm_create(fComm, local_leader, peer_comm.fComm, remote_leader, tag, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -65,7 +65,7 @@ TInterCommunicator TIntraCommunicator::Accept(const TPort &port, Int_t root) con
 {
    MPI_Comm ncomm;
    MPI_Comm_accept(port.GetPortName(), port.GetInfo(), root, fComm, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -74,7 +74,7 @@ TInterCommunicator TIntraCommunicator::Connect(const TPort &port, Int_t root) co
 {
    MPI_Comm ncomm;
    MPI_Comm_connect(port.GetPortName(), port.GetInfo(), root, fComm, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -83,7 +83,7 @@ TInterCommunicator TIntraCommunicator::Spawn(const Char_t *command, const Char_t
 {
    MPI_Comm ncomm;
    MPI_Comm_spawn(command, const_cast<Char_t **>(argv), maxprocs, info, root, fComm, &ncomm, (Int_t *)MPI_ERRCODES_IGNORE);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -93,7 +93,7 @@ TInterCommunicator TIntraCommunicator::Spawn(const Char_t *command, const Char_t
 {
    MPI_Comm ncomm;
    MPI_Comm_spawn(command, const_cast<Char_t **>(argv), maxprocs, info, root, fComm, &ncomm, array_of_errcodes);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -114,7 +114,7 @@ TInterCommunicator TIntraCommunicator::SpawnMultiple(Int_t count, const Char_t *
                            array_of_mpi_info, root,
                            fComm, &ncomm, (Int_t *)MPI_ERRCODES_IGNORE);
    delete[] array_of_mpi_info;
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 
@@ -136,7 +136,7 @@ TInterCommunicator TIntraCommunicator::SpawnMultiple(Int_t count, const Char_t *
                            array_of_mpi_info, root,
                            fComm, &ncomm, array_of_errcodes);
    delete[] array_of_mpi_info;
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
 

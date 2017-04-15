@@ -49,7 +49,7 @@ TInterCommunicator TInterCommunicator::Dup() const
 {
    MPI_Comm dupcomm;
    MPI_Comm_dup(fComm, &dupcomm);
-   ROOT_MPI_CHECK_COMM(dupcomm);
+   ROOT_MPI_CHECK_COMM(dupcomm, this);
    return  dupcomm;
 }
 
@@ -57,9 +57,9 @@ TInterCommunicator TInterCommunicator::Dup() const
 TInterCommunicator TInterCommunicator::Create(const TGroup &group) const
 {
    MPI_Comm ncomm;
-   ROOT_MPI_CHECK_GROUP(group);
+   ROOT_MPI_CHECK_GROUP(group, this);
    MPI_Comm_create(fComm, group, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return  ncomm;
 }
 
@@ -68,6 +68,6 @@ TInterCommunicator TInterCommunicator::Split(int color, int key) const
 {
    MPI_Comm ncomm;
    MPI_Comm_split(fComm, color, key, &ncomm);
-   ROOT_MPI_CHECK_COMM(ncomm);
+   ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }

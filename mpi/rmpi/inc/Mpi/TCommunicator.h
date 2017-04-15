@@ -330,7 +330,7 @@ namespace ROOT {
             MPI_Send(buffer, size, MPI_CHAR, dest, tag, fComm);
             delete buffer;
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
          }
       }
@@ -371,7 +371,7 @@ namespace ROOT {
             Unserialize<Type>(buffer, size, vars, count, this, GetRank(), source, tag, 0);
 
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             //TODO: added status argument to this method
             MPI_Recv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
          }
@@ -410,7 +410,7 @@ namespace ROOT {
                buffer = NULL;
             };
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Isend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
@@ -450,7 +450,7 @@ namespace ROOT {
                buffer = NULL;
             };
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Issend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
@@ -486,7 +486,7 @@ namespace ROOT {
             // ADDED A GOOD ERROR HANDLING HERE!
             //
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
          }
          return req;
@@ -539,7 +539,7 @@ namespace ROOT {
             req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, GetRank(), source, tag, 0);
 
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Irecv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
          }
          return req;
@@ -582,7 +582,7 @@ namespace ROOT {
             Unserialize(buffer, size, vars, count, this, 0, 0, 0, root);
 
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Bcast((void *)vars, count, GetDataType<Type>(), root, fComm);
          }
 
@@ -630,7 +630,7 @@ namespace ROOT {
             req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, 0, 0, 0, root);
 
          } else {
-            ROOT_MPI_CHECK_DATATYPE(Type);
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
             MPI_Ibcast((void *)vars, count, GetDataType<Type>(), root, fComm, &req.fRequest);
          }
          return req;

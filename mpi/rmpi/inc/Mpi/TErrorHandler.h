@@ -50,7 +50,7 @@ namespace ROOT {
             return fVerbose;
          }
 
-         template<class T> static void TraceBack(T *comm, const Char_t *function, const Char_t *file,Int_t line, Int_t errcode, const Char_t *msg);
+         template<class T> static void TraceBack(T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
 
       protected:
          // inter-language operability
@@ -68,7 +68,7 @@ namespace ROOT {
          ClassDef(TErrorHandler, 0)
       };
 
-      template<class T> void TErrorHandler::TraceBack(T *comm, const Char_t *function,const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+      template<class T> void TErrorHandler::TraceBack(T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
       {
          TString msg;
          if (TErrorHandler::IsVerbose()) {

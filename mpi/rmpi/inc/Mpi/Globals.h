@@ -44,33 +44,17 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 #define ROOT_MPI_ASSERT(EXPRESSION,_comm)\
    if(!(EXPRESSION)){ TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,MPI_ERR_ASSERT,Form("assertion expression was %s",#EXPRESSION)); }
 
-#define ROOT_MPI_CHECK_DATATYPE(T)\
-   if (GetDataType<T>() == DATATYPE_NULL) {\
-      Int_t err;\
-      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Unknown datatype, returned null datatype   GetDataType<%s>()",TClassEdit::DemangleName(typeid(T).name(),err));\
-      Abort(ERR_TYPE);\
-   }
+#define ROOT_MPI_CHECK_DATATYPE(T,_comm)\
+   if (GetDataType<T>() == DATATYPE_NULL) { TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,MPI_ERR_TYPE,Form("Unknown datatype, returned null datatype   GetDataType<%s>()",ROOT_MPI_TYPE_NAME(T)));}
 
-#define ROOT_MPI_CHECK_COMM(T)\
-   if (T == MPI_COMM_NULL) {\
-      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Communicator is a null object.");\
-      Abort(ERR_COMM);\
-   }
+#define ROOT_MPI_CHECK_COMM(T,_comm)\
+   if (T == MPI_COMM_NULL) { TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,ERR_COMM,"Communicator is a null object."); }
 
-#define ROOT_MPI_CHECK_GROUP(T)\
-   if (T == MPI_GROUP_NULL) {\
-      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"Group is a null group.");\
-      Abort(ERR_COMM);\
-   }
+#define ROOT_MPI_CHECK_GROUP(T,_comm)\
+   if (T == MPI_GROUP_NULL){ TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,MPI_ERR_GROUP,"Group is a null group.");}
 
-#define ROOT_MPI_CHECK_TAG(T)\
-   if (T == GetInternalTag()) {\
-      Error(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),"The TAG value can not be greater that %d.",GetMaxTag());\
-      Abort(ERR_COMM);\
-   }
-
-#define ROOT_MPI_DEBUG(fmt, ...)\
-   Info(Form("%s(...) %s[%d]",__FUNCTION__,__FILENAME__,__LINE__),fmt, ##__VA_ARGS__)
+#define ROOT_MPI_CHECK_TAG(T,_comm)\
+   if (T == GetInternalTag()) { TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,MPI_ERR_TAG,Form("The TAG value can not be greater that %d.",GetMaxTag()));}
 
 namespace ROOT {
    namespace Mpi {
