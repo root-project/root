@@ -1,6 +1,10 @@
 #include<Mpi/TEnvironment.h>
 #include<Mpi/TIntraCommunicator.h>
+#include<Mpi/TErrorHandler.h>
 using namespace ROOT::Mpi;
+
+TErrorHandler TEnvironment::fErrorHandler = TErrorHandler();
+
 //TODO: enable thread level and thread-safe for ROOT
 
 //______________________________________________________________________________
@@ -21,6 +25,7 @@ TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
       if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
+      MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
    } else {
       //TODO: added error handling here
    }
@@ -45,6 +50,7 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
       if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
+      MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
    } else {
       //TODO: added error handling here
    }

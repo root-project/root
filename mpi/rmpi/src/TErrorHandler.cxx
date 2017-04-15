@@ -11,7 +11,7 @@
 using namespace ROOT::Mpi;
 Bool_t TErrorHandler::fVerbose = kFALSE;
 //______________________________________________________________________________
-TErrorHandler::TErrorHandler(): fErrorHandler(MPI_ERRORS_ARE_FATAL) {}
+TErrorHandler::TErrorHandler(): fErrorHandler(MPI_ERRORS_RETURN) {}
 
 //______________________________________________________________________________
 TErrorHandler::TErrorHandler(const TErrorHandler &err) : TObject(err), fErrorHandler(err.fErrorHandler) { }

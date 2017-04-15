@@ -3,7 +3,6 @@
 #define ROOT_Mpi_TEnvironment
 
 #include<Mpi/Globals.h>
-
 namespace ROOT {
 
    namespace Mpi {
@@ -15,6 +14,7 @@ namespace ROOT {
        */
 
       //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
+      class TErrorHandler;
       class TEnvironment: public TObject {
       private:
          TString fStdOut;
@@ -25,6 +25,7 @@ namespace ROOT {
          Int_t   fStdErrPipe[2];
          Int_t   fSavedStdErr;
          Int_t   fSavedStdOut;
+         static TErrorHandler fErrorHandler;
       protected:
          void InitCapture();
          void EndCapture();

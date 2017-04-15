@@ -8,11 +8,13 @@
 namespace ROOT {
    namespace Mpi {
       class TErrorHandler: public TObject {
+         friend class TEnvironment;
          MPI_Errhandler fErrorHandler;
          static Bool_t fVerbose;
-      public:
          TErrorHandler();
+      public:
          TErrorHandler(const TErrorHandler &err);
+
 
          virtual ~TErrorHandler() { }
 
