@@ -15,7 +15,7 @@ TInterCommunicator::TInterCommunicator(const MPI_Comm &comm): TCommunicator(comm
 TInterCommunicator &TInterCommunicator::Clone() const
 {
    MPI_Comm dupcomm;
-   MPI_Comm_dup(fComm, &dupcomm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
    TInterCommunicator *icomm = new TInterCommunicator(dupcomm);
    return  *icomm;
 }
@@ -24,7 +24,7 @@ TInterCommunicator &TInterCommunicator::Clone() const
 TIntraCommunicator TInterCommunicator::Merge(Int_t high)
 {
    MPI_Comm ncomm;
-   MPI_Intercomm_merge(fComm, high, &ncomm);
+   ROOT_MPI_CHECK_CALL(MPI_Intercomm_merge, (fComm, high, &ncomm), this);
    return ncomm;
 }
 
@@ -32,7 +32,7 @@ TIntraCommunicator TInterCommunicator::Merge(Int_t high)
 Int_t TInterCommunicator::GetRemoteSize() const
 {
    Int_t size;
-   MPI_Comm_remote_size(fComm, &size);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_remote_size, (fComm, &size), this);
    return size;
 }
 
@@ -40,7 +40,7 @@ Int_t TInterCommunicator::GetRemoteSize() const
 TGroup TInterCommunicator::GetRemoteGroup() const
 {
    MPI_Group group;
-   MPI_Comm_remote_group(fComm, &group);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_remote_group, (fComm, &group), this);
    return group;
 }
 
@@ -48,7 +48,7 @@ TGroup TInterCommunicator::GetRemoteGroup() const
 TInterCommunicator TInterCommunicator::Dup() const
 {
    MPI_Comm dupcomm;
-   MPI_Comm_dup(fComm, &dupcomm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_dup, (fComm, &dupcomm), this);
    ROOT_MPI_CHECK_COMM(dupcomm, this);
    return  dupcomm;
 }
@@ -58,16 +58,16 @@ TInterCommunicator TInterCommunicator::Create(const TGroup &group) const
 {
    MPI_Comm ncomm;
    ROOT_MPI_CHECK_GROUP(group, this);
-   MPI_Comm_create(fComm, group, &ncomm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_create, (fComm, group, &ncomm), this);
    ROOT_MPI_CHECK_COMM(ncomm, this);
    return  ncomm;
 }
 
 //______________________________________________________________________________
-TInterCommunicator TInterCommunicator::Split(int color, int key) const
+TInterCommunicator TInterCommunicator::Split(Int_t color, Int_t key) const
 {
    MPI_Comm ncomm;
-   MPI_Comm_split(fComm, color, key, &ncomm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_split, (fComm, color, key, &ncomm), this);
    ROOT_MPI_CHECK_COMM(ncomm, this);
    return ncomm;
 }
