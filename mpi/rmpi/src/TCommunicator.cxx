@@ -1,5 +1,6 @@
 #include<Mpi/TCommunicator.h>
 #include<Mpi/TInterCommunicator.h>
+#include<Mpi/TIntraCommunicator.h>
 #include <Mpi/TMpiMessage.h>
 #include<iostream>
 #include<TSystem.h>
@@ -35,7 +36,7 @@ TCommunicator::~TCommunicator() {}
 Int_t TCommunicator::GetRank() const
 {
    Int_t rank;
-   MPI_Comm_rank(fComm, &rank);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_rank, (fComm, &rank), this);
    return rank;
 }
 
@@ -47,7 +48,7 @@ Int_t TCommunicator::GetRank() const
 Int_t TCommunicator::GetSize() const
 {
    Int_t size;
-   MPI_Comm_size(fComm, &size);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_size, (fComm, &size), this);
    return size;
 }
 
@@ -78,7 +79,7 @@ Int_t TCommunicator::GetMainProcess() const
 */
 void TCommunicator::Abort(Int_t error) const
 {
-   MPI_Abort(fComm, error);
+   ROOT_MPI_CHECK_CALL(MPI_Abort, (fComm, error), this);
 }
 
 //______________________________________________________________________________
@@ -91,7 +92,7 @@ Int_t TCommunicator::GetMaxTag() const
    Int_t *tag;
    Int_t flag = 0;
 
-   MPI_Comm_get_attr(MPI_COMM_WORLD, MPI_TAG_UB, &tag, &flag);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_get_attr, (MPI_COMM_WORLD, MPI_TAG_UB, &tag, &flag), this);
 
    ROOT_MPI_ASSERT(flag != 0, this);
    return *tag - 1;//one tag is reserved for internal use
@@ -114,7 +115,7 @@ Int_t TCommunicator::GetInternalTag() const
  */
 void  TCommunicator::Barrier() const
 {
-   MPI_Barrier(fComm);
+   ROOT_MPI_CHECK_CALL(MPI_Barrier, (fComm), this);
 }
 
 //______________________________________________________________________________
@@ -124,7 +125,7 @@ void  TCommunicator::Barrier() const
  */
 void  TCommunicator::IBarrier(TRequest &req) const
 {
-   MPI_Ibarrier(fComm, &req.fRequest);
+   ROOT_MPI_CHECK_CALL(MPI_Ibarrier, (fComm, &req.fRequest), this);
    if (req.fRequest == MPI_REQUEST_NULL) req.fCallback();
 }
 
@@ -139,7 +140,7 @@ void  TCommunicator::IBarrier(TRequest &req) const
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 {
    Int_t flag;
-   MPI_Iprobe(source, tag, fComm, &flag, &status.fStatus);
+   ROOT_MPI_CHECK_CALL(MPI_Iprobe, (source, tag, fComm, &flag, &status.fStatus), this);
    return (Bool_t)flag;
 }
 
@@ -153,7 +154,7 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag, TStatus &status) const
 Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
 {
    Int_t flag;
-   MPI_Iprobe(source, tag, fComm, &flag, MPI_STATUS_IGNORE);
+   ROOT_MPI_CHECK_CALL(MPI_Iprobe, (source, tag, fComm, &flag, MPI_STATUS_IGNORE), this);
    return (Bool_t)flag;
 }
 
@@ -167,7 +168,7 @@ Bool_t TCommunicator::IProbe(Int_t source, Int_t tag) const
  */
 void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
 {
-   MPI_Probe(source, tag, fComm, &status.fStatus);
+   ROOT_MPI_CHECK_CALL(MPI_Probe, (source, tag, fComm, &status.fStatus), this);
 }
 
 //______________________________________________________________________________
@@ -179,7 +180,7 @@ void TCommunicator::Probe(Int_t source, Int_t tag, TStatus &status) const
  */
 void TCommunicator::Probe(Int_t source, Int_t tag) const
 {
-   MPI_Probe(source, tag, fComm, MPI_STATUS_IGNORE);
+   ROOT_MPI_CHECK_CALL(MPI_Probe, (source, tag, fComm, MPI_STATUS_IGNORE), this);
 }
 
 
@@ -191,7 +192,7 @@ void TCommunicator::Probe(Int_t source, Int_t tag) const
 TGroup TCommunicator::GetGroup() const
 {
    TGroup group;
-   MPI_Comm_group(fComm, &group.fGroup);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_group, (fComm, &group.fGroup), this);
    return group;
 }
 
@@ -209,7 +210,7 @@ TGroup TCommunicator::GetGroup() const
 Int_t TCommunicator::Compare(const TCommunicator &comm1, const TCommunicator &comm2)
 {
    Int_t result;
-   MPI_Comm_compare(comm1.fComm, comm2.fComm, &result);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_compare, (comm1.fComm, comm2.fComm, &result), &COMM_WORLD);
    return result;
 }
 //______________________________________________________________________________
@@ -225,7 +226,7 @@ Int_t TCommunicator::Compare(const TCommunicator &comm1, const TCommunicator &co
 Int_t TCommunicator::Compare(const TCommunicator &comm2)
 {
    Int_t result;
-   MPI_Comm_compare(fComm, comm2.fComm, &result);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_compare, (fComm, comm2.fComm, &result), this);
    return result;
 }
 
@@ -239,7 +240,7 @@ Int_t TCommunicator::Compare(const TCommunicator &comm2)
 */
 void TCommunicator::Free(void)
 {
-   MPI_Comm_free(&fComm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_free, (&fComm), this);
 }
 
 //______________________________________________________________________________
@@ -249,7 +250,7 @@ void TCommunicator::Free(void)
 Bool_t TCommunicator::IsInter() const
 {
    Int_t t;
-   MPI_Comm_test_inter(fComm, &t);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_test_inter, (fComm, &t), this);
    return Bool_t(t);
 }
 
@@ -260,7 +261,7 @@ Bool_t TCommunicator::IsInter() const
 //______________________________________________________________________________
 void TCommunicator::Disconnect()
 {
-   MPI_Comm_disconnect(&fComm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_disconnect, (&fComm), this);
 }
 
 
@@ -268,7 +269,7 @@ void TCommunicator::Disconnect()
 TInterCommunicator TCommunicator::GetParent()
 {
    MPI_Comm parent;
-   MPI_Comm_get_parent(&parent);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_get_parent, (&parent), &COMM_WORLD);
    return parent;
 }
 
@@ -277,7 +278,7 @@ TInterCommunicator TCommunicator::GetParent()
 TInterCommunicator TCommunicator::Join(const Int_t fd)
 {
    MPI_Comm ncomm;
-   MPI_Comm_join(fd, &ncomm);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_join, (fd, &ncomm), &COMM_WORLD);
    return ncomm;
 }
 
@@ -351,13 +352,13 @@ TString TCommunicator::GetCommName() const
 {
    Char_t name[MPI_MAX_PROCESSOR_NAME];
    Int_t size;
-   MPI_Comm_get_name(fComm, name, &size);
+   ROOT_MPI_CHECK_CALL(MPI_Comm_get_name, (fComm, name, &size), this);
    return TString(name, size);
 }
 
 void TCommunicator::SetCommName(const TString name)
 {
-   MPI_Comm_set_name(fComm, name.Data());
+   ROOT_MPI_CHECK_CALL(MPI_Comm_set_name, (fComm, name.Data()), this);
 }
 
 
