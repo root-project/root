@@ -87,7 +87,7 @@ namespace ROOT {
          msg += "\n--------------------------------------------------------------------------\n";
 
          comm->Error(Form("%s(...) %s[%d]", function, file, line), "%s", msg.Data());
-         comm->Abort(errcode);
+         comm->Abort(errcode, kTRUE);
       }
    }
 }

@@ -77,8 +77,23 @@ Int_t TCommunicator::GetMainProcess() const
 * Method to abort  processes
 * \param error integer with error code
 */
-void TCommunicator::Abort(Int_t error) const
+void TCommunicator::Abort(Int_t error, Bool_t silent) const
 {
+   if (!silent) {
+      TString msg;
+      if (TErrorHandler::IsVerbose()) {
+         msg += Form("\nRank = %d", GetRank());
+         msg += Form("\nSize = %d", GetSize());
+         msg += Form("\nComm = %s", ClassName());
+         msg += Form("\nHost = %s", TEnvironment::GetProcessorName().Data());
+      }
+      msg += Form("\nCode = %d", error);
+      msg += Form("\nName = %s", TErrorHandler::GetErrorString(error).Data());
+      msg += "\nAborting, finishing the remaining processes.";
+      msg += "\n--------------------------------------------------------------------------\n";
+
+      std::cerr << "ROOT MPI Abort" << msg.Data();
+   }
    ROOT_MPI_CHECK_CALL(MPI_Abort, (fComm, error), this);
 }
 

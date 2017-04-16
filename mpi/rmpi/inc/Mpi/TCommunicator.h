@@ -100,7 +100,7 @@ namespace ROOT {
 
          Int_t GetMainProcess() const;
 
-         void Abort(Int_t error) const;
+         void Abort(Int_t error, Bool_t silent = kFALSE) const;
 
          Int_t GetMaxTag() const;
 
