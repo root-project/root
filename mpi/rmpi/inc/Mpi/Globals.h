@@ -60,11 +60,11 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 
 
 #define ROOT_MPI_CHECK_CALL(MPI_FUNCTION, ARGS,_comm){ \
-   Int_t _errcode = MPI_FUNCTION ARGS;               \
-   if(_errcode!=MPI_SUCCESS) TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,_errcode,Form("Calling function %s%s",#MPI_FUNCTION,#ARGS));}
+      Int_t _errcode = MPI_FUNCTION ARGS;               \
+      if(_errcode!=MPI_SUCCESS) TErrorHandler::TraceBack(_comm,__FUNCTION__,__FILENAME__,__LINE__,_errcode,Form("Calling function %s%s",#MPI_FUNCTION,#ARGS));}
 
-   
-   
+
+
 namespace ROOT {
    namespace Mpi {
 

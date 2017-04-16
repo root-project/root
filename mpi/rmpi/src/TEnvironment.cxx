@@ -25,18 +25,7 @@ TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t
       Int_t result;
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
       if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
-      Int_t errcode = MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
-      if (errcode != SUCCESS) {
-         TString msg;
-         msg += Form("\nHost = %s", GetProcessorName().Data());
-         msg += Form("\nCode = %d", errcode);
-         msg += Form("\nName = %s", TErrorHandler::GetErrorString(errcode).Data());
-         msg += Form("\nMessage = %s", "Error setting ErrorHandler to COMM_WORLD.");
-         msg += "\nAborting, finishing the remaining processes.";
-         msg += "\n--------------------------------------------------------------------------\n";
-         Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "%s", msg.Data());
-         gSystem->Exit(errcode);
-      }
+      ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
    } else {
       //TODO: added error handling here
    }
@@ -59,19 +48,8 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(
    MPI_Init_thread(&argc, &argv, level, &provided);
    if (IsInitialized()) {
       Int_t result;
-      MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
-      Int_t errcode = MPI_Comm_set_errhandler(MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler);
-      if (errcode != SUCCESS) {
-         TString msg;
-         msg += Form("\nHost = %s", GetProcessorName().Data());
-         msg += Form("\nCode = %d", errcode);
-         msg += Form("\nName = %s", TErrorHandler::GetErrorString(errcode).Data());
-         msg += Form("\nMessage = %s", "Error setting ErrorHandler to COMM_WORLD.");
-         msg += "\nAborting, finishing the remaining processes.";
-         msg += "\n--------------------------------------------------------------------------\n";
-         Error(Form("%s(...) %s[%d]", __FUNCTION__, __FILE__, __LINE__), "%s", msg.Data());
-         gSystem->Exit(errcode);
-      }
+      ROOT_MPI_CHECK_CALL(MPI_Comm_compare, ((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result), &COMM_WORLD);
+      ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
    } else {
       //TODO: added error handling here
    }
@@ -213,7 +191,7 @@ TString TEnvironment::GetProcessorName()
 {
    Char_t name[MAX_PROCESSOR_NAME];
    Int_t size;
-   MPI_Get_processor_name(name, &size);
+   ROOT_MPI_CHECK_CALL(MPI_Get_processor_name, (name, &size), &COMM_WORLD);
    return TString(name, size);
 }
 
@@ -221,7 +199,7 @@ TString TEnvironment::GetProcessorName()
 Int_t TEnvironment::GetThreadLevel()
 {
    Int_t level;
-   MPI_Query_thread(&level);
+   ROOT_MPI_CHECK_CALL(MPI_Query_thread, (&level), &COMM_WORLD);
    return level;
 }
 
@@ -229,6 +207,6 @@ Int_t TEnvironment::GetThreadLevel()
 Bool_t TEnvironment::IsMainThread()
 {
    Int_t status;
-   MPI_Is_thread_main(&status);
+   ROOT_MPI_CHECK_CALL(MPI_Is_thread_main, (&status), &COMM_WORLD);
    return Bool_t(status);
 }
