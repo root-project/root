@@ -327,11 +327,11 @@ namespace ROOT {
             Char_t *buffer;
             Int_t size;
             Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
-            MPI_Send(buffer, size, MPI_CHAR, dest, tag, fComm);
+            ROOT_MPI_CHECK_CALL(MPI_Send, (buffer, size, MPI_CHAR, dest, tag, fComm), this);
             delete buffer;
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Send((void *)vars, count, GetDataType<Type>(), dest, tag, fComm);
+            ROOT_MPI_CHECK_CALL(MPI_Send, ((void *)vars, count, GetDataType<Type>(), dest, tag, fComm), this);
          }
       }
 
@@ -364,16 +364,16 @@ namespace ROOT {
             TStatus s;
             Probe(source, tag, s);
 
-            MPI_Get_elements(&s.fStatus, MPI_CHAR, &size);
+            ROOT_MPI_CHECK_CALL(MPI_Get_elements, (&s.fStatus, MPI_CHAR, &size), this);
 
             Char_t *buffer = new Char_t[size];
-            MPI_Recv(buffer, size, MPI_CHAR, source, tag, fComm, MPI_STATUS_IGNORE);
+            ROOT_MPI_CHECK_CALL(MPI_Recv, (buffer, size, MPI_CHAR, source, tag, fComm, MPI_STATUS_IGNORE), this);
             Unserialize<Type>(buffer, size, vars, count, this, GetRank(), source, tag, 0);
 
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
             //TODO: added status argument to this method
-            MPI_Recv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE);
+            ROOT_MPI_CHECK_CALL(MPI_Recv, ((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE), this);
          }
       }
 
@@ -404,14 +404,14 @@ namespace ROOT {
             Char_t *buffer;
             Int_t size;
             Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
-            MPI_Isend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Isend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
             req.fCallback = [buffer]()mutable { //use to clean memory after wait
                if (buffer) delete buffer;
                buffer = NULL;
             };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Isend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Isend, ((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest), this);
          }
          return req;
       }
@@ -444,14 +444,14 @@ namespace ROOT {
             Char_t *buffer;
             Int_t size;
             Serialize(&buffer, size, vars, count, this, dest, GetRank(), tag);
-            MPI_Issend(buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Issend, (buffer, size, MPI_CHAR, dest, tag, fComm, &req.fRequest), this);
             req.fCallback = [buffer]()mutable { //use to clean memory after wait
                if (buffer) delete buffer;
                buffer = NULL;
             };
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Issend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Issend, ((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest), this);
          }
          return req;
       }
@@ -487,7 +487,7 @@ namespace ROOT {
             //
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Irsend((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Irsend, ((void *)vars, count, GetDataType<Type>(), dest, tag, fComm, &req.fRequest), this);
          }
          return req;
       }
@@ -531,16 +531,16 @@ namespace ROOT {
             while (!IProbe(source, tag, s)) {
                gSystem->Sleep(100);
             }
-            MPI_Get_elements(&s.fStatus, MPI_CHAR, &size);
+            ROOT_MPI_CHECK_CALL(MPI_Get_elements, (&s.fStatus, MPI_CHAR, &size), this);
 
             Char_t *buffer = new Char_t[size];
-            MPI_Irecv(buffer, size, MPI_CHAR, source, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Irecv, (buffer, size, MPI_CHAR, source, tag, fComm, &req.fRequest), this);
 
             req.fCallback = std::bind(Unserialize<Type>, buffer, size, vars, count, this, GetRank(), source, tag, 0);
 
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Irecv((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Irecv, ((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &req.fRequest), this);
          }
          return req;
       }
@@ -583,7 +583,7 @@ namespace ROOT {
 
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Bcast((void *)vars, count, GetDataType<Type>(), root, fComm);
+            ROOT_MPI_CHECK_CALL(MPI_Bcast, ((void *)vars, count, GetDataType<Type>(), root, fComm), this);
          }
 
       }
@@ -631,7 +631,7 @@ namespace ROOT {
 
          } else {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
-            MPI_Ibcast((void *)vars, count, GetDataType<Type>(), root, fComm, &req.fRequest);
+            ROOT_MPI_CHECK_CALL(MPI_Ibcast, ((void *)vars, count, GetDataType<Type>(), root, fComm, &req.fRequest), this);
          }
          return req;
       }
