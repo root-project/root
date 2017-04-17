@@ -52,7 +52,7 @@ namespace ROOT {
             return fVerbose;
          }
 
-         template<class T> static void TraceBack(T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
+         template<class T> static void TraceBack(const T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
 
       protected:
          // inter-language operability
@@ -70,7 +70,7 @@ namespace ROOT {
          ClassDef(TErrorHandler, 0)
       };
 
-      template<class T> void TErrorHandler::TraceBack(T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+      template<class T> void TErrorHandler::TraceBack(const T *comm, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
       {
          TString msg;
          if (TErrorHandler::IsVerbose()) {
@@ -89,6 +89,11 @@ namespace ROOT {
          comm->Error(Form("%s(...) %s[%d]", function, file, line), "%s", msg.Data());
          comm->Abort(errcode, kTRUE);
       }
+
+      template<> void TErrorHandler::TraceBack(const Char_t *class_name, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
+
+      template<> void TErrorHandler::TraceBack(const TGroup *group, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *msg);
+
    }
 }
 #endif

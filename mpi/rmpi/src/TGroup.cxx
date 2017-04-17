@@ -1,5 +1,5 @@
 #include<Mpi/TGroup.h>
-
+#include<Mpi/TErrorHandler.h>
 
 using namespace ROOT::Mpi;
 
@@ -7,7 +7,7 @@ using namespace ROOT::Mpi;
 Int_t TGroup::GetSize() const
 {
    Int_t size;
-   MPI_Group_size(fGroup, &size);
+   ROOT_MPI_CHECK_CALL(MPI_Group_size, (fGroup, &size), this);
    return size;
 }
 
@@ -15,21 +15,21 @@ Int_t TGroup::GetSize() const
 Int_t TGroup::GetRank() const
 {
    Int_t rank;
-   MPI_Group_rank(fGroup, &rank);
+   ROOT_MPI_CHECK_CALL(MPI_Group_rank, (fGroup, &rank), this);
    return rank;
 }
 
 //______________________________________________________________________________
 void TGroup::TranslateRanks(const TGroup &group1, Int_t n, const Int_t ranks1[], const TGroup &group2, Int_t ranks2[])
 {
-   MPI_Group_translate_ranks(group1.fGroup, n, const_cast<Int_t *>(ranks1), group2.fGroup, const_cast<Int_t *>(ranks2));
+   ROOT_MPI_CHECK_CALL(MPI_Group_translate_ranks, (group1.fGroup, n, const_cast<Int_t *>(ranks1), group2.fGroup, const_cast<Int_t *>(ranks2)), TGroup::Class_Name());
 }
 
 //______________________________________________________________________________
 Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
 {
    Int_t result;
-   MPI_Group_compare(group1.fGroup, group2.fGroup, &result);
+   ROOT_MPI_CHECK_CALL(MPI_Group_compare, (group1.fGroup, group2.fGroup, &result), TGroup::Class_Name());
    return result;
 
 }
@@ -38,7 +38,7 @@ Int_t TGroup::Compare(const TGroup &group1, const TGroup &group2)
 Int_t TGroup::Compare(const TGroup &group2)
 {
    Int_t result;
-   MPI_Group_compare(fGroup, group2.fGroup, &result);
+   ROOT_MPI_CHECK_CALL(MPI_Group_compare, (fGroup, group2.fGroup, &result), this);
    return result;
 
 }
@@ -47,7 +47,7 @@ Int_t TGroup::Compare(const TGroup &group2)
 TGroup TGroup::Union(const TGroup &group1, const TGroup &group2)
 {
    MPI_Group newgroup;
-   MPI_Group_union(group1.fGroup, group2.fGroup, &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_union, (group1.fGroup, group2.fGroup, &newgroup), TGroup::Class_Name());
    return newgroup;
 }
 
@@ -63,7 +63,7 @@ TGroup TGroup::Intersect(const TGroup &group1, const TGroup &group2)
 TGroup TGroup::Difference(const TGroup &group1, const TGroup &group2)
 {
    MPI_Group newgroup;
-   MPI_Group_difference(group1.fGroup, group2.fGroup, &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_difference, (group1.fGroup, group2.fGroup, &newgroup), TGroup::Class_Name());
    return newgroup;
 }
 
@@ -71,7 +71,7 @@ TGroup TGroup::Difference(const TGroup &group1, const TGroup &group2)
 TGroup TGroup::Include(Int_t n, const Int_t ranks[]) const
 {
    MPI_Group newgroup;
-   MPI_Group_incl(fGroup, n, const_cast<Int_t *>(ranks), &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_incl, (fGroup, n, const_cast<Int_t *>(ranks), &newgroup), this);
    return newgroup;
 
 }
@@ -80,7 +80,7 @@ TGroup TGroup::Include(Int_t n, const Int_t ranks[]) const
 TGroup TGroup::Exclude(Int_t n, const Int_t ranks[]) const
 {
    MPI_Group newgroup;
-   MPI_Group_excl(fGroup, n, const_cast<Int_t *>(ranks), &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_excl, (fGroup, n, const_cast<Int_t *>(ranks), &newgroup), this);
    return newgroup;
 }
 
@@ -88,7 +88,7 @@ TGroup TGroup::Exclude(Int_t n, const Int_t ranks[]) const
 TGroup TGroup::RangeInclude(Int_t n, const Int_t ranges[][3]) const
 {
    MPI_Group newgroup;
-   MPI_Group_range_incl(fGroup, n, const_cast<Int_t(*)[3]>(ranges), &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_range_incl, (fGroup, n, const_cast<Int_t(*)[3]>(ranges), &newgroup), this);
    return newgroup;
 }
 
@@ -96,12 +96,12 @@ TGroup TGroup::RangeInclude(Int_t n, const Int_t ranges[][3]) const
 TGroup TGroup::RangeExclude(Int_t n, const Int_t ranges[][3]) const
 {
    MPI_Group newgroup;
-   MPI_Group_range_excl(fGroup, n, const_cast<int(*)[3]>(ranges), &newgroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_range_excl, (fGroup, n, const_cast<int(*)[3]>(ranges), &newgroup), this);
    return newgroup;
 }
 
 //______________________________________________________________________________
 void TGroup::Free()
 {
-   MPI_Group_free(&fGroup);
+   ROOT_MPI_CHECK_CALL(MPI_Group_free, (&fGroup), this);
 }

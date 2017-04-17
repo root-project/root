@@ -119,7 +119,6 @@ Int_t TRootMpi::ProcessArgs()
       fMpirunParams += fArgv[fArgc - 1];//macro file is the last
       fMpirunParams += " \"";
       fMpirunParams += sRootParams;
-      std::cout << fMpirunParams << std::endl;
       return Execute();
    }
    return 0;
@@ -137,7 +136,9 @@ Int_t TRootMpi::Compile()
 Int_t TRootMpi::Execute()
 {
    auto cmd = fMpirun + " " + fMpirunParams;
-   return gSystem->Exec(cmd.Data());
+   auto status = gSystem->Exec(cmd.Data());
+   if (fCallValgrind) std::cout << "\nValgrind files " << Form(" report-%s-pid.memcheck ", fArgv[fArgc - 1]) << "must be generated." << std::endl;
+   return status;
 }
 
 void TRootMpi::InitHelp()

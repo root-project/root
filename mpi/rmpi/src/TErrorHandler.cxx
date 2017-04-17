@@ -1,12 +1,6 @@
 #include<Mpi/TErrorHandler.h>
-
-// namespace ROOT {
-//    namespace Mpi {
-//       const TErrorHandler  ERRORS_ARE_FATAL = MPI::ERRORS_ARE_FATAL;
-//       const TErrorHandler  ERRORS_RETURN = MPI::ERRORS_RETURN;
-//       const TErrorHandler  ERRORS_THROW_EXCEPTIONS = MPI::ERRORS_THROW_EXCEPTIONS;
-//    }
-// }
+#include<Mpi/TGroup.h>
+#include<Mpi/TIntraCommunicator.h>
 
 using namespace ROOT::Mpi;
 Bool_t TErrorHandler::fVerbose = kFALSE;
@@ -61,4 +55,45 @@ void TErrorHandler::Free()
    MPI_Errhandler_free(&fErrorHandler);
 }
 
+//______________________________________________________________________________
+template<> void TErrorHandler::TraceBack(const TGroup *group, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+{
+   TString msg;
+   if (TErrorHandler::IsVerbose()) {
+      msg += Form("\nRank   = %d", group->GetRank());
+      msg += Form("\nSize   = %d", group->GetSize());
+      msg += Form("\nObject = %s", group->ClassName());
+      msg += Form("\nHost   = %s", TEnvironment::GetProcessorName().Data());
+   }
 
+   msg += Form("\nCode = %d", errcode);
+   msg += Form("\nName = %s", GetErrorString(errcode).Data());
+   msg += Form("\nMessage = %s", _msg);
+   msg += "\nAborting, finishing the remaining processes.";
+   msg += "\n--------------------------------------------------------------------------\n";
+
+   group->Error(Form("%s(...) %s[%d]", function, file, line), "%s", msg.Data());
+   COMM_WORLD.Abort(errcode, kTRUE);
+}
+
+//______________________________________________________________________________
+template<> void TErrorHandler::TraceBack(const Char_t *class_name, const Char_t *function, const Char_t *file, Int_t line, Int_t errcode, const Char_t *_msg)
+{
+   TString msg;
+   if (TErrorHandler::IsVerbose()) {
+      msg += "\nUsing COMM_WORLD";
+      msg += Form("\nRank   = %d", COMM_WORLD.GetRank());
+      msg += Form("\nSize   = %d", COMM_WORLD.GetSize());
+      msg += Form("\nObject = %s", class_name);
+      msg += Form("\nHost   = %s", TEnvironment::GetProcessorName().Data());
+   }
+
+   msg += Form("\nCode = %d", errcode);
+   msg += Form("\nName = %s", GetErrorString(errcode).Data());
+   msg += Form("\nMessage = %s", _msg);
+   msg += "\nAborting, finishing the remaining processes.";
+   msg += "\n--------------------------------------------------------------------------\n";
+
+   COMM_WORLD.Error(Form("%s(...) %s[%d]", function, file, line), "%s", msg.Data());
+   COMM_WORLD.Abort(errcode, kTRUE);
+}
