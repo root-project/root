@@ -1765,13 +1765,7 @@ Double_t TF1::GetMinMaxNDim(Double_t *x , bool findmax, Double_t epsilon, Int_t 
       if (rmax[i] > rmin[i])
          stepSize = (rmax[i] - rmin[i]) / 100;
       else if (std::abs(x[i]) > 1.)
-<<<<<<< HEAD
          stepSize = 0.1 * x[i];
-
-=======
-         stepSize = 0.1*x[i];
-      
->>>>>>> 276f559... Support for CMA-ES minimizer based on libcmaes
       // set variable names
       if (ndim <= 3) {
          if (i == 0) {
