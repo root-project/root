@@ -21,7 +21,11 @@ namespace ROOT {
          TString fMpirunParams;       //mpirun params like -np 2 etc..
          TString fCompiler;           //compiler for mpi ex. mpic++
          TString fCompilerParams;     //Compile Flags/Linking flags for mpic++
+         TString fValgrind;           //path to valgrind command
+         TString fValgrindParams;     //Valgrind params
          TString fHelpMsg;            //help message
+         Bool_t  fCallValgrind;       // flag to indicate that valgrind must be called
+         const Char_t *fRootSys;            //path to ROOT system, I will be exported with mpirun
 
       protected:
          Int_t ProcessArgs();

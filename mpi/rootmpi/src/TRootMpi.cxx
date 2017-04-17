@@ -10,11 +10,23 @@ using namespace ROOT::Mpi;
 //______________________________________________________________________________
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 {
+
+   fRootSys = gSystem->Getenv("ROOTSYS");
+
+   //TODO: added codes to check all defines and paths for executables
    fMpirun = ROOT_MPI_EXEC;
-   fCompiler = ROOT_MPI_CXX;
    fMpirunParams = " ";
+
+   fCompiler = ROOT_MPI_CXX;
+
+   fValgrind = ROOT_MPI_VALGRIND;
+   fCallValgrind = kFALSE;
+   fValgrindParams =  Form("--suppressions=%s/etc/valgrind-root.supp", fRootSys);
+   fValgrindParams += " -v --leak-check=full --show-leak-kinds=all --track-origins=yes --show-reachable=yes  ";
+
    fArgc = argc;
    fArgv = argv;
+
    InitHelp();
 }
 
@@ -28,12 +40,9 @@ Int_t TRootMpi::Launch()
    }
 
    if (TString(fArgv[fArgc - 1]) == "-process_macro") {
-      Int_t tmp_Argc = fArgc - 1; //less macro name
-      TRint *rootmpi = new TRint("rootmpi", &tmp_Argc, fArgv, 0, 0, kTRUE);
       Int_t status;
-      auto macroFile = rootmpi->Argv(fArgc - 2);
-      rootmpi->ProcessFile(macroFile, &status);
-      delete rootmpi;
+      auto macroFile = fArgv[fArgc - 2];
+      gApplication->ProcessFile(macroFile, &status);
       return status;
    } else {
       return ProcessArgs() ? 1 : 0;
@@ -59,8 +68,10 @@ Int_t TRootMpi::ProcessArgs()
       return gSystem->Exec("mpic++ --help");
    }
    if ((TString(fArgv[1]) == TString("--help-mpirun"))) {
-      return gSystem->Exec("mpirun --help");
+      TString cmd_help = fMpirun + " --help";
+      return gSystem->Exec(cmd_help.Data());
    }
+
 
    if (TString(fArgv[1]) == "-C") {
       for (int i = 2; i < fArgc; i++) {
@@ -93,16 +104,22 @@ Int_t TRootMpi::ProcessArgs()
          if ((arg == "-b") || (arg == "-n") || (arg == "-l") || (arg == "-q") || (arg == "-x") || (arg == "-memstat")) {
             sRootParams += " " + arg;
          } else {
-            fMpirunParams += " " + arg;
+            if (arg == "-valgrind") fCallValgrind = kTRUE;
+            else fMpirunParams += " " + arg;
          }
       }
+
+      if (fCallValgrind) {
+         fMpirunParams += " " + fValgrind + " " + fValgrindParams + Form(" --log-file=report-%s-%s.memcheck ", fArgv[fArgc - 1], "%p");
+      }
       fMpirunParams += " ";
-      fMpirunParams += fArgv[0];
+//       fMpirunParams += Form("%s/bin/%s",fRootSys,fArgv[0]);
+      fMpirunParams += Form("%s/bin/root -l -q", fRootSys);
       fMpirunParams += " \"";
       fMpirunParams += fArgv[fArgc - 1];//macro file is the last
       fMpirunParams += " \"";
       fMpirunParams += sRootParams;
-      fMpirunParams += " -process_macro ";
+      std::cout << fMpirunParams << std::endl;
       return Execute();
    }
    return 0;
@@ -131,7 +148,9 @@ void TRootMpi::InitHelp()
    fHelpMsg += "Options:\n";
    fHelpMsg += "  --help-mpic++  show mpi options for compilation\n";
    fHelpMsg += "  --help-mpirun  show mpi options for execution\n";
-   fHelpMsg += "Options Cint/ROOT:\n";
+   fHelpMsg += "Options Valgrind:\n";
+   fHelpMsg += " -valgrind : launch mpi execution with valgrind\n";
+   fHelpMsg += "Options Cling/ROOT:\n";
    fHelpMsg += " -b : run in batch mode without graphics\n";
    fHelpMsg += " -n : do not execute logon and logoff macros as specified in .rootrc\n";
    fHelpMsg += " -q : exit after processing command line macro files\n";

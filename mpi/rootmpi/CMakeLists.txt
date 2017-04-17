@@ -2,7 +2,14 @@
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 include_directories(inc/)
-add_definitions(-w "-DROOT_MPI_EXEC=\"${MPIEXEC}\"" "-DROOT_MPI_CXX=\"${CXX}\"")
+
+find_program(VALGRIND "valgrind")
+if(VALGRIND)
+    message(STATUS "Found ${VALGRIND}")
+    add_definitions(-w "-DROOT_MPI_VALGRIND=\"${VALGRIND}\"" )
+endif()
+
+add_definitions(-w "-DROOT_MPI_EXEC=\"${MPIEXEC}\"" "-DROOT_MPI_CXX=\"${CXX}\"" "-DROOT_MPI_ROOTSYS=\"$ENV{ROOTSYS}\"")
 
 if(${MPI_CXX_FOUND})
 add_definitions( "-DROOT_MPI_CFLAGS=\"${MPI_CXX_COMPILE_FLAGS}\""  "-DROOT_MPI_LDFLAGS=\"${MPI_CXX_LINK_FLAGS}\"")
