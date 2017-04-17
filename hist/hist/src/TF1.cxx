@@ -622,6 +622,9 @@ void TF1::DoInitialize(EAddToList addToGlobalList) {
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1*)gROOT->GetListOfFunctions()->FindObject(fName);
       gROOT->GetListOfFunctions()->Remove(f1old);
+      // We removed f1old from the list, it is not longer global.
+      // (See TF1::AddToGlobalList which requires this flag to be correct).
+      f1old->SetBit(kNotGlobal, kTRUE);
       gROOT->GetListOfFunctions()->Add(this);
    }
    else
@@ -665,7 +668,7 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
       }
       // do I need to delete previous one with the same name ???
       //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
-      //if (old) gROOT->GetListOfFunctions()->Remove(old);
+      //if (old) { gROOT->GetListOfFunctions()->Remove(old); old->SetBit(kNotGlobal, kTRUE); }
       R__LOCKGUARD2(gROOTMutex);
       gROOT->GetListOfFunctions()->Add(this);
       SetBit(kNotGlobal,kFALSE);
