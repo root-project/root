@@ -628,10 +628,12 @@ void TF1::DoInitialize(EAddToList addToGlobalList)
       R__LOCKGUARD2(gROOTMutex);
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1 *)gROOT->GetListOfFunctions()->FindObject(fName);
-      gROOT->GetListOfFunctions()->Remove(f1old);
-      // We removed f1old from the list, it is not longer global.
-      // (See TF1::AddToGlobalList which requires this flag to be correct).
-      f1old->SetBit(kNotGlobal, kTRUE);
+      if (f1old) {
+         gROOT->GetListOfFunctions()->Remove(f1old);
+         // We removed f1old from the list, it is not longer global.
+         // (See TF1::AddToGlobalList which requires this flag to be correct).
+         f1old->SetBit(kNotGlobal, kTRUE);
+      }
       gROOT->GetListOfFunctions()->Add(this);
    } else
       SetBit(kNotGlobal, kTRUE);
