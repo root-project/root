@@ -227,6 +227,7 @@ if (UNIX)
       execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${cling_tmp_arg_list} -xc++ -E -v /dev/null
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
     endif()
+    set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
 
     execute_process(
       COMMAND echo ${CLING_CXX_HEADERS}
