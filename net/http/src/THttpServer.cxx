@@ -70,11 +70,12 @@ public:
 
 class TLongPollEngine : public THttpWSEngine {
 protected:
-   THttpCallArg *fPoll;  ///< polling connection, which can be used for the sending next operation
+   THttpCallArg *fPoll;  ///< polling request, which can be used for the next sending
+   TString       fBuf;   ///< single entry to keep data which is not yet send to the client
 
 public:
    TLongPollEngine(const char *name, const char *title)
-      : THttpWSEngine(name, title), fPoll(0)
+      : THttpWSEngine(name, title), fPoll(0), fBuf()
    {
    }
 
@@ -82,14 +83,53 @@ public:
 
    virtual UInt_t GetId() const { return TString::Hash((void *)this, sizeof(void *)); }
 
-   virtual void ClearHandle() { fPoll = 0; }
-
-   virtual void Send(const void *buf, int len)
+   virtual void ClearHandle()
    {
+      if (fPoll) { fPoll->Set404(); fPoll->NotifyCondition(); fPoll = 0; }
+   }
+
+   virtual void Send(const void * /*buf*/, int /*len*/)
+   {
+      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
    }
 
    virtual void SendCharStar(const char *buf)
    {
+      if (fPoll) {
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent(buf);
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      } else
+      if (fBuf.Length() == 0) {
+         fBuf = buf;
+      } else {
+         Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
+      }
+   }
+
+   virtual Bool_t PreviewData(THttpCallArg *arg)
+   {
+      // function called in the user code before processing correspondent websocket data
+
+      if (fPoll) {
+         // if there are pending request, reply it immediately
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent("");
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+
+      if (fBuf.Length() > 0) {
+         arg->SetContentType("text/plain");
+         arg->SetContent(fBuf.Data());
+         fBuf = "";
+      } else {
+         arg->SetPostponed();
+         fPoll = arg;
+      }
+
+      return kTRUE;
    }
 
 };
@@ -518,7 +558,7 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->fCond.notify_one();
+      arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
@@ -722,7 +762,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // try to emulate websocket connect
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
-         if (canv->GetCanvasImp()->ProcessWSRequest(arg) && !arg->Is404()) {
+         if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
             arg->SetMethod("WS_READY");
 
             TLongPollEngine* handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
@@ -730,19 +770,26 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
-            if (canv->GetCanvasImp()->ProcessWSRequest(arg) && !arg->Is404())
+            if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
                arg->SetContent(TString::Format("%u",arg->GetWSId()));
+               arg->SetContentType("text/plain");
+            }
          }
+         if (!arg->IsContentType("text/plain"))
+            arg->Set404();
       } else {
          TUrl url;
          url.SetOptions(arg->fQuery);
          url.ParseOptions();
          Int_t connid = url.GetIntValueFromOptions("connection");
          arg->SetWSId((UInt_t)connid);
-         if (url.HasOption("close"))
+         if (url.HasOption("close")) {
             arg->SetMethod("WS_CLOSE");
-         else
+            arg->SetContent("OK");
+            arg->SetContentType("text/plain");
+         } else {
             arg->SetMethod("WS_DATA");
+         }
          if (!canv->GetCanvasImp()->ProcessWSRequest(arg)) arg->Set404();
       }
       return;
