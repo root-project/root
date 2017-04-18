@@ -2,7 +2,7 @@
 // Author: Valeriy Onuchin   12/09/04
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -179,7 +179,7 @@ const char gHelpAboutBuilder[] = "\
                   ROOT Gui Builder\n\
 \n\
 ************************************************************\n\
-* Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.  *\n\
+* Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.  *\n\
 * All rights reserved.                                     *\n\
 *                                                          *\n\
 * For the licensing terms see $ROOTSYS/LICENSE.            *\n\

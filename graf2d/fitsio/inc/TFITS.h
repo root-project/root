@@ -2,7 +2,7 @@
 // Author: Claudi Martinez, July 19th 2010
 
 /*************************************************************************
- * Copyright (C) 1995-2010, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

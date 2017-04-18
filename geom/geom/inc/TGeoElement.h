@@ -2,7 +2,7 @@
 // Author: Andrei Gheata   17/06/04
 // Added support for radionuclides: Mihaela Gheata 24/08/2006
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

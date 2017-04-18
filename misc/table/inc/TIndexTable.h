@@ -2,7 +2,7 @@
 // Author: Valery Fine(fine@bnl.gov)   01/03/2001
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2001 [BNL] Brookhaven National Laboratory.              *
  * All rights reserved.                                                  *
  *                                                                       *

@@ -1,7 +1,7 @@
 // @(#)root/qt:$Id: 98e9b85f582807ea6469888efd07a1ab980ac70a $
 // Author: Valeri Fine   21/01/2003
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2003 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *

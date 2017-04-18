@@ -2,7 +2,7 @@
 // Author: Markus Frank 01/02/2006
 
 /*************************************************************************
-* Copyright (C) 1995-2000, Rene Brun and Fons Rademakers and al.        *
+* Copyright (C) 1995-2017, Rene Brun and Fons Rademakers and al.        *
 * All rights reserved.                                                  *
 *                                                                       *
 * For the licensing terms see $ROOTSYS/LICENSE.                         *

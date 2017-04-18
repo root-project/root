@@ -2,7 +2,7 @@
 // Author: D.Bertini and M.Ivanov   10/08/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

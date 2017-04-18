@@ -1,7 +1,7 @@
 /* @(#)root/asimage:$Id$ */
 
 /*************************************************************************
- * Copyright (C) 1995-2010, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms seeg $ROOTSYS/LICENSE.                        *

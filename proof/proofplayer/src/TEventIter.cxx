@@ -3,7 +3,7 @@
 // Modified: Long Tran-Thanh    04/09/07  (Addition of TEventIterUnit)
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

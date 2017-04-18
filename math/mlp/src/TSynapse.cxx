@@ -2,7 +2,7 @@
 // Author: Christophe.Delaere@cern.ch   21/08/2002
 
 /*************************************************************************
- * Copyright (C) 1995-2003, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
