@@ -4,10 +4,10 @@ void tprofile2poly_tprofile2d_sim2()
    auto c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
    c1->Divide(2,1);
 
-   auto TP2D  = new TProfile2D("hprof2d","Profile of pz versus px and py",40,-4,4,40,-4,4,0,20);
+   auto TP2D  = new TProfile2D("hprof2d","Profile of pz versus px and py",100,-10,10,100,-10,10,0,100);
    auto TP2P = new TProfile2Poly();
 
-   TP2P->Honeycomb(-4,-4,.1,45,55);
+   TP2P->Honeycomb(-10,-10,.1,100,130);
    TP2P->SetName("mine");
    TP2P->SetTitle("mine");
 

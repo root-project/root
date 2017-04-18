@@ -9,11 +9,15 @@ void tprofile2poly_merge() {
 
   TH2Poly* whole = new TH2Poly();
   TProfile2Poly* whole_avg = new TProfile2Poly();
+  TProfile2D* TP2D_avg  = new TProfile2D("hprof2d","Profile of pz versus px and py",16,-4,4,16,-4,4,0,100);
+
 
   TH2Poly*       abso = new TH2Poly[NUM_LS];
   TProfile2Poly* avgs = new TProfile2Poly[NUM_LS];
 
   TProfile2Poly* empty = new TProfile2Poly();
+  TProfile2Poly* empty2 = new TProfile2Poly();
+
 
 
   float minx = -4; float maxx = 4;
@@ -26,6 +30,7 @@ void tprofile2poly_merge() {
       whole_avg->AddBin(i, j, i+binsz, j+binsz);
       whole->AddBin(i, j, i+binsz, j+binsz);
       empty->AddBin(i, j, i+binsz, j+binsz);
+      empty2->AddBin(i, j, i+binsz, j+binsz);
 
       for (int kk = 0; kk <= NUM_LS-1; ++kk) {
         avgs[kk].AddBin(i, j, i+binsz, j+binsz);
@@ -39,7 +44,7 @@ void tprofile2poly_merge() {
   std::vector<std::vector<Event>>              lumisection;
   std::vector<std::vector<std::vector<Event>>> run;
 
-  c1->Divide(3,3);
+  c1->Divide(3,4);
   Double_t ii = 0;
 
   // Fill histograms events
@@ -67,13 +72,15 @@ void tprofile2poly_merge() {
         whole_avg->Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e)); // actual number of hits per bin
         abso[i].Fill(std::get<0>(e), std::get<1>(e)); // weight/charge
         avgs[i].Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e)); // weight/charge
+        TP2D_avg->Fill(std::get<0>(e), std::get<1>(e), std::get<2>(e));
+
 
         events.push_back(e);
       }
       lumisection.push_back(events);
 
       c1->cd(8);
-      whole_avg->SetStats(0);
+      // whole_avg->SetStats(0);
       whole_avg->SetTitle("Running Average");
       whole_avg->Draw("COLZ TEXT");
       c1->Update();
@@ -83,14 +90,14 @@ void tprofile2poly_merge() {
 
     c1->cd(i+1);
     title = " avg charge in LumiSec " + std::to_string(i);
-    avgs[i].SetStats(0);
+    // avgs[i].SetStats(0);
     avgs[i].SetTitle(title.c_str());
     avgs[i].Draw("COLZ TEXT");
     c1->Update();
 
     c1->cd(i+3+1);
     title = " abs hits in LumiSec " + std::to_string(i);
-    abso[i].SetStats(0);
+    // abso[i].SetStats(0);
     abso[i].SetTitle(title.c_str());
     abso[i].Draw("COLZ TEXT");
     c1->Update();
@@ -99,7 +106,7 @@ void tprofile2poly_merge() {
   }
 
   c1->cd(9);
-  whole->SetStats(0);
+  // whole->SetStats(0);
   whole->SetTitle("total hits");
   whole->Draw("COLZ TEXT");
 
@@ -110,7 +117,23 @@ void tprofile2poly_merge() {
   list.push_back(&avgs[2]);
   empty->Merge(list);
 
-  empty->SetStats(0);
-  empty->SetTitle("merge avg0, avg1, avg2 Manually");
+  // empty->SetStats(0);
+  empty->SetTitle("merge avg0, avg1, avg2 Manually w/ Vector");
   empty->Draw("COLZ TEXT");
+
+
+  TList li;
+  li.Add(&avgs[0]);
+  li.Add(&avgs[1]);
+  li.Add(&avgs[2]);
+
+  empty2->Merge(&li);
+  c1->cd(10);
+  empty2->SetTitle("merge avg0, avg1, avg2 Manually w/ TList");
+  empty2->Draw("COLZ TEXT");
+
+  c1->cd(11);
+  // whole->SetStats(0);
+  TP2D_avg->SetTitle("TProfile2D Average");
+  TP2D_avg->Draw("COLZ TEXT");
 }

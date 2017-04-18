@@ -28,6 +28,8 @@ public:
     void SetFSumwz2(Double_t value)     { fSumwz2 = value;     }
     void SetFNumEntries(Double_t value) { fNumEntries = value; }
 
+    void ClearStats();
+
 private:
     Double_t fSumw;
     Double_t fSumw2;
@@ -62,9 +64,13 @@ public:
     virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
     virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
-    void Merge(std::vector<TProfile2Poly*> list); // TODO: Put correct signature so that we can ;override;
-    void Reset(Option_t *option) override;
+    // Writing things such that TProfileHelper can be used on TProfile2Poly
+    // would require rewriting parts of TH2Poly; nope. -> implementing select features
+    Long64_t Merge(TCollection* in) override;
+    virtual void Reset(Option_t *option="") override;
 
+    // provide 'normal' interface of merging TProfile2Polys
+    virtual void Merge(std::vector<TProfile2Poly*> list);
 
 private:
     Double_t    fTsumwz;

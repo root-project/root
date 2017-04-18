@@ -35,6 +35,14 @@ void TProfile2PolyBin::UpdateAverage(){
     SetChanged(true);
 }
 
+void TProfile2PolyBin::ClearStats(){
+   fSumw       = 0;
+   fSumw2      = 0;
+   fSumwz      = 0;
+   fSumwz2     = 0;
+   fNumEntries = 0;
+}
+
 // -------------- TProfile2Poly  --------------
 
 TProfile2Poly::TProfile2Poly(const char *name, const char *title,
@@ -164,6 +172,17 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
     return -5;
 }
 
+Long64_t TProfile2Poly::Merge(TCollection* in){
+
+    std::vector<TProfile2Poly*> list;
+
+    for(int i=0; i<in->GetSize(); i++){
+        list.push_back((TProfile2Poly*)((TList*)in)->At(i));
+    }
+    this->Merge(list);
+    return 0;
+}
+
 void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
 
     // TODO: Build checks to see if merge is allowed on "this" / "list"
@@ -174,7 +193,21 @@ void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
     // TODO: CHECK SIZES OF ALL INPUT ELEMENTS TO VERYIFY THAT WE CAN ACTUALLY MERGE THESE SHITS TOGETHER.
     Int_t numBins = list[0]->fBins->GetSize();
 
-    // for each bin
+    // ------------ Update global (per histo) statistics
+    for(const auto& histo : list){
+        this->fEntries += histo->fEntries;
+        this->fTsumw   += histo->fTsumw  ;
+        this->fTsumw2  += histo->fTsumw2 ;
+        this->fTsumwx  += histo->fTsumwx ;
+        this->fTsumwx2 += histo->fTsumwx2;
+        this->fTsumwy  += histo->fTsumwy ;
+        this->fTsumwy2 += histo->fTsumwy2;
+        this->fTsumwxy += histo->fTsumwxy;
+        this->fTsumwz  += histo->fTsumwz ;
+        this->fTsumwz2 += histo->fTsumwz2;
+    }
+
+    // ------------ Update local (per bin) statistics
     for(Int_t i=0; i<numBins; i++){
         dst = (TProfile2PolyBin*)fBins->At(i);
 
@@ -206,6 +239,7 @@ void TProfile2Poly::Reset(Option_t *opt){
    while ((obj = next())) {
       bin = (TProfile2PolyBin*) obj;
       bin->ClearContent();
+      bin->ClearStats();
    }
    TH2::Reset(opt);
 }
