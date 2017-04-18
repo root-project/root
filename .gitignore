@@ -816,6 +816,8 @@ root/tree/addresses/converterIssues/test_file.root
 # /root/tree/readfile/
 
 # /root/tree/selector/
+/root/tree/selector/lhef_*_gen.C
+/root/tree/selector/lhef_*_gen.h
 
 # /root/tree/split/
 /root/tree/split/abstract.root
