@@ -179,11 +179,15 @@ Long64_t TProfile2Poly::Merge(TCollection* in){
     for(int i=0; i<in->GetSize(); i++){
         list.push_back((TProfile2Poly*)((TList*)in)->At(i));
     }
-    this->Merge(list);
-    return 0;
+    return this->Merge(list);
 }
 
 Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
+
+    if(list.size() == 0){
+        std::cout << "[FAIL] TProfile2Poly::Merge: No objects to be merged " << std::endl;
+        return -1;
+    }
 
     // ------------ Check that bin numbers of TP2P's to be merged are equal
     std::set<Int_t> numBinUnique;
@@ -191,8 +195,8 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
         numBinUnique.insert(histo->fBins->GetSize());
     }
     if(numBinUnique.size() != 1) {
-        std::cout << "[ERROR] Bin numbers of TProfile2Polys to be merged differ! Aborting" << std::endl;
-                return -1;
+        std::cout << "[FAIL] TProfile2Poly::Merge: Bin numbers of TProfile2Polys to be merged differ!" << std::endl;
+        return -1;
     }
     Int_t numBins = *numBinUnique.begin();
 
@@ -218,16 +222,14 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
     for(Int_t i=0; i<numBins; i++){
         dst = (TProfile2PolyBin*)fBins->At(i);
 
-        Int_t current_src        = 0;
         Double_t Sumw_srcs       = 0;
         Double_t NumEntries_srcs = 0;
 
         // accumulate values of interest in the input vector
         for(const auto& e : list){
-            src  = ((TProfile2PolyBin*)list[current_src]->fBins->At(i));
+            src  = (TProfile2PolyBin*)e->fBins->At(i);
             Sumw_srcs += src->GetFSumw();
             NumEntries_srcs += src->GetFNumEntries();
-            current_src++;
         }
 
         // set values of accumulation
@@ -235,7 +237,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
         dst->SetFNumEntries(NumEntries_srcs + dst->GetFNumEntries());
         dst->UpdateAverage();
     }
-    return 0;
+    return 1;
 }
 
 void TProfile2Poly::Reset(Option_t *opt){
