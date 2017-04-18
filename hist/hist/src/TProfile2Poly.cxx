@@ -183,15 +183,19 @@ Long64_t TProfile2Poly::Merge(TCollection* in){
     return 0;
 }
 
-void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
+Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
 
-    // TODO: Build checks to see if merge is allowed on "this" / "list"
+    // ------------ Check that bin numbers of TP2P's to be merged are equal
+    std::set<Int_t> numBinUnique;
+    for(const auto& histo : list){
+        numBinUnique.insert(histo->fBins->GetSize());
+    }
+    if(numBinUnique.size() != 1) {
+        std::cout << "[ERROR] Bin numbers of TProfile2Polys to be merged differ! Aborting" << std::endl;
+                return -1;
+    }
+    Int_t numBins = *numBinUnique.begin();
 
-    TProfile2PolyBin* dst = nullptr;
-    TProfile2PolyBin* src = nullptr;
-
-    // TODO: CHECK SIZES OF ALL INPUT ELEMENTS TO VERYIFY THAT WE CAN ACTUALLY MERGE THESE SHITS TOGETHER.
-    Int_t numBins = list[0]->fBins->GetSize();
 
     // ------------ Update global (per histo) statistics
     for(const auto& histo : list){
@@ -208,6 +212,9 @@ void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
     }
 
     // ------------ Update local (per bin) statistics
+    TProfile2PolyBin* dst = nullptr;
+    TProfile2PolyBin* src = nullptr;
+
     for(Int_t i=0; i<numBins; i++){
         dst = (TProfile2PolyBin*)fBins->At(i);
 
@@ -228,6 +235,7 @@ void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
         dst->SetFNumEntries(NumEntries_srcs + dst->GetFNumEntries());
         dst->UpdateAverage();
     }
+    return 0;
 }
 
 void TProfile2Poly::Reset(Option_t *opt){

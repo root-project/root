@@ -80,7 +80,6 @@ void tprofile2poly_merge() {
       lumisection.push_back(events);
 
       c1->cd(8);
-      // whole_avg->SetStats(0);
       whole_avg->SetTitle("Running Average");
       whole_avg->Draw("COLZ TEXT");
       c1->Update();
@@ -90,14 +89,12 @@ void tprofile2poly_merge() {
 
     c1->cd(i+1);
     title = " avg charge in LumiSec " + std::to_string(i);
-    // avgs[i].SetStats(0);
     avgs[i].SetTitle(title.c_str());
     avgs[i].Draw("COLZ TEXT");
     c1->Update();
 
     c1->cd(i+3+1);
     title = " abs hits in LumiSec " + std::to_string(i);
-    // abso[i].SetStats(0);
     abso[i].SetTitle(title.c_str());
     abso[i].Draw("COLZ TEXT");
     c1->Update();
@@ -106,7 +103,6 @@ void tprofile2poly_merge() {
   }
 
   c1->cd(9);
-  // whole->SetStats(0);
   whole->SetTitle("total hits");
   whole->Draw("COLZ TEXT");
 
@@ -117,10 +113,8 @@ void tprofile2poly_merge() {
   list.push_back(&avgs[2]);
   empty->Merge(list);
 
-  // empty->SetStats(0);
   empty->SetTitle("merge avg0, avg1, avg2 Manually w/ Vector");
   empty->Draw("COLZ TEXT");
-
 
   TList li;
   li.Add(&avgs[0]);
@@ -133,7 +127,6 @@ void tprofile2poly_merge() {
   empty2->Draw("COLZ TEXT");
 
   c1->cd(11);
-  // whole->SetStats(0);
   TP2D_avg->SetTitle("TProfile2D Average");
   TP2D_avg->Draw("COLZ TEXT");
 }

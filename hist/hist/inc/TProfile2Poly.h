@@ -70,7 +70,7 @@ public:
     virtual void Reset(Option_t *option="") override;
 
     // provide 'normal' interface of merging TProfile2Polys
-    virtual void Merge(std::vector<TProfile2Poly*> list);
+    virtual Long64_t Merge(std::vector<TProfile2Poly*> list);
 
 private:
     Double_t    fTsumwz;
