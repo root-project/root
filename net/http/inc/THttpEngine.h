@@ -68,9 +68,11 @@ public:
 
    virtual void SendCharStar(const char *str);
 
-   virtual void ProcessData(THttpCallArg *arg);
+   virtual Bool_t PreviewData(THttpCallArg *) { return kTRUE; }
 
    // --------- method to work with Canvas (temporary solution)
+
+   virtual void ProcessData(THttpCallArg *arg);
 
    virtual void AssignCanvas(TCanvas *canv);
 
