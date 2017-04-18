@@ -771,7 +771,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
+         if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
             arg->SetMethod("WS_READY");
 
             TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
@@ -779,7 +779,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
-            if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
+            if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
                arg->SetContent(TString::Format("%u", arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
@@ -798,7 +798,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          } else {
             arg->SetMethod("WS_DATA");
          }
-         if (!canv->GetCanvasImp()->ProcessWSRequest(arg)) arg->Set404();
+         if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
       }
       return;
 
