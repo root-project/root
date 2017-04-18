@@ -1,24 +1,29 @@
+/*
+Test merging of TProfile2Poly
+Similar to tprofile2poly_avg.cxx
+
+Keep track of total charge/hit in whole_avg which again is emulating
+a TProfile2D TP2D_avg. Also save individual LumiSections and Merge them
+together in the end.
+*/
+
 #include <iostream>
                         // x,     , y      , weight
 using Event = std::tuple<Double_t, Double_t, Double_t>;
 
 void tprofile2poly_merge() {
   TCanvas* c1 = new TCanvas("c1","multipads",900,700);
-
   int NUM_LS = 3;
 
   TH2Poly* whole = new TH2Poly();
   TProfile2Poly* whole_avg = new TProfile2Poly();
   TProfile2D* TP2D_avg  = new TProfile2D("hprof2d","Profile of pz versus px and py",16,-4,4,16,-4,4,0,100);
 
-
   TH2Poly*       abso = new TH2Poly[NUM_LS];
   TProfile2Poly* avgs = new TProfile2Poly[NUM_LS];
 
   TProfile2Poly* empty = new TProfile2Poly();
   TProfile2Poly* empty2 = new TProfile2Poly();
-
-
 
   float minx = -4; float maxx = 4;
   float miny = -4; float maxy = 4;

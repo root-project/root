@@ -2,7 +2,7 @@
                         // x,     , y      , weight
 using Event = std::tuple<Double_t, Double_t, Double_t>;
 
-void tprofile2poly_sim1() {
+void tprofile2poly_sim() {
   TCanvas* c1 = new TCanvas("c1","multipads",900,700);
 
   int NUM_LS = 3;
@@ -12,7 +12,7 @@ void tprofile2poly_sim1() {
 
   TH2Poly*       abso = new TH2Poly[NUM_LS];
   TProfile2Poly* avgs = new TProfile2Poly[NUM_LS];
-  
+
   float minx = -4; float maxx = 4;
   float miny = -4; float maxy = 4;
   float binsz = 0.5;

@@ -1,3 +1,7 @@
+/*
+Approximate a TProfile2D with TProfile2Poly, and see if results are the same.
+Approximation done with honeycomb patten
+*/
 void tprofile2poly_tprofile2d_sim2()
 {
   // CREATE PLOT STURCTURES

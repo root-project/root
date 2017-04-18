@@ -1,3 +1,9 @@
+/*
+Simulate particles with varying charge being shot at a detector.
+Some regions the charge deviates larger, therefore the plot should show
+differences in average charge per hit.
+*/
+
 #include <iostream>
                         // x,     , y      , weight
 using Event = std::tuple<Double_t, Double_t, Double_t>;

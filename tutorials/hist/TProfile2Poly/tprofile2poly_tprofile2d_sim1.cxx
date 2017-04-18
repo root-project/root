@@ -1,3 +1,7 @@
+/*
+Simulate a TProfile2D with TProfile2Poly, and see if results are the same
+*/
+
 void tprofile2poly_tprofile2d_sim1()
 {
   // CREATE PLOT STURCTURES
