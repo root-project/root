@@ -81,7 +81,11 @@ public:
 
    virtual ~TLongPollEngine() {}
 
-   virtual UInt_t GetId() const { return TString::Hash((void *)this, sizeof(void *)); }
+   virtual UInt_t GetId() const
+   {
+      const void *ptr = (const void *) this;
+      return TString::Hash((void *) &ptr, sizeof(void *));
+   }
 
    virtual void ClearHandle()
    {
@@ -111,6 +115,7 @@ public:
    virtual Bool_t PreviewData(THttpCallArg *arg)
    {
       // function called in the user code before processing correspondent websocket data
+      // returns kTRUE when user should ignore such http request - it is for internal use
 
       if (fPoll) {
          // if there are pending request, reply it immediately
@@ -129,7 +134,8 @@ public:
          fPoll = arg;
       }
 
-      return kTRUE;
+      // if arguments has "&dummy" string, user should not process it
+      return strstr(arg->GetQuery(), "&dummy") != 0;
    }
 
 };
@@ -762,6 +768,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // try to emulate websocket connect
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
+
          if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
             arg->SetMethod("WS_READY");
 

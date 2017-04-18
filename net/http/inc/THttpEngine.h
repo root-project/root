@@ -68,7 +68,7 @@ public:
 
    virtual void SendCharStar(const char *str);
 
-   virtual Bool_t PreviewData(THttpCallArg *) { return kTRUE; }
+   virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
 
    // --------- method to work with Canvas (temporary solution)
 
