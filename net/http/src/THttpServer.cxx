@@ -669,6 +669,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
+   if ((arg->fFileName == "favicon.ico") && arg->fPathName.IsNull()) {
+      arg->SetFile(fJSROOTSYS + "/img/RootIcon.ico");
+      return;
+   }
+
    TString filename;
    if (IsFileRequested(arg->fFileName.Data(), filename)) {
       arg->SetFile(filename);
