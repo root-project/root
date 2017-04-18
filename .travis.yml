@@ -17,6 +17,7 @@ cache:
 branches:
   only:
     - master
+    - runtime-cxxmodules
 
 matrix:
   # Abort all builds on a single failing matrix entry.
