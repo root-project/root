@@ -66,6 +66,8 @@ public:
 
    virtual void Send(const void *buf, int len) = 0;
 
+   virtual void SendCharStar(const char *str);
+
    virtual void ProcessData(THttpCallArg *arg);
 
    // --------- method to work with Canvas (temporary solution)
