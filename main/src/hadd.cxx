@@ -421,7 +421,7 @@ int main( int argc, char **argv )
 
    auto filesToProcess = argc - ffirst;
    auto step = (filesToProcess + nProcesses - 1) / nProcesses;
-   if (step < 3) {
+   if (multiproc && step < 3) {
       // At least 3 files per process
       step = 3;
       nProcesses = (filesToProcess + step - 1) / step;
