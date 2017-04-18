@@ -22,15 +22,11 @@
 #ifndef ROOT_CMAES_CMAESMinimizer
 #define ROOT_CMAES_CMAESMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#include "cmaes.h"
+#include "libcmaes/cmaes.h"
 
 using namespace libcmaes;
 
