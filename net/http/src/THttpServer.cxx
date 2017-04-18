@@ -67,29 +67,29 @@ public:
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 class TLongPollEngine : public THttpWSEngine {
 protected:
-   THttpCallArg *fPoll;  ///< polling request, which can be used for the next sending
-   TString       fBuf;   ///< single entry to keep data which is not yet send to the client
+   THttpCallArg *fPoll; ///< polling request, which can be used for the next sending
+   TString fBuf;        ///< single entry to keep data which is not yet send to the client
 
 public:
-   TLongPollEngine(const char *name, const char *title)
-      : THttpWSEngine(name, title), fPoll(0), fBuf()
-   {
-   }
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
 
    virtual ~TLongPollEngine() {}
 
    virtual UInt_t GetId() const
    {
-      const void *ptr = (const void *) this;
-      return TString::Hash((void *) &ptr, sizeof(void *));
+      const void *ptr = (const void *)this;
+      return TString::Hash((void *)&ptr, sizeof(void *));
    }
 
    virtual void ClearHandle()
    {
-      if (fPoll) { fPoll->Set404(); fPoll->NotifyCondition(); fPoll = 0; }
+      if (fPoll) {
+         fPoll->Set404();
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
    }
 
    virtual void Send(const void * /*buf*/, int /*len*/)
@@ -104,8 +104,7 @@ public:
          fPoll->SetContent(buf);
          fPoll->NotifyCondition();
          fPoll = 0;
-      } else
-      if (fBuf.Length() == 0) {
+      } else if (fBuf.Length() == 0) {
          fBuf = buf;
       } else {
          Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
@@ -137,9 +136,7 @@ public:
       // if arguments has "&dummy" string, user should not process it
       return strstr(arg->GetQuery(), "&dummy") != 0;
    }
-
 };
-
 
 // =======================================================
 
@@ -772,18 +769,17 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
             arg->SetMethod("WS_READY");
 
-            TLongPollEngine* handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+            TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
 
             arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
             if (canv->GetCanvasImp()->ProcessWSRequest(arg)) {
-               arg->SetContent(TString::Format("%u",arg->GetWSId()));
+               arg->SetContent(TString::Format("%u", arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
          }
-         if (!arg->IsContentType("text/plain"))
-            arg->Set404();
+         if (!arg->IsContentType("text/plain")) arg->Set404();
       } else {
          TUrl url;
          url.SetOptions(arg->fQuery);
