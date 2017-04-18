@@ -1,4 +1,4 @@
-### This is support for black-box optimization with CMA-ES from within ROOT (http://root.cern.ch/drupal/).
+### This is support for black-box optimization with CMA-ES from within ROOT (http://root.cern.ch/).
 
 This work was supported by the ANR-2010-COSI-002 grant of the French NationalA Research Agency.
 
