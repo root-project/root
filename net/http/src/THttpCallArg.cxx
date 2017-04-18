@@ -312,3 +312,13 @@ Bool_t THttpCallArg::CompressWithGzip()
 
    return kTRUE;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// method used to notify condition which waiting when operation will complete
+/// Condition notified only if not-postponed state is set
+
+void THttpCallArg::NotifyCondition()
+{
+   if (!IsPostponed()) fCond.notify_one();
+}
