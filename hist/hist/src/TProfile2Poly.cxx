@@ -12,29 +12,26 @@ ClassImp(TProfile2Poly)
 // -------------- TProfile2PolyBin  --------------
 
 TProfile2PolyBin::TProfile2PolyBin() {
-    fSumV = 0;
-    fSumV2 = 0;
-    fSumVW = 0;
-    fSumVW2 = 0;
+    fSumw = 0;
+    fSumw2 = 0;
+    fSumwz = 0;
+    fSumwz2 = 0;
 
     fNumEntries = 0;
 }
 
 TProfile2PolyBin::TProfile2PolyBin(TObject* poly, Int_t bin_number)
     : TH2PolyBin(poly, bin_number){
-    fSumV = 0;
-    fSumV2 = 0;
-    fSumVW = 0;
-    fSumVW2 = 0;
+    fSumw = 0;
+    fSumw2 = 0;
+    fSumwz = 0;
+    fSumwz2 = 0;
 
     fNumEntries = 0;
 }
 
-TProfile2PolyBin::~TProfile2PolyBin(){
-}
-
 void TProfile2PolyBin::UpdateAverage(){
-    fContent =  fSumV / fNumEntries;
+    fContent =  fSumw / fNumEntries;
     SetChanged(true);
 }
 
@@ -49,9 +46,6 @@ TProfile2Poly::TProfile2Poly(const char *name, const char *title,
                              Int_t nX, Double_t xlow, Double_t xup,
                              Int_t nY, Double_t ylow, Double_t yup)
     : TH2Poly(name, title, nX, xlow, xup, nY, ylow, yup) {}
-
-TProfile2Poly::~TProfile2Poly(){
-}
 
 Int_t TProfile2Poly::AddBin(TObject *poly)
 {
@@ -137,22 +131,29 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
         return -5;
     }
 
-    TProfile2PolyBin* bin;
+    // ------------ Update global (per histo) statistics
+    fTsumw   += weight;
+    fTsumw2  += weight*weight;
+    fTsumwx  += weight*xcoord;
+    fTsumwx2 += weight*xcoord*xcoord;
+    fTsumwy  += weight*ycoord;
+    fTsumwy2 += weight*ycoord*ycoord;
+    fTsumwxy += weight*xcoord*ycoord;
+    fTsumwz  += weight*value;
+    fTsumwz2 += weight*value*value;
 
+    // ------------ Update local (per bin) statistics
+    TProfile2PolyBin* bin;
     TIter next(&fCells[n+fCellX*m]);
     TObject *obj;
-
     while ((obj=next())) {
         bin  = (TProfile2PolyBin*)obj;
         if (bin->IsInside(xcoord,ycoord)) {
-
             fEntries++;
-
-            bin->fNumEntries++;
-            bin->fSumV += value;
-            bin->fSumVW += value*weight;
-
-            bin->UpdateAverage();
+            bin->SetFNumEntries( bin->GetFNumEntries() + 1 );
+            bin->SetFSumw( bin->GetFSumw() + value );
+            bin->SetFSumwz( bin->GetFSumwz() + value*weight );
+            bin->UpdateAverage(); // fContent = fSumw / fNumEntries;
 
             return bin->GetBinNumber();
         }
@@ -167,36 +168,46 @@ void  TProfile2Poly::Merge(std::vector<TProfile2Poly*> list){
 
     // TODO: Build checks to see if merge is allowed on "this" / "list"
 
-    TIter next(list[0]->fBins);
-    TObject* obj;
-
-    Int_t n=0;
-    while ((obj = next())) {
-        n++;
-    }
-
     TProfile2PolyBin* dst = nullptr;
     TProfile2PolyBin* src = nullptr;
 
+    // TODO: CHECK SIZES OF ALL INPUT ELEMENTS TO VERYIFY THAT WE CAN ACTUALLY MERGE THESE SHITS TOGETHER.
+    Int_t numBins = list[0]->fBins->GetSize();
+
     // for each bin
-    for(Int_t i=0; i<n; i++){
+    for(Int_t i=0; i<numBins; i++){
         dst = (TProfile2PolyBin*)fBins->At(i);
 
-        Int_t current_element    = 0;
-        Double_t SumV_srcs       = 0;
+        Int_t current_src        = 0;
+        Double_t Sumw_srcs       = 0;
         Double_t NumEntries_srcs = 0;
 
         // accumulate values of interest in the input vector
         for(const auto& e : list){
-            src  = ((TProfile2PolyBin*)list[current_element]->fBins->At(i));
-            SumV_srcs += src->fSumV;
-            NumEntries_srcs += src->fNumEntries;
-            current_element++;
+            src  = ((TProfile2PolyBin*)list[current_src]->fBins->At(i));
+            Sumw_srcs += src->GetFSumw();
+            NumEntries_srcs += src->GetFNumEntries();
+            current_src++;
         }
 
         // set values of accumulation
-        dst->setFSumV(SumV_srcs + dst->getFSumV());
-        dst->setFNumEntries(NumEntries_srcs + dst->getFNumEntries());
+        dst->SetFSumw(Sumw_srcs + dst->GetFSumw());
+        dst->SetFNumEntries(NumEntries_srcs + dst->GetFNumEntries());
         dst->UpdateAverage();
     }
 }
+
+void TProfile2Poly::Reset(Option_t *opt){
+   TIter next(fBins);
+   TObject* obj;
+   TProfile2PolyBin* bin;
+
+   // Clears bin contents
+   while ((obj = next())) {
+      bin = (TProfile2PolyBin*) obj;
+      bin->ClearContent();
+   }
+   TH2::Reset(opt);
+}
+
+

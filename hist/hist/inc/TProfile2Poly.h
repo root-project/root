@@ -12,27 +12,27 @@ public:
     TProfile2PolyBin();
     TProfile2PolyBin(TObject* poly, Int_t bin_number);
 
-    virtual ~TProfile2PolyBin();
+    virtual ~TProfile2PolyBin() {}
 
     void UpdateAverage();
 
-    Double_t getFSumV()       const { return fSumV;       }
-    Double_t getFSumV2()      const { return fSumV2;      }
-    Double_t getFSumVW()      const { return fSumVW;      }
-    Double_t getFSumVW2()     const { return fSumVW2;     }
-    Double_t getFNumEntries() const { return fNumEntries; }
+    Double_t GetFSumw()       const { return fSumw;       }
+    Double_t GetFSumw2()      const { return fSumw2;      }
+    Double_t GetFSumwz()      const { return fSumwz;      }
+    Double_t GetFSumwz2()     const { return fSumwz2;     }
+    Double_t GetFNumEntries() const { return fNumEntries; }
 
-    void setFSumV(Double_t value)       { fSumV = value;       }
-    void setFSumV2(Double_t value)      { fSumV2 = value;      }
-    void setFSumVW(Double_t value)      { fSumVW = value;      }
-    void setFSumVW2(Double_t value)     { fSumVW2 = value;     }
-    void setFNumEntries(Double_t value) { fNumEntries = value; }
+    void SetFSumw(Double_t value)       { fSumw = value;       }
+    void SetFSumw2(Double_t value)      { fSumw2 = value;      }
+    void SetFSumwz(Double_t value)      { fSumwz = value;      }
+    void SetFSumwz2(Double_t value)     { fSumwz2 = value;     }
+    void SetFNumEntries(Double_t value) { fNumEntries = value; }
 
-public:
-    Double_t fSumV;
-    Double_t fSumV2;
-    Double_t fSumVW;
-    Double_t fSumVW2;
+private:
+    Double_t fSumw;
+    Double_t fSumw2;
+    Double_t fSumwz;
+    Double_t fSumwz2;
     Double_t fNumEntries;
 
     ClassDef(TProfile2PolyBin,1)
@@ -53,7 +53,7 @@ public:
                   Int_t nX, Double_t xlow, Double_t xup,
                   Int_t nY, Double_t ylow, Double_t yup);
 
-    virtual ~TProfile2Poly();
+    virtual ~TProfile2Poly() {}
 
     using TH2Poly::AddBin;
     virtual Int_t AddBin(TObject *poly) override;
@@ -62,7 +62,13 @@ public:
     virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
     virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
-    void Merge(std::vector<TProfile2Poly*> list);
+    void Merge(std::vector<TProfile2Poly*> list); // TODO: Put correct signature so that we can ;override;
+    void Reset(Option_t *option) override;
+
+
+private:
+    Double_t    fTsumwz;
+    Double_t    fTsumwz2;
 
     ClassDefOverride(TProfile2Poly,1)
 };

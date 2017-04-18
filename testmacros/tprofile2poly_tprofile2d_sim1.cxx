@@ -22,14 +22,14 @@ void tprofile2poly_tprofile2d_sim1()
 
    // ADD EVENTS TO PLOT
    c1->Divide(2,1);
-   int value = 1;
+   int z = 1;
 
    Float_t px, py, pz;
-   for ( Int_t i=0; i<30000; i++) {
+   for ( Int_t i=0; i<1000; i++) {
       gRandom->Rannor(px,py);
-      value = px*px + py*py;
-      TP2D->Fill(px,py,value);
-      TP2P->Fill(px,py,value);
+      z = px*px + py*py;
+      TP2D->Fill(px,py,z);
+      TP2P->Fill(px,py,z);
    }
    c1->cd(1);
    TP2D->Draw("COLZ");
