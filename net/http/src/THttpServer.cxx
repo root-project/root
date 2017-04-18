@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TImage.h"
 #include "TROOT.h"
+#include "TUrl.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TFolder.h"
@@ -63,6 +64,36 @@ public:
       if (fServer) fServer->ProcessRequests();
    }
 };
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+class TLongPollEngine : public THttpWSEngine {
+protected:
+   THttpCallArg *fPoll;  ///< polling connection, which can be used for the sending next operation
+
+public:
+   TLongPollEngine(const char *name, const char *title)
+      : THttpWSEngine(name, title), fPoll(0)
+   {
+   }
+
+   virtual ~TLongPollEngine() {}
+
+   virtual UInt_t GetId() const { return TString::Hash((void *)this, sizeof(void *)); }
+
+   virtual void ClearHandle() { fPoll = 0; }
+
+   virtual void Send(const void *buf, int len)
+   {
+   }
+
+   virtual void SendCharStar(const char *buf)
+   {
+   }
+
+};
+
 
 // =======================================================
 
@@ -679,6 +710,41 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->Set404();
       }
 
+      return;
+   } else if (filename == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (!canv || !canv->GetCanvasImp()) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else if (arg->fQuery == "connect") {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
+         if (canv->GetCanvasImp()->ProcessWSRequest(arg) && !arg->Is404()) {
+            arg->SetMethod("WS_READY");
+
+            TLongPollEngine* handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+
+            arg->SetWSId(handle->GetId());
+            arg->SetWSHandle(handle);
+
+            if (canv->GetCanvasImp()->ProcessWSRequest(arg) && !arg->Is404())
+               arg->SetContent(TString::Format("%u",arg->GetWSId()));
+         }
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close"))
+            arg->SetMethod("WS_CLOSE");
+         else
+            arg->SetMethod("WS_DATA");
+         if (!canv->GetCanvasImp()->ProcessWSRequest(arg)) arg->Set404();
+      }
       return;
 
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
