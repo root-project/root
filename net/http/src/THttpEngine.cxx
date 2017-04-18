@@ -191,6 +191,14 @@ void THttpWSEngine::ProcessData(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Envelope for sending string via the websocket
+
+void THttpWSEngine::SendCharStar(const char *str)
+{
+   if (str) Send(str, strlen(str));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// assign canvas to the web socket
 /// connects with CanvasModified signal
 
