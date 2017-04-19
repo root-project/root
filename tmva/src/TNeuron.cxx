@@ -51,13 +51,10 @@ using std::vector;
 
 ClassImp(TMVA::TNeuron)
 
-TMVA::MsgLogger* TMVA::TNeuron::fgLogger = 0;
-
 //______________________________________________________________________________
 TMVA::TNeuron::TNeuron()
 {
    // standard constructor
-   if (!fgLogger) fgLogger = new MsgLogger("TNeuron",kDEBUG);
    InitNeuron();
 }
 
@@ -333,4 +330,15 @@ void TMVA::TNeuron::PrintMessage( EMsgType type, TString message)
 {
    // print message, for debugging
    Log() << type << message << Endl;
+}
+
+//______________________________________________________________________________
+TMVA::MsgLogger& TMVA::TNeuron::Log() const 
+{
+  #if __cplusplus > 199711L
+  static thread_local MsgLogger logger("TNeuron",kDEBUG);    //! message logger, static to save resources
+#else
+  static MsgLogger logger("TNeuron",kDEBUG);                 //! message logger, static to save resources
+#endif
+  return logger;
 }

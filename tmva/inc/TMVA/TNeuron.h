@@ -163,8 +163,7 @@ namespace TMVA {
       TActivation*  fActivation;              // activation equation
       TNeuronInput* fInputCalculator;         // input calculator
 
-      static MsgLogger* fgLogger;                     //! message logger, static to save resources
-      MsgLogger& Log() const { return *fgLogger; }                       
+      MsgLogger& Log() const;
 
       ClassDef(TNeuron,0) // Neuron class used by MethodANNBase derivative ANNs
    };

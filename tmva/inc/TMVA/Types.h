@@ -38,6 +38,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <map>
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 
 #ifndef ROOT_Rtypes
 #include "Rtypes.h"
@@ -154,7 +157,11 @@ namespace TMVA {
    private:
 
       Types();
+#if __cplusplus > 199711L
+      static std::atomic<Types*> fgTypesPtr;
+#else
       static Types* fgTypesPtr;
+#endif
 
    private:
 

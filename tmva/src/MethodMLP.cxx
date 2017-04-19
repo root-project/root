@@ -1583,8 +1583,13 @@ void TMVA::MethodMLP::IFCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t*
    ((MethodMLP*)GetThisPtr())->FCN( npars, grad, f, fitPars, iflag );
 }
 
+#if __cplusplus > 199711L
+static thread_local Int_t  nc   = 0;
+static thread_local double minf = 1000000;
+#else
 static Int_t  nc   = 0;
 static double minf = 1000000;
+#endif
 
 void TMVA::MethodMLP::FCN( Int_t& npars, Double_t* grad, Double_t &f, Double_t* fitPars, Int_t iflag )
 {

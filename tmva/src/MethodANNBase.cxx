@@ -40,6 +40,9 @@
 #include <vector>
 #include <cstdlib>
 #include <stdexcept>
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 
 #include "TString.h"
 #include "TTree.h"
@@ -980,13 +983,17 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    CreateWeightMonitoringHists( "weights_hist" );
 
    // now save all the epoch-wise monitoring information
+#if __cplusplus > 199711L
+   static std::atomic<int> epochMonitoringDirectoryNumber{0};
+#else
    static int epochMonitoringDirectoryNumber = 0;
+#endif
+   int epochVal = epochMonitoringDirectoryNumber++;
    TDirectory* epochdir = NULL;
-   if( epochMonitoringDirectoryNumber == 0 )
+   if( epochVal == 0 )
       epochdir = BaseDir()->mkdir( "EpochMonitoring" );
    else
-      epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochMonitoringDirectoryNumber) );
-   ++epochMonitoringDirectoryNumber;
+      epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochVal) );
 
    epochdir->cd();
    for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); it++) {

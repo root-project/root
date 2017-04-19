@@ -67,7 +67,11 @@ namespace TMVA {
     
    private:
 
+#if __cplusplus > 199711L
+      static thread_local Int_t fVarIndex;  // index of the variable to sort on
+#else
       static Int_t fVarIndex;  // index of the variable to sort on
+#endif
       const Event* fEvent;     // pointer to the event
     
       Double_t     fBkgWeight; // cumulative background weight for splitting

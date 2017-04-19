@@ -70,10 +70,33 @@
 
 using namespace std;
 
+#if __cplusplus > 199711L
+std::atomic<TMVA::Tools*> TMVA::Tools::fgTools{0};
+#else
 TMVA::Tools* TMVA::Tools::fgTools = 0;
+#endif
+
 TMVA::Tools& TMVA::gTools()                 { return TMVA::Tools::Instance(); }
-TMVA::Tools& TMVA::Tools::Instance()        { return fgTools?*(fgTools): *(fgTools = new Tools()); }
-void         TMVA::Tools::DestroyInstance() { if (fgTools != 0) { delete fgTools; fgTools=0; } }
+TMVA::Tools& TMVA::Tools::Instance()        { 
+#if __cplusplus > 199711L
+  if(!fgTools) {
+    Tools* tmp = new Tools();
+    Tools* expected = 0;
+    if(! fgTools.compare_exchange_strong(expected,tmp)) {
+      //another thread beat us
+      delete tmp;
+    }
+  }
+  return *fgTools;
+#else
+  return fgTools?*(fgTools): *(fgTools = new Tools()); 
+#endif
+}
+void         TMVA::Tools::DestroyInstance() { 
+  //NOTE: there is no thread safe way to do this so 
+  // one must only call this method ones in an executable
+  if (fgTools != 0) { delete fgTools; fgTools=0; } 
+}
 
 //_______________________________________________________________________
 TMVA::Tools::Tools() :
@@ -787,29 +810,29 @@ TString TMVA::Tools::ReplaceRegularExpressions( const TString& s, const TString&
 const TString& TMVA::Tools::Color( const TString& c ) 
 {
    // human readable color strings
-   static TString gClr_none         = "" ;
-   static TString gClr_white        = "\033[1;37m";  // white
-   static TString gClr_black        = "\033[30m";    // black
-   static TString gClr_blue         = "\033[34m";    // blue
-   static TString gClr_red          = "\033[1;31m" ; // red
-   static TString gClr_yellow       = "\033[1;33m";  // yellow
-   static TString gClr_darkred      = "\033[31m";    // dark red
-   static TString gClr_darkgreen    = "\033[32m";    // dark green
-   static TString gClr_darkyellow   = "\033[33m";    // dark yellow
+   static const TString gClr_none         = "" ;
+   static const TString gClr_white        = "\033[1;37m";  // white
+   static const TString gClr_black        = "\033[30m";    // black
+   static const TString gClr_blue         = "\033[34m";    // blue
+   static const TString gClr_red          = "\033[1;31m" ; // red
+   static const TString gClr_yellow       = "\033[1;33m";  // yellow
+   static const TString gClr_darkred      = "\033[31m";    // dark red
+   static const TString gClr_darkgreen    = "\033[32m";    // dark green
+   static const TString gClr_darkyellow   = "\033[33m";    // dark yellow
                                     
-   static TString gClr_bold         = "\033[1m"    ; // bold 
-   static TString gClr_black_b      = "\033[30m"   ; // bold black
-   static TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
-   static TString gClr_cyan_b       = "\033[0;36m" ; // bold cyan
-   static TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
+   static const TString gClr_bold         = "\033[1m"    ; // bold 
+   static const TString gClr_black_b      = "\033[30m"   ; // bold black
+   static const TString gClr_lblue_b      = "\033[1;34m" ; // bold light blue
+   static const TString gClr_cyan_b       = "\033[0;36m" ; // bold cyan
+   static const TString gClr_lgreen_b     = "\033[1;32m";  // bold light green
                                     
-   static TString gClr_blue_bg      = "\033[44m";    // blue background
-   static TString gClr_red_bg       = "\033[1;41m";  // white on red background
-   static TString gClr_whiteonblue  = "\033[1;44m";  // white on blue background
-   static TString gClr_whiteongreen = "\033[1;42m";  // white on green background
-   static TString gClr_grey_bg      = "\033[47m";    // grey background
+   static const TString gClr_blue_bg      = "\033[44m";    // blue background
+   static const TString gClr_red_bg       = "\033[1;41m";  // white on red background
+   static const TString gClr_whiteonblue  = "\033[1;44m";  // white on blue background
+   static const TString gClr_whiteongreen = "\033[1;42m";  // white on green background
+   static const TString gClr_grey_bg      = "\033[47m";    // grey background
 
-   static TString gClr_reset  = "\033[0m";     // reset
+   static const TString gClr_reset  = "\033[0m";     // reset
 
    if (!gConfig().UseColor()) return gClr_none;
 
@@ -1258,7 +1281,7 @@ void TMVA::Tools::TMVAVersionMessage( MsgLogger& logger )
 void TMVA::Tools::ROOTVersionMessage( MsgLogger& logger )
 {
    // prints the ROOT release number and date
-   static const char *months[] = { "Jan","Feb","Mar","Apr","May",
+   static const char * const months[] = { "Jan","Feb","Mar","Apr","May",
                                    "Jun","Jul","Aug","Sep","Oct",
                                    "Nov","Dec" };
    Int_t   idatqq = gROOT->GetVersionDate();   

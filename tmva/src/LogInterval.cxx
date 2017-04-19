@@ -81,19 +81,16 @@
 
 ClassImp(TMVA::LogInterval)
 
-TMVA::MsgLogger* TMVA::LogInterval::fgLogger = 0;
 //_______________________________________________________________________
 TMVA::LogInterval::LogInterval( Double_t min, Double_t max, Int_t nbins ) :
    TMVA::Interval(min,max,nbins)
 {
-   if (!fgLogger) fgLogger = new MsgLogger("LogInterval");
    if (min<=0) Log() << kFATAL << "logarithmic intervals have to have Min>0 !!" << Endl;
 }
 
 TMVA::LogInterval::LogInterval( const LogInterval& other ) :
    TMVA::Interval(other)
 {
-   if (!fgLogger) fgLogger = new MsgLogger("LogInterval");
 }
 
 //_______________________________________________________________________
@@ -150,3 +147,11 @@ Double_t TMVA::LogInterval::GetMean()  const
    return (fMax + fMin)/2; 
 }
 
+TMVA::MsgLogger& TMVA::LogInterval::Log() const {
+#if __cplusplus > 199711L
+  static thread_local MsgLogger logger("LogInterval");   // message logger
+#else
+  static MsgLogger logger("LogInterval");   // message logger
+#endif
+  return logger;
+}
