@@ -1,6 +1,7 @@
 #ifndef TMVA_TEST_DNN_UTILITY
 #define TMVA_TEST_DNN_UTILITY
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <type_traits>
@@ -172,64 +173,48 @@ AFloat reduceMean(F f, AFloat start, const AMatrix &X)
     return result / (AFloat) (m * n);
 }
 
-/** Compute the relative error of x and y normalized by y. Specialized for
- *  float and double to make sure both arguments are above expected machine
- *  precision (1e-5 and 1e-10). */
+/** Compute the relative error of x and y */
 //______________________________________________________________________________
-template <typename AFloat>
-inline AFloat relativeError(const AFloat &x,
-                            const AFloat &y);
-
-
-//______________________________________________________________________________
-template <>
-inline Double_t relativeError(const Double_t &x,
-                              const Double_t &y)
+template <typename T>
+inline T relativeError(const T &x, const T &y)
 {
-    if ((std::abs(x) > 1e-10) && (std::abs(y) > 1e-10)) {
-        return std::fabs((x - y) / y);
-    } else {
-        return std::fabs(x - y);
-    }
-}
+  using std::abs;
 
-//______________________________________________________________________________
-template <>
-inline Real_t relativeError(const Real_t &x,
-                            const Real_t &y)
-{
-    if ((std::abs(x) > 1e-5) && (std::abs(y) > 1e-5)) {
-        return std::fabs((x - y) / y);
-    } else {
-        return std::fabs(x - y);
-    }
+  if (x == y)
+    return T(0.0);
+
+  T diff = abs(x - y);
+
+  if (x * y == T(0.0) ||
+      diff < std::numeric_limits<T>::epsilon())
+    return diff;
+
+  return diff / (abs(x) + abs(y));
 }
 
 /*! Compute the maximum, element-wise relative error of the matrices
 *  X and Y normalized by the element of Y. Protected against division
 *  by zero. */
 //______________________________________________________________________________
-template <typename AMatrix>
-auto maximumRelativeError(const AMatrix &X,
-                          const AMatrix &Y)
--> decltype(X(0,0))
+template <typename Matrix1, typename Matrix2>
+auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0))
 {
+    decltype(X(0,0)) curError, maxError = 0.0;
 
-    using AFloat = decltype(X(0,0));
+    Int_t m = X.GetNrows();
+    Int_t n = X.GetNcols();
 
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+    assert(m == Y.GetNrows());
+    assert(n == Y.GetNcols());
 
-    AFloat maximumError = 0.0;
-
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        AFloat error = relativeError(X(i,j), Y(i,j));
-        maximumError = std::max(error, maximumError);
+    for (Int_t i = 0; i < m; i++) {
+        for (Int_t j = 0; j < n; j++) {
+            curError = relativeError(X(i,j), Y(i,j));
+            maxError = std::max(curError, maxError);
         }
     }
-    return maximumError;
+
+    return maxError;
 }
 
 /*! Numerically compute the derivative of the functional f using finite
