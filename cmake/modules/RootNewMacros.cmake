@@ -25,16 +25,20 @@ elseif(APPLE)
   set(ld_library_path DYLD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so)
+  set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    set(libsuffix .so)
+  else()
+    set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
+  endif()
   set(localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   set(runtimedir ${CMAKE_INSTALL_LIBDIR})
 else()
   set(ld_library_path LD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so)
+  set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
+  set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   set(runtimedir ${CMAKE_INSTALL_LIBDIR})
 endif()
@@ -220,6 +224,19 @@ endmacro()
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
 
+  # Check if OPTIONS start with a dash.
+  if (ARG_OPTIONS)
+    foreach(ARG_O ${ARG_OPTIONS})
+      if (NOT ARG_O MATCHES "^-*")
+        message(FATAL_ERROR "Wrong rootcling option: ${ARG_OPTIONS}")
+      endif()
+    endforeach()
+  endif(ARG_OPTIONS)
+
+  if (ARG_DEPENDENCIES)
+    message(FATAL_ERROR "Unimplemented switch!")
+  endif(ARG_DEPENDENCIES)
+
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -233,30 +250,28 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
   #---Get the list of header files-------------------------
   set(headerfiles)
-  set(fullheaderfiles)
+  set(_list_of_header_dependencies)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
     if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
       file(GLOB files inc/${fp} ${fp})
       foreach(f ${files})
         if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
           list(APPEND headerfiles ${f})
-          list(APPEND fullheaderfiles ${f})
+          list(APPEND _list_of_header_dependencies ${f})
         endif()
       endforeach()
     elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND 
            EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
       list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      list(APPEND fullheaderfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
     elseif(IS_ABSOLUTE ${fp})
       list(APPEND headerfiles ${fp})
-      list(APPEND fullheaderfiles ${fp})
+      list(APPEND _list_of_header_dependencies ${fp})
     else()
       find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs})
       list(APPEND headerfiles ${fp})
       if(headerFile)
-        list(APPEND fullheaderfiles ${headerFile})
-      else()
-        list(APPEND fullheaderfiles ${fp})
+        list(APPEND _list_of_header_dependencies ${headerFile})
       endif()
       unset(headerFile CACHE)
     endif()
@@ -264,7 +279,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
   # Replace the non-standard folder layout of Core.
   if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
-    # FIXME: Glob these folder.
+    # FIXME: Glob these folders.
     set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
     string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
   endif()
@@ -341,13 +356,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   endif()
 
-  #---Get the library and module dependencies-----------------
-  if(ARG_DEPENDENCIES)
-    foreach(dep ${ARG_DEPENDENCIES})
-      set(newargs ${newargs} -m  ${libprefix}${dep}_rdict.pcm)
-    endforeach()
-  endif()
-
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
     set(command rootcling_stage1)
@@ -371,8 +379,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
                                         ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS CXX ${_linkdef} ${fullheaderfiles}
-                     DEPENDS ${fullheaderfiles} ${_linkdef} ${ROOTCINTDEP})
+                     IMPLICIT_DEPENDS CXX ${_linkdef} ${_list_of_header_dependencies}
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
@@ -446,8 +454,8 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
                         DllImport.h TGenericClassInfo.h
                         TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
                         RootMetaSelection.h libcpp_string_view.h
-                        RWrap_libcpp_string_view.h TAtomicCountGcc.h
-                        TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
+                        RWrap_libcpp_string_view.h
+                        TException.h ThreadLocalStorage.h 
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
 

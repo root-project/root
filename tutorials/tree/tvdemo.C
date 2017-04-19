@@ -20,7 +20,6 @@ open_session(void *p = 0) {
 //=========for tree "T" (Wed Feb 21 14:16:23 2001)
 //===This macro can be opened from a TreeViewer session after loading
 //===the corresponding tree
-   gSystem->Load("libTreeViewer");
    TTreeViewer *treeview = (TTreeViewer *) p;
    if (!treeview) treeview = new TTreeViewer();
    TTree *tv_tree = (TTree*)gROOT->FindObject("T");

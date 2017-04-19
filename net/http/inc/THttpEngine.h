@@ -66,9 +66,13 @@ public:
 
    virtual void Send(const void *buf, int len) = 0;
 
-   virtual void ProcessData(THttpCallArg *arg);
+   virtual void SendCharStar(const char *str);
+
+   virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
 
    // --------- method to work with Canvas (temporary solution)
+
+   virtual void ProcessData(THttpCallArg *arg);
 
    virtual void AssignCanvas(TCanvas *canv);
 

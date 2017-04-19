@@ -36,11 +36,6 @@
 #define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #define R__SSTREAM         /* use sstream or strstream header */
 
-/* Do not #define nullptr if the code is compiled in c++11 mode. */
-#if __cplusplus > 199711L
-#define R__NULLPTR
-#endif
-
 #if defined(__cplusplus) && (__cplusplus < 201103L)
 # error "ROOT requires support for C++11 or higher."
 # if defined(__GNUC__) || defined(__clang__)
@@ -412,7 +407,6 @@
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define R__NULLPTR
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif

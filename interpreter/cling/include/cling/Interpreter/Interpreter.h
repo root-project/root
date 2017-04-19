@@ -179,6 +179,10 @@ namespace cling {
     ///
     bool m_RawInputEnabled;
 
+    ///\brief Flag toggling the optimization level to be used.
+    ///
+    int m_OptLevel;
+
     ///\brief Interpreter callbacks.
     ///
     std::unique_ptr<InterpreterCallbacks> m_Callbacks;
@@ -633,10 +637,16 @@ namespace cling {
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
+    int getDefaultOptLevel() const { return m_OptLevel; }
+    void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
+
     clang::CompilerInstance* getCI() const;
     clang::CompilerInstance* getCIOrNull() const;
     clang::Sema& getSema() const;
     clang::DiagnosticsEngine& getDiagnostics() const;
+
+    ///\brief Create suitable default compilation options.
+    CompilationOptions makeDefaultCompilationOpts() const;
 
     //FIXME: This must be in InterpreterCallbacks.
     void installLazyFunctionCreator(void* (*fp)(const std::string&));
@@ -742,7 +752,7 @@ namespace cling {
 
     ///\brief Forwards to cling::IncrementalExecutor::addModule.
     ///
-    void addModule(llvm::Module* module);
+    void addModule(llvm::Module* module, int OptLevel);
 
     void GenerateAutoloadingMap(llvm::StringRef inFile, llvm::StringRef outFile,
                                 bool enableMacros = false, bool enableLogs = true);

@@ -67,6 +67,14 @@ THttpWSEngine::~THttpWSEngine()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Envelope for sending string via the websocket
+
+void THttpWSEngine::SendCharStar(const char *str)
+{
+   if (str) Send(str, strlen(str));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// react on canvas modifications
 
 void THttpWSEngine::CanvasModified()

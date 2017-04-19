@@ -92,14 +92,9 @@ namespace cling {
 
   Interpreter::PushTransactionRAII::PushTransactionRAII(const Interpreter* i)
     : m_Interpreter(i) {
-    CompilationOptions CO;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 0;
+    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = 0;
-    CO.CodeGeneration = 1;
-    CO.CodeGenerationForModule = 0;
 
     m_Transaction = m_Interpreter->m_IncrParser->beginTransaction(CO);
   }
@@ -192,7 +187,8 @@ namespace cling {
     m_Opts(argc, argv),
     m_UniqueCounter(parentInterp ? parentInterp->m_UniqueCounter + 1 : 0),
     m_PrintDebug(false), m_DynamicLookupDeclared(false),
-    m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
+    m_DynamicLookupEnabled(false), m_RawInputEnabled(false),
+    m_OptLevel(parentInterp ? parentInterp->m_OptLevel : -1) {
 
     if (handleSimpleOptions(m_Opts))
       return;
@@ -202,6 +198,10 @@ namespace cling {
     m_IncrParser.reset(new IncrementalParser(this, llvmdir));
     if (!m_IncrParser->isValid(false))
       return;
+
+    // Initialize the opt level to what CodeGenOpts says.
+    if (m_OptLevel == -1)
+      m_OptLevel = getCI()->getCodeGenOpts().OptimizationLevel;
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
@@ -549,6 +549,19 @@ namespace cling {
     return getCI()->getDiagnostics();
   }
 
+  CompilationOptions Interpreter::makeDefaultCompilationOpts() const {
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = CompilationOptions::VPDisabled;
+    CO.CodeGeneration = m_IncrParser->hasCodeGenerator();
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.IgnorePromptDiags = !isRawInputEnabled();
+    CO.CheckPointerValidity = !isRawInputEnabled();
+    CO.OptLevel = getDefaultOptLevel();
+    return CO;
+  }
+
   const MacroInfo* Interpreter::getMacro(llvm::StringRef Macro) const {
     const clang::Preprocessor& PP = getCI()->getPreprocessor();
     if (const IdentifierInfo* II = PP.getIdentifierInfo(Macro)) {
@@ -587,23 +600,17 @@ namespace cling {
       wrapPoint = utils::getWrapPoint(wrapReadySource, getCI()->getLangOpts());
 
     if (isRawInputEnabled() || wrapPoint == std::string::npos) {
-      CompilationOptions CO;
+      CompilationOptions CO = makeDefaultCompilationOpts();
       CO.DeclarationExtraction = 0;
       CO.ValuePrinting = 0;
       CO.ResultEvaluation = 0;
-      CO.DynamicScoping = isDynamicLookupEnabled();
-      CO.Debug = isPrintingDebug();
-      CO.IgnorePromptDiags = !isRawInputEnabled();
-      CO.CheckPointerValidity = !isRawInputEnabled();
       return DeclareInternal(input, CO, T);
     }
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 1;
     CO.ValuePrinting = CompilationOptions::VPAuto;
     CO.ResultEvaluation = (bool)V;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     // CO.IgnorePromptDiags = 1; done by EvaluateInternal().
     CO.CheckPointerValidity = 1;
     if (EvaluateInternal(wrapReadySource, CO, V, T, wrapPoint)
@@ -616,13 +623,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::parse(const std::string& input, Transaction** T /*=0*/) const {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.CodeGeneration = 0;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
 
     return DeclareInternal(input, CO, T);
   }
@@ -674,14 +679,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::parseForModule(const std::string& input) {
-    CompilationOptions CO;
-    CO.CodeGeneration = 1;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.CodeGenerationForModule = 1;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
 
     // When doing parseForModule avoid warning about the user code
     // being loaded ... we probably might as well extend this to
@@ -700,12 +702,10 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::CodeCompleteInternal(const std::string& input, unsigned offset) {
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 0;
 
     std::string wrapped = input;
@@ -725,12 +725,10 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, Transaction** T/*=0 */) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 0;
 
     return DeclareInternal(input, CO, T);
@@ -742,7 +740,7 @@ namespace cling {
     // ExprStmt can be evaluated and etc. Such enforcement cannot happen in the
     // worker, because it is used from various places, where there is no such
     // rule
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 1;
@@ -806,7 +804,7 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::echo(const std::string& input, Value* V /* = 0 */) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = CompilationOptions::VPEnabled;
     CO.ResultEvaluation = (bool)V;
@@ -816,12 +814,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::execute(const std::string& input) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = isPrintingDebug();
     return EvaluateInternal(input, CO);
   }
 
@@ -1223,12 +1220,10 @@ namespace cling {
     std::string code;
     code += "#include \"" + filename + "\"";
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 1;
     CompilationResult res = DeclareInternal(code, CO, T);
     return res;
@@ -1452,8 +1447,8 @@ namespace cling {
     return m_Executor->addSymbol(symbolName, symbolAddress);
   }
 
-  void Interpreter::addModule(llvm::Module* module) {
-     m_Executor->addModule(module);
+  void Interpreter::addModule(llvm::Module* module, int OptLevel) {
+    m_Executor->addModule(module, OptLevel);
   }
 
 
@@ -1497,12 +1492,11 @@ namespace cling {
                                     fwdGenPP.getTargetInfo().getTriple());
 
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = isPrintingDebug();
 
 
     std::string includeFile = std::string("#include \"") + inFile.str() + "\"";

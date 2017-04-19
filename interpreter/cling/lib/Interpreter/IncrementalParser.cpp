@@ -206,11 +206,7 @@ namespace cling {
     if (hasCodeGenerator())
       getCodeGenerator()->Initialize(getCI()->getASTContext());
 
-    CompilationOptions CO;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = CompilationOptions::VPDisabled;
-    CO.CodeGeneration = hasCodeGenerator();
-
+    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
@@ -465,7 +461,7 @@ namespace cling {
     {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
-      Transaction* nestedT = beginTransaction(CompilationOptions());
+      Transaction* nestedT = beginTransaction(T->getCompilationOpts());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
       ParseResultTransaction nestedPRT = endTransaction(nestedT);
@@ -553,7 +549,7 @@ namespace cling {
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
       if (M) {
-        m_Interpreter->addModule(M.get());
+        m_Interpreter->addModule(M.get(), T->getCompilationOpts().OptLevel);
         T->setModule(std::move(M));
       }
 

@@ -16,6 +16,7 @@
 #include "TSystem.h"
 #include "TImage.h"
 #include "TROOT.h"
+#include "TUrl.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TFolder.h"
@@ -61,6 +62,79 @@ public:
       // used to process http requests in main ROOT thread
 
       if (fServer) fServer->ProcessRequests();
+   }
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TLongPollEngine : public THttpWSEngine {
+protected:
+   THttpCallArg *fPoll; ///< polling request, which can be used for the next sending
+   TString fBuf;        ///< single entry to keep data which is not yet send to the client
+
+public:
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
+
+   virtual ~TLongPollEngine() {}
+
+   virtual UInt_t GetId() const
+   {
+      const void *ptr = (const void *)this;
+      return TString::Hash((void *)&ptr, sizeof(void *));
+   }
+
+   virtual void ClearHandle()
+   {
+      if (fPoll) {
+         fPoll->Set404();
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+   }
+
+   virtual void Send(const void * /*buf*/, int /*len*/)
+   {
+      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
+   }
+
+   virtual void SendCharStar(const char *buf)
+   {
+      if (fPoll) {
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent(buf);
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      } else if (fBuf.Length() == 0) {
+         fBuf = buf;
+      } else {
+         Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
+      }
+   }
+
+   virtual Bool_t PreviewData(THttpCallArg *arg)
+   {
+      // function called in the user code before processing correspondent websocket data
+      // returns kTRUE when user should ignore such http request - it is for internal use
+
+      if (fPoll) {
+         // if there are pending request, reply it immediately
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent("");
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+
+      if (fBuf.Length() > 0) {
+         arg->SetContentType("text/plain");
+         arg->SetContent(fBuf.Data());
+         fBuf = "";
+      } else {
+         arg->SetPostponed();
+         fPoll = arg;
+      }
+
+      // if arguments has "&dummy" string, user should not process it
+      return strstr(arg->GetQuery(), "&dummy") != 0;
    }
 };
 
@@ -487,7 +561,7 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->fCond.notify_one();
+      arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
@@ -595,6 +669,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       return;
    }
 
+   if ((arg->fFileName == "favicon.ico") && arg->fPathName.IsNull()) {
+      arg->SetFile(fJSROOTSYS + "/img/RootIcon.ico");
+      return;
+   }
+
    TString filename;
    if (IsFileRequested(arg->fFileName.Data(), filename)) {
       arg->SetFile(filename);
@@ -679,6 +758,48 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->Set404();
       }
 
+      return;
+   } else if (filename == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (!canv || !canv->GetCanvasImp()) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else if (arg->fQuery == "connect") {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
+
+         if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+            arg->SetMethod("WS_READY");
+
+            TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+
+            arg->SetWSId(handle->GetId());
+            arg->SetWSHandle(handle);
+
+            if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+               arg->SetContent(TString::Format("%u", arg->GetWSId()));
+               arg->SetContentType("text/plain");
+            }
+         }
+         if (!arg->IsContentType("text/plain")) arg->Set404();
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close")) {
+            arg->SetMethod("WS_CLOSE");
+            arg->SetContent("OK");
+            arg->SetContentType("text/plain");
+         } else {
+            arg->SetMethod("WS_DATA");
+         }
+         if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
+      }
       return;
 
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
