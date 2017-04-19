@@ -272,7 +272,7 @@ public:
    virtual void      SetFitMethod(const char * /*name*/) {;}
    virtual Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) {return 0;}
 
-   ClassDef(TLinearFitter, 2) //fit a set of data points with a linear combination of functions
+   ClassDef(TLinearFitter, 0); //fit a set of data points with a linear combination of functions
 };
 
 #endif
