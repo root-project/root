@@ -201,14 +201,14 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> decltype(X(0,0)
 {
     decltype(X(0,0)) curError, maxError = 0.0;
 
-    size_t m = X.GetNrows();
-    size_t n = X.GetNcols();
+    Int_t m = X.GetNrows();
+    Int_t n = X.GetNcols();
 
     assert(m == Y.GetNrows());
     assert(n == Y.GetNcols());
 
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
+    for (Int_t i = 0; i < m; i++) {
+        for (Int_t j = 0; j < n; j++) {
             curError = relativeError(X(i,j), Y(i,j));
             maxError = std::max(curError, maxError);
         }
