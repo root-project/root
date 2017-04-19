@@ -72,6 +72,7 @@ protected:
    TString MakeAuthPrefix() const;
    TString MakeHostHeader() const;
    TString MakeDateHeader() const;
+   TString MakeTokenHeader() const;
    TS3HTTPRequest& SetTimeStamp();
 
 public:
@@ -101,6 +102,8 @@ public:
    TS3HTTPRequest& SetSecretKey(const TString& secretKey);
    TS3HTTPRequest& SetAuthKeys(const TString& accessKey, const TString& secretKey);
    TS3HTTPRequest& SetAuthType(TS3HTTPRequest::EAuthType authType);
+
+   TString   fToken;
 
    ClassDef(TS3HTTPRequest, 0)  // Create generic HTTP request for Amazon S3 and Google Storage services
 };
