@@ -74,5 +74,5 @@ void th2polyUSA()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   p->Draw("colz");
+   p->Draw("colz textn");
 }
