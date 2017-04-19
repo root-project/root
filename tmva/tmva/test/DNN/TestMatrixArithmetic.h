@@ -38,8 +38,7 @@ auto testMultiplication(size_t ntests)
       n = rand() % 100 + 1;
       k = rand() % 100 + 1;
 
-      TMatrixT<Double_t> ARef(m,k), A2Ref(m,k), ATRef(k,m) , BRef(k,n),
-          BTRef(n,k), CRef(m,n);
+      TMatrixT<Scalar_t> ARef(m,k), A2Ref(m,k), ATRef(k,m) , BRef(k,n), BTRef(n,k), CRef(m,n);
       TMVA::DNN::randomMatrix(ARef);
       TMVA::DNN::randomMatrix(A2Ref);
       TMVA::DNN::randomMatrix(ATRef);
@@ -50,19 +49,19 @@ auto testMultiplication(size_t ntests)
       // A * B
       CRef.Mult(ARef,BRef);
       Architecture_t::Multiply(C, A, B);
-      Scalar_t error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
+      Scalar_t error = TMVA::DNN::maximumRelativeError(C, CRef);
       maximumError   = std::max(error, maximumError);
 
       // A^T * B
       CRef.TMult(ATRef,BRef);
       Architecture_t::TransposeMultiply(C, AT, B);
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
+      error = TMVA::DNN::maximumRelativeError(C, CRef);
       maximumError   = std::max(error, maximumError);
 
       // A * B^T
       CRef.MultT(ARef,BTRef);
       Architecture_t::MultiplyTranspose(C, A, BT);
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) C, CRef);
+      error = TMVA::DNN::maximumRelativeError(C, CRef);
       maximumError   = std::max(error, maximumError);
 
       // A .* B
@@ -72,7 +71,7 @@ auto testMultiplication(size_t ntests)
          }
       }
       Architecture_t::Hadamard(A, A2);
-      error = TMVA::DNN::maximumRelativeError((TMatrixT<Double_t>) A, ARef);
+      error = TMVA::DNN::maximumRelativeError(A, ARef);
       maximumError   = std::max(error, maximumError);
    }
 
