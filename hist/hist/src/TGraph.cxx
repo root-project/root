@@ -846,17 +846,19 @@ void TGraph::DrawPanel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Interpolate points in this graph at x using a TSpline
-///  -if spline==0 and option="" a linear interpolation between the two points
-///   close to x is computed. If x is outside the graph range, a linear
-///   extrapolation is computed.
+/// Interpolate points in this graph at x using a TSpline.
+///
+///  - if spline==0 and option="" a linear interpolation between the two points
+///    close to x is computed. If x is outside the graph range, a linear
+///    extrapolation is computed.
+///  - if spline==0 and option="S" a TSpline3 object is created using this graph
+///    and the interpolated value from the spline is returned.
+///    the internally created spline is deleted on return.
+///  - if spline is specified, it is used to return the interpolated value.
+///
 ///   If the points are sorted in X a binary search is used (significantly faster)
 ///   One needs to set the bit  TGraph::SetBit(TGraph::kIsSortedX) before calling
 ///   TGraph::Eval to indicate that the graph is sorted in X.
-///  -if spline==0 and option="S" a TSpline3 object is created using this graph
-///   and the interpolated value from the spline is returned.
-///   the internally created spline is deleted on return.
-///  -if spline is specified, it is used to return the interpolated value.
 
 Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
 {
