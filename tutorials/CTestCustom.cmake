@@ -2,8 +2,14 @@
 
 set(CTEST_CUSTOM_TESTS_IGNORE ${CTEST_CUSTOM_TESTS_IGNORE} tutorial-pyroot-zdemo)
 
-if("$ENV{COMPILER}" STREQUAL "classic") #  TTreeProcessorM{T,P} are not available
+if("$ENV{COMPILER}" STREQUAL "classic") 
+  #  TTreeProcessorM{T,P} are not available
   list(APPEND CTEST_CUSTOM_TESTS_IGNORE tutorial-multicore-mp102_readNtuplesFillHistosAndFit)
+  #  pthread is not retained on ubuntus when building root.exe
+  list(APPEND CTEST_CUSTOM_TESTS_IGNORE
+       tutorial-multicore-mt101_fillNtuples
+       tutorial-multicore-mt001_fillHistos
+       tutorial-multicore-mt201_parallelHistoFill)
 endif()
 
 if (CTEST_BUILD_NAME MATCHES aarch64 AND CTEST_BUILD_NAME MATCHES dbg)

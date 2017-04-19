@@ -533,6 +533,7 @@ multiple training phases. A training phase ends when the test error
 did not decrease for a user-specified number of epochs.
 
 \subsubsection{Test and Evaluation Set}
+\label{sec:dnn_test_and_evaluation_set}
 
 The user should note that this implementation uses the error on the TMVA test set
 to check for convergence. Therefore the TMVA test error reported by TMVA may
@@ -556,6 +557,7 @@ factory->BookMethod(dataloader, TMVA::Types::kDNN, "DNN", <options>);
  a user defined name for the method. The fourth argument is the option string
  holding the options for the method. See Sec.~\ref{sec:usingtmva:booking}
  for more information on the booking.}
+\label{example:DNN_booking}
 \end{codeexample}
 
 The \code{Architecture} parameter is used to specify the backend used for the

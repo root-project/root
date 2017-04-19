@@ -27,12 +27,10 @@
 
 #include <string>
 
-extern "C" {
 #if defined(__sun) && defined(__SUNPRO_CC)
 #include <signal.h>
 #endif
 #include "def.h"
-}
 
 #ifndef WIN32
 #include <unistd.h>

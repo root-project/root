@@ -26,7 +26,7 @@ class TActionResultProxy;
 
 namespace Detail {
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &             r,
+ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
                                                                 const std::shared_ptr<TDataFrameImpl> &df);
 }
 
@@ -68,17 +68,18 @@ class TActionResultProxy {
       static Iterator_t GetEnd(const V &v) { return std::end(v); };
    };
    /// \endcond
-   using SPT_t         = std::shared_ptr<T>;
-   using SPTDFI_t      = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
-   using WPTDFI_t      = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
+   using SPT_t = std::shared_ptr<T>;
+   using SPTDFI_t = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
+   using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
-   template<typename W> friend TActionResultProxy<W> ROOT::Detail::MakeActionResultProxy(
+   template <typename W>
+   friend TActionResultProxy<W> ROOT::Detail::MakeActionResultProxy(
       const std::shared_ptr<W> &, const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
 
    ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
    WPTDFI_t fImplWeakPtr;            ///< Points to the TDataFrameImpl at the root of the functional graph
-   SPT_t    fObjPtr;                 ///< Shared pointer encapsulating the wrapped result
+   SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
 
    /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -139,11 +140,11 @@ void TActionResultProxy<T>::TriggerRun()
 
 namespace Detail {
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &             r,
+ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
                                                                 const std::shared_ptr<TDataFrameImpl> &df)
 {
    auto readiness = std::make_shared<bool>(false);
-   auto resPtr    = ROOT::Experimental::TActionResultProxy<T>(r, readiness, df);
+   auto resPtr = ROOT::Experimental::TActionResultProxy<T>(r, readiness, df);
    df->Book(readiness);
    return resPtr;
 }

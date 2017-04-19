@@ -1036,8 +1036,12 @@ int test18() {
   SMatrix<double,7,7,MatRepSym<double,7> > Sinv = S.Inverse(ifail);
   iret |= compare(ifail,0,"sym7x7 inversion");
   SMatrix<double,7> Id = S*Sinv;
+  int tol = 10;
+#ifdef __FAST_MATH__
+  tol = 16;
+#endif
   for (int i = 0; i < 7; ++i) {
-     int iiret = compare(Id(i,i),1.,"inv result",10);
+     int iiret = compare(Id(i,i),1.,"inv result",tol);
      if (iiret) {
         std::cout << "Comparison failed for Id(" << i << "," << i << ") == " << Id(i,i) << " != 1."
                   << " with delta == " << std::abs(Id(i,i) - 1)

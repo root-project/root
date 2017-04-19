@@ -90,6 +90,12 @@ namespace TMVA {
       std::vector<Float_t> fAchievableEff;
       std::vector<Float_t> fAchievablePur;
       std::vector<std::vector<Double_t> > fBestCuts;
+
+      // Temporary storage used during GetBestMultiClassCuts
+      std::vector<Float_t> fClassSumWeights;
+      std::vector<Float_t> fEventWeights;
+      std::vector<UInt_t>  fEventClasses;
+
    protected:
        
        ClassDef(ResultsMulticlass,2);

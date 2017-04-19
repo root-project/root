@@ -38,7 +38,8 @@ script:
   if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
     BASE_COMMIT=$(git rev-parse $TRAVIS_BRANCH)
     echo "Running clang-format-3.9 against branch $TRAVIS_BRANCH, with hash $BASE_COMMIT"
-    RESULT_OUTPUT="$(git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary `which clang-format-3.9`)"
+    COMMIT_FILES=$(git diff --name-only $BASE_COMMIT | grep -i -v LinkDef)
+    RESULT_OUTPUT="$(git-clang-format-3.9 --commit $BASE_COMMIT --diff --binary `which clang-format-3.9` $COMMIT_FILES)"
     
     if [ "$RESULT_OUTPUT" == "no modified files to format" ] \
       || [ "$RESULT_OUTPUT" == "clang-format did not modify any files" ] ; then

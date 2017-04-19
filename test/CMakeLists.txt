@@ -311,6 +311,18 @@ if(ROOT_vc_FOUND)
   ROOT_ADD_TEST(test-Vc COMMAND testVc FAILREGEX "FAILED|Error in")
 endif()
 
+#--VecCore basic test------------------------------------------------------------------------------
+if(ROOT_veccore_FOUND)
+  ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
+  target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
+  target_include_directories(test-veccore PRIVATE ${VecCore_INCLUDE_DIRS})
+  if(VecCore_Vc_FOUND)
+    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")
+  else()
+    ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Scalar")
+  endif()
+endif()
+
 #--Vc GenVector test-----------------------------------------------------------------------------------
 if(ROOT_vc_FOUND)
   include_directories(${Vc_INCLUDE_DIRS})

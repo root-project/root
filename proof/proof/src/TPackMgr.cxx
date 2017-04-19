@@ -842,6 +842,7 @@ Int_t TPackMgr::Install(const char *parpath, Bool_t rmold)
    if (install) {
       if (!TFile::Cp(psrc, dest)) {
          Error("Install", "could not copy %s to %s", psrc.Data(), dest.Data());
+         if (md5) delete md5;
          return -1;
       }
    }

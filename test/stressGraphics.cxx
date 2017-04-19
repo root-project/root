@@ -483,8 +483,11 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 Int_t FileSize (char *filename)
 {
    FileStat_t fs;
-   gSystem->GetPathInfo(filename, fs);
-   return (Int_t)fs.fSize;
+   if (!gSystem->GetPathInfo(filename, fs)) {
+      return (Int_t)fs.fSize;
+   } else {
+      return 0;
+   }
 }
 
 
@@ -498,14 +501,15 @@ Int_t AnalysePS(const TString &filename)
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
-   char *line = new char[251];
-   TString l;
    FILE *fp;
    Int_t status;
    if ((fp=fopen(filename.Data(), "r"))==NULL) {
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
+
+   char *line = new char[251];
+   TString l;
    while((status=fscanf(fp, "%s", line)) != EOF) {
       l = line;
       if (l.Contains("%!PS-Adobe"))  counting = kFALSE;
@@ -514,6 +518,7 @@ Int_t AnalysePS(const TString &filename)
    }
    if (gVerbose==1) printf(">>>>>>>>> Number of characters found in %s: %d\n",filename.Data(),count);
    fclose(fp);
+   delete [] line;
    return count;
 }
 
@@ -2451,6 +2456,9 @@ void tgraph2d2()
 
    TestReport2();
    delete dt;
+   delete [] rx;
+   delete [] ry;
+   delete [] rz;
 }
 
 
@@ -2491,6 +2499,9 @@ void tgraph2d3()
 
    TestReport2();
    delete dt;
+   delete [] rx;
+   delete [] ry;
+   delete [] rz;
 }
 
 
@@ -2809,7 +2820,7 @@ void parallelcoord()
    TParallelCoord* para = (TParallelCoord*)gPad->GetListOfPrimitives()->FindObject("ParaCoord");
    para->SetLineColor(25);
    TColor *col25 = gROOT->GetColor(25);
-   col25->SetAlpha(0.05);
+   if (col25) col25->SetAlpha(0.05);
    C->cd(2);
    ntuple->Draw("px:py:pz:random:px*py*pz","","candle");
 

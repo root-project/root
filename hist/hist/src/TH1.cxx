@@ -6551,11 +6551,13 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    histName = gInterpreter-> MapCppName(histName);
    const char *hname = histName.Data();
    if (!strlen(hname)) hname = "unnamed";
+   TString savedName = GetName();
+   this->SetName(hname);
    TString t(GetTitle());
    t.ReplaceAll("\\","\\\\");
    t.ReplaceAll("\"","\\\"");
    out << hname << " = new " << ClassName() << "(" << quote
-       << GetName() << quote << "," << quote<< t.Data() << quote
+       << hname << quote << "," << quote<< t.Data() << quote
        << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", "<<sxaxis;
@@ -6600,6 +6602,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    TH1::SavePrimitiveHelp(out, hname, option);
+   this->SetName(savedName.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

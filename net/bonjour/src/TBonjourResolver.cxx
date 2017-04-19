@@ -23,6 +23,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBonjourResolver.h"
+#include "TBonjourBrowser.h"
 #include "TBonjourRecord.h"
 #include "TSysEvtHandler.h"
 #include "TSystem.h"

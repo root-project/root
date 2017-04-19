@@ -53,6 +53,16 @@ if(ccache)
    endif()
 endif()
 
+#---Enable test coverage -----------------------------------------------------------------------
+if(coverage)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+  set(GCC_COVERAGE_LINK_FLAGS    "-fprofile-arcs")
+  set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
 if(testing)
@@ -146,12 +156,21 @@ if(cxxmodules)
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack")
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
   if (APPLE)
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
-  endif(APPLE)
+    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+    # trickery to override the contents of system's OpenGL.
+    # On OSX #include TGLIncludes.h will trigger the creation of the system
+    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+    # the translation units which it needs to 'rewrite'. The translation units
+    # which need glew support are in graf3d. However, depending on the modulemap
+    # organization we could request it implicitly (eg. one big module for ROOT).
+    # In these cases we need to 'prepend' this include path to the compiler in order
+    # for glew.h to it its trick.
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
+  endif()
 
   configure_file("${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap" COPYONLY)
 
@@ -183,10 +202,14 @@ if(cxxmodules)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
   endif()
 
   # These vars are useful when we want to compile things without cxxmodules.
-  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  if (NOT APPLE)
+    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags." FORCE)
+  endif()
   set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
 
 
@@ -229,9 +252,11 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
-get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+if(cxxmodules)
+  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+endif(cxxmodules)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})

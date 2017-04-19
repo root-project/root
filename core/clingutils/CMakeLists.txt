@@ -137,6 +137,6 @@ add_custom_command(OUTPUT ${stamp_file}
         ${copy_commands}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
-        COMMENT "Copying LLVM respurce and header files")
+        COMMENT "Copying LLVM resource and header files")
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
 

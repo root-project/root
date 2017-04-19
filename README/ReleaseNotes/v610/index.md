@@ -76,6 +76,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## RooFit Libraries
 
+- Remove deprecated `RooComplex` superseded by `std::complex`.
 
 ## TTree Libraries
 
@@ -183,6 +184,8 @@ The following interfaces have been removed, after deprecation in v6.08.
   h->GetYaxis()->SetTitleOffset(0.);
 ~~~
    the axis title is automatically placed to avoid overlaps with the axis labels.
+- Implement the automatic placement of the `TLegend`. A new constructor not
+  specifying the legend position is available. Only width and height are defined.
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.

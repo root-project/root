@@ -30,6 +30,45 @@ using namespace clang;
 using namespace llvm;
 using namespace llvm::legacy;
 
+namespace {
+  class KeepLocalGVPass: public ModulePass {
+    static char ID;
+
+    bool runOnGlobal(GlobalValue& GV) {
+      if (GV.isDeclaration())
+        return false; // no change.
+
+      // GV is a definition.
+
+      llvm::GlobalValue::LinkageTypes LT = GV.getLinkage();
+      if (!GV.isDiscardableIfUnused(LT))
+        return false;
+
+      if (LT == llvm::GlobalValue::InternalLinkage
+          || LT == llvm::GlobalValue::PrivateLinkage) {
+        GV.setLinkage(llvm::GlobalValue::ExternalLinkage);
+        return true; // a change!
+      }
+      return false;
+    }
+
+  public:
+    KeepLocalGVPass() : ModulePass(ID) {}
+
+    bool runOnModule(Module &M) override {
+      bool ret = false;
+      for (auto &&F: M)
+        ret |= runOnGlobal(F);
+      for (auto &&G: M.globals())
+        ret |= runOnGlobal(G);
+      return ret;
+    }
+  };
+}
+
+char KeepLocalGVPass::ID = 0;
+
+
 BackendPasses::~BackendPasses() {
   //delete m_PMBuilder->Inliner;
 }
@@ -112,6 +151,7 @@ void BackendPasses::CreatePasses(llvm::Module& M)
   // Set up the per-module pass manager.
   m_MPM.reset(new legacy::PassManager());
 
+  m_MPM->add(new KeepLocalGVPass());
   m_MPM->add(createTargetTransformInfoWrapperPass(m_TM.getTargetIRAnalysis()));
 
   // Add target-specific passes that need to run as early as possible.
