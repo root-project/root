@@ -113,14 +113,13 @@ namespace TMVA {
          // test event if it decends the tree at this node to the left 
          inline virtual Bool_t GoesLeft ( const Event& e ) const { return (GetDTNode() != NULL ? 
                                                                            GetDTNode()->GoesLeft(e) : false); }
+         // initialize a node from a data record
+         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
+         virtual void ReadContent(std::stringstream& s);
+         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       
       private:
 
-         // initialize a node from a data record
-         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
-         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-         virtual void ReadContent(std::stringstream& s);
-         
          Int_t fNLeafDaughters; //! number of terminal descendants
          Double_t fNodeResubstitutionEstimate; //! R(t) = misclassification rate for node t
          Double_t fResubstitutionEstimate; //! R(T_t) = sum[t' in ~T_t]{ R(t) }

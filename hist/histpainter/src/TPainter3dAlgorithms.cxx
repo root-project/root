@@ -461,7 +461,7 @@ void TPainter3dAlgorithms::DrawFaceMode1(Int_t *, Double_t *xyz, Int_t np, Int_t
 
    //          Transfer to normalised coordinates
    Bool_t ifneg = false;
-   Double_t x[12+1], y[12+1], p3[3];
+   Double_t x[12+1] = {0}, y[12+1] = {0}, p3[3];
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       if (k < 0) { k = -k; ifneg = true; }
@@ -510,7 +510,7 @@ void TPainter3dAlgorithms::DrawFaceMode2(Int_t *, Double_t *xyz, Int_t np, Int_t
    if (!view) return;
 
    //          Transfer to normalised coordinates
-   Double_t x[12+1], y[12+1], p3[3*12];
+   Double_t x[12+1] = {0}, y[12+1] = {0}, p3[3*12];
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       view->WCtoNDC(&xyz[(k-1)*3], &p3[i*3]);
@@ -566,7 +566,7 @@ void TPainter3dAlgorithms::DrawFaceMode3(Int_t *icodes, Double_t *xyz, Int_t np,
    if (!view) return;
 
    //          Transfer to normalised coordinates
-   Double_t x[4+1], y[4+1], p3[3];
+   Double_t x[4+1] = {0}, y[4+1] = {0}, p3[3];
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       view->WCtoNDC(&xyz[(k-1)*3], p3);
@@ -614,7 +614,7 @@ void TPainter3dAlgorithms::DrawFaceMove1(Int_t *icodes, Double_t *xyz, Int_t np,
    if (!view) return;
 
    //          Copy points to array
-   Double_t p3[3*12];
+   Double_t p3[3*12] = {0};
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       p3[i*3 + 0] = xyz[(k-1)*3 + 0];
@@ -777,7 +777,7 @@ void TPainter3dAlgorithms::DrawFaceMove3(Int_t *icodes, Double_t *xyz, Int_t np,
    TAttLine::Modify();
 
    //          Copy points to array
-   Double_t p3[3*12], ttt[12];
+   Double_t p3[3*12] = {0}, ttt[12] = {0};
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       p3[i*3 + 0] = xyz[(k-1)*3 + 0];
@@ -861,7 +861,7 @@ void TPainter3dAlgorithms::DrawLevelLines(Int_t *icodes, Double_t *xyz, Int_t np
    TAttLine::Modify();
 
    //          Copy points to array
-   Double_t p3[3*12], ttt[12];
+   Double_t p3[3*12] = {0}, ttt[12] = {0};
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       p3[i*3 + 0] = xyz[(k-1)*3 + 0];
@@ -918,7 +918,7 @@ void TPainter3dAlgorithms::DrawFaceRaster1(Int_t *icodes, Double_t *xyz, Int_t n
    if (!view) return;
 
    //          Copy vertices to array
-   Double_t p3[3*12], pp[2*12];
+   Double_t p3[3*12] = {0}, pp[2*12] = {0};
    for (Int_t i = 0; i < np; ++i) {
       Int_t k = iface[i];
       if (k < 0) k = -k;
@@ -4544,14 +4544,14 @@ L510:
    for ( i=1 ; i<=3 ; i++ ) {
       i1 = i;
       i2 = i + 1;
-      if (i == 3) i2 = 1;
+      if (i2 == 4) i2 = 1;
       k1 = TMath::Abs(itria[n-1][i1-1]);
       k2 = TMath::Abs(itria[n-1][i2-1]);
       if (TMath::Abs(xyz[k1-1][0]-xyz[k2-1][0]) > kDel) continue;
       if (TMath::Abs(xyz[k1-1][1]-xyz[k2-1][1]) > kDel) continue;
       if (TMath::Abs(xyz[k1-1][2]-xyz[k2-1][2]) > kDel) continue;
       i3 = i - 1;
-      if (i == 1) i3 = 3;
+      if (i3 == 0) i3 = 3;
       goto L530;
    }
    goto L500;

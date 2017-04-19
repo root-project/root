@@ -154,10 +154,10 @@ private:
 #ifdef ROOT_FIT_PARALLEL
       return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #else
-      if (!BaseFCN::Data().HaveCoordErrors() )
-         return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+      if (BaseFCN::Data().HaveCoordErrors() || BaseFCN::Data().HaveAsymErrors())
+         return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);      
       else
-         return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+         return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
 #endif
    }
 

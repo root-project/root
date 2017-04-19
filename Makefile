@@ -894,8 +894,8 @@ CXXMODULES_CORE_EXCLUDE := RConfig.h RVersion.h  RtypesImp.h \
 			   DllImport.h TGenericClassInfo.h \
 			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
 			   RootMetaSelection.h libcpp_string_view.h \
-			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
-			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
+			   RWrap_libcpp_string_view.h \
+			   TException.h TBranchProxyTemplate.h \
 			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h
 COREDICTH_REL := $(filter-out $(CXXMODULES_CORE_EXCLUDE),$(COREDICTH_REL))
 CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))

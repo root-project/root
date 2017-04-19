@@ -183,6 +183,10 @@ int main(int argc, char *argv[])
    if (argc > 1) verbose = atoi(argv[1]);
    opt = argv[1];
 
+   if (argc > 2) {
+      for (int i = 2; i<argc; i++) opt += argv[i];
+   }
+
    if (opt.Contains("-h")) {
       printf("Usage: stressGraphics [-h] [-r] [-k]\n");
       printf("Options:\n");
@@ -190,10 +194,12 @@ int main(int argc, char *argv[])
       printf("       Redirect the output in the file \"stressGraphics.ref\"\n");
       printf("       to redefine the reference file.\n");
       printf("\n");
-      printf("  -k : Keep the PS files even for passed tests.\n");
-      printf("       By default PS files for passed tests are deleted.\n");
+      printf("  -k : Keep the output files even for passed tests.\n");
+      printf("       By default output files for passed tests are deleted.\n");
       printf("\n");
       printf("  -h : Print usage\n");
+      printf("\n");
+      printf("  Any other option is ignored.\n");
       return 0;
    }
 
@@ -605,7 +611,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the C code conresponding to the canvas C.
+/// Generate the C code corresponding to the canvas C.
 
 void DoCcode(TCanvas *C)
 {
@@ -1603,7 +1609,7 @@ void tgaxis5()
          ga->SetLineColor(0);
          ga->Draw();
 
-         // Get offset string of axis time format: there is not acccessor
+         // Get offset string of axis time format: there is not accessor
          // to time format in TGaxis.
          // Assumes TAxis use the same format.
          TAxis a(10, 0, 1600000000);
@@ -1695,8 +1701,8 @@ void labels1()
    pt->SetTextAlign(12);
    pt->AddText("Use the axis Context Menu LabelsOption");
    pt->AddText(" \"a\"   to sort by alphabetic order");
-   pt->AddText(" \">\"   to sort by decreasing vakues");
-   pt->AddText(" \"<\"   to sort by increasing vakues");
+   pt->AddText(" \">\"   to sort by decreasing values");
+   pt->AddText(" \"<\"   to sort by increasing values");
    pt->Draw();
 
    TestReport1(C, "Alphanumeric labels in a 1-d histogram");

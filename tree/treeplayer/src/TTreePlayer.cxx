@@ -79,7 +79,7 @@ extra libraries (Histogram, display, etc).
 
 #include "HFitInterface.h"
 #include "Foption.h"
-#include "Fit/DataVector.h"
+#include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
@@ -875,7 +875,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          blen[lenb-1] = 0;
          len = leaflen[l];
          if (len <= 0) len = 1;
-         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
+         fprintf(fp,"   static constexpr Int_t kMax%s = %d;\n",blen,len);
       }
    }
    delete [] leaflen;

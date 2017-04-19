@@ -20,12 +20,6 @@
 #include "TIterator.h"
 #include "RooLinkedList.h"
 
-#if ROOT_VERSION_CODE <= 332546
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
 class RooFIter
 {
   public:

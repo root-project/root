@@ -29,20 +29,19 @@ namespace TMVA {
    {
      friend class HyperParameterOptimisation;
    private:
-       std::vector<Float_t> fROCs;
-       Float_t              fROCAVG = 0.0;
-       std::shared_ptr<TMultiGraph>    fROCCurves;
-
-       std::vector<Double_t> fSigs;
-       std::vector<Double_t> fSeps;
-       std::vector<Double_t> fEff01s;
-       std::vector<Double_t> fEff10s;
-       std::vector<Double_t> fEff30s;
-       std::vector<Double_t> fEffAreas;
-       std::vector<Double_t> fTrainEff01s;
-       std::vector<Double_t> fTrainEff10s;
-       std::vector<Double_t> fTrainEff30s;
-       TString               fMethodName;
+      Float_t fROCAVG;
+      std::vector<Float_t> fROCs;
+      std::vector<Double_t> fSigs;
+      std::vector<Double_t> fSeps;
+      std::vector<Double_t> fEff01s;
+      std::vector<Double_t> fEff10s;
+      std::vector<Double_t> fEff30s;
+      std::vector<Double_t> fEffAreas;
+      std::vector<Double_t> fTrainEff01s;
+      std::vector<Double_t> fTrainEff10s;
+      std::vector<Double_t> fTrainEff30s;
+      std::shared_ptr<TMultiGraph> fROCCurves;
+      TString fMethodName;
 
    public:
        HyperParameterOptimisationResult();

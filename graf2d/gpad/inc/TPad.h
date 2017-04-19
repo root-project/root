@@ -112,8 +112,11 @@ protected:
    TObject      *fPadPointer;       ///<! free pointer
    TObject      *fPadView3D;        ///<! 3D View of this TPad
    static Int_t  fgMaxPickDistance; ///<  Maximum Pick Distance
-   Int_t         fNumPaletteColor;     ///< Number of objects with an automatic color
-   Int_t         fNextPaletteColor;    ///< Next automatic color
+   Int_t         fNumPaletteColor;  ///<  Number of objects with an automatic color
+   Int_t         fNextPaletteColor; ///<  Next automatic color
+   Bool_t       *fCollideGrid;      ///<! Grid used to find empty space when adding a box (Legend) in a pad
+   Int_t         fCGnx;             ///<! Size of the collide grid along x
+   Int_t         fCGny;             ///<! Size of the collide grid along y
 
    // 3D Viewer support
    TVirtualViewer3D *fViewer3D;     ///<! Current 3D viewer
@@ -135,6 +138,14 @@ private:
    void CopyBackgroundPixmap(Int_t x, Int_t y);
    void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
    void DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode);
+
+   Bool_t            Collide(Int_t i, Int_t j, Int_t w, Int_t h);
+   void              FillCollideGrid(TObject *o);
+   void              FillCollideGridTBox(TObject *o);
+   void              FillCollideGridTFrame(TObject *o);
+   void              FillCollideGridTGraph(TObject *o);
+   void              FillCollideGridTH1(TObject *o);
+   void              LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2);
 
 public:
    // TPad status bits
@@ -159,7 +170,7 @@ public:
    virtual void      AddExec(const char *name, const char *command);
    virtual void      AutoExec();
    virtual void      Browse(TBrowser *b);
-   virtual TLegend  *BuildLegend(Double_t x1=0.5, Double_t y1=0.67, Double_t x2=0.88, Double_t y2=0.88, const char *title="", Option_t *option = ""); // *MENU*
+   virtual TLegend  *BuildLegend(Double_t x1=0.3, Double_t y1=0.21, Double_t x2=0.3, Double_t y2=0.21, const char *title="", Option_t *option = ""); // *MENU*
    TVirtualPad*      cd(Int_t subpadnumber=0); // *MENU*
    void              Clear(Option_t *option="");
    virtual Int_t     Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt);
@@ -367,6 +378,9 @@ public:
    Int_t             IncrementPaletteColor(Int_t i, TString opt);
    Int_t             NextPaletteColor();
 
+   void              DrawCollideGrid();
+   Bool_t            PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb);
+
    virtual void      x3d(Option_t *type=""); // Depreciated
 
    virtual TVirtualViewer3D *GetViewer3D(Option_t * type = "");
@@ -388,7 +402,7 @@ public:
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
    virtual void      StartEditing() { Emit("StartEditing()"); }   // *SIGNAL*
 
-   ClassDef(TPad,12)  //A Graphics pad
+   ClassDef(TPad,13)  //A Graphics pad
 };
 
 

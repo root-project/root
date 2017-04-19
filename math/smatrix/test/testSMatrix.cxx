@@ -2,47 +2,59 @@
 #include "Math/SVector.h"
 #include "Math/SMatrix.h"
 
+#include <iomanip>
 #include <iostream>
-#include <vector>
-#include <string>
 #include <limits>
-
+#include <string>
+#include <vector>
 
 using namespace ROOT::Math;
 
 using std::cout;
 using std::endl;
 
-
 //#define TEST_STATIC_CHECK  // for testing compiler failures (static check)
 
 #define XXX
 
-template<class T>
-int compare( T a, T b, const std::string & s="",double tol = 1) {
-  if (a == b) return 0;
-  double eps = tol*8.*std::numeric_limits<T>::epsilon();
+/** Compare booleans and integer numbers, tolerance parameter is ignored */
 
-  if (a == 0 && std::abs(b) < eps ) return 0;
-  if (b == 0 && std::abs(a) < eps ) return 0;
-  if (std::abs(a-b) < a*eps) return 0;
-  if ( s =="" )
-    std::cout << "\nFailure " << a << " different than " << b << std::endl;
-  else
-    std::cout << "\n" << s << " : Failure " << a << " different than " << b << std::endl;
-  return 1;
+template<typename T>
+typename std::enable_if<!std::is_floating_point<T>::value, bool>::type
+is_equal(T a, T b, int)
+{
+  return a == b;
 }
 
-int compare( int a, int b, const std::string & s="") {
-  if (a == b) return 0;
-  if ( s =="" )
-    std::cout << "\nFailure " << a << " different than " << b << std::endl;
-  else
-    std::cout << "\n" << s << " : Failure " << a << " different than " << b << std::endl;
-  return 1;
+/** Compare floating point numbers with a tolerance in ulps
+ *  (ulps = units in the last place) */
+
+template<typename T>
+typename std::enable_if<std::is_floating_point<T>::value, bool>::type
+is_equal(T a, T b, int ulps)
+{
+  using std::abs;
+  T eps = std::numeric_limits<T>::epsilon();
+
+  if (a == b)
+    return true;
+
+  if (a * b == T(0.0))
+    return abs(a - b) < ulps * eps;
+
+  return abs(a - b) < ulps * (abs(a) + abs(b)) * eps;
 }
-int compare( bool a, bool b, const std::string & s="") {
-  return compare(static_cast<int>(a), static_cast<int>(b),s);
+
+template<typename T>
+int compare(T a, T b, const std::string & s = "", int ulps = 10)
+{
+  bool equal = is_equal<T>(a, b, ulps);
+
+  if (equal == false)
+    std::cout << std::boolalpha << std::scientific << std::setprecision(16)
+              << s << std::endl << "Failure: " << a << " != " << b << std::endl;
+
+  return equal ? 0 : 1;
 }
 
 int test1() {
@@ -1036,12 +1048,16 @@ int test18() {
   SMatrix<double,7,7,MatRepSym<double,7> > Sinv = S.Inverse(ifail);
   iret |= compare(ifail,0,"sym7x7 inversion");
   SMatrix<double,7> Id = S*Sinv;
+  int tol = 10;
+#ifdef __FAST_MATH__
+  tol = 16;
+#endif
   for (int i = 0; i < 7; ++i) {
-     int iiret = compare(Id(i,i),1.,"inv result",10);
+     int iiret = compare(Id(i,i),1.,"inv result",tol);
      if (iiret) {
         std::cout << "Comparison failed for Id(" << i << "," << i << ") == " << Id(i,i) << " != 1."
                   << " with delta == " << std::abs(Id(i,i) - 1)
-                  << " > " << 10 * 8.*std::numeric_limits<double>::epsilon() << std::endl;
+                  << " > " << tol * std::numeric_limits<double>::epsilon() << std::endl;
      }
      iret |= iiret;
   }
@@ -1102,7 +1118,7 @@ int test19() {
   //std::cout << S << "\n" << Sinv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-     iret |= compare(Id(i,i),float(1.),"inv sym result",1000);
+     iret |= compare(Id(i,i),float(1.),"inv sym result",100);
 
   double sum = 0;
   for (int i = 0; i < 7; ++i)
@@ -1129,7 +1145,7 @@ int test19() {
   //std::cout << M << "\n" << Minv << "\n" << Id << "\n";
 
   for (int i = 0; i < 7; ++i)
-     iret |= compare(Id(i,i),float(1.),"inv result",1000);
+     iret |= compare(Id(i,i),float(1.),"inv result",100);
 
   sum = 0;
   for (int i = 0; i < 7; ++i)

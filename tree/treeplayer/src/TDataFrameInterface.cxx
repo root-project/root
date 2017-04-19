@@ -48,7 +48,7 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
    return usedBranches;
 }
 
-// Jit a string filter or a string temporary column, call this->AddColumn or this->Filter as needed
+// Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
                      const std::string &name, const std::string &expression, TObjArray *branches,
@@ -122,7 +122,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    // Here we have two cases: filter and column
    ss.str("");
    ss << "((" << nodeTypeName << "*)" << thisPtr << ")->" << methodName << "(";
-   if (methodName == "AddColumn") {
+   if (methodName == "Define") {
       ss << "\"" << name << "\", ";
    }
    ss << filterLambda << ", {";

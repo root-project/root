@@ -11,9 +11,9 @@
 ///
 /// \author Rene Brun
 
-void copytree2() {
+R__LOAD_LIBRARY($ROOTSYS/test/libEvent.so)
 
-   gSystem->Load("$ROOTSYS/test/libEvent");
+void copytree2() {
 
    //Get old file, old tree and set top branch address
    TFile *oldfile;

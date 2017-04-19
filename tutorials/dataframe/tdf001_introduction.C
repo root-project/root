@@ -155,7 +155,7 @@ int tdf001_introduction()
    // this is like having a general container at disposal able to accommodate
    // any value of any type.
    // Let's dive in an example:
-   auto entries_sum = d.AddColumn("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
+   auto entries_sum = d.Define("sum", [](double b1, int b2) { return b2 + b1; }, {"b1", "b2"})
                          .Filter([](double sum) { return sum > 4.2; }, {"sum"})
                          .Count();
    std::cout << *entries_sum << std::endl;
@@ -163,7 +163,7 @@ int tdf001_introduction()
    // Additional columns can be expressed as strings. The content must be C++
    // code. The name of the variables must be the name of the branches. The code
    // is just in time compiled.
-   auto entries_sum2 = d.AddColumn("sum", "b1 + b2").Filter("sum > 4.2").Count();
+   auto entries_sum2 = d.Define("sum", "b1 + b2").Filter("sum > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 
    return 0;

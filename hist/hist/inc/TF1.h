@@ -199,7 +199,7 @@ public:
       std::function<T(const T *f, const Double_t *param)> fimpl;
    };
 
-   TF1FunctionPointer *fFunctp; //!Pointer to vectorized function
+   TF1FunctionPointer *fFunctp = nullptr; //!Pointer to vectorized function
 
    static std::atomic<Bool_t> fgAbsValue;  //use absolute value of function when computing integral
    static Bool_t fgRejectPoint;  //True if point must be rejected in a fit
