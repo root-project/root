@@ -1250,6 +1250,15 @@ void TH2Poly::SetFloat(Bool_t flag)
    fFloat = flag;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return "true" if the point (x,y) is inside the bin of binnr.
+
+Bool_t TH2Poly::IsInsideBin(Int_t binnr, Double_t x, Double_t y)
+{
+   TH2PolyBin* bin = (TH2PolyBin*)fBins->At(binnr);
+   return bin->IsInside(x,y);
+}
+
 
 /** \class TH2PolyBin
     \ingroup Hist
