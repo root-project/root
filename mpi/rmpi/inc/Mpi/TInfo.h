@@ -3,6 +3,7 @@
 #define ROOT_Mpi_TInfo
 
 #include<Mpi/Globals.h>
+#include<Mpi/TErrorHandler.h>
 
 #include <sstream>
 
@@ -40,7 +41,7 @@ namespace ROOT {
             {
                TString ivalue;
                ParseValue(ivalue, *const_cast<T *>(&value)); //parsing to string
-               MPI_Info_set(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), const_cast<Char_t *>(ivalue.Data()));
+               ROOT_MPI_CHECK_CALL(MPI_Info_set,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), const_cast<Char_t *>(ivalue.Data())),TInfo::Class_Name());
                return *this;
             }
 
@@ -53,12 +54,12 @@ namespace ROOT {
                T result;
                Int_t flag;
                Int_t valuelen;
-               MPI_Info_get_valuelen(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), &valuelen, &flag);
+               ROOT_MPI_CHECK_CALL(MPI_Info_get_valuelen,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), &valuelen, &flag),TInfo::Class_Name());
                if (!flag) {
                   //TODO:added error handling here
                }
                Char_t *value = new Char_t[valuelen];
-               MPI_Info_get(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), valuelen, value, &flag);
+               ROOT_MPI_CHECK_CALL(MPI_Info_get,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), valuelen, value, &flag),TInfo::Class_Name());
                if (!flag) {
                   //TODO:added error handling here
                }
