@@ -5,11 +5,12 @@
 #include<Mpi.h>
 #include<TH1F.h>
 
+using namespace ROOT::Mpi;
 
-ROOT::Mpi::Op<TH1F> HSUM()//histogram sum(custom operation for reduce)
+Op<TH1F> HSUM()//histogram sum(custom operation for reduce)
 {
    //returning an  ROOT::Mpi::Op<TH1F>(arg) object where "arg" is a lambda function with histograms sum
-   return ROOT::Mpi::Op<TH1F>([](const TH1F & a, const TH1F & b) {
+   return Op<TH1F>([](const TH1F & a, const TH1F & b) {
       TH1F c(a);
       c.Add(&b);
       return  c;
@@ -19,12 +20,12 @@ ROOT::Mpi::Op<TH1F> HSUM()//histogram sum(custom operation for reduce)
 
 void hist_reduce(Int_t points = 100000)
 {
-   ROOT::Mpi::TEnvironment env;
+   TEnvironment env;
 
    auto root = 0;
-   auto rank = gComm->GetRank();
+   auto rank = COMM_WORLD.GetRank();
 
-   if (gComm->GetSize() == 1) return; //need at least 2 process
+   if (COMM_WORLD.GetSize() == 1) return; //need at least 2 process
 
    auto form1 = new TFormula("form1", "abs(sin(x)/x)");
    auto sqroot = new TF1("sqroot", "x*gaus(0) + [3]*form1", 0, 10);
@@ -36,7 +37,7 @@ void hist_reduce(Int_t points = 100000)
 
    TH1F result;
 
-   gComm->Reduce(h1f, result, HSUM, root);
+   COMM_WORLD.Reduce(h1f, result, HSUM, root);
 
    if (rank == root) {
       TCanvas *c1 = new TCanvas("c1", "The FillRandom example", 200, 10, 700, 900);
