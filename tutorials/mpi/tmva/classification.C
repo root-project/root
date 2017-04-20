@@ -12,15 +12,15 @@ void classification()
    Tools::Instance();
 
    TEnvironment env;
-   TCommunicator comm;
-   
-   if(comm.GetSize()==1) return; //needed to run ROOT tutorials in tests
 
    
-   auto rank = comm.GetRank();
-   if (comm.GetSize() != 4) {
+   if(COMM_WORLD.GetSize()==1) return; //needed to run ROOT tutorials in tests
+
+   
+   auto rank = COMM_WORLD.GetRank();
+   if (COMM_WORLD.GetSize() != 4) {
       Error("classification", "Please run wih 4 processors.");
-      comm.Abort(1);
+      COMM_WORLD.Abort(1);
    }
 
    auto outputFile = TFile::Open(Form("TMVA%d.root", rank), "RECREATE");
@@ -30,7 +30,7 @@ void classification()
 
    DataLoader dataloader("dataset");
 
-   if (comm.IsMainProcess()) {
+   if (COMM_WORLD.IsMainProcess()) {
 
       if (gSystem->AccessPathName("./tmva_class_example.root"))    // file does not exist in local directory
          gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
@@ -66,7 +66,7 @@ void classification()
 
    }
 
-   comm.Bcast(dataloader, comm.GetMainProcess());
+   COMM_WORLD.Bcast(dataloader, COMM_WORLD.GetMainProcess());
 
    if (rank == 0) {
       factory.BookMethod(&dataloader, TMVA::Types::kMLP, "MLP",
