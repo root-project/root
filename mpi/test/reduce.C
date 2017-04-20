@@ -58,20 +58,20 @@ void reduce_test_scalar(Int_t root = 0)
 
 
    if (rank == root) {
-      int sum = 0;
-      int prod = 1;
+      Int_t sum = 0;
+      Int_t prod = 1;
       TComplex cplx_r(1, 1);
-      for (int i = 0; i < size - 1; i++) {
+      for (Int_t i = 0; i < size - 1; i++) {
          TComplex c_tmp(1, 1);
          cplx_r = PROD<TComplex>()(cplx_r, c_tmp);
       }
-      for (int i = 0; i < size ; i++) {
+      for (Int_t i = 0; i < size ; i++) {
          sum = SUM<Int_t>()(sum, i);
          prod = PROD<Int_t>()(prod, i + 1);
       }
       std::cout << std::endl;
-//       printf("MPI Result     = %d\n", value);
-//       printf("Correct Result = %d\n", sum);
+//       prInt_tf("MPI Result     = %d\n", value);
+//       prInt_tf("Correct Result = %d\n", sum);
 
       //require values to compare if everything is ok
       TMatrixD req_mat(size, size);
@@ -130,7 +130,7 @@ void reduce_test_array(Int_t root = 0, Int_t count = 2)
 
    if (rank == root) {
       Int_t sum = 0;
-      for (int i = 0; i < size ; i++) {
+      for (Int_t i = 0; i < size ; i++) {
          sum = SUM<Int_t>()(sum, i);
       }
 

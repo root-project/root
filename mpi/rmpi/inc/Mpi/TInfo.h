@@ -41,7 +41,7 @@ namespace ROOT {
             {
                TString ivalue;
                ParseValue(ivalue, *const_cast<T *>(&value)); //parsing to string
-               ROOT_MPI_CHECK_CALL(MPI_Info_set,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), const_cast<Char_t *>(ivalue.Data())),TInfo::Class_Name());
+               ROOT_MPI_CHECK_CALL(MPI_Info_set, (fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), const_cast<Char_t *>(ivalue.Data())), TInfo::Class_Name());
                return *this;
             }
 
@@ -54,12 +54,12 @@ namespace ROOT {
                T result;
                Int_t flag;
                Int_t valuelen;
-               ROOT_MPI_CHECK_CALL(MPI_Info_get_valuelen,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), &valuelen, &flag),TInfo::Class_Name());
+               ROOT_MPI_CHECK_CALL(MPI_Info_get_valuelen, (fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), &valuelen, &flag), TInfo::Class_Name());
                if (!flag) {
                   //TODO:added error handling here
                }
                Char_t *value = new Char_t[valuelen];
-               ROOT_MPI_CHECK_CALL(MPI_Info_get,(fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), valuelen, value, &flag),TInfo::Class_Name());
+               ROOT_MPI_CHECK_CALL(MPI_Info_get, (fInternalInfo, const_cast<Char_t *>(fInternalKey.Data()), valuelen, value, &flag), TInfo::Class_Name());
                if (!flag) {
                   //TODO:added error handling here
                }

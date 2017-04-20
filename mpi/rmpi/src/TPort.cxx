@@ -46,7 +46,7 @@ void TPort::Open(const TInfo &info)
 {
    fInfo = info;
    Char_t *port = new Char_t[MAX_PORT_NAME];
-   ROOT_MPI_CHECK_CALL(MPI_Open_port,(info, port),TPort::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Open_port, (info, port), TPort::Class_Name());
    fPort = port;
 }
 
@@ -54,7 +54,7 @@ void TPort::Open(const TInfo &info)
 void TPort::Close()
 {
    Char_t *port = const_cast<Char_t *>(fPort.Data());
-   ROOT_MPI_CHECK_CALL(MPI_Close_port,(port),TPort::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Close_port, (port), TPort::Class_Name());
    fPort = "";
 }
 
@@ -69,7 +69,7 @@ TPort TPort::LookupName(const TString service_name, const TInfo &info)
 {
    //TODO: error handling here
    Char_t *port = new Char_t[MAX_PORT_NAME];
-   ROOT_MPI_CHECK_CALL(MPI_Lookup_name,(service_name, info, port),TPort::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Lookup_name, (service_name, info, port), TPort::Class_Name());
    return TPort(info, port, service_name);
 }
 
@@ -77,7 +77,7 @@ TPort TPort::LookupName(const TString service_name, const TInfo &info)
 void TPort::PublishName(const TString service_name)
 {
    //TODO: error handling here
-   ROOT_MPI_CHECK_CALL(MPI_Publish_name,(const_cast<Char_t *>(service_name.Data()), fInfo, const_cast<Char_t *>(fPort.Data())),TPort::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Publish_name, (const_cast<Char_t *>(service_name.Data()), fInfo, const_cast<Char_t *>(fPort.Data())), TPort::Class_Name());
    fPublishName = service_name;
 }
 
@@ -85,7 +85,7 @@ void TPort::PublishName(const TString service_name)
 void TPort::UnpublishName(const TString service_name)
 {
    //TODO: error handling here
-   ROOT_MPI_CHECK_CALL(MPI_Unpublish_name,(const_cast<Char_t *>(service_name.Data()), fInfo, const_cast<Char_t *>(fPort.Data())),TPort::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Unpublish_name, (const_cast<Char_t *>(service_name.Data()), fInfo, const_cast<Char_t *>(fPort.Data())), TPort::Class_Name());
    fPublishName = "";
 }
 

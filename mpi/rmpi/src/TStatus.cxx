@@ -13,7 +13,7 @@ TStatus::TStatus(const TStatus &data): TObject(data), fStatus(data.fStatus) {}
 Bool_t TStatus::IsCancelled() const
 {
    Int_t t;
-   ROOT_MPI_CHECK_CALL(MPI_Test_cancelled,(const_cast<MPI_Status *>(&fStatus), &t),TStatus::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Test_cancelled, (const_cast<MPI_Status *>(&fStatus), &t), TStatus::Class_Name());
    return (Bool_t)t;
 }
 
@@ -57,5 +57,5 @@ void TStatus::SetError(Int_t error)
 //______________________________________________________________________________
 void TStatus::SetCancelled(Bool_t flag)
 {
-   ROOT_MPI_CHECK_CALL(MPI_Status_set_cancelled,(&fStatus, (Int_t) flag),TStatus::Class_Name());
+   ROOT_MPI_CHECK_CALL(MPI_Status_set_cancelled, (&fStatus, (Int_t) flag), TStatus::Class_Name());
 }
