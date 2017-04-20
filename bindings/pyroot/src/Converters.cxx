@@ -1541,7 +1541,7 @@ namespace {
 // converter factories for ROOT types
    typedef std::pair< const char*, ConverterFactory_t > NFp_t;
 
-// clang-format off
+   // clang-format off
    NFp_t factories_[] = {
    // factories for built-ins
       NFp_t( "bool",                      &CreateBoolConverter               ),
@@ -1625,7 +1625,7 @@ namespace {
       NFp_t( "FILE*",                     &CreateVoidArrayConverter          ),
       NFp_t( "Double32_t",                &CreateDoubleConverter             )
    };
-// clang-format on
+   // clang-format on
 
    struct InitConvFactories_t {
    public:
