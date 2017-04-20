@@ -379,7 +379,6 @@ void ErrSys(int level,const char *msg, int size)
 
 const char *shellMeta   = "~*[]{}?$";
 const char *shellStuff  = "(){}<>\"'";
-const char  shellEscape = '\\';
 
 ////////////////////////////////////////////////////////////////////////////////
 /// After SO_KEEPALIVE times out we probably get a SIGPIPE.
