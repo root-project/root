@@ -6,12 +6,14 @@ using namespace std;
 
 void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
 {
-   TCanvas *c1 = new TCanvas("c1", "multipads", 900, 700);
-   c1->Divide(2, 1);
+   TCanvas *c1 = new TCanvas("c1", "4 Malfunctioning Panels", 900, 700);
+   c1->Divide(3, 1);
 
    // -------------------- Construct detector bins ------------------------
    auto th2p = new TH2Poly();
-   auto tp2p = new TProfile2Poly();
+   auto avg = new TProfile2Poly();
+   auto err = new TProfile2Poly();
+
    ifstream infile;
    infile.open("./tutorials/hist/TProfile2Poly/test_data/cms_forward3");
 
@@ -36,7 +38,8 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
       x[2] = allCoords[i + 2].first;
       y[2] = allCoords[i + 2].second;
       th2p->AddBin(3, x, y);
-      tp2p->AddBin(3, x, y);
+      avg->AddBin(3, x, y);
+      err->AddBin(3, x, y);
    }
 
    // -------------------- Generate particles ------------------------
@@ -46,7 +49,7 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
       Double_t r2 = ran.Gaus(0, 8);
       Double_t rok = ran.Gaus(20, 2);
       Double_t rbad1 = ran.Gaus(1, 2);
-      Double_t rbad2 = ran.Gaus(2, 1);
+      Double_t rbad2 = ran.Gaus(2, 0);
 
       Double_t val = rok;
       // --------------------  Malfunctioning panels -------------------
@@ -57,7 +60,8 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
 
       // -------------------- Fill histograms ------------------------
       th2p->Fill(r1, r2, val);
-      tp2p->Fill(r1, r2, val);
+      avg->Fill(r1, r2, val);
+      err->Fill(r1, r2, val);
    }
 
    // -------------------- Display end state ------------------------
@@ -67,7 +71,13 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
    th2p->Draw("COLZ");
 
    c1->cd(2);
-   tp2p->SetStats(0);
-   tp2p->SetTitle("average charge - 4 malfunctioning panels");
-   tp2p->Draw("COLZ");
+   avg->SetStats(0);
+   avg->SetTitle("average charge");
+   avg->Draw("COLZ");
+
+   c1->cd(3);
+   err->SetStats(0);
+   err->SetContentToErrorW();
+   err->SetTitle("standard deviation");
+   err->Draw("COLZ");
 }

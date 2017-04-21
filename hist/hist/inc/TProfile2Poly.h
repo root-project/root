@@ -14,7 +14,12 @@ public:
 
    virtual ~TProfile2PolyBin() {}
 
+   void Update();
    void UpdateAverage();
+   void UpdateError();
+
+   Double_t GetError() { return fError; }
+   Double_t GetAverage() { return fAverage; }
 
    Double_t GetFSumw() const { return fSumw; }
    Double_t GetFSumw2() const { return fSumw2; }
@@ -36,6 +41,9 @@ private:
    Double_t fSumwz;
    Double_t fSumwz2;
    Double_t fNumEntries;
+
+   Double_t fAverage;
+   Double_t fError;
 
    ClassDef(TProfile2PolyBin, 1)
 };
@@ -67,6 +75,10 @@ public:
 
    // provide 'normal' interface of merging TProfile2Polys
    virtual Long64_t Merge(std::vector<TProfile2Poly *> list);
+
+   // option to dispay different measures on bins
+   void SetContentToAverageW(); // this one is used by default
+   void SetContentToErrorW();
 
 private:
    Double_t fTsumwz;

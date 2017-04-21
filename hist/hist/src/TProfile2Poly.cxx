@@ -17,8 +17,9 @@ ClassImp(TProfile2Poly)
    fSumw2 = 0;
    fSumwz = 0;
    fSumwz2 = 0;
-
    fNumEntries = 0;
+   fError = 0;
+   fAverage = 0;
 }
 
 TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin(poly, bin_number)
@@ -27,14 +28,26 @@ TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin
    fSumw2 = 0;
    fSumwz = 0;
    fSumwz2 = 0;
-
    fNumEntries = 0;
+   fError = 0;
+   fAverage = 0;
+}
+
+void TProfile2PolyBin::Update()
+{
+   UpdateAverage();
+   UpdateError();
+   SetChanged(true);
 }
 
 void TProfile2PolyBin::UpdateAverage()
 {
-   fContent = fSumw / fNumEntries;
-   SetChanged(true);
+   fAverage = fSumw / fNumEntries;
+}
+
+void TProfile2PolyBin::UpdateError()
+{
+   fError = std::sqrt((fSumw2 / fNumEntries) - (fContent * fContent));
 }
 
 void TProfile2PolyBin::ClearStats()
@@ -44,6 +57,8 @@ void TProfile2PolyBin::ClearStats()
    fSumwz = 0;
    fSumwz2 = 0;
    fNumEntries = 0;
+   fError = 0;
+   fAverage = 0;
 }
 
 // -------------- TProfile2Poly  --------------
@@ -172,8 +187,11 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
          fEntries++;
          bin->SetFNumEntries(bin->GetFNumEntries() + 1);
          bin->SetFSumw(bin->GetFSumw() + value);
-         bin->SetFSumwz(bin->GetFSumwz() + value * weight);
-         bin->UpdateAverage(); // fContent = fSumw / fNumEntries;
+         bin->SetFSumw2(bin->GetFSumw2() + (value * value));
+         bin->SetFSumwz(bin->GetFSumwz() + (value * weight));
+
+         bin->Update();
+         bin->SetContent(bin->GetAverage());
 
          return bin->GetBinNumber();
       }
@@ -186,9 +204,7 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
 
 Long64_t TProfile2Poly::Merge(TCollection *in)
 {
-
    std::vector<TProfile2Poly *> list;
-
    for (int i = 0; i < in->GetSize(); i++) {
       list.push_back((TProfile2Poly *)((TList *)in)->At(i));
    }
@@ -212,7 +228,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
       std::cout << "[FAIL] TProfile2Poly::Merge: Bin numbers of TProfile2Polys to be merged differ!" << std::endl;
       return -1;
    }
-   Int_t numBins = *numBinUnique.begin();
+   Int_t nbins = *numBinUnique.begin();
 
    // ------------ Update global (per histo) statistics
    for (const auto &histo : list) {
@@ -232,25 +248,50 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
    TProfile2PolyBin *dst = nullptr;
    TProfile2PolyBin *src = nullptr;
 
-   for (Int_t i = 0; i < numBins; i++) {
+   for (Int_t i = 0; i < nbins; i++) {
       dst = (TProfile2PolyBin *)fBins->At(i);
 
-      Double_t Sumw_srcs = 0;
-      Double_t NumEntries_srcs = 0;
+      Double_t sumw_acc = dst->GetFSumw();
+      Double_t sumw2_acc = dst->GetFSumw2();
+      Double_t numEntries_acc = dst->GetFNumEntries();
 
       // accumulate values of interest in the input vector
       for (const auto &e : list) {
          src = (TProfile2PolyBin *)e->fBins->At(i);
-         Sumw_srcs += src->GetFSumw();
-         NumEntries_srcs += src->GetFNumEntries();
+         sumw_acc += src->GetFSumw();
+         sumw2_acc += src->GetFSumw2();
+         numEntries_acc += src->GetFNumEntries();
       }
 
       // set values of accumulation
-      dst->SetFSumw(Sumw_srcs + dst->GetFSumw());
-      dst->SetFNumEntries(NumEntries_srcs + dst->GetFNumEntries());
-      dst->UpdateAverage();
+      dst->SetFSumw(sumw_acc);
+      dst->SetFSumw2(sumw2_acc);
+      dst->SetFNumEntries(numEntries_acc);
+
+      // update averages, errors
+      dst->Update();
    }
+   this->SetContentToAverageW();
    return 1;
+}
+
+void TProfile2Poly::SetContentToAverageW()
+{
+   Int_t nbins = fBins->GetSize();
+   for (Int_t i = 0; i < nbins; i++) {
+      TProfile2PolyBin *bin = (TProfile2PolyBin *)fBins->At(i);
+      bin->SetContent(bin->GetAverage());
+   }
+}
+
+void TProfile2Poly::SetContentToErrorW()
+{
+   Int_t nbins = fBins->GetSize();
+   for (Int_t i = 0; i < nbins; i++) {
+      TProfile2PolyBin *bin = (TProfile2PolyBin *)fBins->At(i);
+      bin->Update();
+      bin->SetContent(bin->GetError());
+   }
 }
 
 void TProfile2Poly::Reset(Option_t *opt)
