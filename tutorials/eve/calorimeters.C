@@ -8,6 +8,27 @@
 /// \author Alja Mrak-Tadel
 
 #include "TEveProjections.h"
+#include "TSystem.h"
+#include "TEveCalo.h"
+#include "TEveWindow.h"
+#include "TEveManager.h"
+#include "TEveBrowser.h"
+#include "TEveProjectionAxes.h"
+#include "TEveScene.h"
+#include "TEveViewer.h"
+#include "TEveTrans.h"
+#include "TEveCaloLegoOverlay.h"
+#include "TEveLegoEventHandler.h"
+#include "TEveGedEditor.h"
+#include "TEveJetCone.h"
+
+#include "TGLWidget.h"
+#include "TGLViewer.h"
+#include "TGTab.h"
+
+#include "TFile.h"
+#include "TAxis.h"
+
 
 const char* histFile =
    "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
@@ -21,7 +42,7 @@ void add_jet(TEveElement*, const char*, Float_t, Float_t, Float_t, Float_t);
 
 void calorimeters()
 {
-   gSystem->IgnoreSignal(kSigSegmentationViolation, true);
+   // gSystem->IgnoreSignal(kSigSegmentationViolation, true);
    TEveManager::Create();
 
    // event data
@@ -89,7 +110,6 @@ TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot)
    TEveScene* s;
    if (slot)
    {
-      TEveViewer* v; TEveScene* s;
       MakeViewerScene(slot, v, s);
    } else {
       v = gEve->GetDefaultViewer();
