@@ -2335,7 +2335,7 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
       ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
    }
 
-   WriteAST(outputFile, CI, includeDir, module);
+   WriteAST(outputFile, CI, "", module);
    return true;
 }
 
