@@ -57,7 +57,7 @@
          'MathJax': {
              exports: 'MathJax',
              init: function () {
-                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }, SVG: { mtextFontInherit: true } });
+                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }, SVG: { mtextFontInherit: true, minScaleAdjust: 100, matchFontHeight: true, useFontCache: false } });
                 MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
                    var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;
                    VARIANT["normal"].fonts.unshift("MathJax_SansSerif");
@@ -92,7 +92,7 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "5.1.1 23/03/2017";
+   JSROOT.version = "5.1.2 21/04/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -1535,13 +1535,17 @@
          m.evalPar = function(x, y) {
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
 
-              var _func = this.fTitle, isformula = false;
+              var _func = this.fTitle, isformula = false, pprefix = "[";
               if (_func === "gaus") _func = "gaus(0)";
-              if (this.fFormula && typeof this.fFormula.fFormula == "string")
+              if (this.fFormula && typeof this.fFormula.fFormula == "string") {
                  if (this.fFormula.fFormula.indexOf("[](double*x,double*p)")==0) {
-                    isformula = true;
+                    isformula = true; pprefix = "p[";
                     _func = this.fFormula.fFormula.substr(21);
+                 } else {
+                    _func = this.fFormula.fFormula;
+                    pprefix = "[p";
                  }
+              }
 
               if ('formulas' in this)
                  for (var i=0;i<this.formulas.length;++i)
@@ -1563,7 +1567,7 @@
                               .replace(/ROOT::Math::/g, 'this._math.');
               }
               for (var i=0;i<this.fNpar;++i) {
-                 var parname = (isformula ? "p[" : "[") + i + "]";
+                 var parname = pprefix + i + "]";
                  while(_func.indexOf(parname) != -1)
                     _func = _func.replace(parname, '('+this.GetParValue(i)+')');
               }
@@ -1898,7 +1902,7 @@
       if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
       if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
       if (JSROOT.GetUrlOption('more2d', src)!=null) prereq += "more2d;";
-      if (JSROOT.GetUrlOption('geo', src)!=null) prereq += "geo;";
+      if (JSROOT.GetUrlOption('geom', src)!=null) prereq += "geom;";
       if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
       if (JSROOT.GetUrlOption('math', src)!=null) prereq += "math;";
       if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
