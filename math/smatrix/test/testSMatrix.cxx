@@ -1052,6 +1052,9 @@ int test18() {
 #ifdef __FAST_MATH__
   tol = 16;
 #endif
+#ifdef __arm__
+  tol = 60;
+#endif
   for (int i = 0; i < 7; ++i) {
      int iiret = compare(Id(i,i),1.,"inv result",tol);
      if (iiret) {
