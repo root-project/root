@@ -224,7 +224,7 @@ public:
    void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    BranchTypes_t(), TypeInd_t());
+                                    TypeInd_t());
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -301,7 +301,7 @@ public:
    void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    BranchTypes_t(), TypeInd_t());
+                                    TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(fLastResultPtr[slot].get()); }
@@ -438,7 +438,7 @@ public:
    void BuildReaderValues(TTreeReader &r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    BranchTypes_t(), TypeInd_t());
+                                    TypeInd_t());
    }
 
    // recursive chain of `Report`s

@@ -188,11 +188,10 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
 /// TDataFrameValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
-template <typename TDFValueTuple, typename... BranchTypes, int... S>
+template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r, const BranchNames_t &bn,
                    const BranchNames_t &tmpbn,
                    const std::map<std::string, std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>> &tmpBranches,
-                   ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>,
                    ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
@@ -204,7 +203,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
 
    // hack to expand a parameter pack without c++17 fold expressions.
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
-   // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S and BranchTypes.
+   // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
    std::initializer_list<int> expander{(isTmpColumn[S]
                                            ? std::get<S>(valueTuple).SetTmpColumn(slot, tmpBranches.at(bn.at(S)).get())
                                            : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
