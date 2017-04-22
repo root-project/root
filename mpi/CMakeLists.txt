@@ -42,7 +42,9 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   file( APPEND "${CMAKE_BINARY_DIR}/env.sh"  "else\n")
   file( APPEND "${CMAKE_BINARY_DIR}/env.sh" "\texport ROOT_INCLUDE_PATH=${CMAKE_SOURCE_DIR}/rmpi/inc:${MPI_PATH}/include\n")
   file( APPEND "${CMAKE_BINARY_DIR}/env.sh"  "fi\n")
-  
+
+  get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
+  add_custom_target(move_headers ALL DEPENDS ${__allHeaders})  
   endif()
 
 
