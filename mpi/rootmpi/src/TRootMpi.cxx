@@ -11,7 +11,7 @@ using namespace ROOT::Mpi;
 TRootMpi::TRootMpi(Int_t argc, Char_t **argv)
 {
 
-   fRootSys = gSystem->Getenv("ROOTSYS");
+   fRootSys = TROOT::GetRootSys();
 
    //TODO: added codes to check all defines and paths for executables
    fMpirun = ROOT_MPI_EXEC;

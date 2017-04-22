@@ -47,7 +47,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
 
 
 
-include_directories(${MPI_CXX_INCLUDE_PATH})
+include_directories(${MPI_CXX_INCLUDE_PATH} "${CMAKE_BINARY_DIR}/include")
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-overloaded-virtual  -Wno-literal-suffix)
 
 add_subdirectory(rmpi)
