@@ -20,7 +20,6 @@ namespace ROOT {
          TString fStdOut;
          TString fStdErr;
          Bool_t  fSyncOutput;
-         std::shared_ptr<Char_t> fBuffer;
          Int_t   fStdOutPipe[2];
          Int_t   fStdErrPipe[2];
          Int_t   fSavedStdErr;

@@ -16,7 +16,7 @@ THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may m
 THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
 \param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
 */
-TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t[MAX_IO_BUFFER + 1])
+TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE)
 {
    Int_t provided;
    MPI_Init_thread(NULL, NULL, level, &provided);
@@ -42,7 +42,7 @@ THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
 \param argv list of command line arguments
 \param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
 */
-TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(kFALSE), fBuffer(new Char_t[MAX_IO_BUFFER + 1])
+TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(kFALSE)
 {
    Int_t provided;
    MPI_Init_thread(&argc, &argv, level, &provided);
@@ -68,6 +68,10 @@ TEnvironment::~TEnvironment()
 void TEnvironment::InitCapture()
 {
    if (fSyncOutput) {
+      std::ios::sync_with_stdio();
+      setvbuf(stdout, NULL, _IONBF, 0);  // absolutely needed(flush not needed ;))
+      setvbuf(stderr, NULL, _IONBF, 0);  // absolutely needed
+
       /* save stdout/stderr for display later */
       fSavedStdOut = dup(STDOUT_FILENO);
       fSavedStdErr = dup(STDERR_FILENO);
@@ -98,22 +102,19 @@ void TEnvironment::InitCapture()
 void TEnvironment::EndCapture()
 {
    if (fSyncOutput) {
-      fflush(stdout);
-      fflush(stderr);
       Int_t buf_readed;
-
+      Char_t ch;
       while (true) { /* read from pipe into buffer */
-         buf_readed = read(fStdOutPipe[0], fBuffer.get(), MAX_IO_BUFFER);
-         if (buf_readed <= 0) break;
-         fStdOut += fBuffer.get();
-         memset(fBuffer.get(), 0, MAX_IO_BUFFER + 1);
+         fflush(stdout);
+         buf_readed = read(fStdOutPipe[0], &ch, 1);
+         if (buf_readed == 1) fStdOut += ch;
+         else break;
       }
 
       while (true) { /* read from pipe into buffer */
-         buf_readed = read(fStdErrPipe[0], fBuffer.get(), MAX_IO_BUFFER);
-         if (buf_readed <= 0) break;
-         fStdErr += fBuffer.get();
-         memset(fBuffer.get(), 0, MAX_IO_BUFFER + 1);
+         buf_readed = read(fStdErrPipe[0], &ch, 1);
+         if (buf_readed == 1) fStdErr += ch;
+         else break;
       }
 
       dup2(fSavedStdOut, STDOUT_FILENO);  /* reconnect stdout*/
@@ -182,7 +183,6 @@ void TEnvironment::Finalize()
       EndCapture();
       printf("-------  Rank %d OutPut  -------\n", rank);
       Flush();
-      fBuffer = nullptr;
    }
 }
 
