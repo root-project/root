@@ -976,7 +976,7 @@ private:
    }
    /// \endcond
 
-   // Type was specified by the user, no need to guess it
+   // Type was specified by the user, no need to infer it
    template <typename ActionType, typename BranchType, typename ActionResultType>
    TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r, BranchType *)
@@ -988,7 +988,7 @@ private:
       return resProxy;
    }
 
-   // User did not specify type, do type guessing
+   // User did not specify type, do type inference
    template <typename ActionType, typename ActionResultType>
    TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r,
