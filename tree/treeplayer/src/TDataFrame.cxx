@@ -16,9 +16,11 @@ namespace Experimental {
 /**
 * \class ROOT::Experimental::TDataFrame
 * \ingroup dataframe
-* \brief The ROOT data frame class.
-The ROOT Data Frame allows to analyse data stored in TTrees with a high level interface, exploiting all the resources
-available on the machine in a transparent way for the user.
+* \brief ROOT's TDataFrame offers a high level interface for analyses of data stored in TTrees.
+
+In addition, multi-threading and other low-level optimisations allow users to exploit all the resources available
+on their machines completely transparently.<br>
+Skip to the [class reference](#reference) or keep reading for the user guide.
 
 In a nutshell:
 ~~~{.cpp}
@@ -453,6 +455,7 @@ Most `Filter`/`Define` functions will in fact be pure in the functional programm
 All actions are built to be thread-safe with the exception of `Foreach`, in which case users are responsible of
 thread-safety, see [here](#generic-actions).
 
+<a name="reference"></a>
 */
 
 ////////////////////////////////////////////////////////////////////////////
