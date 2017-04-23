@@ -47,6 +47,9 @@ public:
   void setStrategy(Int_t strat) ;
   void setErrorLevel(Double_t level) ;
   void setEps(Double_t eps) ;
+  void setMaxIter(Int_t niter=5000) ;                     //Modified
+  inline Double_t getEps() const { return _eps ; }        //Modified
+  inline Int_t getNMaxIter() const { return _niter ; }    //Modified
   void optimizeConst(Int_t flag) ;
   void setEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
   void setOffsetting(Bool_t flag) ;
@@ -96,6 +99,9 @@ protected:
   inline Int_t getNPar() const { return _nPar ; }
   inline std::ofstream* logfile() const { return _logfile ; }
   inline Double_t& maxFCN() { return _maxFCN ; }
+
+  Double_t _eps;                                          //Modified
+  Int_t _niter;                                           //Modified
 
   Double_t getPdfParamVal(Int_t index) ;
   Double_t getPdfParamErr(Int_t index) ;	
