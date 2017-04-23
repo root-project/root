@@ -15,6 +15,7 @@
 #include "TMVA/Factory.h"
 #include "TMVA/Tools.h"
 #include "TMVA/MethodPyRandomForest.h"
+#include "TMVA/MethodPyKMeans.h"
 
 void Classification()
 {
@@ -89,6 +90,8 @@ void Classification()
                        "!V:BaseEstimator=None:NEstimators=100:LearningRate=1:Algorithm=SAMME.R:RandomState=None");
    factory->BookMethod(TMVA::Types::kPyGTB, "PyGTB",
                        "!V:NEstimators=150:Loss=deviance:LearningRate=0.1:Subsample=1:MaxDepth=6:MaxFeatures='auto'");
+   factory->BookMethod(TMVA::Types::kPyKMeans, "PyKMeans",
+                       "!V:NClusters=8:MaxIter=300:NInit=10:Init=k-means++:Algorithm=auto:PrecomputeDistances=auto:Tol=1e-4:NJobs=None:RandomState=None:Verbose=0:CopyX=kTrue");
 
 
    // Train MVAs using the set of training events
