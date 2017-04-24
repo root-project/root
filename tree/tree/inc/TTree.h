@@ -151,7 +151,8 @@ protected:
    Bool_t         fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
    Bool_t         fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
-   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches sorted by average task time
+   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
+   std::vector<TBranch*> fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
 
    static Int_t     fgBranchStyle;        ///<  Old/New branch style
    static Long64_t  fgMaxTreeSize;        ///<  Maximum size of a file containing a Tree
@@ -160,7 +161,7 @@ private:
    TTree(const TTree& tt);              // not implemented
    TTree& operator=(const TTree& tt);   // not implemented
 
-   void             InitializeSortedBranches();
+   void             InitializeBranchLists(bool checkLeafCount);
    void             SortBranchesByTime();
 
 protected:
