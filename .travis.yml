@@ -51,18 +51,16 @@ matrix:
       compiler: clang
 
 install:
-  - export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
-  - mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
   - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
+    if [[ $TOOL == 'clang-tidy' ]]; then
+      export BUILD_DEPS="${TRAVIS_BUILD_DIR}/deps"
+      mkdir ${BUILD_DEPS} && cd ${BUILD_DEPS}
       CMAKE_URL="https://cmake.org/files/v3.6/cmake-3.6.0-Linux-x86_64.tar.gz"
       mkdir cmake && travis_retry wget --no-check-certificate --quiet -O - ${CMAKE_URL} | tar --strip-components=1 -xz -C cmake
       export PATH=${BUILD_DEPS}/cmake/bin:${PATH}
+      # Go to the Root directory
+      cd -
     fi
-
-
-    # Go to the Root directory
-  - cd ..
 
 script:
 - echo "Copying and generating header files." && echo -en "travis_fold:start:install.headers"
