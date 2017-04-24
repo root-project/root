@@ -119,6 +119,7 @@ script:
       git remote set-branches --add origin master
       git fetch
       git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*
+      cd ../build
     fi
   elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
     # We need to ignore our vendor drops.
