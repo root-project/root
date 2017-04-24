@@ -171,8 +171,12 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
 
 Long64_t TProfile2Poly::Merge(TCollection *in)
 {
+   Int_t size = in->GetSize();
+
    std::vector<TProfile2Poly *> list;
-   for (int i = 0; i < in->GetSize(); i++) {
+   list.reserve(size);
+
+   for (int i = 0; i < size ; i++) {
       list.push_back((TProfile2Poly *)((TList *)in)->At(i));
    }
    return this->Merge(list);
@@ -180,7 +184,6 @@ Long64_t TProfile2Poly::Merge(TCollection *in)
 
 Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
 {
-
    if (list.size() == 0) {
       std::cout << "[FAIL] TProfile2Poly::Merge: No objects to be merged " << std::endl;
       return -1;
