@@ -118,8 +118,9 @@ script:
       # Workaround for travis issue: travis-ci/travis-ci#6069
       git remote set-branches --add origin master
       git fetch
-      git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*
+      git diff -U0 origin/master > PR.diff
       cd ../build
+      cat ../root/PR.diff | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*
     fi
   elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
     # We need to ignore our vendor drops.
