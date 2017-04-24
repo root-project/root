@@ -4468,7 +4468,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
-   func.Init(minfo);
+   func.Init(*minfo);
    func.SetArgs(listpar);
    // Now calculate the 'this' pointer offset for the method
    // when starting from the class described by cl.
