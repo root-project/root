@@ -35,6 +35,8 @@ using BranchNames_t = std::vector<std::string>;
 // forward declarations
 namespace Detail {
 class TDataFrameBranchBase; // for ColumnName2ColumnTypeName
+struct TDataFrameGuessedType {
+};
 }
 
 namespace Internal {
@@ -157,6 +159,26 @@ struct TExtractType<U<T, Extras...>> {
 
 template <typename T>
 using ExtractType_t = typename TExtractType<T>::type;
+
+template <typename BranchType, typename... Rest>
+struct TNeedJitting {
+   static constexpr bool value = TNeedJitting<Rest...>::value;
+};
+
+template <typename... Rest>
+struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType, Rest...> {
+   static constexpr bool value = true;
+};
+
+template <typename T>
+struct TNeedJitting<T> {
+   static constexpr bool value = false;
+};
+
+template <>
+struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType> {
+   static constexpr bool value = true;
+};
 
 } // end NS TDFTraitsUtils
 

@@ -35,11 +35,6 @@ using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
 
 namespace ROOT {
 
-namespace Detail {
-struct TDataFrameGuessedType {
-};
-}
-
 namespace Internal {
 
 template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
@@ -47,7 +42,7 @@ ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNod
                                                                           const std::shared_ptr<ActionResultType> &r,
                                                                           BranchType *)
 {
-   return node->template CreateAction<ActionType, BranchType, ActionResultType>(bl, r, nullptr);
+   return node->template CreateAction<ActionType, BranchType>(bl, r);
 }
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
@@ -803,7 +798,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
-      return CreateAction<ROOT::Internal::ActionTypes::Min>(bl, minV, (T *)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Min, T>(bl, minV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -820,7 +815,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
-      return CreateAction<ROOT::Internal::ActionTypes::Max>(bl, maxV, (T *)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Max, T>(bl, maxV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -837,7 +832,7 @@ public:
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
-      return CreateAction<ROOT::Internal::ActionTypes::Mean>(bl, meanV, (T *)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Mean, T>(bl, meanV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -885,7 +880,7 @@ private:
    TActionResultProxy<::TH1F> Histo1DImpl(void *, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
    {
       // perform type guessing if needed and build the action
-      return CreateAction<ROOT::Internal::ActionTypes::Histo1D>(bl, h, (X *)(nullptr));
+      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, X>(bl, h);
    }
 
    // W != void: histogram w/ weights
@@ -971,22 +966,25 @@ private:
    /// \endcond
 
    // Type was specified by the user, no need to infer it
-   template <typename ActionType, typename BranchType, typename ActionResultType>
+   template <
+      typename ActionType, typename... BranchTypes, typename ActionResultType,
+      typename std::enable_if<!ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
-                                                     const std::shared_ptr<ActionResultType> &r, BranchType *)
+                                                     const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto resProxy = BuildAndBook<BranchType>(bl, r, nSlots, (ActionType *)nullptr);
+      auto resProxy = BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
       fProxiedPtr->IncrChildrenCount();
       return resProxy;
    }
 
    // User did not specify type, do type inference
-   template <typename ActionType, typename ActionResultType>
+   template <
+      typename ActionType, typename... BranchTypes, typename ActionResultType,
+      typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
    TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
-                                                     const std::shared_ptr<ActionResultType> &r,
-                                                     ROOT::Detail::TDataFrameGuessedType *)
+                                                     const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       const auto &theBranchName = bl[0];
