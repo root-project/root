@@ -123,6 +123,7 @@ public:
    void           SetFloat(Bool_t flag = true);
    void           SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
    Bool_t         IsInsideBin(Int_t binnr, Double_t x, Double_t y);
+   Double_t       GetOverflowContent(Int_t overflowbin) { return (overflowbin > kNOverflow && overflowbin < 0) ? 0 : fOverflow[overflowbin]; }
 
 protected:
     enum {

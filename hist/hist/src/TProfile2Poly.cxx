@@ -242,6 +242,11 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
       this->fTsumwxy += histo->fTsumwxy;
       this->fTsumwz += histo->fTsumwz;
       this->fTsumwz2 += histo->fTsumwz2;
+
+      // Merge overflow bins
+      for (Int_t i = 0; i < 9; ++i) {
+         this->fOverflow[i] += histo->GetOverflowContent(i);
+      }
    }
 
    // ------------ Update local (per bin) statistics
