@@ -2166,7 +2166,7 @@ void TClingCallFunc::Init()
 void TClingCallFunc::Init(const TClingMethodInfo &minfo)
 {
    Init();
-   fMethod = std::make_unique<TClingMethodInfo>(minfo);
+   fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
 }
 
 void TClingCallFunc::Init(std::unique_ptr<TClingMethodInfo> minfo)
@@ -2296,7 +2296,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, const char *arglist,
                              bool objectIsConst, long *poffset)
 {
-   Init(std::make_unique<TClingMethodInfo>(fInterp));
+   Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2323,7 +2323,7 @@ void TClingCallFunc::SetFunc(const TClingClassInfo *info, const char *method, co
 
 void TClingCallFunc::SetFunc(const TClingMethodInfo *info)
 {
-   Init(std::make_unique<TClingMethodInfo>(*info));
+   Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*info)));
    ResetArg();
    if (!fMethod->IsValid()) {
       return;
@@ -2341,7 +2341,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   const char *proto, bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   Init(std::make_unique<TClingMethodInfo>(fInterp));
+   Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));
    if (poffset) {
       *poffset = 0L;
    }
@@ -2370,7 +2370,7 @@ void TClingCallFunc::SetFuncProto(const TClingClassInfo *info, const char *metho
                                   bool objectIsConst, long *poffset,
                                   EFunctionMatchMode mode/*=kConversionMatch*/)
 {
-   Init(std::make_unique<TClingMethodInfo>(fInterp));
+   Init(std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(fInterp)));
    if (poffset) {
       *poffset = 0L;
    }
