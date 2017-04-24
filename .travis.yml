@@ -75,7 +75,7 @@ script:
     cd ../build
     export CC=clang-3.9
     export CXX=clang++-3.9
-    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dall=On -Dx11=Off ../root
+    cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -Dall=On -Dtesting=On -Dx11=Off ../root
     # We need to prebuild a minimal set of targets which are responsible for header copy
     # or generation.
     make -j4 move_headers intrinsics_gen ClangCommentCommandList ClangCommentCommandInfo \
