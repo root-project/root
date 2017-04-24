@@ -116,7 +116,7 @@ script:
       fi
     elif [[ $TOOL == 'clang-tidy' ]]; then
       echo "Running clang-tidy-3.9 only against the changes in branch $TRAVIS_BRANCH."
-      echo "Command: git diff -U0 $TRAVIS_BRANCH..master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary \$(which clang-tidy-3.9) -checks=-*,clang-analyzer-*"
+      echo "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary \$(which clang-tidy-3.9) -checks=-*,clang-analyzer-*"
 
       cd ../root/
       # Workaround for travis issue: travis-ci/travis-ci#6069
