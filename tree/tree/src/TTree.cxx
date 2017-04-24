@@ -403,6 +403,7 @@ End_Macro
 #include <string>
 #include <stdio.h>
 #include <limits.h>
+#include <algorithm>
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
@@ -4862,7 +4863,7 @@ Int_t TTree::FlushBaskets() const
 
 #ifdef R__USE_IMT
    if (fIMTEnabled) {
-      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeSortedBranches(); }
+      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
       fIMTZipBytes.store(0);
@@ -5339,7 +5340,15 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) InitializeSortedBranches();
+      if (fSortedBranches.empty()) InitializeBranchLists(true);
+
+      // Count branches are processed first and sequentially
+      for (auto branch : fSeqBranches) {
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+      if (nb < 0) return nb;
 
       // Enable this IMT use case (activate its locks)
       ROOT::Internal::TParBranchProcessingRAII pbpRAII;
@@ -5380,14 +5389,14 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
          };
 
       ROOT::TThreadExecutor pool;
-      pool.Foreach(mapFunction, nbranches);
+      pool.Foreach(mapFunction, nbranches - fSeqBranches.size());
 
       if (errnb < 0) {
          nb = errnb;
       }
       else {
          // Save the number of bytes read by the tasks
-         nbytes = nbpar;
+         nbytes += nbpar;
 
          // Re-sort branches if necessary
          if (++fNEntriesSinceSorting == kNEntriesResort) {
@@ -5426,26 +5435,56 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Initializes the vector of top-level branches and sorts it by branch size.
 
-void TTree::InitializeSortedBranches()
+////////////////////////////////////////////////////////////////////////////////
+/// Divides the top-level branches into two vectors: (i) branches to be
+/// processed sequentially and (ii) branches to be processed in parallel.
+/// Even if IMT is on, some branches might need to be processed first and in a
+/// sequential fashion: in the parallelization of GetEntry, those are the
+/// branches that store the size of another branch for every entry
+/// (e.g. the size of an array branch). If such branches were processed
+/// in parallel with the rest, there could be two threads invoking
+/// TBranch::GetEntry on one of them at the same time, since a branch that
+/// depends on a size (or count) branch will also invoke GetEntry on the latter.
+/// \param[in] checkLeafCount True if we need to check whether some branches are
+///                           count leaves.
+
+void TTree::InitializeBranchLists(bool checkLeafCount)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
+
+   // The branches to be processed sequentially are those that are the leaf count of another branch
+   if (checkLeafCount) {
+      for (Int_t i = 0; i < nbranches; i++)  {
+         TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
+         auto leafCount = ((TLeaf*)branch->GetListOfLeaves()->At(0))->GetLeafCount();
+         if (leafCount) {
+            auto countBranch = leafCount->GetBranch();
+            if (std::find(fSeqBranches.begin(), fSeqBranches.end(), countBranch) == fSeqBranches.end()) {
+               fSeqBranches.push_back(countBranch);
+            }
+         }
+      }
+   }
+
+   // Any branch that is not a leaf count can be safely processed in parallel when reading
    for (Int_t i = 0; i < nbranches; i++)  {
       Long64_t bbytes = 0;
       TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
-      if (branch) bbytes = branch->GetTotBytes("*");
-      fSortedBranches.emplace_back(bbytes, branch);
+      if (std::find(fSeqBranches.begin(), fSeqBranches.end(), branch) == fSeqBranches.end()) {
+         bbytes = branch->GetTotBytes("*");
+         fSortedBranches.emplace_back(bbytes, branch);
+      }
    }
 
+   // Initially sort parallel branches by size
    std::sort(fSortedBranches.begin(),
              fSortedBranches.end(),
              [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
                 return a.first > b.first;
              });
 
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first = 0LL;
    }
 }
@@ -5455,8 +5494,7 @@ void TTree::InitializeSortedBranches()
 
 void TTree::SortBranchesByTime()
 {
-   Int_t nbranches = fBranches.GetEntriesFast();
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first *= kNEntriesResortInv;
    }
 
@@ -5466,7 +5504,7 @@ void TTree::SortBranchesByTime()
                 return a.first > b.first;
              });
 
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first = 0LL;
    }
 }
