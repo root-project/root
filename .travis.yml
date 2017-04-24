@@ -66,9 +66,7 @@ script:
 - echo "Copying and generating header files." && echo -en "travis_fold:start:install.headers"
 - |
   # We need to put in place all relevant headers before running clang-tidy.
-  if [[ $TOOL == 'clang-tidy' ]] && \
-       [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] || [[ "$TRAVIS_PULL_REQUEST" != "false" ]] ; then
-
+  if [[ $TOOL == 'clang-tidy' ]]; then
     mkdir ../build
     cd ../build
     export CC=clang-3.9
