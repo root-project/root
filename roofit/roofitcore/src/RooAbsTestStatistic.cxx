@@ -947,13 +947,14 @@ void RooAbsTestStatistic::_collectNumIntSetTimings() const {
 
   for (Int_t i = 0; i < _nCPU; ++i) {
     auto timings = _mpfeArray[i]->collectTimingsFromServer();
+    pid_t pid = _mpfeArray[i]->getPIDFromServer();
     for (auto it = timings.begin(); it != timings.end(); ++it) {
       std::string name = it->first;
       double timing_s = it->second;
       timing_outfile << "{\"wall_s\": \"" << timing_s
                      << "\", \"name\": \"" << name
                      << "\", \"ix_cpu\": \"" << i
-                     << "\", \"pid\": \"" << getpid()
+                     << "\", \"pid\": \"" << pid
                      << "\"}," << "\n";
     }
   }

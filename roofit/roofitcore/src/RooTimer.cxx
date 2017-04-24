@@ -1,6 +1,9 @@
 #include "RooTimer.h"
 #include "RooTrace.h"
 
+// for debugging:
+#include <iostream>
+#include "unistd.h"
 
 double RooTimer::timing_s() {
   return _timing_s;
@@ -11,7 +14,10 @@ void RooTimer::set_timing_s(double timing_s) {
 }
 
 void RooTimer::store_timing_in_RooTrace(const std::string &name) {
-  RooTrace::objectTiming.insert({name, _timing_s});
+//  std::cout << "pid in store_timing_in_RooTrace: " << getpid() << ". objectTiming size before insert: " << RooTrace::objectTiming.size() << std::endl;
+//  RooTrace::objectTiming.insert({name, _timing_s});
+//  std::cout << "pid in store_timing_in_RooTrace: " << getpid() << ". objectTiming size after insert: " << RooTrace::objectTiming.size() << std::endl;
+  RooTrace::objectTiming[name] = _timing_s;  // subscript operator overwrites existing values, insert does not
 }
 
 

@@ -25,6 +25,8 @@
 #include <vector>
 #include <iostream>
 #include <string>
+// getpid and getppid (and pid_t):
+#include "unistd.h"
 
 class RooArgSet ;
 namespace RooFit { class BidirMMapPipe; }
@@ -69,7 +71,8 @@ public:
     EnableTimingNamedNumInt, DisableTimingNamedNumInt,
     EnableTimingNumInts, DisableTimingNumInts,
     MeasureCommunicationTime,
-    RetrieveTimings
+    RetrieveTimings,
+    GetPID
   };
 
   friend std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);
@@ -101,6 +104,7 @@ public:
   static RooMPSentinel _sentinel ;
 
   void setCpuAffinity(int cpu);
+  pid_t getPIDFromServer() const;
 
 private:
   RooArgSet* _components = 0;

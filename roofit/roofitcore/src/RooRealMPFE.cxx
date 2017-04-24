@@ -636,6 +636,11 @@ void RooRealMPFE::serverLoop() {
         break;
       }
 
+      case GetPID: {
+        *_pipe << getpid() << BidirMMapPipe::flush;
+        break;
+      }
+
 
       default:
         if (_verboseServer)
@@ -1294,6 +1299,13 @@ std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
   return server_timings;
 }
 
+pid_t RooRealMPFE::getPIDFromServer() const {
+  *_pipe << GetPID << BidirMMapPipe::flush;
+  pid_t pid;
+  *_pipe >> pid;
+  return pid;
+}
+
 void RooRealMPFE::_time_communication_overhead() const {
   // test communication overhead timing
   TimePoint comm_wallclock_begin_c2s, comm_wallclock_begin_s2c, comm_wallclock_end_s2c;
@@ -1341,6 +1353,7 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::DisableTimingNamedNumInt);
     PROCESS_VAL(RooRealMPFE::EnableTimingNumInts);
     PROCESS_VAL(RooRealMPFE::DisableTimingNumInts);
+    PROCESS_VAL(RooRealMPFE::GetPID);
     default: {
       s = "unknown Message!";
       break;
