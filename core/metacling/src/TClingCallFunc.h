@@ -140,7 +140,7 @@ public:
    explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
       : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
    {
-      fMethod = std::make_unique<TClingMethodInfo>(interp);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
    explicit TClingCallFunc(const TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
@@ -148,14 +148,14 @@ public:
      fReturnIsRecordType(false)
 
    {
-      fMethod = std::make_unique<TClingMethodInfo>(minfo);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs), fReturnIsRecordType(rhs.fReturnIsRecordType)
    {
-      fMethod = std::make_unique<TClingMethodInfo>(*rhs.fMethod);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
 
    TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
