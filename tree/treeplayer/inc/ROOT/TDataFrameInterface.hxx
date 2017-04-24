@@ -53,7 +53,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
 
 Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                           ROOT::Detail::TDataFrameBranchBase *bbase);
+                           const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace Internal
 
@@ -879,7 +879,7 @@ private:
    TActionResultProxy<::TH1F> Histo1DImpl(void *, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
    {
       // perform type guessing if needed and build the action
-      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, X>(bl, h);
+      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, X>(BranchNames_t{bl[0]}, h);
    }
 
    // W != void: histogram w/ weights
@@ -986,11 +986,11 @@ private:
                                                      const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
-      const auto &theBranchName = bl[0];
-      auto bbase = df->GetBookedBranch(theBranchName);
+      const auto& tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      auto retVal = ROOT::Internal::CreateActionGuessed(
-         bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), &r, tree, bbase);
+      auto retVal =
+         ROOT::Internal::CreateActionGuessed(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
+                                             typeid(ActionType), &r, tree, tmpBranches);
       return *(TActionResultProxy<ActionResultType> *)retVal;
    }
 

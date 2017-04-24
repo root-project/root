@@ -151,45 +151,58 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    return retVal;
 }
 
-// Jit and call "this->Action(params...)" for all actions that support branch type inference
+// Jit and call something equivalent to "this->Action(params...)" (see comments in the body for actual jitted code)
 // Return pointer to corresponding TActionResultProxy, cast to Long_t
 Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                           ROOT::Detail::TDataFrameBranchBase *bbase)
+                           const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
+   auto nBranches = bl.size();
 
-   const auto &theBranchName = bl[0];
-   const auto theBranchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *tree, bbase);
-   if (theBranchTypeName.empty()) {
-      std::string exceptionText = "The type of column ";
-      exceptionText += theBranchName;
-      exceptionText += " could not be guessed. Please specify one.";
-      throw std::runtime_error(exceptionText.c_str());
+   // retrieve pointers to temporary columns (null if the column is not temporary)
+   std::vector<ROOT::Detail::TDataFrameBranchBase *> tmpBranchPtrs(nBranches, nullptr);
+   for (auto i = 0u; i < nBranches; ++i) {
+      auto tmpBranchIt = tmpBranches.find(bl[i]);
+      if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
    }
+
+   // retrieve branch type names as strings
+   std::vector<std::string> branchTypeNames(nBranches);
+   for (auto i = 0u; i < nBranches; ++i) {
+      const auto branchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(bl[i], *tree, tmpBranchPtrs[i]);
+      if (branchTypeName.empty()) {
+         std::string exceptionText = "The type of column ";
+         exceptionText += bl[i];
+         exceptionText += " could not be guessed. Please specify one.";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      branchTypeNames[i] = branchTypeName;
+   }
+
+   // retrieve type of result of the action as a string
    auto actionResultTypeClass = TClass::GetClass(art);
    if (!actionResultTypeClass) {
-      std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
-      exceptionText += theBranchName;
-      exceptionText += ".";
+      std::string exceptionText = "An error occurred while inferring the result type of an operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
    const auto actionResultTypeName = actionResultTypeClass->GetName();
+
+   // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
    if (!actionTypeClass) {
-      std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
-      exceptionText += theBranchName;
-      exceptionText += ".";
+      std::string exceptionText = "An error occurred while inferring the action type of the operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
    const auto actionTypeName = actionTypeClass->GetName();
-   std::stringstream createAction_str;
 
    // createAction_str will contain the following:
-   // "CallCreateAction<nodeType, actionType, branchType>"
+   // "ROOT::Internal::CallCreateAction<nodeType, actionType, branchType1, branchType2...>"
    // "((nodeType*)thisPtr, *(ROOT::BranchNames_t*)&bl, *(actionResultType*)r, nullptr)"
-   createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName << ", "
-                    << theBranchTypeName << ">("
+   std::stringstream createAction_str;
+   createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName;
+   for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
+   createAction_str << ">("
                     << "(" << nodeTypename << "*)" << thisPtr << ", "
                     << "*(ROOT::BranchNames_t*)" << &bl << ", "
                     << "*(" << actionResultTypeName << "*)" << r << ");";
