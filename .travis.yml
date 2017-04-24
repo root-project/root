@@ -86,6 +86,7 @@ script:
              ClangDriverOptions ClangAttrParserStringSwitches ClangAttrParsedAttrList    \
              ClangAttrTemplateInstantiate ClangAttrSpellingListIndex                     \
              ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds
+    ln -s $PWD/compile_commands.json $PWD/../root/
   fi
 - echo -en 'travis_fold:end:install.headers\\r'
 
@@ -112,15 +113,22 @@ script:
       fi
     elif [[ $TOOL == 'clang-tidy' ]]; then
       echo "Running clang-tidy-3.9 only against the changes in branch $TRAVIS_BRANCH."
-      echo "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary \$(which clang-tidy-3.9) -checks=-*,clang-analyzer-*"
 
       cd ../root/
       # Workaround for travis issue: travis-ci/travis-ci#6069
       git remote set-branches --add origin master
       git fetch
-      git diff -U0 origin/master > PR.diff
-      cd ../build
-      cat ../root/PR.diff | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*
+      RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*)"
+      if [[ "$RESULT_OUTPUT" == "No relevant changes found." ]]; then
+        echo "clang-tidy passed."
+        exit 0
+      else
+        echo "To reproduce it locally please run"
+        echo -e "\tgit checkout $TRAVIS_BRANCH"
+        echo -e "Command: git diff -U0 $TRAVIS_BRANCH..origin/master | clang-tidy-diff.py -p1 -clang-tidy-binary \$(which clang-tidy) -checks=-*,clang-analyzer-*"
+        echo "$RESULT_OUTPUT"
+        exit 1
+      fi
     fi
   elif [[ "$TRAVIS_EVENT_TYPE" = "cron" ]] && [[ $TOOL == 'clang-tidy' ]]; then
     # We need to ignore our vendor drops.
