@@ -71,6 +71,7 @@ public:
    TH2Poly(const char *name,const char *title, Int_t nX, Double_t xlow, Double_t xup,  Int_t nY, Double_t ylow, Double_t yup);
    virtual ~TH2Poly();
 
+   virtual TH2PolyBin *CreateBin(TObject *poly);
    virtual Int_t  AddBin(TObject *poly);
    Int_t          AddBin(Int_t n, const Double_t *x, const Double_t *y);
    Int_t          AddBin(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);

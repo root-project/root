@@ -61,8 +61,7 @@ public:
 
    virtual ~TProfile2Poly() {}
 
-   using TH2Poly::AddBin;
-   virtual Int_t AddBin(TObject *poly) override;
+   virtual TProfile2PolyBin *CreateBin(TObject *poly) override;
 
    using TH2Poly::Fill;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;

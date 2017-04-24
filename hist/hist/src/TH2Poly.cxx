@@ -185,12 +185,13 @@ TH2Poly::~TH2Poly()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Adds a new bin to the histogram. It can be any object having the method
-/// IsInside(). It returns the bin number in the histogram. It returns 0 if
-/// it failed to add. To allow the histogram limits to expand when a bin
-/// outside the limits is added, call SetFloat() before adding the bin.
+/// Create appropriate histogram bin.
+///  e.g. TH2Poly        creates TH2PolyBin,
+///       TProfile2Poly  creates TProfile2PolyBin
+/// This is done so that TH2Poly::AddBin does not have to be duplicated,
+/// but only create needs to be reimplemented for additional histogram types
 
-Int_t TH2Poly::AddBin(TObject *poly)
+TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 {
    if (!poly) return 0;
 
@@ -200,8 +201,21 @@ Int_t TH2Poly::AddBin(TObject *poly)
    }
 
    fNcells++;
+   Int_t ibin = fNcells - kNOverflow;
+   return new TH2PolyBin(poly, ibin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adds a new bin to the histogram. It can be any object having the method
+/// IsInside(). It returns the bin number in the histogram. It returns 0 if
+/// it failed to add. To allow the histogram limits to expand when a bin
+/// outside the limits is added, call SetFloat() before adding the bin.
+
+Int_t TH2Poly::AddBin(TObject *poly)
+{
    Int_t ibin = fNcells-kNOverflow;
-   TH2PolyBin *bin = new TH2PolyBin(poly, ibin);
+   auto *bin = CreateBin(poly);
+   if(!bin) return 0;
 
    // If the bin lies outside histogram boundaries, then extends the boundaries.
    // Also changes the partition information accordingly

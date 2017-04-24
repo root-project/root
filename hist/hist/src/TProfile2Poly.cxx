@@ -75,7 +75,7 @@ TProfile2Poly::TProfile2Poly(const char *name, const char *title, Int_t nX, Doub
 {
 }
 
-Int_t TProfile2Poly::AddBin(TObject *poly)
+TProfile2PolyBin *TProfile2Poly::CreateBin(TObject *poly)
 {
    if (!poly) return 0;
 
@@ -86,40 +86,7 @@ Int_t TProfile2Poly::AddBin(TObject *poly)
 
    fNcells++;
    Int_t ibin = fNcells - kNOverflow;
-   TProfile2PolyBin *bin = new TProfile2PolyBin(poly, ibin);
-
-   // If the bin lies outside histogram boundaries, then extends the boundaries.
-   // Also changes the partition information accordingly
-   Bool_t flag = kFALSE;
-   if (fFloat) {
-      if (fXaxis.GetXmin() > bin->GetXMin()) {
-         fXaxis.Set(100, bin->GetXMin(), fXaxis.GetXmax());
-         flag = kTRUE;
-      }
-      if (fXaxis.GetXmax() < bin->GetXMax()) {
-         fXaxis.Set(100, fXaxis.GetXmin(), bin->GetXMax());
-         flag = kTRUE;
-      }
-      if (fYaxis.GetXmin() > bin->GetYMin()) {
-         fYaxis.Set(100, bin->GetYMin(), fYaxis.GetXmax());
-         flag = kTRUE;
-      }
-      if (fYaxis.GetXmax() < bin->GetYMax()) {
-         fYaxis.Set(100, fYaxis.GetXmin(), bin->GetYMax());
-         flag = kTRUE;
-      }
-      if (flag) ChangePartition(fCellX, fCellY);
-   } else {
-      /*Implement polygon clipping code here*/
-   }
-
-   fBins->Add((TObject *)bin);
-   SetNewBinAdded(kTRUE);
-
-   // Adds the bin to the partition matrix
-   AddBinToPartition(bin);
-
-   return ibin;
+   return new TProfile2PolyBin(poly, ibin);
 }
 
 Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value)
