@@ -4,10 +4,9 @@
 #include <fstream>
 using namespace std;
 
-void tprofile2poly_realistic()
+void tprofile2poly_realistic(Int_t numEvents=100000)
 {
-
-   TCanvas *c1 = new TCanvas("c1", "multipads", 900, 700);
+   TCanvas *c1 = new TCanvas("c1", "2 areas w/ unusual charge", 900, 700);
    c1->Divide(3, 2);
 
    // -------------------- Construct Reference plot bins ------------------------
@@ -63,7 +62,7 @@ void tprofile2poly_realistic()
    int NUM_LS = 3;
 
    for (int i = 0; i <= NUM_LS - 1; ++i) { // LumiSection
-      for (int j = 0; j < 100000; ++j) {   // Events
+      for (int j = 0; j < numEvents; ++j) {   // Events
          Double_t r1 = ran.Gaus(0, 10);
          Double_t r2 = ran.Gaus(0, 8);
          Double_t rok = ran.Gaus(20, 2);
@@ -85,22 +84,27 @@ void tprofile2poly_realistic()
 
    // -------------------- Display end state ------------------------
    c1->cd(1);
-   ref_abs->SetTitle("total hits");
+   ref_abs->SetStats(false);
+   ref_abs->SetTitle("TH2Poly: total hits");
    ref_abs->Draw("COLZ");
 
    c1->cd(2);
+   ref_avg->SetStats(false);
    ref_avg->SetTitle("TProfile2D: average charge");
    ref_avg->Draw("COLZ");
 
    c1->cd(3);
+   new_avg->SetStats(false);
    new_avg->SetTitle("TProfile2Poly: average charge");
    new_avg->Draw("COLZ");
 
    c1->cd(4);
-   h2p->SetTitle("total hits on detector");
+   h2p->SetStats(false);
+   h2p->SetTitle("TH2Poly: total hits on detector");
    h2p->Draw("COLZ");
 
    c1->cd(6);
+   tp2p->SetStats(false);
    tp2p->SetTitle("TProfile2Ploly: average charge on detector");
    tp2p->Draw("COLZ");
 }
