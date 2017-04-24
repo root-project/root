@@ -185,12 +185,14 @@ Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypen
    const auto actionTypeName = actionTypeClass->GetName();
    std::stringstream createAction_str;
 
+   // createAction_str will contain the following:
+   // "CallCreateAction<nodeType, actionType, branchType>"
+   // "((nodeType*)thisPtr, *(ROOT::BranchNames_t*)&bl, *(actionResultType*)r, nullptr)"
    createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName << ", "
-                    << theBranchTypeName << ", " << actionResultTypeName << "::element_type>("
+                    << theBranchTypeName << ">("
                     << "(" << nodeTypename << "*)" << thisPtr << ", "
                     << "*(ROOT::BranchNames_t*)" << &bl << ", "
-                    << "*(" << actionResultTypeName << "*)" << r << ", "
-                    << "nullptr);";
+                    << "*(" << actionResultTypeName << "*)" << r << ");";
    auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
    if (!retVal) {
       std::string exceptionText = "An error occurred while jitting this action ";
