@@ -119,7 +119,7 @@ script:
       git remote set-branches --add origin master
       git fetch
       RESULT_OUTPUT="$(git diff -U0 origin/master | clang-tidy-diff-3.9.py -p1 -clang-tidy-binary $(which clang-tidy-3.9) -checks=-*,clang-analyzer-*)"
-      if [[ "$RESULT_OUTPUT" == "No relevant changes found." ]]; then
+      if [[ $? -eq 0 ]]; then
         echo "clang-tidy passed."
         exit 0
       else
