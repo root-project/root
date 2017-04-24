@@ -37,12 +37,11 @@ namespace ROOT {
 
 namespace Internal {
 
-template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+template <typename TDFNode, typename ActionType, typename...BranchTypes, typename ActionResultType>
 ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNode *node, const BranchNames_t &bl,
-                                                                          const std::shared_ptr<ActionResultType> &r,
-                                                                          BranchType *)
+                                                                          const std::shared_ptr<ActionResultType> &r)
 {
-   return node->template CreateAction<ActionType, BranchType>(bl, r);
+   return node->template CreateAction<ActionType, BranchTypes...>(bl, r);
 }
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
@@ -76,9 +75,9 @@ class TDataFrameInterface {
    friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TDataFrameInterface;
-   template <typename TDFNode, typename ActionType, typename BranchType, typename ActionResultType>
+   template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
    friend TActionResultProxy<ActionResultType> ROOT::Internal::CallCreateAction(
-      TDFNode *, const BranchNames_t &, const std::shared_ptr<ActionResultType> &, BranchType *);
+      TDFNode *, const BranchNames_t &, const std::shared_ptr<ActionResultType> &);
 
 public:
    ////////////////////////////////////////////////////////////////////////////
