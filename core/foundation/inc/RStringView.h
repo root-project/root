@@ -29,7 +29,11 @@
 namespace std {
 
    template<class _CharT, class _Traits = std::char_traits<_CharT> >
+// What happens if we don't have std::basic_string_view and
+// std::experimental::basic_string_view?
+#if !defined(R__HAS_STD_STRING_VIEW) && defined(R__HAS_STD_EXPERIMENTAL_STRING_VIEW)
    using basic_string_view = ::std::experimental::basic_string_view<_CharT,_Traits>;
+#endif
 
    // basic_string_view typedef names
    typedef basic_string_view<char> string_view;
@@ -47,7 +51,9 @@ namespace std {
 #ifndef R__HAS_STOD_STRING_VIEW
    inline double stod(std::string_view str, size_t *pos)
    {
-      return std::stod(str.to_string(),pos);
+// to_string() method didn't make into C++17, but the following should be compatible
+// with std::sting_view and std::experimental::string_view.
+      return std::stod(std::string(str.data(), str.size()), pos);
    }
 #endif
 

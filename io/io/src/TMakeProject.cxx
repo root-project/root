@@ -473,7 +473,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                Int_t stlType;
                if (isdigit(incName[0])) {
                   // Not a class name, nothing to do.
-               } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
+               } else if ((stlType = TClassEdit::IsSTLCont(std::string_view(incName)))) {
                   const char *what = "";
                   switch (TMath::Abs(stlType))  {
                      case ROOT::kSTLvector:

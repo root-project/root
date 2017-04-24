@@ -2612,7 +2612,7 @@ namespace {
             } else if ( (fClassName == "unsigned long" && (other.fClassName == "unsigned long long" || other.fClassName == "ULong64_t"))
                        || ( (fClassName == "unsigned long long" || fClassName == "ULong64_t") && other.fClassName == "unsigned long") ) {
                // This is okay both have the same on file format.
-            } else if (TClassEdit::IsSTLCont(fClassName)) {
+            } else if (TClassEdit::IsSTLCont(std::string_view(fClassName))) {
                TString name = TClassEdit::ShortType( fClassName, TClassEdit::kDropStlDefault );
                TString othername = TClassEdit::ShortType( other.fClassName, TClassEdit::kDropStlDefault );
                if (name != othername) {
@@ -2795,7 +2795,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             break;
          }
       }
-      if (TClassEdit::IsSTLCont(localClass)) {
+      if (TClassEdit::IsSTLCont(std::string_view(localClass))) {
          localClass = TClassEdit::ShortType( localClass, TClassEdit::kDropStlDefault );
          otherClass = TClassEdit::ShortType( otherClass, TClassEdit::kDropStlDefault );
       }
@@ -3232,7 +3232,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       } else {
          type = TClassEdit::GetLong64_Name(TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE));
       }
-      if (TClassEdit::IsSTLCont(type)) {
+      if (TClassEdit::IsSTLCont(std::string_view(type))) {
          type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
       }
       if (code == TClass::kReflex || code == TClass::kReflexNoComment) {

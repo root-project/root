@@ -238,7 +238,7 @@ void TMPWorkerTreeFunc<F>::Process(unsigned code, MPCodeBufPair& msg)
    if(status != TTreeReader::kEntryValid) {
       std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish);
-      MPSend(GetSocket(), MPCode::kProcError, reply.data());
+      MPSend(GetSocket(), MPCode::kProcError, reply.c_str());
       return;
    }
 
