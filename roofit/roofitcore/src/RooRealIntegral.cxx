@@ -77,7 +77,8 @@ RooRealIntegral::RooRealIntegral() :
   _numIntegrand(0),
   _rangeName(0),
   _params(0),
-  _cacheNum(kFALSE)
+  _cacheNum(kFALSE),
+  _timeNumInt(kFALSE)
 {
   _facListIter = _facList.createIterator() ;
   _jacListIter = _jacList.createIterator() ;
@@ -604,7 +605,35 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     _sumCat.addOwned(*sumCat) ;
   }
 
+  // activate timing on numerical integrals
+  activateTimingNumInts();
+
   TRACE_CREATE
+}
+
+
+void RooRealIntegral::activateTimingNumInts() {
+  // activate timing on numerical integrals
+  const RooAbsArg& pdfNode = _function.arg();
+  Bool_t timing_flag = pdfNode.getAttribute("num_int_timing_on");
+
+  RooFIter ni_iter = _intList.fwdIterator();
+  while (RooAbsArg *normint = ni_iter.next()) {
+    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
+    // Therefore: retrieve list of branch nodes of integral expression
+    RooArgList bi;
+    normint->branchNodeServerList(&bi);
+    RooFIter ib_iter = bi.fwdIterator();
+    RooAbsArg *inode;
+    while ((inode = ib_iter.next())) {
+      // If a RooRealIntegal component is found...
+      if (inode->IsA() == RooRealIntegral::Class()) {
+        // Retrieve the number of real dimensions that is integrated numerically,
+        RooRealIntegral *rri = (RooRealIntegral *) inode;
+        rri->setNumIntTiming(timing_flag);
+      }
+    }
+  }
 }
 
 
@@ -776,7 +805,8 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
   _numIntegrand(0),
   _rangeName(other._rangeName),
   _params(0),
-  _cacheNum(kFALSE)
+  _cacheNum(kFALSE),
+  _timeNumInt(other._timeNumInt)
 {
  _funcNormSet = other._funcNormSet ? (RooArgSet*)other._funcNormSet->snapshot(kFALSE) : 0 ;
 
@@ -791,6 +821,9 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 
  other._intList.snapshot(_saveInt) ;
  other._sumList.snapshot(_saveSum) ;
+
+  // activate timing on numerical integrals
+  activateTimingNumInts();
 
   TRACE_CREATE
 }
@@ -993,7 +1026,7 @@ Double_t RooRealIntegral::evaluate() const
     ccxcoutD(Tracing) << "raw*fact = " << retVal << endl ;
   }
 
-  if (getAttribute("timing_on")) {
+  if (_timeNumInt) {
     timer.stop();
     std::cout << "timed integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " on process " << getpid() << ", yay" << std::endl;
     timer.store_timing_in_RooTrace(GetName());
@@ -1235,4 +1268,10 @@ Int_t RooRealIntegral::getCacheAllNumeric()
   return _cacheAllNDim ;
 }
 
-
+void RooRealIntegral::setNumIntTiming(Bool_t flag) {
+  Int_t numIntDim = this->numIntRealVars().getSize();
+  // .. and activate timing if numeric integration occurs
+  if (numIntDim > 0) {
+    _timeNumInt = flag;
+  }
+}

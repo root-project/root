@@ -153,6 +153,7 @@ private:
   RooArgSet _numIntSet;
 
   void _setTimingNumIntSet(Bool_t flag = kTRUE);
+  void _setNumIntTimingInPdfs(Bool_t flag = kTRUE);
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
 };

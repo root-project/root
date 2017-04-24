@@ -140,6 +140,12 @@ protected:
 
   virtual void operModeHook() ; // cache operation mode
 
+public:
+  void setNumIntTiming(Bool_t flag);
+  void activateTimingNumInts();
+private:
+  mutable Bool_t _timeNumInt ; //! do not persist
+
   ClassDef(RooRealIntegral,2) // Real-valued function representing an integral over a RooAbsReal object
 };
 

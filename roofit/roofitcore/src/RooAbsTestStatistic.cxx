@@ -664,6 +664,54 @@ void RooAbsTestStatistic::_setTimingNumIntSet(Bool_t flag) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Activate timing of numerical integral normalization terms in the pdf.
+/// This function should be called from the process that evaluates the pdf.
+/// Using RooRealMPFE this means it should be called from the serverLoop().
+
+void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
+  // find all pdf nodes with a normalization integral and set the activate timing flag on them
+  // Get list of branch nodes in expression
+  RooArgSet blist;
+  RooAbsArg* node;
+
+  _func->branchNodeServerList(&blist);
+
+  // Iterator over branch nodes
+  RooFIter iter = blist.fwdIterator();
+  while((node = iter.next())) {
+    RooAbsPdf *pdfNode = dynamic_cast<RooAbsPdf *>(node);
+    if (!pdfNode) continue;
+    // Skip self-normalized nodes
+    if (pdfNode->selfNormalized()) continue;
+
+    // TODO: move everything below to RooAbsPdf::setNumIntTiming(RooArgSet& obsSet, Bool_t flag) and only call that here? Or do we not want to pass around the observables?
+    // set attribute on or off
+    pdfNode->setAttribute("num_int_timing_on", flag);
+
+    // Retrieve normalization integral object for branch nodes that are pdfs
+    RooRealIntegral *normint = const_cast<RooRealIntegral *>(dynamic_cast<const RooRealIntegral *>(pdfNode->getNormIntegral(*(_data->get()))));
+    if (!normint) continue;
+
+    normint->activateTimingNumInts();
+//    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
+//    // Therefore: retrieve list of branch nodes of integral expression
+//    RooArgList bi;
+//    normint->branchNodeServerList(&bi);
+//    RooFIter ibiter = bi.fwdIterator();
+//    RooAbsArg* inode;
+//    while((inode = ibiter.next())) {
+//      // If a RooRealIntegal component is found...
+//      if (inode->IsA() == RooRealIntegral::Class()) {
+//        // Retrieve the number of real dimensions that is integrated numerically,
+//        RooRealIntegral* rri = (RooRealIntegral*)inode;
+//        rri->setNumIntTiming(flag);
+//      }
+//    }
+
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Initialize simultaneous p.d.f processing mode. Strip simultaneous
 /// p.d.f into individual components, split dataset in subset
 /// matching each component and create component test statistics for
