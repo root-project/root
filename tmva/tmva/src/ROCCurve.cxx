@@ -208,12 +208,14 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 
 TGraph *TMVA::ROCCurve::GetROCCurve(const UInt_t num_points)
 {
-   if (fGraph == nullptr) {
-      auto sensitivity = ComputeSensitivity(num_points);
-      auto specificity = ComputeSpecificity(num_points);
-
-      fGraph = new TGraph(sensitivity.size(), &specificity[0], &sensitivity[0]);
+   if (fGraph != nullptr) {
+      delete fGraph;
    }
+
+   auto sensitivity = ComputeSensitivity(num_points);
+   auto specificity = ComputeSpecificity(num_points);
+
+   fGraph = new TGraph(sensitivity.size(), &specificity[0], &sensitivity[0]);
 
    return fGraph;
 }
