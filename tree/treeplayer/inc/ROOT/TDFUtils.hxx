@@ -269,6 +269,8 @@ const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl
 namespace ActionTypes {
 struct Histo1D {
 };
+struct Histo2D {
+};
 struct Min {
 };
 struct Max {
