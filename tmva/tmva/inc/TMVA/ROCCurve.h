@@ -57,6 +57,8 @@ namespace TMVA {
 
   private:
     void EpsilonCount();
+    Float_t ComputeSpe(Float_t threshold);
+    Float_t ComputeSen(Float_t threshold);
     mutable MsgLogger* fLogger;   //! message logger
     MsgLogger& Log() const { return *fLogger; }
     TGraph *fGraph;
