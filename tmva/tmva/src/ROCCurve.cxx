@@ -112,7 +112,7 @@ TMVA::ROCCurve::~ROCCurve() {
 
 std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
 {
-   if (num_points == 0) {
+   if (num_points <= 2) {
       return {0.0, 1.0};
    }
 
@@ -151,7 +151,7 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
 
 std::vector<Float_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
 {
-   if (num_points == 0) {
+   if (num_points <= 2) {
       return {1.0, 0.0};
    }
 
