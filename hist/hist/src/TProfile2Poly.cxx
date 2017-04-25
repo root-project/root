@@ -8,12 +8,13 @@
 #include "TMath.h"
 
 #include <cassert>
+#include <cmath>
 
 ClassImp(TProfile2Poly)
 
-   // -------------- TProfile2PolyBin  --------------
+// -------------- TProfile2PolyBin  --------------
 
-   TProfile2PolyBin::TProfile2PolyBin()
+TProfile2PolyBin::TProfile2PolyBin()
 {
    fSumv = 0;
    fSumw = 0;
@@ -44,12 +45,12 @@ void TProfile2PolyBin::Update()
 
 void TProfile2PolyBin::UpdateAverage()
 {
-   fAverage = fSumvw / fSumw;
+   if (fSumw != 0) fAverage = fSumvw / fSumw;
 }
 
 void TProfile2PolyBin::UpdateError()
 {
-   fError = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
+   if (fAverage * fAverage != 0) fError = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
 }
 
 void TProfile2PolyBin::ClearStats()
