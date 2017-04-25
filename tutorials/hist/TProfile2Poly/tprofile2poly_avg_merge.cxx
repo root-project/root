@@ -99,4 +99,12 @@ void tprofile2poly_avg_merge()
    merged->SetStats(0);
    merged->SetTitle("individually merged");
    merged->Draw("COLZ TEXT");
+
+   avgs[0].printOverflowRegions();
+   avgs[1].printOverflowRegions();
+   avgs[2].printOverflowRegions();
+
+   merged->printOverflowRegions();
+
+
 }

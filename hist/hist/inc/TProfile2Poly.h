@@ -9,6 +9,8 @@
 
 class TProfile2PolyBin : public TH2PolyBin {
 public:
+   friend class TProfile2Poly;
+
    TProfile2PolyBin();
    TProfile2PolyBin(TObject *poly, Int_t bin_number);
 
@@ -17,30 +19,16 @@ public:
    void Update();
    void UpdateAverage();
    void UpdateError();
-
-   Double_t GetError() { return fError; }
-   Double_t GetAverage() { return fAverage; }
-
-   Double_t GetFSumw() const { return fSumw; }
-   Double_t GetFSumw2() const { return fSumw2; }
-   Double_t GetFSumwz() const { return fSumwz; }
-   Double_t GetFSumwz2() const { return fSumwz2; }
-   Double_t GetFNumEntries() const { return fNumEntries; }
-
-   void SetFSumw(Double_t value) { fSumw = value; }
-   void SetFSumw2(Double_t value) { fSumw2 = value; }
-   void SetFSumwz(Double_t value) { fSumwz = value; }
-   void SetFSumwz2(Double_t value) { fSumwz2 = value; }
-   void SetFNumEntries(Double_t value) { fNumEntries = value; }
-
    void ClearStats();
 
 private:
+   void Fill(Double_t value, Double_t weight);
+
+   Double_t fSumv;
    Double_t fSumw;
-   Double_t fSumw2;
-   Double_t fSumwz;
-   Double_t fSumwz2;
-   Double_t fNumEntries;
+   Double_t fSumvw;
+   Double_t fSumv2;
+   Double_t fSumwv2;
 
    Double_t fAverage;
    Double_t fError;
@@ -72,15 +60,21 @@ public:
    virtual void Reset(Option_t *option = "") override;
 
    Int_t GetOverflowRegionFromCoordinates(Double_t x, Double_t y);
-   Int_t OverflowIdxToArrayIdx(Int_t val) { return -val-1; }
+   Int_t OverflowIdxToArrayIdx(Int_t val) { return -val - 1; }
 
    // option to dispay different measures on bins
-   void SetContentToAverageW(); // this one is used by default
-   void SetContentToErrorW();
+   void SetContentToAverage(); // this one is used by default
+   void SetContentToError();
+                                     // TODO: [F1] HERE IS THE MATCHING TODO
+                                     // fix so fContent is retrieved
+   Double_t GetOverflowContent(Int_t idx) { return regions[idx].fSumw; }
+   void printOverflowRegions();
 
 private:
    Double_t fTsumwz;
    Double_t fTsumwz2;
+
+   TProfile2PolyBin regions[kNOverflow];
 
    ClassDefOverride(TProfile2Poly, 1)
 };

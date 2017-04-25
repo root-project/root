@@ -77,7 +77,7 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
 
    c1->cd(3);
    err->SetStats(0);
-   err->SetContentToErrorW();
+   err->SetContentToError();
    err->SetTitle("standard deviation");
    err->Draw("COLZ");
 }
