@@ -128,12 +128,12 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
 std::vector<Float_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
 {
    if (num_points == 0) {
-      return {0.0, 1.0};
+      return {1.0, 0.0};
    }
 
    UInt_t num_divisions = num_points - 1;
    std::vector<Float_t> sensitivity_vector;
-   sensitivity_vector.push_back(0.0);
+   sensitivity_vector.push_back(1.0);
 
    for (Float_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
       Float_t true_positives = 0.0;
@@ -152,11 +152,11 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
 
       Float_t total_signal = true_positives + false_negatives;
       Float_t sensitivity =
-         (total_signal <= std::numeric_limits<Float_t>::min()) ? (0.0) : (false_negatives / total_signal);
+         (total_signal <= std::numeric_limits<Float_t>::min()) ? (0.0) : (true_positives / total_signal);
       sensitivity_vector.push_back(sensitivity);
    }
 
-   sensitivity_vector.push_back(1.0);
+   sensitivity_vector.push_back(0.0);
    return sensitivity_vector;
 }
 
@@ -170,7 +170,10 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 
    Float_t integral = 0;
    for (UInt_t i = 0; i < sensitivity.size() - 1; i++) {
-      integral += 0.5 * (sensitivity[i + 1] - sensitivity[i]) * (specificity[i] + specificity[i + 1]);
+      // FNR, false negatigve rate = 1 - Sensitivity
+      Float_t fnrCurr = 1 - sensitivity[i];
+      Float_t fnrNext = 1 - sensitivity[i + 1];
+      integral += 0.5 * (fnrNext - fnrCurr) * (specificity[i] + specificity[i + 1]);
    }
 
    return integral;
@@ -185,7 +188,7 @@ TGraph *TMVA::ROCCurve::GetROCCurve(const UInt_t num_points)
       auto sensitivity = ComputeSensitivity(num_points);
       auto specificity = ComputeSpecificity(num_points);
 
-      fGraph = new TGraph(sensitivity.size(), &sensitivity[0], &specificity[0]);
+      fGraph = new TGraph(sensitivity.size(), &specificity[0], &sensitivity[0]);
    }
 
    return fGraph;

@@ -769,16 +769,18 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    TMVA::ROCCurve *rocCurve;
    TGraph         *graph;
 
-   auto eventCollection = dataset->GetEventCollection();
-   for (auto ev : eventCollection) {
-      mvaResTypes.push_back( ev->GetClass() == iClass );
-      mvaResWeights.push_back( ev->GetWeight() );
-   }
-
    if (this->fAnalysisType == Types::kClassification) {
       
       std::vector<Float_t> * rawMvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
       mvaRes = *rawMvaRes;
+
+      std::vector<Bool_t> * rawMvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+      mvaResTypes = *rawMvaResType;
+
+      auto eventCollection = dataset->GetEventCollection();
+      for (auto ev : eventCollection) {
+         mvaResWeights.push_back( ev->GetWeight() );
+      }
 
    } else if (this->fAnalysisType == Types::kMulticlass) {
       std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
@@ -788,6 +790,12 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       // in ResultsMulticlass::GetValueVector.
       for (auto & item : *rawMvaRes) {
          mvaRes.push_back( item[iClass] );
+      }
+
+      auto eventCollection = dataset->GetEventCollection();
+      for (auto ev : eventCollection) {
+         mvaResTypes.push_back( ev->GetClass() == iClass );
+         mvaResWeights.push_back( ev->GetWeight() );
       }
    }
 
@@ -802,9 +810,9 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    delete rocCurve;
 
    if(setTitles) {
-        graph->GetYaxis()->SetTitle("Background Rejection");
-        graph->GetXaxis()->SetTitle("Signal Efficiency");
-        graph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
+        graph->GetYaxis()->SetTitle("Sensitivity");
+        graph->GetXaxis()->SetTitle("Specificity");
+        graph->SetTitle( Form( "Specificity vs. Sensitivity (%s)", theMethodName.Data() ) );
    }
 
    return graph;
@@ -922,12 +930,12 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass)
    if ( multigraph ) {
       multigraph->Draw("AC");
 
-      multigraph->GetYaxis()->SetTitle("Background Rejection");
-      multigraph->GetXaxis()->SetTitle("Signal Efficiency");
+      multigraph->GetYaxis()->SetTitle("Sensitivity");
+      multigraph->GetXaxis()->SetTitle("Specificity");
 
-      TString titleString = Form( "Background Rejection vs. Signal Efficiency");
+      TString titleString = Form( "Specificity vs. Sensitivity");
       if (this->fAnalysisType == Types::kMulticlass) {
-         titleString = Form( "Background Rejection vs. Signal Efficiency (Class=%i)", iClass );
+         titleString = Form( "Specificity vs. Sensitivity (Class=%i)", iClass );
       }
 
       // Workaround for TMultigraph not drawing title correctly.
