@@ -64,7 +64,8 @@ void TProfile2PolyBin::ClearStats()
 }
 
 void TProfile2PolyBin::Fill(Double_t value, Double_t weight)
-{  //TODO: [F1] HERE IS THE MATCHING TODO
+{
+   fSumv += value;
    fSumw += weight;
    fSumvw += value * weight;
    fSumv2 += value * value;
@@ -110,9 +111,6 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
    // Find region in which the hit occured
    Int_t tmp = GetOverflowRegionFromCoordinates(xcoord, ycoord);
    Int_t overflow_idx = OverflowIdxToArrayIdx(tmp);
-   //   fOverflow[overflow_idx] += value * weight;
-   // if (overflow_idx != 4) return tmp;
-
    regions[overflow_idx].Fill(value, weight);
 
    // Find the cell to which (x,y) coordinates belong to
@@ -144,21 +142,12 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
       bin = (TProfile2PolyBin *)obj;
       if (bin->IsInside(xcoord, ycoord)) {
          fEntries++;
-
-         bin->fSumv += value;
-         bin->fSumw += weight;
-         bin->fSumvw += value * weight;
-         bin->fSumv2 += value * value;
-         bin->fSumwv2 += weight * value * value;
-
+         bin->Fill(value, weight);
          bin->Update();
          bin->SetContent(bin->fAverage);
-
-         return bin->GetBinNumber();
       }
    }
 
-   assert(tmp == -5 && overflow_idx == 4);
    return tmp;
 }
 
@@ -296,8 +285,8 @@ void TProfile2Poly::Reset(Option_t *opt)
 
 Int_t TProfile2Poly::GetOverflowRegionFromCoordinates(Double_t x, Double_t y)
 {
-   // The overflow regions are calculated by considering x, y coordinates.  The Middle bin at -5 is the one containing
-   // all the TProfile2Poly bins. The other bins are used for statistics.
+   // The overflow regions are calculated by considering x, y coordinates.
+   // The Middle bin at -5 contains all the TProfile2Poly bins.
    //
    //           -0 -1 -2
    //           ________

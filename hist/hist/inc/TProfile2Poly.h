@@ -65,8 +65,7 @@ public:
    // option to dispay different measures on bins
    void SetContentToAverage(); // this one is used by default
    void SetContentToError();
-                                     // TODO: [F1] HERE IS THE MATCHING TODO
-                                     // fix so fContent is retrieved
+
    Double_t GetOverflowContent(Int_t idx) { return regions[idx].fSumw; }
    void printOverflowRegions();
 
