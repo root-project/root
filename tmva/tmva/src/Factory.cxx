@@ -762,17 +762,22 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    }
 
    std::vector<Float_t> mvaRes;
+   std::vector<Float_t> mvaResWeights;
    std::vector<Bool_t>  mvaResTypes;
+
    TMVA::ROCCurve *rocCurve;
    TGraph         *graph;
+
+   auto eventCollection = dataset->GetEventCollection();
+   for (auto ev : eventCollection) {
+      mvaResTypes.push_back( ev->GetClass() == iClass );
+      mvaResWeights.push_back( ev->GetWeight() );
+   }
 
    if (this->fAnalysisType == Types::kClassification) {
       
       std::vector<Float_t> * rawMvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
       mvaRes = *rawMvaRes;
-
-      std::vector<Bool_t> * rawMvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-      mvaResTypes = *rawMvaResType;
 
    } else if (this->fAnalysisType == Types::kMulticlass) {
       std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
@@ -783,14 +788,9 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       for (auto & item : *rawMvaRes) {
          mvaRes.push_back( item[iClass] );
       }
-
-      auto eventCollection = dataset->GetEventCollection();
-      for (auto ev : eventCollection) {
-         mvaResTypes.push_back( ev->GetClass() == iClass );
-      }
    }
 
-   rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes);
+   rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
    
    if ( ! rocCurve ) {
       Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
