@@ -1,0 +1,9 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/dataframe/test_snapshot.C+...
+Info in <TUnixSystem::ACLiC>: creating shared library /home/dpiparo/RootDevel/Root6/head/build/roottest/root/dataframe/test_snapshot_C.so
+Branch: b1
+Branch: b1_square
+Branch: b2_vector
+Branch: a
+Means:49 49
+(int) 0
