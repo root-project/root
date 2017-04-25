@@ -779,7 +779,7 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
 
       auto eventCollection = dataset->GetEventCollection();
       for (auto ev : eventCollection) {
-         mvaResWeights.push_back( ev->GetWeight() );
+         mvaResWeights.push_back(ev->GetWeight());
       }
 
    } else if (this->fAnalysisType == Types::kMulticlass) {
@@ -795,12 +795,12 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       auto eventCollection = dataset->GetEventCollection();
       for (auto ev : eventCollection) {
          mvaResTypes.push_back( ev->GetClass() == iClass );
-         mvaResWeights.push_back( ev->GetWeight() );
+         mvaResWeights.push_back(ev->GetWeight());
       }
    }
 
    rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
-   
+
    if ( ! rocCurve ) {
       Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return nullptr;
@@ -810,9 +810,9 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    delete rocCurve;
 
    if(setTitles) {
-        graph->GetYaxis()->SetTitle("Sensitivity");
-        graph->GetXaxis()->SetTitle("Specificity");
-        graph->SetTitle( Form( "Specificity vs. Sensitivity (%s)", theMethodName.Data() ) );
+      graph->GetYaxis()->SetTitle("Sensitivity");
+      graph->GetXaxis()->SetTitle("Specificity");
+      graph->SetTitle(Form("Specificity vs. Sensitivity (%s)", theMethodName.Data()));
    }
 
    return graph;
@@ -933,9 +933,9 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass)
       multigraph->GetYaxis()->SetTitle("Sensitivity");
       multigraph->GetXaxis()->SetTitle("Specificity");
 
-      TString titleString = Form( "Specificity vs. Sensitivity");
+      TString titleString = Form("Specificity vs. Sensitivity");
       if (this->fAnalysisType == Types::kMulticlass) {
-         titleString = Form( "Specificity vs. Sensitivity (Class=%i)", iClass );
+         titleString = Form("Specificity vs. Sensitivity (Class=%i)", iClass);
       }
 
       // Workaround for TMultigraph not drawing title correctly.
