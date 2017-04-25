@@ -54,7 +54,7 @@ int tdf007_snapshot()
                 .Define("b2_vector",
                         [](float b2) {
                            std::vector<float> v;
-                           for (int i = 0; i < 3; i++) v.push_back(i);
+                           for (int i = 0; i < 3; i++) v.push_back(b2*i);
                            return v;
                         },
                         {"b2"});
