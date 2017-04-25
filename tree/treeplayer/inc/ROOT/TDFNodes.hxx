@@ -51,7 +51,7 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ROOT::Detail::RangeBaseVec_t fBookedRanges;
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *fDirPtr{nullptr};
-   TTree *fTree{nullptr};
+   std::shared_ptr<TTree> fTree{nullptr};
    const BranchNames_t fDefaultBranches;
    const unsigned int fNSlots{0};
    bool fHasRunAtLeastOnce{false};
@@ -85,7 +85,7 @@ public:
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
-   void SetTree(TTree *tree) { fTree = tree; }
+   void SetTree(std::shared_ptr<TTree> tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
 };

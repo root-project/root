@@ -478,8 +478,7 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
       auto msg = "Tree \"" + treeName + "\" cannot be found!";
       throw std::runtime_error(msg);
    }
-   fTree = std::shared_ptr<TTree>(tree, [](TTree *) {});
-   fProxiedPtr->SetTree(tree);
+   fProxiedPtr->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -499,8 +498,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 {
    auto chain = new TChain(treeName.c_str());
    chain->Add(filenameglob.c_str());
-   fTree = std::shared_ptr<TTree>(static_cast<TTree *>(chain));
-   fProxiedPtr->SetTree(chain);
+   fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 }
 
 ////////////////////////////////////////////////////////////////////////////

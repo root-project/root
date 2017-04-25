@@ -75,8 +75,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
 {
    auto chain = new TChain(treeName.c_str());
    for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
-   fTree = std::make_shared<TTree>(static_cast<TTree *>(chain));
-   fProxiedPtr->SetTree(chain);
+   fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 
 } // end NS Experimental
