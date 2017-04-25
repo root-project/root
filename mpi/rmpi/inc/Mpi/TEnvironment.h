@@ -16,6 +16,7 @@ namespace ROOT {
       //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
       class TErrorHandler;
       class TEnvironment: public TObject {
+         friend class TCommunicator;
       private:
          TString fStdOut;
          TString fStdErr;
@@ -25,11 +26,15 @@ namespace ROOT {
          Int_t   fSavedStdErr;
          Int_t   fSavedStdOut;
          static TErrorHandler fErrorHandler;
+         static Int_t fCompressionAlgorithm;
+         static Int_t fCompressionLevel;
       protected:
          void InitCapture();
          void EndCapture();
          void Flush();
          void ClearBuffers();
+         static Int_t GetCompressionAlgorithm();
+         static Int_t GetCompressionLevel();
       public:
          TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
          /**
@@ -62,6 +67,10 @@ namespace ROOT {
 
          static Int_t GetThreadLevel();
          static Bool_t IsMainThread();
+
+
+         static void SetCompression(Int_t level, Int_t algorithm = 0);
+
          ClassDef(TEnvironment, 1)
       };
    }

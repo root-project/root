@@ -5,6 +5,11 @@ using namespace ROOT::Mpi;
 
 TErrorHandler TEnvironment::fErrorHandler = TErrorHandler();
 
+
+Int_t TEnvironment::fCompressionAlgorithm = 0;
+Int_t TEnvironment::fCompressionLevel = 0;
+
+
 //TODO: enable thread level and thread-safe for ROOT
 
 //______________________________________________________________________________
@@ -209,4 +214,23 @@ Bool_t TEnvironment::IsMainThread()
    Int_t status;
    ROOT_MPI_CHECK_CALL(MPI_Is_thread_main, (&status), &COMM_WORLD);
    return Bool_t(status);
+}
+
+//______________________________________________________________________________
+Int_t TEnvironment::GetCompressionAlgorithm()
+{
+   return fCompressionAlgorithm;
+}
+
+//______________________________________________________________________________
+Int_t TEnvironment::GetCompressionLevel()
+{
+   return fCompressionLevel;
+}
+
+//______________________________________________________________________________
+void TEnvironment::SetCompression(Int_t level, Int_t algorithm)
+{
+   fCompressionAlgorithm = algorithm;
+   fCompressionLevel = level;
 }

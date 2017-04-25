@@ -244,9 +244,23 @@ namespace ROOT {
                msgis[i] = msgi;
             }
             TMpiMessage msg;
+            auto level = TEnvironment::GetCompressionLevel();
+            auto algorithm = TEnvironment::GetCompressionAlgorithm();
+
+            if (level > 0) {
+               msg.SetCompressionLevel(level);
+               msg.SetCompressionAlgorithm(algorithm);
+            }
             msg.WriteObject(msgis);
-            auto ibuffer = msg.Buffer();
-            size = msg.BufferSize();
+            Char_t *ibuffer;
+            if (level > 0) {
+               msg.Compress();
+               ibuffer = msg.CompBuffer();
+               size = msg.CompLength();
+            } else {
+               ibuffer = msg.Buffer();
+               size = msg.BufferSize();
+            }
             *buffer = new Char_t[size];
             if (ibuffer == NULL) {
                comm->Error(__FUNCTION__, "Error serializing object type %s \n", ROOT_MPI_TYPE_NAME(msgis));
@@ -270,6 +284,15 @@ namespace ROOT {
          template<class T> static  void Unserialize(Char_t *buffer, Int_t size, T *vars, Int_t count, const TCommunicator *comm, Int_t dest = 0, Int_t source = 0, Int_t tag = 0, Int_t root = 0)
          {
             TMpiMessage msg(buffer, size);
+            auto level = TEnvironment::GetCompressionLevel();
+            auto algorithm = TEnvironment::GetCompressionAlgorithm();
+
+            if (level > 0) {
+               msg.SetCompressionLevel(level);
+               msg.SetCompressionAlgorithm(algorithm);
+               msg.Uncompress();
+            }
+
             auto cl = gROOT->GetClass(typeid(std::vector<TMpiMessageInfo>));
             auto msgis = (std::vector<TMpiMessageInfo> *)msg.ReadObjectAny(cl);
             if (msgis == NULL) {
