@@ -67,13 +67,12 @@ public:
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
-   // Writing things such that TProfileHelper can be used on TProfile2Poly
-   // would require rewriting parts of TH2Poly; nope. -> implementing select features
+   Long64_t Merge(std::vector<TProfile2Poly *> list);
    Long64_t Merge(TCollection *in) override;
    virtual void Reset(Option_t *option = "") override;
 
-   // provide 'normal' interface of merging TProfile2Polys
-   virtual Long64_t Merge(std::vector<TProfile2Poly *> list);
+   Int_t GetOverflowRegionFromCoordinates(Double_t x, Double_t y);
+   Int_t OverflowIdxToArrayIdx(Int_t val) { return -val-1; }
 
    // option to dispay different measures on bins
    void SetContentToAverageW(); // this one is used by default

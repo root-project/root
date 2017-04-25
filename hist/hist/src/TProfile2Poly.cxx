@@ -7,6 +7,8 @@
 #include "TList.h"
 #include "TMath.h"
 
+#include <cassert>
+
 ClassImp(TProfile2Poly)
 
    // -------------- TProfile2PolyBin  --------------
@@ -96,27 +98,13 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value)
 
 Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight)
 {
+   // Find region in which the hit occured
+   Int_t tmp = GetOverflowRegionFromCoordinates(xcoord, ycoord);
+   Int_t overflow_idx = OverflowIdxToArrayIdx(tmp);
+   fOverflow[overflow_idx] += value * weight;
+   if(overflow_idx != 4) return tmp;
 
-   // TODO: is this correct?
-   if (fNcells <= kNOverflow) return 0;
-   Int_t overflow = 0;
-   if (ycoord > fYaxis.GetXmax())
-      overflow += -1;
-   else if (ycoord > fYaxis.GetXmin())
-      overflow += -4;
-   else
-      overflow += -7;
-   if (xcoord > fXaxis.GetXmax())
-      overflow += -2;
-   else if (xcoord > fXaxis.GetXmin())
-      overflow += -1;
-   if (overflow != -5) {
-      fOverflow[-overflow - 1] += weight;
-      if (fSumw2.fN) fSumw2.fArray[-overflow - 1] += weight * weight;
-      return overflow;
-   }
-
-   // Finds the cell (x,y) coordinates belong to
+   // Find the cell to which (x,y) coordinates belong to
    Int_t n = (Int_t)(floor((xcoord - fXaxis.GetXmin()) / fStepX));
    Int_t m = (Int_t)(floor((ycoord - fYaxis.GetXmin()) / fStepY));
 
@@ -125,13 +113,6 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
    if (m >= fCellY) m = fCellY - 1;
    if (n < 0) n = 0;
    if (m < 0) m = 0;
-
-   // TODO: is this correct?
-   if (fIsEmpty[n + fCellX * m]) {
-      fOverflow[4] += weight;
-      if (fSumw2.fN) fSumw2.fArray[4] += weight * weight;
-      return -5;
-   }
 
    // ------------ Update global (per histo) statistics
    fTsumw += weight;
@@ -152,8 +133,8 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
       bin = (TProfile2PolyBin *)obj;
       if (bin->IsInside(xcoord, ycoord)) {
          fEntries++;
-         bin->SetFNumEntries(bin->GetFNumEntries() + 1);
-         bin->SetFSumw(bin->GetFSumw() + value);
+         bin->SetFNumEntries(bin->GetFNumEntries() + weight);
+         bin->SetFSumw(bin->GetFSumw() + value * weight);
          bin->SetFSumw2(bin->GetFSumw2() + (value * value));
          bin->SetFSumwz(bin->GetFSumwz() + (value * weight));
 
@@ -164,9 +145,8 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
       }
    }
 
-   fOverflow[4] += weight;
-   if (fSumw2.fN) fSumw2.fArray[4] += weight * weight * value;
-   return -5;
+   assert(tmp == -5 && overflow_idx == 4);
+   return tmp;
 }
 
 Long64_t TProfile2Poly::Merge(TCollection *in)
@@ -176,7 +156,7 @@ Long64_t TProfile2Poly::Merge(TCollection *in)
    std::vector<TProfile2Poly *> list;
    list.reserve(size);
 
-   for (int i = 0; i < size ; i++) {
+   for (int i = 0; i < size; i++) {
       list.push_back((TProfile2Poly *)((TList *)in)->At(i));
    }
    return this->Merge(list);
@@ -282,4 +262,38 @@ void TProfile2Poly::Reset(Option_t *opt)
       bin->ClearStats();
    }
    TH2::Reset(opt);
+}
+
+Int_t TProfile2Poly::GetOverflowRegionFromCoordinates(Double_t x, Double_t y)
+{
+   // The overflow regions are calculated by considering x, y coordinates.  The Middle bin at -5 is the one containing
+   // all the TProfile2Poly bins. The other bins are used for statistics.
+   //
+   //           -0 -1 -2
+   //           ________
+   //    -1:   |__|__|__|
+   //    -4:   |__|__|__|
+   //    -7:   |__|__|__|
+
+   Int_t region = 0;
+
+   if (fNcells <= kNOverflow) return 0;
+
+   // --- y offset
+   if (y > fYaxis.GetXmax())
+      region += -1;
+   else if (y > fYaxis.GetXmin())
+      region += -4;
+   else
+      region += -7;
+
+   // --- x offset
+   if (x > fXaxis.GetXmax())
+      region += -2;
+   else if (x > fXaxis.GetXmin())
+      region += -1;
+   else
+      region += 0;
+
+   return region;
 }
