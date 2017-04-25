@@ -76,6 +76,30 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
+
+TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
+{
+   fMvaSignal = mvaSignal;
+   fMvaBackground = mvaBackground;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+
+TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground,
+                         const std::vector<Float_t> &mvaSignalWeights, const std::vector<Float_t> &mvaBackgroundWeights)
+   : ROCCurve(mvaSignal, mvaBackground)
+{
+   assert(mvaSignal.size() == mvaSignalWeights.size());
+   assert(mvaBackground.size() == mvaBackgroundWeights.size());
+
+   fMvaSignalWeights = mvaSignalWeights;
+   fMvaBackgroundWeights = mvaBackgroundWeights;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TMVA::ROCCurve::~ROCCurve() {

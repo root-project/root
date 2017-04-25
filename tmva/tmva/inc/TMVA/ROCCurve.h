@@ -52,6 +52,11 @@ public:
 
    ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets);
 
+   ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground,
+            const std::vector<Float_t> &mvaSignalWeights, const std::vector<Float_t> &mvaBackgroundWeights);
+
+   ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground);
+
    ~ROCCurve();
 
    Double_t GetROCIntegral(const UInt_t points = 41);
