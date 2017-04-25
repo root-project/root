@@ -928,7 +928,7 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass)
    TMultiGraph *multigraph = this->GetROCCurveAsMultiGraph(datasetname, iClass);
 
    if ( multigraph ) {
-      multigraph->Draw("AC");
+      multigraph->Draw("AL");
 
       multigraph->GetYaxis()->SetTitle("Sensitivity");
       multigraph->GetXaxis()->SetTitle("Specificity");
