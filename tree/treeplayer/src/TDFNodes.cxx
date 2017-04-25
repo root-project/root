@@ -120,7 +120,8 @@ unsigned int TSlotStack::Pop()
 }
 
 TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
-   : fTree(std::shared_ptr<TTree>(tree,[](TTree*){})), fDefaultBranches(defaultBranches), fNSlots(ROOT::Internal::GetNSlots())
+   : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
+     fNSlots(ROOT::Internal::GetNSlots())
 {
 }
 

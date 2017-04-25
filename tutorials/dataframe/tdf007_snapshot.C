@@ -51,7 +51,13 @@ int tdf007_snapshot()
    // ## Enrich the dataset
    // Build some temporary branches: we'll write them out
    auto d2 = d_cut.Define("b1_square", "b1 * b1")
-                  .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(i); return v;}, {"b2"});
+                .Define("b2_vector",
+                        [](float b2) {
+                           std::vector<float> v;
+                           for (int i = 0; i < 3; i++) v.push_back(i);
+                           return v;
+                        },
+                        {"b2"});
 
    // ## Write it to disk in ROOT format
    // We now write to disk a new dataset with one of the variables originally present in the tree and the new variables.
@@ -59,7 +65,7 @@ int tdf007_snapshot()
 
    // Open the new file and list the branches of the tree
    TFile f(outFileName);
-   TTree* t;
+   TTree *t;
    f.GetObject(treeName, t);
    for (auto branch : *t->GetListOfBranches()) {
       std::cout << "Branch: " << branch->GetName() << std::endl;
