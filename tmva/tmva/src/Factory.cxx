@@ -1,6 +1,6 @@
 // @(#)Root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
-// Updated by: Omar Zapata
+// Updated by: Omar Zapata, Kim Albertsson
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
@@ -21,6 +21,7 @@
  *      Omar Zapata     <Omar.Zapata@cern.ch>    - UdeA/ITM Colombia              *
  *      Lorenzo Moneta  <Lorenzo.Moneta@cern.ch> - CERN, Switzerland              *
  *      Sergei Gleyzer  <Sergei.Gleyzer@cern.ch> - U of Florida & CERN            *
+ *      Kim Albertsson  <kim.albertsson@cern.ch> - LTU & CERN                     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
