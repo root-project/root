@@ -50,6 +50,9 @@ matrix:
           packages: ['clang-3.9', 'clang-tidy-3.9', 'libstdc++-6-dev']
       compiler: clang
 
+  allow_failures:
+    # clang-tidy is still experimental
+    - env: TOOL=clang-tidy
 install:
   - |
     if [[ $TOOL == 'clang-tidy' ]]; then
