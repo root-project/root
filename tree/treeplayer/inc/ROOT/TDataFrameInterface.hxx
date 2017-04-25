@@ -15,6 +15,8 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "TChain.h"
+#include "TFile.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
@@ -32,6 +34,12 @@
 using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
 
 namespace ROOT {
+
+namespace Detail {
+   // StringParameter<T> is a std::string for any type T
+   template<typename T>
+   using StringParameter = const std::string&;
+}
 
 namespace Detail {
 struct TDataFrameGuessedType {
@@ -228,6 +236,18 @@ public:
       auto retVal = ROOT::Internal::InterpretCall(this, "Define", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
       return *(TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \param[in] treename The name of the TTree
+   /// \param[in] filename The name of the TFile
+   /// \param[in] bnames The list of names of the branches to be written
+   template<typename...Args>
+   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string& treename, const std::string& filename, const BranchNames_t &bnames)
+   {
+      using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(Args)>::Type_t;
+      return SnapshotImpl<Args...>(treename, filename, bnames, TypeInd_t());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1011,6 +1031,49 @@ protected:
       }
       auto bnBegin = defaultBranches.begin();
       return BranchNames_t(bnBegin, bnBegin + nExpectedBranches);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Implementation of snapshot
+   /// \param[in] treename The name of the TTree
+   /// \param[in] filename The name of the TFile
+   /// \param[in] bnames The list of names of the branches to be written
+   /// The implementation exploits Foreach. The association of the addresses to
+   /// the branches takes place at the first event. This is possible because
+   /// since there are no copies, the address of the value passed by reference
+   /// is the address pointing to the storage of the read/created object in/by
+   /// the TTreeReaderValue/TemporaryBranch
+   template<typename...Args, int...S>
+   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(const std::string& treename, const std::string& filename, const BranchNames_t &bnames, ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/) {
+
+      std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
+      TTree t(treename.c_str(), treename.c_str());
+
+      auto fillTree = [&t,&bnames](Args&...args)
+      {
+         static bool firstEvt = true;
+         if (firstEvt) {
+            // hack to call TTree::Branch on all variadic template arguments
+            std::initializer_list<int> expander = { (t.Branch(bnames[S].c_str(), &args),0)...,0 };
+
+            (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+            firstEvt = false;
+         }
+         t.Fill();
+      };
+
+      Foreach(fillTree, {bnames[S]...});
+
+      t.Write();
+
+      // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
+      // since this would introduce a cyclic headers dependency.
+      TDataFrameInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, bnames));
+      auto chain = new TChain(treename.c_str());
+      chain->Add(filename.c_str());
+      snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
+
+      return snapshotTDF;
    }
 
    TDataFrameInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<ROOT::Detail::TDataFrameImpl> &impl)
