@@ -45,7 +45,7 @@ int test_snapshot()
 
    auto d2 = d_cut.Define("a","A(b1)")
                   .Define("b1_square", "b1 * b1")
-                  .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(i); return v;}, {"b2"});
+                  .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(b2*i); return v;}, {"b2"});
 
 
    auto snapshot_tdf =  d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
