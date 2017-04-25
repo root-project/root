@@ -3,6 +3,7 @@
 #define ROOT_Mpi_TStatus
 
 #include<Mpi/Globals.h>
+#include<Mpi/TErrorHandler.h>
 
 namespace ROOT {
    namespace Mpi {
@@ -18,6 +19,7 @@ namespace ROOT {
 
       protected:
          MPI_Status fStatus;       //internal MP_Status object
+         Int_t fMsgSize;           //size of the message in the serialization
       public:
          /**
          Default constructor
@@ -95,10 +97,21 @@ namespace ROOT {
               \param flag boolean to set the cancelled flag to the message
               */
          virtual void SetCancelled(Bool_t flag);
+         /**
+         Returns the size of the message in bytes
+              */
+         Int_t GetMsgSize() const;
 
+         /**
+          Method to set the size of the message in bytes
+              \param size size of the message in bytes
+              */
+         void SetMsgSize(Int_t size);
 
          ClassDef(TStatus, 1)
       };
+
+
    }
 }
 #endif

@@ -127,7 +127,9 @@ namespace ROOT {
 
          template<class Type> void Send(const Type &var, Int_t dest, Int_t tag) const;
 
-         template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const; //must be changed by ROOOT::Mpi::TStatus& Recv(...)
+         template<class Type>  void Recv(Type &var, Int_t source, Int_t tag) const;
+
+         template<class Type>  void Recv(Type &var, Int_t source, Int_t tag, TStatus &status) const;
 
          template<class Type> TRequest ISend(const Type &var, Int_t dest, Int_t tag);
 
@@ -151,6 +153,8 @@ namespace ROOT {
          template<class Type> void Send(const Type *vars, Int_t count, Int_t dest, Int_t tag) const;
 
          template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag) const;
+
+         template<class Type>  void Recv(Type *vars, Int_t count, Int_t source, Int_t tag, TStatus &status) const;
 
          //methods with nonblocking//
 
@@ -350,6 +354,19 @@ namespace ROOT {
 
       //______________________________________________________________________________
       /**
+      * Method to receive a message for p2p communication
+      * \param var any selializable object reference to receive the message
+      * \param source id with the origin(Rank/Process) of the message
+      * \param tag id of the message
+      * \param status TStatus object
+      */
+      template<class Type>  void TCommunicator::Recv(Type &var, Int_t source, Int_t tag, TStatus &status) const
+      {
+         Recv(&var, 1, source, tag, status);
+      }
+
+      //______________________________________________________________________________
+      /**
        * Method to receive a message for p2p communication
        * \param vars array of any selializable objects
        * \param count number of elements in array \p vars
@@ -374,6 +391,35 @@ namespace ROOT {
             ROOT_MPI_CHECK_DATATYPE(Type, this);
             //TODO: added status argument to this method
             ROOT_MPI_CHECK_CALL(MPI_Recv, ((void *)vars, count, GetDataType<Type>(), source, tag, fComm, MPI_STATUS_IGNORE), this);
+         }
+      }
+      //______________________________________________________________________________
+      /**
+       * Method to receive a message for p2p communication
+       * \param vars array of any selializable objects
+       * \param count number of elements in array \p vars
+       * \param source id with the origin(Rank/Process) of the message
+       * \param tag id of the message
+       * \param status TStatus object
+       */
+      template<class Type>  void TCommunicator::Recv(Type *vars, Int_t count, Int_t source, Int_t tag, TStatus &status) const
+      {
+
+         if (std::is_class<Type>::value) {
+            Int_t size;
+            Probe(source, tag, status);
+
+            ROOT_MPI_CHECK_CALL(MPI_Get_elements, (&status.fStatus, MPI_CHAR, &size), this);
+
+            Char_t *buffer = new Char_t[size];
+            ROOT_MPI_CHECK_CALL(MPI_Recv, (buffer, size, MPI_CHAR, source, tag, fComm, &status.fStatus), this);
+            Unserialize<Type>(buffer, size, vars, count, this, GetRank(), source, tag, 0);
+            status.SetMsgSize(size);
+         } else {
+            ROOT_MPI_CHECK_DATATYPE(Type, this);
+            //TODO: added status argument to this method
+            ROOT_MPI_CHECK_CALL(MPI_Recv, ((void *)vars, count, GetDataType<Type>(), source, tag, fComm, &status.fStatus), this);
+            status.SetMsgSize(sizeof(Type)*count);
          }
       }
 

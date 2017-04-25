@@ -59,3 +59,16 @@ void TStatus::SetCancelled(Bool_t flag)
 {
    ROOT_MPI_CHECK_CALL(MPI_Status_set_cancelled, (&fStatus, (Int_t) flag), TStatus::Class_Name());
 }
+
+//______________________________________________________________________________
+Int_t TStatus::GetMsgSize() const
+{
+   return fMsgSize;
+}
+
+//______________________________________________________________________________
+void TStatus::SetMsgSize(Int_t size)
+{
+   fMsgSize = size;
+}
+
