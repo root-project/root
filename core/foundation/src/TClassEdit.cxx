@@ -137,7 +137,7 @@ TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fNam
 ROOT::ESTLType TClassEdit::TSplitType::IsInSTL() const
 {
    if (fElements[0].empty()) return ROOT::kNotSTL;
-   return STLKind(fElements[0]);
+   return STLKind(std::string_view(fElements[0].data(), fElements[0].size()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +164,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
       return 0;
    }
 
-   int kind = STLKind(fElements[0]);
+   int kind = STLKind(std::string_view(fElements[0].data(), fElements[0].size()));
 
    if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist || kind==ROOT::kSTLforwardlist) {
 
@@ -239,7 +239,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    //    fprintf(stderr,"calling ShortType %d for %s with narg %d tail %d\n",imode,typeDesc,narg,tailLoc);
 
    //kind of stl container
-   const int kind = STLKind(fElements[0]);
+   const int kind = STLKind(std::string_view(fElements[0].data(), fElements[0].size()));
    const int iall = STLArgs(kind);
 
    // Only class is needed
@@ -714,7 +714,7 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
 {
    string c = elementName;
 
-   size_t pos = StdLen(c);
+   size_t pos = StdLen(std::string_view(c.data(), c.size()));
 
    const int elementlen = strlen(defaultElementName);
    if (c.compare(pos,elementlen,defaultElementName) != 0) {
@@ -787,7 +787,7 @@ bool TClassEdit::IsDefHash(const char *hashname, const char *classname)
 
 void TClassEdit::GetNormalizedName(std::string &norm_name, std::string_view name)
 {
-   norm_name = std::string(name); // NOTE: Is that the shortest version?
+   norm_name = std::string(name.data(), name.size()); // NOTE: Is that the shortest version?
 
    // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
@@ -1342,7 +1342,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 bool TClassEdit::IsVectorBool(const char *name) {
    TSplitType splitname( name );
 
-   return ( TClassEdit::STLKind( splitname.fElements[0] ) == ROOT::kSTLvector)
+   return ( TClassEdit::STLKind( std::string_view(splitname.fElements[0].data(), splitname.fElements[0].size()) ) == ROOT::kSTLvector)
       && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
 }
 
@@ -1871,8 +1871,10 @@ class NameCleanerForIO {
       if (!mother) return false;
       bool isSTLContOrArray = true;
       while (nullptr != mother){
-         auto stlType = TClassEdit::IsSTLCont(mother->fName+"<>");
-         isSTLContOrArray &= ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(mother->fName+"<");
+         auto tmpStr = mother->fName+"<>";
+         auto stlType = TClassEdit::IsSTLCont(std::string_view(tmpStr.data(), tmpStr.size()));
+         tmpStr = mother->fName+"<";
+         isSTLContOrArray &= ROOT::kNotSTL != stlType || TClassEdit::IsStdArray(std::string_view(tmpStr.data(), tmpStr.size()));
          mother = mother->fMother;
       }
 
@@ -1951,7 +1953,8 @@ public:
 
       // We have in hands a case like unique_ptr< ... >
       // Perhaps we could treat atomics as well like this?
-      if (!fMother && TClassEdit::IsUniquePtr(fName+"<")) {
+      auto tmpStr = fName+"<";
+      if (!fMother && TClassEdit::IsUniquePtr(std::string_view(tmpStr.data(), tmpStr.size()))) {
          name = fArgumentNodes.front()->ToString();
          fHasChanged = true;
          return name;
@@ -1959,7 +1962,8 @@ public:
 
       // Now we treat the case of the collections of unique ptrs
       auto stlContType = AreAncestorsSTLContOrArray();
-      if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(fName+"<")) {
+      tmpStr = fName+"<";
+      if (stlContType != ROOT::kNotSTL && TClassEdit::IsUniquePtr(std::string_view(tmpStr.data(), tmpStr.size()))) {
          name = fArgumentNodes.front()->ToString();
          name += "*";
          fHasChanged = true;

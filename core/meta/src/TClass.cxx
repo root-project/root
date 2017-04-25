@@ -1392,7 +1392,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // Advertise ourself as the loading class for this class name
    TClass::AddClass(this);
 
-   Bool_t isStl = TClassEdit::IsSTLCont(fName);
+   Bool_t isStl = TClassEdit::IsSTLCont(std::string_view(fName));
 
    if (!gInterpreter) {
       ::Fatal("TClass::Init", "gInterpreter not initialized");
@@ -6139,7 +6139,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code, Bool_t &isvalid) const
       TBaseClass *tbc=0;
       while((tbc=(TBaseClass*)nextBase())) {
          name = tbc->GetName();
-         Bool_t isSTL = TClassEdit::IsSTLCont(name);
+         Bool_t isSTL = TClassEdit::IsSTLCont(std::string_view(name));
          if (isSTL)
             name = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
          il = name.Length();

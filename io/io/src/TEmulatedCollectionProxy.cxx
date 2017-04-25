@@ -630,7 +630,7 @@ static TStreamerElement* R__CreateEmulatedElement(const char *dmName, const char
       if (strcmp(dmType,"string") == 0 || strcmp(dmType,"std::string") == 0 || strcmp(dmType,full_string_name)==0 ) {
          return new TStreamerSTLstring(dmName,dmTitle,offset,dmFull,dmIsPtr);
       }
-      if (TClassEdit::IsSTLCont(dmType)) {
+      if (TClassEdit::IsSTLCont(std::string_view(dmType))) {
          return new TStreamerSTL(dmName,dmTitle,offset,dmFull,dmFull,dmIsPtr);
       }
       TClass *clm = TClass::GetClass(dmType);

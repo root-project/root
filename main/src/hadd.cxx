@@ -391,7 +391,7 @@ int main( int argc, char **argv )
       }
    }
    merger.SetNotrees(noTrees);
-   merger.SetMergeOptions(cacheSize);
+   merger.SetMergeOptions(std::string_view(cacheSize));
    Bool_t status;
    if (append) status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
    else status = merger.Merge();
