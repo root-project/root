@@ -263,5 +263,5 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
       TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
       TMVAGlob::imgconv( c[countCanvas], fname );
    }
-   delete [] c;
+   delete[] c;
 }

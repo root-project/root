@@ -32,7 +32,7 @@
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult()
    : fROCAVG(0.0), fROCCurves(std::make_shared<TMultiGraph>())
 {
-    fROCAVG = 0.;
+   fROCAVG = 0.;
 }
 
 TMVA::HyperParameterOptimisationResult::~HyperParameterOptimisationResult()
