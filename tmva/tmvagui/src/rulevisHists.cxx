@@ -10,7 +10,7 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void TMVA::rulevisHists( TString fin, TMVAGlob::TypeOfPlot type , bool useTMVAStyle )
+void TMVA::rulevisHists(TString fin, TMVAGlob::TypeOfPlot type, bool useTMVAStyle)
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
