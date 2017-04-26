@@ -115,7 +115,7 @@ private:
   void _initNumIntSet(const RooArgSet& obs);
   void _setTimingNumIntSet(Bool_t flag = kTRUE);
 
-  std::map<std::string, double> collectTimingsFromServer() const;
+  std::map<std::string, double> collectTimingsFromServer(Bool_t clear_timings = kTRUE) const;
 
   void _time_communication_overhead() const;
 

@@ -147,7 +147,7 @@ protected:
   mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
 private:
-  void _collectNumIntSetTimings() const;
+  void _collectNumIntSetTimings(Bool_t clear_timings = kTRUE) const;
 
   void _initNumIntSet();
   RooArgSet _numIntSet;

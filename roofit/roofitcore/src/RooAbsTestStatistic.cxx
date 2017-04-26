@@ -941,12 +941,12 @@ Double_t RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }
 
 
-void RooAbsTestStatistic::_collectNumIntSetTimings() const {
+void RooAbsTestStatistic::_collectNumIntSetTimings(Bool_t clear_timings) const {
   ofstream timing_outfile;
   timing_outfile.open("timings_NumIntSet.json", ios::app);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
-    auto timings = _mpfeArray[i]->collectTimingsFromServer();
+    auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);
     pid_t pid = _mpfeArray[i]->getPIDFromServer();
     for (auto it = timings.begin(); it != timings.end(); ++it) {
       std::string name = it->first;

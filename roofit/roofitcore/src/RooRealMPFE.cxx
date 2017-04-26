@@ -626,11 +626,16 @@ void RooRealMPFE::serverLoop() {
       }
 
       case RetrieveTimings: {
+        Bool_t clear_timings;
+        *_pipe >> clear_timings;
         *_pipe << static_cast<unsigned long>(RooTrace::objectTiming.size()) << BidirMMapPipe::flush;
         for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
           std::string name = it->first;
           double timing_s = it->second;
           *_pipe << name << timing_s << BidirMMapPipe::flush;
+        }
+        if (clear_timings == kTRUE) {
+          RooTrace::objectTiming.clear();
         }
 
         break;
@@ -1281,10 +1286,10 @@ void RooRealMPFE::enableOffsetting(Bool_t flag)
   ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
 }
 
-std::map<std::string, double> RooRealMPFE::collectTimingsFromServer() const {
+std::map<std::string, double> RooRealMPFE::collectTimingsFromServer(Bool_t clear_timings) const {
   std::map<std::string, double> server_timings;
 
-  *_pipe << RetrieveTimings << BidirMMapPipe::flush;
+  *_pipe << RetrieveTimings << clear_timings << BidirMMapPipe::flush;
 
   unsigned long numTimings;
   *_pipe >> numTimings;
