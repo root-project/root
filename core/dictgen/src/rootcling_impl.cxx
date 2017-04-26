@@ -2297,7 +2297,17 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
 
    // Load the modulemap from the ROOT include directory.
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   auto moduleFile = fileMgr.getFile(includeDir + "/module.modulemap");
+   std::string moduleMapPath = includeDir + "/module.modulemap";
+   auto moduleFile = fileMgr.getFile(moduleMapPath);
+
+   // Check if we actually found the modulemap file...
+   if (!moduleFile) {
+      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find ROOT modulemap in"
+                                                " %s! Ensure that cxxmodules=On is set in CMake.\n",
+                              moduleMapPath.c_str());
+      return false;
+   }
+
    moduleMap.parseModuleMapFile(moduleFile, false, fileMgr.getDirectory(includeDir));
 
    // Try to get the module name in the modulemap based on the filepath.
@@ -2313,7 +2323,7 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
    clang::Module *module = moduleMap.findModule(moduleName);
 
    // Inform the user and abort if we can't find a module with a given name.
-   if (module == nullptr) {
+   if (!module) {
       ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
                               moduleName.c_str());
       return false;
