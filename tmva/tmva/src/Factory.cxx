@@ -763,13 +763,13 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    }
 
    TMVA::ROCCurve *rocCurve = nullptr;
-   TGraph         *graph    = nullptr;
+   TGraph *graph = nullptr;
 
    if (this->fAnalysisType == Types::kClassification) {
-      
-      std::vector<Float_t> * mvaRes     = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-      std::vector<Bool_t>  * mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-      std::vector<Float_t>   mvaResWeights;
+
+      std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+      std::vector<Bool_t> *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+      std::vector<Float_t> mvaResWeights;
 
       auto eventCollection = dataset->GetEventCollection();
       mvaResWeights.reserve(eventCollection.size());
@@ -781,7 +781,7 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
 
    } else if (this->fAnalysisType == Types::kMulticlass) {
       std::vector<Float_t> mvaRes;
-      std::vector<Bool_t>  mvaResTypes;
+      std::vector<Bool_t> mvaResTypes;
       std::vector<Float_t> mvaResWeights;
 
       std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
