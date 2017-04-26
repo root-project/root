@@ -50,7 +50,7 @@ void TProfile2PolyBin::UpdateAverage()
 
 void TProfile2PolyBin::UpdateError()
 {
-   if (fAverage * fAverage != 0) fError = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
+   if (fSumw != 0) fError = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
 }
 
 void TProfile2PolyBin::ClearStats()
@@ -205,7 +205,6 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
    // ------------ Update local (per bin) statistics
    TProfile2PolyBin *dst = nullptr;
    TProfile2PolyBin *src = nullptr;
-
    for (Int_t i = 0; i < nbins; i++) {
       dst = (TProfile2PolyBin *)fBins->At(i);
 
@@ -213,6 +212,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
       Double_t sumw_acc = 0;
       Double_t sumvw_acc = 0;
       Double_t sumv2_acc = 0;
+      Double_t sumwv2_acc = 0;
 
       // accumulate values of interest in the input vector
       for (const auto &e : list) {
@@ -221,6 +221,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
          sumw_acc += src->fSumw;
          sumvw_acc += src->fSumvw;
          sumv2_acc += src->fSumv2;
+         sumwv2_acc += src->fSumwv2;
       }
 
       // add values of accumulation to existing histogram
@@ -228,6 +229,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
       dst->fSumw += sumw_acc;
       dst->fSumvw += sumvw_acc;
       dst->fSumv2 += sumv2_acc;
+      dst->fSumwv2 += sumwv2_acc;
 
       // update averages, errors
       dst->Update();
@@ -241,6 +243,7 @@ void TProfile2Poly::SetContentToAverage()
    Int_t nbins = fBins->GetSize();
    for (Int_t i = 0; i < nbins; i++) {
       TProfile2PolyBin *bin = (TProfile2PolyBin *)fBins->At(i);
+      bin->Update();
       bin->SetContent(bin->fAverage);
    }
 }

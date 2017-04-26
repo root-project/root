@@ -13,25 +13,24 @@ public:
 
    TProfile2PolyBin();
    TProfile2PolyBin(TObject *poly, Int_t bin_number);
-
    virtual ~TProfile2PolyBin() {}
 
    void Update();
-   void UpdateAverage();
-   void UpdateError();
    void ClearStats();
 
 private:
-   void Fill(Double_t value, Double_t weight);
-
    Double_t fSumv;
    Double_t fSumw;
    Double_t fSumvw;
    Double_t fSumv2;
    Double_t fSumwv2;
-
    Double_t fAverage;
    Double_t fError;
+
+protected:
+   void Fill(Double_t value, Double_t weight);
+   void UpdateAverage();
+   void UpdateError();
 
    ClassDef(TProfile2PolyBin, 1)
 };
@@ -43,13 +42,9 @@ public:
 
    TProfile2Poly() {}
    TProfile2Poly(const char *name, const char *title, Double_t xlow, Double_t xup, Double_t ylow, Double_t yup);
-
    TProfile2Poly(const char *name, const char *title, Int_t nX, Double_t xlow, Double_t xup, Int_t nY, Double_t ylow,
                  Double_t yup);
-
    virtual ~TProfile2Poly() {}
-
-   virtual TProfile2PolyBin *CreateBin(TObject *poly) override;
 
    using TH2Poly::Fill;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
@@ -70,10 +65,12 @@ public:
    void printOverflowRegions();
 
 private:
+   TProfile2PolyBin regions[kNOverflow];
    Double_t fTsumwz;
    Double_t fTsumwz2;
 
-   TProfile2PolyBin regions[kNOverflow];
+protected:
+   virtual TProfile2PolyBin *CreateBin(TObject *poly) override;
 
    ClassDefOverride(TProfile2Poly, 1)
 };
