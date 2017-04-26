@@ -411,78 +411,68 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam T The type of the branch the values of which are used to fill the histogram.
-   /// \param[in] valBranchName The name of the branch of which the values are to be collected.
-   /// \param[in] weightBranchName The name of the branch of which the weights are to be collected.
-   /// \param[in] model The model to be considered to build the new return value.
+   /// \tparam V The type of the branch used to fill the histogram.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \param[in] vName The name of the branch that will fill the histogram.
    ///
-   /// If no branch type is specified and no weight branch is specified, the implementation will try to guess one.
-   /// The returned histogram is independent of the input one.
+   /// The default branches, if available, will be used instead of branches whose names are left empty.
+   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple branches of container type
+   /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
+   /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &valBranchName = "",
-                                      const std::string &weightBranchName = "")
+   /// The user gives up ownership of the model histogram.
+   template <typename V = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = TH1F{"", "", 128u, 0., 0.},
+                                      const std::string &vName = "")
    {
-      auto bl = GetBranchNames<T, W>({valBranchName, weightBranchName}, "fill the histogram");
+      auto bl = GetBranchNames<V>({vName}, "fill the histogram");
       auto h = std::make_shared<::TH1F>(model);
-      return Histo1DImpl<T, W>((W *)nullptr, bl, h);
+      if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
+         ROOT::Internal::TDFV7Utils::Histo<::TH1F>::SetCanExtendAllAxes(*h);
+      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, V>(bl, h);
+   }
+
+   template <typename V = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH1F> Histo1D(const std::string &vName)
+   {
+      return Histo1D<V>(TH1F{"", "", 128u, 0., 0.}, vName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam T The type of the branch the values of which are used to fill the histogram.
-   /// \param[in] valBranchName The name of the branch of which the values are to be collected.
-   /// \param[in] weightBranchName The name of the branch of which the weights are to be collected.
-   /// \param[in] nbins The number of bins.
-   /// \param[in] minVal The lower value of the xaxis.
-   /// \param[in] maxVal The upper value of the xaxis.
+   /// \tparam V The type of the branch used to fill the histogram.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \param[in] vName The name of the branch that will fill the histogram.
+   /// \param[in] wName The name of the branch that will provide the weights.
    ///
-   /// If no branch type is specified, the implementation will try to guess one.
-   ///
-   /// If no axes boundaries are specified, all entries are buffered: at the end of
-   /// the loop on the entries, the histogram is filled. If the axis boundaries are
-   /// specified, the histogram (or histograms in the parallel case) are filled. This
-   /// latter mode may result in a reduced memory footprint.
-   ///
+   /// The default branches, if available, will be used instead of branches whose names are left empty.
+   /// Branches can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// is filled with each one of the elements of the container. In case multiple branches of container type
+   /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
+   /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
-   TActionResultProxy<::TH1F> Histo1D(const std::string &valBranchName = "", int nBins = 128, double minVal = 0.,
-                                      double maxVal = 0., const std::string &weightBranchName = "")
+   /// The user gives up ownership of the model histogram.
+   template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
    {
-      auto bl = GetBranchNames<T, W>({valBranchName, weightBranchName}, "fill the histogram");
-      auto blSize = bl.size();
-      ::TH1F h("", "", nBins, minVal, maxVal);
-      if (minVal == maxVal) {
-         ROOT::Internal::TDFV7Utils::Histo<::TH1F>::SetCanExtendAllAxes(h);
-      }
-
-      // A weighted histogram
-      return Histo1D<T, W>(std::move(h), bl[0], blSize == 1 ? "" : bl[1]);
+      auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
+      auto h = std::make_shared<::TH1F>(model);
+      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, V, W>(bl, h);
    }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a one-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam T The type of the branch the values of which are used to fill the histogram.
-   /// \param[in] valBranchName The name of the branch of which the values are to be collected.
-   /// \param[in] weightBranchName The name of the branch of which the weights are to be collected.
-   ///
-   /// If no branch type is specified, the implementation will try to guess one.
-   ///
-   /// If no axes boundaries are specified, all entries are buffered: at the end of
-   /// the loop on the entries, the histogram is filled. If the axis boundaries are
-   /// specified, the histogram (or histograms in the parallel case) are filled. This
-   /// latter mode may result in a reduced memory footprint.
-   ///
-   /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType, typename W = void>
-   TActionResultProxy<::TH1F> Histo1D(const std::string &valBranchName, const std::string &weightBranchName)
+   template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
-      return Histo1D<T, W>(valBranchName, 128, 0., 0., weightBranchName);
+      return Histo1D<V,W>(TH1F{"", "", 128u, 0., 0.}, vName, wName);
+   }
+
+   template <typename V, typename W>
+   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = TH1F{"", "", 128u, 0., 0.})
+   {
+      return Histo1D<V,W>(std::move(model), "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -838,40 +828,8 @@ private:
       return GetDefaultBranchNames(neededBranches, actionNameForErr);
    }
 
-   // Two overloaded template methods which allow to avoid branching in the Histo1D method.
-   // W == void: histogram w/o weights
-   template <typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(void *, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
-   {
-      // perform type guessing if needed and build the action
-      return CreateAction<ROOT::Internal::ActionTypes::Histo1D, X>(BranchNames_t{bl[0]}, h);
-   }
-
-   // W != void: histogram w/ weights
-   // the case in which X has to be guessed but W was explicitly specified is not supported
-   template <typename X, typename W>
-   TActionResultProxy<::TH1F> Histo1DImpl(W *, const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h)
-   {
-      // weighted histograms never need to do type guessing, we can build
-      // the action here
-      auto df = GetDataFrameChecked();
-      auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
-      auto nSlots = df->GetNSlots();
-      if (hasAxisLimits) {
-         using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
-         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X, W>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      } else {
-         using Op_t = ROOT::Internal::Operations::FillOperation;
-         using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<X, W>>;
-         df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      }
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
-   }
-
    /// \cond HIDDEN_SYMBOLS
-   template <typename BranchType>
+   template <typename...BranchTypes>
    TActionResultProxy<::TH1F> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h,
                                            unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D *)
    {
@@ -881,12 +839,12 @@ private:
       if (hasAxisLimits) {
          using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH1F>;
          using DFA_t =
-            ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
+            ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
          using Op_t = ROOT::Internal::Operations::FillOperation;
          using DFA_t =
-            ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
+            ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
       return ROOT::Detail::MakeActionResultProxy(h, df);
