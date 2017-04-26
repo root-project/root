@@ -273,6 +273,8 @@ struct Histo2D {
 };
 struct Histo3D {
 };
+struct Profile1D {
+};
 struct Min {
 };
 struct Max {
