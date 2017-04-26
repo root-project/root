@@ -1518,10 +1518,9 @@ TH1F *TGraph::GetHistogram() const
       if (gPad && gPad->GetLogx()) uxmax = 1.1 * rwxmax;
       else                         uxmax = 0;
    }
-   if (minimum < 0 && rwymin >= 0) {
-      if (gPad && gPad->GetLogy()) minimum = 0.9 * rwymin;
-      else                         minimum = 0;
-   }
+
+   if (minimum < 0 && rwymin >= 0) minimum = 0.9 * rwymin;
+
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = 0.001 * maximum;
    if (uxmin <= 0 && gPad && gPad->GetLogx()) {
       if (uxmax > 1000) uxmin = 1;
