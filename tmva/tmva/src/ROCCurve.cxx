@@ -218,6 +218,7 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 ///                     into num_points - 1 regions where the performance of the
 ///                     classifier is sampled. Larger number means more accurate,
 ///                     but more costly, evaluation.
+
 TGraph *TMVA::ROCCurve::GetROCCurve(const UInt_t num_points)
 {
    if (fGraph != nullptr) {
