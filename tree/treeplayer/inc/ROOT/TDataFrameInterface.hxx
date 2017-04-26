@@ -540,77 +540,63 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
-   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
-   /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
-   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
-   /// \param[in] b2BranchName The name of the branch of which the z values are to be collected.
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
+   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \param[in] v1Name The name of the branch that will fill the x axis.
+   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] v3Name The name of the branch that will fill the z axis.
    ///
-   /// The returned histogram is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
-   template <typename B0, typename B1, typename B2>
-   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &b0BranchName = "",
-                                      const std::string &b1BranchName = "", const std::string &b2BranchName = "",
-                                      const std::string &wBranchName = "")
+   /// The user gives up ownership of the model histogram.
+   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
+                                      const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TH3F>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
-         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+         throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl =
-         GetBranchNames<B0, B1, B2>({b0BranchName, b1BranchName, b2BranchName, wBranchName}, "fill the histogram");
-      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
-      using DFA_t =
-         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, B2>>;
-      auto df = GetDataFrameChecked();
-      auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
+      auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the histogram");
+      return CreateAction<ROOT::Internal::ActionTypes::Histo3D, V1, V2, V3>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a three-dimensional histogram with the values of a branch (*lazy action*)
-   /// \tparam B0 The type of the branch the values of which are used to fill the histogram.
-   /// \tparam B1 The type of the branch the values of which are used to fill the histogram.
-   /// \tparam B2 The type of the branch the values of which are used to fill the histogram.
-   /// \tparam W The type of the branch the weights of which are used to fill the histogram.
-   /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
-   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
-   /// \param[in] b2BranchName The name of the branch of which the z values are to be collected.
-   /// \param[in] wBranchName The name of the branch of which the weight values are to be collected.
+   /// \brief Fill and return a three-dimensional histogram (*lazy action*)
+   /// \tparam V1 The type of the branch used to fill the x axis of the histogram.
+   /// \tparam V2 The type of the branch used to fill the y axis of the histogram.
+   /// \tparam V3 The type of the branch used to fill the z axis of the histogram.
+   /// \tparam W The type of the branch used for the weights of the histogram.
+   /// \param[in] model The returned histogram will be constructed using this as a model.
+   /// \param[in] v1Name The name of the branch that will fill the x axis.
+   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] v3Name The name of the branch that will fill the z axis.
+   /// \param[in] wName The name of the branch that will provide the weights.
    ///
-   /// The returned histogram is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
-   template <typename B0, typename B1, typename B2, typename W>
-   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &b0BranchName = "",
-                                      const std::string &b1BranchName = "", const std::string &b2BranchName = "",
-                                      const std::string &wBranchName = "")
+   /// The user gives up ownership of the model histogram.
+   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
+                                      const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TH3F>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
-         throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
+         throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
-      auto bl =
-         GetBranchNames<B0, B1, B2, W>({b0BranchName, b1BranchName, b2BranchName, wBranchName}, "fill the histogram");
-      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
-      using DFA_t =
-         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, B2, W>>;
-      auto df = GetDataFrameChecked();
-      auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
+      auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
+      return CreateAction<ROOT::Internal::ActionTypes::Histo3D, V1, V2, V3, W>(bl, h);
+   }
+
+   template <typename V1, typename V2, typename V3, typename W>
+   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model)
+   {
+      return Histo3D<V1, V2, V3, W>(std::move(model), "", "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -921,6 +907,18 @@ private:
                                            unsigned int nSlots, ROOT::Internal::ActionTypes::Histo2D *)
    {
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH2F>;
+      using DFA_t =
+         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
+      auto df = GetDataFrameChecked();
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
+      return ROOT::Detail::MakeActionResultProxy(h, df);
+   }
+
+   template<typename...BranchTypes>
+   TActionResultProxy<::TH3F> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH3F> &h,
+                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Histo3D *)
+   {
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
       auto df = GetDataFrameChecked();
