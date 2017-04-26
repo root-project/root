@@ -7,8 +7,6 @@ void tprofile2polyCorrectness()
 
   bool ret = true;
 
-  // CREATE PLOT STURCTURES
-  auto c1 = new TCanvas("c1", "Profile histogram example", 200, 10, 700, 500);
   auto TP2D = new TProfile2D("NoName", "NoTitle", 10, -10, 10, 10, -10, 10, 0, 0);
   auto TP2P = new TProfile2Poly();
 
@@ -24,7 +22,6 @@ void tprofile2polyCorrectness()
      }
   }
 
-  c1->Divide(2, 1);
   Double_t value, weight;
 
   Float_t px, py;
@@ -37,12 +34,6 @@ void tprofile2polyCorrectness()
      TP2D->Fill(px, py, value, weight);
      TP2P->Fill(px, py, value, weight);
   }
-  c1->cd(1);
-  TP2D->Draw("TEXT");
-
-  c1->cd(2);
-  TP2P->Draw("TEXT");
-
 
   // ------------ COMPARE IF THEY YIELD THE SAME RESULTS ---------------
   std::set<Double_t> v1;
@@ -93,13 +84,6 @@ void tprofile2polyCorrectness()
   TP2D_2->Merge(&DMerge);
   TP2P_2->Merge(&PMerge);
 
-  c1->cd(1);
-  TP2D_2->Draw("COLZ TEXT");
-
-  c1->cd(2);
-  TP2P_2->Draw("COLZ TEXT");
-
-
   // ------------ COMPARE IF THEY YIELD THE SAME RESULTS ---------------
   v1.clear();
   v2.clear();
@@ -118,9 +102,7 @@ void tprofile2polyCorrectness()
   }
 
   std::cout << "\t Merge Identical" << std::endl;
-
   ret &= v1==v2;
-
 
   return ret;
 }

@@ -6,13 +6,22 @@ using namespace std;
 
 void tprofile2poly_realistic(Int_t numEvents=100000)
 {
-   TCanvas *c1 = new TCanvas("c1", "2 areas w/ unusual charge", 900, 700);
-   c1->Divide(3, 2);
+   int NUM_LS = 8;
+   TCanvas *c1 = new TCanvas("c1", "moving charge", 900, 400);
+   TCanvas *c2 = new TCanvas("c2", "Merge Individual moving charge plots", 800, 400);
+
+   c1->Divide(NUM_LS, 3);
+   c2->Divide(3,1);
 
    // -------------------- Construct Reference plot bins ------------------------
    auto new_avg = new TProfile2Poly();
-   auto ref_abs = new TH2Poly();
-   auto ref_avg = new TProfile2D("", "", 60, -15, 15, 60, -15, 15, 0, 200);
+
+   auto tot_avg_ls = new TProfile2Poly[NUM_LS];
+   auto det_avg_ls = new TProfile2Poly[NUM_LS];
+   auto det_err_ls = new TProfile2Poly[NUM_LS];
+   auto tot_merge = new TProfile2Poly();
+   auto det_avg_merge = new TProfile2Poly();
+   auto det_err_merge = new TProfile2Poly();
 
    float minx = -15;
    float maxx = 15;
@@ -22,8 +31,10 @@ void tprofile2poly_realistic(Int_t numEvents=100000)
 
    for (float i = minx; i < maxx; i += binsz) {
       for (float j = miny; j < maxy; j += binsz) {
-         ref_abs->AddBin(i, j, i + binsz, j + binsz);
-         new_avg->AddBin(i, j, i + binsz, j + binsz);
+        tot_merge->AddBin(i, j, i + binsz, j + binsz);
+        for (int l=0; l<NUM_LS; ++l) {
+          tot_avg_ls[l].AddBin(i, j, i + binsz, j + binsz);
+        }
       }
    }
 
@@ -53,58 +64,111 @@ void tprofile2poly_realistic(Int_t numEvents=100000)
       y[1] = allCoords[i + 1].second;
       x[2] = allCoords[i + 2].first;
       y[2] = allCoords[i + 2].second;
-      h2p->AddBin(3, x, y);
-      tp2p->AddBin(3, x, y);
+
+      det_avg_merge->AddBin(3, x, y);
+      det_err_merge->AddBin(3, x, y);
+
+      for (int l=0; l<NUM_LS; ++l) {
+        det_avg_ls[l].AddBin(3, x, y);
+      }
    }
 
    // -------------------- Simulate particles ------------------------
    TRandom ran;
-   int NUM_LS = 3;
 
-   for (int i = 0; i <= NUM_LS - 1; ++i) { // LumiSection
+   // moving error
+   Double_t xoffset1 = 0;
+   Double_t yoffset1 = 0;
+   Double_t xoffset2 = 0;
+   Double_t yoffset2 = 0;
+
+   for (int i = 0; i <= NUM_LS-1; ++i) { // LumiSection
+     std::cout << "[In Progress] LumiSection " << i << std::endl;
       for (int j = 0; j < numEvents; ++j) {   // Events
          Double_t r1 = ran.Gaus(0, 10);
          Double_t r2 = ran.Gaus(0, 8);
-         Double_t rok = ran.Gaus(20, 2);
-         Double_t rbad1 = ran.Gaus(2, 5);
+         Double_t rok = ran.Gaus(10, 1);
+         Double_t rbad1 = ran.Gaus(8, 5);
+         Double_t rbad2 = ran.Gaus(-8, 5);
 
          Double_t val = rok;
 
-         if (r2 > 3 && r2 < 8 && r1 > 1 && r1 < 5) val = rok - rbad1;
-         if (r2 > -10 && r2 < -2 && r1 > -1 && r1 < 4) val = rok + rbad1;
+         xoffset1 += 0.00002;
+         yoffset1 += 0.00002;
 
-         ref_abs->Fill(r1, r2, val);
-         ref_avg->Fill(r1, r2, val);
-         new_avg->Fill(r1, r2, val);
+         xoffset2 += 0.00003;
+         yoffset2 += 0.00004;
 
-         h2p->Fill(r1, r2, val);
-         tp2p->Fill(r1, r2, val);
+         if (r2 > 3. - yoffset1 && r2 < 8. - yoffset1 &&
+             r1 > 1. + xoffset1 && r1 < 5. + xoffset1 ) {
+           val -= rbad1;
+         }
+
+         if (r2 > -10 + yoffset2 && r2 < -8 + yoffset2 &&
+             r1 > -6 + xoffset2 && r1 < 8 + xoffset2 ) {
+           val -= rbad2;
+         }
+
+         tot_avg_ls[i].Fill(r1, r2, val);
+         det_avg_ls[i].Fill(r1, r2, val);
       }
+
+      std::string title;
+
+
+      c1->cd(i+1);
+      title = "Global View: Avg in LS  " + to_string(i);
+      tot_avg_ls[i].SetTitle(title.c_str());
+      tot_avg_ls[i].SetStats(false);
+      tot_avg_ls[i].Draw("COLZ");
+      c1->Update();
+
+      c1->cd((i+1)+NUM_LS);
+      title = "Detector View: Avg in LS  " + to_string(i);
+      det_avg_ls[i].SetTitle(title.c_str());
+      det_avg_ls[i].SetStats(false);
+      det_avg_ls[i].Draw("COLZ");
+      c1->Update();
+
+
+      c1->cd((i+1)+(NUM_LS*2));
+      title = "Detector View: Error in LS  " + to_string(i);
+      det_avg_ls[i].SetTitle(title.c_str());
+      det_avg_ls[i].SetStats(false);
+      det_avg_ls[i].SetContentToError();
+      det_avg_ls[i].Draw("COLZ");
+      c1->Update();
    }
 
-   // -------------------- Display end state ------------------------
-   c1->cd(1);
-   ref_abs->SetStats(false);
-   ref_abs->SetTitle("TH2Poly: total hits");
-   ref_abs->Draw("COLZ");
+   std::vector<TProfile2Poly*> tot_avg_v;
+   std::vector<TProfile2Poly*> det_avg_v;
+   for (Int_t t=0; t<NUM_LS; t++){
+     tot_avg_v.push_back(&tot_avg_ls[t]);
+     det_avg_v.push_back(&det_avg_ls[t]);
+   }
 
-   c1->cd(2);
-   ref_avg->SetStats(false);
-   ref_avg->SetTitle("TProfile2D: average charge");
-   ref_avg->Draw("COLZ");
+   std::cout << "[In Progress] Merging" << std::endl;
 
-   c1->cd(3);
-   new_avg->SetStats(false);
-   new_avg->SetTitle("TProfile2Poly: average charge");
-   new_avg->Draw("COLZ");
+   std::string title;
 
-   c1->cd(4);
-   h2p->SetStats(false);
-   h2p->SetTitle("TH2Poly: total hits on detector");
-   h2p->Draw("COLZ");
+   tot_merge->Merge(tot_avg_v);
+   c2->cd(1);
+   title = "Total average merge";
+   tot_merge->SetTitle(title.c_str());
+   tot_merge->Draw("COLZ");
 
-   c1->cd(6);
-   tp2p->SetStats(false);
-   tp2p->SetTitle("TProfile2Ploly: average charge on detector");
-   tp2p->Draw("COLZ");
+   det_avg_merge->Merge(det_avg_v);
+   c2->cd(2);
+   title = "Detector average merge";
+   det_avg_merge->SetTitle(title.c_str());
+   //det_avg_merge->SetContentToAverage(); // implicit
+   det_avg_merge->Draw("COLZ");
+
+   det_err_merge->Merge(det_avg_v);
+   c2->cd(3);
+   title = "Detector error merge";
+   det_err_merge->SetTitle(title.c_str());
+   det_err_merge->SetContentToError();
+   det_err_merge->Draw("COLZ");
+
 }

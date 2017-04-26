@@ -6,7 +6,7 @@ using namespace std;
 
 void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
 {
-   TCanvas *c1 = new TCanvas("c1", "4 Malfunctioning Panels", 900, 700);
+   TCanvas *c1 = new TCanvas("c1", "4 Malfunctioning Panels", 800, 400);
    c1->Divide(3, 1);
 
    // -------------------- Construct detector bins ------------------------
