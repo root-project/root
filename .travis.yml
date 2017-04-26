@@ -21,6 +21,9 @@ branches:
   only:
     - master
 
+# Without the top-level env, no job will be allowed to fail.
+env: # important!
+
 matrix:
   # Abort all builds on a single failing matrix entry.
   fast_finish: true
