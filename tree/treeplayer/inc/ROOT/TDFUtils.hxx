@@ -271,6 +271,8 @@ struct Histo1D {
 };
 struct Histo2D {
 };
+struct Histo3D {
+};
 struct Min {
 };
 struct Max {
