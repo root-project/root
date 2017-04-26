@@ -161,7 +161,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    c2->cd(2);
    title = "Detector average merge";
    det_avg_merge->SetTitle(title.c_str());
-   //det_avg_merge->SetContentToAverage(); // implicit
+   det_avg_merge->SetContentToAverage(); // implicit
    det_avg_merge->Draw("COLZ");
 
    det_err_merge->Merge(det_avg_v);
@@ -170,5 +170,4 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    det_err_merge->SetTitle(title.c_str());
    det_err_merge->SetContentToError();
    det_err_merge->Draw("COLZ");
-
 }
