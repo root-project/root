@@ -18,7 +18,7 @@ ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree 
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 if(fortran AND CMAKE_Fortran_COMPILER)
-  ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern)
+  ROOT_EXECUTABLE(g2root g2root.f LIBRARIES minicern ${CMAKE_Fortran_IMPLICIT_LINK_LIBRARIES})
   ROOT_EXECUTABLE(h2root h2root.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore Thread minicern)
 endif()
 
