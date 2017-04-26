@@ -1,6 +1,6 @@
 // @(#)Root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne, Jan Therhaag
-// Updated by: Omar Zapata
+// Updated by: Omar Zapata, Kim Albertsson
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
@@ -21,6 +21,7 @@
  *      Omar Zapata     <Omar.Zapata@cern.ch>    - UdeA/ITM Colombia              *
  *      Lorenzo Moneta  <Lorenzo.Moneta@cern.ch> - CERN, Switzerland              *
  *      Sergei Gleyzer  <Sergei.Gleyzer@cern.ch> - U of Florida & CERN            *
+ *      Kim Albertsson  <kim.albertsson@cern.ch> - LTU & CERN                     *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -761,37 +762,49 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
       return nullptr;
    }
 
-   std::vector<Float_t> mvaRes;
-   std::vector<Bool_t>  mvaResTypes;
-   TMVA::ROCCurve *rocCurve;
-   TGraph         *graph;
+   TMVA::ROCCurve *rocCurve = nullptr;
+   TGraph *graph = nullptr;
 
    if (this->fAnalysisType == Types::kClassification) {
-      
-      std::vector<Float_t> * rawMvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
-      mvaRes = *rawMvaRes;
 
-      std::vector<Bool_t> * rawMvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
-      mvaResTypes = *rawMvaResType;
+      std::vector<Float_t> *mvaRes = dynamic_cast<ResultsClassification *>(results)->GetValueVector();
+      std::vector<Bool_t> *mvaResType = dynamic_cast<ResultsClassification *>(results)->GetValueVectorTypes();
+      std::vector<Float_t> mvaResWeights;
+
+      auto eventCollection = dataset->GetEventCollection();
+      mvaResWeights.reserve(eventCollection.size());
+      for (auto ev : eventCollection) {
+         mvaResWeights.push_back(ev->GetWeight());
+      }
+
+      rocCurve = new TMVA::ROCCurve(*mvaRes, *mvaResType, mvaResWeights);
 
    } else if (this->fAnalysisType == Types::kMulticlass) {
+      std::vector<Float_t> mvaRes;
+      std::vector<Bool_t> mvaResTypes;
+      std::vector<Float_t> mvaResWeights;
+
       std::vector<std::vector<Float_t>> * rawMvaRes = dynamic_cast<ResultsMulticlass *>(results)->GetValueVector();
       
       // Vector transpose due to values being stored as 
       //    [ [0, 1, 2], [0, 1, 2], ... ]
       // in ResultsMulticlass::GetValueVector.
-      for (auto & item : *rawMvaRes) {
-         mvaRes.push_back( item[iClass] );
+      mvaRes.reserve(rawMvaRes->size());
+      for (auto item : *rawMvaRes) {
+         mvaRes.push_back(item[iClass]);
       }
 
       auto eventCollection = dataset->GetEventCollection();
+      mvaResTypes.reserve(eventCollection.size());
+      mvaResWeights.reserve(eventCollection.size());
       for (auto ev : eventCollection) {
-         mvaResTypes.push_back( ev->GetClass() == iClass );
+         mvaResTypes.push_back(ev->GetClass() == iClass);
+         mvaResWeights.push_back(ev->GetWeight());
       }
+
+      rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
    }
 
-   rocCurve = new TMVA::ROCCurve(mvaRes, mvaResTypes);
-   
    if ( ! rocCurve ) {
       Log() << kFATAL << Form("ROCCurve object was not created in Method = %s not found with Dataset = %s ", theMethodName.Data(), datasetname.Data()) << Endl;
       return nullptr;
@@ -801,9 +814,9 @@ TGraph* TMVA::Factory::GetROCCurve(TString datasetname, TString theMethodName, B
    delete rocCurve;
 
    if(setTitles) {
-        graph->GetYaxis()->SetTitle("Background Rejection");
-        graph->GetXaxis()->SetTitle("Signal Efficiency");
-        graph->SetTitle( Form( "Background Rejection vs. Signal Efficiency (%s)", theMethodName.Data() ) );
+      graph->GetYaxis()->SetTitle("Background rejection (Specificity)");
+      graph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
+      graph->SetTitle(Form("Signal efficiency vs. Background rejection (%s)", theMethodName.Data()));
    }
 
    return graph;
@@ -919,14 +932,14 @@ TCanvas * TMVA::Factory::GetROCCurve(TString datasetname, UInt_t iClass)
    TMultiGraph *multigraph = this->GetROCCurveAsMultiGraph(datasetname, iClass);
 
    if ( multigraph ) {
-      multigraph->Draw("AC");
+      multigraph->Draw("AL");
 
-      multigraph->GetYaxis()->SetTitle("Background Rejection");
-      multigraph->GetXaxis()->SetTitle("Signal Efficiency");
+      multigraph->GetYaxis()->SetTitle("Background rejection (Specificity)");
+      multigraph->GetXaxis()->SetTitle("Signal efficiency (Sensitivity)");
 
-      TString titleString = Form( "Background Rejection vs. Signal Efficiency");
+      TString titleString = Form("Signal efficiency vs. Background rejection");
       if (this->fAnalysisType == Types::kMulticlass) {
-         titleString = Form( "Background Rejection vs. Signal Efficiency (Class=%i)", iClass );
+         titleString = Form("%s (Class=%i)", titleString.Data(), iClass);
       }
 
       // Workaround for TMultigraph not drawing title correctly.
