@@ -5467,6 +5467,11 @@ void TTree::InitializeBranchLists(bool checkLeafCount)
       }
    }
 
+   // The special branch fBranchRef also needs to be processed sequentially
+   if (fBranchRef) {
+      fSeqBranches.push_back(fBranchRef);
+   }
+
    // Any branch that is not a leaf count can be safely processed in parallel when reading
    for (Int_t i = 0; i < nbranches; i++)  {
       Long64_t bbytes = 0;
