@@ -36,12 +36,6 @@ using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
 namespace ROOT {
 
 namespace Detail {
-// StringParameter<T> is a std::string for any type T
-template <typename T>
-using StringParameter = const std::string &;
-}
-
-namespace Detail {
 struct TDataFrameGuessedType {
 };
 }
