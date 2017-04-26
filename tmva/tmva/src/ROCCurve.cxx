@@ -48,12 +48,12 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
    assert(mvaValues.size() == mvaWeights.size());
 
    for (UInt_t i = 0; i < mvaValues.size(); i++) {
-      if (mvaTargets.at(i)) {
-         fMvaSignal.push_back(mvaValues.at(i));
-         fMvaSignalWeights.push_back(mvaWeights.at(i));
+      if (mvaTargets[i]) {
+         fMvaSignal.push_back(mvaValues[i]);
+         fMvaSignalWeights.push_back(mvaWeights[i]);
       } else {
-         fMvaBackground.push_back(mvaValues.at(i));
-         fMvaBackgroundWeights.push_back(mvaWeights.at(i));
+         fMvaBackground.push_back(mvaValues[i]);
+         fMvaBackgroundWeights.push_back(mvaWeights[i]);
       }
    }
 }
@@ -67,10 +67,10 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
    assert(mvaValues.size() == mvaTargets.size());
 
    for (UInt_t i = 0; i < mvaValues.size(); i++) {
-      if (mvaTargets.at(i)) {
-         fMvaSignal.push_back(mvaValues.at(i));
+      if (mvaTargets[i]) {
+         fMvaSignal.push_back(mvaValues[i]);
       } else {
-         fMvaBackground.push_back(mvaValues.at(i));
+         fMvaBackground.push_back(mvaValues[i]);
       }
    }
 }
@@ -110,19 +110,19 @@ TMVA::ROCCurve::~ROCCurve() {
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
+std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
 {
    if (num_points <= 2) {
       return {0.0, 1.0};
    }
 
    UInt_t num_divisions = num_points - 1;
-   std::vector<Float_t> specificity_vector;
+   std::vector<Double_t> specificity_vector;
    specificity_vector.push_back(0.0);
 
-   for (Float_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
-      Float_t false_positives = 0.0;
-      Float_t true_negatives = 0.0;
+   for (Double_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
+      Double_t false_positives = 0.0;
+      Double_t true_negatives = 0.0;
 
       for (size_t i = 0; i < fMvaBackground.size(); ++i) {
          auto value = fMvaBackground.at(i);
@@ -135,9 +135,9 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
          }
       }
 
-      Float_t total_background = false_positives + true_negatives;
-      Float_t specificity =
-         (total_background <= std::numeric_limits<Float_t>::min()) ? (0.0) : (true_negatives / total_background);
+      Double_t total_background = false_positives + true_negatives;
+      Double_t specificity =
+         (total_background <= std::numeric_limits<Double_t>::min()) ? (0.0) : (true_negatives / total_background);
 
       specificity_vector.push_back(specificity);
    }
@@ -149,19 +149,19 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-std::vector<Float_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
+std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
 {
    if (num_points <= 2) {
       return {1.0, 0.0};
    }
 
    UInt_t num_divisions = num_points - 1;
-   std::vector<Float_t> sensitivity_vector;
+   std::vector<Double_t> sensitivity_vector;
    sensitivity_vector.push_back(1.0);
 
-   for (Float_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
-      Float_t true_positives = 0.0;
-      Float_t false_negatives = 0.0;
+   for (Double_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
+      Double_t true_positives = 0.0;
+      Double_t false_negatives = 0.0;
 
       for (size_t i = 0; i < fMvaSignal.size(); ++i) {
          auto value = fMvaSignal.at(i);
@@ -174,9 +174,9 @@ std::vector<Float_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points)
          }
       }
 
-      Float_t total_signal = true_positives + false_negatives;
-      Float_t sensitivity =
-         (total_signal <= std::numeric_limits<Float_t>::min()) ? (0.0) : (true_positives / total_signal);
+      Double_t total_signal = true_positives + false_negatives;
+      Double_t sensitivity =
+         (total_signal <= std::numeric_limits<Double_t>::min()) ? (0.0) : (true_positives / total_signal);
       sensitivity_vector.push_back(sensitivity);
    }
 
@@ -192,12 +192,12 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
    auto sensitivity = ComputeSensitivity(num_points);
    auto specificity = ComputeSpecificity(num_points);
 
-   Float_t integral = 0;
+   Double_t integral = 0.0;
    for (UInt_t i = 0; i < sensitivity.size() - 1; i++) {
       // FNR, false negatigve rate = 1 - Sensitivity
-      Float_t fnrCurr = 1 - sensitivity[i];
-      Float_t fnrNext = 1 - sensitivity[i + 1];
-      integral += 0.5 * (fnrNext - fnrCurr) * (specificity[i] + specificity[i + 1]);
+      Double_t currFnr = 1 - sensitivity[i];
+      Double_t nextFnr = 1 - sensitivity[i + 1];
+      integral += 0.5 * (nextFnr - currFnr) * (specificity[i] + specificity[i + 1]);
    }
 
    return integral;
@@ -215,7 +215,7 @@ TGraph *TMVA::ROCCurve::GetROCCurve(const UInt_t num_points)
    auto sensitivity = ComputeSensitivity(num_points);
    auto specificity = ComputeSpecificity(num_points);
 
-   fGraph = new TGraph(sensitivity.size(), &specificity[0], &sensitivity[0]);
+   fGraph = new TGraph(sensitivity.size(), &sensitivity[0], &specificity[0]);
 
    return fGraph;
 }

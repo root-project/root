@@ -73,8 +73,8 @@ private:
    std::vector<Float_t> fMvaSignalWeights;
    std::vector<Float_t> fMvaBackgroundWeights;
 
-   std::vector<Float_t> ComputeSensitivity(const UInt_t num_points);
-   std::vector<Float_t> ComputeSpecificity(const UInt_t num_points);
+   std::vector<Double_t> ComputeSensitivity(const UInt_t num_points);
+   std::vector<Double_t> ComputeSpecificity(const UInt_t num_points);
 };
 }
 #endif
