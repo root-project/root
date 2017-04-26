@@ -22,7 +22,7 @@ branches:
     - master
 
 # Without the top-level env, no job will be allowed to fail.
-env: # important!
+env:
 
 matrix:
   # Abort all builds on a single failing matrix entry.
