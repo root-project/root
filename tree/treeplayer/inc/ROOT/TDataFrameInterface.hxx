@@ -600,68 +600,58 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a profile (*lazy action*)
-   /// \tparam B0 The type of the branch the values of which are used to fill the profile.
-   /// \tparam B1 The type of the branch the values of which are used to fill the profile.
+   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
+   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
-   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
+   /// \param[in] v1Name The name of the branch that will fill the x axis.
+   /// \param[in] v2Name The name of the branch that will fill the y axis.
    ///
-   /// The returned profile is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
-   template <typename B0, typename B1>
-   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &b0BranchName = "",
-                                            const std::string &b1BranchName = "")
+   /// The user gives up ownership of the model profile object.
+   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
+                                            const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TProfile>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<B0, B1>({b0BranchName, b1BranchName}, "fill the profile");
-      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
-      using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1>>;
-      auto df = GetDataFrameChecked();
-      auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
+      auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the 1D Profile");
+      return CreateAction<ROOT::Internal::ActionTypes::Profile1D, V1, V2>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a profile (*lazy action*)
-   /// \tparam B0 The type of the branch the values of which are used to fill the profile.
-   /// \tparam B1 The type of the branch the values of which are used to fill the profile.
+   /// \brief Fill and return a one-dimensional profile (*lazy action*)
+   /// \tparam V1 The type of the branch the values of which are used to fill the profile.
+   /// \tparam V2 The type of the branch the values of which are used to fill the profile.
    /// \tparam W The type of the branch the weights of which are used to fill the profile.
    /// \param[in] model The model to be considered to build the new return value.
-   /// \param[in] b0BranchName The name of the branch of which the x values are to be collected.
-   /// \param[in] b1BranchName The name of the branch of which the y values are to be collected.
-   /// \param[in] wBranchName The name of the branch of which the weight values are to be collected.
+   /// \param[in] v1Name The name of the branch that will fill the x axis.
+   /// \param[in] v2Name The name of the branch that will fill the y axis.
+   /// \param[in] wName The name of the branch that will provide the weights.
    ///
-   /// The returned profile is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
-   template <typename B0, typename B1, typename W>
-   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &b0BranchName = "",
-                                            const std::string &b1BranchName = "", const std::string &wBranchName = "")
+   /// The user gives up ownership of the model profile object.
+   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
+             typename W = ROOT::Detail::TDataFrameGuessedType>
+   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name,
+                                            const std::string &v2Name, const std::string &wName)
    {
       auto h = std::make_shared<::TProfile>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
-         throw std::runtime_error("Profiles with no axes limits are not supported yet.");
+         throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
-      auto bl = GetBranchNames<B0, B1, W>({b0BranchName, b1BranchName, wBranchName}, "fill the profile");
-      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
-      using DFA_t =
-         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<B0, B1, W>>;
-      auto df = GetDataFrameChecked();
-      auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
+      auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the 1D profile");
+      return CreateAction<ROOT::Internal::ActionTypes::Profile1D, V1, V2, W>(bl, h);
+   }
+
+   template <typename V1, typename V2, typename W>
+   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model)
+   {
+      return Profile1D<V1,V2,W>(std::move(model), "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -919,6 +909,18 @@ private:
                                            unsigned int nSlots, ROOT::Internal::ActionTypes::Histo3D *)
    {
       using Op_t = ROOT::Internal::Operations::FillTOOperation<::TH3F>;
+      using DFA_t =
+         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
+      auto df = GetDataFrameChecked();
+      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
+      return ROOT::Detail::MakeActionResultProxy(h, df);
+   }
+
+   template<typename...BranchTypes>
+   TActionResultProxy<::TProfile> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TProfile> &h,
+                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Profile1D *)
+   {
+      using Op_t = ROOT::Internal::Operations::FillTOOperation<::TProfile>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
       auto df = GetDataFrameChecked();
