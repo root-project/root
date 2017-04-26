@@ -16,10 +16,9 @@ ClassImp(TProfile2Poly)
 
 TProfile2PolyBin::TProfile2PolyBin()
 {
-   fSumv = 0;
    fSumw = 0;
    fSumvw = 0;
-   fSumv2 = 0;
+   fSumw2 = 0;
    fSumwv2 = 0;
    fError = 0;
    fAverage = 0;
@@ -27,10 +26,9 @@ TProfile2PolyBin::TProfile2PolyBin()
 
 TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin(poly, bin_number)
 {
-   fSumv = 0;
    fSumw = 0;
    fSumvw = 0;
-   fSumv2 = 0;
+   fSumw2 = 0;
    fSumwv2 = 0;
    fError = 0;
    fAverage = 0;
@@ -51,14 +49,14 @@ void TProfile2PolyBin::UpdateAverage()
 void TProfile2PolyBin::UpdateError()
 {
    if (fSumw != 0) fError = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
+   if (fErrorMode == kERRORMEAN) fError /= std::sqrt(GetEffectiveEntries());
 }
 
 void TProfile2PolyBin::ClearStats()
 {
-   fSumv = 0;
    fSumw = 0;
    fSumvw = 0;
-   fSumv2 = 0;
+   fSumw2 = 0;
    fSumwv2 = 0;
    fError = 0;
    fAverage = 0;
@@ -66,10 +64,9 @@ void TProfile2PolyBin::ClearStats()
 
 void TProfile2PolyBin::Fill(Double_t value, Double_t weight)
 {
-   fSumv += value;
    fSumw += weight;
    fSumvw += value * weight;
-   fSumv2 += value * value;
+   fSumw2 += weight * weight;
    fSumwv2 += weight * value * value;
    this->Update();
 }
@@ -220,15 +217,14 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
          sumv_acc += src->fSumv;
          sumw_acc += src->fSumw;
          sumvw_acc += src->fSumvw;
-         sumv2_acc += src->fSumv2;
+         sumv2_acc += src->fSumw2;
          sumwv2_acc += src->fSumwv2;
       }
 
       // add values of accumulation to existing histogram
-      dst->fSumv += sumv_acc;
       dst->fSumw += sumw_acc;
       dst->fSumvw += sumvw_acc;
-      dst->fSumv2 += sumv2_acc;
+      dst->fSumw2 += sumv2_acc;
       dst->fSumwv2 += sumwv2_acc;
 
       // update averages, errors
@@ -256,6 +252,14 @@ void TProfile2Poly::SetContentToError()
       bin->Update();
       bin->SetContent(bin->fError);
    }
+}
+
+Double_t TProfile2Poly::GetBinEffectiveEntries(Int_t binnr)
+{
+    //todo
+    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+    if (bin<0) return fOverflow[-bin - 1];
+    return ((TH2PolyBin*) fBins->At(bin-1))->GetContent();
 }
 
 void TProfile2Poly::printOverflowRegions()
@@ -319,4 +323,17 @@ Int_t TProfile2Poly::GetOverflowRegionFromCoordinates(Double_t x, Double_t y)
       region += 0;
 
    return region;
+}
+
+void TProfile2Poly::SetErrorOption(TProfile2Poly::EErrorProfileType type)
+{
+  fErrorMode = type;
+
+  TIter next(fBins);
+  TObject *obj;
+  TProfile2PolyBin *bin;
+  while ((obj = next())) {
+     bin = (TProfile2PolyBin *)obj;
+     bin->SetErrorOption(type);
+  }
 }
