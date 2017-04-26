@@ -157,9 +157,6 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor for this graph
-///
-/// This copy constructor does not copy the underlying histogram. Basic informations
-/// attached to it (like axis titles) will be lost after a copy.
 
 TGraph::TGraph(const TGraph &gr)
    : TNamed(gr), TAttLine(gr), TAttFill(gr), TAttMarker(gr)
@@ -168,7 +165,8 @@ TGraph::TGraph(const TGraph &gr)
    fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
-   fHistogram = 0;
+   if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
+   else fHistogram = 0;
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {

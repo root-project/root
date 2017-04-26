@@ -173,7 +173,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 - The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
   The following picture show the old and new version
 - `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
-
+- The `TGraph` copy constructor also copy the underlying `TH1F` if it exists (it
+  holds the axis titles).
 
 ![New box option for 3D histograms](NewBoxOption.png)
 
