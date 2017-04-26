@@ -52,8 +52,6 @@ FillOperation::FillOperation(const std::shared_ptr<Hist_t> &h, unsigned int nSlo
       Buf_t v;
       v.reserve(fBufSize);
       fBuffers.emplace_back(v);
-
-      Buf_t w(fBufSize, 1);
       fWBuffers.emplace_back(v);
    }
 }
@@ -74,7 +72,7 @@ void FillOperation::Exec(unsigned int slot, double v, double w)
 void FillOperation::Finalize()
 {
    for (unsigned int i = 0; i < fNSlots; ++i) {
-      if (fBuffers[i].size() != fBuffers[i].size()) {
+      if (!fWBuffers[i].empty() && fBuffers[i].size() != fWBuffers[i].size()) {
          throw std::runtime_error("Cannot fill weighted histogram with values in containers of different sizes.");
       }
    }
