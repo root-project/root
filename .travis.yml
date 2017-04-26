@@ -32,6 +32,7 @@ matrix:
     # Note: Workaround travis-ci/travis-ci#4681
     # Exclude default job which lacks our included environment variables.
     - os: linux
+    - env:
 
   include:
     # There seems to be a hard limit to how many machines a Travis build will
