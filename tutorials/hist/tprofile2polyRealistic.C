@@ -4,7 +4,7 @@
 #include <fstream>
 using namespace std;
 
-void tprofile2poly_realistic(Int_t numEvents=100000)
+void tprofile2polyRealistic(Int_t numEvents=100000)
 {
    int NUM_LS = 8;
    TCanvas *c1 = new TCanvas("c1", "moving charge", 900, 400);
@@ -42,7 +42,7 @@ void tprofile2poly_realistic(Int_t numEvents=100000)
    auto h2p = new TH2Poly();
    auto tp2p = new TProfile2Poly();
    ifstream infile;
-   infile.open("./tutorials/hist/TProfile2Poly/test_data/cms_forward3");
+   infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
 
    vector<pair<Double_t, Double_t>> allCoords;
    Double_t a, b;

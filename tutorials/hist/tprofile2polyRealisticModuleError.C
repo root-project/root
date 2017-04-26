@@ -4,7 +4,7 @@
 #include <fstream>
 using namespace std;
 
-void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
+void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
 {
    TCanvas *c1 = new TCanvas("c1", "4 Malfunctioning Panels", 800, 400);
    c1->Divide(3, 1);
@@ -15,7 +15,7 @@ void tprofile2poly_realistic_module_error(Int_t numEvents = 1000000)
    auto err = new TProfile2Poly();
 
    ifstream infile;
-   infile.open("./tutorials/hist/TProfile2Poly/test_data/cms_forward3");
+   infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
 
    vector<pair<Double_t, Double_t>> allCoords;
    Double_t a, b;
