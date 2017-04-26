@@ -186,8 +186,8 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the ROC integral (AUC)
-/// 
-/// @param num_points Granularity of the resulting curve used for integration. 
+///
+/// @param num_points Granularity of the resulting curve used for integration.
 ///                     The curve will be subdivided into num_points - 1 regions
 ///                     where the performance of the classifier is sampled.
 ///                     Larger number means more accurate, but more costly,
@@ -213,9 +213,9 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a new TGraph containing the ROC curve. Specificity is on the x-axis,
 /// sensitivity on the y-axis.
-/// 
-/// @param num_points Granularity of the resulting curve. The curve will be subdivided 
-///                     into num_points - 1 regions where the performance of the 
+///
+/// @param num_points Granularity of the resulting curve. The curve will be subdivided
+///                     into num_points - 1 regions where the performance of the
 ///                     classifier is sampled. Larger number means more accurate,
 ///                     but more costly, evaluation.
 TGraph *TMVA::ROCCurve::GetROCCurve(const UInt_t num_points)
