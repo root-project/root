@@ -20,6 +20,7 @@ cache:
 branches:
   only:
     - master
+    - Travis*
 
 # Without the top-level env, no job will be allowed to fail.
 env:
