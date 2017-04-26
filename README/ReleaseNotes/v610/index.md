@@ -172,9 +172,6 @@ The following interfaces have been removed, after deprecation in v6.08.
   anti-aliasing for filled area for the Cocoa backend. Default is `no`.
 - The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
   The following picture show the old and new version
-- `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
-- The `TGraph` copy constructor also copy the underlying `TH1F` if it exists (it
-  holds the axis titles).
 
 ![New box option for 3D histograms](NewBoxOption.png)
 
@@ -195,6 +192,11 @@ The following interfaces have been removed, after deprecation in v6.08.
    the axis title is automatically placed to avoid overlaps with the axis labels.
 - Implement the automatic placement of the `TLegend`. A new constructor not
   specifying the legend position is available. Only width and height are defined.
+- `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
+- The `TGraph` copy constructor also copy the underlying `TH1F` if it exists (it
+  holds the axis titles).
+- `TGraph` axis range was computed differently depending on the order of SetLog[x|y]"
+  This issue was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8751)
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
