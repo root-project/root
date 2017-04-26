@@ -2322,7 +2322,7 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
    clang::Module *module = moduleMap.findModule(moduleName);
 
    // Inform the user and abort if we can't find a module with a given name.
-   if (module == nullptr) {
+   if (!module) {
       ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
                               moduleName.c_str());
       return false;
