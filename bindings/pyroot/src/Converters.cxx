@@ -1619,7 +1619,11 @@ namespace {
       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
       NFp_t( "_object*",                  &CreatePyObjectConverter           ),
       NFp_t( "FILE*",                     &CreateVoidArrayConverter          ),
-      NFp_t( "Double32_t",                &CreateDoubleConverter             )
+      NFp_t( "Float16_t",                 &CreateFloatConverter              ),
+      NFp_t( "const Float16_t&",          &CreateConstFloatRefConverter      ),
+      NFp_t( "Double32_t",                &CreateDoubleConverter             ),
+      NFp_t( "Double32_t&",               &CreateDoubleRefConverter          ),
+      NFp_t( "const Double32_t&",         &CreateConstDoubleRefConverter     )
    };
    // clang-format on
 

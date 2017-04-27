@@ -840,8 +840,12 @@ namespace {
 
       NFp_t( "float",              &CreateFloatExecutor               ),
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
+      NFp_t( "Float16_t",          &CreateFloatExecutor               ),
+      NFp_t( "Float16_t&",         &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
+      NFp_t( "Double32_t",         &CreateDoubleExecutor              ),
+      NFp_t( "Double32_t&",        &CreateDoubleRefExecutor           ),
       NFp_t( "long double",        &CreateLongDoubleExecutor          ),   // TODO: lost precision
       NFp_t( "long double&",       &CreateLongDoubleRefExecutor       ),
       NFp_t( "void",               &CreateVoidExecutor                ),
