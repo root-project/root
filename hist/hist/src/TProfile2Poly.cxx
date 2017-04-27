@@ -55,7 +55,7 @@ void TProfile2PolyBin::UpdateError()
 
    switch (fErrorMode) {
    case kERRORMEAN:
-       fError /= std::sqrt(GetEffectiveEntries()) / tmp;
+       fError = std::sqrt(GetEffectiveEntries()) / tmp;
        break;
    case kERRORSPREAD:
        fError = tmp;
