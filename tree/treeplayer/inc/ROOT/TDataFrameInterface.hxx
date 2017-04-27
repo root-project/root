@@ -716,14 +716,24 @@ public:
    /// booked but not executed. See TActionResultProxy documentation.
    /// The user gives up ownership of the model object.
    /// It is compulsory to express the branches to be considered.
-   template <typename...BranchTypes, typename T>
+   template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
    TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
    {
       auto h = std::make_shared<T>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<ROOT::Internal::ActionTypes::Fill, BranchTypes...>(bl, h);
+      return CreateAction<ROOT::Internal::ActionTypes::Fill, FirstBranch, OtherBranches...>(bl, h);
+   }
+
+   template <typename T>
+   TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   {
+      auto h = std::make_shared<T>(model);
+      if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
+         throw std::runtime_error("The absence of axes limits is not supported yet.");
+      }
+      return CreateAction<ROOT::Internal::ActionTypes::Fill, ROOT::Detail::TDataFrameGuessedType>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
