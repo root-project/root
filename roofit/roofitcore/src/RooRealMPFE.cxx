@@ -555,48 +555,16 @@ void RooRealMPFE::serverLoop() {
       }
 
 
-      case EnableTimingNamedNumInt: {
-        std::string name;
-        *_pipe >> name;
-
-        _numIntSet.Print("v");
-        std::cout << "_numIntSet contains " << _numIntSet.getSize() << " elements in process " << getpid() << std::endl;
-
-        RooAbsArg * absArg = _numIntSet.find(name.c_str());
-        if (absArg) {
-          absArg->setAttribute("timing_on");
-        } else {
-          std::cout << "find for component " << name << " returned null pointer in process " << getpid() << "!" << std::endl;
-          msg = Terminate;
-        }
-
-        break;
-      }
-
-
-      case DisableTimingNamedNumInt: {
-        std::string name;
-        *_pipe >> name;
-
-        _numIntSet.find(name.c_str())->setAttribute("timing_on", kFALSE);
-
-        break;
-      }
-
-
       case EnableTimingNumInts: {
-        // This must be done server-side, otherwise you have to copy all timing_on flags to server manually anyway
+        // This must be done server-side, otherwise you have to copy all timing flags to server manually anyway
         // FIXME: make this more general than just RooAbsTestStatistic (when needed)
-        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_initNumIntSet();
-        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setTimingNumIntSet();
+        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setNumIntTimingInPdfs();
         break;
       }
 
 
       case DisableTimingNumInts: {
-        // This assumes _initNumIntSet to be run. If not, it will still iterate over the empty _numIntSet, which will
-        // do nothing, but that's fine, because apparently timing was not enabled.
-        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setTimingNumIntSet(kFALSE);
+        dynamic_cast<RooAbsTestStatistic*>(_arg.absArg())->_setNumIntTimingInPdfs(kFALSE);
         break;
       }
 
@@ -691,72 +659,6 @@ void RooRealMPFE::serverLoop() {
   }
 
 #endif // _WIN32
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find all numerical integrals in pdf given a set of observables
-
-void RooRealMPFE::_initNumIntSet(const RooArgSet& obs) {
-  // Get list of branch nodes in expression
-  RooArgSet blist;
-
-  // TODO: rewrite _initNumIntSet signature to take function ('real' in RATS::initMPMode where _initNumIntSet is called), so we don't have to assume RooAbsOptTestStatistic
-  // TODO: then replace ((RooAbsOptTestStatistic&)_arg.arg()).function() with that function.
-  ((RooAbsOptTestStatistic&)_arg.arg()).function().branchNodeServerList(&blist);
-
-  // Iterator over branch nodes
-  RooFIter iter = blist.fwdIterator();
-  RooAbsArg* node;
-  while((node = iter.next())) {
-    RooAbsPdf* pdfNode = dynamic_cast<RooAbsPdf*>(node);
-    if (!pdfNode) continue;
-    // Skip self-normalized nodes
-    if (pdfNode->selfNormalized()) continue;
-
-    // Retrieve normalization integral object for branch nodes that are pdfs
-    const RooAbsReal* normint = pdfNode->getNormIntegral(obs);
-    if (!normint) continue;
-
-    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
-    // Therefore: retrieve list of branch nodes of integral expression
-    RooArgList bi;
-    normint->branchNodeServerList(&bi);
-    RooFIter ibiter = bi.fwdIterator();
-    RooAbsArg* inode;
-    while((inode = ibiter.next())) {
-      // If a RooRealIntegal component is found...
-      if (inode->IsA() == RooRealIntegral::Class()) {
-        // Retrieve the number of real dimensions that is integrated numerically,
-        RooRealIntegral* rri = (RooRealIntegral*)inode;
-        Int_t numIntDim = rri->numIntRealVars().getSize();
-        // .. and add to list if numeric integration occurs
-        if (numIntDim > 0) {
-          _numIntSet.add(*rri);
-        }
-      }
-    }
-  }
-
-  ccoutD(Generation) << "RooRealMPFE::_initNumIntSet: found " << _numIntSet.getSize() << " numerical integrals. Process " << getpid() << std::endl;
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Activate timing in all NumIntSet integral nodes
-
-void RooRealMPFE::_setTimingNumIntSet(Bool_t flag) {
-  RooFIter iter = _numIntSet.fwdIterator();
-  if (flag == kTRUE) {
-    while(RooAbsArg* node = iter.next()) {
-      *_pipe << EnableTimingNamedNumInt << node->GetName();
-    }
-  } else if (flag == kFALSE) {
-    while(RooAbsArg* node = iter.next()) {
-      *_pipe << DisableTimingNamedNumInt << node->GetName();
-    }
-  }
 }
 
 
@@ -1354,8 +1256,6 @@ std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value){
     PROCESS_VAL(RooRealMPFE::DisableTimingNamedAbsArg);
     PROCESS_VAL(RooRealMPFE::MeasureCommunicationTime);
     PROCESS_VAL(RooRealMPFE::RetrieveTimings);
-    PROCESS_VAL(RooRealMPFE::EnableTimingNamedNumInt);
-    PROCESS_VAL(RooRealMPFE::DisableTimingNamedNumInt);
     PROCESS_VAL(RooRealMPFE::EnableTimingNumInts);
     PROCESS_VAL(RooRealMPFE::DisableTimingNumInts);
     PROCESS_VAL(RooRealMPFE::GetPID);

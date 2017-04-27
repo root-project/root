@@ -121,7 +121,8 @@ protected:
 
   Bool_t initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
-  void initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity = true, bool timeNumInts = true) ;
+  void initMPMode(RooAbsReal *real, RooAbsData *data, const RooArgSet *projDeps, const char *rangeName,
+                    const char *addCoefRangeName, bool cpu_affinity);
 
   mutable Bool_t _init ;          //! Is object initialized  
   GOFOpMode   _gofOpMode ;        // Operation mode of test statistic instance 
@@ -147,12 +148,8 @@ protected:
   mutable Double_t _evalCarry; //! carry of Kahan sum in evaluatePartition
 
 private:
-  void _collectNumIntSetTimings(Bool_t clear_timings = kTRUE) const;
+  void _collectNumIntTimings(Bool_t clear_timings = kTRUE) const;
 
-  void _initNumIntSet();
-  RooArgSet _numIntSet;
-
-  void _setTimingNumIntSet(Bool_t flag = kTRUE);
   void _setNumIntTimingInPdfs(Bool_t flag = kTRUE);
 
   ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics

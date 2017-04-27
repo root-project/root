@@ -1028,13 +1028,12 @@ Double_t RooRealIntegral::evaluate() const
 
   if (_timeNumInt) {
     timer.stop();
-//    std::cout << "timed integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " on process " << getpid() << ", yay! Timing: " << timer.timing_s() << "s" << std::endl;
-    std::cout << timer.timing_s() << "s for integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " on process " << getpid() << std::endl;
     timer.store_timing_in_RooTrace(GetName());
-  } else {
-    std::cout << "did not time integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " which is a " << ClassName()
-              << " on process " << getpid() << ", boohoo" << std::endl;
   }
+//  } else {
+//    std::cout << "did not time integral " << GetName() << " at " << this << " with _function.absArg() " << _function.absArg() << " which is a " << ClassName()
+//              << " on process " << getpid() << ", boohoo" << std::endl;
+//  }
 
   return retVal ;
 }

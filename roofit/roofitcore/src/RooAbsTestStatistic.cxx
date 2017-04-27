@@ -359,7 +359,9 @@ Double_t RooAbsTestStatistic::evaluate() const
       timing_outfile.close();
     }
 
-    _collectNumIntSetTimings();
+    if (RooTrace::time_numInts() == kTRUE) {
+      _collectNumIntTimings();
+    }
 
     return ret ;
 
@@ -438,66 +440,20 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
-//  if (RooTrace::time_numIntSet()) {
-//    _initNumIntSet();
-//    _setTimingNumIntSet();
-//  }
+  if ((MPMaster != _gofOpMode) && (RooTrace::time_numInts() == kTRUE)) {
+    // in single-process mode, activate numerical integral timing on the local process
+    // for multi-process mode, this is called from RooRealMPFE::setTimingNumInts in initMPMode
+    _setNumIntTimingInPdfs();
+  }
 
   if (MPMaster == _gofOpMode) {
-    initMPMode(_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
+    initMPMode(_func, _data, _projDeps, _rangeName.size() ? _rangeName.c_str() : 0,
+               _addCoefRangeName.size() ? _addCoefRangeName.c_str() : 0, false);
   } else if (SimMaster == _gofOpMode) {
     initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   }
   _init = kTRUE;
   return kFALSE;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find all numerical integrals in pdf given a set of observables
-
-void RooAbsTestStatistic::_initNumIntSet() {
-  // Get list of branch nodes in expression
-  RooArgSet blist;
-
-  _func->branchNodeServerList(&blist);
-
-  // Iterator over branch nodes
-  RooFIter iter = blist.fwdIterator();
-  RooAbsArg* node;
-  while((node = iter.next())) {
-    RooAbsPdf* pdfNode = dynamic_cast<RooAbsPdf*>(node);
-    if (!pdfNode) continue;
-    // Skip self-normalized nodes
-    if (pdfNode->selfNormalized()) continue;
-
-    // Retrieve normalization integral object for branch nodes that are pdfs
-    const RooAbsReal* normint = pdfNode->getNormIntegral(*(_data->get()));
-    if (!normint) continue;
-
-    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
-    // Therefore: retrieve list of branch nodes of integral expression
-    RooArgList bi;
-    normint->branchNodeServerList(&bi);
-    RooFIter ibiter = bi.fwdIterator();
-    RooAbsArg* inode;
-    while((inode = ibiter.next())) {
-      // If a RooRealIntegal component is found...
-      if (inode->IsA() == RooRealIntegral::Class()) {
-        // Retrieve the number of real dimensions that is integrated numerically,
-        RooRealIntegral* rri = (RooRealIntegral*)inode;
-        Int_t numIntDim = rri->numIntRealVars().getSize();
-        // .. and add to list if numeric integration occurs
-        if (numIntDim > 0) {
-          _numIntSet.add(*rri);
-        }
-      }
-    }
-  }
-
-  ccoutD(Generation) << "RooAbsTestStatistic::_initNumIntSet: found " << _numIntSet.getSize()
-                     << " numerical integral(s). Process " << getpid() << std::endl;
-
 }
 
 
@@ -599,7 +555,8 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 /// Initialize multi-processor calculation mode. Create component test statistics in separate
 /// processed that are connected to this process through a RooAbsRealMPFE front-end class.
 
-void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName, bool cpu_affinity, bool timeNumInts)
+void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const RooArgSet *projDeps, const char *rangeName,
+                                     const char *addCoefRangeName, bool cpu_affinity)
 {
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
@@ -624,17 +581,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
       _mpfeArray[i]->setCpuAffinity(i);
     }
 
-//    if (timeNumInts) {
-      // FIXME
-      // Seems wasteful to initialize the NumIntSet for each mpfeArray, but it should contain the MPFE-local nodes,
-      // so I'm not sure whether it would be a lot faster to create this list in RATS, because then you would also
-      // have to reinitialize the list in each MPFE but then with the MPFE-local nodes again, meaning you will have to
-      // do name lookups in MPFE...
-//      _mpfeArray[i]->_initNumIntSet(*(data->get()));
-//      _mpfeArray[i]->_setTimingNumIntSet();
-//    }
-
-    if (RooTrace::time_numIntSet()) {
+    if (RooTrace::time_numInts() == kTRUE) {
       _mpfeArray[i]->setTimingNumInts();
     }
   }
@@ -644,24 +591,6 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal* real, RooAbsData* data, const R
   return ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Activate timing in all NumIntSet integral nodes
-
-void RooAbsTestStatistic::_setTimingNumIntSet(Bool_t flag) {
-  RooFIter iter = _numIntSet.fwdIterator();
-
-  if (flag == kTRUE) {
-    while(RooAbsArg* node = iter.next()) {
-      std::cout << "setting timing_on in integral " << node->GetName() << " at " << node
-                << " which is a " << node->ClassName() << " on process " << getpid() << std::endl;
-      node->setAttribute("timing_on");
-    }
-  } else if (flag == kFALSE) {
-    while(RooAbsArg* node = iter.next()) {
-      node->setAttribute("timing_on", kFALSE);
-    }
-  }
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Activate timing of numerical integral normalization terms in the pdf.
@@ -693,21 +622,6 @@ void RooAbsTestStatistic::_setNumIntTimingInPdfs(Bool_t flag) {
     if (!normint) continue;
 
     normint->activateTimingNumInts();
-//    // Integral expressions can be composite objects (in case of disjoint normalization ranges)
-//    // Therefore: retrieve list of branch nodes of integral expression
-//    RooArgList bi;
-//    normint->branchNodeServerList(&bi);
-//    RooFIter ibiter = bi.fwdIterator();
-//    RooAbsArg* inode;
-//    while((inode = ibiter.next())) {
-//      // If a RooRealIntegal component is found...
-//      if (inode->IsA() == RooRealIntegral::Class()) {
-//        // Retrieve the number of real dimensions that is integrated numerically,
-//        RooRealIntegral* rri = (RooRealIntegral*)inode;
-//        rri->setNumIntTiming(flag);
-//      }
-//    }
-
   }
 }
 
@@ -941,9 +855,9 @@ Double_t RooAbsTestStatistic::getCarry() const
 { return _evalCarry; }
 
 
-void RooAbsTestStatistic::_collectNumIntSetTimings(Bool_t clear_timings) const {
+void RooAbsTestStatistic::_collectNumIntTimings(Bool_t clear_timings) const {
   ofstream timing_outfile;
-  timing_outfile.open("timings_NumIntSet.json", ios::app);
+  timing_outfile.open("timings_numInts.json", ios::app);
 
   for (Int_t i = 0; i < _nCPU; ++i) {
     auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);

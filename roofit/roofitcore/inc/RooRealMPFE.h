@@ -68,7 +68,6 @@ public:
     SetCpuAffinity,
     EnableTimingRATS, DisableTimingRATS,
     EnableTimingNamedAbsArg, DisableTimingNamedAbsArg,
-    EnableTimingNamedNumInt, DisableTimingNamedNumInt,
     EnableTimingNumInts, DisableTimingNumInts,
     MeasureCommunicationTime,
     RetrieveTimings,
@@ -110,16 +109,10 @@ private:
   RooArgSet* _components = 0;
   RooAbsArg* _findComponent(std::string name);
 
-  RooArgSet _numIntSet;
-
-  void _initNumIntSet(const RooArgSet& obs);
-  void _setTimingNumIntSet(Bool_t flag = kTRUE);
-
-  std::map<std::string, double> collectTimingsFromServer(Bool_t clear_timings = kTRUE) const;
-
   void _time_communication_overhead() const;
 
   void setTimingNumInts(Bool_t flag = kTRUE);
+  std::map<std::string, double> collectTimingsFromServer(Bool_t clear_timings = kTRUE) const;
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };

@@ -55,10 +55,11 @@ public:
   // TODO: for windows version, change to private _timing_flag and use public method that returns its value
   static int timing_flag;
 
-  static Bool_t time_numIntSet();
+  static Bool_t time_numInts();
+  static void set_time_numInts(Bool_t flag);
 
 private:
-  static Bool_t _time_numIntSet;
+  static Bool_t _time_numInts;
 
 protected:
 

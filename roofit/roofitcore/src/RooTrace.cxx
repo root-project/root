@@ -331,8 +331,12 @@ std::map<std::string,double> RooTrace::objectTiming;
 /// 10: time communication overhead
 int RooTrace::timing_flag = 0;
 
-Bool_t RooTrace::time_numIntSet() {
-  return _time_numIntSet;
+Bool_t RooTrace::time_numInts() {
+  return _time_numInts;
 }
 
-Bool_t RooTrace::_time_numIntSet = true;
+void RooTrace::set_time_numInts(Bool_t flag) {
+  _time_numInts = flag;
+}
+
+Bool_t RooTrace::_time_numInts = kFALSE;
