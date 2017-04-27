@@ -2,6 +2,9 @@
 #include "TH1F.h"
 #include "TH2F.h"
 #include "TH3F.h"
+#include "TH1D.h"
+#include "TH1I.h"
+#include "TH2D.h"
 #include "TProfile.h"
 #include "TProfile2D.h"
 #include "TTree.h"
@@ -17,6 +20,7 @@ int main() {
    t.Branch("w", &w);
    t.Fill();
 
+   std::cout << "histo1D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d1(t, {"v1", "w"});
    // histogram w/o weights -- these calls are all equivalent
    std::vector<ROOT::Experimental::TActionResultProxy<TH1F>> results1D;
@@ -45,6 +49,7 @@ int main() {
    // TODO throughout the test the model histogram/profiles are moved multiple times. This is safe, because histograms
    // and profiles do not actually invalidate anything when move-constructed. If this changes in the future, each one
    // of the calls to Histo* and Profile* actions should provide a different model.
+   std::cout << "histo2D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d2(t, {"v1", "v2", "w"});
    // histo2D w/o weights
    std::vector<ROOT::Experimental::TActionResultProxy<TH2F>> results2D;
@@ -70,6 +75,7 @@ int main() {
       std::cout << res->GetEntries() << " " << res->GetMean(1) << " " << res->GetMean(2) << std::endl;
 
 
+   std::cout << "histo3D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d3(t, {"v1", "v2", "v3", "w"});
    // Histo3D w/o weights
    std::vector<ROOT::Experimental::TActionResultProxy<TH3F>> results3D;
@@ -102,6 +108,7 @@ int main() {
       std::cout << res->GetEntries() << " " << res->GetMean(1) << " " << res->GetMean(2) << " " << res->GetMean(3)
                 << std::endl;
 
+   std::cout << "Profile1D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d4(t, {"v1", "v2", "w"});
    // Profile1D w/o weights
    std::vector<ROOT::Experimental::TActionResultProxy<TProfile>> resultsProf1D;
@@ -127,6 +134,7 @@ int main() {
       std::cout << res->GetEntries() << " " << res->GetMean(1) << " " << res->GetMean(2) << std::endl;
 
 
+   std::cout << "Profile2D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d5(t, {"v1", "v2", "v3", "w"});
    // Profile2D w/ weights
    std::vector<ROOT::Experimental::TActionResultProxy<TProfile2D>> resultsProf2D;
@@ -158,6 +166,22 @@ int main() {
    for(auto& res : resultsProf2D)
       std::cout << res->GetEntries() << " " << res->GetMean(1) << " " << res->GetMean(2) << " " << res->GetMean(3)
                 << std::endl;
+
+   std::cout << "Fill" << std::endl;
+   // Fill
+   ROOT::Experimental::TDataFrame d6(t);
+   auto fill1 = d6.Fill<int>(TH1D("", "", 64, 0, 128), {"v1"});
+   auto fill2 = d6.Fill(TH1D("", "", 64, 0, 128), {"v1"});
+   auto fill3 = d6.Fill<int,double>(TH1I("", "", 64, 0, 128), {"v1","w"});
+   auto fill4 = d6.Fill(TH1I("", "", 64, 0, 128), {"v1","w"});
+   auto fill5 = d6.Fill<int, int>(TH2D("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
+   auto fill6 = d6.Fill(TH2D("", "", 64, 0, 128, 64, 0, 1024), {"v1", "v2"});
+   std::cout << fill1->GetEntries() << " " << fill1->GetMean() << std::endl;
+   std::cout << fill2->GetEntries() << " " << fill2->GetMean() << std::endl;
+   std::cout << fill3->GetEntries() << " " << fill3->GetMean() << std::endl;
+   std::cout << fill4->GetEntries() << " " << fill4->GetMean() << std::endl;
+   std::cout << fill5->GetEntries() << " " << fill5->GetMean(1) << " " << fill5->GetMean(2) << std::endl;
+   std::cout << fill6->GetEntries() << " " << fill6->GetMean(1) << " " << fill6->GetMean(2) << std::endl;
 
    return 0;
 }
