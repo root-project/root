@@ -18,7 +18,7 @@ void timer()
    if (COMM_WORLD.GetRank() == 0) {
       TCanvas *c = new TCanvas("times");
       hist->Draw();
-      c->SaveAs("times.png");
+      c->SaveAs("times.C");
       timer.Sleep(30000);
    }
 }

@@ -6,11 +6,12 @@ using namespace ROOT::Mpi;
 void ping()
 {
    TEnvironment env;          //environment to start communication system
-   env.SyncOutput();
 
    if (COMM_WORLD.GetSize() != 2) {
-      env.Finalize();
+      std::cout << "RUN ONLY WITH TWO PROCESS!!" << std::endl;
+      COMM_WORLD.Abort(ERR_SIZE);
    }
+   env.SyncOutput();
 
    Float_t elements[10];
    TH1F *msgh;  //Serialized message size in Kb
