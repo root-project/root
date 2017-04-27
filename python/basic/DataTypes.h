@@ -79,7 +79,9 @@ public:
     Long64_t             get_long64();
     ULong64_t            get_ulong64();
     float                get_float();
+    Float16_t            get_float16();
     double               get_double();
+    Double32_t           get_double32();
     long double          get_ldouble();
     EWhat                get_enum();
     void*                get_voidp();
@@ -127,7 +129,9 @@ public:
     const Long64_t&           get_long64_cr();
     const ULong64_t&          get_ulong64_cr();
     const float&              get_float_cr();
+    const Float16_t&          get_float16_cr();
     const double&             get_double_cr();
+    const Double32_t&         get_double32_cr();
     const long double&        get_ldouble_cr();
     const EWhat&              get_enum_cr();
 
@@ -147,7 +151,9 @@ public:
     Long64_t&           get_long64_r();
     ULong64_t&          get_ulong64_r();
     float&              get_float_r();
+    Float16_t&          get_float16_r();
     double&             get_double_r();
+    Double32_t&         get_double32_r();
     long double&        get_ldouble_r();
     EWhat&              get_enum_r();
 
@@ -167,7 +173,9 @@ public:
     void set_long64(Long64_t);
     void set_ulong64(ULong64_t);
     void set_float(float);
+    void set_float16(Float16_t);
     void set_double(double);
+    void set_double32(Double32_t);
     void set_ldouble(long double);
     void set_enum(EWhat);
     void set_voidp(void*);
@@ -199,7 +207,9 @@ public:
     void set_long64_cr(const Long64_t&);
     void set_ulong64_cr(const ULong64_t&);
     void set_float_cr(const float&);
+    void set_float16_cr(const Float16_t&);
     void set_double_cr(const double&);
+    void set_double32_cr(const Double32_t&);
     void set_ldouble_cr(const long double&);
     void set_enum_cr(const EWhat&);
 
@@ -243,7 +253,9 @@ public:
     Long64_t             m_long64;
     ULong64_t            m_ulong64;
     float                m_float;
+    Float16_t            m_float16;
     double               m_double;
+    Double32_t           m_double32;
     long double          m_ldouble;
     EWhat                m_enum;
     void*                m_voidp;
@@ -289,7 +301,9 @@ public:
     static Long64_t                s_long64;
     static ULong64_t               s_ulong64;
     static float                   s_float;
+    static Float16_t               s_float16;
     static double                  s_double;
+    static Double32_t              s_double32;
     static long double             s_ldouble;
     static EWhat                   s_enum;
     static void*                   s_voidp;
@@ -321,7 +335,9 @@ extern unsigned long long g_ullong;
 extern Long64_t           g_long64;
 extern ULong64_t          g_ulong64;
 extern float              g_float;
+extern Float16_t          g_float16;
 extern double             g_double;
+extern Double32_t         g_double32;
 extern long double        g_ldouble;
 extern EFruit             g_enum;
 extern void*              g_voidp;
@@ -341,7 +357,9 @@ static const unsigned long long g_c_ullong  =  399ull;
 static const Long64_t           g_c_long64  = -499ll;
 static const ULong64_t          g_c_ulong64 =  499ull;
 static const float              g_c_float   = -599.f;
+static const Float16_t          g_c_float16 = -599.f;
 static const double             g_c_double  = -699.;
+static const Double32_t         g_c_double32= -699.;
 static const long double        g_c_ldouble = -799.l;
 static const EFruit             g_c_enum    = kApple;
 static const void*              g_c_voidp   = nullptr;

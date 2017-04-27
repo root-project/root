@@ -74,9 +74,15 @@ class TestClassDATATYPES:
         assert round(c.m_float          + 66.,  5) == 0
         assert round(c.get_float_cr()   + 66.,  5) == 0
         assert round(c.get_float_r()    + 66.,  5) == 0
+        assert round(c.m_float16        - 16.,  5) == 0
+        assert round(c.get_float16_cr() - 16.,  5) == 0
+        assert round(c.get_float16_r()  - 16.,  5) == 0
         assert round(c.m_double         + 77., 11) == 0
         assert round(c.get_double_cr()  + 77., 11) == 0
         assert round(c.get_double_r()   + 77., 11) == 0
+        assert round(c.m_double32       - 32., 11) == 0
+        assert round(c.get_double32_cr()  - 32., 11) == 0
+        assert round(c.get_double32_r()   - 32., 11) == 0
         assert round(c.m_ldouble        + 88., 24) == 0
         assert round(c.get_ldouble_cr() + 88., 24) == 0
         assert round(c.get_ldouble_r()  + 88., 24) == 0
@@ -213,16 +219,24 @@ class TestClassDATATYPES:
 
         # float types through functions
         c.set_float(0.123);   assert round(c.get_float()   - 0.123,  5) == 0
+        #c.set_float16(0.123); assert round(c.get_float16() - 0.123,  5) == 0
         c.set_double(0.456);  assert round(c.get_double()  - 0.456, 11) == 0
+        c.set_double32(0.456);assert round(c.get_double32()- 0.456, 11) == 0
         c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 24) == 0
 
         # float types through data members
         c.m_float = 0.123;       assert round(c.get_float()   - 0.123,  5) == 0
         c.set_float(0.234);      assert round(c.m_float       - 0.234,  5) == 0
         c.set_float_cr(0.456);   assert round(c.m_float       - 0.456,  5) == 0
+        c.m_float16 = 0.123;     assert round(c.get_float16() - 0.123,  5) == 0
+        c.set_float16(0.234);    assert round(c.m_float16     - 0.234,  5) == 0
+        c.set_float16_cr(0.456); assert round(c.m_float16     - 0.456,  5) == 0
         c.m_double = 0.678;      assert round(c.get_double()  - 0.678, 11) == 0
         c.set_double(0.890);     assert round(c.m_double      - 0.890, 11) == 0
         c.set_double_cr(0.012);  assert round(c.m_double      - 0.012, 11) == 0
+        c.m_double32 = 0.678;    assert round(c.get_double32()- 0.678, 11) == 0
+        c.set_double32(0.890);   assert round(c.m_double32    - 0.890, 11) == 0
+        c.set_double32_cr(0.012);assert round(c.m_double32    - 0.012, 11) == 0
         c.m_ldouble = 0.345;     assert round(c.get_ldouble() - 0.345, 24) == 0
         c.set_ldouble(0.678);    assert round(c.m_ldouble     - 0.678, 24) == 0
         c.set_ldouble_cr(0.902); assert round(c.m_ldouble     - 0.902, 24) == 0
@@ -338,8 +352,12 @@ class TestClassDATATYPES:
         # floating point types
         assert round(CppyyTestData.s_float   + 606.,  5) == 0
         assert round(c.s_float               + 606.,  5) == 0
+        assert round(CppyyTestData.s_float16 + 116.,  5) == 0
+        assert round(c.s_float16             + 116.,  5) == 0
         assert round(CppyyTestData.s_double  + 707., 11) == 0
         assert round(c.s_double              + 707., 11) == 0
+        assert round(CppyyTestData.s_double32+ 132., 11) == 0
+        assert round(c.s_double32            + 132., 11) == 0
         assert round(CppyyTestData.s_ldouble + 808., 24) == 0
         assert round(c.s_ldouble             + 808., 42) == 0
 

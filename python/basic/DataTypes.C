@@ -23,7 +23,9 @@ CppyyTestData::CppyyTestData() : m_owns_arrays(false)
     m_long64  = -55ll;
     m_ulong64 =  55ull;
     m_float   = -66.f;
+    m_float16   = 16.f;
     m_double  = -77.;
+    m_double32  = 32.;
     m_ldouble = -88.l;
     m_enum    = kNothing;
     m_voidp   = (void*)0;
@@ -107,7 +109,9 @@ unsigned long long   CppyyTestData::get_ullong()  { return m_ullong; }
 Long64_t             CppyyTestData::get_long64()  { return m_long64; }
 ULong64_t            CppyyTestData::get_ulong64() { return m_ulong64; }
 float                CppyyTestData::get_float()   { return m_float; }
+Float16_t            CppyyTestData::get_float16() { return m_float16; }
 double               CppyyTestData::get_double()  { return m_double; }
+Double32_t           CppyyTestData::get_double32(){ return m_double32; }
 long double          CppyyTestData::get_ldouble() { return m_ldouble; }
 CppyyTestData::EWhat CppyyTestData::get_enum()    { return m_enum; }
 void*                CppyyTestData::get_voidp()   { return m_voidp; }
@@ -155,7 +159,9 @@ const unsigned long long&   CppyyTestData::get_ullong_cr()  { return m_ullong; }
 const Long64_t&             CppyyTestData::get_long64_cr()  { return m_long64; }
 const ULong64_t&            CppyyTestData::get_ulong64_cr() { return m_ulong64; }
 const float&                CppyyTestData::get_float_cr()   { return m_float; }
+const Float16_t&            CppyyTestData::get_float16_cr() { return m_float16; }
 const double&               CppyyTestData::get_double_cr()  { return m_double; }
+const Double32_t&           CppyyTestData::get_double32_cr(){ return m_double32; }
 const long double&          CppyyTestData::get_ldouble_cr() { return m_ldouble; }
 const CppyyTestData::EWhat& CppyyTestData::get_enum_cr()    { return m_enum; }
 
@@ -175,7 +181,9 @@ unsigned long long&   CppyyTestData::get_ullong_r()  { return m_ullong; }
 Long64_t&             CppyyTestData::get_long64_r()  { return m_long64; }
 ULong64_t&            CppyyTestData::get_ulong64_r() { return m_ulong64; }
 float&                CppyyTestData::get_float_r()   { return m_float; }
+Float16_t&            CppyyTestData::get_float16_r() { return m_float16; }
 double&               CppyyTestData::get_double_r()  { return m_double; }
+Double32_t&           CppyyTestData::get_double32_r(){ return m_double32; }
 long double&          CppyyTestData::get_ldouble_r() { return m_ldouble; }
 CppyyTestData::EWhat& CppyyTestData::get_enum_r()    { return m_enum; }
 
@@ -195,7 +203,9 @@ void CppyyTestData::set_ullong(unsigned long long ull)     { m_ullong  = ull; }
 void CppyyTestData::set_long64(Long64_t l64)               { m_long64  = l64; }
 void CppyyTestData::set_ulong64(ULong64_t ul64)            { m_ulong64 = ul64; }
 void CppyyTestData::set_float(float f)                     { m_float   = f; }
+void CppyyTestData::set_float16(Float16_t f)               { m_float16   = f; }
 void CppyyTestData::set_double(double d)                   { m_double  = d; }
+void CppyyTestData::set_double32(Double32_t d)             { m_double32  = d; }
 void CppyyTestData::set_ldouble(long double ld)            { m_ldouble = ld; }
 void CppyyTestData::set_enum(EWhat w)                      { m_enum    = w; }
 void CppyyTestData::set_voidp(void* p)                     { m_voidp   = p; }
@@ -228,7 +238,9 @@ void CppyyTestData::set_ullong_cr(const unsigned long long& ull) { m_ullong  = u
 void CppyyTestData::set_long64_cr(const Long64_t& l64)           { m_long64  = l64; }
 void CppyyTestData::set_ulong64_cr(const ULong64_t& ul64)        { m_ulong64 = ul64; }
 void CppyyTestData::set_float_cr(const float& f)                 { m_float   = f; }
+void CppyyTestData::set_float16_cr(const Float16_t& f)           { m_float16 = f; }
 void CppyyTestData::set_double_cr(const double& d)               { m_double  = d; }
+void CppyyTestData::set_double32_cr(const Double32_t& d)         { m_double32= d; }
 void CppyyTestData::set_ldouble_cr(const long double& ld)        { m_ldouble = ld; }
 void CppyyTestData::set_enum_cr(const EWhat& w)                  { m_enum    = w; }
 
@@ -258,7 +270,9 @@ unsigned long long   CppyyTestData::s_ullong  =  404ull;
 Long64_t             CppyyTestData::s_long64  = -505ll;
 ULong64_t            CppyyTestData::s_ulong64 = 505ull;
 float                CppyyTestData::s_float   = -606.f;
+Float16_t            CppyyTestData::s_float16 = -116.f;
 double               CppyyTestData::s_double  = -707.;
+Double32_t           CppyyTestData::s_double32= -132.;
 long double          CppyyTestData::s_ldouble = -808.l;
 CppyyTestData::EWhat CppyyTestData::s_enum    = CppyyTestData::kNothing;
 void*                CppyyTestData::s_voidp   = (void*)0;
@@ -301,7 +315,9 @@ unsigned long long g_ullong   =  388ull;
 Long64_t           g_long64   = -488ll;
 ULong64_t          g_ulong64  =  488ull;
 float              g_float    = -588.f;
+Float16_t          g_float16  = -16.f;
 double             g_double   = -688.;
+Double32_t         g_double32 = -32.;
 long double        g_ldouble  = -788.l;
 EFruit             g_enum     = kBanana;
 void*              g_voidp    = nullptr;
