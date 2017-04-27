@@ -859,20 +859,35 @@ void RooAbsTestStatistic::_collectNumIntTimings(Bool_t clear_timings) const {
   ofstream timing_outfile;
   timing_outfile.open("timings_numInts.json", ios::app);
 
-  for (Int_t i = 0; i < _nCPU; ++i) {
-    auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);
-    pid_t pid = _mpfeArray[i]->getPIDFromServer();
-    for (auto it = timings.begin(); it != timings.end(); ++it) {
+  if (MPMaster == _gofOpMode) {
+    for (Int_t i = 0; i < _nCPU; ++i) {
+      auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);
+      pid_t pid = _mpfeArray[i]->getPIDFromServer();
+      for (auto it = timings.begin(); it != timings.end(); ++it) {
+        std::string name = it->first;
+        double timing_s = it->second;
+        timing_outfile << "{\"wall_s\": \"" << timing_s
+                       << "\", \"name\": \"" << name
+                       << "\", \"ix_cpu\": \"" << i
+                       << "\", \"pid\": \"" << pid
+                       << "\", \"ppid\": \"" << getpid()  // ppid of servers is pid of master/client process
+                       << "\"}," << "\n";
+      }
+    }
+  } else {
+    pid_t pid = getpid();
+    for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
       std::string name = it->first;
       double timing_s = it->second;
       timing_outfile << "{\"wall_s\": \"" << timing_s
                      << "\", \"name\": \"" << name
-                     << "\", \"ix_cpu\": \"" << i
                      << "\", \"pid\": \"" << pid
                      << "\"}," << "\n";
+    }
+    if (clear_timings == kTRUE) {
+      RooTrace::objectTiming.clear();
     }
   }
 
   timing_outfile.close();
-
 }
