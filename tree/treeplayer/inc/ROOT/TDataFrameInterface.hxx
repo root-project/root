@@ -707,31 +707,23 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return any entity with a Fill method (*lazy action*)
-   /// \tparam BRANCHTYPES The types of the branches the values of which are used to fill the object.
+   /// \tparam BranchTypes The types of the branches the values of which are used to fill the object.
    /// \param[in] model The model to be considered to build the new return value.
    /// \param[in] bl The name of the branches read to fill the object.
    ///
    /// The returned object is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TActionResultProxy documentation.
-   /// The user renounces to the ownership of the model. The value to be used is the
-   /// returned one.
+   /// The user gives up ownership of the model object.
    /// It is compulsory to express the branches to be considered.
-   template <typename... BRANCHTYPES, typename T>
+   template <typename...BranchTypes, typename T>
    TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
    {
       auto h = std::make_shared<T>(model);
       if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      using Op_t = ROOT::Internal::Operations::FillTOOperation<T>;
-      using DFA_t =
-         ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BRANCHTYPES...>>;
-      auto df = GetDataFrameChecked();
-      auto nSlots = df->GetNSlots();
-      df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(h, df);
+      return CreateAction<ROOT::Internal::ActionTypes::Fill, BranchTypes...>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
