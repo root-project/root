@@ -82,9 +82,7 @@ void FillOperation::Finalize()
 
    if (fResultHist->CanExtendAllAxes() && globalMin != std::numeric_limits<BufEl_t>::max() &&
        globalMax != std::numeric_limits<BufEl_t>::min()) {
-      auto xaxis = fResultHist->GetXaxis();
-      fResultHist->ExtendAxis(globalMin, xaxis);
-      fResultHist->ExtendAxis(globalMax, xaxis);
+      fResultHist->SetBins(fResultHist->GetNbinsX(), globalMin, globalMax);
    }
 
    for (unsigned int i = 0; i < fNSlots; ++i) {
