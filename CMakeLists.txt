@@ -137,6 +137,10 @@ endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
 
 add_subdirectory (interpreter)
+# To prevent bugs from having different defines for the same headers included by cling and LLVM (e.g. ROOT-8769).
+if(LLVM_ENABLE_ASSERTIONS)
+   message(WARNING "LLVM_ENABLE_ASSERTIONS is not supported by ROOT")
+endif()
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
