@@ -28,6 +28,7 @@
 #include <initializer_list>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <typeinfo>
 #include <type_traits> // is_same, enable_if
 
@@ -228,15 +229,42 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Create a snapshot of the dataset on disk in the form of a TTree
-   /// \param[in] treename The name of the TTree
-   /// \param[in] filename The name of the TFile
+   /// \tparam BranchTypes variadic list of branch/column types
+   /// \param[in] treename The name of the output TTree
+   /// \param[in] filename The name of the output TFile
    /// \param[in] bnames The list of names of the branches to be written
-   template <typename... Args>
+   ///
+   /// This function returns a `TDataFrame` built with the output tree as a source.
+   template <typename...BranchTypes>
    TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                               const BranchNames_t &bnames)
    {
-      using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(Args)>::Type_t;
-      return SnapshotImpl<Args...>(treename, filename, bnames, TypeInd_t());
+      using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
+      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
+   }
+
+   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+                                                              const BranchNames_t &bnames)
+   {
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      std::stringstream snapCall;
+      // build a string equivalent to
+      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<BranchNames_t*>(&bnames))"
+      snapCall << "((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
+      bool first = true;
+      for (auto &b : bnames) {
+         if (!first) snapCall << ", ";
+         snapCall << ROOT::Internal::ColumnName2ColumnTypeName(b, *tree, df->GetBookedBranch(b));
+         first = false;
+      };
+      // TODO is there a way to use BranchNames_t instead of std::vector<std::string> without parsing the whole header?
+      snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
+               << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
+               << ");";
+      // jit snapCall, return result
+      return *reinterpret_cast<TDataFrameInterface<ROOT::Detail::TDataFrameImpl>*>(
+         gInterpreter->ProcessLine(snapCall.str().c_str()));
    }
 
    ////////////////////////////////////////////////////////////////////////////
