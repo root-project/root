@@ -283,6 +283,8 @@ struct Max {
 };
 struct Mean {
 };
+struct Fill {
+};
 }
 
 // Utilities to accommodate v7
