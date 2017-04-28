@@ -49,9 +49,6 @@ if(ROOT_imt_FOUND)
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
-ROOTTEST_ADD_TEST(testHadd
-                  MACRO testHadd.C)
-
 ROOTTEST_GENERATE_EXECUTABLE(current_dir current_dir.cpp LIBRARIES Core RIO Thread)
 
 ROOTTEST_ADD_TEST(current_dir
