@@ -973,26 +973,26 @@ protected:
       const std::string &treename, const std::string &filename, const BranchNames_t &bnames,
       ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
    {
+      {
+         std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
+         TTree t(treename.c_str(), treename.c_str());
 
-      std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
-      TTree t(treename.c_str(), treename.c_str());
+         auto fillTree = [&t, &bnames](Args &... args) {
+            static bool firstEvt = true;
+            if (firstEvt) {
+               // hack to call TTree::Branch on all variadic template arguments
+               std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
 
-      auto fillTree = [&t, &bnames](Args &... args) {
-         static bool firstEvt = true;
-         if (firstEvt) {
-            // hack to call TTree::Branch on all variadic template arguments
-            std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
+               (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+               firstEvt = false;
+            }
+            t.Fill();
+         };
 
-            (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-            firstEvt = false;
-         }
-         t.Fill();
-      };
+         Foreach(fillTree, {bnames[S]...});
 
-      Foreach(fillTree, {bnames[S]...});
-
-      t.Write();
-
+         t.Write();
+      }
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TDataFrameInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(
