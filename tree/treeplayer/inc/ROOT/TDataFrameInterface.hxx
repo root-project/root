@@ -460,7 +460,7 @@ public:
    /// booked but not executed. See TActionResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = TH1F{"", "", 128u, 0., 0.},
+   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.},
                                       const std::string &vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
@@ -473,7 +473,7 @@ public:
    template <typename V = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<::TH1F> Histo1D(const std::string &vName)
    {
-      return Histo1D<V>(TH1F{"", "", 128u, 0., 0.}, vName);
+      return Histo1D<V>(::TH1F{"", "", 128u, 0., 0.}, vName);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -502,11 +502,11 @@ public:
    template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
    TActionResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
-      return Histo1D<V,W>(TH1F{"", "", 128u, 0., 0.}, vName, wName);
+      return Histo1D<V,W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
    }
 
    template <typename V, typename W>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = TH1F{"", "", 128u, 0., 0.})
+   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.})
    {
       return Histo1D<V,W>(std::move(model), "", "");
    }
