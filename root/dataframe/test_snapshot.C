@@ -47,7 +47,7 @@ int test_snapshot()
                   .Define("b1_square", "b1 * b1")
                   .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(b2*i); return v;}, {"b2"});
 
-
+   /****** non-jitted snapshot *******/
    auto snapshot_tdf =  d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
    // Open the new file and list the branches of the tree
@@ -66,6 +66,29 @@ int test_snapshot()
 
    if (*mean_b1 != *mean_a) {
       std::cerr << "Error: the mean values of two branches which are supposed to be identical differ!\n";
+      return 1;
+   }
+
+   /****** jitted snapshot *******/
+   auto snapshot_jit =  d2.Snapshot(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
+
+   // Open the new file and list the branche of the trees
+   TFile jit_f(outFileName);
+   TTree* jit_t;
+   jit_f.GetObject(treeName, jit_t);
+   auto l = jit_t->GetListOfBranches();
+   for (auto branch : *jit_t->GetListOfBranches()) {
+      std::cout << "Jitted branch: " << branch->GetName() << std::endl;
+   }
+   jit_f.Close();
+
+   auto jit_mean_b1 = snapshot_jit.Mean("b1");
+   auto jit_mean_a = snapshot_jit.Define("a_val",[](A& a){return a.GetI();},{"a"}).Mean("a_val");
+
+   std::cout << "Jitted means:" << *jit_mean_b1 << " " << *jit_mean_a << std::endl;
+
+   if (*jit_mean_b1 != *jit_mean_a || *mean_b1 != *jit_mean_b1) {
+      std::cerr << "Error: the jitted mean values of two branches which are supposed to be identical differ!\n";
       return 1;
    }
 
