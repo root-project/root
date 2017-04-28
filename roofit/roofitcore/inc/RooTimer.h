@@ -4,6 +4,7 @@
 #include <chrono>
 #include <ctime>
 #include <string>
+#include <fstream>
 #include "Rtypes.h"
 
 class RooTimer {
@@ -37,6 +38,21 @@ public:
 
 private:
   struct timespec _timing_begin, _timing_end;
+};
+
+
+class JsonListFile {
+public:
+  JsonListFile(const std::string & filename);
+  ~JsonListFile();
+  void close_json_list();
+
+private:
+  std::string _filename;
+public:
+  std::ofstream out;
+private:
+  std::ifstream _in;
 };
 
 #endif
