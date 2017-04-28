@@ -6,10 +6,9 @@
    cb->SetGrid();
    gStyle->SetHistMinimumZero();
 
-   Int_t size[] = {4, 8, 16, 32, 64, 128, 256, 512, 1024};
    TFile f("reduceall.root", "READ");
    Double_t maxvalue = std::max(h2->GetMaximum(), h4->GetMaximum());
-   maxvalue = std::max(maxvalue, h8->GetMaximum()) + 10;
+   maxvalue = std::max(maxvalue, h8->GetMaximum()) + 20;
    h2->SetBarWidth(0.1);
    h2->SetBarOffset(0.1);
    h2->SetStats(0);
