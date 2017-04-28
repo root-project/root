@@ -156,6 +156,14 @@ list of branch names. The filter function is applied to the specified branches f
 a `bool` which signals whether the event passes the filter (`true`) or not (`false`). You can think of your data as
 "flowing" through the chain of calls, being transformed, filtered and finally used to perform actions. Multiple `Filter`
 calls can be chained one after another.
+It is possible to specify filters as strings too. This snippet is analogous to the one above:
+~~~{.cpp}
+ROOT::Experimental::TDataFrame d("myTree", filePtr);
+auto c = d.Filter("MET > 4.").Count();
+std::cout << *c << std::endl;
+~~~
+Here the names of the branches used in the expression and their types are inferred automatically. The string must be
+standard C++ and is just in time compiled by the ROOT interpreter, Cling.
 
 ### Running on a range of entries
 It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the TDataFrame
@@ -191,6 +199,16 @@ std::cout << *zMean << std::endl;
 variables created with `Define` as if they were actual tree branches, but they are evaluated on the fly, once per
 event. As with filters, `Define` calls can be chained with other transformations to create multiple temporary
 columns.
+As with filters, it is possible to specify new columns as strings too. This snippet is analogous to the one above:
+~~~{.cpp}
+ROOT::Experimental::TDataFrame d(treeName, filePtr);
+auto zMean = d.Define("z", "sqrt(x*x + y*y)")
+              .Filter("z > 0.")
+              .Mean("z");
+std::cout << *zMean << std::endl;
+~~~
+Again the names of the branches used in the expression and their types are inferred automatically. The string must be
+standard C++ and is just in time compiled by the ROOT interpreter, Cling.
 
 ### Executing multiple actions
 As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of
