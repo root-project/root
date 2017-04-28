@@ -307,7 +307,7 @@ RooAbsArg* RooRealMPFE::_findComponent(std::string name) {
 
 void RooRealMPFE::serverLoop() {
 #ifndef _WIN32
-  ofstream timing_outfile;
+  std::ofstream timing_outfile;
   RooWallTimer timer;
 
   if (RooTrace::timing_flag == 9) {
@@ -681,7 +681,7 @@ void RooRealMPFE::setTimingNumInts(Bool_t flag) {
 
 void RooRealMPFE::calculate() const
 {
-  ofstream timing_outfile;
+  std::ofstream timing_outfile;
   RooWallTimer timer;
 
   // Start asynchronous calculation of arg value
@@ -866,7 +866,7 @@ Double_t RooRealMPFE::getValV(const RooArgSet* /*nset*/) const
 
 Double_t RooRealMPFE::evaluate() const
 {
-  ofstream timing_outfile;
+  std::ofstream timing_outfile;
   RooWallTimer wtimer, wtimer_before, wtimer_retrieve, wtimer_after;
   RooCPUTimer ctimer, ctimer_before, ctimer_retrieve, ctimer_after;
 
