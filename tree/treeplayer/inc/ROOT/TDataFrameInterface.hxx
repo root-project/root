@@ -243,6 +243,14 @@ public:
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \param[in] treename The name of the output TTree
+   /// \param[in] filename The name of the output TFile
+   /// \param[in] bnames The list of names of the branches to be written
+   ///
+   /// This function returns a `TDataFrame` built with the output tree as a source.
+   /// The types of the branches are automatically inferred and do not need to be specified.
    TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                               const BranchNames_t &bnames)
    {
