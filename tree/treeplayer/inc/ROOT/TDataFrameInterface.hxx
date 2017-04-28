@@ -977,8 +977,9 @@ protected:
          std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
          TTree t(treename.c_str(), treename.c_str());
 
+         static bool firstEvt = true;
+
          auto fillTree = [&t, &bnames](Args &... args) {
-            static bool firstEvt = true;
             if (firstEvt) {
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
@@ -992,6 +993,7 @@ protected:
          Foreach(fillTree, {bnames[S]...});
 
          t.Write();
+         firstEvt = true;
       }
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
