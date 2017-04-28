@@ -52,7 +52,8 @@ void RooCPUTimer::stop() {
 
 
 JsonListFile::JsonListFile(const std::string & filename) :
-_filename(filename)
+_filename(filename),
+_member_index(0)
 {
   // do not use ios::app for opening out!
   // app moves put pointer to end of file before each write, which makes seekp useless.
@@ -87,4 +88,23 @@ void JsonListFile::close_json_list() {
   }
   out << "\n]";
   delete[] tail;
+}
+
+void JsonListFile::set_member_names(const std::vector<std::string> & member_names) {
+  _member_names = member_names;
+  _member_index = 0;
+}
+
+template <typename T>
+JsonListFile& JsonListFile::operator<<(const T& obj)
+{
+  // write obj to stream
+  auto ix = _next_member_index();
+  out << _member_names[ix] << obj;
+  return *this;
+}
+
+unsigned JsonListFile::_next_member_index() {
+  _member_index = (_member_index + 1) % _member_names.size();
+  return _member_index;
 }

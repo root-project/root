@@ -46,6 +46,9 @@ public:
   JsonListFile(const std::string & filename);
   ~JsonListFile();
   void close_json_list();
+  void set_member_names(const std::vector<std::string> & member_names);
+  template <typename T>
+  JsonListFile& JsonListFile::operator<<(const T& obj);
 
 private:
   std::string _filename;
@@ -53,6 +56,9 @@ public:
   std::ofstream out;
 private:
   std::ifstream _in;
+  std::vector<std::string> _member_names;
+  unsigned _next_member_index();
+  unsigned _member_index;
 };
 
 #endif
