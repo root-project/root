@@ -7,6 +7,10 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+ROOTTEST_ADD_TEST(regression_snapshot
+                  MACRO regression_snapshot.C+
+                  OUTREF regression_snapshot.ref)
+
 ROOTTEST_GENERATE_EXECUTABLE(test_inference test_inference.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_inference
                   EXEC test_inference

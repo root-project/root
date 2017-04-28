@@ -1,0 +1,14 @@
+
+Processing /home/dpiparo/RootDevel/Root6/head/roottest/root/dataframe/regression_snapshot.C+...
+first list of branches
+Jitted branch: b1
+Jitted branch: b1_square
+Jitted branch: b2_vector
+Jitted branch: a
+
+second list of branches
+Branch: b1
+Branch: b1_square
+Branch: b2_vector
+Branch: a
+(int) 0
