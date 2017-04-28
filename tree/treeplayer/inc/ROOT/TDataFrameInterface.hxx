@@ -973,6 +973,17 @@ protected:
       const std::string &treename, const std::string &filename, const BranchNames_t &bnames,
       ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
    {
+      const auto templateParamsN = sizeof...(S);
+      const auto bNamesN = bnames.size();
+      if (templateParamsN != bNamesN) {
+         std::string err_msg = "The number of template parameters specified for the snapshot is ";
+         err_msg += std::to_string(templateParamsN);
+         err_msg += " while ";
+         err_msg += std::to_string(bNamesN);
+         err_msg += " branches have been specified.";
+         throw std::runtime_error(err_msg.c_str());
+      }
+
       {
          std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
          TTree t(treename.c_str(), treename.c_str());
