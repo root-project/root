@@ -142,8 +142,8 @@ const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl
       if (bl.size() == 0 && nArgs == defBl.size()) {
          useDefBl = true;
       } else {
-         auto msg = "mismatch between number of filter arguments (" + std::to_string(nArgs) +
-                    ") and number of branches (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + ")";
+         auto msg = "mismatch between number of filter/define arguments (" + std::to_string(nArgs) +
+                    ") and number of columns specified (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + "). Please check the number of arguments of the function/lambda/functor and the number of branches specified.";
          throw std::runtime_error(msg);
       }
    }
