@@ -60,8 +60,12 @@ int tdf007_snapshot()
                         {"b2"});
 
    // ## Write it to disk in ROOT format
-   // We now write to disk a new dataset with one of the variables originally present in the tree and the new variables.
-   d2.Snapshot<int, int, std::vector<float>>(treeName, outFileName, {"b1", "b1_square", "b2_vector"});
+   // We now write to disk a new dataset with one of the variables originally
+   // present in the tree and the new variables.
+   // The user can explicitly specify the types of the branches as template
+   // arguments of the Snapshot method, otherwise they will be automatically
+   // inferred.
+   d2.Snapshot(treeName, outFileName, {"b1", "b1_square", "b2_vector"});
 
    // Open the new file and list the branches of the tree
    TFile f(outFileName);
