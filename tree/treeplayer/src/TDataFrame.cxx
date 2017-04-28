@@ -157,6 +157,22 @@ a `bool` which signals whether the event passes the filter (`true`) or not (`fal
 "flowing" through the chain of calls, being transformed, filtered and finally used to perform actions. Multiple `Filter`
 calls can be chained one after another.
 
+### Running on a range of entries
+It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the TDataFrame
+offers the concept of ranges as a node of the TDataFrame graph: this means that filters, columns and actions can be hung
+to it. If a range is specified after a filter, the range will act exclusively on the entries surviving the filter.
+Here you can find some code using ranges:
+~~~{.cpp}
+ROOT::Experimental::TDataFrame d("myTree", filePtr);
+// This is how you can express a range of the first 30 entries
+auto d_0_30 = d.Range(0, 30);
+// This is how you pick all entries from 15 onwards
+auto d_15_end = d.Range(15, 0);
+// We can use a stride too, in this case we pick an event every 3
+auto d_15_end_3 = d.Range(15, 0, 3);
+~~~
+Ranges are available only in sequential mode.
+
 ### Creating a temporary column
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived
 quantity `z = sqrt(x*x + y*y)`.
