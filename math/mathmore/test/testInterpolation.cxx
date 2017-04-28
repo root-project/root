@@ -31,6 +31,7 @@ void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false )
    // print result of interpolation
    const Int_t n = 50;  //JH replacing n = 51;
    Int_t i = 0;
+   double xi = 0.;
    Float_t xcoord[n], ycoord[n];
 
    for (i = 0; i < n; ++i) {
