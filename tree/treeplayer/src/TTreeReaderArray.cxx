@@ -74,13 +74,6 @@ namespace {
             Error("TSTLReader::GetCP()", "Logic error, proxy object not set in TBranchProxy.");
             return 0;
          }
-         if (proxy->IsaPointer()) {
-            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
-               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
-               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-            }
-            else return 0;
-         }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
