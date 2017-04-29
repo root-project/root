@@ -52,59 +52,31 @@ void RooCPUTimer::stop() {
 
 
 JsonListFile::JsonListFile(const std::string & filename) :
-_filename(filename),
 _member_index(0)
 {
   // do not use ios::app for opening out!
   // app moves put pointer to end of file before each write, which makes seekp useless.
   // See http://en.cppreference.com/w/cpp/io/basic_filebuf/open
-  out.open(_filename, std::ios_base::in | std::ios_base::out);  // "mode r+"
-  if (!out.is_open()) {
-    out.clear();
+  _out.open(filename, std::ios_base::in | std::ios_base::out);  // "mode r+"
+  if (!_out.is_open()) {
+    _out.clear();
     // new file
-    out.open(_filename, std::ios_base::out);  // "mode w"
-    out << "[\n";
+    _out.open(filename, std::ios_base::out);  // "mode w"
+    _out << "[\n";
   } else {
     // existing file that, presumably, has been closed with close_json_list() and thus ends with "\n]".
-    out.seekp(-2, std::ios_base::end);
-    out << ",\n";
+    _out.seekp(-2, std::ios_base::end);
+    _out << ",\n";
   }
 }
 
 JsonListFile::~JsonListFile() {
-  close_json_list();
+  _out.seekp(-2, std::ios_base::end);
+  _out << "\n]";
 }
 
-void JsonListFile::close_json_list() {
-  out.flush();
-  _in.open(_filename);
-  _in.seekg(-2, std::ios_base::end);
-  char * tail = new char[2];
-  _in.read(tail, 2);
-  if (tail[1] == ',') {
-    out.seekp(-1, std::ios_base::end);
-  } else if (tail[0] == ',') {
-    out.seekp(-2, std::ios_base::end);
-  }
-  out << "\n]";
-  delete[] tail;
-}
-
-void JsonListFile::set_member_names(const std::vector<std::string> & member_names) {
-  _member_names = member_names;
-  _member_index = 0;
-}
-
-template <typename T>
-JsonListFile& JsonListFile::operator<<(const T& obj)
-{
-  // write obj to stream
-  auto ix = _next_member_index();
-  out << _member_names[ix] << obj;
-  return *this;
-}
-
-unsigned JsonListFile::_next_member_index() {
+unsigned long JsonListFile::_next_member_index() {
+  auto current_index = _member_index;
   _member_index = (_member_index + 1) % _member_names.size();
-  return _member_index;
+  return current_index;
 }

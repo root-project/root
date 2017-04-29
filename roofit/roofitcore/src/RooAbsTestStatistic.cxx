@@ -857,34 +857,32 @@ Double_t RooAbsTestStatistic::getCarry() const
 
 void RooAbsTestStatistic::_collectNumIntTimings(Bool_t clear_timings) const {
   if (MPMaster == _gofOpMode) {
+    std::vector<std::string> member_names = {"wall_s", "name", "ix_cpu", "pid", "ppid"};
     for (Int_t i = 0; i < _nCPU; ++i) {
       auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);
       if (timings.size() > 0) {
         JsonListFile timing_json("timings_numInts.json");
+        timing_json.set_member_names(member_names.begin(), member_names.end());
+
         pid_t pid = _mpfeArray[i]->getPIDFromServer();
         for (auto it = timings.begin(); it != timings.end(); ++it) {
           std::string name = it->first;
           double timing_s = it->second;
-          timing_json.out << "{\"wall_s\": \"" << timing_s
-                          << "\", \"name\": \"" << name
-                          << "\", \"ix_cpu\": \"" << i
-                          << "\", \"pid\": \"" << pid
-                          << "\", \"ppid\": \"" << getpid()  // ppid of servers is pid of master/client process
-                          << "\"}," << "\n";
+          timing_json << timing_s << name << i << pid << getpid();
         }
       }
     }
   } else {
+    std::vector<std::string> member_names = {"wall_s", "name", "pid"};
     if (RooTrace::objectTiming.size() > 0) {
       JsonListFile timing_json("timings_numInts.json");
+      timing_json.set_member_names(member_names.begin(), member_names.end());
+
       pid_t pid = getpid();
       for (auto it = RooTrace::objectTiming.begin(); it != RooTrace::objectTiming.end(); ++it) {
         std::string name = it->first;
         double timing_s = it->second;
-        timing_json.out << "{\"wall_s\": \"" << timing_s
-                        << "\", \"name\": \"" << name
-                        << "\", \"pid\": \"" << pid
-                        << "\"}," << "\n";
+        timing_json << timing_s << name << pid;
       }
       if (clear_timings == kTRUE) {
         RooTrace::objectTiming.clear();

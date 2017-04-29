@@ -45,20 +45,55 @@ class JsonListFile {
 public:
   JsonListFile(const std::string & filename);
   ~JsonListFile();
-  void close_json_list();
-  void set_member_names(const std::vector<std::string> & member_names);
+
+  template <class Iter>
+  void set_member_names(Iter begin, Iter end, bool reset_index = true);
+
   template <typename T>
-  JsonListFile& JsonListFile::operator<<(const T& obj);
+  JsonListFile& operator<< (const T& obj);
 
 private:
-  std::string _filename;
-public:
-  std::ofstream out;
-private:
-  std::ifstream _in;
+  std::ofstream _out;
   std::vector<std::string> _member_names;
-  unsigned _next_member_index();
-  unsigned _member_index;
+  unsigned long _next_member_index();
+  unsigned long _member_index;
 };
+
+
+template <class Iter>
+void JsonListFile::set_member_names(Iter begin, Iter end, bool reset_index) {
+  _member_names.clear();
+  for(Iter it = begin; it != end; ++it) {
+    _member_names.push_back(*it);
+  }
+  if (reset_index) {
+    _member_index = 0;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This method assumes that std::ofstream::operator<<(T) exists.
+
+template <typename T>
+JsonListFile& JsonListFile::operator<< (const T& obj)
+{
+  auto ix = _next_member_index();
+  if (ix == 0) {
+    _out << "{";
+  }
+
+  // `"member name": `
+  _out << "\"" << _member_names[ix] << "\": ";
+  // `"value"` (comma added below, if not last value in list element)
+  _out << "\"" << obj << "\"";
+
+  if (ix == _member_names.size() - 1) {
+    _out << "},\n";
+  } else {
+    _out << ", ";
+  }
+
+  return *this;
+}
 
 #endif
