@@ -94,18 +94,18 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
    if (code == MPCode::kMessage) {
       //general message, ignore it
       reply += ": ok";
-      MPSend(fS.get(), MPCode::kMessage, reply.data());
+      MPSend(fS.get(), MPCode::kMessage, reply.c_str());
    } else if (code == MPCode::kError) {
       //general error, ignore it
       reply += ": ko";
-      MPSend(fS.get(), MPCode::kMessage, reply.data());
+      MPSend(fS.get(), MPCode::kMessage, reply.c_str());
    } else if (code == MPCode::kShutdownOrder || code == MPCode::kFatalError) {
       //client is asking the server to shutdown or client is dying
-      MPSend(fS.get(), MPCode::kShutdownNotice, reply.data());
+      MPSend(fS.get(), MPCode::kShutdownNotice, reply.c_str());
       gSystem->Exit(0);
    } else {
       reply += ": unknown code received. code=" + std::to_string(code);
-      MPSend(fS.get(), MPCode::kError, reply.data());
+      MPSend(fS.get(), MPCode::kError, reply.c_str());
    }
 }
 
@@ -115,5 +115,5 @@ void TMPWorker::HandleInput(MPCodeBufPair &msg)
 void TMPWorker::SendError(const std::string& errmsg, unsigned int errcode)
 {
    std::string reply = fId + ": " + errmsg;
-   MPSend(GetSocket(), errcode, reply.data());
+   MPSend(GetSocket(), errcode, reply.c_str());
 }
