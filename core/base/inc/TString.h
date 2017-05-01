@@ -280,6 +280,7 @@ public:
    // Type conversion
    operator const char*() const { return GetPointer(); }
    operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
+   explicit operator std::string() const { return std::string(GetPointer(),Length()); }
 
    // Assignment
    TString    &operator=(char s);                // Replace string
