@@ -229,7 +229,7 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             SafeDelete(templist);
             return 0;
          }
-         if (indobj >= ((TSeqCollection*)collcrt)->GetLast()) {
+         if (indobj > ((TSeqCollection*)collcrt)->LastIndex()) {
             // We reached the end of this collection.
             continue;
          }
