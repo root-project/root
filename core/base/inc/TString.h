@@ -106,7 +106,7 @@ public:
    char          operator[](Ssiz_t i) const;     // Index with bounds checking
 
    operator std::string_view() const { return std::string_view(Data(),fExtent); }
-   operator std::string() const { return std::string_view(Data(),fExtent).to_string(); }
+   operator std::string() const { return std::string(Data(),fExtent); }
 
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
