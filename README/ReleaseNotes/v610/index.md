@@ -197,6 +197,10 @@ The following interfaces have been removed, after deprecation in v6.08.
   holds the axis titles).
 - `TGraph` axis range was computed differently depending on the order of SetLog[x|y]"
   This issue was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8751)
+- Add the new markers suggested [here](https://root-forum.cern.ch/t/adding-custom-markers/24506).
+  Improve the marker style for the OpenGl backend (some where wrong or missing).
+
+![New markers](NewMarkers.png)
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
