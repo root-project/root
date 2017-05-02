@@ -1079,15 +1079,17 @@ TCling::TCling(const char *name, const char *title)
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
 
-      std::string pchFilename = interpInclude + "/allDict.cxx.pch";
-      if (gSystem->Getenv("ROOT_PCH")) {
-         pchFilename = gSystem->Getenv("ROOT_PCH");
-      }
-      clingArgsStorage.push_back("-include-pch");
-      clingArgsStorage.push_back(pchFilename);
+      // Attach the PCH (unless we have C++ modules enabled which provide the
+      // same functionality).
+      if (!getenv("ROOT_MODULES")) {
+         std::string pchFilename = interpInclude + "/allDict.cxx.pch";
+         if (gSystem->Getenv("ROOT_PCH")) {
+            pchFilename = gSystem->Getenv("ROOT_PCH");
+         }
 
-      // clingArgsStorage.push_back("-Xclang");
-      // clingArgsStorage.push_back("-fmodules");
+         clingArgsStorage.push_back("-include-pch");
+         clingArgsStorage.push_back(pchFilename);
+      }
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
@@ -4790,6 +4792,12 @@ namespace {
 
 Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 {
+   // Don't load any rootmaps when we have are running in modules mode
+   // because we don't want to rely on those forward declarations here.
+   // This functionality is replaced by the 'link' attribute in the modulemap.
+   if ("ROOT_MODULES")
+      return 0;
+
    R__LOCKGUARD(gInterpreterMutex);
    // open the [system].rootmap files
    if (!fMapfile) {
