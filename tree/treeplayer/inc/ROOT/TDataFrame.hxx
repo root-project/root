@@ -40,10 +40,6 @@ namespace ROOT {
 namespace Experimental {
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
-private:
-   std::shared_ptr<TTree> fTree;
-   void InitTree(TTree &tree, bool ownsTree);
-
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
