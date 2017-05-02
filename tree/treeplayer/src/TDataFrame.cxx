@@ -163,7 +163,7 @@ auto c = d.Filter("MET > 4.").Count();
 std::cout << *c << std::endl;
 ~~~
 Here the names of the branches used in the expression and their types are inferred automatically. The string must be
-standard C++ and is just in time compiled by the ROOT interpreter, Cling.
+standard C++ and is just-in-time compiled by the ROOT interpreter, Cling.
 
 ### Running on a range of entries
 It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the TDataFrame
@@ -179,7 +179,7 @@ auto d_15_end = d.Range(15, 0);
 // We can use a stride too, in this case we pick an event every 3
 auto d_15_end_3 = d.Range(15, 0, 3);
 ~~~
-Ranges are available only in sequential mode.
+Ranges are not available when multi-threading is enabled.
 
 ### Creating a temporary column
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived
@@ -208,7 +208,7 @@ auto zMean = d.Define("z", "sqrt(x*x + y*y)")
 std::cout << *zMean << std::endl;
 ~~~
 Again the names of the branches used in the expression and their types are inferred automatically. The string must be
-standard C++ and is just in time compiled by the ROOT interpreter, Cling.
+standard C++ and is just-in-time compiled by the ROOT interpreter, Cling.
 
 ### Executing multiple actions
 As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of
@@ -440,7 +440,7 @@ tdf.Define("pt", "sqrt(px*px + py*py)");
 ~~~
 
 will create a new column called "pt" the value of which is calculated starting from the branches px and py. The system
-builds a just in time compiled function starting from the expression after having deduced the list of necessary branches
+builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
 from the names of the variables specified by the user.
 
 ##  <a name="actions"></a>Actions
@@ -459,13 +459,14 @@ note that all actions are only executed for events that pass all preceding filte
 | **Lazy actions** | **Description** |
 |------------------|-----------------|
 | Count | Return the number of events processed. |
-| Take | Build a collection of values of a branch. |
-| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the branch values that passed all filters. |
+| Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
+| Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
 | Max | Return the maximum of processed branch values. |
 | Mean | Return the mean of processed branch values. |
 | Min | Return the minimum of processed branch values. |
 | Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
 | Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
+| Take | Build a collection of values of a branch. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
