@@ -868,22 +868,21 @@ private:
    // BuildAndBook builds a TDataFrameAction with the right operation and book it with the TDataFrameImpl
 
    // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
-   template<typename...BranchTypes, typename ActionType, typename ActionResultType>
-   TActionResultProxy<ActionResultType> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &h,
-                                           unsigned int nSlots, ActionType *)
+   template <typename... BranchTypes, typename ActionType, typename ActionResultType>
+   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
+                     ActionType *)
    {
       using Op_t = ROOT::Internal::Operations::FillTOOperation<ActionResultType>;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
-      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    // Histo1D filling (must handle the special case of distinguishing FillTOOperation and FillOperation
-   template <typename...BranchTypes>
-   TActionResultProxy<::TH1F> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h,
-                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Histo1D *)
+   template <typename... BranchTypes>
+   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h, unsigned int nSlots,
+                     ROOT::Internal::ActionTypes::Histo1D *)
    {
       auto df = GetDataFrameChecked();
       auto hasAxisLimits = ROOT::Internal::TDFV7Utils::Histo<::TH1F>::HasAxisLimits(*h);
@@ -899,46 +898,42 @@ private:
             ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
-      return ROOT::Detail::MakeActionResultProxy(h, df);
    }
 
    // Min action
    template <typename BranchType>
-   TActionResultProxy<double> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &minV,
-                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Min *)
+   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
+                     ROOT::Internal::ActionTypes::Min *)
    {
       using Op_t = ROOT::Internal::Operations::MinOperation;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
-      return ROOT::Detail::MakeActionResultProxy(minV, df);
    }
 
    // Max action
    template <typename BranchType>
-   TActionResultProxy<double> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &maxV,
-                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Max *)
+   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
+                     ROOT::Internal::ActionTypes::Max *)
    {
       using Op_t = ROOT::Internal::Operations::MaxOperation;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
-      return ROOT::Detail::MakeActionResultProxy(maxV, df);
    }
 
    // Mean action
    template <typename BranchType>
-   TActionResultProxy<double> BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &meanV,
-                                           unsigned int nSlots, ROOT::Internal::ActionTypes::Mean *)
+   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
+                     ROOT::Internal::ActionTypes::Mean *)
    {
       using Op_t = ROOT::Internal::Operations::MeanOperation;
       using DFA_t =
          ROOT::Internal::TDataFrameAction<Op_t, Proxied, ROOT::Internal::TDFTraitsUtils::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));
-      return ROOT::Detail::MakeActionResultProxy(meanV, df);
    }
    /****** end BuildAndBook ******/
    /// \endcond
@@ -952,9 +947,9 @@ private:
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      auto resProxy = BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
+      BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
       fProxiedPtr->IncrChildrenCount();
-      return resProxy;
+      return ROOT::Detail::MakeActionResultProxy(r, df);
    }
 
    // User did not specify type, do type inference
@@ -967,10 +962,9 @@ private:
       auto df = GetDataFrameChecked();
       const auto& tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      auto retVal =
-         ROOT::Internal::CreateActionGuessed(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
-                                             typeid(ActionType), &r, tree, tmpBranches);
-      return *(TActionResultProxy<ActionResultType> *)retVal;
+      ROOT::Internal::CreateActionGuessed(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
+                                          typeid(ActionType), &r, tree, tmpBranches);
+      return ROOT::Detail::MakeActionResultProxy(r, df);
    }
 
 protected:
