@@ -2,7 +2,7 @@ module "libc" {
   export *
   module "assert.h" {
     export *
-    header "assert.h"
+    textual header "assert.h"
   }
   module "ctype.h" {
     export *
