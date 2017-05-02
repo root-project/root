@@ -233,10 +233,6 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif(ARG_OPTIONS)
 
-  if (ARG_DEPENDENCIES)
-    message(FATAL_ERROR "Unimplemented switch!")
-  endif(ARG_DEPENDENCIES)
-
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
@@ -354,6 +350,13 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(rootmapargs )
   else()
     set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  endif()
+
+  #---Get the library and module dependencies-----------------
+  if(ARG_DEPENDENCIES)
+    foreach(dep ${ARG_DEPENDENCIES})
+      set(newargs ${newargs} -m  ${libprefix}${dep}_rdict.pcm)
+    endforeach()
   endif()
 
   #---what rootcling command to use--------------------------
