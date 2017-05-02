@@ -24,13 +24,9 @@ int main() {
    ROOT::Experimental::TDataFrame d(treeName, fileName);
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
-
-   // this should throw an exception because string is not a guessable type
-   try {
-      auto hs = d.Histo1D("s");
-   } catch (const std::runtime_error& error) {
-      std::cout << error.what() << std::endl;
-   }
+   // Histo1D("s") should compile and execute (jitting recognizes the std::string type)
+   // although the histogram will be filled with meaningless values
+   auto hs = d.Histo1D("s");
    *hb;
 
    return 0;
