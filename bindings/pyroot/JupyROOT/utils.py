@@ -507,7 +507,7 @@ def enableCppHighlighting():
 def iPythonize():
     setStyle()
     loadMagicsAndCapturers()
-    enableCppHighlighting()
+    #enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
 
