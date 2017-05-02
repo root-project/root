@@ -750,7 +750,6 @@ public:
   mutable Double_t  _curWgtErr ;   // Weight of current event
 
   RooVectorDataStore* _cache ; //! Optimization cache
-  std::vector<RooVectorDataStore::RealVector*> _cacheUpdateList ; //! Pointers to the optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
 
   Bool_t _forcedUpdate ; //! Request for forced cache update 
