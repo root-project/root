@@ -2192,7 +2192,8 @@ static bool InjectModuleUtilHeader(const char *argv0,
 /// respecting the given isysroot.
 /// If module is not a null pointer, we only write the given module to the
 /// given file and not the whole AST.
-static void WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
+/// Returns true if the AST was succesfully written.
+bool WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstance, StringRef iSysRoot,
                      clang::Module *module = nullptr)
 {
    // From PCHGenerator and friends:
@@ -2204,7 +2205,11 @@ static void WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
                                                                /*RemoveFileOnSignal=*/false, /*InFile*/ "",
                                                                /*Extension=*/"", /*useTemporary=*/false,
                                                                /*CreateMissingDirectories*/ false);
-   assert(!out && "Couldn't open output PCM file");
+   if (!out) {
+       ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n",
+                               fileName.data());
+       return false;
+   }
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
@@ -2217,6 +2222,8 @@ static void WriteAST(StringRef fileName, clang::CompilerInstance *compilerInstan
    out->flush();
    bool deleteOutputFile = compilerInstance->getDiagnostics().hasErrorOccurred();
    compilerInstance->clearOutputFiles(deleteOutputFile);
+
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2229,9 +2236,7 @@ static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *c
 
    std::string iSysRoot("/DUMMY_SYSROOT/include/");
    if (gBuildingROOT) iSysRoot = (currentDirectory + "/");
-   WriteAST(modGen.GetModuleFileName(), compilerInstance, iSysRoot);
-
-   return true;
+   return WriteAST(modGen.GetModuleFileName(), compilerInstance, iSysRoot);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2344,8 +2349,7 @@ static bool GenerateModule(TModuleGenerator &modGen, clang::CompilerInstance *CI
       ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
    }
 
-   WriteAST(outputFile, CI, "", module);
-   return true;
+   return WriteAST(outputFile, CI, "", module);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
