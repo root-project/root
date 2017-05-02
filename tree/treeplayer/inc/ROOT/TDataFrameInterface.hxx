@@ -38,11 +38,11 @@ namespace ROOT {
 
 namespace Internal {
 
-template <typename TDFNode, typename ActionType, typename...BranchTypes, typename ActionResultType>
-ROOT::Experimental::TActionResultProxy<ActionResultType> CallCreateAction(TDFNode *node, const BranchNames_t &bl,
-                                                                          const std::shared_ptr<ActionResultType> &r)
+template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
+void CallBuildAndBook(TDFNode *node, const BranchNames_t &bl, unsigned int nSlots,
+                      const std::shared_ptr<ActionResultType> &r)
 {
-   return node->template CreateAction<ActionType, BranchTypes...>(bl, r);
+   node->template BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
 }
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
@@ -52,9 +52,9 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
-                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                           const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace Internal
 
@@ -77,8 +77,8 @@ class TDataFrameInterface {
    template <typename T>
    friend class TDataFrameInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-   friend TActionResultProxy<ActionResultType> ROOT::Internal::CallCreateAction(
-      TDFNode *, const BranchNames_t &, const std::shared_ptr<ActionResultType> &);
+   friend void ROOT::Internal::CallBuildAndBook(TDFNode *, const BranchNames_t &, unsigned int nSlots,
+                                                const std::shared_ptr<ActionResultType> &);
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -960,10 +960,12 @@ private:
                                                      const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
+      unsigned int nSlots = df->GetNSlots();
       const auto& tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      ROOT::Internal::CreateActionGuessed(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
-                                          typeid(ActionType), &r, tree, tmpBranches);
+      ROOT::Internal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
+                                      typeid(ActionType), &r, *tree, nSlots, tmpBranches);
+      fProxiedPtr->IncrChildrenCount();
       return ROOT::Detail::MakeActionResultProxy(r, df);
    }
 
