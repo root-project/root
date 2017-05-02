@@ -1120,15 +1120,13 @@ function(ROOT_PATH_TO_STRING resultvar path)
 endfunction(ROOT_PATH_TO_STRING)
 
 #----------------------------------------------------------------------------
-# ROOT_ADD_UNITTEST_SUBDIRECTORY( <name> LIBRARIES)
+# ROOT_ADD_UNITTEST_DIR(<libraries ...>)
 #----------------------------------------------------------------------------
-function(ROOT_ADD_UNITTEST_SUBDIRECTORY subdir)
-  ROOT_GLOB_FILES(test_files ${CMAKE_CURRENT_SOURCE_DIR}/${subdir}/*.cxx)
+function(ROOT_ADD_UNITTEST_DIR)
+  ROOT_GLOB_FILES(test_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
   # Get the component from the path. Eg. core to form coreTests test suite name.
-  ROOT_PATH_TO_STRING(test_name ${CMAKE_CURRENT_SOURCE_DIR}/Tests/)
-  ROOT_ADD_GTEST(${test_name} ${test_files} ${ARGN})
-  # Override the target output folder for to put the binaries in the ${subdir}.
-  set_property(TARGET ${test_name} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${subdir}/)
+  ROOT_PATH_TO_STRING(test_name ${CMAKE_CURRENT_SOURCE_DIR}/)
+  ROOT_ADD_GTEST(${test_name}Unit ${test_files} LIBRARIES ${ARGN})
 endfunction()
 
 #----------------------------------------------------------------------------
