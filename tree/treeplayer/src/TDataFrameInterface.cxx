@@ -151,11 +151,11 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    return retVal;
 }
 
-// Jit and call something equivalent to "this->Action(params...)" (see comments in the body for actual jitted code)
-// Return pointer to corresponding TActionResultProxy, cast to Long_t
-Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
-                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                           const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
+// Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
+// (see comments in the body for actual jitted code)
+void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
    auto nBranches = bl.size();
@@ -170,7 +170,7 @@ Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypen
    // retrieve branch type names as strings
    std::vector<std::string> branchTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto branchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(bl[i], *tree, tmpBranchPtrs[i]);
+      const auto branchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
       if (branchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
@@ -197,23 +197,23 @@ Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypen
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // "ROOT::Internal::CallCreateAction<nodeType, actionType, branchType1, branchType2...>"
-   // "((nodeType*)thisPtr, *(ROOT::BranchNames_t*)&bl, *(actionResultType*)r, nullptr)"
+   // ROOT::Internal::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
+   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::BranchNames_t*>(&bl),
+   //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName;
+   createAction_str << "ROOT::Internal::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
    createAction_str << ">("
-                    << "(" << nodeTypename << "*)" << thisPtr << ", "
-                    << "*(ROOT::BranchNames_t*)" << &bl << ", "
-                    << "*(" << actionResultTypeName << "*)" << r << ");";
-   auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
-   if (!retVal) {
-      std::string exceptionText = "An error occurred while jitting this action ";
+                    << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
+                    << "*reinterpret_cast<ROOT::BranchNames_t*>(" << &bl << "), " << nSlots << ", *reinterpret_cast<"
+                    << actionResultTypeName << "*>(" << r << "));";
+   auto error = TInterpreter::EErrorCode::kNoError;
+   gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
+   if (error) {
+      std::string exceptionText = "An error occurred while jitting this action:\n";
       exceptionText += createAction_str.str();
-      exceptionText += ".";
       throw std::runtime_error(exceptionText.c_str());
    }
-   return retVal;
 }
 } // namespace Internal
 
