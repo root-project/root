@@ -1147,7 +1147,7 @@ function(ROOT_ADD_GTEST test_suite)
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
-  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite})
+  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite} WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
 
 
