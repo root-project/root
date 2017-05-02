@@ -1,6 +1,5 @@
 {
   'version': 0,
-  'ignore-non-existent-contents': false,
   'roots': [
     { 'name': '@__libcpp_full_path@', 'type': 'directory',
       'contents': [
