@@ -1075,15 +1075,17 @@ TCling::TCling(const char *name, const char *title)
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
 
-      std::string pchFilename = interpInclude + "/allDict.cxx.pch";
-      if (gSystem->Getenv("ROOT_PCH")) {
-         pchFilename = gSystem->Getenv("ROOT_PCH");
-      }
-      clingArgsStorage.push_back("-include-pch");
-      clingArgsStorage.push_back(pchFilename);
+      // Attach the PCH (unless we have C++ modules enabled which provide the
+      // same functionality).
+      if (!getenv("ROOT_MODULES")) {
+         std::string pchFilename = interpInclude + "/allDict.cxx.pch";
+         if (gSystem->Getenv("ROOT_PCH")) {
+            pchFilename = gSystem->Getenv("ROOT_PCH");
+         }
 
-      // clingArgsStorage.push_back("-Xclang");
-      // clingArgsStorage.push_back("-fmodules");
+         clingArgsStorage.push_back("-include-pch");
+         clingArgsStorage.push_back(pchFilename);
+      }
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
