@@ -24,8 +24,8 @@ TEST(TTreeReaderArray, Vector) {
    tr.SetEntry(1);
 
    EXPECT_EQ(5u, vec.GetSize());
-   EXPECT_DOUBLE_EQ(19., vec[2]);
-   EXPECT_DOUBLE_EQ(17., vec[0]);
+   EXPECT_FLOAT_EQ(19.f, vec[2]);
+   EXPECT_FLOAT_EQ(17.f, vec[0]);
 }
 
 
