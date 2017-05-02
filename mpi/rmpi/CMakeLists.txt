@@ -21,6 +21,7 @@ set(RMPI_HEADERS Mpi/TEnvironment.h
          Mpi/TInfo.h
          Mpi/TPort.h
          Mpi/TMpiTimer.h
+         Mpi/TMpiFile.h
          Mpi/TErrorHandler.h
 		 Mpi.h
 		 )
