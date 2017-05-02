@@ -16,10 +16,7 @@ module "stl" {
     export *
     header "bitset"
   }
-  module "cassert" {
-    export *
-    header "cassert"
-  }
+  // no module for cassert to stay consistent with the OS X modulemap
   module "ccomplex" {
     export *
     header "ccomplex"
