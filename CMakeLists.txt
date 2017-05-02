@@ -172,16 +172,14 @@ if(cxxmodules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
 
-  configure_file("${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap" COPYONLY)
+  add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+  add_custom_command(
+                    OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                    DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+                    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                    COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+  )
 
-  add_custom_target(copymodulemap
-                    DEPENDS build/unix/module.modulemap
-                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
-                    )
-  add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> ${CMAKE_BINARY_DIR}/include/module.modulemap
-                     VERBATIM
-                    )
   add_dependencies(move_artifacts copymodulemap)
 
   # Provide our own modulemap for implementations other than libcxx.
