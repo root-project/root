@@ -245,12 +245,12 @@ TBrowser::~TBrowser()
 
 void TBrowser::Destructor()
 {
-   fImp->CloseTabs();
+   if (fImp) fImp->CloseTabs();
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);
    delete fContextMenu;
    delete fTimer;
-   delete fImp;
+   if (fImp) delete fImp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

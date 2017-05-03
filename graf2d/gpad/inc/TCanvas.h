@@ -134,7 +134,7 @@ public:
    void              FeedbackMode(Bool_t set);
    void              Flush();
    void              UseCurrentStyle(); // *MENU*
-   void              ForceUpdate() { fCanvasImp->ForceUpdate(); }
+   void              ForceUpdate() { if (fCanvasImp) fCanvasImp->ForceUpdate(); }
    const char       *GetDISPLAY() const {return fDISPLAY.Data();}
    TContextMenu     *GetContextMenu() const {return fContextMenu;};
    Int_t             GetDoubleBuffer() const {return fDoubleBuffer;}
@@ -172,7 +172,7 @@ public:
                      {wtopx=GetWindowTopX(); wtopy=fWindowTopY; ww=fWindowWidth; wh=fWindowHeight;}
    virtual void      HandleInput(EEventType button, Int_t x, Int_t y);
    Bool_t            HasMenuBar() const { return TestBit(kMenuBar); }
-   void              Iconify() { fCanvasImp->Iconify(); }
+   void              Iconify() { if (fCanvasImp) fCanvasImp->Iconify(); }
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsDrawn() { return fDrawn; }
    Bool_t            IsFolder() const;
@@ -190,7 +190,7 @@ public:
    virtual void      Selected(TVirtualPad *pad, TObject *obj, Int_t event);            // *SIGNAL*
    virtual void      Cleared(TVirtualPad *pad);                                        // *SIGNAL*
    virtual void      Closed();                                                         // *SIGNAL*
-   void              RaiseWindow() { fCanvasImp->RaiseWindow(); }
+   void              RaiseWindow() { if (fCanvasImp) fCanvasImp->RaiseWindow(); }
    void              ResetDrawn() { fDrawn=kFALSE; }
    virtual void      Resize(Option_t *option="");
    void              ResizeOpaque(Int_t set=1);
@@ -200,15 +200,16 @@ public:
    virtual void      SetDoubleBuffer(Int_t mode=1);
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
-   void              SetWindowPosition(Int_t x, Int_t y) { fCanvasImp->SetWindowPosition(x, y); }
-   void              SetWindowSize(UInt_t ww, UInt_t wh) { fCanvasImp->SetWindowSize(ww, wh); }
+   void              SetWindowPosition(Int_t x, Int_t y) { if (fCanvasImp) fCanvasImp->SetWindowPosition(x, y); }
+   void              SetWindowSize(UInt_t ww, UInt_t wh) { if (fCanvasImp) fCanvasImp->SetWindowSize(ww, wh); }
+   void              SetCanvasImp(TCanvasImp *i) { fCanvasImp = i; }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }
    void              SetSelected(TObject *obj);
    void              SetClickSelected(TObject *obj) { fClickSelected = obj; }
    void              SetSelectedPad(TPad *pad) { fSelectedPad = pad; }
    void              SetClickSelectedPad(TPad *pad) { fClickSelectedPad = pad; }
-   void              Show() { fCanvasImp->Show(); }
+   void              Show() { if (fCanvasImp) fCanvasImp->Show(); }
    virtual void      Size(Float_t xsizeuser=0, Float_t ysizeuser=0);
    void              SetBatch(Bool_t batch=kTRUE);
    static  void      SetFolder(Bool_t isfolder=kTRUE);
