@@ -31,6 +31,7 @@
 #pragma link C++ class ROOT::Mpi::TMpiMessage+;
 #pragma link C++ class ROOT::Mpi::TMpiMessageInfo+;
 #pragma link C++ class ROOT::Mpi::TMpiFile+;
+#pragma link C++ class ROOT::Mpi::TMpiFileMerger+;
 #pragma link C++ class ROOT::Mpi::TInfo+;
 #pragma link C++ class ROOT::Mpi::TPort+;
 #pragma link C++ class ROOT::Mpi::TMpiTimer;
