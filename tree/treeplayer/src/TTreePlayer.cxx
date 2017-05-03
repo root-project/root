@@ -437,13 +437,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (sumh != 0) fHistogram->Scale(1./sumh);
    }
 
-   //if (!nrows && draw && drawflag && !opt.Contains("same")) {
-   //   if (gPad) gPad->Clear();
-   //   return 0;
-   //}
    if (drawflag) {
       if (gPad) {
-         if (!opt.Contains("same")) {
+         if (!opt.Contains("same") && !opt.Contains("goff")) {
             gPad->DrawFrame(-1.,-1.,1.,1.);
             TText *text_empty = new TText(0.,0.,"Empty");
             text_empty->SetTextAlign(22);
