@@ -453,6 +453,12 @@ template <>
 TBuffer  &operator>>(TBuffer &buf,       TString *&sp);
 TBuffer  &operator<<(TBuffer &buf, const TString * sp);
 
+// Conversion operator (per se).
+inline std::string& operator+=(std::string &left, const TString &right)
+{
+   return left.append(right.Data());
+}
+
 TString ToLower(const TString &s);    // Return lower-case version of argument
 TString ToUpper(const TString &s);    // Return upper-case version of argument
 
