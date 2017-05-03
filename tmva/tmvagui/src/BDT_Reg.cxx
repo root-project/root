@@ -226,9 +226,9 @@ TMVA::DecisionTree* TMVA::StatDialogBDTReg::ReadTree( TString* &vars, Int_t itre
       if (itree >= fNtrees) {
          std::cout << "*** ERROR: requested decision tree: " << itree 
                    << ", but number of trained trees only: " << fNtrees << std::endl;
-        delete d;
-        d = nullptr;
-        return 0;
+         delete d;
+         d = nullptr;
+         return 0;
       }
       
       // file header with name
