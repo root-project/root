@@ -141,7 +141,6 @@ void     zoomtf1        ();
 
 // Auxiliary functions
 void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
-void     tmarker_draw   (Double_t x, Double_t y, Int_t mt, Double_t d);
 Double_t interference   (Double_t *x, Double_t *par);
 Double_t result         (Double_t *x, Double_t *par);
 void     cleanup        ();
@@ -695,7 +694,7 @@ void tline()
    TestReport1(C, "TLine");
    DoCcode(C);
    TestReport2();
-};
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,52 +702,14 @@ void tline()
 
 void tmarker()
 {
-   TCanvas *C = StartTest(100,800);
+   TCanvas *C = StartTest(500,200);
 
-   C->Range(0,0,1,1);
-   C->SetFillColor(0);
-   C->SetBorderSize(2);
-   int i;
-   Double_t x = 0.5;
-   Double_t y = 0.1;
-   Double_t dy = 0.04;
-   for (i = 1; i<=7; i++) {
-      tmarker_draw(x, y, i, dy);
-      y = y+dy;
-   }
-   for (i = 20; i<=34; i++) {
-      tmarker_draw(x, y, i, dy);
-      y = y+dy;
-   }
+   TMarker m;
+   m.DisplayMarkerTypes();
 
    TestReport1(C, "TMarker");
    DoCcode(C);
    TestReport2();
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Auxiliary function used by "tmarker"
-
-void tmarker_draw(Double_t x, Double_t y, Int_t mt, Double_t d)
-{
-   double dy=d/3;
-   TMarker *m  = new TMarker(x+0.1, y, mt);
-   TText   *t  = new TText(x-0.1, y, Form("%d",mt));
-   TLine   *l1 = new TLine(0,y,1,y);
-   TLine   *l2 = new TLine(0,y+dy,1,y+dy);
-   TLine   *l3 = new TLine(0,y-dy,1,y-dy);
-   l2->SetLineStyle(2);
-   l3->SetLineStyle(2);
-   m->SetMarkerSize(3.6);
-   m->SetMarkerColor(kRed);
-   t->SetTextAlign(32);
-   t->SetTextSize(0.3);
-   t->Draw();
-   l1->Draw();
-   l2->Draw();
-   l3->Draw();
-   m->Draw();
 }
 
 
@@ -771,7 +732,7 @@ void tpolyline()
    TestReport1(C, "TPolyLine");
    DoCcode(C);
    TestReport2();
-};
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -823,7 +784,7 @@ void patterns()
    TestReport1(C, "Fill patterns");
    DoCcode(C);
    TestReport2();
-};
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
