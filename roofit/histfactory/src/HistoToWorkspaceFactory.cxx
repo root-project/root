@@ -424,7 +424,7 @@ namespace HistFactory{
 
      proto->import(*data);
      delete obsForTree;
-     obsForTree = NULLPTR;
+     obsForTree = nullptr;
 
   }
 
