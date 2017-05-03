@@ -60,6 +60,7 @@ public:
               const BranchNames_t &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
+   TDataFrame(Long64_t numEntries);
 };
 
 template <typename FILENAMESCOLL,

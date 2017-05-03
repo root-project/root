@@ -211,7 +211,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// TDataFrameValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
-void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r, const BranchNames_t &bn,
+void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const BranchNames_t &bn,
                    const BranchNames_t &tmpbn,
                    const std::map<std::string, std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>> &tmpBranches,
                    ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
@@ -232,6 +232,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader &r,
                                         0)...};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
+   (void)r;        // avoid "unused variable" warnings for r on gcc5.2
 }
 
 template <typename Filter>

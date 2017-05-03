@@ -12,6 +12,9 @@
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#endif
 #include "RtypesCore.h" // Long64_t
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
@@ -125,40 +128,85 @@ TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches
 {
 }
 
+TDataFrameImpl::TDataFrameImpl(Long64_t nEmptyEntries)
+   : fNEmptyEntries(nEmptyEntries), fNSlots(ROOT::Internal::GetNSlots())
+{
+}
+
+void TDataFrameImpl::RunAndCheckFilters(unsigned int slot, Long64_t entry)
+{
+   for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
+   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
+}
+
 void TDataFrameImpl::Run()
 {
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
-      using ttpmt_t = ROOT::TTreeProcessorMT;
-      std::unique_ptr<ttpmt_t> tp;
-      tp.reset(new ttpmt_t(*fTree));
-
       TSlotStack slotStack(fNSlots);
       CreateSlots(fNSlots);
-      tp->Process([this, &slotStack](TTreeReader &r) -> void {
-         auto slot = slotStack.Pop();
-         BuildAllReaderValues(r, slot);
-         // recursive call to check filters and conditionally execute actions
-         while (r.Next()) {
-            const auto currEntry = r.GetCurrentEntry();
-            for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, currEntry);
-            for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, currEntry);
+
+      if (fNEmptyEntries > 0) {
+         // Working with an empty tree.
+         // Evenly partition the entries according to fNSlots 
+         const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
+         auto remainder = fNEmptyEntries % fNSlots;
+         std::vector<std::pair<Long64_t, Long64_t>> entryRanges;
+         Long64_t start = 0;
+         while (start < fNEmptyEntries) {
+            Long64_t end = start + nEntriesPerSlot;
+            if (remainder > 0) {
+               ++end;
+               --remainder;
+            }
+            entryRanges.emplace_back(start, end);
+            start = end;
          }
-         slotStack.Push(slot);
-      });
+
+         // Each task will generate a subrange of entries
+         auto genFunction = [this, &slotStack](const std::pair<Long64_t, Long64_t> &range) {
+            auto slot = slotStack.Pop();
+            BuildAllReaderValues(nullptr, slot);
+            for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
+               RunAndCheckFilters(slot, currEntry);
+            }
+            slotStack.Push(slot);
+          };
+
+         ROOT::TThreadExecutor pool;
+         pool.Foreach(genFunction, entryRanges);
+      } else {
+         using ttpmt_t = ROOT::TTreeProcessorMT;
+         std::unique_ptr<ttpmt_t> tp;
+         tp.reset(new ttpmt_t(*fTree));
+
+         tp->Process([this, &slotStack](TTreeReader &r) -> void {
+            auto slot = slotStack.Pop();
+            BuildAllReaderValues(&r, slot);
+            // recursive call to check filters and conditionally execute actions
+            while (r.Next()) {
+               RunAndCheckFilters(slot, r.GetCurrentEntry());
+            }
+            slotStack.Push(slot);
+         });
+      }
    } else {
 #endif // R__USE_IMT
-      TTreeReader r(fTree.get());
-
       CreateSlots(1);
-      BuildAllReaderValues(r, 0);
+      if (fNEmptyEntries > 0) {
+         BuildAllReaderValues(nullptr, 0);
+         for (Long64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
+            RunAndCheckFilters(0, currEntry);
+         }
+      } else {
+         TTreeReader r(fTree.get());
+         BuildAllReaderValues(&r, 0);
 
-      // recursive call to check filters and conditionally execute actions
-      // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
-      while (r.Next() && fNStopsReceived < fNChildren) {
-         const auto currEntry = r.GetCurrentEntry();
-         for (auto &actionPtr : fBookedActions) actionPtr->Run(0, currEntry);
-         for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(0, currEntry);
+         // recursive call to check filters and conditionally execute actions
+         // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
+         while (r.Next() && fNStopsReceived < fNChildren) {
+            RunAndCheckFilters(0, r.GetCurrentEntry());
+         }
       }
 #ifdef R__USE_IMT
    }
@@ -181,7 +229,7 @@ void TDataFrameImpl::Run()
 /// calls their `BuildReaderValues` methods. It is called once per node per slot, before
 /// running the event loop. It also informs each node of the TTreeReader that
 /// a particular slot will be using.
-void TDataFrameImpl::BuildAllReaderValues(TTreeReader &r, unsigned int slot)
+void TDataFrameImpl::BuildAllReaderValues(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first
    // because actions and filters might need to point to the values encapsulate

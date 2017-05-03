@@ -127,10 +127,12 @@ unsigned int GetNSlots()
 
 void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 {
-   auto branch = treePtr->GetBranch(branchName.c_str());
-   if (branch != nullptr) {
-      auto msg = "branch \"" + branchName + "\" already present in TTree";
-      throw std::runtime_error(msg);
+   if (treePtr != nullptr) {
+      auto branch = treePtr->GetBranch(branchName.c_str());
+      if (branch != nullptr) {
+         auto msg = "branch \"" + branchName + "\" already present in TTree";
+         throw std::runtime_error(msg);
+      }
    }
 }
 

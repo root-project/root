@@ -85,6 +85,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 - Allow reading of older version of TTreePerfStats (ROOT-8520)
 - Introduce TDataFrame which offers a new and highly efficient way to analyse data stored in TTrees
+    - Allow to build a TDataFrame from an empty source by specifying the number of entries to be generated on the fly.
 - In `TTree::OptimizeBaskets()` do not call GetBasket(0) to avoid disc reads
 - It is now possible to define the precision of the default histogram created
   by `TTree::Draw`. Three new parameters are available in `$ROOTSYS/etcsystem.rootrc`

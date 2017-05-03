@@ -555,6 +555,19 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
 {
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
+/// \param[in] numEntries The number of entries to generate.
+///
+/// An empty-source dataframe constructed with a number of entries will
+/// generate those entries on the fly when some action is triggered,
+/// and it will do so for all the previously-defined temporary branches.
+TDataFrame::TDataFrame(Long64_t numEntries)
+   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+        std::make_shared<ROOT::Detail::TDataFrameImpl>(numEntries))
+{
+}
+
 } // end NS Experimental
 
 } // end NS ROOT

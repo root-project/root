@@ -53,17 +53,21 @@ class TDataFrameImpl : public std::enable_shared_from_this<TDataFrameImpl> {
    ::TDirectory *fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
    const BranchNames_t fDefaultBranches;
+   const Long64_t fNEmptyEntries{0};
    const unsigned int fNSlots{0};
    bool fHasRunAtLeastOnce{false};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
+   void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+
 public:
    TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches);
+   TDataFrameImpl(Long64_t nEmptyEntries);
    TDataFrameImpl(const TDataFrameImpl &) = delete;
    ~TDataFrameImpl(){};
    void Run();
-   void BuildAllReaderValues(TTreeReader &r, unsigned int slot);
+   void BuildAllReaderValues(TTreeReader *r, unsigned int slot);
    void CreateSlots(unsigned int nSlots);
    TDataFrameImpl *GetImplPtr();
    std::shared_ptr<TDataFrameImpl> GetSharedPtr() { return shared_from_this(); }
@@ -135,14 +139,14 @@ public:
 
    void SetTmpColumn(unsigned int slot, ROOT::Detail::TDataFrameBranchBase *tmpColumn);
 
-   void MakeProxy(TTreeReader &r, const std::string &bn)
+   void MakeProxy(TTreeReader *r, const std::string &bn)
    {
       Reset();
       bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
       if (useReaderValue)
-         fReaderValue.reset(new TTreeReaderValue<T>(r, bn.c_str()));
+         fReaderValue.reset(new TTreeReaderValue<T>(*r, bn.c_str()));
       else
-         fReaderArray.reset(new TTreeReaderArray<ProxyParam_t>(r, bn.c_str()));
+         fReaderArray.reset(new TTreeReaderArray<ProxyParam_t>(*r, bn.c_str()));
    }
 
    template <typename U = T,
@@ -198,7 +202,7 @@ public:
    TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches);
    virtual ~TDataFrameActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
-   virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
+   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
 };
 
@@ -221,7 +225,7 @@ public:
 
    void CreateSlots(unsigned int nSlots) final { fValues.resize(nSlots); }
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
+   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                     TypeInd_t());
@@ -259,7 +263,7 @@ protected:
 public:
    TDataFrameBranchBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
    virtual ~TDataFrameBranchBase() {}
-   virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
+   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    virtual void *GetValuePtr(unsigned int slot) = 0;
    virtual const std::type_info &GetTypeId() const = 0;
@@ -298,7 +302,7 @@ public:
 
    TDataFrameBranch(const TDataFrameBranch &) = delete;
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
+   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                     TypeInd_t());
@@ -367,7 +371,7 @@ protected:
 public:
    TDataFrameFilterBase(TDataFrameImpl *df, const BranchNames_t &tmpBranches, const std::string &name);
    virtual ~TDataFrameFilterBase() {}
-   virtual void BuildReaderValues(TTreeReader &r, unsigned int slot) = 0;
+   virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
@@ -435,7 +439,7 @@ public:
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
 
-   void BuildReaderValues(TTreeReader &r, unsigned int slot) final
+   void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                     TypeInd_t());
