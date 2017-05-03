@@ -9870,7 +9870,7 @@ int stressHistogram()
    status = ht2->compareHistograms();
    GlobalStatus += status;
    printResult("Testing Histogram Projections with weights.......................", status);
-   if (cleanHistos) delete ht2;
+   if (cleanHistos) SafeDelete(ht2);
 
 
    ProjectionTester* htp2 = new ProjectionTester(true);
@@ -9878,7 +9878,7 @@ int stressHistogram()
    status = htp2->compareProfiles();
    GlobalStatus += status;
    printResult("Testing Profile   Projections with weights.......................", status);
-   if (cleanHistos) delete htp2;
+   if (cleanHistos) SafeDelete(htp2);
 
    // Test 3
    // Range Tests
