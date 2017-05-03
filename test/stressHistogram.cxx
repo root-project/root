@@ -9839,19 +9839,23 @@ int stressHistogram()
 
 
 
-   ProjectionTester* ht = new ProjectionTester();
-   ht->buildHistograms();
-   //Ht->buildHistograms(2,4,5,6,8,10);
-   status = ht->compareHistograms();
-   GlobalStatus += status;
-   if (cleanHistos) delete ht;
-   printResult("Testing Histogram Projections without weights....................", status);
+   {
+      ProjectionTester* ht = new ProjectionTester();
+      ht->buildHistograms();
+      //Ht->buildHistograms(2,4,5,6,8,10);
+      status = ht->compareHistograms();
+      GlobalStatus += status;
+      if (cleanHistos) delete ht;
+      printResult("Testing Histogram Projections without weights....................", status);
+   }
 
-   ProjectionTester* htp = new ProjectionTester();
-   htp->buildProfiles();
-   status = htp->compareProfiles();
-   GlobalStatus += status;
-   if (cleanHistos) delete htp;
+   {
+      ProjectionTester* htp = new ProjectionTester();
+      htp->buildProfiles();
+      status = htp->compareProfiles();
+      GlobalStatus += status;
+      if (cleanHistos) delete htp;
+   }
 
    printResult("Testing Profile Projections without weights......................", status);
 
@@ -9865,20 +9869,23 @@ int stressHistogram()
    TH1::SetDefaultSumw2();
 
 
-   ProjectionTester* ht2 = new ProjectionTester();
-   ht2->buildHistogramsWithWeights();
-   status = ht2->compareHistograms();
-   GlobalStatus += status;
-   printResult("Testing Histogram Projections with weights.......................", status);
-   if (cleanHistos) SafeDelete(ht2);
+   {
+      ProjectionTester* ht2 = new ProjectionTester();
+      ht2->buildHistogramsWithWeights();
+      status = ht2->compareHistograms();
+      GlobalStatus += status;
+      printResult("Testing Histogram Projections with weights.......................", status);
+      if (cleanHistos) delete ht2;
+   }
 
-
-   ProjectionTester* htp2 = new ProjectionTester(true);
-   htp2->buildProfiles();
-   status = htp2->compareProfiles();
-   GlobalStatus += status;
-   printResult("Testing Profile   Projections with weights.......................", status);
-   if (cleanHistos) SafeDelete(htp2);
+   {
+      ProjectionTester* htp2 = new ProjectionTester(true);
+      htp2->buildProfiles();
+      status = htp2->compareProfiles();
+      GlobalStatus += status;
+      printResult("Testing Profile   Projections with weights.......................", status);
+      if (cleanHistos) delete htp2;
+   }
 
    // Test 3
    // Range Tests
