@@ -221,7 +221,7 @@ void TMPWorkerTree::HandleInput(MPCodeBufPair& msg)
       //unknown code received
       std::string reply = "S" + std::to_string(GetNWorker());
       reply += ": unknown code received: " + std::to_string(code);
-      MPSend(GetSocket(), MPCode::kError, reply.data());
+      MPSend(GetSocket(), MPCode::kError, reply.c_str());
    }
 }
 

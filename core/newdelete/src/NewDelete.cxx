@@ -175,10 +175,14 @@ static TReAllocInit gReallocInit;
 #endif
 
 #ifdef R__THROWNEWDELETE
-#   ifdef R__OLDHPACC
-#      define R__THROW_BAD  throw(bad_alloc)
+#   if __cplusplus <= 201402L
+#     ifdef R__OLDHPACC
+#       define R__THROW_BAD  throw(bad_alloc)
+#     else
+#       define R__THROW_BAD  throw(std::bad_alloc)
+#     endif
 #   else
-#      define R__THROW_BAD  throw(std::bad_alloc)
+#     define R__THROW_BAD throw()
 #   endif
 #   define R__THROW_NULL throw()
 #else
