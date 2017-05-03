@@ -15,11 +15,14 @@ public:
    TProfile2PolyBin(TObject *poly, Int_t bin_number);
    virtual ~TProfile2PolyBin() {}
 
+   void Merge(const TProfile2PolyBin *toMerge);
+
    void Update();
    void ClearStats();
 
    Double_t GetEffectiveEntries() { return (fSumw * fSumw) / fSumw2; }
    Double_t GetEntries() { return fSumw; }
+   Double_t GetBinError() { return fError; }
 
 
 private:
@@ -69,7 +72,12 @@ public:
 
    void SetErrorOption(EErrorType type);
 
-   Double_t GetBinEffectiveEntries(Int_t bin);
+   Double_t GetBinEffectiveEntries(Int_t bin) const;
+   Double_t GetBinEntries(Int_t bin) const;
+
+   using TH2Poly::GetBinError;
+   virtual Double_t GetBinError(Int_t bin) const override;
+
    Double_t GetOverflowContent(Int_t idx) { return regions[idx].fSumw; }
    void printOverflowRegions();
 

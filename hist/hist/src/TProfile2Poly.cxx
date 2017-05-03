@@ -36,6 +36,14 @@ TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin
    fErrorMode = kERRORSPREAD;
 }
 
+void TProfile2PolyBin::Merge(const TProfile2PolyBin *toMerge)
+{
+   this->fSumw += toMerge->fSumw;
+   this->fSumvw += toMerge->fSumvw;
+   this->fSumw2 += toMerge->fSumw2;
+   this->fSumwv2 += toMerge->fSumwv2;
+}
+
 void TProfile2PolyBin::Update()
 {
    UpdateAverage();
@@ -54,14 +62,9 @@ void TProfile2PolyBin::UpdateError()
    if (fSumw != 0) tmp = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
 
    switch (fErrorMode) {
-   case kERRORMEAN:
-       fError = std::sqrt(GetEffectiveEntries()) / tmp;
-       break;
-   case kERRORSPREAD:
-       fError = tmp;
-       break;
-   default:
-       fError = tmp;
+   case kERRORMEAN: fError = std::sqrt(GetEffectiveEntries()) / tmp; break;
+   case kERRORSPREAD: fError = tmp; break;
+   default: fError = tmp;
    }
 }
 
@@ -208,7 +211,7 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
 
       // Merge overflow bins
       for (Int_t i = 0; i < kNOverflow; ++i) {
-         this->regions[i].fSumw += histo->GetOverflowContent(i);
+         this->regions[i].Merge(&histo->regions[i]);
       }
    }
 
@@ -218,27 +221,11 @@ Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
    for (Int_t i = 0; i < nbins; i++) {
       dst = (TProfile2PolyBin *)fBins->At(i);
 
-      Double_t sumw_acc = 0;
-      Double_t sumvw_acc = 0;
-      Double_t sumv2_acc = 0;
-      Double_t sumwv2_acc = 0;
-
-      // accumulate values of interest in the input vector
       for (const auto &e : list) {
          src = (TProfile2PolyBin *)e->fBins->At(i);
-         sumw_acc += src->fSumw;
-         sumvw_acc += src->fSumvw;
-         sumv2_acc += src->fSumw2;
-         sumwv2_acc += src->fSumwv2;
+         dst->Merge(src);
       }
 
-      // add values of accumulation to existing histogram
-      dst->fSumw += sumw_acc;
-      dst->fSumvw += sumvw_acc;
-      dst->fSumw2 += sumv2_acc;
-      dst->fSumwv2 += sumwv2_acc;
-
-      // update averages, errors
       dst->Update();
    }
 
@@ -266,12 +253,25 @@ void TProfile2Poly::SetContentToError()
    }
 }
 
-Double_t TProfile2Poly::GetBinEffectiveEntries(Int_t bin)
+Double_t TProfile2Poly::GetBinEffectiveEntries(Int_t bin) const
 {
-    //todo
-    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-    if (bin<0) return fOverflow[-bin - 1];
-    return ((TProfile2PolyBin*) fBins->At(bin-1))->GetEffectiveEntries();
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEffectiveEntries();
+}
+
+Double_t TProfile2Poly::GetBinEntries(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntries();
+}
+
+Double_t TProfile2Poly::GetBinError(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetBinError();
 }
 
 void TProfile2Poly::printOverflowRegions()
@@ -339,13 +339,13 @@ Int_t TProfile2Poly::GetOverflowRegionFromCoordinates(Double_t x, Double_t y)
 
 void TProfile2Poly::SetErrorOption(EErrorType type)
 {
-  fErrorMode = type;
+   fErrorMode = type;
 
-  TIter next(fBins);
-  TObject *obj;
-  TProfile2PolyBin *bin;
-  while ((obj = next())) {
-     bin = (TProfile2PolyBin *)obj;
-     bin->SetErrorOption(type);
-  }
+   TIter next(fBins);
+   TObject *obj;
+   TProfile2PolyBin *bin;
+   while ((obj = next())) {
+      bin = (TProfile2PolyBin *)obj;
+      bin->SetErrorOption(type);
+   }
 }

@@ -96,9 +96,9 @@ public:
    Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
    Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
    Bool_t       GetBinContentChanged() const{return fBinContentChanged;}
-   Double_t     GetBinError(Int_t bin) const;
-   Double_t     GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
-   Double_t     GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
+   virtual Double_t GetBinError(Int_t bin) const;
+   virtual Double_t GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse
+   virtual Double_t GetBinError(Int_t , Int_t , Int_t) const {return 0;}    //MayNotUse
    const char  *GetBinName(Int_t bin) const;
    const char  *GetBinTitle(Int_t bin) const;
    Bool_t       GetFloat(){return fFloat;}
