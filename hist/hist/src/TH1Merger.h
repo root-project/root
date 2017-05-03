@@ -55,6 +55,10 @@ public:
    }
 
    ~TH1Merger() {
+      // The list contains fHClone, so let's clear it first to avoid
+      // accessing deleted memory later [we 'could' have just removed
+      // fHClone from the list]
+      fInputList.Clear();
       if (fHClone) delete fHClone; 
    }
 
