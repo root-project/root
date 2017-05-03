@@ -139,3 +139,27 @@ TEST(TTreeReaderLeafs, LeafList) {
    EXPECT_EQ(2u, vec.GetSize());
    tree.release();
 }
+
+TEST(TTreeReaderLeafs, TArrayD) {
+   // https://root-forum.cern.ch/t/tarrayd-in-ttreereadervalue/24495
+   TTree* tree = new TTree("TTreeReaderLeafsTArrayD", "In-memory test tree");
+   TArrayD arrD(7);
+   for (int i = 0; i < arrD.GetSize(); ++i)
+      arrD.SetAt(i + 2., i);
+   tree->Branch("arrD", &arrD);
+
+   tree->Fill();
+   tree->Fill();
+   tree->Fill();
+
+   tree->ResetBranchAddresses();
+
+   TTreeReader tr(tree);
+   TTreeReaderValue<TArrayD> arr(tr, "arrD");
+
+   tr.SetEntry(1);
+
+   EXPECT_EQ(7, arr->GetSize());
+   EXPECT_DOUBLE_EQ(4., (*arr)[2]);
+   EXPECT_DOUBLE_EQ(2., (*arr)[0]);
+}
