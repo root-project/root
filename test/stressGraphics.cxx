@@ -115,10 +115,11 @@ void     tgaxis4        ();
 void     tgaxis5        ();
 void     tgraph1        ();
 void     tgraph2        ();
+void     tgraph3        ();
+void     tgraph4        ();
 void     tgraph2d1      ();
 void     tgraph2d2      ();
 void     tgraph2d3      ();
-void     tgraph3        ();
 void     th2poly        ();
 void     timage         ();
 void     tlatex1        ();
@@ -358,6 +359,7 @@ void stressGraphics(Int_t verbose = 0)
    tgraph1       ();
    tgraph2       ();
    tgraph3       ();
+   tgraph4       ();
    tmultigraph1  ();
    tmultigraph2  ();
    waves         ();
@@ -1191,6 +1193,7 @@ void itbf()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TMatText test
 
 void tmathtext()
 {
@@ -1604,7 +1607,7 @@ void tgaxis5()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// function used by tgaxis5
+/// Function used by tgaxis5
 
 TString stime(time_t* t, bool utc, bool display_time_zone)
 {
@@ -1918,6 +1921,48 @@ void tgraph3()
    TestReport2();
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// 4th TGraph test.
+
+void tgraph4()
+{
+   TCanvas *C = StartTest(800,400);
+
+   C->DivideSquare(2);
+
+   const int numPoints = 10;
+   double xValues[numPoints], yValues[numPoints];
+   for (int i=0;i<numPoints;i++) {
+      xValues[i] = i+2;
+      yValues[i] = pow(10,i-3);
+   }
+   TGraph *g1 = new TGraph(numPoints, xValues, yValues);
+   g1->SetTitle("These two plots should be the same");
+   TGraph *g2 = new TGraph(numPoints, xValues, yValues);
+   g2->SetTitle("");
+
+   // Log x first
+   C->cd(1);
+   g1->Draw();
+   gPad->SetLogx();
+   C->Update();
+   gPad->SetLogy();
+   C->Update();
+
+   // Log y first
+   C->cd(2);
+   g2->Draw();
+   gPad->SetLogy();
+   C->Update();
+   gPad->SetLogx();
+
+   TestReport1(C, "TGraph 4 (Log scales setting order)");
+   DoCcode(C);
+   TestReport2();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// TH2Poly test.
 
@@ -1987,6 +2032,7 @@ void th2poly()
    DoCcode(C);
    TestReport2();
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TMultigraph and TGraphErrors test
@@ -2290,7 +2336,7 @@ void options2d5()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 5th 2D options Test
+/// 6th 2D options Test
 
 void earth()
 {
@@ -2671,12 +2717,12 @@ void timage()
 }
 
 
-//______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Zoom/UnZoom a collection of TF1
+
 double fg(double *x, double *p) {return sin((*p)*(*x));}
 void zoomtf1()
 {
-   // Zoom/UnZoom a collection of TF1
-
    TCanvas *C = StartTest(800,800);
 
    TF1* f[6];
