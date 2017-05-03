@@ -93,7 +93,15 @@ std::unique_ptr<TTree> CreateTree() {
    data.fDouble32 = 17.;
    data.fFloat16 = 44.;
    tree->Fill();
+
+   data.fVec.clear();
+   data.fVec.resize(3210, 1001.f); // ROOT-8747
    tree->Fill();
+
+   data.fVec.clear();
+   data.fVec.resize(2, 42.f); // ROOT-8747
+   tree->Fill();
+
    tree->ResetBranchAddresses();
    return tree;
 }
@@ -121,4 +129,13 @@ TEST(TTreeReaderLeafs, LeafList) {
 
    EXPECT_FLOAT_EQ(17, *d32);
    EXPECT_FLOAT_EQ(44, *f16);
+
+   tr.Next();
+   EXPECT_FLOAT_EQ(1001.f, vec[1]); // ROOT-8747
+   EXPECT_EQ(3210u, vec.GetSize());
+
+   tr.Next();
+   EXPECT_FLOAT_EQ(42.f, vec[1]); // ROOT-8747
+   EXPECT_EQ(2u, vec.GetSize());
+   tree.release();
 }
