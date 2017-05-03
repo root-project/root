@@ -10236,10 +10236,6 @@ int stressHistogram()
              << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
-   if (cleanHistos) {
-      delete ht2;
-      delete htp2;
-   }
    return GlobalStatus;
 }
 
