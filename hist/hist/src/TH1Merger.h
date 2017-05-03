@@ -1,10 +1,20 @@
-// Helper clas implementing some of the TH1 functionality
+// @(#)root/cont:$Id$
+// Author:  Lorenzo Moneta 08/2016
 
+/*************************************************************************
+ * Copyright (C) 1995-2003, Rene Brun, Fons Rademakers and al.           *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+// Helper clas implementing some of the TH1 functionality
 
 #include "TH1.h"
 #include "TList.h"
 
-class TH1Merger{
+class TH1Merger {
 
 public: 
 
