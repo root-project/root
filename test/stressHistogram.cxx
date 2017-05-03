@@ -118,7 +118,7 @@ enum compareOptions {
 int defaultEqualOptions = 0; //cmpOptPrint;
 //int defaultEqualOptions = cmpOptDebug;
 
-Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swict off in case of debugging)
+constexpr Bool_t cleanHistos = kTRUE;   // delete histogram after testing (swicth off in case of debugging)
 
 const double defaultErrorLimit = 1.E-10;
 
