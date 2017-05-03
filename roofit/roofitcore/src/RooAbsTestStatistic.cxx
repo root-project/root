@@ -243,7 +243,7 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 Double_t RooAbsTestStatistic::evaluate() const
 {
-  std::ofstream timing_outfile;
+  RooJsonListFile timing_outfile;
   RooWallTimer timer;
 
     // One-time Initialization
@@ -253,7 +253,9 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   if (SimMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_outfile.open("timing_RATS_evaluate_full.json");
+      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+      timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     // Evaluate array of owned GOF objects
@@ -286,27 +288,24 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-      
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
-          << "\", \"pid\": \"" << getpid()
-          << "\", \"ppid\": \"" << getppid()
-          << "\", \"mode\": \"SimMaster"
-          << "\"}," << "\n";
-
-      timing_outfile.close();
+      timing_outfile << timer.timing_s() << getpid() << getppid() << "SimMaster";
     }
 
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_outfile.open("timing_RATS_evaluate_full.json");
+      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+      timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     std::vector<double> timings;
     if (RooTrace::timing_flag == 3) {
       timings.reserve(_nCPU);
-      timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json", ios::app);
+      timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json");
+      std::string names[4] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid", "ppid"};
+      timing_outfile.set_member_names(names, names + 4);
     }
 
     // Start calculations in parallel
@@ -331,17 +330,9 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     if (RooTrace::timing_flag == 3) {
-
       for (Int_t i = 0; i < _nCPU; ++i) {
-        timing_outfile << "{"
-                       << "\"RATS_evaluate_mpmaster_it_wall_s\": \"" << timings[i]
-                       << "\", \"it_nr\": \"" << i
-                       << "\", \"pid\": \"" << getpid()
-                       << "\", \"ppid\": \"" << getppid()
-                       << "\"}," << "\n";
+        timing_outfile << timings[i] << i << getpid() << getppid();
       }
-
-      timing_outfile.close();
     }
 
     Double_t ret = sum ;
@@ -349,14 +340,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
-          << "\", \"pid\": \"" << getpid()
-          << "\", \"ppid\": \"" << getppid()
-          << "\", \"mode\": \"MPMaster"
-          << "\"}," << "\n";
-
-      timing_outfile.close();
+      timing_outfile << timer.timing_s() << getpid() << getppid() << "MPMaster";
     }
 
     if (RooTrace::time_numInts() == kTRUE) {
@@ -367,7 +351,9 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   } else {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json", ios::app);
+      timing_outfile.open("timing_RATS_evaluate_full.json");
+      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+      timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
 
@@ -414,14 +400,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-
-      timing_outfile << "{\"RATS_evaluate_wall_s\": \"" << timer.timing_s()
-          << "\", \"pid\": \"" << getpid()
-          << "\", \"ppid\": \"" << getppid()
-          << "\", \"mode\": \"other"
-          << "\"}," << "\n";
-
-      timing_outfile.close();
+      timing_outfile << timer.timing_s() << getpid() << getppid() << "other";
     }
 
     return ret ;
@@ -861,7 +840,7 @@ void RooAbsTestStatistic::_collectNumIntTimings(Bool_t clear_timings) const {
     for (Int_t i = 0; i < _nCPU; ++i) {
       auto timings = _mpfeArray[i]->collectTimingsFromServer(clear_timings);
       if (timings.size() > 0) {
-        JsonListFile timing_json("timings_numInts.json");
+        RooJsonListFile timing_json("timings_numInts.json");
         timing_json.set_member_names(member_names.begin(), member_names.end());
 
         pid_t pid = _mpfeArray[i]->getPIDFromServer();
@@ -875,7 +854,7 @@ void RooAbsTestStatistic::_collectNumIntTimings(Bool_t clear_timings) const {
   } else {
     std::vector<std::string> member_names = {"wall_s", "name", "pid"};
     if (RooTrace::objectTiming.size() > 0) {
-      JsonListFile timing_json("timings_numInts.json");
+      RooJsonListFile timing_json("timings_numInts.json");
       timing_json.set_member_names(member_names.begin(), member_names.end());
 
       pid_t pid = getpid();

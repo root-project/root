@@ -41,16 +41,19 @@ private:
 };
 
 
-class JsonListFile {
+class RooJsonListFile {
 public:
-  JsonListFile(const std::string & filename);
-  ~JsonListFile();
+  RooJsonListFile(): _member_index(0) {}
+  RooJsonListFile(const std::string & filename);
+  ~RooJsonListFile();
+
+  void open(const std::string & filename);
 
   template <class Iter>
   void set_member_names(Iter begin, Iter end, bool reset_index = true);
 
   template <typename T>
-  JsonListFile& operator<< (const T& obj);
+  RooJsonListFile& operator<< (const T& obj);
 
 private:
   std::ofstream _out;
@@ -61,7 +64,7 @@ private:
 
 
 template <class Iter>
-void JsonListFile::set_member_names(Iter begin, Iter end, bool reset_index) {
+void RooJsonListFile::set_member_names(Iter begin, Iter end, bool reset_index) {
   _member_names.clear();
   for(Iter it = begin; it != end; ++it) {
     _member_names.push_back(*it);
@@ -75,7 +78,7 @@ void JsonListFile::set_member_names(Iter begin, Iter end, bool reset_index) {
 /// This method assumes that std::ofstream::operator<<(T) exists.
 
 template <typename T>
-JsonListFile& JsonListFile::operator<< (const T& obj)
+RooJsonListFile& RooJsonListFile::operator<< (const T& obj)
 {
   auto ix = _next_member_index();
   if (ix == 0) {

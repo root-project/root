@@ -51,9 +51,12 @@ void RooCPUTimer::stop() {
 }
 
 
-JsonListFile::JsonListFile(const std::string & filename) :
-_member_index(0)
-{
+RooJsonListFile::RooJsonListFile(const std::string & filename) :
+_member_index(0) {
+  open(filename);
+}
+
+void RooJsonListFile::open(const std::string & filename) {
   // do not use ios::app for opening out!
   // app moves put pointer to end of file before each write, which makes seekp useless.
   // See http://en.cppreference.com/w/cpp/io/basic_filebuf/open
@@ -70,12 +73,12 @@ _member_index(0)
   }
 }
 
-JsonListFile::~JsonListFile() {
+RooJsonListFile::~RooJsonListFile() {
   _out.seekp(-2, std::ios_base::end);
   _out << "\n]";
 }
 
-unsigned long JsonListFile::_next_member_index() {
+unsigned long RooJsonListFile::_next_member_index() {
   auto current_index = _member_index;
   _member_index = (_member_index + 1) % _member_names.size();
   return current_index;
