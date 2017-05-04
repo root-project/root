@@ -59,3 +59,6 @@ ROOTTEST_ADD_TEST(assertUnnamedMacro
                   MACRO assertUnnamedMacro.C
                   LABELS roottest regression cling)
 
+ROOTTEST_ADD_TEST(assertROOT8773
+                  MACRO assertROOT8773.C
+                  LABELS roottest regression cling)
