@@ -203,6 +203,8 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ![New markers](NewMarkers.png)
 
+- Remove a large memory leak in TFITSHDU's GetArrayRow, GetArrayColumn and GetTabRealVectorColumn member functions.
+
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
 - The option `BOX`and `GLBOX` now draw boxes with a volume proportional to the
