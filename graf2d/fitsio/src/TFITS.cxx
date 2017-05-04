@@ -1095,7 +1095,7 @@ TVectorD* TFITSHDU::GetArrayColumn(UInt_t col)
    }
 
    TVectorD *vec = new TVectorD(H);
-   double *v = vec->GetMatrixArray()
+   double *v = vec->GetMatrixArray();
 
    for (i = 0; i < H; i++) {
       v[i] = fPixels->GetAt(W*i+col);
