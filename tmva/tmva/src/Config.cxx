@@ -67,6 +67,7 @@ TMVA::Config::Config() :
 
    fVariablePlotting.fNbinsMVAoutput   = 40;
    fVariablePlotting.fNbinsXOfROCCurve = 100;
+   fVariablePlotting.fUsePaperStyle = 0;
 
    // IO names
    fIONames.fWeightFileDir           = "weights";
