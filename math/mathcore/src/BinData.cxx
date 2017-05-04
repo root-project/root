@@ -202,7 +202,7 @@ namespace ROOT {
 
       if ( fpTmpBinEdgeVector )
       {
-        delete [] fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector= NULL;
       }
 
@@ -230,7 +230,7 @@ namespace ROOT {
       {
         assert( Opt().fIntegral );
 
-        delete [] fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector= NULL;
       }
 
@@ -716,7 +716,7 @@ namespace ROOT {
 
       if ( fpTmpBinEdgeVector )
       {
-        delete [] fpTmpBinEdgeVector;
+        delete[] fpTmpBinEdgeVector;
         fpTmpBinEdgeVector = NULL;
       }
 
