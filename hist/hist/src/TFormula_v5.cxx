@@ -2685,7 +2685,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 {
    Int_t i,j;
    // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow.
-   Double_t tab[kMAXFOUND];
+   Double_t tab[kMAXFOUND]={0};
    const char *stringStack[gMAXSTRINGFOUND];
    Double_t param_calc[kMAXFOUND];
    char *string_calc[gMAXSTRINGFOUND];
@@ -4188,7 +4188,7 @@ Double_t TFormula::EvalParFast(const Double_t *x, const Double_t *uparams)
    const Double_t  *pdata[3] = {x,(uparams!=0)?uparams:fParams, fConst};
    //
    Int_t i,j;
-   Double_t tab[kMAXFOUND];
+   Double_t tab[kMAXFOUND]={0};
    const char *stringStack[gMAXSTRINGFOUND];
    Double_t param_calc[kMAXFOUND];
    char *string_calc[gMAXSTRINGFOUND];

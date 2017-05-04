@@ -192,10 +192,10 @@ double testAddition( const std::vector<V *> & dataV, TStopwatch & tim, double& t
     for (unsigned int j = i +1; j < n; ++j) {
       V & v2 = *(dataV[j]);
       V v3 = v1 + v2;
-      if (i % 1) {
-        tot += v3.E();
+      if (i % 2) {
+         tot += v3.E();
       } else {
-        tot -= v3.E();
+         tot -= v3.E();
       }
     }
   }
@@ -214,10 +214,10 @@ double testScale( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
     V  & v1 = *(dataV[i]);
     // scale
     v1 = 2.0*v1;
-    if (i % 1) {
-      tot += v1.E();
+    if (i % 2) {
+       tot += v1.E();
     } else {
-      tot -= v1.E();
+       tot -= v1.E();
     }
   }
   tim.Stop();
@@ -255,10 +255,10 @@ double testDeltaR( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
     for (unsigned int j = i +1; j < n; ++j) {
       V & v2 = *(dataV[j]);
       double delta = VectorUtil::DeltaR(v1,v2);
-      if (i % 1) {
-        tot += delta;
+      if (i % 2) {
+         tot += delta;
       } else {
-        tot -= delta;
+         tot -= delta;
       }
     }
   }
