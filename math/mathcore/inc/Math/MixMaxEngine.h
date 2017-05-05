@@ -38,7 +38,7 @@ namespace ROOT {
 
       /**
          MixMaxEngine is a wrapper class for the MIXMAX Random number generator.
-         MIXMASX  is a matrix-recursive random number generator introduced by
+         MIXMAX is a matrix-recursive random number generator introduced by
          G. Savvidy.
 
          The real implementation of the generator, written in C, is in the mixmax.h and mixmax.cxx files.
@@ -54,7 +54,7 @@ namespace ROOT {
           
          *  MIXMAX with N = 17, from the 2.0 version with $s=0$ and $m=2^{36}+1$. The period of the generator is $10^{294}$. 
 
-         *  MIMAMX with N = 256 from the 1.0 version. The period is (for `SkipNumber=0`) $10^{4682}$. For this generatior we reccomend using a default value of `SkipNumber=2`. 
+         *  MIXMAX with N = 256 from the 1.0 version. The period is (for `SkipNumber=0`) $10^{4682}$. For this generator we recommend using a default value of `SkipNumber=2`. 
  
 
          The References for MIXMAX are 
