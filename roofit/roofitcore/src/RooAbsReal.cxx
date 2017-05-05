@@ -1597,6 +1597,8 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 ///
 /// NumCPU(Int_t ncpu)              -- Number of CPUs to use simultaneously to calculate data-weighted projections (only in combination with ProjWData)
 ///
+/// CPUAffinity(Bool_t flag)        -- Set CPU affinity to fix multi core processes to their own CPU cores
+///
 ///
 /// Misc content control
 /// --------------------
@@ -1768,6 +1770,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineInt("showProg","ShowProgress",0,0) ;
   pc.defineInt("numCPU","NumCPU",0,1) ;
   pc.defineInt("interleave","NumCPU",1,0) ;
+  pc.defineInt("cpuAffinity","CPUAffinity",0,1) ;
   pc.defineString("addToCurveName","AddTo",0,"") ;
   pc.defineDouble("addToWgtSelf","AddTo",0,1.) ;
   pc.defineDouble("addToWgtOther","AddTo",1,1.) ;
@@ -1803,6 +1806,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   o.projDataSet = (const RooArgSet*) pc.getObject("projDataSet") ;
   o.numCPU = pc.getInt("numCPU") ;
   o.interleave = (RooFit::MPSplit) pc.getInt("interleave") ;
+  o.CPUAffinity = static_cast<Bool_t>(pc.getInt("cpuAffinity"));
   o.eeval      = pc.getDouble("evalErrorVal") ;
   o.doeeval   = pc.getInt("doEvalError") ;
 
@@ -2175,8 +2179,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     projection->attachDataSet(*projDataSel) ;
 
     // Construct optimized data weighted average
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
+    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,o.CPUAffinity,kTRUE) ;
+    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,o.CPUAffinity,kTRUE) ;
 
     // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
     dwa.constOptimizeTestStatistic(Activate,kFALSE) ;
@@ -2532,8 +2536,8 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     }
 
 
-    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,kTRUE) ;
-    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,kTRUE) ;
+    RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,o.numCPU,o.interleave,o.CPUAffinity,kTRUE) ;
+    //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,o.CPUAffinity,kTRUE) ;
     dwa.constOptimizeTestStatistic(Activate) ;
 
     RooRealBinding projBind(dwa,*plotVar) ;
@@ -4253,6 +4257,7 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 /// Range(Double_t lo, Double_t hi) -- Fit only data inside given range. A range named "fit" is created on the fly on all observables.
 ///                                    Multiple comma separated range names can be specified.
 /// NumCPU(int num)                 -- Parallelize NLL calculation on num CPUs
+/// CPUAffinity(Bool_t)             -- Set CPU affinity to fix multi core processes to their own CPU cores
 /// Optimize(Bool_t flag)           -- Activate constant term optimization (on by default)
 ///
 /// Options to control flow of fit procedure
@@ -4326,6 +4331,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ///  ------------------------------------------
 ///  DataError(RooAbsData::ErrorType)  -- Choose between Poisson errors and Sum-of-weights errors
 ///  NumCPU(Int_t)                     -- Activate parallel processing feature on N processes
+///  CPUAffinity(Bool_t)               -- Set CPU affinity to fix multi core processes to their own CPU cores
 ///  Range()                           -- Calculate Chi2 only in selected region
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,

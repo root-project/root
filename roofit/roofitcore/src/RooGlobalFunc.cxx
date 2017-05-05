@@ -153,8 +153,8 @@ namespace RooFit {
   // RooChi2Var::ctor arguments
   RooCmdArg Extended(Bool_t flag) { return RooCmdArg("Extended",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg DataError(Int_t etype) { return RooCmdArg("DataError",(Int_t)etype,0,0,0,0,0,0,0) ; }
-  RooCmdArg NumCPU(Int_t nCPU, Int_t interleave, Bool_t cpu_affinity)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
-  RooCmdArg CPUAffinity(Bool_t flag=kTRUE) { return RooCmdArg("CPUAffinity",flag,0,0,0,0,0,0,0); }
+  RooCmdArg NumCPU(Int_t nCPU, Int_t interleave)   { return RooCmdArg("NumCPU",nCPU,interleave,0,0,0,0,0,0) ; }
+  RooCmdArg CPUAffinity(Bool_t flag) { return RooCmdArg("CPUAffinity",flag,0,0,0,0,0,0,0); }
 
   // RooAbsCollection::printLatex arguments
   RooCmdArg Columns(Int_t ncol)                           { return RooCmdArg("Columns",ncol,0,0,0,0,0,0,0) ; }
