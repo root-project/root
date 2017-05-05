@@ -2049,10 +2049,18 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 /// both the url query identifier and a wildcard. Wildcard matching is not
 /// done in this method itself.
 /// ~~~ {.cpp}
-///     /a/path/file.root[/treename]
-///     xxx://a/path/file.root[/treename][?query]
-///     xxx://a/path/file.root[?query[#treename]]
+///     [xxx://host]/a/path/file.root[/treename]
+///     [xxx://host]/a/path/file.root[/treename][?query]
+///     [xxx://host]/a/path/file.root[?query[#treename]]
 /// ~~~
+///
+/// Note that in a case like this
+/// ~~~ {.cpp}
+///     [xxx://host]/a/path/file#treename
+/// ~~~
+/// i.e. anchor but no options (query), the filename will be the full path, as the
+/// ancho may be the internal file name of an archive.
+///
 /// \param[in] name        is the original name
 /// \param[in] wildcards   indicates if the resulting filename will be treated for
 ///                        wildcards. For backwards compatibility, with most protocols
@@ -2072,7 +2080,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix,
                                Bool_t) const
 {
-   Ssiz_t pIdx;
+   Ssiz_t pIdx = kNPOS;
    filename = name;
    treename.Clear();
    query.Clear();
@@ -2081,24 +2089,36 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    // General case
    TUrl url(name, kTRUE);
 
-   // Extract query (and treename, if any)
-   query.Form("?%s", url.GetOptions());
-   treename = url.GetAnchor();
-
-   // Save suffix, if any
-   suffix = url.GetFileAndOptions();
    TString fn = url.GetFile();
-   suffix.Replace(suffix.Index(fn), fn.Length(), "");
-   // Remove it from the file name
-   filename.Remove(filename.Index(fn) + fn.Length());
+   // Extract query (and treename, if any)
+   if (url.GetOptions() && (strlen(url.GetOptions()) > 0)) {
+      query.Form("?%s", url.GetOptions());
+      // The treename can be passed as anchor in this case
+      treename = url.GetAnchor();
+      // Suffix
+      suffix = url.GetFileAndOptions();
+      suffix.Replace(suffix.Index(fn), fn.Length(), "");
+      // Remove it from the file name
+      filename.Remove(filename.Index(fn) + fn.Length());
+   }
 
    // Special case: [...]file.root/treename
    static const char *dotr = ".root/";
    static Ssiz_t dotrl = strlen(dotr);
-   pIdx = filename.Index(dotr);
+   // Find the last one
+   Ssiz_t js = filename.Index(dotr);
+   while (js != kNPOS) {
+      pIdx = js;
+      js = filename.Index(dotr, js + 1);
+   }
    if (pIdx != kNPOS) {
-      treename = filename(pIdx + dotrl, filename.Length());
-      filename.Remove(pIdx + dotrl - 1);
+      TString tn = filename(pIdx + dotrl, filename.Length());
+      if (!tn.EndsWith(".root")) {
+         // Good treename
+         treename = tn;
+         filename.Remove(pIdx + dotrl - 1);
+         suffix.Insert(0, TString::Format("/%s", treename.Data()));
+      }
    }
 }
 
