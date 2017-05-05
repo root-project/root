@@ -108,8 +108,8 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& indata,
 					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) : 
-  RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
+					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t CPUAffinity, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/) :
+  RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, CPUAffinity, verbose, splitCutRange),
   _projDeps(0),
   _sealed(kFALSE), 
   _optimized(kFALSE)

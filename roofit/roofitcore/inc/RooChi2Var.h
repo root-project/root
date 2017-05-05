@@ -39,22 +39,25 @@ public:
   enum FuncMode { Function, Pdf, ExtendedPdf } ;
 
   RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& data,
-	    Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+	     Bool_t extended=kFALSE, const char* rangeName=0, const char* addCoefRangeName=0,
+	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE,
+	     Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& data,
 	     const RooArgSet& projDeps, FuncMode funcMode, const char* rangeName=0, const char* addCoefRangeName=0, 
-	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
+	     Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE,
+	     Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
 				      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition,Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, Bool_t = kFALSE) {
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE,
+				      Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE, Bool_t = kFALSE) {
     // Virtual constructor
     return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,rangeName,
-			  addCoefRangeName,nCPU,interleave,verbose, splitCutRange,_etype) ;
+			  addCoefRangeName,nCPU,interleave,CPUAffinity,verbose, splitCutRange,_etype) ;
   }
   
   virtual ~RooChi2Var();

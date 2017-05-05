@@ -61,14 +61,16 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 			 0,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooFit::Interleave,
+                         RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","CPUAffinity",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 0)
   //  RooChi2Var constructor. Optional arguments taken
   //
-  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
-  //  NumCPU()     -- Activate parallel processing feature
-  //  Range()      -- Fit only selected region
-  //  Verbose()    -- Verbose output of GOF framework
+  //  DataError()   -- Choose between Poisson errors and Sum-of-weights errors
+  //  NumCPU()      -- Activate parallel processing feature
+  //  CPUAffinity() -- Set CPU affinity to pin parallel processes to their own CPU cores
+  //  Range()       -- Fit only selected region
+  //  Verbose()     -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
@@ -108,17 +110,19 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","NumCPU",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
 			 RooFit::Interleave,
 			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","Verbose",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
-			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))             
+                         RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","CPUAffinity",0,1,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9),
+			 RooCmdConfig::decodeIntOnTheFly("RooChi2Var::RooChi2Var","SplitRange",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
   //  RooChi2Var constructor. Optional arguments taken
   //
-  //  Extended()   -- Include extended term in calculation
-  //  DataError()  -- Choose between Poisson errors and Sum-of-weights errors
-  //  NumCPU()     -- Activate parallel processing feature
-  //  Range()      -- Fit only selected region
+  //  Extended()     -- Include extended term in calculation
+  //  DataError()    -- Choose between Poisson errors and Sum-of-weights errors
+  //  NumCPU()       -- Activate parallel processing feature
+  //  CPUAffinity()  -- Set CPU affinity to pin parallel processes to their own CPU cores
+  //  Range()        -- Fit only selected region
   //  SumCoefRange() -- Set the range in which to interpret the coefficients of RooAddPdf components 
-  //  SplitRange() -- Fit range is split by index catory of simultaneous PDF
+  //  SplitRange()   -- Fit range is split by index catory of simultaneous PDF
   //  ConditionalObservables() -- Define projected observables 
-  //  Verbose()    -- Verbose output of GOF framework
+  //  Verbose()      -- Verbose output of GOF framework
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
@@ -156,8 +160,8 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooDataHist& hdata,
 		       Bool_t extended, const char* cutRange, const char* addCoefRange,
-		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
-  RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
+		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t CPUAffinity, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) :
+  RooAbsOptTestStatistic(name,title,pdf,hdata,RooArgSet(),cutRange,addCoefRange,nCPU,interleave,CPUAffinity,verbose,splitCutRange),
    _etype(etype), _funcMode(extended?ExtendedPdf:Pdf)
 {
 }
@@ -183,8 +187,8 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
 		       const RooArgSet& projDeps, RooChi2Var::FuncMode fmode, const char* cutRange, const char* addCoefRange, 
-		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) : 
-  RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cutRange,addCoefRange,nCPU,interleave,verbose,splitCutRange),
+		       Int_t nCPU, RooFit::MPSplit interleave, Bool_t CPUAffinity, Bool_t verbose, Bool_t splitCutRange, RooDataHist::ErrorType etype) :
+  RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cutRange,addCoefRange,nCPU,interleave,CPUAffinity,verbose,splitCutRange),
   _etype(etype), _funcMode(fmode)
 {
 }

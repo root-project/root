@@ -42,7 +42,7 @@ public:
   RooAbsTestStatistic() ;
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 		      const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0, 
-		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
+		      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE, Bool_t verbose=kTRUE, Bool_t splitCutRange=kTRUE) ;
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
   virtual ~RooAbsTestStatistic();
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
@@ -122,7 +122,7 @@ protected:
   Bool_t initialize() ;
   void initSimMode(RooSimultaneous* pdf, RooAbsData* data, const RooArgSet* projDeps, const char* rangeName, const char* addCoefRangeName) ;    
   void initMPMode(RooAbsReal *real, RooAbsData *data, const RooArgSet *projDeps, const char *rangeName,
-                    const char *addCoefRangeName, bool cpu_affinity);
+                    const char *addCoefRangeName);
 
   mutable Bool_t _init ;          //! Is object initialized  
   GOFOpMode   _gofOpMode ;        // Operation mode of test statistic instance 
@@ -142,6 +142,7 @@ protected:
   pRooRealMPFE*  _mpfeArray ; //! Array of parallel execution frond ends
 
   RooFit::MPSplit        _mpinterl ; // Use interleaving strategy rather than N-wise split for partioning of dataset for multiprocessor-split
+  Bool_t         _CPUAffinity; // Use CPU affinity to pin processes to cores
   Bool_t         _doOffset ; // Apply interval value offset to control numeric precision?
   mutable Double_t _offset ; //! Offset
   mutable Double_t _offsetCarry; //! avoids loss of precision
@@ -152,7 +153,7 @@ private:
 
   void _setNumIntTimingInPdfs(Bool_t flag = kTRUE);
 
-  ClassDef(RooAbsTestStatistic,2) // Abstract base class for real-valued test statistics
+  ClassDef(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
 };
 
 #endif

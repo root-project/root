@@ -76,7 +76,7 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
   _func(0), _data(0), _projDeps(0), _splitRange(0), _simCount(0),
   _verbose(kFALSE), _init(kFALSE), _gofOpMode(Slave), _nEvents(0), _setNum(0),
   _numSets(0), _extSet(0), _nGof(0), _gofArray(0), _nCPU(1), _mpfeArray(0),
-  _mpinterl(RooFit::BulkPartition), _doOffset(kFALSE), _offset(0),
+  _mpinterl(RooFit::BulkPartition), _CPUAffinity(1), _doOffset(kFALSE), _offset(0),
   _offsetCarry(0), _evalCarry(0)
 {
 }
@@ -99,7 +99,8 @@ RooAbsTestStatistic::RooAbsTestStatistic() :
 
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
 					 const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					 Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange) :
+					 Int_t nCPU, RooFit::MPSplit interleave, Bool_t CPUAffinity,
+                                         Bool_t verbose, Bool_t splitCutRange) :
   RooAbsReal(name,title),
   _paramSet("paramSet","Set of parameters",this),
   _func(&real),
@@ -115,6 +116,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, Ro
   _nCPU(nCPU),
   _mpfeArray(0),
   _mpinterl(interleave),
+  _CPUAffinity(CPUAffinity),
   _doOffset(kFALSE),
   _offset(0),
   _offsetCarry(0),
@@ -174,6 +176,7 @@ RooAbsTestStatistic::RooAbsTestStatistic(const RooAbsTestStatistic& other, const
   _nCPU(other._nCPU),
   _mpfeArray(0),
   _mpinterl(other._mpinterl),
+  _CPUAffinity(other._CPUAffinity),
   _doOffset(other._doOffset),
   _offset(other._offset),
   _offsetCarry(other._offsetCarry),
@@ -427,7 +430,7 @@ Bool_t RooAbsTestStatistic::initialize()
 
   if (MPMaster == _gofOpMode) {
     initMPMode(_func, _data, _projDeps, _rangeName.size() ? _rangeName.c_str() : 0,
-               _addCoefRangeName.size() ? _addCoefRangeName.c_str() : 0, false);
+               _addCoefRangeName.size() ? _addCoefRangeName.c_str() : 0);
   } else if (SimMaster == _gofOpMode) {
     initSimMode((RooSimultaneous*)_func,_data,_projDeps,_rangeName.size()?_rangeName.c_str():0,_addCoefRangeName.size()?_addCoefRangeName.c_str():0) ;
   }
@@ -535,7 +538,7 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 /// processed that are connected to this process through a RooAbsRealMPFE front-end class.
 
 void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const RooArgSet *projDeps, const char *rangeName,
-                                     const char *addCoefRangeName, bool cpu_affinity)
+                                     const char *addCoefRangeName)
 {
   _mpfeArray = new pRooRealMPFE[_nCPU];
 
@@ -556,7 +559,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
       _mpfeArray[i]->followAsSlave(*_mpfeArray[0]);
     }
 
-    if (cpu_affinity) {
+    if (_CPUAffinity == kTRUE) {
       _mpfeArray[i]->setCpuAffinity(i);
     }
 

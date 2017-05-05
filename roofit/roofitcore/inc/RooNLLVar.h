@@ -34,27 +34,28 @@ public:
 	    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    Bool_t extended, const char* rangeName=0, const char* addCoefRangeName=0, 
-	    Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
+	    Bool_t extended, const char* rangeName=0, const char* addCoefRangeName=0,
+	    Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE,
 	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE) ;
-  
+
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
-	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0, 
-	    const char* addCoefRangeName=0, Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, 
+	    const RooArgSet& projDeps, Bool_t extended=kFALSE, const char* rangeName=0,
+	    const char* addCoefRangeName=0, Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE,
 	    Bool_t cloneData=kTRUE, Bool_t binnedL=kFALSE) ;
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
 
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0, 
-				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t binnedL=kFALSE) {
-    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave,verbose,splitRange,kFALSE,binnedL) ;
+				      const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName=0,
+				      Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t CPUAffinity=kTRUE,
+				      Bool_t verbose=kTRUE, Bool_t splitRange=kFALSE, Bool_t binnedL=kFALSE) {
+    return new RooNLLVar(name,title,(RooAbsPdf&)pdf,adata,projDeps,_extended,rangeName, addCoefRangeName, nCPU, interleave, CPUAffinity, verbose,splitRange,kFALSE,binnedL) ;
   }
-  
+
   virtual ~RooNLLVar();
 
-  void applyWeightSquared(Bool_t flag) ; 
+  void applyWeightSquared(Bool_t flag) ;
 
   virtual Double_t defaultErrorLevel() const { return 0.5 ; }
 
@@ -73,7 +74,7 @@ protected:
 
   mutable std::vector<Double_t> _binw ; //!
   mutable RooRealSumPdf* _binnedPdf ; //!
-   
+
   ClassDef(RooNLLVar,2) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
