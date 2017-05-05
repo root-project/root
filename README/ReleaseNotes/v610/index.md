@@ -204,6 +204,9 @@ The following interfaces have been removed, after deprecation in v6.08.
 ![New markers](NewMarkers.png)
 
 - Remove a large memory leak in TFITSHDU's GetArrayRow, GetArrayColumn and GetTabRealVectorColumn member functions.
+- When `TGraph`s belonging to a `TMultiGraph` were changed (for instance with `SetPoint`)
+  after the `TMultiGraph` was drawn, the `TMultiGraph` range was not recomputed.
+  This issue was discovered thanks to [this forum post](https://root-forum.cern.ch/t/multi-layer-perceptron/24561/2).
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
