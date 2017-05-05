@@ -18,6 +18,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TGQt.h"
+
 #if defined(HAVE_CONFIG) || defined (R__HAVE_CONFIG)
 # include "RConfigure.h"
 #endif
@@ -59,7 +61,6 @@
 
 #include "TQtApplication.h"
 #include "TQtWidget.h"
-#include "TGQt.h"
 #include "TQtBrush.h"
 #include "TQtClientFilter.h"
 #include "TQtEventQueue.h"
