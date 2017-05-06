@@ -7,6 +7,7 @@
 #include<Mpi/Globals.h>
 #include<Mpi/TErrorHandler.h>
 #include<Mpi/TIntraCommunicator.h>
+#include <TMutex.h>
 namespace ROOT {
 
    namespace Mpi {
@@ -21,22 +22,32 @@ namespace ROOT {
          TIntraCommunicator fComm; //!
 
          TMpiMessage fMessage;     //!
-         TMpiFileMerger *fMerger;     //!
+         TMpiFileMerger *fMerger;  //!
+         Bool_t fSync;             //
+         Int_t fSyncType;          //
       protected:
          TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          void CopyFrom(TDirectory *source, TMpiFile *file) ;
+         void SyncSave(Int_t type);
       public:
          TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
+         ~TMpiFile() {};
 
-         //merge of all  TMpiFile in a process root
+         //merge of all  TMpiFile in a  root process
          void Merge(Int_t root, Int_t type = TFileMerger::kAllIncremental);
 
-         //save all files from memory to disk from all processes
+         //method to synchronize all TMpiFile content in all process of a given TIntraCommunicator
+         void Merge(Int_t type = TFileMerger::kAllIncremental);
+
+         //save the file from memory to disk in the process that is called, but needs to be called with Sync
+         //and the Sync call must be visible for all processes
          void Save(Int_t type = TFileMerger::kAllIncremental);
 
-         //method to synchronize all TMpiFile content in all process of a given TIntraCommunicator
-         void Sync(Int_t type = TFileMerger::kAllIncremental);
 
+         //Causes all previous writes to be transferred to the storage device
+         //This method are using the ring algorithm with blocking communication to do it
+         // in a sequential mode along of all processes in the intracommunicator
+         void Sync();
 
          ClassDef(TMpiFile, 1)
 

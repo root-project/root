@@ -1,6 +1,7 @@
 #include<Mpi/TMpiFile.h>
 #include<TKey.h>
 #include<TTree.h>
+#include<TThread.h>
 using namespace ROOT::Mpi;
 
 //______________________________________________________________________________
@@ -26,14 +27,14 @@ Bool_t TMpiFileMerger::OutputMemFile(const char *outputfile, const char *mode, I
 }
 
 //______________________________________________________________________________
-TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, buffer, size, option, ftitle, compress), fComm(comm)
+TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, buffer, size, option, ftitle, compress), fComm(comm), fSync(kFALSE)
 {
-
+   TMessage::EnableSchemaEvolutionForAll(kTRUE);
 }
 
 
 //______________________________________________________________________________
-TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, option, ftitle, compress), fComm(comm)
+TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, option, ftitle, compress), fComm(comm), fSync(kFALSE)
 {
    TMessage::EnableSchemaEvolutionForAll(kTRUE);
 }
@@ -48,7 +49,7 @@ void TMpiFile::CopyFrom(TDirectory *source, TMpiFile *file)
    TKey *key;
    TIter nextkey(source->GetListOfKeys());
    while ((key = (TKey *)nextkey())) {
-      const char *classname = key->GetClassName();
+      const Char_t *classname = key->GetClassName();
       TClass *cl = gROOT->GetClass(classname);
       if (!cl) continue;
       if (cl->InheritsFrom(TDirectory::Class())) {
@@ -118,40 +119,48 @@ void TMpiFile::Merge(Int_t root, Int_t type)
    }
 }
 
-//______________________________________________________________________________
-//save all files from memory to disk from all processes
-void TMpiFile::Save(Int_t type)
-{
-   auto file = TFile::Open(GetName(), "UPDATE", "", GetCompressionLevel());
-   CopyFrom(this, (TMpiFile *)file);
-   file->Close();
-   delete file;
+// //______________________________________________________________________________
+// void TMpiFile::SyncSave()
+// {
+//    auto file =TFile::Open(TFile::AsyncOpen(GetName(), "UPDATE", "", GetCompressionLevel()));
+//    CopyFrom(this, (TMpiFile *)file);
+//    file->Close();
+//    delete file;
+// }
 
-//     fComm.Barrier();
-//     //TODO: I need to put a lock here do it in sequence and dont over write
-//    Write();
-//    fMessage.Reset(kMESS_ANY);
-//    CopyTo(fMessage);
-//
-//    fMerger = new TMpiFileMerger(kFALSE, kFALSE);
-//    fMerger->SetPrintLevel(0);
-//    fMerger->OutputMemFile(GetName(), "UPDATE");
-//
-//    fMessage.SetReadMode();
-//    fMessage.Reset(kMESS_ANY);
-//    TMemFile *memffile  = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), GetEND(), "UPDATE");
-//    fMessage.SetBufferOffset(fMessage.Length() + GetEND());
-//    fMerger->AddAdoptFile(memffile);
-//    memffile = 0;
-//
-//    fMerger->PartialMerge(type);
-//    delete fMerger;
+#include<iostream>
+//______________________________________________________________________________
+void TMpiFile::SyncSave(Int_t type)
+{
+   Write();
+   fMessage.Reset(kMESS_ANY);
+   fMessage.SetWriteMode();
+   CopyTo(fMessage);
+   fMerger = new TMpiFileMerger(kFALSE, kFALSE);
+   fMerger->SetPrintLevel(0);
+   fMerger->OutputFile(GetName(), "UPDATE");
+
+   fMessage.SetReadMode();
+   fMessage.Reset(kMESS_ANY);
+   TMemFile *memffile  = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), GetEND(), "UPDATE");
+   fMessage.SetBufferOffset(fMessage.Length() + GetEND());
+   fMerger->AddAdoptFile(memffile);
+   memffile = 0;
+   fMerger->PartialMerge(type);
+   delete fMerger;
 }
 
 
 //______________________________________________________________________________
-//method to synchronize all TMpiFile content in all process of a given TIntraCommunicator
-void TMpiFile::Sync(Int_t type)
+void TMpiFile::Save(Int_t type)
+{
+   fSync = kTRUE;
+   fSyncType = type;
+}
+
+
+//______________________________________________________________________________
+void TMpiFile::Merge(Int_t type)
 {
    Write();
    fMessage.Reset(kMESS_ANY);
@@ -183,9 +192,7 @@ void TMpiFile::Sync(Int_t type)
       }
       fMerger->PartialMerge(type);
       TMemFile *mfile = dynamic_cast<TMemFile *>(fMerger->GetOutputFile());
-//       mfile->ls();
 //       TDirectory::TContext ctxt;
-//       mfile->Write();
       fMessage.Reset(kMESS_ANY);
       fMessage.SetWriteMode();
       fMessage.WriteLong64(mfile->GetEND());
@@ -205,11 +212,33 @@ void TMpiFile::Sync(Int_t type)
    this->Delete("*;*");
    CopyFrom(mpifile, this);
 
-//    this->ls();
    delete mpifile;
    if (fComm.GetRank() == 0) {
       delete fMerger;
    }
 }
 
+//______________________________________________________________________________
+void TMpiFile::Sync()
+{
+   Int_t dummy;
+   if (fComm.GetRank() != 0) {
+      fComm.Recv(dummy, fComm.GetRank() - 1, 0);
+      if (fSync) {
+         SyncSave(fSyncType);
+         fSync = kFALSE;
+      }
+   }
+   fComm.Send(dummy, (fComm.GetRank() + 1) % fComm.GetSize(), 0);
+
+   if (fComm.GetRank() == 0) {
+      fComm.Recv(dummy, fComm.GetSize() - 1, 0);
+      if (fSync) {
+         SyncSave(fSyncType);
+         fSync = kFALSE;
+      }
+   }
+
+
+}
 

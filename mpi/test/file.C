@@ -14,8 +14,11 @@ void file(Int_t size = 10)
 
 //    f.Merge(0);
 //    f.Sync();
+//    f.ls();
+//    f.Save();
+   if (rank == 0 || rank == 2) f.Save();
+
+   f.Sync();
    f.ls();
-   f.Save();
-//    if(rank==0) f.Save();
    f.Close();
 }
