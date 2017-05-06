@@ -270,7 +270,7 @@ $(PROOFDEXEO): CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 $(PROOFEXECVO): CXXFLAGS += $(AUTHFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 
 $(XPDO): $(XROOTDMAKE) $(XRDHDRS)
-$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) $(BONJOURCPPFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
+$(XPDO): CXXFLAGS += $(XPDINCEXTRA) $(EXTRA_XRDFLAGS) -I$(ROOT_SRCDIR)/net/rpdutils/res
 
 ifneq ($(ICC_GE_9),)
 # remove when xrootd has moved from strstream.h -> sstream.
