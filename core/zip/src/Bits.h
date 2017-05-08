@@ -572,8 +572,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   int method   = Z_DEFLATED;
 
   if (*srcsize < 1 + HDRSIZE + 1) {
-    *irep = 0;
-    return;
+     *irep = 0;
+     return;
   }
 
   if (cxlevel <= 0) {
@@ -688,10 +688,10 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     }
 
     while ((err = deflate(&stream, Z_FINISH)) != Z_STREAM_END) {
-      if (err != Z_OK) {
-        deflateEnd(&stream);
-        return;
-      }
+       if (err != Z_OK) {
+          deflateEnd(&stream);
+          return;
+       }
     }
 
     err = deflateEnd(&stream);

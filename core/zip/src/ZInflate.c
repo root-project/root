@@ -1188,7 +1188,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     int err = 0;
 
     stream.next_in   = (Bytef*)(&src[HDRSIZE]);
-    stream.avail_in  = (uInt)(*srcsize) - HDRSIZE;
+    stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
     stream.next_out  = (Bytef*)tgt;
     stream.avail_out = (uInt)(*tgtsize);
     stream.zalloc    = (alloc_func)0;
@@ -1202,11 +1202,11 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     }
 
     while ((err = inflate(&stream, Z_FINISH)) != Z_STREAM_END) {
-      if (err != Z_OK) {
-        inflateEnd(&stream);
-        fprintf(stderr,"R__unzip: error %d in inflate (zlib)\n", err);
-        return;
-      }
+       if (err != Z_OK) {
+          inflateEnd(&stream);
+          fprintf(stderr, "R__unzip: error %d in inflate (zlib)\n", err);
+          return;
+       }
     }
 
     inflateEnd(&stream);
