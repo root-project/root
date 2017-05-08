@@ -35,6 +35,12 @@ include(RootNewMacros)
 include(CheckCompiler)
 include(MacroEnsureVersion)
 
+#---Set home directory to avoid CCache issue----------------------------------------------------
+# Temporairly workaround as CCache has issues reading the config file due to kerb
+if ((NOT APPLE) AND (NOT WIN32))
+   set(ENV{HOME} /build/)
+endif()
+
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
    set(CMAKE_IGNORE_PATH_TMP ${CMAKE_IGNORE_PATH})
