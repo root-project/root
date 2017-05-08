@@ -908,7 +908,9 @@ void TStyle::SetColorModelPS(Int_t c)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the argument zero=kTRUE the minimum value for the Y axis of 1-d histograms
-/// is set to 0 if the minimum bin content is greater than 0 and TH1::SetMinimum
+/// is set to 0.
+///
+/// If the minimum bin content is greater than 0 and TH1::SetMinimum
 /// has not been called.
 /// Otherwise the minimum is based on the minimum bin content.
 
@@ -960,6 +962,7 @@ void TStyle::SetAxisColor(Color_t color, Option_t *axis)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the size (in pixels) of the small lines drawn at the
 /// end of the error bars (TH1 or TGraphErrors).
+///
 /// The default value is 2 pixels.
 /// Set np=0 to remove these lines
 
@@ -970,7 +973,8 @@ void TStyle::SetEndErrorSize(Float_t np)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a string to be inserted in the Postscript header
+/// Define a string to be inserted in the Postscript header.
+///
 /// The string in header will be added to the Postscript file
 /// immediately following the %%Page line
 /// For example, this string may contain special Postscript instructions like
@@ -990,9 +994,10 @@ void TStyle::SetHeaderPS(const char *header)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets the fIsReading member to reading (default=kTRUE)
-/// fIsReading (used via gStyle->IsReading()) can be used in
-/// the functions myclass::UseCurrentStyle to read from the current style
+/// Sets the `fIsReading` member to reading (default=kTRUE).
+///
+/// `fIsReading` (used via `gStyle->IsReading()`) can be used in
+/// the functions `myclass::UseCurrentStyle` to read from the current style
 /// or write to the current style
 
 void TStyle::SetIsReading(Bool_t reading)
