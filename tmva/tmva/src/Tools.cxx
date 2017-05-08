@@ -163,9 +163,9 @@ Double_t TMVA::Tools::GetSeparation( TH1* S, TH1* B ) const
          Double_t s = S->GetBinContent( bin+1 )/Double_t(nS);
          Double_t b = B->GetBinContent( bin+1 )/Double_t(nB);
          // separation
-         if (s + b > 0) separation += 0.5*(s - b)*(s - b)/(s + b);
+         if (s + b > 0) separation += (s - b)*(s - b)/(s + b);
       }
-      separation *= intBin;
+      separation *= (0.5*intBin);
    }
    else {
       Log() << kWARNING << "<GetSeparation> histograms with zero entries: "
