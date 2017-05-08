@@ -178,7 +178,7 @@ Long64_t TProfile2Poly::Merge(TCollection *in)
    return this->Merge(list);
 }
 
-Long64_t TProfile2Poly::Merge(std::vector<TProfile2Poly *> list)
+Long64_t TProfile2Poly::Merge(const std::vector<TProfile2Poly *> &list)
 {
    if (list.size() == 0) {
       std::cout << "[FAIL] TProfile2Poly::Merge: No objects to be merged " << std::endl;

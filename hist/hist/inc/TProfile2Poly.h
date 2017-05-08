@@ -59,7 +59,7 @@ public:
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
-   Long64_t Merge(std::vector<TProfile2Poly *> list);
+   Long64_t Merge(const std::vector<TProfile2Poly *> &list);
    Long64_t Merge(TCollection *in) override;
    virtual void Reset(Option_t *option = "") override;
 
