@@ -25,14 +25,18 @@ namespace ROOT {
          TMpiFileMerger *fMerger;  //!
          Bool_t fSync;             //
          Int_t fSyncType;          //
+         Int_t fSyncReCreate;      //synchronized create/recreate file call
+         Int_t fSyncMakeZombie;    //
       protected:
-         TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          void CopyFrom(TDirectory *source, TMpiFile *file) ;
          void SyncSave(Int_t type);
+         void SyncReCreate(Int_t rank); //method to delete/create/recreate file from a given rank
       public:
+         TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
+         TMpiFile(const TMpiFile &file);
          ~TMpiFile() {};
-
+         static TMpiFile Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          //merge of all  TMpiFile in a  root process
          void Merge(Int_t root, Int_t type = TFileMerger::kAllIncremental);
 

@@ -12,13 +12,21 @@ void file(Int_t size = 10)
    TF1 f1(Form("f%d", COMM_WORLD.GetRank()), Form("%d*sin(x)", rank + 1));
    f1.Write();
 
-//    f.Merge(0);
+   f.Merge(0, TFileMerger::kAllIncremental);
+   if (rank == 0) {
+      TF1 fs("fspecial", Form("sin(x)/%d", rank + 1));
+      fs.Write();
+//        f.ls();
+   }
+   f.Merge(0, TFileMerger::kAllIncremental);
+
 //    f.Sync();
+//    f.Merge();
 //    f.ls();
 //    f.Save();
-   if (rank == 0 || rank == 2) f.Save();
+//    if (rank == 0 || rank == 1 || rank == 2) f.Save();
 
    f.Sync();
-   f.ls();
+//    f.ls();
    f.Close();
 }
