@@ -1190,8 +1190,8 @@ void TStyle::SetOptDate(Int_t optdate)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The type of information about fit parameters printed in the histogram
-/// statistics box can be selected via the parameter mode.
-///  The parameter mode can be = pcev  (default = 0111)
+/// statistics box can be selected via the parameter `mode`.
+///  The parameter mode can be = `pcev`:
 ///  -  p = 1;  print Probability
 ///  -  c = 1;  print Chisquare/Number of degrees of freedom
 ///  -  e = 1;  print errors (if e=1, v must be 1)
@@ -1201,8 +1201,13 @@ void TStyle::SetOptDate(Int_t optdate)
 ///  -  When "v"=1 is specified, only the non-fixed parameters are shown.
 ///  -  When "v"=2 all parameters are shown.
 ///
-///  Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent to
-///        `gStyle->SetOptFit(111)`
+///  #### Notes:
+///  - `gStyle->SetOptFit(1)` is a shortcut allowing to set the most common
+///    case and is equivalent to `gStyle->SetOptFit(111)`
+///  - At ROOT startup the option fit is set to `0`. So, to see the fit parameters
+///    on all plot resulting from a fit, a call to `gStyle->SetOptFit()` with a
+///    non nul value should be done. One can put it in the `rootlogon.C` file to
+///    always have it.
 ///
 /// see also SetOptStat below.
 
@@ -1223,7 +1228,7 @@ void TStyle::SetOptFit(Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// The type of information printed in the histogram statistics box
 ///  can be selected via the parameter mode.
-///  The parameter mode can be = ksiourmen  (default = 000001111)
+///  The parameter mode can be = `ksiourmen`
 ///  -  k = 1;  kurtosis printed
 ///  -  k = 2;  kurtosis and kurtosis error printed
 ///  -  s = 1;  skewness printed
@@ -1243,16 +1248,16 @@ void TStyle::SetOptFit(Int_t mode)
 ///           print only name of histogram and number of entries.
 ///           `gStyle->SetOptStat(1101);`  displays the name of histogram, mean value and RMS.
 ///
-///  WARNING: never call `SetOptStat(000111);` but `SetOptStat(1111)`, 0001111 will
-///          be taken as an octal number !!
+///  #### Notes:
 ///
-///  WARNING: `SetOptStat(1)` is taken as `SetOptStat(1111)` (for back compatibility
-///           with older versions. If you want to print only the name of the histogram
-///           call `SetOptStat(1000000001)`.
-///
-///  NOTE that in case of 2-D histograms, when selecting just underflow (10000)
-///        or overflow (100000), the stats box will show all combinations
-///        of underflow/overflows and not just one single number!
+///  - never call `SetOptStat(000111);` but `SetOptStat(1111)`, 0001111 will
+///    be taken as an octal number !!
+///  - `SetOptStat(1)` is s shortcut allowing to set the most common case, and is
+///    taken as `SetOptStat(1111)` (for backward compatibility with older versions.
+///    If you want to print only the name of the histogram call `SetOptStat(1000000001)`.
+///  - that in case of 2-D histograms, when selecting just underflow (10000)
+///    or overflow (100000), the stats box will show all combinations
+///    of underflow/overflows and not just one single number!
 
 void TStyle::SetOptStat(Int_t mode)
 {
