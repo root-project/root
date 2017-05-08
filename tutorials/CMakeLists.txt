@@ -133,7 +133,6 @@ endif()
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
-             gl/*.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
