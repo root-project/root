@@ -2,7 +2,7 @@
 // Author: Anna Kreshuk 18/11/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2005, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

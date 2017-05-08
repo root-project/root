@@ -2,7 +2,7 @@
 // Author: Valeri Fine   23/01/2003
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2003 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *

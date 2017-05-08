@@ -1,6 +1,6 @@
 // @(#)root/qt:$Id$
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * Copyright (C) 2002 by Valeri Fine.                                    *
  * All rights reserved.                                                  *
  *                                                                       *

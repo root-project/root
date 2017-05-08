@@ -2,7 +2,7 @@
 // Author: Katerina Opocenska   11/09/2008
 
 /*************************************************************************
-* Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+* Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
 * All rights reserved.                                                  *
 *                                                                       *
 * For the licensing terms see $ROOTSYS/LICENSE.                         *

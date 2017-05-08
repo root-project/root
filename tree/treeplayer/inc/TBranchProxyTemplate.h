@@ -2,7 +2,7 @@
 // Author: Philippe Canal 01/06/2004
 
 /*************************************************************************
- * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers and al.        *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers and al.        *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

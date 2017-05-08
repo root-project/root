@@ -1,7 +1,7 @@
 // @(#)root/tree:$Id: 4e77188fbf1e7fd026a984989de66663c49b12fc $
 // Author: Rene Brun   19/01/96
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *

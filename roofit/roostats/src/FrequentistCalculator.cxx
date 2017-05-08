@@ -1,7 +1,7 @@
 // @(#)root/roostats:$Id: FrequentistCalculator.cxx 37084 2010-11-29 21:37:13Z moneta $
 // Author: Kyle Cranmer, Sven Kreiss   23/05/10
 /*************************************************************************
- * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
