@@ -34,7 +34,7 @@ private:
 int regression_snapshot()
 {
 
-   auto fileName = "test_snapshot.root";
+   auto fileName = "test_regressionsnapshot.root";
    auto treeName = "myTree";
    fill_tree(fileName, treeName);
 
@@ -47,7 +47,7 @@ int regression_snapshot()
                   .Define("b2_vector", [](float b2){ std::vector<float> v; for (int i=0;i < 3; i++) v.push_back(b2*i); return v;}, {"b2"});
 
    {
-      auto outFileName = "test_snapshot_output1.root";
+      auto outFileName = "test_regr_snapshot_output1.root";
       d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
       // Open the new file and list the branche of the trees
@@ -63,7 +63,7 @@ int regression_snapshot()
    }
 
    {
-      auto outFileName = "test_snapshot_output2.root";
+      auto outFileName = "test_regr_snapshot_output2.root";
       d2.Snapshot<int, int, std::vector<float>, A>(treeName, outFileName, {"b1", "b1_square", "b2_vector", "a"});
 
       // Open the new file and list the branche of the trees
