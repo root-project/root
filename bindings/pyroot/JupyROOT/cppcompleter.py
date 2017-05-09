@@ -12,9 +12,13 @@ import ROOT
 _TTabComHookCode = """
 std::vector<std::string> _TTabComHook(const char* pattern){
    static auto ttc = new TTabCom;
-   int pLoc = strlen(pattern);
+   const size_t lineBufSize = 2*1024;  // must be equal to/larger than BUF_SIZE in TTabCom.cxx
+   std::unique_ptr<char[]> completed(new char[lineBufSize]);
+   strncpy(completed.get(), pattern, lineBufSize);
+   completed[lineBufSize-1] = '\\0';
+   int pLoc = strlen(completed.get());
    std::ostringstream oss;
-   ttc->Hook((char* )pattern, &pLoc, oss);
+   ttc->Hook(completed.get(), &pLoc, oss);
    auto completions = oss.str();
    vector<string> completions_v;
    istringstream f(completions);
