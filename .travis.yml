@@ -93,7 +93,7 @@ script:
              ClangDiagnosticAST ClangDiagnosticDriver ClangDiagnosticAnalysis            \
              ClangDriverOptions ClangAttrParserStringSwitches ClangAttrParsedAttrList    \
              ClangAttrTemplateInstantiate ClangAttrSpellingListIndex                     \
-             ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds
+             ClangAttrParsedAttrImpl ClangAttrParsedAttrKinds googletest
     ln -s $PWD/compile_commands.json $PWD/../root/
   fi
 - echo -en 'travis_fold:end:install.headers\\r'
