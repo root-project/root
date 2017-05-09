@@ -50,6 +50,8 @@ protected:
    void *fBinData;        ///<! binary data, assigned with http call
    Long_t fBinDataLength; ///<! length of binary data
 
+   Bool_t fNotifyFlag;    ///<!  indicate that notification called
+
    Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
 
    TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
