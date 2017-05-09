@@ -371,14 +371,14 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
-   static Func_t GetSymInLibThread(const char *funcname)
+   static Func_t GetSymInLibImt(const char *funcname)
    {
-      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libThread");
+      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libImt");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
          } else {
-            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+            Error("GetSymInLibImt", "Cannot get symbol %s.", funcname);
          }
       }
       return nullptr;
@@ -395,7 +395,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -409,7 +409,7 @@ namespace Internal {
    void DisableParBranchProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -422,7 +422,7 @@ namespace Internal {
    Bool_t IsParBranchProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -444,7 +444,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -458,7 +458,7 @@ namespace Internal {
    void DisableParTreeProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -471,7 +471,7 @@ namespace Internal {
    Bool_t IsParTreeProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -497,7 +497,7 @@ namespace Internal {
    /// Enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety()
    {
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
       if (sym)
          sym();
    }
@@ -526,7 +526,7 @@ namespace Internal {
    {
 #ifdef R__USE_IMT
       EnableThreadSafety();
-      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
 #else
@@ -539,7 +539,7 @@ namespace Internal {
    void DisableImplicitMT()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableImplicitMT");
       if (sym)
          sym();
 #else
@@ -552,7 +552,7 @@ namespace Internal {
    Bool_t IsImplicitMTEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsImplicitMTEnabled");
       if (sym)
          return sym();
       else
@@ -567,7 +567,7 @@ namespace Internal {
    UInt_t GetImplicitMTPoolSize()
    {
 #ifdef R__USE_IMT
-      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_GetImplicitMTPoolSize");
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetImplicitMTPoolSize");
       if (sym)
          return sym();
       else
