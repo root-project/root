@@ -30,7 +30,6 @@ namespace ROOT {
 
    namespace Fit {
 
-
 /**
    namespace defining utility free functions using in Fit for evaluating the various fit method
    functions (chi2, likelihood, etc..)  given the data and the model function
@@ -150,23 +149,19 @@ namespace FitUtil {
       (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 
       double maxResValue = std::numeric_limits<double>::max() /n;
-      double wrefVolume = 1.0;
-      std::vector<double> xc;
       std::vector<double> ones{1,1,1,1};
       auto vecSize = vecCore::VectorSize<T>();
 
       auto mapFunction = [&](unsigned int i){
           // in case of no error in y invError=1 is returned
-          const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i*vecSize,0));
-          const auto y = vecCore::FromPtr<T>(data.ValuePtr(i*vecSize));
+          T x, y, invErrorVec;
+          vecCore::Load<T>(x, data.GetCoordComponent(i*vecSize,0));
+          vecCore::Load<T>(y, data.ValuePtr(i*vecSize));
           const auto invError = data.ErrorPtr(i*vecSize);
           auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
-          const auto invErrorVec = vecCore::FromPtr<T>(invErrorptr);
+          vecCore::Load<T>(invErrorVec, invErrorptr);
 
           T fval{};
-          T chi2{};
-
-          double binVolume = 1.0;
 
     #ifdef USE_PARAMCACHE
           fval = func ( &x );
@@ -176,17 +171,14 @@ namespace FitUtil {
           nPoints++;
 
           T tmp = ( y - fval ) * invErrorVec;
-          T resval = tmp * tmp;
+          T chi2 = tmp * tmp;
+
 
           // avoid inifinity or nan in chi2 values due to wrong function values
-          auto m = vecCore::Mask_v<T>( resval < maxResValue);
+          auto m = vecCore::Mask_v<T>(chi2 > maxResValue);
 
-          if(m.isFull()){
-            chi2 += resval;
-          } else {
-            for(unsigned it=0; it<vecSize; it++)
-              chi2[it] += m[it]==1? resval[it] : maxResValue;
-          }
+          vecCore::MaskedAssign<T>(chi2, m, maxResValue);
+
           return chi2;
       };
 
@@ -199,7 +191,7 @@ namespace FitUtil {
         for (unsigned int i=0; i<(data.Size()/vecSize); i++) {
           res += mapFunction(i);
         }
-      }else if(executionPolicy == 1) {
+      } else if(executionPolicy == 1) {
         ROOT::TThreadExecutor pool;
         res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
       // } else if(executionPolicy == 2){
