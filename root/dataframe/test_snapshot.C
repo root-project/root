@@ -77,7 +77,7 @@ int test_snapshot()
    TTree* jit_t;
    jit_f.GetObject(treeName, jit_t);
    auto l = jit_t->GetListOfBranches();
-   for (auto branch : *jit_t->GetListOfBranches()) {
+   for (auto branch : *l) {
       std::cout << "Jitted branch: " << branch->GetName() << std::endl;
    }
    jit_f.Close();
@@ -91,6 +91,19 @@ int test_snapshot()
       std::cerr << "Error: the jitted mean values of two branches which are supposed to be identical differ!\n";
       return 1;
    }
+
+   // now we exercise the regexp functionality
+   auto snapshot_jit2 =  d2.Snapshot(treeName, outFileName, "b[1,2].*");
+
+   // Open the new file and list the branche of the trees
+   TFile jit_f2(outFileName);
+   TTree* jit_t2;
+   jit_f2.GetObject(treeName, jit_t2);
+   auto l2 = jit_t2->GetListOfBranches();
+   for (auto branch : *l2) {
+      std::cout << "Jitted branch: " << branch->GetName() << std::endl;
+   }
+   jit_f.Close();
 
    return 0;
 }
