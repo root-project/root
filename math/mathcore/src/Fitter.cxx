@@ -125,8 +125,21 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
 
    // creates the parameter  settings
    fConfig.CreateParamsSettings(*fFunc);
+   fFunc_v.reset();
 }
 
+void Fitter::SetFunction(const IModelFunction_v & func)
+{
+   //  set the fit model function (clone the given one and keep a copy )
+   //std::cout << "set a non-grad function" << std::endl;
+   fUseGradient = false;
+   fFunc_v = std::shared_ptr<IModelFunction_v>(dynamic_cast<IModelFunction_v *>(func.Clone() ) );
+   assert(fFunc_v);
+
+   // creates the parameter  settings
+   fConfig.CreateParamsSettings(*fFunc_v);
+   fFunc.reset();
+}
 
 void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
@@ -149,6 +162,7 @@ void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 
    // creates the parameter  settings
    fConfig.CreateParamsSettings(*fFunc);
+   fFunc_v.reset();
 }
 
 void Fitter::SetFunction(const IGradModelFunction & func, bool useGradient)
@@ -161,6 +175,7 @@ void Fitter::SetFunction(const IGradModelFunction & func, bool useGradient)
 
    // creates the parameter  settings
    fConfig.CreateParamsSettings(*fFunc);
+   fFunc_v.reset();
 }
 
 
@@ -173,6 +188,7 @@ void Fitter::SetFunction(const IGradModel1DFunction & func, bool useGradient)
 
    // creates the parameter  settings
    fConfig.CreateParamsSettings(*fFunc);
+   fFunc_v.reset();
 }
 
 
@@ -325,45 +341,51 @@ bool Fitter::EvalFCN() {
 }
 
 
-bool Fitter::DoLeastSquareFit() {
+bool Fitter::DoLeastSquareFit(unsigned executionPolicy) {
 
    // perform a chi2 fit on a set of binned data
    std::shared_ptr<BinData> data = std::dynamic_pointer_cast<BinData>(fData);
    assert(data);
 
    // check function
-   if (!fFunc) {
-      MATH_ERROR_MSG("Fitter::DoLeastSquareFit","model function is not set");
-      return false;
-   }
+   if (!fFunc ) {
+      if (!fFunc_v ) {
+         MATH_ERROR_MSG("Fitter::DoLeastSquareFit","model function is not set");
+         return false;
+      } else{
+         Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v, executionPolicy);
+         fFitType = chi2.Type();
+         return DoMinimization (chi2);
+     }
+   } else {
 
 #ifdef DEBUG
    std::cout << "Fitter ParamSettings " << Config().ParamsSettings()[3].IsBound() << " lower limit " <<  Config().ParamsSettings()[3].LowerLimit() << " upper limit " <<  Config().ParamsSettings()[3].UpperLimit() << std::endl;
 #endif
 
-   fBinFit = true;
-   fDataSize = data->Size();
-
-   // check if fFunc provides gradient
-   if (!fUseGradient) {
-      // do minimzation without using the gradient
-      Chi2FCN<BaseFunc> chi2(data,fFunc);
-      fFitType = chi2.Type();
-      return DoMinimization (chi2);
-   }
-   else {
-      // use gradient
-      if (fConfig.MinimizerOptions().PrintLevel() > 0)
-         MATH_INFO_MSG("Fitter::DoLeastSquareFit","use gradient from model function");
-      std::shared_ptr<IGradModelFunction> gradFun = std::dynamic_pointer_cast<IGradModelFunction>(fFunc);
-      if (gradFun) {
-         Chi2FCN<BaseGradFunc> chi2(data,gradFun);
+      fBinFit = true;
+      fDataSize = data->Size();
+      // check if fFunc provides gradient
+      if (!fUseGradient) {
+         // do minimzation without using the gradient
+         Chi2FCN<BaseFunc> chi2(data,fFunc, executionPolicy);
          fFitType = chi2.Type();
          return DoMinimization (chi2);
       }
-      MATH_ERROR_MSG("Fitter::DoLeastSquareFit","wrong type of function - it does not provide gradient");
-   }
-   return false;
+      else {
+         // use gradient
+         if (fConfig.MinimizerOptions().PrintLevel() > 0)
+            MATH_INFO_MSG("Fitter::DoLeastSquareFit","use gradient from model function");
+         std::shared_ptr<IGradModelFunction> gradFun = std::dynamic_pointer_cast<IGradModelFunction>(fFunc);
+         if (gradFun) {
+            Chi2FCN<BaseGradFunc> chi2(data,gradFun);
+            fFitType = chi2.Type();
+            return DoMinimization (chi2);
+         }
+         MATH_ERROR_MSG("Fitter::DoLeastSquareFit","wrong type of function - it does not provide gradient");
+      }
+  }
+  return false;
 }
 
 bool Fitter::DoBinnedLikelihoodFit(bool extended) {
@@ -733,8 +755,6 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
    if (fConfig.NormalizeErrors() && fFitType == ROOT::Math::FitMethodFunction::kLeastSquare )
       fResult->NormalizeErrors();
-
-
 
    // set also new parameter values and errors in FitConfig
    if (fConfig.UpdateAfterFit() && ret) DoUpdateFitConfig();

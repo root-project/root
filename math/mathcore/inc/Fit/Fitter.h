@@ -29,7 +29,6 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Math/IParamFunctionfwd.h"
 #include <memory>
 
-
 namespace ROOT {
 
 
@@ -78,10 +77,11 @@ class Fitter {
 
 public:
 
-   typedef ROOT::Math::IParamMultiFunction       IModelFunction;
-   typedef ROOT::Math::IParamMultiGradFunction   IGradModelFunction;
-   typedef ROOT::Math::IParamFunction            IModel1DFunction;
-   typedef ROOT::Math::IParamGradFunction        IGradModel1DFunction;
+   typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
+   typedef ROOT::Math::IParametricFunctionMultiDimTempl<Double_v>  IModelFunction_v;
+   typedef ROOT::Math::IParamMultiGradFunction             IGradModelFunction;
+   typedef ROOT::Math::IParamFunction                      IModel1DFunction;
+   typedef ROOT::Math::IParamGradFunction                  IGradModel1DFunction;
 
    typedef ROOT::Math::IMultiGenFunction BaseFunc;
    typedef ROOT::Math::IMultiGradFunction BaseGradFunc;
@@ -125,22 +125,22 @@ public:
        Pre-requisite on the function:
        it must implement the 1D or multidimensional parametric function interface
    */
-   template < class Data , class Function>
-   bool Fit( const Data & data, const Function & func ) {
+   template < class Data , class Function, class cond = typename std::enable_if<!(std::is_same<Function, int>::value), Function>::type>
+   bool Fit( const Data & data, const Function & func, unsigned executionPolicy =0) {
       SetFunction(func);
-      return Fit(data);
+      return Fit(data, executionPolicy);
    }
 
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data) {
+   bool Fit(const BinData & data, unsigned executionPolicy=0) {
       SetData(data);
-      return DoLeastSquareFit();
+      return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data) {
+   bool Fit(const std::shared_ptr<BinData> & data, unsigned executionPolicy=0) {
       SetData(data);
-      return DoLeastSquareFit();
+      return DoLeastSquareFit(executionPolicy);
    }
 
    /**
@@ -316,6 +316,11 @@ public:
        Set the fitted function (model function) from a parametric function interface
    */
    void  SetFunction(const IModelFunction & func, bool useGradient = false);
+
+   /**
+       Set the fitted function (model function) from a vectorized parametric function interface
+   */
+   void  SetFunction(const IModelFunction_v & func);
    /**
       Set the fitted function from a parametric 1D function interface
     */
@@ -413,7 +418,7 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit();
+   bool DoLeastSquareFit(unsigned executionPolicy = 0);
    /// binned likelihood fit
    bool DoBinnedLikelihoodFit( bool extended = true);
    /// un-binned likelihood fit
@@ -474,6 +479,7 @@ private:
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
 
+   std::shared_ptr<IModelFunction_v> fFunc_v;  //! copy of the fitted  function containing on output the fit result
    std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
 
    std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit

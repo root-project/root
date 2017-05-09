@@ -105,6 +105,8 @@ public:
    */
    void CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func);
 
+   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<Double_v> & func);
+
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.
    */
