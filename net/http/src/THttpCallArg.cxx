@@ -32,7 +32,7 @@ ClassImp(THttpCallArg)
    THttpCallArg::THttpCallArg()
    : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
      fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
-     fBinData(0), fBinDataLength(0)
+     fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
 {
 }
 
@@ -319,7 +319,10 @@ Bool_t THttpCallArg::CompressWithGzip()
 
 void THttpCallArg::NotifyCondition()
 {
-   if (!IsPostponed()) HttpReplied();
+   if (!fNotifyFlag && !IsPostponed()) {
+      fNotifyFlag = kTRUE;
+      HttpReplied();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
