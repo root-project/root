@@ -1171,7 +1171,7 @@ if(imt)
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 44_20160413)
+  set(tbb_version 2017_20170226)
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
