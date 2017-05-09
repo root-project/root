@@ -137,16 +137,28 @@ class CppCompleter(object):
     def _completeImpl(self, line):
         line=line.split()[-1]
         suggestions = self._getSuggestions(line)
-        if not suggestions: return []
-        accessorPos = self._getLastAccessorPos(line)
         suggestions = filter(lambda s: len(s.strip()) != 0, suggestions)
         suggestions = sorted(suggestions)
-        # Look for spaces since these mark function signatures
-        are_signatures = "(" in "".join(suggestions)
+        if not suggestions: return []
+        # Remove combinations of opening and closing brackets and just opening
+        # brackets at the end of a line. Jupyter seems to expect functions
+        # without these brackets to work properly. The brackets of'operator()'
+        # must not be removed
+        suggestions = [sugg[:-2] if sugg[-2:] == '()' and sugg != 'operator()' else sugg for sugg in suggestions]
+        suggestions = [sugg[:-1] if sugg[-1:] == '(' else sugg for sugg in suggestions]
+        # If a function signature is encountered, add an empty item to the
+        # suggestions. Try to guess a function signature by an opening bracket
+        # ignoring 'operator()'.
+        are_signatures = "(" in "".join(filter(lambda s: s != 'operator()', suggestions))
+        accessorPos = self._getLastAccessorPos(line)
         if are_signatures:
             suggestions = [" "] + suggestions
         elif accessorPos > 0:
-            suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
+            # Prepend variable name to suggestions. Do not prepend if the
+            # suggestion already contains the variable name, this can happen if
+            # e.g. there is only one valid completion
+            if len(suggestions) > 1 or line[:accessorPos] != suggestions[0][:accessorPos]:
+                suggestions = [line[:accessorPos]+sugg for sugg in suggestions]
         return suggestions
 
     def complete(self, ip, event) :
