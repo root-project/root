@@ -37,13 +37,13 @@ ROOTTEST_ADD_TEST(processExecutor
 
 if(ROOT_imt_FOUND)
   include_directories(${TBB_INCLUDE_DIRS})
-  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Thread Hist)
+  ROOTTEST_GENERATE_EXECUTABLE(threadExecutor tThreadExecutor.cpp LIBRARIES Core Imt Hist)
 
   ROOTTEST_ADD_TEST(threadExecutor
                     EXEC threadExecutor
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-  ROOTTEST_GENERATE_EXECUTABLE(poolManager testPoolManager.cpp LIBRARIES Core Thread ${TBB_LIBRARIES})
+  ROOTTEST_GENERATE_EXECUTABLE(poolManager testPoolManager.cpp LIBRARIES Core Imt ${TBB_LIBRARIES})
   ROOTTEST_ADD_TEST(poolManager
                     EXEC poolManager
                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
