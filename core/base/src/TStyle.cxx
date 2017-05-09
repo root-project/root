@@ -1211,7 +1211,7 @@ void TStyle::SetOptDate(Int_t optdate)
 ///    case and is equivalent to `gStyle->SetOptFit(111)`
 ///  - At ROOT startup the option fit is set to `0`. So, to see the fit parameters
 ///    on all plot resulting from a fit, a call to `gStyle->SetOptFit()` with a
-///    non nul value should be done. One can put it in the `rootlogon.C` file to
+///    non null value should be done. One can put it in the `rootlogon.C` file to
 ///    always have it.
 ///
 /// see also SetOptStat below.
