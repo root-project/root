@@ -18,4 +18,8 @@ ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs> $<TARGET_OBJECTS:RootPc
                                DEPENDENCIES Core Thread)
 ROOT_INSTALL_HEADERS()
 
+if(testing)
+  add_subdirectory(test)
+endif()
+
 #--- Extra rules ----------------------------------------------------------
