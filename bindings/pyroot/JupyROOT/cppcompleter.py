@@ -18,16 +18,22 @@ std::vector<std::string> _TTabComHook(const char* pattern){
    completed[lineBufSize-1] = '\\0';
    int pLoc = strlen(completed.get());
    std::ostringstream oss;
-   ttc->Hook(completed.get(), &pLoc, oss);
-   auto completions = oss.str();
-   vector<string> completions_v;
-   istringstream f(completions);
-   string s;
-   while (getline(f, s, '\\n')) {
-      //cout << "**" << s << "**" << endl;
-      completions_v.push_back(s);
+   Int_t firstChange = ttc->Hook(completed.get(), &pLoc, oss);
+   if (firstChange == -2) { // got some completions in oss
+      auto completions = oss.str();
+      vector<string> completions_v;
+      istringstream f(completions);
+      string s;
+      while (getline(f, s, '\\n')) {
+         completions_v.push_back(s);
+      }
+      return completions_v;
    }
-   return completions_v;
+   if (firstChange == -1) { // found no completions
+      return vector<string>();
+   }
+   // found exactly one completion
+   return vector<string>(1, completed.get());
 }
 """
 
