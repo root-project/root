@@ -334,7 +334,7 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int & executionPolicy) {
+double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int & executionPolicy, unsigned nChunks) {
    // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
    // the actual number of used points
    // normal chi2 using only error on values (from fitting histogram)
@@ -467,7 +467,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
     }
   } else if(executionPolicy == 1) {
     ROOT::TThreadExecutor pool;
-    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+    res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, nChunks);
 //   } else if(executionPolicy == 2){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);

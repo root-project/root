@@ -50,7 +50,7 @@ namespace FitUtil {
        evaluate the Chi2 given a model function and the data at the point x.
        return also nPoints as the effective number of used points in the Chi2 evaluation
    */
-   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const unsigned int &executionPolicy);
+   double EvaluateChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks=1 );
 
    /**
        evaluate the effective Chi2 given a model function and the data at the point x.
@@ -124,7 +124,7 @@ namespace FitUtil {
 
   template<class T>
   struct EvalChi2{
-    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy){
+    static double DoEval(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0){
       // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
@@ -193,7 +193,7 @@ namespace FitUtil {
         }
       } else if(executionPolicy == 1) {
         ROOT::TThreadExecutor pool;
-        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
+        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction, nChunks);
       // } else if(executionPolicy == 2){
       //   ROOT::TProcessExecutor pool;
       //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
@@ -212,12 +212,12 @@ namespace FitUtil {
 
   template<>
   struct EvalChi2<double>{
-    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy) {
+    static double DoEval(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy,unsigned nChunks = 1) {
       // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
       // the actual number of used points
       // normal chi2 using only error on values (from fitting histogram)
       // optionally the integral of function in the bin is used
-      return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy);
+      return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
     }
   };
 
