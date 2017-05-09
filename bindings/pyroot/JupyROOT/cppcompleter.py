@@ -121,7 +121,7 @@ class CppCompleter(object):
         for accessor in self.accessors:
             tmpAccessorPos = line.rfind(accessor)
             if accessorPos < tmpAccessorPos:
-                accessorPos = tmpAccessorPos+len(accessor) if accessor!="::" else 0
+                accessorPos = tmpAccessorPos+len(accessor)
         return accessorPos
 
     def _completeImpl(self, line):
