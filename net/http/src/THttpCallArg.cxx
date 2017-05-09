@@ -319,5 +319,15 @@ Bool_t THttpCallArg::CompressWithGzip()
 
 void THttpCallArg::NotifyCondition()
 {
-   if (!IsPostponed()) fCond.notify_one();
+   if (!IsPostponed()) HttpReplied();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// virtual method to inform object that http request is processed
+/// Normally condition is notified and waiting thread will be awaked
+/// One could reimplement this method in sub-class
+
+void THttpCallArg::HttpReplied()
+{
+   fCond.notify_one();
 }
