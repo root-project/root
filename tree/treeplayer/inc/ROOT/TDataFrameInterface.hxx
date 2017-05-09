@@ -23,6 +23,7 @@
 #include "TInterpreter.h"
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
+#include "TRegexp.h"
 #include "TROOT.h"      // IsImplicitMTEnabled
 
 #include <initializer_list>
@@ -273,6 +274,44 @@ public:
       // jit snapCall, return result
       return *reinterpret_cast<TDataFrameInterface<ROOT::Detail::TDataFrameImpl>*>(
          gInterpreter->ProcessLine(snapCall.str().c_str()));
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Create a snapshot of the dataset on disk in the form of a TTree
+   /// \param[in] treename The name of the output TTree
+   /// \param[in] filename The name of the output TFile
+   /// \param[in] columnNameRegexp The regular expression to match the column names to be selected. Empty means all.
+   ///
+   /// This function returns a `TDataFrame` built with the output tree as a source.
+   /// The types of the branches are automatically inferred and do not need to be specified.
+   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+                                                              const std::string &columnNameRegexp = "")
+   {
+      BranchNames_t selectedColumns;
+      selectedColumns.reserve(32);
+      const auto isEmptyRegex = "" == columnNameRegexp;
+
+      const auto tmpBranches = fProxiedPtr->GetTmpBranches();
+      // Since we support gcc48 and it does not provide in its stl std::regex,
+      // we need to use TRegexp
+      TRegexp regexp(columnNameRegexp);
+      int dummy;
+      for (auto&& branchName : tmpBranches) {
+         if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
+            selectedColumns.emplace_back(branchName);
+         }
+      }
+
+      auto df = GetDataFrameChecked();
+      const auto branches = df->GetTree()->GetListOfBranches();
+      for (auto branch : *branches) {
+         auto branchName = branch->GetName();
+         if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+            selectedColumns.emplace_back(branchName);
+         }
+      }
+
+      return Snapshot(treename, filename, selectedColumns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
