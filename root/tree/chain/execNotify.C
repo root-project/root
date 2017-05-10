@@ -29,7 +29,6 @@ void execNotifyImpl() {
   l.Add(new Notified(2));
   printf("Second notify\n");
   t.LoadTree(0);
-  l.ls();
 }
 
 void execNotify() {
