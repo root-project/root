@@ -1,0 +1,19 @@
+
+Processing execNotify.C...
+Error in <TList::AddLast>: argument is a null pointer
+First notify
+Notifying #1
+Second notify
+Notifying #1
+Notifying #2
+OBJ: TList	TList	Doubly linked list : 0
+ OBJ: TObject	TObject	Basic ROOT object : 0 at: 0x7f7f81426510
+ OBJ: TObject	TObject	Basic ROOT object : 0 at: 0x7f7f81434e10
+First notify
+Notifying #1
+Second notify
+Notifying #1
+Notifying #2
+OBJ: TObjArray	TObjArray	An array of objects : 0
+ OBJ: TObject	TObject	Basic ROOT object : 0 at: 0x7f7f81426530
+ OBJ: TObject	TObject	Basic ROOT object : 0 at: 0x7f7f81424c90
