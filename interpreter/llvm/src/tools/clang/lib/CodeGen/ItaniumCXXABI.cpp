@@ -61,7 +61,11 @@ public:
 
   RecordArgABI getRecordArgABI(const CXXRecordDecl *RD) const override {
     // If C++ prohibits us from making a copy, pass by address.
+#if __clang_major__ < 5
     if (!canCopyArgument(RD))
+#else
+    if (RD->hasNonTrivialDestructor() || RD->hasNonTrivialCopyConstructor())
+#endif
       return RAA_Indirect;
     return RAA_Default;
   }
@@ -972,7 +976,11 @@ bool ItaniumCXXABI::classifyReturnType(CGFunctionInfo &FI) const {
     return false;
 
   // If C++ prohibits us from making a copy, return by address.
+#if __clang_major__ < 5
   if (!canCopyArgument(RD)) {
+#else
+  if (RD->hasNonTrivialDestructor() || RD->hasNonTrivialCopyConstructor()) {
+#endif
     auto Align = CGM.getContext().getTypeAlignInChars(FI.getReturnType());
     FI.getReturnInfo() = ABIArgInfo::getIndirect(Align, /*ByVal=*/false);
     return true;

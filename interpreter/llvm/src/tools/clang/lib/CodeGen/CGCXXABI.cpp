@@ -55,6 +55,7 @@ bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
       CopyOrMoveDeleted = true;
     }
   }
+#if __clang_major__ < 5
   // If a move constructor or move assignment operator was declared, the
   // default copy constructors are implicitly deleted, except in one case
   // related to compatibility with MSVC pre-2015.
@@ -67,6 +68,7 @@ bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
     if (!DeletesOnlyMatchingCopy)
       return false;
   }
+#endif
 
   // If all trivial copy and move constructors are deleted, we cannot copy the
   // argument.
