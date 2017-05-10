@@ -30,13 +30,13 @@ class TTreeReader;
 
 namespace ROOT {
 
-using BranchNames_t = std::vector<std::string>;
-
-// forward declarations
 namespace Detail {
-class TDataFrameBranchBase; // for ColumnName2ColumnTypeName
+namespace TDF {
+using BranchNames_t = std::vector<std::string>;
+class TCustomColumnBase; // fwd decl for ColumnName2ColumnTypeName
 struct TDataFrameGuessedType {
 };
+}
 }
 
 namespace Internal {
@@ -166,7 +166,7 @@ struct TNeedJitting {
 };
 
 template <typename... Rest>
-struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType, Rest...> {
+struct TNeedJitting<ROOT::Detail::TDF::TDataFrameGuessedType, Rest...> {
    static constexpr bool value = true;
 };
 
@@ -176,7 +176,7 @@ struct TNeedJitting<T> {
 };
 
 template <>
-struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType> {
+struct TNeedJitting<ROOT::Detail::TDF::TDataFrameGuessedType> {
    static constexpr bool value = true;
 };
 
@@ -185,7 +185,7 @@ struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, ROOT::Detail::TDataFrameBranchBase *);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, ROOT::Detail::TDF::TCustomColumnBase *);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string s);
@@ -211,9 +211,9 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// TDataFrameValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
-void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const BranchNames_t &bn,
-                   const BranchNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>> &tmpBranches,
+void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
+                   const ROOT::Detail::TDF::BranchNames_t &bn, const ROOT::Detail::TDF::BranchNames_t &tmpbn,
+                   const std::map<std::string, std::shared_ptr<ROOT::Detail::TDF::TCustomColumnBase>> &tmpBranches,
                    ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
@@ -265,7 +265,8 @@ void CheckReduce(F &, T)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl);
+const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::BranchNames_t &bl,
+                                                        const ROOT::Detail::TDF::BranchNames_t &defBl);
 
 namespace ActionTypes {
 struct Histo1D {

@@ -21,9 +21,9 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 // extern templates
-template class TInterface<ROOT::Detail::TDataFrameImpl>;
-template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
+template class TInterface<ROOT::Detail::TDF::TDataFrameImpl>;
+template class TInterface<ROOT::Detail::TDF::TFilterBase>;
+template class TInterface<ROOT::Detail::TDF::TCustomColumnBase>;
 }
 }
 
@@ -170,7 +170,7 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
-   std::vector<ROOT::Detail::TDataFrameBranchBase *> tmpBranchPtrs(nBranches, nullptr);
+   std::vector<ROOT::Detail::TDF::TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
    for (auto i = 0u; i < nBranches; ++i) {
       auto tmpBranchIt = tmpBranches.find(bl[i]);
       if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
@@ -214,8 +214,8 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
    createAction_str << ">("
                     << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
-                    << "*reinterpret_cast<ROOT::BranchNames_t*>(" << &bl << "), " << nSlots << ", *reinterpret_cast<"
-                    << actionResultTypeName << "*>(" << r << "));";
+                    << "*reinterpret_cast<ROOT::Detail::TDF::BranchNames_t*>(" << &bl << "), " << nSlots
+                    << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
    auto error = TInterpreter::EErrorCode::kNoError;
    gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
    if (error) {

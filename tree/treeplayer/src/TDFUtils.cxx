@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TDataFrameBranchBase
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName requires TCustomColumnBase
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
 #include "TBranchElement.h"
@@ -26,7 +26,7 @@ namespace Internal {
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
-                                      ROOT::Detail::TDataFrameBranchBase *tmpBranch)
+                                      ROOT::Detail::TDF::TCustomColumnBase *tmpBranch)
 {
    if (auto branch = tree.GetBranch(colName.c_str())) {
       // this must be a real TTree branch
@@ -137,7 +137,8 @@ void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl)
+const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::BranchNames_t &bl,
+                                                        const ROOT::Detail::TDF::BranchNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {
