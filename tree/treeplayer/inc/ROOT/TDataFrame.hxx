@@ -16,7 +16,6 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
-#include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TDataFrameInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
