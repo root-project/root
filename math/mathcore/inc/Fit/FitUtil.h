@@ -569,6 +569,11 @@ nPoints = 0;
    return -logl;
 
     }
+
+    static double EvalChi2Effective(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints){
+      Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
+      return -1.;
+    }
   };
 
   template<>
@@ -583,6 +588,9 @@ nPoints = 0;
     static double EvalLogL(const IModelFunctionTempl<double> & func, const UnBinData & data, const double * p, int iWeight,
                                bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks=0) {
       return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
+    }
+    static double EvalChi2Effective(const IModelFunctionTempl<double> & func, const BinData & data, const double * p, unsigned int & nPoints){
+      return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
     }
   };
 

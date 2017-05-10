@@ -150,15 +150,11 @@ private:
       Evaluation of the  function (required by interface)
     */
    virtual double DoEval (const double * x) const {
-//       this->UpdateNCalls();
-// #ifdef ROOT_FIT_PARALLEL
-      // return FitUtilParallel::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-// #else
-//       if (!BaseFCN::Data().HaveCoordErrors() )
+      this->UpdateNCalls();
+      if (!BaseFCN::Data().HaveCoordErrors() )
          return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
-//       else
-//          return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-// #endif
+      else
+         return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
    }
 
    // for derivatives
