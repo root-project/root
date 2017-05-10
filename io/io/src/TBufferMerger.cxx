@@ -280,6 +280,7 @@ TBufferMerger::~TBufferMerger()
    fCV.notify_one();
 
    fMergingThread->join();
+   fFile->Close();
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
