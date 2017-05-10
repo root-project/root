@@ -30,13 +30,9 @@ class TTree;
 
 R__LOAD_LIBRARY(libTreePlayer)
 
-namespace cling {
-// TDataFrame pretty-printing
-std::string printValue(ROOT::Experimental::TDataFrame *tdf);
-}
-
 namespace ROOT {
 namespace Experimental {
+namespace TDF {
 
 class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
 public:
@@ -50,7 +46,7 @@ public:
    ///
    /// The default branches are looked at in case no branch is specified in the
    /// booking of actions or transformations.
-   /// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+   /// See TDataFrameInterface for the documentation of the
    /// methods available.
    template <
       typename FILENAMESCOLL,
@@ -74,6 +70,8 @@ TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenam
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 
+} // end NS TDF
+using TDF::TDataFrame; // let users access TDataFrame as ROOT::Experimental::TDataFrame
 } // end NS Experimental
 } // end NS ROOT
 
