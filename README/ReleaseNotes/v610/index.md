@@ -248,6 +248,30 @@ The following interfaces have been removed, after deprecation in v6.08.
 ## Parallelism and PROOF
 - Add ROOT::GetImplicitMTPoolSize function to get the size of the pool used to enable implicit multi threading
 - Add the TThreadExecutor::Foreach method for parallelising functions featuring void return type
+- Add TBufferMerger and TBufferMergerFile classes
+
+  TBufferMerger is a class to facilitate writing data in
+  parallel from multiple threads, while writing to a single
+  output file. Its purpose is similar to TParallelMergingFile,
+  but instead of using processes that connect to a network
+  socket, TBufferMerger uses threads that each write to a
+  TBufferMergerFile, which in turn push data into a queue
+  managed by the TBufferMerger. An exerpt of the
+  [tutorial](https://github.com/root-project/root/blob/master/tutorials/multicore/mt103_fillNtuples.C)
+  is shown below.
+  ```{.cpp}
+  // Create the TBufferMerger
+  TBufferMerger merger("mp103_fillNtuple.root");
+
+  // Define what each worker will do
+  auto work_function = [&]() {
+     auto f = merger.GetFile();
+     TNtuple ntrand("ntrand", "Random Numbers", "r");
+     fill(ntrand, nEventsPerWorker);
+     ntrand.Write();
+     f->Write();
+  };
+  ```
 
 ## Language Bindings
 
