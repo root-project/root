@@ -245,7 +245,7 @@ void CheckFilter(Filter &)
 void CheckTmpBranch(const std::string &branchName, TTree *treePtr);
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Check that the callable passed to TDataFrameInterface::Reduce:
+/// Check that the callable passed to TInterface::Reduce:
 /// - takes exactly two arguments of the same type
 /// - has a return value of the same type as the arguments
 template <typename F, typename T>
