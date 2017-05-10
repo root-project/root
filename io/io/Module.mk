@@ -18,7 +18,7 @@ IODS         := $(call stripsrc,$(MODDIRS)/G__RIO.cxx)
 IODO         := $(IODS:.cxx=.o)
 IODH         := $(IODS:.cxx=.h)
 
-IOH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+IOH          := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h $(MODDIRI)/ROOT/*.hxx))
 IOS          := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 IOO          := $(call stripsrc,$(IOS:.cxx=.o))
 
@@ -28,7 +28,7 @@ IOLIB        := $(LPATH)/libRIO.$(SOEXT)
 IOMAP        := $(IOLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-IOH_REL      := $(patsubst $(MODDIRI)/%.h,include/%.h,$(IOH))
+IOH_REL      := $(patsubst $(MODDIRI)/%,include/%,$(IOH))
 ALLHDRS      += $(IOH_REL)
 ALLLIBS      += $(IOLIB)
 ALLMAPS      += $(IOMAP)
@@ -48,6 +48,10 @@ INCLUDEFILES += $(IODEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(IODIRI)/%.h
+		cp $< $@
+
+include/%.hxx:  $(IODIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 $(IOLIB):       $(IOO) $(IODO) $(ROOTPCMO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
