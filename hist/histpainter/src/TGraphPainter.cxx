@@ -441,7 +441,7 @@ When several graphs are painted in the same canvas or when a multi-graph is draw
 it might be useful to have an easy and automatic way to choose
 their color. The simplest way is to pick colors in the current active color
 palette. Palette coloring for histogram is activated thanks to the options `PFC`
-(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+(Palette Fill Color), `PLC` (Palette Line Color) and `PMC` (Palette Marker Color).
 When one of these options is given to `TGraph::Draw` the graph get its color
 from the current color palette defined by `gStyle->SetPalette(…)`. The color
 is determined according to the number of objects having palette coloring in
