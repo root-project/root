@@ -17,12 +17,16 @@
 #include <string>
 using namespace ROOT::Experimental::TDF;
 
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
 // extern templates
 template class TInterface<ROOT::Detail::TDataFrameImpl>;
 template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
 template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
+}
+}
 
-namespace ROOT {
 namespace Internal {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
