@@ -79,7 +79,7 @@ private:
    std::mutex fWriteMutex;                                       //< Mutex used for the condition variable
    std::condition_variable fCV;                                  //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
-   std::unique_ptr<TFile> fFile;                                 //< Output file, owned by the user
+   std::unique_ptr<TFile> fFile;                                 //< Output file, owned by this class
    std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 
