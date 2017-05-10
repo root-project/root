@@ -12,6 +12,7 @@
 #define ROOT_TDATAFRAME_INTERFACE
 
 #include "ROOT/TActionResultProxy.hxx"
+#include "ROOT/TBufferMerger.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -1066,26 +1067,33 @@ protected:
       }
 
       {
-         std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
-         TTree t(treename.c_str(), treename.c_str());
+         auto df = GetDataFrameChecked();
+         unsigned int nSlots = df->GetNSlots();
+         TBufferMerger merger(filename.c_str(), "RECREATE");
+         std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
+         std::vector<std::unique_ptr<TTree>> trees(nSlots);
 
-         static bool firstEvt = true;
+         auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
+            if (!trees[slot]) {
+               files[slot] = merger.GetFile();
+               trees[slot].reset(new TTree(treename.c_str(), treename.c_str()));
 
-         auto fillTree = [&t, &bnames](Args &... args) {
-            if (firstEvt) {
                // hack to call TTree::Branch on all variadic template arguments
-               std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
+               std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
 
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-               firstEvt = false;
             }
-            t.Fill();
+
+            trees[slot]->Fill();
          };
 
-         Foreach(fillTree, {bnames[S]...});
+         ForeachSlot(fillTree, {bnames[S]...});
 
-         t.Write();
-         firstEvt = true;
+         for (auto &&tree : trees) tree->Write();
+         for (auto &&file : files) file->Write();
+
+         trees.clear();
+         files.clear();
       }
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
