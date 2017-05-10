@@ -62,8 +62,7 @@ template <typename FILENAMESCOLL,
           typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+   : TInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
