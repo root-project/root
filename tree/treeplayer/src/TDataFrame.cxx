@@ -9,9 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/TDataFrame.hxx"
-
-namespace ROOT {
-namespace Experimental {
+using namespace ROOT::Experimental::TDF;
 
 /**
 * \class ROOT::Experimental::TDataFrame
@@ -502,7 +500,7 @@ thread-safety, see [here](#generic-actions).
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+/// See TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
@@ -528,7 +526,7 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+/// See TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
                        const BranchNames_t &defaultBranches)
@@ -547,7 +545,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See ROOT::Experimental::TDataFrameInterface for the documentation of the
+/// See TDataFrameInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
    : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
@@ -567,7 +565,3 @@ TDataFrame::TDataFrame(Long64_t numEntries)
         std::make_shared<ROOT::Detail::TDataFrameImpl>(numEntries))
 {
 }
-
-} // end NS Experimental
-
-} // end NS ROOT
