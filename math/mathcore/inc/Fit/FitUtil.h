@@ -305,294 +305,299 @@ namespace FitUtil {
 
    unsigned setAutomaticChunking(unsigned nEvents);
 
-  template<class T>
-  struct Evaluate{
-    static double EvalChi2(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0){
-      // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
-      // the actual number of used points
-      // normal chi2 using only error on values (from fitting histogram)
-      // optionally the integral of function in the bin is used
+   template<class T>
+   struct Evaluate{
+      static double EvalChi2(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
+      {
+         // evaluate the chi2 given a  vectorized function reference  , the data and returns the value and also in nPoints
+         // the actual number of used points
+         // normal chi2 using only error on values (from fitting histogram)
+         // optionally the integral of function in the bin is used
 
-      unsigned int n = data.Size();
+         unsigned int n = data.Size();
 
-      nPoints = 0; // count the effective non-zero points
-      // set parameters of the function to cache integral value
-      #ifdef USE_PARAMCACHE
-        (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
-      #endif
-      // do not cache parameter values (it is not thread safe)
-      //func.SetParameters(p);
-
-
-      // get fit option and check case if using integral of bins
-      const DataOptions & fitOpt = data.Opt();
-      if (fitOpt.fExpErrors || fitOpt.fIntegral || fitOpt.fExpErrors)
-        Error("FitUtil::EvaluateChi2","The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
-
-      (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
-
-      double maxResValue = std::numeric_limits<double>::max() /n;
-      std::vector<double> ones{1,1,1,1};
-      auto vecSize = vecCore::VectorSize<T>();
-
-      auto mapFunction = [&](unsigned int i){
-          // in case of no error in y invError=1 is returned
-          T x, y, invErrorVec;
-          vecCore::Load<T>(x, data.GetCoordComponent(i*vecSize,0));
-          vecCore::Load<T>(y, data.ValuePtr(i*vecSize));
-          const auto invError = data.ErrorPtr(i*vecSize);
-          auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
-          vecCore::Load<T>(invErrorVec, invErrorptr);
-
-          T fval{};
-
-    #ifdef USE_PARAMCACHE
-          fval = func ( &x );
-    #else
-          fval = func ( &x, p );
-    #endif
-          nPoints++;
-
-          T tmp = ( y - fval ) * invErrorVec;
-          T chi2 = tmp * tmp;
-
-
-          // avoid inifinity or nan in chi2 values due to wrong function values
-          auto m = vecCore::Mask_v<T>(chi2 > maxResValue);
-
-          vecCore::MaskedAssign<T>(chi2, m, maxResValue);
-
-          return chi2;
-      };
-
-      auto redFunction = [](const std::vector<T> & objs){
-                          return std::accumulate(objs.begin(), objs.end(), T{});
-      };
-
-      T res{};
-      if(executionPolicy == 0){
-        for (unsigned int i=0; i<(data.Size()/vecSize); i++) {
-          res += mapFunction(i);
-        }
-      } else if(executionPolicy == 1) {
-        auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size()/vecSize);
-        ROOT::TThreadExecutor pool;
-        res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction, chunks);
-      // } else if(executionPolicy == 2){
-      //   ROOT::TProcessExecutor pool;
-      //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
-      } else{
-        Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
-      }
-      nPoints=n;
-
-    #ifdef DEBUG
-      std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
-    #endif
-
-      return res.sum();
-    }
-
-   static double EvalLogL(const IModelFunctionTempl<T> & func, const UnBinData & data, const double * const p, int iWeight,
-                               bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks=0) {
-   // evaluate the LogLikelihood
-   unsigned int n = data.Size();
-
-   //unsigned int nRejected = 0;
-
-   // set parameters of the function to cache integral value
+         nPoints = 0; // count the effective non-zero points
+         // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE
-   (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
+         (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 #endif
+         // do not cache parameter values (it is not thread safe)
+         //func.SetParameters(p);
 
-   // this is needed if function must be normalized
-   bool normalizeFunc = false;
-   double norm = 1.0;
-   if (normalizeFunc) {
-      // compute integral of the function
-      std::vector<double> xmin(data.NDim());
-      std::vector<double> xmax(data.NDim());
-      IntegralEvaluator<IModelFunctionTempl<T>> igEval( func, p, true);
-      // compute integral in the ranges where is defined
-      if (data.Range().Size() > 0 ) {
-         norm = 0;
-         for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
-            data.Range().GetRange(&xmin[0],&xmax[0],ir);
-            norm += igEval.Integral(xmin.data(),xmax.data());
-         }
-      } else {
-         // use (-inf +inf)
-         data.Range().GetRange(&xmin[0],&xmax[0]);
-         // check if funcition is zero at +- inf
-         const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
-         const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
-         if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
-            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
-            return 0;
-         }
-         norm = igEval.Integral(&xmin[0],&xmax[0]);
-      }
-   }
 
-   // needed to compute effective global weight in case of extended likelihood
+         // get fit option and check case if using integral of bins
+         const DataOptions &fitOpt = data.Opt();
+         if (fitOpt.fExpErrors || fitOpt.fIntegral || fitOpt.fExpErrors)
+            Error("FitUtil::EvaluateChi2", "The vectorized implementation doesn't support Integrals, BinVolume or ExpErrors\n. Aborting operation.");
 
-  auto vecSize = vecCore::VectorSize<T>();
+         (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 
-    auto mapFunction = [&, p](const unsigned i){
-      T W{};
-      T W2{};
-      const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i*vecSize, 0));
+         double maxResValue = std::numeric_limits<double>::max() / n;
+         std::vector<double> ones{1, 1, 1, 1};
+         auto vecSize = vecCore::VectorSize<T>();
+
+         auto mapFunction = [&](unsigned int i) {
+            // in case of no error in y invError=1 is returned
+            T x, y, invErrorVec;
+            vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
+            vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
+            const auto invError = data.ErrorPtr(i * vecSize);
+            auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
+            vecCore::Load<T>(invErrorVec, invErrorptr);
+
+            T fval{};
 
 #ifdef USE_PARAMCACHE
-       auto fval = func ( &x );
+            fval = func(&x);
 #else
-       auto fval = func (&x, p);
+            fval = func(&x, p);
 #endif
-      if (normalizeFunc) fval = fval * (1/norm);
+            nPoints++;
 
-      // function EvalLog protects against negative or too small values of fval
-      auto logval =  ROOT::Math::Util::EvalLog(fval);
-      if (iWeight > 0) {
-         auto weight = data.WeightsPtr(i) == nullptr? 1 : vecCore::FromPtr<T>(data.WeightsPtr(i));
-         logval *= weight;
-         if (iWeight==2) {
-            logval *= weight; // use square of weights in likelihood
-            if (!extended) {
-               // needed sum of weights and sum of weight square if likelkihood is extended
-               W  = weight;
-               W2 = weight*weight;
+            T tmp = (y - fval) * invErrorVec;
+            T chi2 = tmp * tmp;
+
+
+            // avoid inifinity or nan in chi2 values due to wrong function values
+            auto m = vecCore::Mask_v<T>(chi2 > maxResValue);
+
+            vecCore::MaskedAssign<T>(chi2, m, maxResValue);
+
+            return chi2;
+         };
+
+         auto redFunction = [](const std::vector<T> &objs) {
+            return std::accumulate(objs.begin(), objs.end(), T{});
+         };
+
+         T res{};
+         if (executionPolicy == 0) {
+            for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
+               res += mapFunction(i);
+            }
+         } else if (executionPolicy == 1) {
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
+            ROOT::TThreadExecutor pool;
+            res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+            // } else if(executionPolicy == 2){
+            //   ROOT::TProcessExecutor pool;
+            //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
+         } else {
+            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+         }
+         nPoints = n;
+
+#ifdef DEBUG
+         std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
+#endif
+
+         return res.sum();
+      }
+
+      static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData & data, const double * const p, int iWeight,
+                             bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
+      {
+         // evaluate the LogLikelihood
+         unsigned int n = data.Size();
+
+         //unsigned int nRejected = 0;
+
+         // set parameters of the function to cache integral value
+#ifdef USE_PARAMCACHE
+         (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
+#endif
+
+         // this is needed if function must be normalized
+         bool normalizeFunc = false;
+         double norm = 1.0;
+         if (normalizeFunc) {
+            // compute integral of the function
+            std::vector<double> xmin(data.NDim());
+            std::vector<double> xmax(data.NDim());
+            IntegralEvaluator<IModelFunctionTempl<T>> igEval(func, p, true);
+            // compute integral in the ranges where is defined
+            if (data.Range().Size() > 0) {
+               norm = 0;
+               for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+                  data.Range().GetRange(&xmin[0], &xmax[0], ir);
+                  norm += igEval.Integral(xmin.data(), xmax.data());
+               }
+            } else {
+               // use (-inf +inf)
+               data.Range().GetRange(&xmin[0], &xmax[0]);
+               // check if funcition is zero at +- inf
+               const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
+               const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
+               if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
+                  MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
+                  return 0;
+               }
+               norm = igEval.Integral(&xmin[0], &xmax[0]);
             }
          }
+
+         // needed to compute effective global weight in case of extended likelihood
+
+         auto vecSize = vecCore::VectorSize<T>();
+
+         auto mapFunction = [ &, p](const unsigned i) {
+            T W{};
+            T W2{};
+            const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i * vecSize, 0));
+
+#ifdef USE_PARAMCACHE
+            auto fval = func(&x);
+#else
+            auto fval = func(&x, p);
+#endif
+            if (normalizeFunc) fval = fval * (1 / norm);
+
+            // function EvalLog protects against negative or too small values of fval
+            auto logval =  ROOT::Math::Util::EvalLog(fval);
+            if (iWeight > 0) {
+               auto weight = data.WeightsPtr(i) == nullptr ? 1 : vecCore::FromPtr<T>(data.WeightsPtr(i));
+               logval *= weight;
+               if (iWeight == 2) {
+                  logval *= weight; // use square of weights in likelihood
+                  if (!extended) {
+                     // needed sum of weights and sum of weight square if likelkihood is extended
+                     W  = weight;
+                     W2 = weight * weight;
+                  }
+               }
+            }
+            nPoints++;
+            return LikelihoodAux<T>(logval, W, W2);
+         };
+
+         auto redFunction = [](const std::vector<LikelihoodAux<T>> &objs) {
+            return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<T>(),
+            [](const LikelihoodAux<T> &l1, const LikelihoodAux<T> &l2) {
+               return l1 + l2;
+            });
+         };
+
+         T logl_v{};
+         T sumW_v{};
+         T sumW2_v{};
+
+         if (executionPolicy == 0) {
+            for (unsigned int i = 0; i < n / vecSize; ++i) {
+               auto resArray = mapFunction(i);
+               logl_v += resArray.logvalue;
+               sumW_v += resArray.weight;
+               sumW2_v += resArray.weight2;
+            }
+         } else if (executionPolicy == 1) {
+            auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
+            ROOT::TThreadExecutor pool(4);
+            auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+            logl_v = resArray.logvalue;
+            sumW_v = resArray.weight;
+            sumW2_v = resArray.weight2;
+         } else if (executionPolicy == 2) {
+            // ROOT::TProcessExecutor pool;
+            // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+         } else {
+            Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+         }
+
+         //reduce vector type to double.
+         double logl  = 0.;
+         double sumW  = 0.;
+         double sumW2 = 0;;
+
+         for (unsigned vIt = 0; vIt < vecSize; vIt++) {
+            logl += logl_v[vIt];
+            sumW += sumW_v[vIt];
+            sumW2 += sumW2_v[vIt];
+         }
+
+         if (extended) {
+            // add Poisson extended term
+            double extendedTerm = 0; // extended term in likelihood
+            double nuTot = 0;
+            // nuTot is integral of function in the range
+            // if function has been normalized integral has been already computed
+            if (!normalizeFunc) {
+               IntegralEvaluator<IModelFunctionTempl<T>> igEval(func, p, true);
+               std::vector<double> xmin(data.NDim());
+               std::vector<double> xmax(data.NDim());
+
+               // compute integral in the ranges where is defined
+               if (data.Range().Size() > 0) {
+                  nuTot = 0;
+                  for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
+                     data.Range().GetRange(&xmin[0], &xmax[0], ir);
+                     nuTot += igEval.Integral(xmin.data(), xmax.data());
+                  }
+               } else {
+                  // use (-inf +inf)
+                  data.Range().GetRange(&xmin[0], &xmax[0]);
+                  // check if funcition is zero at +- inf
+                  const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
+                  const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
+                  if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
+                     MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
+                     return 0;
+                  }
+                  nuTot = igEval.Integral(&xmin[0], &xmax[0]);
+               }
+
+               // force to be last parameter value
+               //nutot = p[func.NDim()-1];
+               if (iWeight != 2)
+                  extendedTerm = - nuTot;  // no need to add in this case n log(nu) since is already computed before
+               else {
+                  // case use weight square in likelihood : compute total effective weight = sw2/sw
+                  // ignore for the moment case when sumW is zero
+                  extendedTerm = - (sumW2 / sumW) * nuTot;
+               }
+
+            } else {
+               nuTot = norm;
+               extendedTerm = - nuTot + double(n) *  ROOT::Math::Util::EvalLog(nuTot);
+               // in case of weights need to use here sum of weights (to be done)
+            }
+
+            logl += extendedTerm;
+         }
+
+         // reset the number of fitting data points
+         //  nPoints = n;
+// std::cout<<", n: "<<nPoints<<std::endl;
+         nPoints = 0;
+         return -logl;
+
       }
-      nPoints++;
-      return LikelihoodAux<T>(logval, W, W2);
+
+      static double EvalChi2Effective(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints)
+      {
+         Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
+         return -1.;
+      }
    };
 
-  auto redFunction = [](const std::vector<LikelihoodAux<T>> & objs){
-           return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<T>(),
-                       [](const LikelihoodAux<T> &l1, const LikelihoodAux<T> &l2){
-                           return l1+l2;
-                  });
-  };
-
-  T logl_v{};
-  T sumW_v{};
-  T sumW2_v{};
-
-  if(executionPolicy == 0){
-    for (unsigned int i=0; i<n/vecSize; ++i) {
-      auto resArray = mapFunction(i);
-      logl_v+=resArray.logvalue;
-      sumW_v+=resArray.weight;
-      sumW2_v+=resArray.weight2;
-    }
-  } else if(executionPolicy == 1) {
-    auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size()/vecSize);
-    ROOT::TThreadExecutor pool(4);
-    auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction, chunks);
-    logl_v = resArray.logvalue;
-    sumW_v = resArray.weight;
-    sumW2_v= resArray.weight2;
-  } else if(executionPolicy == 2){
-    // ROOT::TProcessExecutor pool;
-    // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
-  } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
-  }
-
-  //reduce vector type to double.
-  double logl  = 0.;
-  double sumW  = 0.;
-  double sumW2 =0;;
-
-  for(unsigned vIt = 0; vIt<vecSize; vIt++){
-    logl += logl_v[vIt];
-    sumW += sumW_v[vIt];
-    sumW2 += sumW2_v[vIt];
-  }
-
-  if (extended) {
-      // add Poisson extended term
-      double extendedTerm = 0; // extended term in likelihood
-      double nuTot = 0;
-      // nuTot is integral of function in the range
-      // if function has been normalized integral has been already computed
-      if (!normalizeFunc) {
-         IntegralEvaluator<IModelFunctionTempl<T>> igEval( func, p, true);
-         std::vector<double> xmin(data.NDim());
-         std::vector<double> xmax(data.NDim());
-
-         // compute integral in the ranges where is defined
-         if (data.Range().Size() > 0 ) {
-            nuTot = 0;
-            for (unsigned int ir = 0; ir < data.Range().Size(); ++ir) {
-               data.Range().GetRange(&xmin[0],&xmax[0],ir);
-               nuTot += igEval.Integral(xmin.data(),xmax.data());
-            }
-         } else {
-            // use (-inf +inf)
-            data.Range().GetRange(&xmin[0],&xmax[0]);
-            // check if funcition is zero at +- inf
-         const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
-         const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
-         if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
-            MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood","A range has not been set and the function is not zero at +/- inf");
-            return 0;
-         }
-            nuTot = igEval.Integral(&xmin[0],&xmax[0]);
-         }
-
-         // force to be last parameter value
-         //nutot = p[func.NDim()-1];
-         if (iWeight != 2)
-            extendedTerm = - nuTot;  // no need to add in this case n log(nu) since is already computed before
-         else {
-            // case use weight square in likelihood : compute total effective weight = sw2/sw
-            // ignore for the moment case when sumW is zero
-            extendedTerm = - (sumW2 / sumW) * nuTot;
-         }
-
+   template<>
+   struct Evaluate<double>{
+      static double EvalChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
+      {
+         // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
+         // the actual number of used points
+         // normal chi2 using only error on values (from fitting histogram)
+         // optionally the integral of function in the bin is used
+         return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
       }
-      else {
-         nuTot = norm;
-         extendedTerm = - nuTot + double(n) *  ROOT::Math::Util::EvalLog( nuTot);
-         // in case of weights need to use here sum of weights (to be done)
+      static double EvalLogL(const IModelFunctionTempl<double> &func, const UnBinData & data, const double * p, int iWeight,
+      bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
+      {
+         return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
       }
-
-      logl += extendedTerm;
-   }
-
-   // reset the number of fitting data points
-  //  nPoints = n;
-// std::cout<<", n: "<<nPoints<<std::endl;
-nPoints = 0;
-   return -logl;
-
-    }
-
-    static double EvalChi2Effective(const IModelFunctionTempl<T> & func, const BinData & data, const double * p, unsigned int & nPoints){
-      Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
-      return -1.;
-    }
-  };
-
-  template<>
-  struct Evaluate<double>{
-    static double EvalChi2(const IModelFunction & func, const BinData & data, const double * p, unsigned int & nPoints, const unsigned int &executionPolicy,unsigned nChunks=0) {
-      // evaluate the chi2 given a  function reference, the data and returns the value and also in nPoints
-      // the actual number of used points
-      // normal chi2 using only error on values (from fitting histogram)
-      // optionally the integral of function in the bin is used
-      return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
-    }
-    static double EvalLogL(const IModelFunctionTempl<double> & func, const UnBinData & data, const double * p, int iWeight,
-                               bool extended, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks=0) {
-      return FitUtil::EvaluateLogL(func, data, p, iWeight, extended, nPoints, executionPolicy, nChunks);
-    }
-    static double EvalChi2Effective(const IModelFunctionTempl<double> & func, const BinData & data, const double * p, unsigned int & nPoints){
-      return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
-    }
-  };
+      static double EvalChi2Effective(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int &nPoints)
+      {
+         return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
+      }
+   };
 
 
 } // end namespace FitUtil
