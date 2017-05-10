@@ -25,7 +25,7 @@
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
 #include "TRegexp.h"
-#include "TROOT.h"      // IsImplicitMTEnabled
+#include "TROOT.h" // IsImplicitMTEnabled
 
 #include <initializer_list>
 #include <memory>
@@ -105,7 +105,7 @@ public:
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const BranchNames_t &bn = {},
-                                                                  const std::string &name = "")
+                                                         const std::string &name = "")
    {
       ROOT::Internal::CheckFilter(f);
       auto df = GetDataFrameChecked();
@@ -157,8 +157,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression,
-                                                                  const std::string &name = "")
+   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression, const std::string &name = "")
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -193,7 +192,7 @@ public:
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, F expression,
-                                                                  const BranchNames_t &bl = {})
+                                                         const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
@@ -217,8 +216,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name,
-                                                                  const std::string &expression)
+   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, const std::string &expression)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -238,9 +236,9 @@ public:
    /// \param[in] bnames The list of names of the branches to be written
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
-   template <typename...BranchTypes>
+   template <typename... BranchTypes>
    TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
-                                                              const BranchNames_t &bnames)
+                                                     const BranchNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
@@ -255,7 +253,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
-                                                              const BranchNames_t &bnames)
+                                                     const BranchNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -274,7 +272,7 @@ public:
                << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
                << ");";
       // jit snapCall, return result
-      return *reinterpret_cast<TInterface<ROOT::Detail::TDataFrameImpl>*>(
+      return *reinterpret_cast<TInterface<ROOT::Detail::TDataFrameImpl> *>(
          gInterpreter->ProcessLine(snapCall.str().c_str()));
    }
 
@@ -287,7 +285,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
-                                                              const std::string &columnNameRegexp = "")
+                                                     const std::string &columnNameRegexp = "")
    {
       BranchNames_t selectedColumns;
       selectedColumns.reserve(32);
@@ -298,7 +296,7 @@ public:
       // we need to use TRegexp
       TRegexp regexp(columnNameRegexp);
       int dummy;
-      for (auto&& branchName : tmpBranches) {
+      for (auto &&branchName : tmpBranches) {
          if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
             selectedColumns.emplace_back(branchName);
          }
@@ -323,8 +321,7 @@ public:
    /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
    ///
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop,
-                                                                unsigned int stride = 1)
+   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
    {
       // check invariants
       if (stride == 0 || (stop != 0 && stop < start))
@@ -501,8 +498,7 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = ROOT::Detail::TDataFrameGuessedType>
-   TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.},
-                                      const std::string &vName = "")
+   TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.}, const std::string &vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
       auto h = std::make_shared<::TH1F>(std::move(model));
@@ -543,13 +539,13 @@ public:
    template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
-      return Histo1D<V,W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
+      return Histo1D<V, W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
    }
 
    template <typename V, typename W>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.})
    {
-      return Histo1D<V,W>(std::move(model), "", "");
+      return Histo1D<V, W>(std::move(model), "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -590,7 +586,7 @@ public:
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename W = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
-                                      const std::string &wName)
+                                const std::string &wName)
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
@@ -603,7 +599,7 @@ public:
    template <typename V1, typename V2, typename W>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model)
    {
-      return Histo2D<V1,V2,W>(std::move(model), "", "", "");
+      return Histo2D<V1, V2, W>(std::move(model), "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -622,7 +618,7 @@ public:
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
-                                      const std::string &v3Name = "")
+                                const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
@@ -650,7 +646,7 @@ public:
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
-                                      const std::string &v3Name, const std::string &wName)
+                                const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH3F>::HasAxisLimits(*h)) {
@@ -679,7 +675,7 @@ public:
    /// The user gives up ownership of the model profile object.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
-                                            const std::string &v2Name = "")
+                                      const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
@@ -704,8 +700,8 @@ public:
    /// The user gives up ownership of the model profile object.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename W = ROOT::Detail::TDataFrameGuessedType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name,
-                                            const std::string &v2Name, const std::string &wName)
+   TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name, const std::string &v2Name,
+                                      const std::string &wName)
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile>::HasAxisLimits(*h)) {
@@ -718,7 +714,7 @@ public:
    template <typename V1, typename V2, typename W>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model)
    {
-      return Profile1D<V1,V2,W>(std::move(model), "", "", "");
+      return Profile1D<V1, V2, W>(std::move(model), "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -737,7 +733,7 @@ public:
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
-                                              const std::string &v2Name = "", const std::string &v3Name = "")
+                                        const std::string &v2Name = "", const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TProfile2D>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile2D>::HasAxisLimits(*h)) {
@@ -764,9 +760,8 @@ public:
    /// The user gives up ownership of the model profile.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name,
-                                              const std::string &v2Name, const std::string &v3Name,
-                                              const std::string &wName)
+   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name, const std::string &v2Name,
+                                        const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TProfile2D>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TProfile2D>::HasAxisLimits(*h)) {
@@ -983,8 +978,7 @@ private:
    template <
       typename ActionType, typename... BranchTypes, typename ActionResultType,
       typename std::enable_if<!ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
-                                                     const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
@@ -997,12 +991,11 @@ private:
    template <
       typename ActionType, typename... BranchTypes, typename ActionResultType,
       typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
-                                                     const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
-      const auto& tmpBranches = df->GetBookedBranches();
+      const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
       ROOT::Internal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
                                       typeid(ActionType), &r, *tree, nSlots, tmpBranches);
@@ -1052,9 +1045,9 @@ protected:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
-   TInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(
-      const std::string &treename, const std::string &filename, const BranchNames_t &bnames,
-      ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
+   TInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(const std::string &treename, const std::string &filename,
+                                                         const BranchNames_t &bnames,
+                                                         ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
@@ -1115,8 +1108,7 @@ protected:
    /// Only enabled when building a TInterface<TDataFrameImpl>
    template <typename T = Proxied,
              typename std::enable_if<std::is_same<T, ROOT::Detail::TDataFrameImpl>::value, int>::type = 0>
-   TInterface(const std::shared_ptr<Proxied> &proxied)
-      : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
+   TInterface(const std::shared_ptr<Proxied> &proxied) : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
    {
    }
 

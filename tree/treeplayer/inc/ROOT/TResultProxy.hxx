@@ -77,8 +77,8 @@ class TResultProxy {
    using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TResultProxy<W> ROOT::Detail::MakeResultProxy(
-      const std::shared_ptr<W> &, const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
+   friend TResultProxy<W> ROOT::Detail::MakeResultProxy(const std::shared_ptr<W> &,
+                                                        const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
 
    ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
