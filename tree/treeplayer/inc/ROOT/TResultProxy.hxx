@@ -27,14 +27,17 @@ class TResultProxy;
 }
 
 namespace Detail {
+namespace TDF {
 using ROOT::Experimental::TDF::TResultProxy;
 // Fwd decl for TResultProxy
 template <typename T>
 TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df);
-}
+} // ns TDF
+} // ns Detail
 
 namespace Experimental {
 namespace TDF {
+using namespace ROOT::Detail::TDF;
 
 /// Smart pointer for the return type of actions
 /**
@@ -73,12 +76,12 @@ class TResultProxy {
    };
    /// \endcond
    using SPT_t = std::shared_ptr<T>;
-   using SPTDFI_t = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
-   using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
+   using SPTDFI_t = std::shared_ptr<TDataFrameImpl>;
+   using WPTDFI_t = std::weak_ptr<TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TResultProxy<W> ROOT::Detail::MakeResultProxy(const std::shared_ptr<W> &,
-                                                        const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
+   friend TResultProxy<W> ROOT::Detail::TDF::MakeResultProxy(const std::shared_ptr<W> &,
+                                                             const std::shared_ptr<TDataFrameImpl> &);
 
    ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
@@ -144,6 +147,7 @@ void TResultProxy<T>::TriggerRun()
 } // end NS Experimental
 
 namespace Detail {
+namespace TDF {
 template <typename T>
 TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df)
 {
@@ -152,8 +156,8 @@ TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_p
    df->Book(readiness);
    return resPtr;
 }
-
-} // namespace Detail
+} // end NS TDF
+} // end NS Detail
 } // end NS ROOT
 
 #endif // ROOT_TRESULTPROXY

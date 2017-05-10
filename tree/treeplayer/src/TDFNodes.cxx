@@ -25,58 +25,58 @@
 #include <string>
 class TDirectory;
 class TTree;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Internal {
 
-TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
+TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches)
 {
 }
 
 } // end NS Internal
+} // end NS ROOT
 
-namespace Detail {
-
-TDataFrameBranchBase::TDataFrameBranchBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+TCustomColumnBase::TCustomColumnBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
                                            const std::string &name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-BranchNames_t TDataFrameBranchBase::GetTmpBranches() const
+BranchNames_t TCustomColumnBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
 
-std::string TDataFrameBranchBase::GetName() const
+std::string TCustomColumnBase::GetName() const
 {
    return fName;
 }
 
-TDataFrameImpl *TDataFrameBranchBase::GetImplPtr() const
+TDataFrameImpl *TCustomColumnBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-TDataFrameFilterBase::TDataFrameFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+TFilterBase::TFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
                                            const std::string &name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
-TDataFrameImpl *TDataFrameFilterBase::GetImplPtr() const
+TDataFrameImpl *TFilterBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-BranchNames_t TDataFrameFilterBase::GetTmpBranches() const
+BranchNames_t TFilterBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
 
-bool TDataFrameFilterBase::HasName() const
+bool TFilterBase::HasName() const
 {
    return !fName.empty();
 };
 
-void TDataFrameFilterBase::PrintReport() const
+void TFilterBase::PrintReport() const
 {
    if (fName.empty()) // PrintReport is no-op for unnamed filters
       return;
@@ -266,7 +266,7 @@ TTree *TDataFrameImpl::GetTree() const
    return fTree.get();
 }
 
-TDataFrameBranchBase *TDataFrameImpl::GetBookedBranch(const std::string &name) const
+TCustomColumnBase *TDataFrameImpl::GetBookedBranch(const std::string &name) const
 {
    auto it = fBookedBranches.find(name);
    return it == fBookedBranches.end() ? nullptr : it->second.get();
@@ -287,7 +287,7 @@ void TDataFrameImpl::Book(const ActionBasePtr_t &actionPtr)
    fBookedActions.emplace_back(actionPtr);
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
+void TDataFrameImpl::Book(const FilterBasePtr_t &filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -295,7 +295,7 @@ void TDataFrameImpl::Book(const ROOT::Detail::FilterBasePtr_t &filterPtr)
    }
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::TmpBranchBasePtr_t &branchPtr)
+void TDataFrameImpl::Book(const TmpBranchBasePtr_t &branchPtr)
 {
    fBookedBranches[branchPtr->GetName()] = branchPtr;
 }
@@ -305,7 +305,7 @@ void TDataFrameImpl::Book(const std::shared_ptr<bool> &readinessPtr)
    fResProxyReadiness.emplace_back(readinessPtr);
 }
 
-void TDataFrameImpl::Book(const ROOT::Detail::RangeBasePtr_t &rangePtr)
+void TDataFrameImpl::Book(const RangeBasePtr_t &rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
 }
@@ -327,21 +327,18 @@ void TDataFrameImpl::Report() const
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
 }
 
-TDataFrameRangeBase::TDataFrameRangeBase(ROOT::Detail::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
+TRangeBase::TRangeBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
                                          unsigned int start, unsigned int stop, unsigned int stride)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride)
 {
 }
 
-TDataFrameImpl *TDataFrameRangeBase::GetImplPtr() const
+TDataFrameImpl *TRangeBase::GetImplPtr() const
 {
    return fImplPtr;
 }
 
-BranchNames_t TDataFrameRangeBase::GetTmpBranches() const
+BranchNames_t TRangeBase::GetTmpBranches() const
 {
    return fTmpBranches;
 }
-
-} // end NS Detail
-} // end NS ROOT

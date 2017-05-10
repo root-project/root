@@ -34,14 +34,13 @@
 #include <typeinfo>
 #include <type_traits> // is_same, enable_if
 
-using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>;
-
 namespace ROOT {
 
 namespace Internal {
+using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDF::TCustomColumnBase>;
 
 template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-void CallBuildAndBook(TDFNode *node, const BranchNames_t &bl, unsigned int nSlots,
+void CallBuildAndBook(TDFNode *node, const ROOT::Detail::TDF::BranchNames_t &bl, unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> &r)
 {
    node->template BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
@@ -54,14 +53,15 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
-                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+void JitBuildAndBook(const ROOT::Detail::TDF::BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
+                     const std::type_info &art, const std::type_info &at, const void *r, TTree &tree,
+                     unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace Internal
 
 namespace Experimental {
 namespace TDF {
+using namespace ROOT::Detail::TDF;
 
 // forward declarations
 class TDataFrame;
@@ -69,9 +69,9 @@ class TDataFrame;
 /**
 * \class ROOT::Experimental::TDF::TInterface
 * \ingroup dataframe
-* \brief The public interface to the TDataFrame federation of classes: TDataFrameImpl, TDataFrameFilter,
-* TDataFrameBranch
-* \tparam T One of the TDataFrameImpl, TDataFrameFilter, TDataFrameBranch classes. The user never specifies this type
+* \brief The public interface to the TDataFrame federation of classes: TDataFrameImpl, TFilter,
+* TCustomColumn
+* \tparam T One of the TDataFrameImpl, TFilter, TCustomColumn classes. The user never specifies this type
 * manually.
 */
 template <typename Proxied>
@@ -80,8 +80,8 @@ class TInterface {
    template <typename T>
    friend class TInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-   friend void ROOT::Internal::CallBuildAndBook(TDFNode *, const BranchNames_t &, unsigned int nSlots,
-                                                const std::shared_ptr<ActionResultType> &);
+   friend void ROOT::Internal::CallBuildAndBook(TDFNode *, const ROOT::Detail::TDF::BranchNames_t &,
+                                                unsigned int nSlots, const std::shared_ptr<ActionResultType> &);
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -104,7 +104,7 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const BranchNames_t &bn = {},
+   TInterface<TFilterBase> Filter(F f, const BranchNames_t &bn = {},
                                                          const std::string &name = "")
    {
       ROOT::Internal::CheckFilter(f);
@@ -112,11 +112,11 @@ public:
       const BranchNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bn, defBl);
-      using DFF_t = ROOT::Detail::TDataFrameFilter<F, Proxied>;
+      using DFF_t = TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
       fProxiedPtr->IncrChildrenCount();
       df->Book(FilterPtr);
-      TInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
+      TInterface<TFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
    }
 
@@ -128,7 +128,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::string &name)
+   TInterface<TFilterBase> Filter(F f, const std::string &name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
       // rather than this template method.
@@ -143,7 +143,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
+   TInterface<TFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
    {
       return Filter(f, BranchNames_t{bn});
    }
@@ -157,7 +157,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression, const std::string &name = "")
+   TInterface<TFilterBase> Filter(const std::string &expression, const std::string &name = "")
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -166,7 +166,7 @@ public:
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "Filter", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
-      return *(TInterface<ROOT::Detail::TDataFrameFilterBase> *)retVal;
+      return *(TInterface<TFilterBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -191,19 +191,19 @@ public:
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, F expression,
-                                                         const BranchNames_t &bl = {})
+   TInterface<ROOT::Detail::TDF::TCustomColumnBase> Define(const std::string &name, F expression,
+                                                           const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::CheckTmpBranch(name, df->GetTree());
       const BranchNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t::fgSize;
       const BranchNames_t &actualBl = ROOT::Internal::PickBranchNames(nArgs, bl, defBl);
-      using DFB_t = ROOT::Detail::TDataFrameBranch<F, Proxied>;
+      using DFB_t = TCustomColumn<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
       df->Book(BranchPtr);
-      TInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
+      TInterface<ROOT::Detail::TDF::TCustomColumnBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
    }
 
@@ -216,7 +216,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, const std::string &expression)
+   TInterface<ROOT::Detail::TDF::TCustomColumnBase> Define(const std::string &name, const std::string &expression)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -225,7 +225,7 @@ public:
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "Define", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
-      return *(TInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
+      return *(TInterface<ROOT::Detail::TDF::TCustomColumnBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -237,7 +237,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                      const BranchNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
@@ -252,7 +252,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                      const BranchNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
@@ -272,7 +272,7 @@ public:
                << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
                << ");";
       // jit snapCall, return result
-      return *reinterpret_cast<TInterface<ROOT::Detail::TDataFrameImpl> *>(
+      return *reinterpret_cast<TInterface<TDataFrameImpl> *>(
          gInterpreter->ProcessLine(snapCall.str().c_str()));
    }
 
@@ -284,7 +284,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                      const std::string &columnNameRegexp = "")
    {
       BranchNames_t selectedColumns;
@@ -321,7 +321,7 @@ public:
    /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
    ///
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
+   TInterface<TRangeBase> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
    {
       // check invariants
       if (stride == 0 || (stop != 0 && stop < start))
@@ -330,11 +330,11 @@ public:
          throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
 
       auto df = GetDataFrameChecked();
-      using Range_t = ROOT::Detail::TDataFrameRange<Proxied>;
+      using Range_t = TRange<Proxied>;
       auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
       df->Book(RangePtr);
-      TInterface<ROOT::Detail::TDataFrameRangeBase> tdf_r(RangePtr, fImplWeakPtr);
+      TInterface<TRangeBase> tdf_r(RangePtr, fImplWeakPtr);
       return tdf_r;
    }
 
@@ -343,7 +343,7 @@ public:
    /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
    ///
    /// See the other Range overload for a detailed description.
-   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
+   TInterface<TRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
@@ -441,7 +441,7 @@ public:
       using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeResultProxy(redObjPtr, df);
+      return MakeResultProxy(redObjPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -458,7 +458,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeResultProxy(cSPtr, df);
+      return MakeResultProxy(cSPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -480,7 +480,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeResultProxy(valuesPtr, df);
+      return MakeResultProxy(valuesPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -497,7 +497,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.}, const std::string &vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
@@ -507,7 +507,7 @@ public:
       return CreateAction<ROOT::Internal::ActionTypes::Histo1D, V>(bl, h);
    }
 
-   template <typename V = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName)
    {
       return Histo1D<V>(::TH1F{"", "", 128u, 0., 0.}, vName);
@@ -528,7 +528,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
    {
       auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
@@ -536,7 +536,7 @@ public:
       return CreateAction<ROOT::Internal::ActionTypes::Histo1D, V, W>(bl, h);
    }
 
-   template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
       return Histo1D<V, W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
@@ -559,7 +559,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
@@ -583,8 +583,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &wName)
    {
@@ -615,8 +615,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
                                 const std::string &v3Name = "")
    {
@@ -643,8 +643,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &v3Name, const std::string &wName)
    {
@@ -673,7 +673,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
                                       const std::string &v2Name = "")
    {
@@ -698,8 +698,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name, const std::string &v2Name,
                                       const std::string &wName)
    {
@@ -730,8 +730,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
                                         const std::string &v2Name = "", const std::string &v3Name = "")
    {
@@ -758,8 +758,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
+             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name, const std::string &v2Name,
                                         const std::string &v3Name, const std::string &wName)
    {
@@ -805,7 +805,7 @@ public:
       if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<ROOT::Internal::ActionTypes::Fill, ROOT::Detail::TDataFrameGuessedType>(bl, h);
+      return CreateAction<ROOT::Internal::ActionTypes::Fill, ROOT::Detail::TDF::TDataFrameGuessedType>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -817,7 +817,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<double> Min(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
@@ -834,7 +834,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<double> Max(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
@@ -851,7 +851,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
    TResultProxy<double> Mean(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
@@ -984,7 +984,7 @@ private:
       unsigned int nSlots = df->GetNSlots();
       BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeResultProxy(r, df);
+      return MakeResultProxy(r, df);
    }
 
    // User did not specify type, do type inference
@@ -1000,12 +1000,12 @@ private:
       ROOT::Internal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
                                       typeid(ActionType), &r, *tree, nSlots, tmpBranches);
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeResultProxy(r, df);
+      return MakeResultProxy(r, df);
    }
 
 protected:
    /// Get the TDataFrameImpl if reachable. If not, throw.
-   std::shared_ptr<ROOT::Detail::TDataFrameImpl> GetDataFrameChecked()
+   std::shared_ptr<TDataFrameImpl> GetDataFrameChecked()
    {
       auto df = fImplWeakPtr.lock();
       if (!df) {
@@ -1045,7 +1045,7 @@ protected:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
-   TInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(const std::string &treename, const std::string &filename,
+   TInterface<TDataFrameImpl> SnapshotImpl(const std::string &treename, const std::string &filename,
                                                          const BranchNames_t &bnames,
                                                          ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
    {
@@ -1090,8 +1090,8 @@ protected:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(
-         std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, bnames));
+      TInterface<TDataFrameImpl> snapshotTDF(
+         std::make_shared<TDataFrameImpl>(nullptr, bnames));
       auto chain = new TChain(treename.c_str());
       chain->Add(filename.c_str());
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
@@ -1099,49 +1099,49 @@ protected:
       return snapshotTDF;
    }
 
-   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<ROOT::Detail::TDataFrameImpl> &impl)
+   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TDataFrameImpl> &impl)
       : fProxiedPtr(proxied), fImplWeakPtr(impl)
    {
    }
 
    /// Only enabled when building a TInterface<TDataFrameImpl>
    template <typename T = Proxied,
-             typename std::enable_if<std::is_same<T, ROOT::Detail::TDataFrameImpl>::value, int>::type = 0>
+             typename std::enable_if<std::is_same<T, TDataFrameImpl>::value, int>::type = 0>
    TInterface(const std::shared_ptr<Proxied> &proxied) : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
    {
    }
 
    std::shared_ptr<Proxied> fProxiedPtr;
-   std::weak_ptr<ROOT::Detail::TDataFrameImpl> fImplWeakPtr;
+   std::weak_ptr<TDataFrameImpl> fImplWeakPtr;
 };
 
 template <>
-inline const char *TInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName()
+inline const char *TInterface<TFilterBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameFilterBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>";
 }
 
 template <>
-inline const char *TInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName()
+inline const char *TInterface<ROOT::Detail::TDF::TCustomColumnBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameBranchBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>";
 }
 
 template <>
-inline const char *TInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
+inline const char *TInterface<TDataFrameImpl>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameImpl>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TDataFrameImpl>";
 }
 
 template <>
-inline const char *TInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
+inline const char *TInterface<TRangeBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameRangeBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TRangeBase>";
 }
 
 // Before we had to specialise the GetNodeTypeName method FIXME what is this?
-// extern template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
-// extern template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
+// extern template class TInterface<TFilterBase>;
+// extern template class TInterface<TCustomColumnBase>;
 
 } // end NS TDF
 } // end NS Experimental
