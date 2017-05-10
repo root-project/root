@@ -500,10 +500,10 @@ thread-safety, see [here](#generic-actions).
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See TDataFrameInterface for the documentation of the
+/// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   : TInterface<ROOT::Detail::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
@@ -526,11 +526,11 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See TDataFrameInterface for the documentation of the
+/// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
                        const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   : TInterface<ROOT::Detail::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
@@ -545,10 +545,10 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 ///
 /// The default branches are looked at in case no branch is specified in the
 /// booking of actions or transformations.
-/// See TDataFrameInterface for the documentation of the
+/// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   : TInterface<ROOT::Detail::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
 {
 }
@@ -561,7 +561,7 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined temporary branches.
 TDataFrame::TDataFrame(Long64_t numEntries)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   : TInterface<ROOT::Detail::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDataFrameImpl>(numEntries))
 {
 }

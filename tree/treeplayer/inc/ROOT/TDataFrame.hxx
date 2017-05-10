@@ -16,7 +16,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
-#include "ROOT/TDataFrameInterface.hxx"
+#include "ROOT/TInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
@@ -34,7 +34,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 
-class TDataFrame : public TDataFrameInterface<ROOT::Detail::TDataFrameImpl> {
+class TDataFrame : public TInterface<ROOT::Detail::TDataFrameImpl> {
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ public:
    ///
    /// The default branches are looked at in case no branch is specified in the
    /// booking of actions or transformations.
-   /// See TDataFrameInterface for the documentation of the
+   /// See TInterface for the documentation of the
    /// methods available.
    template <
       typename FILENAMESCOLL,
@@ -62,7 +62,7 @@ template <typename FILENAMESCOLL,
           typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const BranchNames_t &defaultBranches)
-   : TDataFrameInterface<ROOT::Detail::TDataFrameImpl>(
+   : TInterface<ROOT::Detail::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());

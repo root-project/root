@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDATAFRAME_INTERFACE
-#define ROOT_TDATAFRAME_INTERFACE
+#ifndef ROOT_TDF_TINTERFACE
+#define ROOT_TDF_TINTERFACE
 
 #include "ROOT/TBufferMerger.hxx"
 #include "ROOT/TResultProxy.hxx"
@@ -67,7 +67,7 @@ namespace TDF {
 class TDataFrame;
 
 /**
-* \class ROOT::Experimental::TDF::TDataFrameInterface
+* \class ROOT::Experimental::TDF::TInterface
 * \ingroup dataframe
 * \brief The public interface to the TDataFrame federation of classes: TDataFrameImpl, TDataFrameFilter,
 * TDataFrameBranch
@@ -75,10 +75,10 @@ class TDataFrame;
 * manually.
 */
 template <typename Proxied>
-class TDataFrameInterface {
-   friend std::string cling::printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the prompt TODO try using unqualified TDataFrame name
+class TInterface {
+   friend std::string cling::printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
-   friend class TDataFrameInterface;
+   friend class TInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
    friend void ROOT::Internal::CallBuildAndBook(TDFNode *, const BranchNames_t &, unsigned int nSlots,
                                                 const std::shared_ptr<ActionResultType> &);
@@ -104,7 +104,7 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const BranchNames_t &bn = {},
+   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const BranchNames_t &bn = {},
                                                                   const std::string &name = "")
    {
       ROOT::Internal::CheckFilter(f);
@@ -116,7 +116,7 @@ public:
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
       fProxiedPtr->IncrChildrenCount();
       df->Book(FilterPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
+      TInterface<ROOT::Detail::TDataFrameFilterBase> tdf_f(FilterPtr, fImplWeakPtr);
       return tdf_f;
    }
 
@@ -128,7 +128,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::string &name)
+   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::string &name)
    {
       // The sfinae is there in order to pick up the overloaded method which accepts two strings
       // rather than this template method.
@@ -143,7 +143,7 @@ public:
    ///
    /// Refer to the first overload of this method for the full documentation.
    template <typename F>
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
+   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
    {
       return Filter(f, BranchNames_t{bn});
    }
@@ -157,7 +157,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression,
+   TInterface<ROOT::Detail::TDataFrameFilterBase> Filter(const std::string &expression,
                                                                   const std::string &name = "")
    {
       auto df = GetDataFrameChecked();
@@ -167,7 +167,7 @@ public:
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "Filter", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
-      return *(TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase> *)retVal;
+      return *(TInterface<ROOT::Detail::TDataFrameFilterBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -192,7 +192,7 @@ public:
    /// An exception is thrown if the name of the new branch is already in use
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, F expression,
+   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name, F expression,
                                                                   const BranchNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
@@ -204,7 +204,7 @@ public:
       auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
       df->Book(BranchPtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
+      TInterface<ROOT::Detail::TDataFrameBranchBase> tdf_b(BranchPtr, fImplWeakPtr);
       return tdf_b;
    }
 
@@ -217,7 +217,7 @@ public:
    /// variable names to be used inside are the names of the branches. Only
    /// valid C++ is accepted.
    /// Refer to the first overload of this method for the full documentation.
-   TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name,
+   TInterface<ROOT::Detail::TDataFrameBranchBase> Define(const std::string &name,
                                                                   const std::string &expression)
    {
       auto df = GetDataFrameChecked();
@@ -227,7 +227,7 @@ public:
       auto tmpBookedBranches = df->GetBookedBranches();
       auto retVal = ROOT::Internal::InterpretCall(this, "Define", GetNodeTypeName(), name, expression, branches,
                                                   tmpBranches, tmpBookedBranches, tree);
-      return *(TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
+      return *(TInterface<ROOT::Detail::TDataFrameBranchBase> *)retVal;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -239,7 +239,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename...BranchTypes>
-   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                               const BranchNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
@@ -254,7 +254,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                               const BranchNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
@@ -274,7 +274,7 @@ public:
                << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
                << ");";
       // jit snapCall, return result
-      return *reinterpret_cast<TDataFrameInterface<ROOT::Detail::TDataFrameImpl>*>(
+      return *reinterpret_cast<TInterface<ROOT::Detail::TDataFrameImpl>*>(
          gInterpreter->ProcessLine(snapCall.str().c_str()));
    }
 
@@ -286,7 +286,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<ROOT::Detail::TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
                                                               const std::string &columnNameRegexp = "")
    {
       BranchNames_t selectedColumns;
@@ -323,7 +323,7 @@ public:
    /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
    ///
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop,
+   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int start, unsigned int stop,
                                                                 unsigned int stride = 1)
    {
       // check invariants
@@ -337,7 +337,7 @@ public:
       auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
       df->Book(RangePtr);
-      TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> tdf_r(RangePtr, fImplWeakPtr);
+      TInterface<ROOT::Detail::TDataFrameRangeBase> tdf_r(RangePtr, fImplWeakPtr);
       return tdf_r;
    }
 
@@ -346,7 +346,7 @@ public:
    /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
    ///
    /// See the other Range overload for a detailed description.
-   TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
+   TInterface<ROOT::Detail::TDataFrameRangeBase> Range(unsigned int stop) { return Range(0, stop, 1); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
@@ -1052,7 +1052,7 @@ protected:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
-   TDataFrameInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(
+   TInterface<ROOT::Detail::TDataFrameImpl> SnapshotImpl(
       const std::string &treename, const std::string &filename, const BranchNames_t &bnames,
       ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...> /*dummy*/)
    {
@@ -1098,7 +1098,7 @@ protected:
       }
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TDataFrameInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(
+      TInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(
          std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, bnames));
       auto chain = new TChain(treename.c_str());
       chain->Add(filename.c_str());
@@ -1107,15 +1107,15 @@ protected:
       return snapshotTDF;
    }
 
-   TDataFrameInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<ROOT::Detail::TDataFrameImpl> &impl)
+   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<ROOT::Detail::TDataFrameImpl> &impl)
       : fProxiedPtr(proxied), fImplWeakPtr(impl)
    {
    }
 
-   /// Only enabled when building a TDataFrameInterface<TDataFrameImpl>
+   /// Only enabled when building a TInterface<TDataFrameImpl>
    template <typename T = Proxied,
              typename std::enable_if<std::is_same<T, ROOT::Detail::TDataFrameImpl>::value, int>::type = 0>
-   TDataFrameInterface(const std::shared_ptr<Proxied> &proxied)
+   TInterface(const std::shared_ptr<Proxied> &proxied)
       : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
    {
    }
@@ -1125,35 +1125,35 @@ protected:
 };
 
 template <>
-inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName()
+inline const char *TInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameFilterBase>";
 }
 
 template <>
-inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName()
+inline const char *TInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameBranchBase>";
 }
 
 template <>
-inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
+inline const char *TInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameImpl>";
 }
 
 template <>
-inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
+inline const char *TInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameRangeBase>";
 }
 
-// Before we had to specialise the GetNodeTypeName method
-// extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-// extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
+// Before we had to specialise the GetNodeTypeName method FIXME what is this?
+// extern template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
+// extern template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 } // end NS TDF
 } // end NS Experimental
 } // end NS ROOT
 
-#endif // ROOT_TDATAFRAME_INTERFACE
+#endif // ROOT_TDF_INTERFACE

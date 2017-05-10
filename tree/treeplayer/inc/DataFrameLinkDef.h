@@ -10,8 +10,8 @@
 
 // All these are there for the autoloading
 #pragma link C++ class ROOT::Experimental::TDF::TDataFrame-;
-#pragma link C++ class ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>-;
-#pragma link C++ class ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameFilterBase>-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDataFrameBranchBase>-;
 #pragma link C++ class ROOT::Detail::TDataFrameImpl-;
 
 #endif
