@@ -49,6 +49,12 @@ The following interfaces have been removed, after deprecation in v6.08.
 - See "Build, Configuration and Testing Infrastructure" below for changes in the directory structure.
 - libCling now exports only a minimal set of symbols.
 - Add support for std::array_view also for C++11 builds. The implementation has been modified to work before C++14.
+- Added TCollection::Notify to allow nofitying more than one object.
+```{.cpp}
+  TList formulas;
+  // Add several TTreeFormula to the list;
+  chain.SetNotify(&formulas);
+```
 
 ## Histogram Libraries
 
