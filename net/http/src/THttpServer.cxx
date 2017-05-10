@@ -119,7 +119,10 @@ public:
       // this is normal request, deliver and process it as any other
       if (!strstr(arg->GetQuery(), "&dummy")) return kFALSE;
 
-      if (arg==fPoll) { Error("PreviewData", "NEVER SHOULD HAPPEN"); exit(12); }
+      if (arg == fPoll) {
+         Error("PreviewData", "NEVER SHOULD HAPPEN");
+         exit(12);
+      }
 
       if (fPoll) {
          Info("PreviewData", "Get dummy request when previous not completed");
@@ -553,7 +556,6 @@ Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
    return kFALSE;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
 /// Regularly invoked by THttpTimer, when somewhere in the code
@@ -592,8 +594,7 @@ void THttpServer::ProcessRequests()
       }
 
       // workaround for longpoll handle, it sometime notifies condition before server
-      if (!arg->fNotifyFlag)
-         arg->NotifyCondition();
+      if (!arg->fNotifyFlag) arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
@@ -829,17 +830,16 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetContentType("text/plain");
          } else {
             arg->SetMethod("WS_DATA");
-            const char* post = url.GetValueFromOptions("post");
+            const char *post = url.GetValueFromOptions("post");
             if (post) {
                // posted data transferred as URL parameter
                // done due to limitation of webengine in qt
                Int_t len = strlen(post);
-               void *buf = malloc(len/2+1);
-               char *sbuf = (char *) buf;
-               for (int n=0;n<len;n+=2)
-                  sbuf[n/2] = TString::BaseConvert(TString(post+n, 2), 16, 10).Atoi();
-               sbuf[len/2] = 0; // just in case of zero-terminated string
-               arg->SetPostData(buf, len/2);
+               void *buf = malloc(len / 2 + 1);
+               char *sbuf = (char *)buf;
+               for (int n = 0; n < len; n += 2) sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               sbuf[len / 2] = 0; // just in case of zero-terminated string
+               arg->SetPostData(buf, len / 2);
             }
          }
          if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
