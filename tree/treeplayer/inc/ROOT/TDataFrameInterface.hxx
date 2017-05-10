@@ -61,13 +61,13 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
 } // namespace Internal
 
 namespace Experimental {
-using namespace ROOT::Experimental::TDF; //TODO delete line
+namespace TDF {
 
 // forward declarations
 class TDataFrame;
 
 /**
-* \class ROOT::Experimental::TDataFrameInterface
+* \class ROOT::Experimental::TDF::TDataFrameInterface
 * \ingroup dataframe
 * \brief The public interface to the TDataFrame federation of classes: TDataFrameImpl, TDataFrameFilter,
 * TDataFrameBranch
@@ -76,7 +76,7 @@ class TDataFrame;
 */
 template <typename Proxied>
 class TDataFrameInterface {
-   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+   friend std::string cling::printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the prompt TODO try using unqualified TDataFrame name
    template <typename T>
    friend class TDataFrameInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
@@ -1127,31 +1127,32 @@ protected:
 template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>";
+   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>";
 }
 
 template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>";
+   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>";
 }
 
 template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameImpl>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";
+   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>";
 }
 
 template <>
 inline const char *TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>";
+   return "ROOT::Experimental::TDF::TDataFrameInterface<ROOT::Detail::TDataFrameRangeBase>";
 }
 
 // Before we had to specialise the GetNodeTypeName method
 // extern template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
 // extern template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
+} // end NS TDF
 } // end NS Experimental
 } // end NS ROOT
 

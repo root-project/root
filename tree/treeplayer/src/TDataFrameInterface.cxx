@@ -15,9 +15,14 @@
 
 #include <vector>
 #include <string>
+using namespace ROOT::Experimental::TDF;
+
+// extern templates
+template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
+template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
+template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 namespace ROOT {
-
 namespace Internal {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
@@ -217,12 +222,4 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
 }
 } // namespace Internal
 
-namespace Experimental {
-
-// extern templates
-template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
-
-} // namespace Experimental
 } // namespace ROOT
