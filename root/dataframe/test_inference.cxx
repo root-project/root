@@ -23,7 +23,7 @@ int main() {
    std::cout << "histo1D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d1(t, {"v1", "w"});
    // histogram w/o weights -- these calls are all equivalent
-   std::vector<ROOT::Experimental::TActionResultProxy<TH1F>> results1D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH1F>> results1D;
    results1D.emplace_back(d1.Histo1D());
    results1D.emplace_back(d1.Histo1D({"", "", 128u, 0., 4.}));
    results1D.emplace_back(d1.Histo1D<int>());
@@ -52,7 +52,7 @@ int main() {
    std::cout << "histo2D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d2(t, {"v1", "v2", "w"});
    // histo2D w/o weights
-   std::vector<ROOT::Experimental::TActionResultProxy<TH2F>> results2D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH2F>> results2D;
    TH2F model2D{"h2", "h2", 128u, 0., 4., 128u, 0., 4.};
    results2D.emplace_back(d2.Histo2D(std::move(model2D)));
    results2D.emplace_back(d2.Histo2D(std::move(model2D), "v1"));
@@ -78,7 +78,7 @@ int main() {
    std::cout << "histo3D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d3(t, {"v1", "v2", "v3", "w"});
    // Histo3D w/o weights
-   std::vector<ROOT::Experimental::TActionResultProxy<TH3F>> results3D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TH3F>> results3D;
    TH3F model3D{"h3", "h3", 128u, 0., 4., 128u, 0., 4., 128u, 0., 4.};
    results3D.emplace_back(d3.Histo3D(std::move(model3D)));
    results3D.emplace_back(d3.Histo3D(std::move(model3D), "v1"));
@@ -111,7 +111,7 @@ int main() {
    std::cout << "Profile1D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d4(t, {"v1", "v2", "w"});
    // Profile1D w/o weights
-   std::vector<ROOT::Experimental::TActionResultProxy<TProfile>> resultsProf1D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TProfile>> resultsProf1D;
    TProfile modelProf1D{"", "", 128u, 0., 4., 0., 4.};
    resultsProf1D.emplace_back(d4.Profile1D(std::move(modelProf1D)));
    resultsProf1D.emplace_back(d4.Profile1D(std::move(modelProf1D), "v1"));
@@ -137,7 +137,7 @@ int main() {
    std::cout << "Profile2D, all calls must yield same results" << std::endl;
    ROOT::Experimental::TDataFrame d5(t, {"v1", "v2", "v3", "w"});
    // Profile2D w/ weights
-   std::vector<ROOT::Experimental::TActionResultProxy<TProfile2D>> resultsProf2D;
+   std::vector<ROOT::Experimental::TDF::TResultProxy<TProfile2D>> resultsProf2D;
    TProfile2D modelProf2D{"", "", 128u, 0., 4., 128u, 0., 4., 0., 4.};
    resultsProf2D.emplace_back(d5.Profile2D(std::move(modelProf2D)));
    resultsProf2D.emplace_back(d5.Profile2D(std::move(modelProf2D), "v1"));
