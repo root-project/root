@@ -11,16 +11,16 @@
 #include "TClass.h"
 #include "TRegexp.h"
 
-#include "ROOT/TDataFrameInterface.hxx"
+#include "ROOT/TInterface.hxx"
 
 #include <vector>
 #include <string>
 using namespace ROOT::Experimental::TDF;
 
 // extern templates
-template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
+template class TInterface<ROOT::Detail::TDataFrameImpl>;
+template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
+template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
 
 namespace ROOT {
 namespace Internal {
