@@ -21,9 +21,9 @@ namespace RooStats{
 
     class hf_exc: public std::exception
     {
-      virtual const char* what() const throw()
+      virtual const char* what() const noexcept
       {
-	return "HistFactory - Exception";
+        return "HistFactory - Exception";
       }
     };
 

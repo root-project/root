@@ -45,10 +45,10 @@ public:
    TPyException();
 
 // destructor
-   virtual ~TPyException() throw();
+   virtual ~TPyException() noexcept;
 
 // give reason for raised exception
-   virtual const char* what() const throw();
+   virtual const char* what() const noexcept;
 
    ClassDef(TPyException,0)   //C++ exception for throwing python exceptions
 };
