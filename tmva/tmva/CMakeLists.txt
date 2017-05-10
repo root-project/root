@@ -76,10 +76,6 @@ else()
   set(installoptions ${installoptions} FILTER "Cpu")
 endif()
 
-if(APPLE)  # Xcode 8.3 gererates undefined-var-template warning with no apparent reason
-  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-undefined-var-template)
-endif()
-
 ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} ${theaders5}  MODULE TMVA LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx ${DNN_FILES} ${DNN_CPU_FILES}
