@@ -116,10 +116,16 @@ public:
       // function called in the user code before processing correspondent websocket data
       // returns kTRUE when user should ignore such http request - it is for internal use
 
+      // this is normal request, deliver and process it as any other
+      if (!strstr(arg->GetQuery(), "&dummy")) return kFALSE;
+
+      if (arg==fPoll) { Error("PreviewData", "NEVER SHOULD HAPPEN"); exit(12); }
+
       if (fPoll) {
+         Info("PreviewData", "Get dummy request when previous not completed");
          // if there are pending request, reply it immediately
          fPoll->SetContentType("text/plain");
-         fPoll->SetContent("");
+         fPoll->SetContent("<<nope>>"); // normally should never happen
          fPoll->NotifyCondition();
          fPoll = 0;
       }
@@ -134,7 +140,7 @@ public:
       }
 
       // if arguments has "&dummy" string, user should not process it
-      return strstr(arg->GetQuery(), "&dummy") != 0;
+      return kTRUE;
    }
 };
 
