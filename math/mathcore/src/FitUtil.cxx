@@ -896,11 +896,11 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
     logl=resArray.logvalue;
     sumW=resArray.weight;
     sumW2=resArray.weight2;
-  } else if(executionPolicy == 2){
+//   } else if(executionPolicy == 2){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n");
   }
   // std::cout<<"log: "<<logl;
 

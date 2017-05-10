@@ -383,7 +383,7 @@ namespace FitUtil {
             //   ROOT::TProcessExecutor pool;
             //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
-            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n");
          }
          nPoints = n;
 
@@ -495,7 +495,7 @@ namespace FitUtil {
             logl_v = resArray.logvalue;
             sumW_v = resArray.weight;
             sumW2_v = resArray.weight2;
-         } else if (executionPolicy == 2) {
+        //  } else if (executionPolicy == 2) {
             // ROOT::TProcessExecutor pool;
             // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
          } else {

@@ -701,10 +701,10 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
             opt.ReplaceAll("WIDTH","");
       }
 
-      if (opt.Contains("MULTIPROC")) {
-         fitOption.ExecPolicy = 2;
-         opt.ReplaceAll("MULTIPROC","");
-      }
+      // if (opt.Contains("MULTIPROC")) {
+      //    fitOption.ExecPolicy = 2;
+      //    opt.ReplaceAll("MULTIPROC","");
+      // }
 
       if (opt.Contains("MULTITHREAD")) {
          fitOption.ExecPolicy = 1;
