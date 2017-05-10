@@ -5,7 +5,9 @@
 set(sources base.cxx)
 
 if (imt)
-  set(sources ${sources} TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx)
+  set(headers ROOT/TPoolManager.hxx ROOT/TThreadExecutor.hxx)
+  ROOT_GENERATE_DICTIONARY(G__Imt ${headers} MODULE Imt LINKDEF LinkDef.h) # For auto{loading,parsing}
+  set(sources ${sources} TImplicitMT.cxx TThreadExecutor.cxx TPoolManager.cxx G__Imt.cxx)
 endif()
 
 include_directories(${TBB_INCLUDE_DIRS})
