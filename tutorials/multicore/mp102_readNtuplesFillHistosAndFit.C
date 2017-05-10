@@ -20,6 +20,10 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    // Perform the operation sequentially 
    TChain inputChain("multiCore");
    inputChain.Add("mp101_multiCore_*.root");
+   if (inputChain.GetNtrees() <= 0) {
+      Printf(" No files in the TChain: did you run mp101_fillNtuples.C before?");
+      return 1;
+   }
    TH1F outHisto("outHisto", "Random Numbers", 128, -4, 4);
    inputChain.Draw("r >> outHisto");
    outHisto.Fit("gaus");
