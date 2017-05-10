@@ -1,6 +1,7 @@
 #ifndef __CLASSESERROR1_H__
 #define __CLASSESERROR1_H__
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
