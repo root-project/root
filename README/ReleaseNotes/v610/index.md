@@ -256,7 +256,7 @@ The following interfaces have been removed, after deprecation in v6.08.
   but instead of using processes that connect to a network
   socket, TBufferMerger uses threads that each write to a
   TBufferMergerFile, which in turn push data into a queue
-  managed by the TBufferMerger. An exerpt of the
+  managed by the TBufferMerger. An excerpt of the
   [tutorial](https://github.com/root-project/root/blob/master/tutorials/multicore/mt103_fillNtuples.C)
   is shown below.
   ```{.cpp}
