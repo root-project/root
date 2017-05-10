@@ -215,11 +215,11 @@ void TDataFrameImpl::Run()
    fHasRunAtLeastOnce = true;
    // forget actions
    fBookedActions.clear();
-   // make all TActionResultProxies ready
+   // make all TResultProxies ready
    for (auto readiness : fResProxyReadiness) {
       *readiness.get() = true;
    }
-   // forget TActionResultProxies
+   // forget TResultProxies
    fResProxyReadiness.clear();
 }
 

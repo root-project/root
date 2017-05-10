@@ -11,8 +11,8 @@
 #ifndef ROOT_TDATAFRAME_INTERFACE
 #define ROOT_TDATAFRAME_INTERFACE
 
-#include "ROOT/TActionResultProxy.hxx"
 #include "ROOT/TBufferMerger.hxx"
+#include "ROOT/TResultProxy.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFOperations.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -61,6 +61,7 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
 } // namespace Internal
 
 namespace Experimental {
+using namespace ROOT::Experimental::TDF; //TODO delete line
 
 // forward declarations
 class TDataFrame;
@@ -412,9 +413,9 @@ public:
    /// where `T` is the type of branch.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultPtr documentation.
+   /// booked but not executed. See TResultProxy documentation.
    template <typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
-   TActionResultProxy<T> Reduce(F f, const std::string &branchName = {})
+   TResultProxy<T> Reduce(F f, const std::string &branchName = {})
    {
       static_assert(std::is_default_constructible<T>::value,
                     "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
@@ -431,7 +432,7 @@ public:
    ///
    /// See the description of the other Reduce overload for more information.
    template <typename F, typename T = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t>
-   TActionResultProxy<T> Reduce(F f, const std::string &branchName, const T &initValue)
+   TResultProxy<T> Reduce(F f, const std::string &branchName, const T &initValue)
    {
       using Args_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
       ROOT::Internal::CheckReduce(f, Args_t());
@@ -443,15 +444,15 @@ public:
       using DFA_t = typename ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(redObjPtr, df);
+      return ROOT::Detail::MakeResultProxy(redObjPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
-   TActionResultProxy<unsigned int> Count()
+   /// booked but not executed. See TResultProxy documentation.
+   TResultProxy<unsigned int> Count()
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
@@ -460,7 +461,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(cSPtr, df);
+      return ROOT::Detail::MakeResultProxy(cSPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -470,9 +471,9 @@ public:
    /// \param[in] branchName The name of the branch of which the values are to be collected
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TActionResultProxy<COLL> Take(const std::string &branchName = "")
+   TResultProxy<COLL> Take(const std::string &branchName = "")
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
@@ -482,7 +483,7 @@ public:
       using DFA_t = ROOT::Internal::TDataFrameAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(valuesPtr, df);
+      return ROOT::Detail::MakeResultProxy(valuesPtr, df);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -497,10 +498,10 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.},
+   TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.},
                                       const std::string &vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
@@ -511,7 +512,7 @@ public:
    }
 
    template <typename V = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH1F> Histo1D(const std::string &vName)
+   TResultProxy<::TH1F> Histo1D(const std::string &vName)
    {
       return Histo1D<V>(::TH1F{"", "", 128u, 0., 0.}, vName);
    }
@@ -529,10 +530,10 @@ public:
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
+   TResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
    {
       auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
       auto h = std::make_shared<::TH1F>(std::move(model));
@@ -540,13 +541,13 @@ public:
    }
 
    template <typename V = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
+   TResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
       return Histo1D<V,W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
    }
 
    template <typename V, typename W>
-   TActionResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.})
+   TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.})
    {
       return Histo1D<V,W>(std::move(model), "", "");
    }
@@ -560,10 +561,10 @@ public:
    /// \param[in] v2Name The name of the branch that will fill the y axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
+   TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<::TH2F>::HasAxisLimits(*h)) {
@@ -584,11 +585,11 @@ public:
    /// \param[in] wName The name of the branch that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
+   TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
                                       const std::string &wName)
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
@@ -600,7 +601,7 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TActionResultProxy<::TH2F> Histo2D(::TH2F &&model)
+   TResultProxy<::TH2F> Histo2D(::TH2F &&model)
    {
       return Histo2D<V1,V2,W>(std::move(model), "", "", "");
    }
@@ -616,11 +617,11 @@ public:
    /// \param[in] v3Name The name of the branch that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
+   TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
                                       const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
@@ -644,11 +645,11 @@ public:
    /// \param[in] wName The name of the branch that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
+   TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
                                       const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
@@ -660,7 +661,7 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TActionResultProxy<::TH3F> Histo3D(::TH3F &&model)
+   TResultProxy<::TH3F> Histo3D(::TH3F &&model)
    {
       return Histo3D<V1, V2, V3, W>(std::move(model), "", "", "", "");
    }
@@ -674,10 +675,10 @@ public:
    /// \param[in] v2Name The name of the branch that will fill the y axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
+   TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
                                             const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
@@ -699,11 +700,11 @@ public:
    /// \param[in] wName The name of the branch that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name,
+   TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name,
                                             const std::string &v2Name, const std::string &wName)
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
@@ -715,7 +716,7 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TActionResultProxy<::TProfile> Profile1D(::TProfile &&model)
+   TResultProxy<::TProfile> Profile1D(::TProfile &&model)
    {
       return Profile1D<V1,V2,W>(std::move(model), "", "", "");
    }
@@ -731,11 +732,11 @@ public:
    /// \param[in] v3Name The name of the branch that will fill the z axis.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
+   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
                                               const std::string &v2Name = "", const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TProfile2D>(std::move(model));
@@ -759,11 +760,11 @@ public:
    /// \param[in] wName The name of the branch that will provide the weights.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
    template <typename V1 = ROOT::Detail::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDataFrameGuessedType,
              typename V3 = ROOT::Detail::TDataFrameGuessedType, typename W = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name,
+   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name,
                                               const std::string &v2Name, const std::string &v3Name,
                                               const std::string &wName)
    {
@@ -776,7 +777,7 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TActionResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model)
+   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model)
    {
       return Profile2D<V1, V2, V3, W>(std::move(model), "", "", "", "");
    }
@@ -789,11 +790,11 @@ public:
    ///
    /// The returned object is independent of the input one.
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model object.
    /// It is compulsory to express the branches to be considered.
    template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
-   TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   TResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
@@ -803,7 +804,7 @@ public:
    }
 
    template <typename T>
-   TActionResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   TResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!ROOT::Internal::TDFV7Utils::Histo<T>::HasAxisLimits(*h)) {
@@ -820,9 +821,9 @@ public:
    /// If no branch type is specified, the implementation will try to guess one.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<double> Min(const std::string &branchName = "")
+   TResultProxy<double> Min(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
       auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
@@ -837,9 +838,9 @@ public:
    /// If no branch type is specified, the implementation will try to guess one.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<double> Max(const std::string &branchName = "")
+   TResultProxy<double> Max(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
       auto maxV = std::make_shared<double>(std::numeric_limits<double>::min());
@@ -854,9 +855,9 @@ public:
    /// If no branch type is specified, the implementation will try to guess one.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
-   /// booked but not executed. See TActionResultProxy documentation.
+   /// booked but not executed. See TResultProxy documentation.
    template <typename T = ROOT::Detail::TDataFrameGuessedType>
-   TActionResultProxy<double> Mean(const std::string &branchName = "")
+   TResultProxy<double> Mean(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
       auto meanV = std::make_shared<double>(0);
@@ -982,21 +983,21 @@ private:
    template <
       typename ActionType, typename... BranchTypes, typename ActionResultType,
       typename std::enable_if<!ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
+   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(r, df);
+      return ROOT::Detail::MakeResultProxy(r, df);
    }
 
    // User did not specify type, do type inference
    template <
       typename ActionType, typename... BranchTypes, typename ActionResultType,
       typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TActionResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
+   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl,
                                                      const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
@@ -1006,7 +1007,7 @@ private:
       ROOT::Internal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
                                       typeid(ActionType), &r, *tree, nSlots, tmpBranches);
       fProxiedPtr->IncrChildrenCount();
-      return ROOT::Detail::MakeActionResultProxy(r, df);
+      return ROOT::Detail::MakeResultProxy(r, df);
    }
 
 protected:

@@ -135,7 +135,7 @@ h->Draw();
 ~~~
 The first line creates a `TDataFrame` associated to the `TTree` "myTree". This tree has a branch named "MET".
 
-`Histo1D` is an action; it returns a smart pointer (a `TActionResultProxy` to be precise) to a `TH1F` histogram filled
+`Histo1D` is an action; it returns a smart pointer (a `TResultProxy` to be precise) to a `TH1F` histogram filled
 with the `MET` of all events.
 If the quantity stored in the branch is a collection, the histogram is filled with its elements.
 

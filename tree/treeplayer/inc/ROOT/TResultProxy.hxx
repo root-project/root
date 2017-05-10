@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TACTIONRESULTPROXY
-#define ROOT_TACTIONRESULTPROXY
+#ifndef ROOT_TRESULTPROXY
+#define ROOT_TRESULTPROXY
 
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -18,23 +18,27 @@
 
 namespace ROOT {
 
-// Fwd declarations
 namespace Experimental {
+namespace TDF {
+// Fwd decl for MakeResultProxy
 template <typename T>
-class TActionResultProxy;
+class TResultProxy;
+}
 }
 
 namespace Detail {
+using ROOT::Experimental::TDF::TResultProxy;
+// Fwd decl for TResultProxy
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
-                                                                const std::shared_ptr<TDataFrameImpl> &df);
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df);
 }
 
 namespace Experimental {
+namespace TDF {
 
 /// Smart pointer for the return type of actions
 /**
-\class ROOT::Experimental::TActionResultProxy
+\class ROOT::Experimental::TDF::TResultProxy
 \ingroup dataframe
 \brief A wrapper around the result of TDataFrame actions able to trigger calculations lazily.
 \tparam T Type of the action result
@@ -52,7 +56,7 @@ If iteration is not supported by the type of the proxied object, a compilation e
 
 */
 template <typename T>
-class TActionResultProxy {
+class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool isCont = ROOT::Internal::TDFTraitsUtils::TIsContainer<V>::fgValue>
    struct TIterationHelper {
@@ -73,7 +77,7 @@ class TActionResultProxy {
    using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TActionResultProxy<W> ROOT::Detail::MakeActionResultProxy(
+   friend TResultProxy<W> ROOT::Detail::MakeResultProxy(
       const std::shared_ptr<W> &, const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
 
    ShrdPtrBool_t fReadiness =
@@ -93,13 +97,13 @@ class TActionResultProxy {
       return fObjPtr.get();
    }
 
-   TActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
+   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
       : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr)
    {
    }
 
 public:
-   TActionResultProxy() = delete;
+   TResultProxy() = delete;
 
    /// Get a reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
@@ -128,7 +132,7 @@ public:
 };
 
 template <typename T>
-void TActionResultProxy<T>::TriggerRun()
+void TResultProxy<T>::TriggerRun()
 {
    auto df = fImplWeakPtr.lock();
    if (!df) {
@@ -136,15 +140,15 @@ void TActionResultProxy<T>::TriggerRun()
    }
    df->Run();
 }
+} // end NS TDF
 } // end NS Experimental
 
 namespace Detail {
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
-                                                                const std::shared_ptr<TDataFrameImpl> &df)
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df)
 {
    auto readiness = std::make_shared<bool>(false);
-   auto resPtr = ROOT::Experimental::TActionResultProxy<T>(r, readiness, df);
+   auto resPtr = TResultProxy<T>(r, readiness, df);
    df->Book(readiness);
    return resPtr;
 }
@@ -152,4 +156,4 @@ ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::share
 } // namespace Detail
 } // end NS ROOT
 
-#endif // ROOT_TACTIONRESULTPROXY
+#endif // ROOT_TRESULTPROXY
