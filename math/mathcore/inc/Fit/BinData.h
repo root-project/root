@@ -223,6 +223,9 @@ public :
     return fDataPtr[ipoint];
   }
 
+  /**
+    return a pointer to the value for the given fit point
+  */
   const double *ValuePtr( unsigned int ipoint ) const
   {
     return &fDataPtr[ipoint];
