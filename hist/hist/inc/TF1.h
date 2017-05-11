@@ -242,7 +242,7 @@ protected:
    Bool_t      fNormalized;  //Normalization option (false by default)
    Double_t    fNormIntegral;//Integral of the function before being normalized
 //  ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
-   TF1FunctorPointer  *fFunctor = nullptr;
+   TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
 
