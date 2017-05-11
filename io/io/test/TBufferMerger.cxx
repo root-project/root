@@ -11,7 +11,7 @@
 
 using namespace ROOT::Experimental;
 
-static void Fill(std::shared_ptr<TTree> tree, int init, int count)
+static void Fill(TTree* tree, int init, int count)
 {
    int n = 0;
 
@@ -47,11 +47,9 @@ TEST(TBufferMerger, SequentialTreeFill)
       TBufferMerger merger("tbuffermerger_sequential.root");
 
       auto myfile = merger.GetFile();
-      auto mytree = std::make_shared<TTree>("mytree", "mytree");
+      auto mytree = new TTree("mytree", "mytree");
 
       Fill(mytree, 0, nevents);
-
-      mytree->Write();
       myfile->Write();
    }
 }
@@ -69,11 +67,9 @@ TEST(TBufferMerger, ParallelTreeFill)
       for (int i = 0; i < nthreads; ++i) {
          threads.emplace_back([=, &merger]() {
             auto myfile = merger.GetFile();
-            auto mytree = std::make_shared<TTree>("mytree", "mytree");
+            auto mytree = new TTree("mytree", "mytree");
 
             Fill(mytree, i * nevents, nevents);
-
-            mytree->Write();
             myfile->Write();
          });
       }
