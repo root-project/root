@@ -124,15 +124,23 @@ public:
 
 
    /// i-th chi-square residual
-   virtual double DataElement(const double *, unsigned int i, double *) const {
+   virtual double DataElement(const double *x, unsigned int i, double *g) const {
       if (i==0) this->UpdateNCalls();
-      return 0.0;//FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+#ifdef R__HAS_VECCORE
+      return FitUtil::Evaluate<T>::EvalChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+#else
+      return FitUtil::EvaluateChi2Residual(BaseFCN::ModelFunction(), BaseFCN::Data(), x, i, g);
+#endif
    }
 
    // need to be virtual to be instantiated
-   virtual void Gradient(const double *, double *) const {
+   virtual void Gradient(const double *x, double *g) const {
       // evaluate the chi2 gradient
-      // FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+#ifdef R__HAS_VECCORE
+      FitUtil::Evaluate<T>::EvalChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+#else
+      FitUtil::EvaluateChi2Gradient(BaseFCN::ModelFunction(), BaseFCN::Data(), x, g, fNEffPoints);
+#endif
    }
 
    /// get type of fit method function

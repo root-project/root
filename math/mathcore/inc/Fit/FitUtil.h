@@ -593,6 +593,17 @@ namespace FitUtil {
          Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
          return -1.;
       }
+
+      static void EvalChi2Gradient(const IModelFunctionTempl<T> &, const BinData &, const double *, double *, unsigned int)
+      {
+         Error("FitUtil::Evaluate<T>::EvalChi2Gradient", "The vectorized evaluation of the Chi2 with gradient is still not supported");
+      }
+
+      static double EvalChi2Residual(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int, double *)
+      {
+         Error("FitUtil::Evaluate<T>::EvalChi2Residual", "The vectorized evaluation of the Chi2 with the ith residual is still not supported");
+         return -1.;
+      }
    };
 
    template<>
@@ -613,6 +624,14 @@ namespace FitUtil {
       static double EvalChi2Effective(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int &nPoints)
       {
          return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
+      }
+      static void EvalChi2Gradient(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, double * g, unsigned int &nPoints)
+      {
+          FitUtil::EvaluateChi2Gradient(func, data, p, g, nPoints);
+      }
+      static double EvalChi2Residual(const IModelFunctionTempl<double> &func, const BinData & data, const double * p, unsigned int i, double *g = 0)
+      {
+         return FitUtil::EvaluateChi2Residual(func, data, p, i, g);
       }
    };
 #endif
