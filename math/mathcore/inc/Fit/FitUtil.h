@@ -211,6 +211,7 @@ namespace FitUtil {
             inline double ExecFunc(T *f, const double *x, const double *p) const{
                 return (*f)(x, p);
             }
+
 #ifdef R__HAS_VECCORE
             inline double ExecFunc(const IModelFunctionTempl<Double_v> *f, const double *x, const double *p) const{
                 const Double_v xx = vecCore::FromPtr<Double_v>(x);
@@ -219,6 +220,7 @@ namespace FitUtil {
                 return res[0];
             }
 #endif
+
             // objects of this class are not meant to be copied / assigned
             IntegralEvaluator(const IntegralEvaluator& rhs);
             IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
@@ -321,6 +323,7 @@ namespace FitUtil {
    double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);
 
    unsigned setAutomaticChunking(unsigned nEvents);
+
 #ifdef R__HAS_VECCORE
    template<class T>
    struct Evaluate{

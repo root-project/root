@@ -966,6 +966,7 @@ nPoints = 0;
 void FitUtil::EvaluateLogLGradient(const IModelFunctionTempl<Double_v> &, const UnBinData &, const double * , double *, unsigned int & ) {
 }
 #endif
+
 void FitUtil::EvaluateLogLGradient(const IModelFunction & f, const UnBinData & data, const double * p, double * grad, unsigned int & ) {
    // evaluate the gradient of the log likelihood function
 

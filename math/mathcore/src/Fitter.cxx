@@ -127,6 +127,7 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
    fConfig.CreateParamsSettings(*fFunc);
    fFunc_v.reset();
 }
+
 #ifdef R__HAS_VECCORE
 void Fitter::SetFunction(const IModelFunction_v & func)
 {
@@ -141,6 +142,7 @@ void Fitter::SetFunction(const IModelFunction_v & func)
    fFunc.reset();
 }
 #endif
+
 void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
    fUseGradient = useGradient;

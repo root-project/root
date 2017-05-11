@@ -199,6 +199,7 @@ void FitConfig::CreateParamsSettings(const ROOT::Math::IParamMultiFunction & fun
    }
 
 }
+
 #ifdef R__HAS_VECCORE
 void FitConfig::CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<Double_v> & func){
 
