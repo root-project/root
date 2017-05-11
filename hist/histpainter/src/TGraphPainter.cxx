@@ -3242,8 +3242,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    opt.ToLower();
    TH1F *theHist = (TH1F *)theGraph->GetHistogram();
 
-   Boll_t lrx = opt.Contains("rx");
-   Boll_t lry = opt.Contains("ry");
+   Bool_t lrx = opt.Contains("rx");
+   Bool_t lry = opt.Contains("ry");
 
    Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
    Double_t TLX = theHist->GetXaxis()->GetTickLength();
