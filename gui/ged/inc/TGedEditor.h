@@ -99,7 +99,7 @@ public:
    virtual void   SetCanvas(TCanvas *c);
    virtual void   SetGlobal(Bool_t global);
    virtual void   GlobalSetModel(TVirtualPad *, TObject *, Int_t);
-   virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
+   virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
 

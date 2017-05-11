@@ -47,12 +47,12 @@ void TEveArrow::ComputeBBox()
 {
    TEveVector a, b;
    fVector.OrthoNormBase(a, b);
-   Float_t r = TMath::Max(fTubeR, fConeR);
+   Float_t r = fVector.Mag() * TMath::Max(fTubeR, fConeR);
    a *= r; b *= r;
 
    TEveVector end(fOrigin + fVector);
 
-   BBoxZero();
+   BBoxInit();
    BBoxCheckPoint(fOrigin + a + b);
    BBoxCheckPoint(fOrigin + a - b);
    BBoxCheckPoint(fOrigin - a - b);
