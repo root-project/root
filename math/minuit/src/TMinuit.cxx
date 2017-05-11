@@ -1138,7 +1138,7 @@ void TMinuit::mncler()
 
 void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
 {
-   static const char *clabel = "0123456789ABCDEFGHIJ";
+   static const char *const clabel = "0123456789ABCDEFGHIJ";
 
    /* Local variables */
    Double_t d__1, d__2;
@@ -7425,11 +7425,11 @@ void TMinuit::mnsimp()
 {
    /* Initialized data */
 
-   static Double_t alpha = 1;
-   static Double_t beta = .5;
-   static Double_t gamma = 2;
-   static Double_t rhomin = 4;
-   static Double_t rhomax = 8;
+   static constexpr Double_t alpha = 1;
+   static constexpr Double_t beta = .5;
+   static constexpr Double_t gamma = 2;
+   static constexpr Double_t rhomin = 4;
+   static constexpr Double_t rhomax = 8;
 
    /* Local variables */
    Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
