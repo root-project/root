@@ -1138,7 +1138,7 @@ void TMinuit::mncler()
 
 void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
 {
-   static TString clabel = "0123456789ABCDEFGHIJ";
+   static const char *clabel = "0123456789ABCDEFGHIJ";
 
    /* Local variables */
    Double_t d__1, d__2;
@@ -2673,7 +2673,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
    /* Initialized data */
 
    TString comand = command;
-   static const char *cname[40] = {
+   static const char *const cname[40] = {
       "MINImize  ",
       "SEEk      ",
       "SIMplex   ",
@@ -3372,7 +3372,6 @@ void TMinuit::mngrad()
    Double_t fzero, err;
    Int_t i, nparx, lc, istsav;
    Bool_t lnone;
-   static TString cwd = "    ";
 
    fISW[2] = 1;
    nparx   = fNpar;
@@ -3396,18 +3395,23 @@ void TMinuit::mngrad()
    lnone = kFALSE;
    for (lc = 1; lc <= fNpar; ++lc) {
       i   = fNexofi[lc-1];
-      cwd = "GOOD";
+      const char *cwd = "GOOD";
+      bool converging = true;
       err = fDgrd[lc-1];
-      if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
+      if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err) {
+         converging = false;
+         cwd = " BAD";
+         fISW[2] = 0;
+      }
       if (fGin[i-1] == fUndefi) {
          cwd      = "NONE";
          lnone    = kTRUE;
          fGRADgf[lc-1] = 0;
+         fISW[2] = 0;
       }
-      if (cwd != "GOOD") fISW[2] = 0;
       Printf("       %5d  %10s%12.4e%12.4e%12.4e    %s",i
                     ,(const char*)fCpnam[i-1]
-                    ,fGRADgf[lc-1],fGrd[lc-1],err,(const char*)cwd);
+                    ,fGRADgf[lc-1],fGrd[lc-1],err,cwd);
    }
    if (lnone) {
       Printf("  AGREEMENT=NONE  MEANS FCN DID NOT CALCULATE THE DERIVATIVE");
@@ -6083,9 +6087,6 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
       return;
    }
 
-   static TString cdot   = ".";
-   static TString cslash = "/";
-
    /* Local variables */
    Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
    Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
@@ -6313,8 +6314,8 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
 {
    /* Initialized data */
 
-   static TString cblank = "           ";
-   static TString cnambf = "           ";
+   static const TString cblank = "           ";
+   TString cnambf = "           ";
 
    /* Local variables */
    Double_t dcmax, x1, x2, x3, dc;
@@ -6906,7 +6907,7 @@ void TMinuit::mnset()
 {
    /* Initialized data */
 
-   static const char *cname[30] = {
+   static const char *const cname[30] = {
       "FCN value ",
       "PARameters",
       "LIMits    ",
@@ -6940,19 +6941,19 @@ void TMinuit::mnset()
 
    static Int_t nname = 25;
    static Int_t nntot = 30;
-   static TString cprlev[5] = {
+   static const TString cprlev[5] = {
       "-1: NO OUTPUT EXCEPT FROM SHOW    ",
       " 0: REDUCED OUTPUT                ",
       " 1: NORMAL OUTPUT                 ",
       " 2: EXTRA OUTPUT FOR PROBLEM CASES",
       " 3: MAXIMUM OUTPUT                "};
 
-   static TString cstrat[3] = {
+   static const TString cstrat[3] = {
       " 0: MINIMIZE THE NUMBER OF CALLS TO FUNCTION",
       " 1: TRY TO BALANCE SPEED AGAINST RELIABILITY",
       " 2: MAKE SURE MINIMUM TRUE, ERRORS CORRECT  "};
 
-   static TString cdbopt[7] = {
+   static const TString cdbopt[7] = {
       "REPORT ALL EXCEPTIONAL CONDITIONS      ",
       "MNLINE: LINE SEARCH MINIMIZATION       ",
       "MNDERI: FIRST DERIVATIVE CALCULATIONS  ",
@@ -7663,7 +7664,7 @@ Bool_t TMinuit::mnunpt(TString &cfname)
 {
    Int_t i, l, ic;
    Bool_t ret_val;
-   static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
+   static const TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
 
    ret_val = kFALSE;
    l       = strlen((const char*)cfname);
