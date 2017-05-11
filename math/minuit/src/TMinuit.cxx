@@ -341,6 +341,8 @@ into account the non-linearities much more precisely.
 #include "TPluginManager.h"
 #include "TClass.h"
 
+#include <atomic>
+
 TMinuit *gMinuit;
 
 static const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -6642,19 +6644,33 @@ void TMinuit::mnrn15(Double_t &val, Int_t &inseed)
 {
    /* Initialized data */
 
-   static Int_t iseed = 12345;
+   static std::atomic<Int_t> g_iseed( 12345 );
 
    Int_t k;
 
    if (val == 3) {
       //  "entry" to set seed, flag is VAL=3
-      iseed = inseed;
+      g_iseed.store(inseed, std::memory_order_release);
    } else {
-      inseed = iseed;
-      k      = iseed / 53668;
-      iseed  = (iseed - k*53668)*40014 - k*12211;
-      if (iseed < 0) iseed += 2147483563;
-      val = Double_t(iseed*4.656613e-10);
+      // Grab the local value.  Two threads might comes here at the same
+      // time and will end up with the same results.
+      int starting_seed = g_iseed.load( std::memory_order_acquire );
+      int next_seed;
+
+      do {
+         next_seed = inseed = starting_seed;
+
+         // Determine the next seed.
+         k      = next_seed / 53668;
+         next_seed  = (next_seed - k*53668)*40014 - k*12211;
+         if (next_seed < 0) next_seed += 2147483563;
+
+         val = Double_t(next_seed*4.656613e-10);
+
+         // If more than one thread gets here, one will manage the update
+         // of g_iseed the other we go for at least one more round.
+         // This is not reproduceable
+      } while (! g_iseed.compare_exchange_strong(starting_seed, next_seed) );
    }
 }
 
