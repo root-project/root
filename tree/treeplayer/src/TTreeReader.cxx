@@ -20,11 +20,14 @@
  TTreeReader is a simple, robust and fast interface to read values from a TTree,
  TChain or TNtuple.
 
- It uses TTreeReaderValue<T> and TTreeReaderArray<T> to access the data.
+ It uses `TTreeReaderValue<T>` and `TTreeReaderArray<T>` to access the data.
 
  Example code can be found in
  tutorials/tree/hsimpleReader.C and tutorials/trees/h1analysisTreeReader.h and
  tutorials/trees/h1analysisTreeReader.C for a TSelector.
+
+ You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
+ for all of a tree's branches using `TTree::MakeSelector()`.
 
  Roottest contains an
  <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
