@@ -27,6 +27,17 @@
 #include "TError.h"
 #include "TSystem.h"
 
+namespace vecCore{
+   //Auxiliar function. To be included in VecCore's new release
+   template <typename T> vecCore::Scalar<T> Reduce(const T &v)
+   {
+      vecCore::Scalar<T> sum{};
+      for (size_t i = 0; i < VectorSize<T>(); ++i)
+      sum += vecCore::Get(v, i);
+      return sum;
+   }
+}
+
 namespace ROOT {
 
    namespace Fit {
@@ -391,7 +402,7 @@ namespace FitUtil {
          std::cout << "chi2 = " << chi2 << " n = " << nPoints  /*<< " rejected = " << nRejected */ << std::endl;
 #endif
 
-         return res.sum();
+         return vecCore::Reduce(res);
       }
 
       static double EvalLogL(const IModelFunctionTempl<T> &func, const UnBinData & data, const double * const p, int iWeight,
@@ -428,7 +439,7 @@ namespace FitUtil {
                // check if funcition is zero at +- inf
                const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
                const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
-               if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
+               if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
                   MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                   return 0;
                }
@@ -537,7 +548,7 @@ namespace FitUtil {
                   // check if funcition is zero at +- inf
                   const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
                   const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
-                  if (func(&xmin_v, p).sum() != 0 || func(&xmax_v, p).sum() != 0) {
+                  if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
                      MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                      return 0;
                   }
@@ -606,6 +617,6 @@ namespace FitUtil {
 
 } // end namespace ROOT
 
-Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<Double_v>);
+// Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<Double_v>);
 
 #endif /* ROOT_Fit_FitUtil */

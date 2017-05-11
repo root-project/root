@@ -49,8 +49,6 @@
 
 #include "AnalyticalIntegrals.h"
 
-//#include <iostream>
-
 std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
 std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
