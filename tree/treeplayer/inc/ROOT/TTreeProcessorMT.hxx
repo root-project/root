@@ -60,6 +60,8 @@ namespace ROOT {
          /// the file if necessary.
          void Init()
          {
+            // Here we do not use a TContext since the TThreadedObject protects
+            // the copies done for every processing slots.
             fCurrentFile.reset(TFile::Open(fFileNames[fCurrentIdx].data()));
 
             // If the tree name is empty, look for a tree in the file
@@ -256,6 +258,8 @@ namespace ROOT {
          {
             if (i != fCurrentIdx) {
                fCurrentIdx = i;
+               // Here we need to restore the directory after opening the file.
+               TDirectory::TContext ctxt(gDirectory);
                TFile *f = TFile::Open(fFileNames[fCurrentIdx].data());
                fCurrentTree = (TTree*)f->Get(fTreeName.data());
                fCurrentTree->ResetBit(TObject::kMustCleanup);
