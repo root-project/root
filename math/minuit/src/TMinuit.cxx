@@ -343,7 +343,7 @@ into account the non-linearities much more precisely.
 
 TMinuit *gMinuit;
 
-const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 ClassImp(TMinuit)
 
