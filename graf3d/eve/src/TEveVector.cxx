@@ -89,7 +89,7 @@ template<typename TT> void TEveVectorT<TT>::OrthoNormBase(TEveVectorT<TT>& a, TE
    v.Normalize();
    a = v.Orthogonal();
    a.Normalize();
-   TMath::Cross(v.Arr(), a.Arr(), b.Arr());
+   b = v.Cross(a);
    b.Normalize();
 }
 
