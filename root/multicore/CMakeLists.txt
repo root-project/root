@@ -5,6 +5,13 @@ if(ROOTTEST_OS_ID MATCHES Ubuntu)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-as-needed")
 endif()
 
+# ROOT-8787
+ROOTTEST_GENERATE_EXECUTABLE(tthrobj_ttreeview_regression tthrobj_ttreeview_regression.cpp LIBRARIES Core RIO Tree Imt)
+
+ROOTTEST_ADD_TEST(tthrobj_ttreeview_regression
+                  EXEC tthrobj_ttreeview_regression
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core RIO Tree)
 
 ROOTTEST_ADD_TEST(testSetAddressLoop
