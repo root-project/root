@@ -6631,16 +6631,16 @@ void TMinuit::mnrn15(Double_t &val, Int_t &inseed)
 
    Int_t k;
 
-   if (val == 3) goto L100;
-   inseed = iseed;
-   k      = iseed / 53668;
-   iseed  = (iseed - k*53668)*40014 - k*12211;
-   if (iseed < 0) iseed += 2147483563;
-   val = Double_t(iseed*4.656613e-10);
-   return;
-//               "entry" to set seed, flag is VAL=3
-L100:
-   iseed = inseed;
+   if (val == 3) {
+      //  "entry" to set seed, flag is VAL=3
+      iseed = inseed;
+   } else {
+      inseed = iseed;
+      k      = iseed / 53668;
+      iseed  = (iseed - k*53668)*40014 - k*12211;
+      if (iseed < 0) iseed += 2147483563;
+      val = Double_t(iseed*4.656613e-10);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6939,8 +6939,8 @@ void TMinuit::mnset()
       "SHOw      ",
       "SET       "};
 
-   static Int_t nname = 25;
-   static Int_t nntot = 30;
+   static constexpr Int_t nname = 25; // Must less than sizeof(cname)/sizeof(char*)
+   static constexpr Int_t nntot = sizeof(cname)/sizeof(char*);
    static const TString cprlev[5] = {
       "-1: NO OUTPUT EXCEPT FROM SHOW    ",
       " 0: REDUCED OUTPUT                ",
