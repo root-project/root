@@ -13,6 +13,7 @@
 #include "TBuffer3D.h"
 #include "TClass.h"
 #include "TContextMenu.h"
+#include "TEnv.h"
 
 
 /** \class TGLLogicalShape
@@ -63,6 +64,9 @@ viewer architecture and how external viewer clients use it.
 ClassImp(TGLLogicalShape);
 
 Bool_t TGLLogicalShape::fgIgnoreSizeForCameraInterest = kFALSE;
+
+Bool_t TGLLogicalShape::fgUseDLs            = kTRUE;
+Bool_t TGLLogicalShape::fgUseDLsForVertArrs = kTRUE;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -284,7 +288,7 @@ Bool_t TGLLogicalShape::SetDLCache(Bool_t cache)
 
 Bool_t TGLLogicalShape::ShouldDLCache(const TGLRnrCtx& rnrCtx) const
 {
-   if (!fDLCache || !fScene   ||
+   if (!fDLCache || !fScene ||
        (rnrCtx.SecSelection() && SupportsSecondarySelect()))
    {
       return kFALSE;
@@ -382,7 +386,7 @@ entry_point:
    // MT: I can't see how this could happen right now ... with
    // rendering from a flat drawable-list.
 
-   if (!ShouldDLCache(rnrCtx) || rnrCtx.IsDLCaptureOpen())
+   if (!fgUseDLs || !ShouldDLCache(rnrCtx) || rnrCtx.IsDLCaptureOpen())
    {
       DirectDraw(rnrCtx);
       return;
@@ -485,4 +489,19 @@ Bool_t TGLLogicalShape::GetIgnoreSizeForCameraInterest()
 void TGLLogicalShape::SetIgnoreSizeForCameraInterest(Bool_t isfci)
 {
    fgIgnoreSizeForCameraInterest = isfci;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Load GL shape settings from ROOT's TEnv into static data members.
+
+void TGLLogicalShape::SetEnvDefaults()
+{
+   fgUseDLs            = gEnv->GetValue("OpenGL.UseDisplayLists", 1);
+   fgUseDLsForVertArrs = gEnv->GetValue("OpenGL.UseDisplayListsForVertexArrays", 1);
+
+   if (!fgUseDLs || !fgUseDLsForVertArrs)
+   {
+      printf("TGLLogicalShape::SetEnvDefaults() fgUseDLs=%d, fgUseDLsForVertArrs=%d\n",
+             fgUseDLs, fgUseDLsForVertArrs);
+   }
 }

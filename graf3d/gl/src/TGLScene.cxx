@@ -281,7 +281,10 @@ TGLScene::TGLScene() :
    fInSmartRefresh(kFALSE),
    fLastPointSizeScale (0),
    fLastLineWidthScale (0)
-{}
+{
+   if (fSceneID == 1)
+      TGLLogicalShape::SetEnvDefaults();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy scene objects
