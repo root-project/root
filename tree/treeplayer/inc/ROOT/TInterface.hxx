@@ -1065,12 +1065,12 @@ protected:
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filename.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<std::unique_ptr<TTree>> trees(nSlots);
+         std::vector<TTree*> trees(nSlots);
 
          auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
             if (!trees[slot]) {
                files[slot] = merger.GetFile();
-               trees[slot].reset(new TTree(treename.c_str(), treename.c_str()));
+               trees[slot] = new TTree(treename.c_str(), treename.c_str());
 
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
@@ -1083,11 +1083,7 @@ protected:
 
          ForeachSlot(fillTree, {bnames[S]...});
 
-         for (auto &&tree : trees) tree->Write();
          for (auto &&file : files) file->Write();
-
-         trees.clear();
-         files.clear();
       }
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
