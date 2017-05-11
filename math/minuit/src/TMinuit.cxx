@@ -4320,7 +4320,7 @@ void TMinuit::mnimpr()
 {
    /* Initialized data */
 
-   static Double_t rnum = 0;
+   Double_t rnum = 0;
 
    /* Local variables */
    Double_t amax, ycalf, ystar, ystst;
