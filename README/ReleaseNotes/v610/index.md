@@ -106,6 +106,23 @@ The following interfaces have been removed, after deprecation in v6.08.
    Hist.Precision.3D:           float
   ```
   the default values are `float`. They can be set to `double`.
+- Fix ROOT-8742: TTree::SetBranchAddress could not be invoked safely even when dealing with the same tree obtained from the same file opened in different threads.
+
+### TDataFrame
+- Creation of the TDataFrame class. The TDataFrame allows to interact with data
+stored in columnar format in a functional and intuitive way in order to perform
+data analysis. Parallelism is accessible simply by activating implicit
+multi-threading with the ROOT::EnableImplicitMT() function.
+In a nutshell, the functionality provided is:
+    - Create and fill histograms with one single method invocation
+    - Express filtering of entries with strings, lambdas or functions
+    - Easy creation of efficiencies of cut-flows
+    - Possibility to run on ranges of entries
+    - Creating columns not present in the original dataset
+    - Chain multiple actions to be executed on the same event loop
+    - Snapshot on a rootfile the dataset after cuts and after augmentation with columns created by the user
+    - Run analyses expressed as chains of actions in parallel in a transparent way for the user
+See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Experimental_1_1TDF_1_1TDataFrame.html) for more details
 
 ## 2D Graphics Libraries
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
@@ -239,6 +256,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - TDavixFile: Added support for bucket name in path
 - Fix error sometimes prompted when trying to write std::array column-wise
 
+
 ## Database Libraries
 
 
@@ -316,3 +334,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - For rootcling_stage1 (formerly known as rootcling_tmp), the package structure was changed to enable homogenous visibility
   settings across object files. See core/README for an overview.
 - Several non-public headers are not copied into include/ anymore; they reside in the PACKAGE/res/ subdirectory in the source tree.
+- The IMT switch is set to on by default.
+- A new library is now created, libImt. It contains all classes which depend on TBB. Those classes were previously part of libThread. As a consequence rootcling/genreflex do not depend anymore from TBB even in presence of imt builds.
+- Refactoring of several math tests to avoid exact comparisons of floating point numbers
+-
