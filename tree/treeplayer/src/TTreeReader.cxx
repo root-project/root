@@ -320,7 +320,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          fEntryStatus = kEntryNotFound;
          return fEntryStatus;
       }
-      entryAfterList = fEntryList->GetEntry(entry);
+      if (entry >= 0) entryAfterList = fEntryList->GetEntry(entry);
       if (local && IsChain()) {
          // Must translate the entry list's entry to the current TTree's entry number.
          local = kFALSE;
