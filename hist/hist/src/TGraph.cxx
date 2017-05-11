@@ -15,7 +15,6 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TGraph.h"
-#include "TGaxis.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
