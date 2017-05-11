@@ -94,7 +94,7 @@ The following interfaces have been removed, after deprecation in v6.08.
     - Add support for the creation of events on-the-fly (e.g. via Pythia or user-define generator functors), with no need for an underlying TTree of data file
     - Add runtime branch type inference to all relevant actions: TDataFrame checks the column types at runtime and just-in-time compiles the corresponding (templated) action
     - Add `Range` transformation: for non-parallel runs, `Range`s are now available to filter events according to their `start`, `stop` and `stride` parameters
-    - Improve multi-thread speed-up through various optimisations of the parallel event-loop management 
+    - Improve multi-thread speed-up through various optimisations of the parallel event-loop management
     - Update the user guide to include the generic `Fill` action and ranges
     - Bug fixes and improvements to Doxygen docs
 - In `TTree::OptimizeBaskets()` do not call GetBasket(0) to avoid disc reads
@@ -235,6 +235,17 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 - When `TGraph`s belonging to a `TMultiGraph` were changed (for instance with `SetPoint`)
   after the `TMultiGraph` was drawn, the `TMultiGraph` range was not recomputed.
   This issue was discovered thanks to [this forum post](https://root-forum.cern.ch/t/multi-layer-perceptron/24561/2).
+- When a TGraph is drawn, the X-axis is drawn with increasing values from left to
+  right and the Y-axis from bottom to top. The two options `RX` and `RY` allow to
+  change this order. The option `RX` allows to draw the X-axis with increasing values
+  from right to left and the `RY` option allows to draw the Y-axis with increasing
+  values from top to bottom.
+~~~ {.cpp}
+   g->Draw("APL");
+   g->Draw("A RX RY PL");
+~~~
+
+![New box option for 3D histograms](ReverseAxis.png)
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
