@@ -588,7 +588,7 @@ namespace FitUtil {
 
       }
 
-      static double EvalChi2Effective(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints)
+      static double EvalChi2Effective(const IModelFunctionTempl<T> &, const BinData &, const double *, unsigned int &)
       {
          Error("FitUtil::Evaluate<T>::EvalChi2Effective", "The vectorized evaluation of the Chi2 with coordinate errors is still not supported");
          return -1.;
