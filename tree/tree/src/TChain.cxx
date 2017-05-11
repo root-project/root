@@ -76,7 +76,7 @@ TChain::TChain()
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->Remove(this);
+   if (gDirectory) gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
    fDirectory = 0;
@@ -152,7 +152,7 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gDirectory->Remove(this);
+   if (gDirectory) gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
    fDirectory = 0;
