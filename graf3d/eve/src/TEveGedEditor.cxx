@@ -124,7 +124,7 @@ void TEveGedEditor::DisplayElement(TEveElement* re)
 
    fElement = re;
    fObject  = fElement ? fElement->GetEditorObject(eh) : 0;
-   TGedEditor::SetModel(fPad, fObject, kButton1Down);
+   TGedEditor::SetModel(fPad, fObject, kButton1Down, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,17 +134,17 @@ void TEveGedEditor::DisplayObject(TObject* obj)
 {
    fElement = dynamic_cast<TEveElement*>(obj);
    fObject  = obj;
-   TGedEditor::SetModel(fPad, obj, kButton1Down);
+   TGedEditor::SetModel(fPad, obj, kButton1Down, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set model object.
 
-void TEveGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event)
+void TEveGedEditor::SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force)
 {
    fElement = dynamic_cast<TEveElement*>(obj);
    fObject  = obj;
-   TGedEditor::SetModel(pad, obj, event);
+   TGedEditor::SetModel(pad, obj, event, force);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
