@@ -152,9 +152,15 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
       if (!BaseFCN::Data().HaveCoordErrors() )
+#ifdef R__HAS_VECCORE
          return FitUtil::Evaluate<T>::EvalChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
       else
          return FitUtil::Evaluate<T>::EvalChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+#else
+        return FitUtil::EvaluateChi2(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints, fExecutionPolicy);
+      else
+         return FitUtil::EvaluateChi2Effective(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
+#endif
    }
 
    // for derivatives

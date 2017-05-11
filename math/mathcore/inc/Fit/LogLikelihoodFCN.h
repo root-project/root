@@ -158,10 +158,10 @@ private:
    virtual double DoEval (const double * x) const {
       this->UpdateNCalls();
 
-#ifdef ROOT_FIT_PARALLEL
-      return FitUtilParallel::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fNEffPoints);
-#else
+#ifdef R__HAS_VECCORE
       return FitUtil::Evaluate<T>::EvalLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
+#else
+      return FitUtil::EvaluateLogL(BaseFCN::ModelFunction(), BaseFCN::Data(), x, fWeight, fIsExtended, fNEffPoints, fExecutionPolicy);
 #endif
    }
 

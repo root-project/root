@@ -27,6 +27,7 @@
 #include "TError.h"
 #include "TSystem.h"
 
+#ifdef R__HAS_VECCORE
 namespace vecCore{
    //Auxiliar function. To be included in VecCore's new release
    template <typename T> vecCore::Scalar<T> Reduce(const T &v)
@@ -37,6 +38,7 @@ namespace vecCore{
       return sum;
    }
 }
+#endif
 
 namespace ROOT {
 
@@ -209,14 +211,14 @@ namespace FitUtil {
             inline double ExecFunc(T *f, const double *x, const double *p) const{
                 return (*f)(x, p);
             }
-
+#ifdef R__HAS_VECCORE
             inline double ExecFunc(const IModelFunctionTempl<Double_v> *f, const double *x, const double *p) const{
                 const Double_v xx = vecCore::FromPtr<Double_v>(x);
                 const double *p0 = p;
                 auto res =  (*f)( &xx, (const double *)p0);
                 return res[0];
             }
-
+#endif
             // objects of this class are not meant to be copied / assigned
             IntegralEvaluator(const IntegralEvaluator& rhs);
             IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
@@ -267,7 +269,9 @@ namespace FitUtil {
        return also nPoints as the effective number of used points in the LogL evaluation
    */
    void EvaluateLogLGradient(const IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);
+#ifdef R__HAS_VECCORE
    void EvaluateLogLGradient(const IModelFunctionTempl<Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) ;
+#endif
 
    /**
        evaluate the Poisson LogL given a model function and the data at the point x.
@@ -305,7 +309,9 @@ namespace FitUtil {
        is used
    */
    double EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0);
+#ifdef R__HAS_VECCORE   
    double EvaluatePdf(const IModelFunctionTempl<Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *);
+#endif
    /**
        evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
        If the pointer g is not null evaluate also the gradient of the Poisson pdf.
@@ -315,7 +321,7 @@ namespace FitUtil {
    double EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * x, unsigned int ipoint, double * g = 0);
 
    unsigned setAutomaticChunking(unsigned nEvents);
-
+#ifdef R__HAS_VECCORE
    template<class T>
    struct Evaluate{
       static double EvalChi2(const IModelFunctionTempl<T> &func, const BinData & data, const double * p, unsigned int &nPoints, const unsigned int &executionPolicy, unsigned nChunks = 0)
@@ -609,7 +615,7 @@ namespace FitUtil {
          return FitUtil::EvaluateChi2Effective(func, data, p, nPoints);
       }
    };
-
+#endif
 
 } // end namespace FitUtil
 

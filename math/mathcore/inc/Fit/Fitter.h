@@ -78,7 +78,9 @@ class Fitter {
 public:
 
    typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
+#ifdef R__HAS_VECCORE
    typedef ROOT::Math::IParametricFunctionMultiDimTempl<Double_v>  IModelFunction_v;
+#endif
    typedef ROOT::Math::IParamMultiGradFunction             IGradModelFunction;
    typedef ROOT::Math::IParamFunction                      IModel1DFunction;
    typedef ROOT::Math::IParamGradFunction                  IGradModel1DFunction;
@@ -320,7 +322,9 @@ public:
    /**
        Set the fitted function (model function) from a vectorized parametric function interface
    */
+#ifdef R__HAS_VECCORE
    void  SetFunction(const IModelFunction_v & func);
+#endif
    /**
       Set the fitted function from a parametric 1D function interface
     */
@@ -478,8 +482,11 @@ private:
    int fDataSize;  // size of data sets (need for Fumili or LM fitters)
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
-
+#ifdef R__HAS_VECCORE
    std::shared_ptr<IModelFunction_v> fFunc_v;  //! copy of the fitted  function containing on output the fit result
+#else
+    std::shared_ptr<IModelFunction> fFunc_v;   //dummy for when VecCore not available. Keeps the code cleaner.
+#endif
    std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
 
    std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit

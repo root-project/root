@@ -127,7 +127,7 @@ void Fitter::SetFunction(const IModelFunction & func, bool useGradient)
    fConfig.CreateParamsSettings(*fFunc);
    fFunc_v.reset();
 }
-
+#ifdef R__HAS_VECCORE
 void Fitter::SetFunction(const IModelFunction_v & func)
 {
    //  set the fit model function (clone the given one and keep a copy )
@@ -140,7 +140,7 @@ void Fitter::SetFunction(const IModelFunction_v & func)
    fConfig.CreateParamsSettings(*fFunc_v);
    fFunc.reset();
 }
-
+#endif
 void Fitter::SetFunction(const IModel1DFunction & func, bool useGradient)
 {
    fUseGradient = useGradient;
@@ -352,10 +352,12 @@ bool Fitter::DoLeastSquareFit(unsigned executionPolicy) {
       if (!fFunc_v ) {
          MATH_ERROR_MSG("Fitter::DoLeastSquareFit","model function is not set");
          return false;
+#ifdef R__HAS_VECCORE
       } else{
          Chi2FCN<BaseFunc, IModelFunction_v> chi2(data, fFunc_v, executionPolicy);
          fFitType = chi2.Type();
          return DoMinimization (chi2);
+#endif
      }
    } else {
 
@@ -493,6 +495,7 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, unsigned executionPolicy) {
 
    if (!fUseGradient) {
       // do minimization without using the gradient
+#ifdef R__HAS_VECCORE
      if (fFunc_v ){
        LogLikelihoodFCN<BaseFunc, IModelFunction_v> logl(data, fFunc_v, useWeight, extended, executionPolicy);
        fFitType = logl.Type();
@@ -503,7 +506,8 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, unsigned executionPolicy) {
         }
         return true;
      }
-     else{
+     else{         
+#endif
        LogLikelihoodFCN<BaseFunc> logl(data, fFunc, useWeight, extended, executionPolicy);
 
         fFitType = logl.Type();
@@ -513,9 +517,10 @@ bool Fitter::DoUnbinnedLikelihoodFit(bool extended, unsigned executionPolicy) {
           if (!ApplyWeightCorrection(logl) ) return false;
         }
         return true;
+#ifdef R__HAS_VECCORE
      }
-   }
-   else {
+#endif
+   } else {
       // use gradient : check if fFunc provides gradient
       if (fConfig.MinimizerOptions().PrintLevel() > 0)
          MATH_INFO_MSG("Fitter::DoUnbinnedLikelihoodFit","use gradient from model function");
