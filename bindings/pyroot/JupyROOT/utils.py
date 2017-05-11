@@ -32,12 +32,8 @@ ROOT.gROOT.SetBatch()
 cppMIME = 'text/x-c++src'
 
 _jsMagicHighlight = """
-require(['notebook'],
-  function() {{
-    IPython.CodeCell.config_defaults.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
-    console.log("JupyROOT - %%cpp magic configured");
-  }}
-);
+Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/^%%cpp/]}};
+console.log("JupyROOT - %%cpp magic configured");
 """
 
 _jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
@@ -507,7 +503,7 @@ def enableCppHighlighting():
 def iPythonize():
     setStyle()
     loadMagicsAndCapturers()
-    #enableCppHighlighting()
+    enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
 
