@@ -256,7 +256,10 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
       fEndEntry = endEntry;
    else
       fEndEntry = -1;
-   SetEntry(beginEntry - 1);
+   if (beginEntry - 1 < 0)
+      Restart();
+   else
+      SetEntry(beginEntry - 1);
    return kEntryValid;
 }
 
