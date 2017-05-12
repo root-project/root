@@ -50,7 +50,7 @@ void CallBuildAndBook(TDFNode *node, const ROOT::Detail::TDF::ColumnNames_t &bl,
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
 
-Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
                      const std::string &name, const std::string &expression, TObjArray *branches,
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
@@ -166,7 +166,7 @@ public:
       auto branches = tree->GetListOfBranches();
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
-      auto retVal = ROOT::Internal::TDF::InterpretCall(this, "Filter", GetNodeTypeName(), name, expression, branches,
+      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Filter", GetNodeTypeName(), name, expression, branches,
                                                        tmpBranches, tmpBookedBranches, tree);
       return *(TInterface<TFilterBase> *)retVal;
    }
@@ -225,7 +225,7 @@ public:
       auto branches = tree->GetListOfBranches();
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
-      auto retVal = ROOT::Internal::TDF::InterpretCall(this, "Define", GetNodeTypeName(), name, expression, branches,
+      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Define", GetNodeTypeName(), name, expression, branches,
                                                        tmpBranches, tmpBookedBranches, tree);
       return *(TInterface<ROOT::Detail::TDF::TCustomColumnBase> *)retVal;
    }
