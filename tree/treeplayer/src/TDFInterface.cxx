@@ -11,7 +11,7 @@
 #include "TClass.h"
 #include "TRegexp.h"
 
-#include "ROOT/TInterface.hxx"
+#include "ROOT/TDFInterface.hxx"
 
 #include <vector>
 #include <string>
