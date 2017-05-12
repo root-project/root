@@ -218,7 +218,8 @@ namespace FitUtil {
 
 #ifdef R__HAS_VECCORE
             inline double ExecFunc(const IModelFunctionTempl<Double_v> *f, const double *x, const double *p) const{
-                const Double_v xx = vecCore::FromPtr<Double_v>(x);
+                Double_v xx;
+                vecCore::Load<Double_v>(xx, x);
                 const double *p0 = p;
                 auto res =  (*f)( &xx, (const double *)p0);
                 return res[0];
@@ -464,8 +465,9 @@ namespace FitUtil {
                // use (-inf +inf)
                data.Range().GetRange(&xmin[0], &xmax[0]);
                // check if funcition is zero at +- inf
-               const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
-               const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
+               T xmin_v, xmax_v;
+               vecCore::Load<T>(xmin_v, xmin.data());
+               vecCore::Load<T>(xmax_v, xmax.data());
                if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
                   MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                   return 0;
@@ -481,7 +483,9 @@ namespace FitUtil {
          auto mapFunction = [ &, p](const unsigned i) {
             T W{};
             T W2{};
-            const auto x1 = vecCore::FromPtr<T>(data.GetCoordComponent(i * vecSize, 0));
+            T x1{};
+
+            vecCore::Load<T>(x1, data.GetCoordComponent(i*vecSize,0));
 
             const T * x = nullptr;
             if(data.NDim() > 1) {
@@ -505,7 +509,11 @@ namespace FitUtil {
             // function EvalLog protects against negative or too small values of fval
             auto logval =  ROOT::Math::Util::EvalLog(fval);
             if (iWeight > 0) {
-               auto weight = data.WeightsPtr(i) == nullptr ? 1 : vecCore::FromPtr<T>(data.WeightsPtr(i));
+               T weight{};
+               if (data.WeightsPtr(i) == nullptr)
+                  weight = 1;
+               else
+                  vecCore::Load<T>(weight, data.WeightsPtr(i*vecSize));
                logval *= weight;
                if (iWeight == 2) {
                   logval *= weight; // use square of weights in likelihood
@@ -587,8 +595,9 @@ namespace FitUtil {
                   // use (-inf +inf)
                   data.Range().GetRange(&xmin[0], &xmax[0]);
                   // check if funcition is zero at +- inf
-                  const auto xmin_v = vecCore::FromPtr<T>(xmin.data());
-                  const auto xmax_v = vecCore::FromPtr<T>(xmax.data());
+                  T xmin_v, xmax_v;
+                  vecCore::Load<T>(xmin_v, xmin.data());
+                  vecCore::Load<T>(xmax_v, xmax.data());
                   if (vecCore::Reduce(func(&xmin_v, p)) != 0 || vecCore::Reduce(func(&xmax_v, p)) != 0) {
                      MATH_ERROR_MSG("FitUtil::EvaluateLogLikelihood", "A range has not been set and the function is not zero at +/- inf");
                      return 0;
