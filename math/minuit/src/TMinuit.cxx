@@ -3413,10 +3413,8 @@ void TMinuit::mngrad()
    for (lc = 1; lc <= fNpar; ++lc) {
       i   = fNexofi[lc-1];
       const char *cwd = "GOOD";
-      bool converging = true;
       err = fDgrd[lc-1];
       if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err) {
-         converging = false;
          cwd = " BAD";
          fISW[2] = 0;
       }
