@@ -21,7 +21,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 // extern templates
-template class TInterface<ROOT::Detail::TDF::TDataFrameImpl>;
+template class TInterface<ROOT::Detail::TDF::TLoopManager>;
 template class TInterface<ROOT::Detail::TDF::TFilterBase>;
 template class TInterface<ROOT::Detail::TDF::TCustomColumnBase>;
 }
