@@ -504,7 +504,7 @@ public:
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
       auto h = std::make_shared<::TH1F>(std::move(model));
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
-         ROOT::Internal::TDF::Histo<::TH1F>::SetCanExtendAllAxes(*h);
+         ROOT::Internal::TDF::HistoUtils<::TH1F>::SetCanExtendAllAxes(*h);
       return CreateAction<ROOT::Internal::TDF::ActionTypes::Histo1D, V>(bl, h);
    }
 
@@ -567,7 +567,7 @@ public:
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TH2F>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TH2F>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the histogram");
@@ -594,7 +594,7 @@ public:
                                 const std::string &wName)
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TH2F>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TH2F>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the histogram");
@@ -627,7 +627,7 @@ public:
                                 const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TH3F>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TH3F>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the histogram");
@@ -656,7 +656,7 @@ public:
                                 const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TH3F>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TH3F>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TH3F>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
@@ -686,7 +686,7 @@ public:
                                       const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TProfile>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2>({v1Name, v2Name}, "fill the 1D Profile");
@@ -713,7 +713,7 @@ public:
                                       const std::string &wName)
    {
       auto h = std::make_shared<::TProfile>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TProfile>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, W>({v1Name, v2Name, wName}, "fill the 1D profile");
@@ -746,7 +746,7 @@ public:
                                         const std::string &v2Name = "", const std::string &v3Name = "")
    {
       auto h = std::make_shared<::TProfile2D>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TProfile2D>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, V3>({v1Name, v2Name, v3Name}, "fill the 2D profile");
@@ -775,7 +775,7 @@ public:
                                         const std::string &v3Name, const std::string &wName)
    {
       auto h = std::make_shared<::TProfile2D>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<::TProfile2D>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
       auto bl = GetBranchNames<V1, V2, V3, W>({v1Name, v2Name, v3Name, wName}, "fill the histogram");
@@ -803,7 +803,7 @@ public:
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<T>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
       return CreateAction<ROOT::Internal::TDF::ActionTypes::Fill, FirstBranch, OtherBranches...>(bl, h);
@@ -813,7 +813,7 @@ public:
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
-      if (!ROOT::Internal::TDF::Histo<T>::HasAxisLimits(*h)) {
+      if (!ROOT::Internal::TDF::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
       return CreateAction<ROOT::Internal::TDF::ActionTypes::Fill, ROOT::Detail::TDF::TDataFrameGuessedType>(bl, h);
@@ -931,7 +931,7 @@ private:
                      ROOT::Internal::TDF::ActionTypes::Histo1D *)
    {
       auto df = GetDataFrameChecked();
-      auto hasAxisLimits = ROOT::Internal::TDF::Histo<::TH1F>::HasAxisLimits(*h);
+      auto hasAxisLimits = ROOT::Internal::TDF::HistoUtils<::TH1F>::HasAxisLimits(*h);
 
       if (hasAxisLimits) {
          using Op_t = ROOT::Internal::TDF::FillTOOperation<::TH1F>;
