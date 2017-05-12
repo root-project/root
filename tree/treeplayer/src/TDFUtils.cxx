@@ -138,8 +138,8 @@ void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::BranchNames_t &bl,
-                                                        const ROOT::Detail::TDF::BranchNames_t &defBl)
+const ROOT::Detail::TDF::ColumnNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::ColumnNames_t &bl,
+                                                        const ROOT::Detail::TDF::ColumnNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {

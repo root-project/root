@@ -32,7 +32,7 @@ namespace ROOT {
 
 namespace Detail {
 namespace TDF {
-using BranchNames_t = std::vector<std::string>;
+using ColumnNames_t = std::vector<std::string>;
 class TCustomColumnBase; // fwd decl for ColumnName2ColumnTypeName
 struct TDataFrameGuessedType {
 };
@@ -210,7 +210,7 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
-                   const ROOT::Detail::TDF::BranchNames_t &bn, const ROOT::Detail::TDF::BranchNames_t &tmpbn,
+                   const ROOT::Detail::TDF::ColumnNames_t &bn, const ROOT::Detail::TDF::ColumnNames_t &tmpbn,
                    const std::map<std::string, std::shared_ptr<ROOT::Detail::TDF::TCustomColumnBase>> &tmpBranches,
                    TStaticSeq<S...>)
 {
@@ -263,8 +263,8 @@ void CheckReduce(F &, T)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::BranchNames_t &bl,
-                                                        const ROOT::Detail::TDF::BranchNames_t &defBl);
+const ROOT::Detail::TDF::ColumnNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::ColumnNames_t &bl,
+                                                        const ROOT::Detail::TDF::ColumnNames_t &defBl);
 
 namespace ActionTypes {
 struct Histo1D {

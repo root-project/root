@@ -163,7 +163,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
                      const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
@@ -208,14 +208,14 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
 
    // createAction_str will contain the following:
    // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
-   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::BranchNames_t*>(&bl),
+   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
    //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
    createAction_str << ">("
                     << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
-                    << "*reinterpret_cast<ROOT::Detail::TDF::BranchNames_t*>(" << &bl << "), " << nSlots
+                    << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
                     << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
    auto error = TInterpreter::EErrorCode::kNoError;
    gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
