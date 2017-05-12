@@ -42,7 +42,7 @@ namespace TDF {
 using TmpBranchBasePtr_t = std::shared_ptr<ROOT::Detail::TDF::TCustomColumnBase>;
 
 template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-void CallBuildAndBook(TDFNode *node, const ROOT::Detail::TDF::BranchNames_t &bl, unsigned int nSlots,
+void CallBuildAndBook(TDFNode *node, const ROOT::Detail::TDF::ColumnNames_t &bl, unsigned int nSlots,
                       const std::shared_ptr<ActionResultType> &r)
 {
    node->template BuildAndBook<BranchTypes...>(bl, r, nSlots, (ActionType *)nullptr);
@@ -55,7 +55,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-void JitBuildAndBook(const ROOT::Detail::TDF::BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
+void JitBuildAndBook(const ROOT::Detail::TDF::ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr,
                      const std::type_info &art, const std::type_info &at, const void *r, TTree &tree,
                      unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
@@ -83,7 +83,7 @@ class TInterface {
    template <typename T>
    friend class TInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
-   friend void ROOT::Internal::TDF::CallBuildAndBook(TDFNode *, const ROOT::Detail::TDF::BranchNames_t &,
+   friend void ROOT::Internal::TDF::CallBuildAndBook(TDFNode *, const ROOT::Detail::TDF::ColumnNames_t &,
                                                      unsigned int nSlots, const std::shared_ptr<ActionResultType> &);
 
 public:
@@ -107,13 +107,13 @@ public:
    /// it is executed once per entry. If its result is requested more than
    /// once, the cached result is served.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
-   TInterface<TFilterBase> Filter(F f, const BranchNames_t &bn = {}, const std::string &name = "")
+   TInterface<TFilterBase> Filter(F f, const ColumnNames_t &bn = {}, const std::string &name = "")
    {
       ROOT::Internal::TDF::CheckFilter(f);
       auto df = GetDataFrameChecked();
-      const BranchNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDF::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs, bn, defBl);
+      const ColumnNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs, bn, defBl);
       using DFF_t = TFilter<F, Proxied>;
       auto FilterPtr = std::make_shared<DFF_t>(std::move(f), actualBl, *fProxiedPtr, name);
       fProxiedPtr->IncrChildrenCount();
@@ -147,7 +147,7 @@ public:
    template <typename F>
    TInterface<TFilterBase> Filter(F f, const std::initializer_list<std::string> &bn)
    {
-      return Filter(f, BranchNames_t{bn});
+      return Filter(f, ColumnNames_t{bn});
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -194,13 +194,13 @@ public:
    /// for another branch in the TTree.
    template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<ROOT::Detail::TDF::TCustomColumnBase> Define(const std::string &name, F expression,
-                                                           const BranchNames_t &bl = {})
+                                                           const ColumnNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
       ROOT::Internal::TDF::CheckTmpBranch(name, df->GetTree());
-      const BranchNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDF::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs, bl, defBl);
+      const ColumnNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs, bl, defBl);
       using DFB_t = TCustomColumn<F, Proxied>;
       auto BranchPtr = std::make_shared<DFB_t>(name, std::move(expression), actualBl, *fProxiedPtr);
       fProxiedPtr->IncrChildrenCount();
@@ -240,7 +240,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                       const BranchNames_t &bnames)
+                                       const ColumnNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
@@ -255,13 +255,13 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                       const BranchNames_t &bnames)
+                                       const ColumnNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       std::stringstream snapCall;
       // build a string equivalent to
-      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<BranchNames_t*>(&bnames))"
+      // "reinterpret_cast</nodetype/*>(this)->Snapshot<Ts...>(treename,filename,*reinterpret_cast<ColumnNames_t*>(&bnames))"
       snapCall << "((" << GetNodeTypeName() << "*)" << this << ")->Snapshot<";
       bool first = true;
       for (auto &b : bnames) {
@@ -269,7 +269,7 @@ public:
          snapCall << ROOT::Internal::TDF::ColumnName2ColumnTypeName(b, *tree, df->GetBookedBranch(b));
          first = false;
       };
-      // TODO is there a way to use BranchNames_t instead of std::vector<std::string> without parsing the whole header?
+      // TODO is there a way to use ColumnNames_t instead of std::vector<std::string> without parsing the whole header?
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
                << ");";
@@ -288,7 +288,7 @@ public:
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
                                        const std::string &columnNameRegexp = "")
    {
-      BranchNames_t selectedColumns;
+      ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
       const auto isEmptyRegex = "" == columnNameRegexp;
 
@@ -358,7 +358,7 @@ public:
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
    template <typename F>
-   void Foreach(F f, const BranchNames_t &bl = {})
+   void Foreach(F f, const ColumnNames_t &bl = {})
    {
       namespace TDFInt = ROOT::Internal::TDF;
       using Args_t = typename TDFInt::TFunctionTraits<decltype(f)>::ArgsNoDecay_t;
@@ -383,12 +383,12 @@ public:
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
    template <typename F>
-   void ForeachSlot(F f, const BranchNames_t &bl = {})
+   void ForeachSlot(F f, const ColumnNames_t &bl = {})
    {
       auto df = GetDataFrameChecked();
-      const BranchNames_t &defBl = df->GetDefaultBranches();
+      const ColumnNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDF::TFunctionTraits<F>::Args_t::fgSize;
-      const BranchNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs - 1, bl, defBl);
+      const ColumnNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs - 1, bl, defBl);
       using Op_t = ROOT::Internal::TDF::ForeachSlotOperation<F>;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
@@ -457,7 +457,7 @@ public:
       auto cSPtr = std::make_shared<unsigned int>(0);
       using Op_t = ROOT::Internal::TDF::CountOperation;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied>;
-      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), BranchNames_t({}), *fProxiedPtr));
+      df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(cSPtr, df);
    }
@@ -800,7 +800,7 @@ public:
    /// The user gives up ownership of the model object.
    /// It is compulsory to express the branches to be considered.
    template <typename FirstBranch, typename... OtherBranches, typename T> // need FirstBranch to disambiguate overloads
-   TResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!ROOT::Internal::TDF::Histo<T>::HasAxisLimits(*h)) {
@@ -810,7 +810,7 @@ public:
    }
 
    template <typename T>
-   TResultProxy<T> Fill(T &&model, const BranchNames_t &bl)
+   TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
       auto h = std::make_shared<T>(std::move(model));
       if (!ROOT::Internal::TDF::Histo<T>::HasAxisLimits(*h)) {
@@ -891,7 +891,7 @@ private:
 
    /// Returns the default branches if needed, takes care of the error handling.
    template <typename T1, typename T2 = void, typename T3 = void, typename T4 = void>
-   BranchNames_t GetBranchNames(BranchNames_t bl, const std::string &actionNameForErr)
+   ColumnNames_t GetBranchNames(ColumnNames_t bl, const std::string &actionNameForErr)
    {
       constexpr auto isT2Void = std::is_same<T2, void>::value;
       constexpr auto isT3Void = std::is_same<T3, void>::value;
@@ -916,7 +916,7 @@ private:
 
    // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
    template <typename... BranchTypes, typename ActionType, typename ActionResultType>
-   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
+   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
                      ActionType *)
    {
       using Op_t = ROOT::Internal::TDF::FillTOOperation<ActionResultType>;
@@ -927,7 +927,7 @@ private:
 
    // Histo1D filling (must handle the special case of distinguishing FillTOOperation and FillOperation
    template <typename... BranchTypes>
-   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<::TH1F> &h, unsigned int nSlots,
+   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1F> &h, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Histo1D *)
    {
       auto df = GetDataFrameChecked();
@@ -946,7 +946,7 @@ private:
 
    // Min action
    template <typename BranchType>
-   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
+   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Min *)
    {
       using Op_t = ROOT::Internal::TDF::MinOperation;
@@ -957,7 +957,7 @@ private:
 
    // Max action
    template <typename BranchType>
-   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
+   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Max *)
    {
       using Op_t = ROOT::Internal::TDF::MaxOperation;
@@ -968,7 +968,7 @@ private:
 
    // Mean action
    template <typename BranchType>
-   void BuildAndBook(const BranchNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
+   void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Mean *)
    {
       using Op_t = ROOT::Internal::TDF::MeanOperation;
@@ -982,7 +982,7 @@ private:
    // Type was specified by the user, no need to infer it
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<!ROOT::Internal::TDF::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
@@ -994,7 +994,7 @@ private:
    // User did not specify type, do type inference
    template <typename ActionType, typename... BranchTypes, typename ActionResultType,
              typename std::enable_if<ROOT::Internal::TDF::TNeedJitting<BranchTypes...>::value, int>::type = 0>
-   TResultProxy<ActionResultType> CreateAction(const BranchNames_t &bl, const std::shared_ptr<ActionResultType> &r)
+   TResultProxy<ActionResultType> CreateAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &r)
    {
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
@@ -1017,10 +1017,10 @@ protected:
       return df;
    }
 
-   const BranchNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
+   const ColumnNames_t GetDefaultBranchNames(unsigned int nExpectedBranches, const std::string &actionNameForErr)
    {
       auto df = GetDataFrameChecked();
-      const BranchNames_t &defaultBranches = df->GetDefaultBranches();
+      const ColumnNames_t &defaultBranches = df->GetDefaultBranches();
       const auto dBSize = defaultBranches.size();
       if (nExpectedBranches > dBSize) {
          std::string msg("Trying to deduce the branches from the default list in order to ");
@@ -1034,7 +1034,7 @@ protected:
          throw std::runtime_error(msg);
       }
       auto bnBegin = defaultBranches.begin();
-      return BranchNames_t(bnBegin, bnBegin + nExpectedBranches);
+      return ColumnNames_t(bnBegin, bnBegin + nExpectedBranches);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1049,7 +1049,7 @@ protected:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
    TInterface<TLoopManager> SnapshotImpl(const std::string &treename, const std::string &filename,
-                                           const BranchNames_t &bnames, ROOT::Internal::TDF::TStaticSeq<S...> /*dummy*/)
+                                           const ColumnNames_t &bnames, ROOT::Internal::TDF::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();

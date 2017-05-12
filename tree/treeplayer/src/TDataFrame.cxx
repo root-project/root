@@ -502,7 +502,7 @@ thread-safety, see [here](#generic-actions).
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
    : TInterface<ROOT::Detail::TDF::TLoopManager>(
         std::make_shared<ROOT::Detail::TDF::TLoopManager>(nullptr, defaultBranches))
 {
@@ -529,7 +529,7 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
-                       const BranchNames_t &defaultBranches)
+                       const ColumnNames_t &defaultBranches)
    : TInterface<ROOT::Detail::TDF::TLoopManager>(
         std::make_shared<ROOT::Detail::TDF::TLoopManager>(nullptr, defaultBranches))
 {
@@ -547,7 +547,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
+TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
    : TInterface<ROOT::Detail::TDF::TLoopManager>(
         std::make_shared<ROOT::Detail::TDF::TLoopManager>(&tree, defaultBranches))
 {

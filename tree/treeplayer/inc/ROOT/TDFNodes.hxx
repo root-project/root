@@ -55,7 +55,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr};
-   const BranchNames_t fDefaultBranches;
+   const ColumnNames_t fDefaultBranches;
    const Long64_t fNEmptyEntries{0};
    const unsigned int fNSlots{0};
    bool fHasRunAtLeastOnce{false};
@@ -65,7 +65,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    void RunAndCheckFilters(unsigned int slot, Long64_t entry);
 
 public:
-   TLoopManager(TTree *tree, const BranchNames_t &defaultBranches);
+   TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
    TLoopManager(Long64_t nEmptyEntries);
    TLoopManager(const TLoopManager &) = delete;
    ~TLoopManager(){};
@@ -74,8 +74,8 @@ public:
    void CreateSlots(unsigned int nSlots);
    TLoopManager *GetImplPtr();
    std::shared_ptr<TLoopManager> GetSharedPtr() { return shared_from_this(); }
-   const BranchNames_t &GetDefaultBranches() const;
-   const BranchNames_t GetTmpBranches() const { return {}; };
+   const ColumnNames_t &GetDefaultBranches() const;
+   const ColumnNames_t GetTmpBranches() const { return {}; };
    TTree *GetTree() const;
    TCustomColumnBase *GetBookedBranch(const std::string &name) const;
    const std::map<std::string, TmpBranchBasePtr_t> &GetBookedBranches() const { return fBookedBranches; }
@@ -200,10 +200,10 @@ protected:
    ROOT::Detail::TDF::TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
                                                 /// graph. It is only guaranteed to contain a valid address during an
                                                 /// event loop.
-   const ROOT::Detail::TDF::BranchNames_t fTmpBranches;
+   const ROOT::Detail::TDF::ColumnNames_t fTmpBranches;
 
 public:
-   TActionBase(ROOT::Detail::TDF::TLoopManager *implPtr, const ROOT::Detail::TDF::BranchNames_t &tmpBranches);
+   TActionBase(ROOT::Detail::TDF::TLoopManager *implPtr, const ROOT::Detail::TDF::ColumnNames_t &tmpBranches);
    virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
@@ -215,12 +215,12 @@ class TAction final : public TActionBase {
    using TypeInd_t = typename TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    Helper fHelper;
-   const ROOT::Detail::TDF::BranchNames_t fBranches;
+   const ROOT::Detail::TDF::ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
    std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TAction(Helper &&h, const ROOT::Detail::TDF::BranchNames_t &bl, PrevDataFrame &pd)
+   TAction(Helper &&h, const ROOT::Detail::TDF::ColumnNames_t &bl, PrevDataFrame &pd)
       : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
    }
@@ -261,13 +261,13 @@ class TCustomColumnBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
-   BranchNames_t fTmpBranches;
+   ColumnNames_t fTmpBranches;
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const BranchNames_t &tmpBranches, const std::string &name);
+   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, const std::string &name);
    virtual ~TCustomColumnBase() {}
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
@@ -278,7 +278,7 @@ public:
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    std::string GetName() const;
-   BranchNames_t GetTmpBranches() const;
+   ColumnNames_t GetTmpBranches() const;
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
    void IncrChildrenCount() { ++fNChildren; }
    virtual void StopProcessing() = 0;
@@ -291,7 +291,7 @@ class TCustomColumn final : public TCustomColumnBase {
    using Ret_t = typename ROOT::Internal::TDF::TFunctionTraits<F>::Ret_t;
 
    F fExpression;
-   const BranchNames_t fBranches;
+   const ColumnNames_t fBranches;
    std::vector<std::unique_ptr<Ret_t>> fLastResultPtr;
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
@@ -299,7 +299,7 @@ class TCustomColumn final : public TCustomColumnBase {
    std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TCustomColumn(const std::string &name, F &&expression, const BranchNames_t &bl, PrevData &pd)
+   TCustomColumn(const std::string &name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
       : TCustomColumnBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fExpression(std::move(expression)),
         fBranches(bl), fPrevData(pd)
    {
@@ -365,7 +365,7 @@ class TFilterBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
-   const BranchNames_t fTmpBranches;
+   const ColumnNames_t fTmpBranches;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
@@ -375,14 +375,14 @@ protected:
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   TFilterBase(TLoopManager *df, const BranchNames_t &tmpBranches, const std::string &name);
+   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, const std::string &name);
    virtual ~TFilterBase() {}
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
    TLoopManager *GetImplPtr() const;
-   BranchNames_t GetTmpBranches() const;
+   ColumnNames_t GetTmpBranches() const;
    bool HasName() const;
    virtual void CreateSlots(unsigned int nSlots) = 0;
    void PrintReport() const;
@@ -396,12 +396,12 @@ class TFilter final : public TFilterBase {
    using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
-   const BranchNames_t fBranches;
+   const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
    std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TFilter(FilterF &&f, const BranchNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
+   TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
       : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fFilter(std::move(f)), fBranches(bl), fPrevData(pd)
    {
    }
@@ -470,7 +470,7 @@ class TRangeBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                              /// guaranteed to contain a valid address during an event loop.
-   BranchNames_t fTmpBranches;
+   ColumnNames_t fTmpBranches;
    unsigned int fStart;
    unsigned int fStop;
    unsigned int fStride;
@@ -481,11 +481,11 @@ protected:
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   TRangeBase(TLoopManager *implPtr, const BranchNames_t &tmpBranches, unsigned int start, unsigned int stop,
+   TRangeBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches, unsigned int start, unsigned int stop,
               unsigned int stride);
    virtual ~TRangeBase() {}
    TLoopManager *GetImplPtr() const;
-   BranchNames_t GetTmpBranches() const;
+   ColumnNames_t GetTmpBranches() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
    virtual void Report() const = 0;
    virtual void PartialReport() const = 0;
