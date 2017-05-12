@@ -360,15 +360,17 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
+#ifdef R__USE_IMT
   } else if(executionPolicy == 1) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
+#endif
 //   } else if(executionPolicy == 2){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
   }
 
    return res;
@@ -900,20 +902,21 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
       sumW+=resArray.weight;
       sumW2+=resArray.weight2;
     }
+#ifdef R__USE_IMT
   } else if(executionPolicy == 1) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
-    ROOT::TThreadExecutor pool(4);
+    ROOT::TThreadExecutor pool;
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
     logl=resArray.logvalue;
     sumW=resArray.weight;
     sumW2=resArray.weight2;
+#endif
 //   } else if(executionPolicy == 2){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
   }
-  // std::cout<<"log: "<<logl;
 
   if (extended) {
       // add Poisson extended term

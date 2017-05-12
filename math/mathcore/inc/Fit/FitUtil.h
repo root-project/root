@@ -15,8 +15,12 @@
 
 #include "Math/IParamFunctionfwd.h"
 #include "Math/IParamFunction.h"
+
+#ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
-#include "ROOT/TProcessExecutor.hxx"
+#endif
+
+// #include "ROOT/TProcessExecutor.hxx"
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
@@ -407,15 +411,17 @@ namespace FitUtil {
             for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
                res += mapFunction(i);
             }
+#ifdef R__USE_IMT
          } else if (executionPolicy == 1) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+#endif
             // } else if(executionPolicy == 2){
             //   ROOT::TProcessExecutor pool;
             //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
-            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n");
+            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
          nPoints = n;
 
@@ -520,9 +526,10 @@ namespace FitUtil {
                sumW_v += resArray.weight;
                sumW2_v += resArray.weight2;
             }
+#ifdef R__USE_IMT
          } else if (executionPolicy == 1) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
-            ROOT::TThreadExecutor pool(4);
+            ROOT::TThreadExecutor pool;
             auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
             logl_v = resArray.logvalue;
             sumW_v = resArray.weight;
@@ -530,8 +537,9 @@ namespace FitUtil {
         //  } else if (executionPolicy == 2) {
             // ROOT::TProcessExecutor pool;
             // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
+#endif
          } else {
-            Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread\n 2: MultiProcess");
+            Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
 
          //reduce vector type to double.
