@@ -291,7 +291,8 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-      timing_outfile << timer.timing_s() << getpid() << getppid() << "SimMaster";
+      // set ppid to -1, to signify that this is not a slave process
+      timing_outfile << timer.timing_s() << getpid() << -1 << "SimMaster";
     }
 
     return ret ;
@@ -307,8 +308,8 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 3) {
       timings.reserve(_nCPU);
       timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json");
-      std::string names[4] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid", "ppid"};
-      timing_outfile.set_member_names(names, names + 4);
+      std::string names[3] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid"};
+      timing_outfile.set_member_names(names, names + 3);
     }
 
     // Start calculations in parallel
@@ -334,7 +335,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 3) {
       for (Int_t i = 0; i < _nCPU; ++i) {
-        timing_outfile << timings[i] << i << getpid() << getppid();
+        timing_outfile << timings[i] << i << getpid();
       }
     }
 
@@ -343,7 +344,8 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-      timing_outfile << timer.timing_s() << getpid() << getppid() << "MPMaster";
+      // set ppid to -1, to signify that this is not a slave process
+      timing_outfile << timer.timing_s() << getpid() << -1 << "MPMaster";
     }
 
     if (RooTrace::time_numInts() == kTRUE) {
@@ -403,7 +405,14 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 2) {
       timer.stop();
-      timing_outfile << timer.timing_s() << getpid() << getppid() << "other";
+      int ppid;
+      if (Slave == _gofOpMode) {
+        ppid = getppid();
+      } else {
+        // set ppid to -1, to signify that this is not a slave process
+        ppid = -1;
+      }
+      timing_outfile << timer.timing_s() << getpid() << ppid << "other";
     }
 
     return ret ;

@@ -318,15 +318,6 @@ void RooRealMPFE::serverLoop() {
     timing_outfile.set_member_names(names, names + 3);
   }
 
-  if (RooTrace::timing_flag == 8) {
-    stringstream filename_ss;
-    filename_ss << "timing_RRMPFE_serverloop_p" << getpid() << ".json";
-    timing_outfile.open(filename_ss.str().c_str());
-    std::string names[3] = {"RRMPFE_serverloop_wall_s", "pid", "ppid"};
-    timing_outfile.set_member_names(names, names + 3);
-    timer.start();
-  }
-
   int msg;
 
   Int_t idx, index, numErrors;
@@ -639,12 +630,6 @@ void RooRealMPFE::serverLoop() {
       break;
     }
 
-  }
-
-  // end timing
-  if (RooTrace::timing_flag == 8) {
-    timer.stop();
-    timing_outfile << timer.timing_s() << getpid() << getppid();
   }
 
 #endif // _WIN32
