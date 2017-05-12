@@ -177,6 +177,7 @@ option(gminimal "Do not automatically search for support libraries, but include 
 option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
+option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols visible in libCling." OFF)
 
 #--- Minor chnages in defaults due to platform--------------------------------------------------
 if(WIN32)
