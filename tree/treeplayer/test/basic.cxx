@@ -271,6 +271,15 @@ TEST(TTreeReaderBasic, EntryList) {
       ++count;
    }
    EXPECT_EQ(9, count);
+
+   aReader.Restart();
+   EXPECT_EQ(TTreeReader::kEntryValid, aReader.SetEntriesRange(0, 2));
+
+   EXPECT_TRUE(aReader.Next());
+   EXPECT_EQ(0, aReader.GetCurrentEntry());
+   EXPECT_EQ(TTreeReader::kEntryValid, aReader.GetEntryStatus());
+
+   EXPECT_EQ(9, aReader.GetEntries(false));
 }
 
 TEST(TTreeReaderBasic, EntryListBeyondEnd) {
