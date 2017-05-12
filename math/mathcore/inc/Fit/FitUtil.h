@@ -481,12 +481,24 @@ namespace FitUtil {
          auto mapFunction = [ &, p](const unsigned i) {
             T W{};
             T W2{};
-            const auto x = vecCore::FromPtr<T>(data.GetCoordComponent(i * vecSize, 0));
+            const auto x1 = vecCore::FromPtr<T>(data.GetCoordComponent(i * vecSize, 0));
+
+            const T * x = nullptr;
+            if(data.NDim() > 1) {
+                std::vector<T> xc;
+                xc.resize(data.NDim());
+                xc[0] = x1;
+                for (unsigned int j = 1; j < data.NDim(); ++j)
+                    vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                    x = xc.data();
+            } else {
+                    x = &x1;
+            }
 
 #ifdef USE_PARAMCACHE
-            auto fval = func(&x);
+            auto fval = func(x);
 #else
-            auto fval = func(&x, p);
+            auto fval = func(x, p);
 #endif
             if (normalizeFunc) fval = fval * (1 / norm);
 

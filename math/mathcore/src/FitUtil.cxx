@@ -858,7 +858,19 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
     auto mapFunction = [&](const unsigned i){
       double W = 0;
       double W2 = 0;
-      const auto x = data.GetCoordComponent(i, 0);
+      const auto x1 = data.GetCoordComponent(i, 0);
+
+      const double * x = nullptr;
+     if(data.NDim() > 1) {
+         std::vector<double> xc;
+         xc.resize(data.NDim());
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < data.NDim(); ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+            x = xc.data();
+      } else {
+            x = x1;
+      }
 
 #ifdef USE_PARAMCACHE
        double fval = func ( x );
