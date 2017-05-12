@@ -1729,9 +1729,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
 
                   if (sep[k][i] < 0 || sig[k][i] < 0) {
                      // cannot compute separation/significance -> no MVA (usually for Cuts)
-                     Log() << kINFO
-                           << Form("%-13s %-15s: %#1.3f", itrMap->first.Data(), (const char *)mname[k][i],
-                                   effArea[k][i])
+                     Log() << kINFO << Form("%-13s %-15s: %#1.3f", itrMap->first.Data(), (const char *)mname[k][i],
+                                            effArea[k][i])
                            << Endl;
 
                      //               Log() << kDEBUG << Form("%-20s %-15s: %#1.3f(%02i)  %#1.3f(%02i)  %#1.3f(%02i)
@@ -1779,10 +1778,9 @@ void TMVA::Factory::EvaluateAllMethods( void )
                   MethodBase *theMethod = dynamic_cast<MethodBase *>((*methods)[i]);
                   if (theMethod == 0) continue;
 
-                  Log() << kINFO
-                        << Form("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
-                                theMethod->fDataSetInfo.GetName(), (const char *)mname[k][i], eff01[k][i],
-                                trainEff01[k][i], eff10[k][i], trainEff10[k][i], eff30[k][i], trainEff30[k][i])
+                  Log() << kINFO << Form("%-20s %-15s: %#1.3f (%#1.3f)       %#1.3f (%#1.3f)      %#1.3f (%#1.3f)",
+                                         theMethod->fDataSetInfo.GetName(), (const char *)mname[k][i], eff01[k][i],
+                                         trainEff01[k][i], eff10[k][i], trainEff10[k][i], eff30[k][i], trainEff30[k][i])
                         << Endl;
                }
             }
