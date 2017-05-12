@@ -198,8 +198,8 @@ using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 class TActionBase {
 protected:
    ROOT::Detail::TDF::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional
-                                           /// graph. It is only guaranteed to contain a valid address during an event
-                                           /// loop.
+                                                /// graph. It is only guaranteed to contain a valid address during an
+                                                /// event loop.
    const ROOT::Detail::TDF::BranchNames_t fTmpBranches;
 
 public:
@@ -232,7 +232,7 @@ public:
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    TypeInd_t());
+                                         TypeInd_t());
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -402,8 +402,7 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const BranchNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
-      : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fFilter(std::move(f)), fBranches(bl),
-        fPrevData(pd)
+      : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fFilter(std::move(f)), fBranches(bl), fPrevData(pd)
    {
    }
 
@@ -483,7 +482,7 @@ protected:
 
 public:
    TRangeBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, unsigned int start, unsigned int stop,
-                       unsigned int stride);
+              unsigned int stride);
    virtual ~TRangeBase() {}
    TDataFrameImpl *GetImplPtr() const;
    BranchNames_t GetTmpBranches() const;

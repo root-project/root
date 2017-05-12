@@ -561,7 +561,6 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined temporary branches.
 TDataFrame::TDataFrame(Long64_t numEntries)
-   : TInterface<ROOT::Detail::TDF::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDF::TDataFrameImpl>(numEntries))
+   : TInterface<ROOT::Detail::TDF::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDF::TDataFrameImpl>(numEntries))
 {
 }

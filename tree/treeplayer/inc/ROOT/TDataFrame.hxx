@@ -48,9 +48,8 @@ public:
    /// booking of actions or transformations.
    /// See TInterface for the documentation of the
    /// methods available.
-   template <
-      typename FILENAMESCOLL,
-      typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   template <typename FILENAMESCOLL,
+             typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
               const BranchNames_t &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});

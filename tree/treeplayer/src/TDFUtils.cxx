@@ -147,7 +147,9 @@ const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, cons
          useDefBl = true;
       } else {
          auto msg = "mismatch between number of filter/define arguments (" + std::to_string(nArgs) +
-                    ") and number of columns specified (" + std::to_string(bl.size() ? bl.size() : defBl.size()) + "). Please check the number of arguments of the function/lambda/functor and the number of branches specified.";
+                    ") and number of columns specified (" + std::to_string(bl.size() ? bl.size() : defBl.size()) +
+                    "). Please check the number of arguments of the function/lambda/functor and the number of branches "
+                    "specified.";
          throw std::runtime_error(msg);
       }
    }
