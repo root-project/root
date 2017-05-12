@@ -309,7 +309,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       else {
          // calculate integral normalized by bin volume
          // need to set function and parameters here in case loop is parallelized
-         fval = igEval( x1, data.BinUpEdge(i)) ;
+         fval = igEval( x, data.BinUpEdge(i)) ;
       }
       // normalize result if requested according to bin volume
       if (useBinVolume) fval *= binVolume;
