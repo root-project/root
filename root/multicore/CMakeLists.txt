@@ -24,6 +24,14 @@ ROOTTEST_ADD_TEST(testSetAddressLoop
 ROOTTEST_ADD_TEST(checkTThreadedObjectCopies
                   MACRO checkTThreadedObjectCopies.C)
 
+
+ROOTTEST_GENERATE_EXECUTABLE(processExecutorH1Test tProcessExecutorH1Test.cpp COMPILE_FLAGS -I${ROOTSYS}/tutorials/multicore LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist Gpad Graf)
+
+ROOTTEST_ADD_TEST(processExecutorH1Test
+                  EXEC processExecutorH1Test
+                  OUTREF tProcessExecutorH1Test.ref
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(processExecutorTreeTest tProcessExecutorTreeTest.cpp LIBRARIES MultiProc Core Net TreePlayer Tree RIO Hist)
 
 ROOTTEST_ADD_TEST(processExecutorTreeTest
