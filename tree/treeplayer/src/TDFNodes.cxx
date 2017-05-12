@@ -40,8 +40,7 @@ TActionBase::TActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr, const Branc
 } // end NS Internal
 } // end NS ROOT
 
-TCustomColumnBase::TCustomColumnBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                           const std::string &name)
+TCustomColumnBase::TCustomColumnBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
 BranchNames_t TCustomColumnBase::GetTmpBranches() const
@@ -59,8 +58,7 @@ TDataFrameImpl *TCustomColumnBase::GetImplPtr() const
    return fImplPtr;
 }
 
-TFilterBase::TFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                           const std::string &name)
+TFilterBase::TFilterBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, const std::string &name)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fName(name){};
 
 TDataFrameImpl *TFilterBase::GetImplPtr() const
@@ -150,7 +148,7 @@ void TDataFrameImpl::Run()
 
       if (fNEmptyEntries > 0) {
          // Working with an empty tree.
-         // Evenly partition the entries according to fNSlots 
+         // Evenly partition the entries according to fNSlots
          const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
          auto remainder = fNEmptyEntries % fNSlots;
          std::vector<std::pair<Long64_t, Long64_t>> entryRanges;
@@ -173,7 +171,7 @@ void TDataFrameImpl::Run()
                RunAndCheckFilters(slot, currEntry);
             }
             slotStack.Push(slot);
-          };
+         };
 
          ROOT::TThreadExecutor pool;
          pool.Foreach(genFunction, entryRanges);
@@ -329,8 +327,8 @@ void TDataFrameImpl::Report() const
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
 }
 
-TRangeBase::TRangeBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches,
-                                         unsigned int start, unsigned int stop, unsigned int stride)
+TRangeBase::TRangeBase(TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches, unsigned int start, unsigned int stop,
+                       unsigned int stride)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches), fStart(start), fStop(stop), fStride(stride)
 {
 }
