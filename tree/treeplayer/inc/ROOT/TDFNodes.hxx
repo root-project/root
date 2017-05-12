@@ -25,14 +25,16 @@
 namespace ROOT {
 
 namespace Internal {
-class TDataFrameActionBase;
+namespace TDF {
+class TActionBase;
+}
 }
 
 namespace Detail {
 namespace TDF {
 
 // forward declarations for TDataFrameImpl
-using ActionBasePtr_t = std::shared_ptr<ROOT::Internal::TDataFrameActionBase>;
+using ActionBasePtr_t = std::shared_ptr<ROOT::Internal::TDF::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
@@ -98,6 +100,7 @@ public:
 } // end ns Detail
 
 namespace Internal {
+namespace TDF {
 
 /**
 \class ROOT::Experimental::TDataFrameValue
@@ -125,7 +128,7 @@ class TDataFrameValue {
    // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
    // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
-                                                  TDFTraitsUtils::ExtractType_t<T>>::type;
+                                                  ExtractType_t<T>>::type;
    std::unique_ptr<TTreeReaderValue<T>> fReaderValue{nullptr}; //< Owning ptr to a TTreeReaderValue. Used for
                                                                /// non-temporary columns and T != std::array_view<U>
    std::unique_ptr<TTreeReaderArray<ProxyParam_t>> fReaderArray{nullptr}; //< Owning ptr to a TTreeReaderArray. Used for
@@ -185,14 +188,14 @@ struct TTDFValueTuple {
 };
 
 template <typename... BranchTypes>
-struct TTDFValueTuple<ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>> {
-   using type = std::tuple<ROOT::Internal::TDataFrameValue<BranchTypes>...>;
+struct TTDFValueTuple<TTypeList<BranchTypes...>> {
+   using type = std::tuple<TDataFrameValue<BranchTypes>...>;
 };
 
 template <typename BranchType>
 using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
-class TDataFrameActionBase {
+class TActionBase {
 protected:
    ROOT::Detail::TDF::TDataFrameImpl *fImplPtr; ///< A raw pointer to the TDataFrameImpl at the root of this functional
                                            /// graph. It is only guaranteed to contain a valid address during an event
@@ -200,36 +203,35 @@ protected:
    const ROOT::Detail::TDF::BranchNames_t fTmpBranches;
 
 public:
-   TDataFrameActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr,
-                        const ROOT::Detail::TDF::BranchNames_t &tmpBranches);
-   virtual ~TDataFrameActionBase() {}
+   TActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr, const ROOT::Detail::TDF::BranchNames_t &tmpBranches);
+   virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
-class TDataFrameAction final : public TDataFrameActionBase {
-   using TypeInd_t = typename TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+class TAction final : public TActionBase {
+   using TypeInd_t = typename TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    Helper fHelper;
    const ROOT::Detail::TDF::BranchNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<ROOT::Internal::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TDataFrameAction(Helper &&h, const ROOT::Detail::TDF::BranchNames_t &bl, PrevDataFrame &pd)
-      : TDataFrameActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
+   TAction(Helper &&h, const ROOT::Detail::TDF::BranchNames_t &bl, PrevDataFrame &pd)
+      : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
    }
 
-   TDataFrameAction(const TDataFrameAction &) = delete;
+   TAction(const TAction &) = delete;
 
    void CreateSlots(unsigned int nSlots) final { fValues.resize(nSlots); }
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                     TypeInd_t());
    }
 
@@ -240,15 +242,16 @@ public:
    }
 
    template <int... S>
-   void Exec(unsigned int slot, Long64_t entry, TDFTraitsUtils::TStaticSeq<S...>)
+   void Exec(unsigned int slot, Long64_t entry, TStaticSeq<S...>)
    {
       (void)entry; // avoid bogus 'unused parameter' warning in gcc4.9
       fHelper.Exec(slot, std::get<S>(fValues[slot]).Get(entry)...);
    }
 
-   ~TDataFrameAction() { fHelper.Finalize(); }
+   ~TAction() { fHelper.Finalize(); }
 };
 
+} // end NS TDF
 } // end NS Internal
 
 namespace Detail {
@@ -283,9 +286,9 @@ public:
 
 template <typename F, typename PrevData>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Args_t;
-   using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
+   using BranchTypes_t = typename ROOT::Internal::TDF::TFunctionTraits<F>::Args_t;
+   using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using Ret_t = typename ROOT::Internal::TDF::TFunctionTraits<F>::Ret_t;
 
    F fExpression;
    const BranchNames_t fBranches;
@@ -293,7 +296,7 @@ class TCustomColumn final : public TCustomColumnBase {
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
-   std::vector<ROOT::Internal::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
    TCustomColumn(const std::string &name, F &&expression, const BranchNames_t &bl, PrevData &pd)
@@ -307,8 +310,8 @@ public:
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    TypeInd_t());
+      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+                                         TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(fLastResultPtr[slot].get()); }
@@ -339,8 +342,8 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>,
-                     ROOT::Internal::TDFTraitsUtils::TTypeList<BranchTypes...>)
+   void UpdateHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDF::TStaticSeq<S...>,
+                     ROOT::Internal::TDF::TTypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
    }
@@ -389,13 +392,13 @@ public:
 
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
-   using BranchTypes_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<FilterF>::Args_t;
-   using TypeInd_t = typename ROOT::Internal::TDFTraitsUtils::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using BranchTypes_t = typename ROOT::Internal::TDF::TFunctionTraits<FilterF>::Args_t;
+   using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
    const BranchNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<ROOT::Internal::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
    TFilter(FilterF &&f, const BranchNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
@@ -437,15 +440,15 @@ public:
    }
 
    template <int... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDF::TStaticSeq<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                    TypeInd_t());
+      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+                                         TypeInd_t());
    }
 
    // recursive chain of `Report`s
@@ -544,8 +547,8 @@ public:
 
 // method implementations
 template <typename T>
-void ROOT::Internal::TDataFrameValue<T>::SetTmpColumn(unsigned int slot,
-                                                      ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
+void ROOT::Internal::TDF::TDataFrameValue<T>::SetTmpColumn(unsigned int slot,
+                                                           ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
 {
    Reset();
    fTmpColumn = tmpColumn;
@@ -561,9 +564,10 @@ void ROOT::Internal::TDataFrameValue<T>::SetTmpColumn(unsigned int slot,
 // (have both branches inside functions and have a pointer to
 // the branch to be executed)
 template <typename T>
-template <typename U, typename std::enable_if<
-                         std::is_same<typename ROOT::Internal::TDataFrameValue<U>::ProxyParam_t, U>::value, int>::type>
-T &ROOT::Internal::TDataFrameValue<T>::Get(Long64_t entry)
+template <typename U,
+          typename std::enable_if<
+             std::is_same<typename ROOT::Internal::TDF::TDataFrameValue<U>::ProxyParam_t, U>::value, int>::type>
+T &ROOT::Internal::TDF::TDataFrameValue<T>::Get(Long64_t entry)
 {
    if (fReaderValue) {
       return *(fReaderValue->Get());

@@ -61,7 +61,7 @@ If iteration is not supported by the type of the proxied object, a compilation e
 template <typename T>
 class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = ROOT::Internal::TDFTraitsUtils::TIsContainer<V>::fgValue>
+   template <typename V, bool isCont = ROOT::Internal::TDF::TIsContainer<V>::fgValue>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
