@@ -358,19 +358,31 @@ namespace FitUtil {
 
          auto mapFunction = [&](unsigned int i) {
             // in case of no error in y invError=1 is returned
-            T x, y, invErrorVec;
-            vecCore::Load<T>(x, data.GetCoordComponent(i * vecSize, 0));
+            T x1, y, invErrorVec;
+            vecCore::Load<T>(x1, data.GetCoordComponent(i * vecSize, 0));
             vecCore::Load<T>(y, data.ValuePtr(i * vecSize));
             const auto invError = data.ErrorPtr(i * vecSize);
             auto invErrorptr = (invError != nullptr) ? invError : &ones.front();
             vecCore::Load<T>(invErrorVec, invErrorptr);
 
+            const T * x = nullptr;
+            if(data.NDim() > 1) {
+                std::vector<T> xc;
+                xc.resize(data.NDim());
+                xc[0] = x1;
+                for (unsigned int j = 1; j < data.NDim(); ++j)
+                    vecCore::Load<T>(xc[j], data.GetCoordComponent(i * vecSize, j));
+                    x = xc.data();
+            } else {
+                    x = &x1;
+            }
+
             T fval{};
 
 #ifdef USE_PARAMCACHE
-            fval = func(&x);
+            fval = func(x);
 #else
-            fval = func(&x, p);
+            fval = func(x, p);
 #endif
             nPoints++;
 

@@ -273,21 +273,31 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
 
       invError = (invError!= 0.0) ? 1.0/invError :1;
 
+      const double * x = nullptr;
       std::vector<double> xc;
       double binVolume = 1.0;
-        if (useBinVolume) {
+      if (useBinVolume) {
          unsigned int ndim = data.NDim();
          const double * x2 = data.BinUpEdge(i);
          xc.resize(data.NDim());
          for (unsigned int j = 0; j < ndim; ++j) {
-            binVolume *= std::abs(x2[j]-x1[j]);
-            xc[j] = 0.5*(x2[j]+ x1[j]);
+            auto xx = *data.GetCoordComponent(i, j);
+            binVolume *= std::abs(x2[j]- xx);
+            xc[j] = 0.5*(x2[j]+ xx);
+            x = xc.data();
          }
          // normalize the bin volume using a reference value
          binVolume *= wrefVolume;
+      } else if(data.NDim() > 1) {
+         xc.resize(data.NDim());
+         xc[0] = *x1;
+         for (unsigned int j = 1; j < data.NDim(); ++j)
+            xc[j] = *data.GetCoordComponent(i, j);
+            x = xc.data();
+      } else {
+            x = x1;
       }
 
-      const double * x = (useBinVolume) ? &xc.front() : x1;
 
       if (!useBinIntegral) {
 #ifdef USE_PARAMCACHE
