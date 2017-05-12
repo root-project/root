@@ -92,8 +92,8 @@ TTreeProcessorMP::TTreeProcessorMP(unsigned nWorkers) : TMPClient(nWorkers)
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: memory resident tree
-TList* TTreeProcessorMP::Process(TTree& tree, TSelector& selector, TEntryList *entries,
-                                 ULong64_t nToProcess, ULong64_t firstEntry)
+TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList *entries, ULong64_t nToProcess,
+                                 ULong64_t firstEntry)
 {
    //prepare environment
    Reset();
@@ -101,7 +101,7 @@ TList* TTreeProcessorMP::Process(TTree& tree, TSelector& selector, TEntryList *e
    selector.Begin(nullptr);
 
    //fork
-   TMPWorkerTreeSel worker(selector, &tree, entries, nWorkers, nToProcess/nWorkers, firstEntry);
+   TMPWorkerTreeSel worker(selector, &tree, entries, nWorkers, nToProcess / nWorkers, firstEntry);
    bool ok = Fork(worker);
    if(!ok) {
       Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation");
@@ -146,9 +146,8 @@ TList* TTreeProcessorMP::Process(TTree& tree, TSelector& selector, TEntryList *e
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a vector of files
-TList* TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, TSelector& selector,
-                                 TEntryList *entries, const std::string& treeName,
-                                 ULong64_t nToProcess, ULong64_t firstEntry)
+TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSelector &selector, TEntryList *entries,
+                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
 {
 
    //prepare environment
@@ -229,9 +228,8 @@ TList* TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, TSel
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TFileCollection
-TList* TTreeProcessorMP::Process(TFileCollection& files, TSelector& selector,
-                                 TEntryList *entries, const std::string& treeName,
-                                 ULong64_t nToProcess, ULong64_t firstEntry)
+TList *TTreeProcessorMP::Process(TFileCollection &files, TSelector &selector, TEntryList *entries,
+                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
 {
    std::vector<std::string> fileNames(files.GetNFiles());
    unsigned count = 0;
@@ -244,8 +242,7 @@ TList* TTreeProcessorMP::Process(TFileCollection& files, TSelector& selector,
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a TChain
-TList* TTreeProcessorMP::Process(TChain& files, TSelector& selector,
-                                 TEntryList *entries, const std::string& treeName,
+TList *TTreeProcessorMP::Process(TChain &files, TSelector &selector, TEntryList *entries, const std::string &treeName,
                                  ULong64_t nToProcess, ULong64_t firstEntry)
 {
    TObjArray* filelist = files.GetListOfFiles();
@@ -259,50 +256,45 @@ TList* TTreeProcessorMP::Process(TChain& files, TSelector& selector,
 
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a single file
-TList* TTreeProcessorMP::Process(const std::string& fileName, TSelector& selector,
-                                 TEntryList *entries, const std::string& treeName,
-                                 ULong64_t nToProcess, ULong64_t firstEntry)
+TList *TTreeProcessorMP::Process(const std::string &fileName, TSelector &selector, TEntryList *entries,
+                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
 {
    std::vector<std::string> singleFileName(1, fileName);
    return Process(singleFileName, selector, entries, treeName, nToProcess, firstEntry);
 }
 
-
 ///
 /// No TEntryList versions of selector processor
 ///
 
-TList *TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, TSelector& selector,
-                                 const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
+TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSelector &selector,
+                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t jFirst)
 {
    return Process(fileNames, selector, nullptr, treeName, nToProcess, jFirst);
 }
 
-TList *TTreeProcessorMP::Process(const std::string& fileName, TSelector& selector,
-                                 const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
+TList *TTreeProcessorMP::Process(const std::string &fileName, TSelector &selector, const std::string &treeName,
+                                 ULong64_t nToProcess, ULong64_t jFirst)
 {
    return Process(fileName, selector, nullptr, treeName, nToProcess, jFirst);
 }
 
-TList *TTreeProcessorMP::Process(TFileCollection& files, TSelector& selector,
-                                 const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-{
-   return Process(files, selector, nullptr, treeName, nToProcess, jFirst);
-}
-
-TList *TTreeProcessorMP::Process(TChain& files, TSelector& selector,
-                                 const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
-{
-   return Process(files, selector, nullptr, treeName, nToProcess, jFirst);
-}
-
-TList *TTreeProcessorMP::Process(TTree& tree, TSelector& selector,
+TList *TTreeProcessorMP::Process(TFileCollection &files, TSelector &selector, const std::string &treeName,
                                  ULong64_t nToProcess, ULong64_t jFirst)
+{
+   return Process(files, selector, nullptr, treeName, nToProcess, jFirst);
+}
+
+TList *TTreeProcessorMP::Process(TChain &files, TSelector &selector, const std::string &treeName, ULong64_t nToProcess,
+                                 ULong64_t jFirst)
+{
+   return Process(files, selector, nullptr, treeName, nToProcess, jFirst);
+}
+
+TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, ULong64_t nToProcess, ULong64_t jFirst)
 {
    return Process(tree, selector, nullptr, nToProcess, jFirst);
 }
-
-
 
 /// Fix list of lists before merging (to avoid errors about duplicated objects)
 void TTreeProcessorMP::FixLists(std::vector<TObject*> &lists) {

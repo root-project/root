@@ -44,32 +44,25 @@
 /// must be done once _before_ forking, while the initialization of the
 /// members must be done _after_ forking by each of the children processes.
 TMPWorkerTree::TMPWorkerTree()
-              : TMPWorker(), fFileNames(), fTreeName(), fTree(nullptr),
-                fFile(nullptr), fEntryList(nullptr), fFirstEntry(0),
-                fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-                fUseTreeCache(kTRUE), fCacheSize(-1)
+   : TMPWorker(), fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr), fEntryList(nullptr), fFirstEntry(0),
+     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
 {
    Setup();
 }
 
-TMPWorkerTree::TMPWorkerTree(const std::vector<std::string>& fileNames, TEntryList *entries,
-                             const std::string& treeName,
-                             unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
-              : TMPWorker(nWorkers, maxEntries),
-                fFileNames(fileNames), fTreeName(treeName), fTree(nullptr),
-                fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
-                fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-                fUseTreeCache(kTRUE), fCacheSize(-1)
+TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries,
+                             const std::string &treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
+   : TMPWorker(nWorkers, maxEntries), fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
+     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE),
+     fCacheSize(-1)
 {
    Setup();
 }
 
-TMPWorkerTree::TMPWorkerTree(TTree *tree, TEntryList *entries, unsigned nWorkers,
-                             ULong64_t maxEntries, ULong64_t firstEntry)
-              : TMPWorker(nWorkers, maxEntries), fTree(tree),
-                fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
-                fTreeCache(0), fTreeCacheIsLearning(kFALSE),
-                fUseTreeCache(kTRUE), fCacheSize(-1)
+TMPWorkerTree::TMPWorkerTree(TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries,
+                             ULong64_t firstEntry)
+   : TMPWorker(nWorkers, maxEntries), fTree(tree), fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
+     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
 {
    Setup();
 }
@@ -256,19 +249,19 @@ void TMPWorkerTreeSel::Process(unsigned int code, MPCodeBufPair& msg)
       return;
    }
 
-   if(fCallBegin){
-     fSelector.SlaveBegin(nullptr);
-     fCallBegin = false;
+   if (fCallBegin) {
+      fSelector.SlaveBegin(nullptr);
+      fCallBegin = false;
    }
 
    fSelector.Init(fTree);
    fSelector.Notify();
-   for(Long64_t entry = start; entry<finish; ++entry) {
+   for (Long64_t entry = start; entry < finish; ++entry) {
       Long64_t e = (enl) ? enl->GetEntry(entry) : entry;
       fSelector.Process(e);
    }
 
-   //update the number of processed entries
+   // update the number of processed entries
    fProcessedEntries += finish - start;
 
    MPSend(GetSocket(), MPCode::kIdling);
@@ -276,14 +269,12 @@ void TMPWorkerTreeSel::Process(unsigned int code, MPCodeBufPair& msg)
    return;
 }
 
-
 /// Load the requierd tree and evaluate the processing range
 
-Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
-                              Long64_t &start, Long64_t &finish,
+Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish,
                               TEntryList **enl, std::string &errmsg)
 {
-   //evaluate the index of the file to process in fFileNames
+   // evaluate the index of the file to process in fFileNames
    //(we actually don't need the parameter if code == kProcTree)
 
    start = 0;
@@ -299,7 +290,7 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
    TTree *tree = 0;
    if (code ==  MPCode::kProcTree) {
 
-      mgroot +=  "MPCode::kProcTree: ";
+      mgroot += "MPCode::kProcTree: ";
 
       // The tree must be defined at this level
       if(fTree == nullptr) {
@@ -316,8 +307,8 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
       unsigned nEntries = fTree->GetEntries();
       unsigned nBunch = nEntries / fNWorkers;
       unsigned rangeN = nProcessed % fNWorkers;
-      start = rangeN*nBunch;
-      if(rangeN < (fNWorkers-1)) {
+      start = rangeN * nBunch;
+      if (rangeN < (fNWorkers - 1)) {
          finish = (rangeN+1)*nBunch;
       } else {
          finish = nEntries;
@@ -330,16 +321,15 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
          // We need to reopen the file locally (TODO: to understand and fix this)
          if ((fFile = TFile::Open(fTree->GetCurrentFile()->GetName())) && !fFile->IsZombie()) {
             if (!(tree = (TTree *) fFile->Get(fTree->GetName()))) {
-               errmsg = mgroot + std::string("unable to retrieve tree from open file ")
-                               + std::string(fTree->GetCurrentFile()->GetName());
+               errmsg = mgroot + std::string("unable to retrieve tree from open file ") +
+                        std::string(fTree->GetCurrentFile()->GetName());
                delete fFile;
                return -1;
             }
             fTree = tree;
          } else {
             //errors are handled inside OpenFile
-            errmsg = mgroot + std::string("unable to open file ")
-                            + std::string(fTree->GetCurrentFile()->GetName());
+            errmsg = mgroot + std::string("unable to open file ") + std::string(fTree->GetCurrentFile()->GetName());
             if (fFile && fFile->IsZombie()) delete fFile;
             return -1;
          }
@@ -348,13 +338,13 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
    } else {
 
       if (code == MPCode::kProcRange) {
-         mgroot +=  "MPCode::kProcRange: ";
+         mgroot += "MPCode::kProcRange: ";
          //retrieve the total number of entries ranges processed so far by TPool
          nProcessed = ReadBuffer<unsigned>(msg.second.get());
          //evaluate the file and the entries range to process
          fileN = nProcessed / fNWorkers;
       } else if (code == MPCode::kProcFile) {
-         mgroot +=  "MPCode::kProcFile: ";
+         mgroot += "MPCode::kProcFile: ";
          //evaluate the file and the entries range to process
          fileN = ReadBuffer<unsigned>(msg.second.get());
       } else {
@@ -393,7 +383,7 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
          unsigned nBunch = nEntries / fNWorkers;
          if(nEntries % fNWorkers) nBunch++;
          unsigned rangeN = nProcessed % fNWorkers;
-         start = rangeN*nBunch;
+         start = rangeN * nBunch;
          if(rangeN < (fNWorkers-1))
             finish = (rangeN+1)*nBunch;
          else
@@ -407,21 +397,20 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
    // Setup the cache, if required
    if (setupcache) SetupTreeCache(fTree);
 
-
    // Get the entrylist, if required
    if (fEntryList && enl) {
       if ((*enl = fEntryList->GetEntryList(fTree->GetName(), TUrl(fFile->GetName()).GetFile()))) {
-         //create entries range
+         // create entries range
          if (code == MPCode::kProcRange) {
-            //example: for 21 entries, 4 workers we want ranges 0-5, 5-10, 10-15, 15-21
-            //and this worker must take the rangeN-th range
+            // example: for 21 entries, 4 workers we want ranges 0-5, 5-10, 10-15, 15-21
+            // and this worker must take the rangeN-th range
             unsigned nEntries = (*enl)->GetN();
             unsigned nBunch = nEntries / fNWorkers;
-            if(nEntries % fNWorkers) nBunch++;
+            if (nEntries % fNWorkers) nBunch++;
             unsigned rangeN = nProcessed % fNWorkers;
-            start = rangeN*nBunch;
-            if(rangeN < (fNWorkers-1))
-               finish = (rangeN+1)*nBunch;
+            start = rangeN * nBunch;
+            if (rangeN < (fNWorkers - 1))
+               finish = (rangeN + 1) * nBunch;
             else
                finish = nEntries;
          } else {
@@ -440,8 +429,8 @@ Int_t TMPWorkerTree::LoadTree(unsigned int code, MPCodeBufPair& msg,
          finish = start + fMaxNEntries - fProcessedEntries;
 
    if (gDebug > 0 && fFile)
-      Info("LoadTree", "%s %d %d file: %s %lld %lld", mgroot.c_str(), nProcessed, fileN, fFile->GetName(), start, finish);
-
+      Info("LoadTree", "%s %d %d file: %s %lld %lld", mgroot.c_str(), nProcessed, fileN, fFile->GetName(), start,
+           finish);
 
    return 0;
 }

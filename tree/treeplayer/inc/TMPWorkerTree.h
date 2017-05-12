@@ -35,8 +35,8 @@ class TMPWorkerTree : public TMPWorker {
    /// \endcond
 public:
    TMPWorkerTree();
-   TMPWorkerTree(const std::vector<std::string>& fileNames, TEntryList *entries,
-                 const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
+   TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
+                 unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
    TMPWorkerTree(TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
    virtual ~TMPWorkerTree();
 
@@ -50,15 +50,14 @@ protected:
    ULong64_t    EvalMaxEntries(ULong64_t maxEntries);
    void         HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a MP client
    void         Init(int fd, unsigned workerN);
-   Int_t        LoadTree(unsigned int code, MPCodeBufPair& msg,
-                         Long64_t &start, Long64_t &finish, TEntryList **enl, std::string &errmsg);
+   Int_t LoadTree(unsigned int code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
+                  std::string &errmsg);
    TFile       *OpenFile(const std::string& fileName);
    virtual void Process(unsigned, MPCodeBufPair&) { }
    TTree       *RetrieveTree(TFile *fp);
    virtual void SendResult() { }
    void         Setup();
    void         SetupTreeCache(TTree *tree);
-
 
    std::vector<std::string> fFileNames; ///< the files to be processed by all workers
    std::string fTreeName;               ///< the name of the tree to be processed
@@ -79,14 +78,18 @@ private:
 template<class F>
 class TMPWorkerTreeFunc : public TMPWorkerTree {
 public:
-   TMPWorkerTreeFunc(F procFunc, const std::vector<std::string>& fileNames, TEntryList *entries,
-                                 const std::string& treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
-                  : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry),
-                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false) {}
-   TMPWorkerTreeFunc(F procFunc, TTree *tree, TEntryList *entries,
-                     unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
-                  : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry),
-                    fProcFunc(procFunc), fReducedResult(), fCanReduce(false) {}
+   TMPWorkerTreeFunc(F procFunc, const std::vector<std::string> &fileNames, TEntryList *entries,
+                     const std::string &treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
+      : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry), fProcFunc(procFunc),
+        fReducedResult(), fCanReduce(false)
+   {
+   }
+   TMPWorkerTreeFunc(F procFunc, TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries,
+                     ULong64_t firstEntry)
+      : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fProcFunc(procFunc), fReducedResult(),
+        fCanReduce(false)
+   {
+   }
    virtual ~TMPWorkerTreeFunc() {}
 
 private:
@@ -100,15 +103,17 @@ private:
 
 class TMPWorkerTreeSel : public TMPWorkerTree {
 public:
-   TMPWorkerTreeSel(TSelector &selector, const std::vector<std::string>& fileNames, TEntryList *entries,
-                                         const std::string& treeName, unsigned nWorkers,
-                                         ULong64_t maxEntries, ULong64_t firstEntry)
-                  : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry),
-                    fSelector(selector), fCallBegin(true) {}
-   TMPWorkerTreeSel(TSelector &selector, TTree *tree, TEntryList *entries,
-                    unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
-                  : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry),
-                    fSelector(selector), fCallBegin(true) {}
+   TMPWorkerTreeSel(TSelector &selector, const std::vector<std::string> &fileNames, TEntryList *entries,
+                    const std::string &treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
+      : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry), fSelector(selector),
+        fCallBegin(true)
+   {
+   }
+   TMPWorkerTreeSel(TSelector &selector, TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries,
+                    ULong64_t firstEntry)
+      : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fSelector(selector), fCallBegin(true)
+   {
+   }
    virtual ~TMPWorkerTreeSel() {}
 
 private:
@@ -182,8 +187,7 @@ void TMPWorkerTreeFunc<F>::Process(unsigned code, MPCodeBufPair& msg)
 
    TTreeReader::EEntryStatus status = reader.SetEntriesRange(start, finish);
    if(status != TTreeReader::kEntryValid) {
-      reply = sn + "could not set TTreeReader to range "
-                 + std::to_string(start) + " " + std::to_string(finish - 1);
+      reply = sn + "could not set TTreeReader to range " + std::to_string(start) + " " + std::to_string(finish - 1);
       MPSend(GetSocket(), MPCode::kProcError, reply.c_str());
       return;
    }
