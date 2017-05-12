@@ -293,7 +293,7 @@ struct TIsV7Histo {
 };
 
 template <typename T, bool ISV7HISTO = TIsV7Histo<T>::fgValue>
-struct Histo {
+struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
    {
@@ -303,7 +303,7 @@ struct Histo {
 };
 
 template <typename T>
-struct Histo<T, true> {
+struct HistoUtils<T, true> {
    static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
