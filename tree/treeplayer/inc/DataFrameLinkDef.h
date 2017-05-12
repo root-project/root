@@ -12,6 +12,6 @@
 #pragma link C++ class ROOT::Experimental::TDF::TDataFrame-;
 #pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>-;
 #pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>-;
-#pragma link C++ class ROOT::Detail::TDataFrameImpl-;
+#pragma link C++ class ROOT::Detail::TLoopManager-;
 
 #endif
