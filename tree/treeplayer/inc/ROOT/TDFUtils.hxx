@@ -204,9 +204,9 @@ struct TReaderValueOrArray<std::array_view<T>> {
 template <typename T>
 using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 
-/// Initialize a tuple of TDataFrameValues.
+/// Initialize a tuple of TColumnValues.
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
-/// TDataFrameValue. For temporary columns a pointer to the corresponding variable
+/// TColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
 void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
