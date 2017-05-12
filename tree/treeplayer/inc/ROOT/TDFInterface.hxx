@@ -389,7 +389,7 @@ public:
       const ColumnNames_t &defBl = df->GetDefaultBranches();
       auto nArgs = ROOT::Internal::TDF::TFunctionTraits<F>::Args_t::fgSize;
       const ColumnNames_t &actualBl = ROOT::Internal::TDF::PickBranchNames(nArgs - 1, bl, defBl);
-      using Op_t = ROOT::Internal::TDF::ForeachSlotOperation<F>;
+      using Op_t = ROOT::Internal::TDF::ForeachSlotHelper<F>;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f)), actualBl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -438,7 +438,7 @@ public:
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "reduce branch values");
       auto redObjPtr = std::make_shared<T>(initValue);
-      using Op_t = ROOT::Internal::TDF::ReduceOperation<F, T>;
+      using Op_t = ROOT::Internal::TDF::ReduceHelper<F, T>;
       using DFA_t = typename ROOT::Internal::TDF::TAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(std::move(f), redObjPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -455,7 +455,7 @@ public:
       auto df = GetDataFrameChecked();
       unsigned int nSlots = df->GetNSlots();
       auto cSPtr = std::make_shared<unsigned int>(0);
-      using Op_t = ROOT::Internal::TDF::CountOperation;
+      using Op_t = ROOT::Internal::TDF::CountHelper;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(cSPtr, nSlots), ColumnNames_t({}), *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -477,7 +477,7 @@ public:
       unsigned int nSlots = df->GetNSlots();
       auto bl = GetBranchNames<T>({branchName}, "get the values of the branch");
       auto valuesPtr = std::make_shared<COLL>();
-      using Op_t = ROOT::Internal::TDF::TakeOperation<T, COLL>;
+      using Op_t = ROOT::Internal::TDF::TakeHelper<T, COLL>;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied>;
       df->Book(std::make_shared<DFA_t>(Op_t(valuesPtr, nSlots), bl, *fProxiedPtr));
       fProxiedPtr->IncrChildrenCount();
@@ -919,13 +919,13 @@ private:
    void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h, unsigned int nSlots,
                      ActionType *)
    {
-      using Op_t = ROOT::Internal::TDF::FillTOOperation<ActionResultType>;
+      using Op_t = ROOT::Internal::TDF::FillTOHelper<ActionResultType>;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchTypes...>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
    }
 
-   // Histo1D filling (must handle the special case of distinguishing FillTOOperation and FillOperation
+   // Histo1D filling (must handle the special case of distinguishing FillTOHelper and FillHelper
    template <typename... BranchTypes>
    void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1F> &h, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Histo1D *)
@@ -934,11 +934,11 @@ private:
       auto hasAxisLimits = ROOT::Internal::TDF::HistoUtils<::TH1F>::HasAxisLimits(*h);
 
       if (hasAxisLimits) {
-         using Op_t = ROOT::Internal::TDF::FillTOOperation<::TH1F>;
+         using Op_t = ROOT::Internal::TDF::FillTOHelper<::TH1F>;
          using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       } else {
-         using Op_t = ROOT::Internal::TDF::FillOperation;
+         using Op_t = ROOT::Internal::TDF::FillHelper;
          using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchTypes...>>;
          df->Book(std::make_shared<DFA_t>(Op_t(h, nSlots), bl, *fProxiedPtr));
       }
@@ -949,7 +949,7 @@ private:
    void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Min *)
    {
-      using Op_t = ROOT::Internal::TDF::MinOperation;
+      using Op_t = ROOT::Internal::TDF::MinHelper;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(minV, nSlots), bl, *fProxiedPtr));
@@ -960,7 +960,7 @@ private:
    void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Max *)
    {
-      using Op_t = ROOT::Internal::TDF::MaxOperation;
+      using Op_t = ROOT::Internal::TDF::MaxHelper;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(maxV, nSlots), bl, *fProxiedPtr));
@@ -971,7 +971,7 @@ private:
    void BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, unsigned int nSlots,
                      ROOT::Internal::TDF::ActionTypes::Mean *)
    {
-      using Op_t = ROOT::Internal::TDF::MeanOperation;
+      using Op_t = ROOT::Internal::TDF::MeanHelper;
       using DFA_t = ROOT::Internal::TDF::TAction<Op_t, Proxied, ROOT::Internal::TDF::TTypeList<BranchType>>;
       auto df = GetDataFrameChecked();
       df->Book(std::make_shared<DFA_t>(Op_t(meanV, nSlots), bl, *fProxiedPtr));

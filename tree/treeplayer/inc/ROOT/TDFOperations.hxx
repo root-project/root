@@ -31,12 +31,12 @@ using Count_t = unsigned long;
 using Hist_t = ::TH1F;
 
 template <typename F>
-class ForeachSlotOperation {
+class ForeachSlotHelper {
    F fCallable;
 
 public:
    using BranchTypes_t = typename TRemoveFirst<typename TFunctionTraits<F>::Args_t>::Types_t;
-   ForeachSlotOperation(F &&f) : fCallable(f) {}
+   ForeachSlotHelper(F &&f) : fCallable(f) {}
 
    template <typename... Args>
    void Exec(unsigned int slot, Args &&... args)
@@ -49,18 +49,18 @@ public:
    void Finalize() { /* noop */}
 };
 
-class CountOperation {
+class CountHelper {
    std::shared_ptr<unsigned int> fResultCount;
    std::vector<Count_t> fCounts;
 
 public:
    using BranchTypes_t = TTypeList<>;
-   CountOperation(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots);
+   CountHelper(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots);
    void Exec(unsigned int slot);
    void Finalize();
 };
 
-class FillOperation {
+class FillHelper {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
    using BufEl_t = double;
@@ -77,7 +77,7 @@ class FillOperation {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillOperation(const std::shared_ptr<Hist_t> &h, unsigned int nSlots);
+   FillHelper(const std::shared_ptr<Hist_t> &h, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
 
@@ -110,26 +110,26 @@ public:
    void Finalize();
 };
 
-extern template void FillOperation::Exec(unsigned int, const std::vector<float> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<double> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<char> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<int> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void FillOperation::Exec(unsigned int, const std::vector<unsigned int> &,
+extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
+extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &,
                                          const std::vector<unsigned int> &);
 
 template <typename HIST = Hist_t>
-class FillTOOperation {
+class FillTOHelper {
    std::unique_ptr<TThreadedObject<HIST>> fTo;
 
 public:
-   FillTOOperation(FillTOOperation &&) = default;
+   FillTOHelper(FillTOHelper &&) = default;
 
-   FillTOOperation(const std::shared_ptr<HIST> &h, unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
+   FillTOHelper(const std::shared_ptr<HIST> &h, unsigned int nSlots) : fTo(new TThreadedObject<HIST>(*h))
    {
       fTo->SetAtSlot(0, h);
       // Initialise all other slots
@@ -225,12 +225,12 @@ public:
 // note: changes to this class should probably be replicated in its partial
 // specialization below
 template <typename T, typename COLL>
-class TakeOperation {
+class TakeHelper {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
    using BranchTypes_t = TTypeList<T>;
-   TakeOperation(const std::shared_ptr<COLL> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
@@ -264,12 +264,12 @@ public:
 // note: changes to this class should probably be replicated in its unspecialized
 // declaration above
 template <typename T>
-class TakeOperation<T, std::vector<T>> {
+class TakeHelper<T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
    using BranchTypes_t = TTypeList<T>;
-   TakeOperation(const std::shared_ptr<std::vector<T>> &resultColl, unsigned int nSlots)
+   TakeHelper(const std::shared_ptr<std::vector<T>> &resultColl, unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
       for (unsigned int i = 1; i < nSlots; ++i) {
@@ -306,14 +306,14 @@ public:
 };
 
 template <typename F, typename T>
-class ReduceOperation {
+class ReduceHelper {
    F fReduceFun;
    std::shared_ptr<T> fReduceRes;
    std::vector<T> fReduceObjs;
 
 public:
    using BranchTypes_t = TTypeList<T>;
-   ReduceOperation(F &&f, const std::shared_ptr<T> &reduceRes, unsigned int nSlots)
+   ReduceHelper(F &&f, const std::shared_ptr<T> &reduceRes, unsigned int nSlots)
       : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
    {
    }
@@ -326,12 +326,12 @@ public:
    }
 };
 
-class MinOperation {
+class MinHelper {
    std::shared_ptr<double> fResultMin;
    std::vector<double> fMins;
 
 public:
-   MinOperation(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
+   MinHelper(const std::shared_ptr<double> &minVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
@@ -343,18 +343,18 @@ public:
    void Finalize();
 };
 
-extern template void MinOperation::Exec(unsigned int, const std::vector<float> &);
-extern template void MinOperation::Exec(unsigned int, const std::vector<double> &);
-extern template void MinOperation::Exec(unsigned int, const std::vector<char> &);
-extern template void MinOperation::Exec(unsigned int, const std::vector<int> &);
-extern template void MinOperation::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void MinHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void MinHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-class MaxOperation {
+class MaxHelper {
    std::shared_ptr<double> fResultMax;
    std::vector<double> fMaxs;
 
 public:
-   MaxOperation(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
+   MaxHelper(const std::shared_ptr<double> &maxVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
@@ -366,19 +366,19 @@ public:
    void Finalize();
 };
 
-extern template void MaxOperation::Exec(unsigned int, const std::vector<float> &);
-extern template void MaxOperation::Exec(unsigned int, const std::vector<double> &);
-extern template void MaxOperation::Exec(unsigned int, const std::vector<char> &);
-extern template void MaxOperation::Exec(unsigned int, const std::vector<int> &);
-extern template void MaxOperation::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-class MeanOperation {
+class MeanHelper {
    std::shared_ptr<double> fResultMean;
    std::vector<Count_t> fCounts;
    std::vector<double> fSums;
 
 public:
-   MeanOperation(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);
+   MeanHelper(const std::shared_ptr<double> &meanVPtr, unsigned int nSlots);
    void Exec(unsigned int slot, double v);
 
    template <typename T, typename std::enable_if<TIsContainer<T>::fgValue, int>::type = 0>
@@ -393,11 +393,11 @@ public:
    void Finalize();
 };
 
-extern template void MeanOperation::Exec(unsigned int, const std::vector<float> &);
-extern template void MeanOperation::Exec(unsigned int, const std::vector<double> &);
-extern template void MeanOperation::Exec(unsigned int, const std::vector<char> &);
-extern template void MeanOperation::Exec(unsigned int, const std::vector<int> &);
-extern template void MeanOperation::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void MeanHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 } // end of NS TDF
 } // end of NS Internal
