@@ -36,7 +36,7 @@ namespace TDF {
 
 class TDataFrame : public TInterface<ROOT::Detail::TDF::TLoopManager> {
 public:
-   TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
+   TDataFrame(const std::string &treeName, const std::string &filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Build the dataframe
    /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
@@ -51,16 +51,16 @@ public:
    template <typename FILENAMESCOLL,
              typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
-              const BranchNames_t &defaultBranches = {});
-   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
-   TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
+              const ColumnNames_t &defaultBranches = {});
+   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
+   TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(Long64_t numEntries);
 };
 
 template <typename FILENAMESCOLL,
           typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
-                       const BranchNames_t &defaultBranches)
+                       const ColumnNames_t &defaultBranches)
    : TInterface<ROOT::Detail::TDF::TLoopManager>(
         std::make_shared<ROOT::Detail::TDF::TLoopManager>(nullptr, defaultBranches))
 {
