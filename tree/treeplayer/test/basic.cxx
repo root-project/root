@@ -154,6 +154,25 @@ TEST(TTreeReaderBasic, Range) {
    EXPECT_FALSE(tr.Next());
    EXPECT_EQ(TTreeReader::kEntryBeyondEnd, tr.GetEntryStatus());
    EXPECT_EQ(9, tr.GetCurrentEntry());
+
+
+   // Restart, now with different entries.
+   tr.Restart();
+   EXPECT_EQ(TTreeReader::kEntryValid, tr.SetEntriesRange(0, 2));
+
+   EXPECT_TRUE(tr.Next());
+   EXPECT_EQ(0, tr.GetCurrentEntry());
+   EXPECT_EQ(TTreeReader::kEntryValid, tr.GetEntryStatus());
+
+   EXPECT_TRUE(tr.Next());
+   EXPECT_EQ(1, tr.GetCurrentEntry());
+   EXPECT_EQ(TTreeReader::kEntryValid, tr.GetEntryStatus());
+
+   // Reached end:
+   EXPECT_FALSE(tr.Next());
+   EXPECT_EQ(2, tr.GetCurrentEntry());
+   EXPECT_EQ(TTreeReader::kEntryBeyondEnd, tr.GetEntryStatus());
+
 }
 
 TEST(TTreeReaderBasic, InvalidRange) {
