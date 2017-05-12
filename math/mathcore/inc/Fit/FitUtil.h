@@ -657,6 +657,9 @@ namespace FitUtil {
 
 } // end namespace ROOT
 
-// Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<Double_v>);
+#ifdef R__HAS_VECCORE
+//Fixes alignment for structures of SIMD structures
+Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<Double_v>);
+#endif
 
 #endif /* ROOT_Fit_FitUtil */
