@@ -76,7 +76,7 @@ int mp103_processSelector(){
   out = pool.Process(fc, *sel);
   sel->GetOutputList()->Delete();
 
-  //TTreeProcessorMP::Process with TChain, no tree name
+  // TTreeProcessorMP::Process with TChain, no tree name
   out = pool.Process(ch, *sel);
   sel->GetOutputList()->Delete();
 
