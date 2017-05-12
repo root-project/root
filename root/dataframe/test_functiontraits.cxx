@@ -23,7 +23,7 @@ struct Functor2 {
 
 int main() {
 // check TFunctionTraits with one arg, two args, return type, nodecaytypes
-   using namespace ROOT::Internal::TDFTraitsUtils;
+   using namespace ROOT::Internal::TDF;
 
    // free function
    static_assert(std::is_same<TTypeList<int>,
