@@ -103,7 +103,7 @@ namespace Internal {
 namespace TDF {
 
 /**
-\class ROOT::Experimental::TDataFrameValue
+\class ROOT::Experimental::TColumnValue
 \ingroup dataframe
 \brief Helper class that updates and returns TTree branches as well as TDataFrame temporary columns
 \tparam T The type of the column
@@ -114,17 +114,17 @@ temporary columns whose values are generated on the fly. While the type of the
 value is known at compile time (or just-in-time), it is only at runtime that nodes
 can check whether a certain value is generated on the fly or not.
 
-TDataFrameValuePtr abstracts this difference by providing the same interface for
+TColumnValuePtr abstracts this difference by providing the same interface for
 both cases and handling the reading or generation of new values transparently.
 Only one of the two data members fReaderProxy or fValuePtr will be non-null
-for a given TDataFrameValue, depending on whether the value comes from a real
+for a given TColumnValue, depending on whether the value comes from a real
 TTree branch or from a temporary column respectively.
 
-TDataFrame nodes can store tuples of TDataFrameValues and retrieve an updated
+TDataFrame nodes can store tuples of TColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
 template <typename T>
-class TDataFrameValue {
+class TColumnValue {
    // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
    // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
@@ -140,7 +140,7 @@ class TDataFrameValue {
    unsigned int fSlot{0}; //< The slot this value belongs to. Only used for temporary columns, not for real branches.
 
 public:
-   TDataFrameValue() = default;
+   TColumnValue() = default;
 
    void SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *tmpColumn);
 
@@ -155,7 +155,7 @@ public:
    }
 
    template <typename U = T,
-             typename std::enable_if<std::is_same<typename TDataFrameValue<U>::ProxyParam_t, U>::value, int>::type = 0>
+             typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type = 0>
    T &Get(Long64_t entry);
 
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
@@ -189,7 +189,7 @@ struct TTDFValueTuple {
 
 template <typename... BranchTypes>
 struct TTDFValueTuple<TTypeList<BranchTypes...>> {
-   using type = std::tuple<TDataFrameValue<BranchTypes>...>;
+   using type = std::tuple<TColumnValue<BranchTypes>...>;
 };
 
 template <typename BranchType>
@@ -546,13 +546,13 @@ public:
 
 // method implementations
 template <typename T>
-void ROOT::Internal::TDF::TDataFrameValue<T>::SetTmpColumn(unsigned int slot,
+void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
                                                            ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
 {
    Reset();
    fTmpColumn = tmpColumn;
    if (tmpColumn->GetTypeId() != typeid(T))
-      throw std::runtime_error(std::string("TDataFrameValue: type specified is ") + typeid(T).name() +
+      throw std::runtime_error(std::string("TColumnValue: type specified is ") + typeid(T).name() +
                                " but temporary column has type " + tmpColumn->GetTypeId().name());
    fValuePtr = static_cast<T *>(tmpColumn->GetValuePtr(slot));
    fSlot = slot;
@@ -565,8 +565,8 @@ void ROOT::Internal::TDF::TDataFrameValue<T>::SetTmpColumn(unsigned int slot,
 template <typename T>
 template <typename U,
           typename std::enable_if<
-             std::is_same<typename ROOT::Internal::TDF::TDataFrameValue<U>::ProxyParam_t, U>::value, int>::type>
-T &ROOT::Internal::TDF::TDataFrameValue<T>::Get(Long64_t entry)
+             std::is_same<typename ROOT::Internal::TDF::TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
+T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
 {
    if (fReaderValue) {
       return *(fReaderValue->Get());
