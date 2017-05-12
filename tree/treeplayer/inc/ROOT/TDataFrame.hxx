@@ -34,7 +34,7 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 
-class TDataFrame : public TInterface<ROOT::Detail::TDF::TDataFrameImpl> {
+class TDataFrame : public TInterface<ROOT::Detail::TDF::TLoopManager> {
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ template <typename FILENAMESCOLL,
           typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDF::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDF::TDataFrameImpl>(nullptr, defaultBranches))
+   : TInterface<ROOT::Detail::TDF::TLoopManager>(
+        std::make_shared<ROOT::Detail::TDF::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::TDF::ToConstCharPtr(fileName));

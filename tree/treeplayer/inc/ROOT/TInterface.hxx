@@ -72,9 +72,9 @@ class TDataFrame;
 /**
 * \class ROOT::Experimental::TDF::TInterface
 * \ingroup dataframe
-* \brief The public interface to the TDataFrame federation of classes: TDataFrameImpl, TFilter,
+* \brief The public interface to the TDataFrame federation of classes: TLoopManager, TFilter,
 * TCustomColumn
-* \tparam T One of the TDataFrameImpl, TFilter, TCustomColumn classes. The user never specifies this type
+* \tparam T One of the TLoopManager, TFilter, TCustomColumn classes. The user never specifies this type
 * manually.
 */
 template <typename Proxied>
@@ -239,7 +239,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
-   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
                                        const BranchNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
@@ -254,7 +254,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
                                        const BranchNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
@@ -274,7 +274,7 @@ public:
                << "*reinterpret_cast<std::vector<std::string>*>(" << &bnames << ")"
                << ");";
       // jit snapCall, return result
-      return *reinterpret_cast<TInterface<TDataFrameImpl> *>(gInterpreter->ProcessLine(snapCall.str().c_str()));
+      return *reinterpret_cast<TInterface<TLoopManager> *>(gInterpreter->ProcessLine(snapCall.str().c_str()));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -285,7 +285,7 @@ public:
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
-   TInterface<TDataFrameImpl> Snapshot(const std::string &treename, const std::string &filename,
+   TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
                                        const std::string &columnNameRegexp = "")
    {
       BranchNames_t selectedColumns;
@@ -912,7 +912,7 @@ private:
    /// \cond HIDDEN_SYMBOLS
 
    /****** BuildAndBook overloads *******/
-   // BuildAndBook builds a TAction with the right operation and book it with the TDataFrameImpl
+   // BuildAndBook builds a TAction with the right operation and book it with the TLoopManager
 
    // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
    template <typename... BranchTypes, typename ActionType, typename ActionResultType>
@@ -1007,8 +1007,8 @@ private:
    }
 
 protected:
-   /// Get the TDataFrameImpl if reachable. If not, throw.
-   std::shared_ptr<TDataFrameImpl> GetDataFrameChecked()
+   /// Get the TLoopManager if reachable. If not, throw.
+   std::shared_ptr<TLoopManager> GetDataFrameChecked()
    {
       auto df = fImplWeakPtr.lock();
       if (!df) {
@@ -1048,7 +1048,7 @@ protected:
    /// is the address pointing to the storage of the read/created object in/by
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
-   TInterface<TDataFrameImpl> SnapshotImpl(const std::string &treename, const std::string &filename,
+   TInterface<TLoopManager> SnapshotImpl(const std::string &treename, const std::string &filename,
                                            const BranchNames_t &bnames, ROOT::Internal::TDF::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
@@ -1092,7 +1092,7 @@ protected:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TDataFrameImpl> snapshotTDF(std::make_shared<TDataFrameImpl>(nullptr, bnames));
+      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, bnames));
       auto chain = new TChain(treename.c_str());
       chain->Add(filename.c_str());
       snapshotTDF.fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
@@ -1100,19 +1100,19 @@ protected:
       return snapshotTDF;
    }
 
-   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TDataFrameImpl> &impl)
+   TInterface(const std::shared_ptr<Proxied> &proxied, const std::weak_ptr<TLoopManager> &impl)
       : fProxiedPtr(proxied), fImplWeakPtr(impl)
    {
    }
 
-   /// Only enabled when building a TInterface<TDataFrameImpl>
-   template <typename T = Proxied, typename std::enable_if<std::is_same<T, TDataFrameImpl>::value, int>::type = 0>
+   /// Only enabled when building a TInterface<TLoopManager>
+   template <typename T = Proxied, typename std::enable_if<std::is_same<T, TLoopManager>::value, int>::type = 0>
    TInterface(const std::shared_ptr<Proxied> &proxied) : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr())
    {
    }
 
    std::shared_ptr<Proxied> fProxiedPtr;
-   std::weak_ptr<TDataFrameImpl> fImplWeakPtr;
+   std::weak_ptr<TLoopManager> fImplWeakPtr;
 };
 
 template <>
@@ -1128,9 +1128,9 @@ inline const char *TInterface<ROOT::Detail::TDF::TCustomColumnBase>::GetNodeType
 }
 
 template <>
-inline const char *TInterface<TDataFrameImpl>::GetNodeTypeName()
+inline const char *TInterface<TLoopManager>::GetNodeTypeName()
 {
-   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TDataFrameImpl>";
+   return "ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TLoopManager>";
 }
 
 template <>

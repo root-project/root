@@ -31,7 +31,7 @@ namespace TDF {
 using ROOT::Experimental::TDF::TResultProxy;
 // Fwd decl for TResultProxy
 template <typename T>
-TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df);
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
 } // ns TDF
 } // ns Detail
 
@@ -76,24 +76,24 @@ class TResultProxy {
    };
    /// \endcond
    using SPT_t = std::shared_ptr<T>;
-   using SPTDFI_t = std::shared_ptr<TDataFrameImpl>;
-   using WPTDFI_t = std::weak_ptr<TDataFrameImpl>;
+   using SPTDFI_t = std::shared_ptr<TLoopManager>;
+   using WPTDFI_t = std::weak_ptr<TLoopManager>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
    friend TResultProxy<W> ROOT::Detail::TDF::MakeResultProxy(const std::shared_ptr<W> &,
-                                                             const std::shared_ptr<TDataFrameImpl> &);
+                                                             const std::shared_ptr<TLoopManager> &);
 
    ShrdPtrBool_t fReadiness =
-      std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
-   WPTDFI_t fImplWeakPtr;            ///< Points to the TDataFrameImpl at the root of the functional graph
+      std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
+   WPTDFI_t fImplWeakPtr;            ///< Points to the TLoopManager at the root of the functional graph
    SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
 
-   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fImplWeakPtr
+   /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
    /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *Get()
    {
       if (!*fReadiness) TriggerRun();
@@ -109,12 +109,12 @@ public:
    TResultProxy() = delete;
 
    /// Get a reference to the encapsulated object.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T &operator*() { return *Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *operator->() { return Get(); }
 
    /// Return an iterator to the beginning of the contained object if this makes
@@ -149,7 +149,7 @@ void TResultProxy<T>::TriggerRun()
 namespace Detail {
 namespace TDF {
 template <typename T>
-TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TDataFrameImpl> &df)
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
 {
    auto readiness = std::make_shared<bool>(false);
    auto resPtr = TResultProxy<T>(r, readiness, df);
