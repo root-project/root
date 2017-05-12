@@ -24,12 +24,9 @@
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
-
 namespace Internal {
+namespace TDF {
 
-namespace Operations {
-
-using namespace Internal::TDFTraitsUtils;
 using Count_t = unsigned long;
 using Hist_t = ::TH1F;
 
@@ -402,10 +399,8 @@ extern template void MeanOperation::Exec(unsigned int, const std::vector<char> &
 extern template void MeanOperation::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanOperation::Exec(unsigned int, const std::vector<unsigned int> &);
 
-} // end of NS Operations
-
+} // end of NS TDF
 } // end of NS Internal
-
 } // end of NS ROOT
 
 /// \endcond

@@ -29,12 +29,14 @@ using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Internal {
+namespace TDF {
 
-TDataFrameActionBase::TDataFrameActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
+TActionBase::TActionBase(ROOT::Detail::TDF::TDataFrameImpl *implPtr, const BranchNames_t &tmpBranches)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches)
 {
 }
 
+} // end NS TDF
 } // end NS Internal
 } // end NS ROOT
 
@@ -124,12 +126,12 @@ unsigned int TSlotStack::Pop()
 
 TDataFrameImpl::TDataFrameImpl(TTree *tree, const BranchNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
-     fNSlots(ROOT::Internal::GetNSlots())
+     fNSlots(ROOT::Internal::TDF::GetNSlots())
 {
 }
 
 TDataFrameImpl::TDataFrameImpl(Long64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(ROOT::Internal::GetNSlots())
+   : fNEmptyEntries(nEmptyEntries), fNSlots(ROOT::Internal::TDF::GetNSlots())
 {
 }
 

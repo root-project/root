@@ -50,7 +50,7 @@ public:
    /// methods available.
    template <
       typename FILENAMESCOLL,
-      typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+      typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
               const BranchNames_t &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
@@ -59,14 +59,14 @@ public:
 };
 
 template <typename FILENAMESCOLL,
-          typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+          typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const BranchNames_t &defaultBranches)
    : TInterface<ROOT::Detail::TDF::TDataFrameImpl>(
         std::make_shared<ROOT::Detail::TDF::TDataFrameImpl>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
-   for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::TDF::ToConstCharPtr(fileName));
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 

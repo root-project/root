@@ -11,10 +11,8 @@
 #include "ROOT/TDFOperations.hxx"
 
 namespace ROOT {
-
 namespace Internal {
-
-namespace Operations {
+namespace TDF {
 
 CountOperation::CountOperation(const std::shared_ptr<unsigned int> &resultCount, unsigned int nSlots)
    : fResultCount(resultCount), fCounts(nSlots, 0)
@@ -177,6 +175,6 @@ template void MeanOperation::Exec(unsigned int, const std::vector<char> &);
 template void MeanOperation::Exec(unsigned int, const std::vector<int> &);
 template void MeanOperation::Exec(unsigned int, const std::vector<unsigned int> &);
 
-} // end NS Operations
+} // end NS TDF
 } // end NS Internal
 } // end NS ROOT
