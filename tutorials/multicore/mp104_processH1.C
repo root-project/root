@@ -31,12 +31,11 @@ static std::string tutname = "mp104_processH1: ";
 static std::string logfile = "mp104_processH1.log";
 static RedirectHandle_t gRH;
 
-const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root",
-                     "http://root.cern.ch/files/h1/dstarp1a.root",
-                     "http://root.cern.ch/files/h1/dstarp1b.root",
-                     "http://root.cern.ch/files/h1/dstarp2.root"};
+const char *fh1[] = {"http://root.cern.ch/files/h1/dstarmb.root", "http://root.cern.ch/files/h1/dstarp1a.root",
+                     "http://root.cern.ch/files/h1/dstarp1b.root", "http://root.cern.ch/files/h1/dstarp2.root"};
 
-int mp104_processH1(){
+int mp104_processH1()
+{
 
    // MacOSX may generate connection to WindowServer errors
    gROOT->SetBatch(kTRUE);
@@ -49,42 +48,44 @@ int mp104_processH1(){
       files.push_back(fh1[i]);
    }
 
-   // Check and fit lambdas
+// Check and fit lambdas
 #include "mp_H1_lambdas.C"
 
-  ROOT::TTreeProcessorMP pool(3);
+   ROOT::TTreeProcessorMP pool(3);
 
-  std::cout << tutname << "processing the H1 dataset with a lambda \n";
+   std::cout << tutname << "processing the H1 dataset with a lambda \n";
 
-  auto hListFun = pool.Process(files, doH1, "h42");
-  
-  // Check the output
-  if (checkH1(hListFun) < 0) return -1;
+   auto hListFun = pool.Process(files, doH1, "h42");
 
-  // Do the fit
-  if (doFit(hListFun, logfile.c_str()) < 0) return -1;
+   // Check the output
+   if (checkH1(hListFun) < 0) return -1;
 
-  stp.Print(); stp.Start();
+   // Do the fit
+   if (doFit(hListFun, logfile.c_str()) < 0) return -1;
 
-  // Run the analysis with a selector
+   stp.Print();
+   stp.Start();
 
-  TString selectorPath = gROOT->GetTutorialDir();
-  selectorPath += "/tree/h1analysisTreeReader.C+";
-  std::cout << tutname << "processing the H1 dataset with selector '" << selectorPath << "'\n";
-  TSelector *sel = TSelector::GetSelector(selectorPath);
+   // Run the analysis with a selector
 
-  // In a second run we use sel
-  gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
-  auto hListSel = pool.Process(files, *sel, "h42");
-  gSystem->RedirectOutput(0, 0, &gRH);
-  
-  // Check the output
-  if (checkH1(hListSel) < 0) return -1;
+   TString selectorPath = gROOT->GetTutorialDir();
+   selectorPath += "/tree/h1analysisTreeReader.C+";
+   std::cout << tutname << "processing the H1 dataset with selector '" << selectorPath << "'\n";
+   TSelector *sel = TSelector::GetSelector(selectorPath);
 
-  // Do the fit
-  if (doFit(hListSel, logfile.c_str()) < 0) return -1;
+   // In a second run we use sel
+   gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
+   auto hListSel = pool.Process(files, *sel, "h42");
+   gSystem->RedirectOutput(0, 0, &gRH);
 
-  stp.Print(); stp.Start();
+   // Check the output
+   if (checkH1(hListSel) < 0) return -1;
 
-  return 0;
+   // Do the fit
+   if (doFit(hListSel, logfile.c_str()) < 0) return -1;
+
+   stp.Print();
+   stp.Start();
+
+   return 0;
 }
