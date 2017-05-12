@@ -112,7 +112,7 @@ inline static void R__LoadBranch(TBranch* br, Long64_t entry, Bool_t quickLoad)
 class TDimensionInfo : public TObject {
 public:
    Int_t fCode;  // Location of the leaf in TTreeFormula::fCode
-   Int_t fOper;  // Location of the Operation using the leaf in TTreeFormula::fOper
+   Int_t fOper;  // Location of the Helper using the leaf in TTreeFormula::fOper
    Int_t fSize;
    TFormLeafInfoMultiVarDim* fMultiDim;
    TDimensionInfo(Int_t code, Int_t oper, Int_t size, TFormLeafInfoMultiVarDim* multiDim)
