@@ -269,7 +269,7 @@ void TTreeReader::Restart() {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
-/// of the TTree / TChain.
+/// of the TTree / TChain, independent of a range set by SetEntriesRange().
 ///
 /// \param force If `IsChain()` and `force`, determines whether all TFiles of
 ///   this TChain should be opened to determine the exact number of entries
