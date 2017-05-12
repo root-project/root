@@ -22,6 +22,7 @@ class TTree;
 
 namespace ROOT {
 namespace Internal {
+namespace TDF {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
@@ -154,5 +155,6 @@ const ROOT::Detail::TDF::BranchNames_t &PickBranchNames(unsigned int nArgs, cons
    return useDefBl ? defBl : bl;
 }
 
+} // end NS TDF
 } // end NS Internal
 } // end NS ROOT

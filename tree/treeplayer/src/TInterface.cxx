@@ -28,6 +28,7 @@ template class TInterface<ROOT::Detail::TDF::TCustomColumnBase>;
 }
 
 namespace Internal {
+namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObjArray *branches,
@@ -64,7 +65,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
                      const std::vector<std::string> &tmpBranches,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = ROOT::Internal::GetUsedBranchesNames(expression, branches, tmpBranches);
+   auto usedBranches = ROOT::Internal::TDF::GetUsedBranchesNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -86,7 +87,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *tree, tmpBr);
+         auto brTypeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(brName, *tree, tmpBr);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -179,7 +180,7 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    // retrieve branch type names as strings
    std::vector<std::string> branchTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto branchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      const auto branchTypeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
       if (branchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
@@ -206,11 +207,11 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // ROOT::Internal::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
+   // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
    //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::BranchNames_t*>(&bl),
    //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
+   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
    createAction_str << ">("
                     << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
@@ -224,6 +225,6 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
       throw std::runtime_error(exceptionText.c_str());
    }
 }
-} // namespace Internal
-
-} // namespace ROOT
+} // end ns TDF
+} // end ns Internal
+} // end ns ROOT
