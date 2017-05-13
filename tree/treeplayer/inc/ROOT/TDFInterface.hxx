@@ -51,9 +51,9 @@ void CallBuildAndBook(TDFNode *node, const ROOT::Detail::TDF::ColumnNames_t &bl,
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
 
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
-                     const std::string &name, const std::string &expression, TObjArray *branches,
-                     const std::vector<std::string> &tmpBranches,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
+                         const std::string &name, const std::string &expression, TObjArray *branches,
+                         const std::vector<std::string> &tmpBranches,
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
 void JitBuildAndBook(const ROOT::Detail::TDF::ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr,
                      const std::type_info &art, const std::type_info &at, const void *r, TTree &tree,
@@ -166,8 +166,8 @@ public:
       auto branches = tree->GetListOfBranches();
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
-      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Filter", GetNodeTypeName(), name, expression, branches,
-                                                       tmpBranches, tmpBookedBranches, tree);
+      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Filter", GetNodeTypeName(), name, expression,
+                                                           branches, tmpBranches, tmpBookedBranches, tree);
       return *(TInterface<TFilterBase> *)retVal;
    }
 
@@ -225,8 +225,8 @@ public:
       auto branches = tree->GetListOfBranches();
       auto tmpBranches = fProxiedPtr->GetTmpBranches();
       auto tmpBookedBranches = df->GetBookedBranches();
-      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Define", GetNodeTypeName(), name, expression, branches,
-                                                       tmpBranches, tmpBookedBranches, tree);
+      auto retVal = ROOT::Internal::TDF::JitTransformation(this, "Define", GetNodeTypeName(), name, expression,
+                                                           branches, tmpBranches, tmpBookedBranches, tree);
       return *(TInterface<ROOT::Detail::TDF::TCustomColumnBase> *)retVal;
    }
 
@@ -240,7 +240,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                       const ColumnNames_t &bnames)
+                                     const ColumnNames_t &bnames)
    {
       using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
       return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
@@ -255,7 +255,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                       const ColumnNames_t &bnames)
+                                     const ColumnNames_t &bnames)
    {
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
@@ -286,7 +286,7 @@ public:
    /// This function returns a `TDataFrame` built with the output tree as a source.
    /// The types of the branches are automatically inferred and do not need to be specified.
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                       const std::string &columnNameRegexp = "")
+                                     const std::string &columnNameRegexp = "")
    {
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
@@ -1049,7 +1049,7 @@ protected:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
    TInterface<TLoopManager> SnapshotImpl(const std::string &treename, const std::string &filename,
-                                           const ColumnNames_t &bnames, ROOT::Internal::TDF::TStaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &bnames, ROOT::Internal::TDF::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
