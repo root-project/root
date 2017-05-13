@@ -72,10 +72,8 @@ class TDataFrame;
 /**
 * \class ROOT::Experimental::TDF::TInterface
 * \ingroup dataframe
-* \brief The public interface to the TDataFrame federation of classes: TLoopManager, TFilter,
-* TCustomColumn
-* \tparam T One of the TLoopManager, TFilter, TCustomColumn classes. The user never specifies this type
-* manually.
+* \brief The public interface to the TDataFrame federation of classes
+* \tparam T One of the "node" base types (e.g. TLoopManager, TFilterBase). The user never specifies this type manually.
 */
 template <typename Proxied>
 class TInterface {
