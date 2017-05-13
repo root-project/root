@@ -2,7 +2,22 @@
 #include<TKey.h>
 #include<TTree.h>
 #include<TThread.h>
+#include <iostream>
+#include <fstream>
+#include<vector>
 using namespace ROOT::Mpi;
+
+//______________________________________________________________________________
+//utility function to read all bytes from a file
+static std::vector<Char_t> ReadBytes(const Char_t  *name)
+{
+   std::ifstream file(name, std::ios::binary | std::ios::ate);
+   std::ifstream::pos_type position = file.tellg();
+   std::vector<Char_t>  data(position);
+   file.seekg(0, std::ios::beg);
+   file.read(&data[0], position);
+   return data;
+}
 
 //______________________________________________________________________________
 Bool_t TMpiFileMerger::OutputMemFile(const char *outputfile, const char *mode, Int_t compressionLevel)
@@ -35,12 +50,6 @@ TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *b
 //______________________________________________________________________________
 TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, option, ftitle, compress), fComm(comm), fSync(kFALSE)
 {
-   fOption.ToUpper();
-   Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
-   Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
-   if (create || recreate) fSyncReCreate = kTRUE;
-
-   Sync();
 }
 
 //______________________________________________________________________________
@@ -50,10 +59,13 @@ TMpiFile::TMpiFile(const TMpiFile &file): TMemFile(file)
    fMerger = file.fMerger;
    fSync = file.fSync;
    fSyncType = file.fSyncType;
+   fDiskOpenMode = file.fDiskOpenMode;
 }
 
-TMpiFile TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress)
+TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress)
 {
+   TMpiFile *file = NULL;
+
    TString fOption = option;
    fOption.ToUpper();
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
@@ -66,13 +78,30 @@ TMpiFile TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opti
    }
 
    if (create || recreate) {
-      return TMpiFile(comm, name, option, ftitle, compress);
+      if (comm.IsMainProcess()) {
+         auto tfile = TFile::Open(name, option, ftitle, compress);
+         if (!tfile) {
+            if (create && !gSystem->AccessPathName(name, kFileExists)) comm.Abort(ERR_FILE_EXISTS);
+            else comm.Abort(ERR_FILE);
+         }
+         tfile->Close();
+         delete tfile;
+      }
+      file = new TMpiFile(comm, name, option, ftitle, compress);
    } else {
-      auto *tfile = TFile::Open(name, option, ftitle, compress);
-      TMpiFile mfile(comm, name, option, ftitle, compress);
-      mfile.CopyFrom(tfile, &mfile);
-      return mfile;
+
+      auto tfile = TFile::Open(name, option, ftitle, compress);
+      if (!tfile) {
+         comm.Abort(ERR_FILE);
+      }
+      tfile->Close();
+      delete tfile;
+
+      auto buffer = ReadBytes(name);
+      file = new TMpiFile(comm, name, &buffer[0], buffer.size(), option, ftitle, compress);
    }
+   if (file) file->fDiskOpenMode = fOption;
+   return file;
 }
 
 
@@ -168,62 +197,39 @@ void TMpiFile::Merge(Int_t root, Int_t type)
 //    delete file;
 // }
 
-//______________________________________________________________________________
-void TMpiFile::SyncSave(Int_t type)
-{
-   Write();
-   fMessage.Reset(kMESS_ANY);
-   fMessage.SetWriteMode();
-   CopyTo(fMessage);
-   fMerger = new TMpiFileMerger(kFALSE, kFALSE);
-   fMerger->SetPrintLevel(1);
-   fMerger->OutputFile(GetName(), "UPDATE");
 
-   fMessage.SetReadMode();
-   fMessage.Reset(kMESS_ANY);
-   TDirectory::TContext ctxt;
-   TMemFile *memffile  = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), GetEND(), "UPDATE");
-   fMessage.SetBufferOffset(fMessage.Length() + GetEND());
-   fMerger->AddAdoptFile(memffile);
-   memffile = 0;
-   fMerger->PartialMerge(type);
-   delete fMerger;
-//    ls();
-//    printf("--rank %d--\n",fComm.GetRank());
-}
 
-void TMpiFile::SyncReCreate(Int_t rank)
-{
-   auto name = GetName();
-   fSyncMakeZombie = kFALSE;
-   if (fComm.GetRank() == rank) {
-      if (fOption == "CREATE") {
-         if (gSystem->AccessPathName(name, kFileExists)) {
-            Error("TMpiFile", "file %s already exists", name);
-            fSyncMakeZombie = kTRUE;
-         } else {
-            if (gSystem->Unlink(name) != 0) {
-               SysError("TMpiFile", "could not delete %s (errno: %d)", name, gSystem->GetErrno());
-               fSyncMakeZombie = kTRUE;
-            }
-         }
-      }
-      if (fOption == "RECREATE") {
-         if (!gSystem->AccessPathName(name, kFileExists)) {
-            if (gSystem->Unlink(name) != 0) {
-               SysError("TMpiFile", "could not delete %s (errno: %d)", name, gSystem->GetErrno());
-               fSyncMakeZombie = kTRUE;
-            }
-         }
-      }
-   }
-//    fComm.Bcast(fSyncMakeZombie,rank);
-//    if(fSyncMakeZombie)
-//    {
-//       MakeZombie();
-//       gDirectory = gROOT;
+// void TMpiFile::SyncReCreate(const TIntraCommunicator &comm, Int_t rank, const Char_t *name, TString option, Int_t &SyncMakeZombie)
+// {
+//    SyncMakeZombie = kFALSE;
+//    if (comm.GetRank() == rank) {
+//       if (option == "CREATE") {
+//          if (gSystem->AccessPathName(name, kFileExists)) {
+//             comm.Error("TMpiFile", "file %s already exists", name);
+//             SyncMakeZombie = kTRUE;
+//          } else {
+//             if (gSystem->Unlink(name) != 0) {
+//                comm.SysError("TMpiFile", "could not delete %s (errno: %d)", name, gSystem->GetErrno());
+//                SyncMakeZombie = kTRUE;
+//             }
+//          }
+//       }
+//       if (option == "RECREATE") {
+//          if (!gSystem->AccessPathName(name, kFileExists)) {
+//             if (gSystem->Unlink(name) != 0) {
+//                comm.SysError("TMpiFile", "could not delete %s (errno: %d)", name, gSystem->GetErrno());
+//                SyncMakeZombie = kTRUE;
+//             }
+//          }
+//       }
 //    }
-}
+// //    fComm.Bcast(fSyncMakeZombie,rank);
+// //    if(fSyncMakeZombie)
+// //    {
+// //       MakeZombie();
+// //       gDirectory = gROOT;
+// //    }
+// }
 
 
 //______________________________________________________________________________
@@ -299,25 +305,16 @@ void TMpiFile::Sync()
    Int_t dummy;
    if (fComm.GetRank() != 0) {
       fComm.Recv(dummy, fComm.GetRank() - 1, 0);
-      if (fSyncReCreate) {
-         SyncReCreate(0);
-         fSyncReCreate = kFALSE;
-      }
       if (fSync) {
          printf("--rank %d--\n", fComm.GetRank());
          SyncSave(fSyncType);
          fSync = kFALSE;
       }
-
    }
    fComm.Send(dummy, (fComm.GetRank() + 1) % fComm.GetSize(), 0);
 
    if (fComm.GetRank() == 0) {
       fComm.Recv(dummy, fComm.GetSize() - 1, 0);
-      if (fSyncReCreate) {
-         SyncReCreate(0);
-         fSyncReCreate = kFALSE;
-      }
       if (fSync) {
          printf("--rank %d--\n", fComm.GetRank());
          SyncSave(fSyncType);
@@ -325,5 +322,30 @@ void TMpiFile::Sync()
       }
    }
 
+}
+
+//______________________________________________________________________________
+void TMpiFile::SyncSave(Int_t type)
+{
+   Write();
+   fMessage.Reset(kMESS_ANY);
+   fMessage.SetWriteMode();
+   CopyTo(fMessage);
+   fMerger = new TMpiFileMerger(kFALSE, kFALSE);
+   fMerger->Reset();
+   fMerger->SetPrintLevel(0);
+   fMerger->OutputFile(GetName(), "UPDATE");
+   fMessage.SetReadMode();
+   fMessage.Reset(kMESS_ANY);
+   TDirectory::TContext ctxt;
+   TMemFile *memffile  = new TMemFile(GetName(), fMessage.Buffer() + fMessage.Length(), GetEND(), "UPDATE");
+   fMessage.SetBufferOffset(fMessage.Length() + GetEND());
+   fMerger->AddAdoptFile(memffile);
+   memffile = 0;
+   fMerger->PartialMerge(type);
+//    fMerger->Reset();
+   delete fMerger;
+//    ls();
+//    printf("--rank %d--\n",fComm.GetRank());
 }
 
