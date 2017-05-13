@@ -14,7 +14,7 @@
 #include "ROOT/TBufferMerger.hxx"
 #include "ROOT/TResultProxy.hxx"
 #include "ROOT/TDFNodes.hxx"
-#include "ROOT/TDFOperations.hxx"
+#include "ROOT/TDFActionHelpers.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
 #include "TFile.h"
