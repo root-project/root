@@ -34,7 +34,7 @@ namespace Detail {
 namespace TDF {
 using ColumnNames_t = std::vector<std::string>;
 class TCustomColumnBase; // fwd decl for ColumnName2ColumnTypeName
-struct TDataFrameGuessedType {
+struct TInferType {
 };
 } // end ns Detail
 } // end ns TDF
@@ -166,7 +166,7 @@ struct TNeedJitting {
 };
 
 template <typename... Rest>
-struct TNeedJitting<ROOT::Detail::TDF::TDataFrameGuessedType, Rest...> {
+struct TNeedJitting<ROOT::Detail::TDF::TInferType, Rest...> {
    static constexpr bool value = true;
 };
 
@@ -176,7 +176,7 @@ struct TNeedJitting<T> {
 };
 
 template <>
-struct TNeedJitting<ROOT::Detail::TDF::TDataFrameGuessedType> {
+struct TNeedJitting<ROOT::Detail::TDF::TInferType> {
    static constexpr bool value = true;
 };
 

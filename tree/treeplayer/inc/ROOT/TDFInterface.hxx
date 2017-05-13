@@ -496,7 +496,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model = ::TH1F{"", "", 128u, 0., 0.}, const std::string &vName = "")
    {
       auto bl = GetBranchNames<V>({vName}, "fill the histogram");
@@ -506,7 +506,7 @@ public:
       return CreateAction<ROOT::Internal::TDF::ActionTypes::Histo1D, V>(bl, h);
    }
 
-   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName)
    {
       return Histo1D<V>(::TH1F{"", "", 128u, 0., 0.}, vName);
@@ -527,8 +527,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TInferType,
+             typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
    {
       auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
@@ -536,8 +536,8 @@ public:
       return CreateAction<ROOT::Internal::TDF::ActionTypes::Histo1D, V, W>(bl, h);
    }
 
-   template <typename V = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V = ROOT::Detail::TDF::TInferType,
+             typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
       return Histo1D<V, W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
@@ -560,8 +560,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
@@ -585,9 +585,9 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType,
+             typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &wName)
    {
@@ -618,9 +618,9 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType,
+             typename V3 = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
                                 const std::string &v3Name = "")
    {
@@ -648,8 +648,8 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
    template <
-      typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-      typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+      typename V1 = ROOT::Detail::TDF::TInferType, typename V2 = ROOT::Detail::TDF::TInferType,
+      typename V3 = ROOT::Detail::TDF::TInferType, typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &v3Name, const std::string &wName)
    {
@@ -678,8 +678,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
                                       const std::string &v2Name = "")
    {
@@ -704,9 +704,9 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType,
+             typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name, const std::string &v2Name,
                                       const std::string &wName)
    {
@@ -737,9 +737,9 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-             typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename V1 = ROOT::Detail::TDF::TInferType,
+             typename V2 = ROOT::Detail::TDF::TInferType,
+             typename V3 = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
                                         const std::string &v2Name = "", const std::string &v3Name = "")
    {
@@ -767,8 +767,8 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
    template <
-      typename V1 = ROOT::Detail::TDF::TDataFrameGuessedType, typename V2 = ROOT::Detail::TDF::TDataFrameGuessedType,
-      typename V3 = ROOT::Detail::TDF::TDataFrameGuessedType, typename W = ROOT::Detail::TDF::TDataFrameGuessedType>
+      typename V1 = ROOT::Detail::TDF::TInferType, typename V2 = ROOT::Detail::TDF::TInferType,
+      typename V3 = ROOT::Detail::TDF::TInferType, typename W = ROOT::Detail::TDF::TInferType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name, const std::string &v2Name,
                                         const std::string &v3Name, const std::string &wName)
    {
@@ -814,7 +814,7 @@ public:
       if (!ROOT::Internal::TDF::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
-      return CreateAction<ROOT::Internal::TDF::ActionTypes::Fill, ROOT::Detail::TDF::TDataFrameGuessedType>(bl, h);
+      return CreateAction<ROOT::Internal::TDF::ActionTypes::Fill, ROOT::Detail::TDF::TInferType>(bl, h);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -826,7 +826,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TInferType>
    TResultProxy<double> Min(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the minimum");
@@ -843,7 +843,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TInferType>
    TResultProxy<double> Max(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the maximum");
@@ -860,7 +860,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-   template <typename T = ROOT::Detail::TDF::TDataFrameGuessedType>
+   template <typename T = ROOT::Detail::TDF::TInferType>
    TResultProxy<double> Mean(const std::string &branchName = "")
    {
       auto bl = GetBranchNames<T>({branchName}, "calculate the mean");
