@@ -1235,7 +1235,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
    Double_t result = 0;
    if (fType == 1)  {
-      if (fFunctor != nullptr) {
+      if (fFunctor) {
          assert(fParams);
          if (params) result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)params);
          else        result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)fParams->GetParameters());
@@ -2658,7 +2658,7 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor != nullptr && fSave.empty()) return kFALSE;
+   if (fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 
@@ -2676,7 +2676,7 @@ void TF1::Print(Option_t *option) const
       if (fType == 2)
          printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
       else {
-         if (fFunctor != nullptr)
+         if (fFunctor)
             printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
          else {
             printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNpar(), GetNdim(), int(fSave.size()));
