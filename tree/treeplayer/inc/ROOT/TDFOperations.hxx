@@ -120,7 +120,7 @@ extern template void FillHelper::Exec(unsigned int, const std::vector<double> &,
 extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &,
-                                         const std::vector<unsigned int> &);
+                                      const std::vector<unsigned int> &);
 
 template <typename HIST = Hist_t>
 class FillTOHelper {
