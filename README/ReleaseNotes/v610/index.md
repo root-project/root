@@ -79,6 +79,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Math Libraries
 
+* Improve thread friendliness of the TMinuit class.
 
 ## RooFit Libraries
 
