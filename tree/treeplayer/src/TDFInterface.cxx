@@ -61,9 +61,9 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
-                     const std::string &name, const std::string &expression, TObjArray *branches,
-                     const std::vector<std::string> &tmpBranches,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
+                         const std::string &name, const std::string &expression, TObjArray *branches,
+                         const std::vector<std::string> &tmpBranches,
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
    auto usedBranches = ROOT::Internal::TDF::GetUsedBranchesNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();

@@ -198,8 +198,8 @@ using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 class TActionBase {
 protected:
    ROOT::Detail::TDF::TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
-                                                /// graph. It is only guaranteed to contain a valid address during an
-                                                /// event loop.
+                                              /// graph. It is only guaranteed to contain a valid address during an
+                                              /// event loop.
    const ROOT::Detail::TDF::ColumnNames_t fTmpBranches;
 
 public:
@@ -260,7 +260,7 @@ namespace TDF {
 class TCustomColumnBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                             /// guaranteed to contain a valid address during an event loop.
+                           /// guaranteed to contain a valid address during an event loop.
    ColumnNames_t fTmpBranches;
    const std::string fName;
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
@@ -364,7 +364,7 @@ public:
 class TFilterBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                             /// guaranteed to contain a valid address during an event loop.
+                           /// guaranteed to contain a valid address during an event loop.
    const ColumnNames_t fTmpBranches;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
@@ -469,7 +469,7 @@ public:
 class TRangeBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
-                             /// guaranteed to contain a valid address during an event loop.
+                           /// guaranteed to contain a valid address during an event loop.
    ColumnNames_t fTmpBranches;
    unsigned int fStart;
    unsigned int fStop;
@@ -547,7 +547,7 @@ public:
 // method implementations
 template <typename T>
 void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
-                                                           ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
+                                                        ROOT::Detail::TDF::TCustomColumnBase *tmpColumn)
 {
    Reset();
    fTmpColumn = tmpColumn;
@@ -564,8 +564,8 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
 // the branch to be executed)
 template <typename T>
 template <typename U,
-          typename std::enable_if<
-             std::is_same<typename ROOT::Internal::TDF::TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
+          typename std::enable_if<std::is_same<typename ROOT::Internal::TDF::TColumnValue<U>::ProxyParam_t, U>::value,
+                                  int>::type>
 T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
 {
    if (fReaderValue) {
