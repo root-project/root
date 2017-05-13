@@ -103,7 +103,7 @@ namespace Internal {
 namespace TDF {
 
 /**
-\class ROOT::Experimental::TColumnValue
+\class ROOT::Internal::TDF::TColumnValue
 \ingroup dataframe
 \brief Helper class that updates and returns TTree branches as well as TDataFrame temporary columns
 \tparam T The type of the column
