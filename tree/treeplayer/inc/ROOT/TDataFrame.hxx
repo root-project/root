@@ -33,8 +33,11 @@ R__LOAD_LIBRARY(libTreePlayer)
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
+namespace TDFDetail = ROOT::Detail::TDF;
+namespace TDFInternal = ROOT::Internal::TDF;
 
-class TDataFrame : public TInterface<ROOT::Detail::TDF::TLoopManager> {
+class TDataFrame : public TInterface<TDFDetail::TLoopManager> {
+   using ColumnNames_t = TDFDetail::ColumnNames_t;
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
@@ -49,7 +52,7 @@ public:
    /// See TInterface for the documentation of the
    /// methods available.
    template <typename FILENAMESCOLL,
-             typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+             typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
               const ColumnNames_t &defaultBranches = {});
    TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
@@ -57,15 +60,13 @@ public:
    TDataFrame(Long64_t numEntries);
 };
 
-template <typename FILENAMESCOLL,
-          typename std::enable_if<ROOT::Internal::TDF::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDF::TLoopManager>(
-        std::make_shared<ROOT::Detail::TDF::TLoopManager>(nullptr, defaultBranches))
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
-   for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::TDF::ToConstCharPtr(fileName));
+   for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 

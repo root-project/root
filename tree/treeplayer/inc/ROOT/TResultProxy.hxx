@@ -37,7 +37,8 @@ TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_p
 
 namespace Experimental {
 namespace TDF {
-using namespace ROOT::Detail::TDF;
+namespace TDFInternal = ROOT::Internal::TDF;
+namespace TDFDetail = ROOT::Detail::TDF;
 
 /// Smart pointer for the return type of actions
 /**
@@ -61,7 +62,7 @@ If iteration is not supported by the type of the proxied object, a compilation e
 template <typename T>
 class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = ROOT::Internal::TDF::TIsContainer<V>::fgValue>
+   template <typename V, bool isCont = TDFInternal::TIsContainer<V>::fgValue>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
@@ -76,16 +77,15 @@ class TResultProxy {
    };
    /// \endcond
    using SPT_t = std::shared_ptr<T>;
-   using SPTDFI_t = std::shared_ptr<TLoopManager>;
-   using WPTDFI_t = std::weak_ptr<TLoopManager>;
+   using SPTLM_t = std::shared_ptr<TDFDetail::TLoopManager>;
+   using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TResultProxy<W> ROOT::Detail::TDF::MakeResultProxy(const std::shared_ptr<W> &,
-                                                             const std::shared_ptr<TLoopManager> &);
+   friend TResultProxy<W> TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
    ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
-   WPTDFI_t fImplWeakPtr;            ///< Points to the TLoopManager at the root of the functional graph
+   WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
    SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
 
    /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
@@ -100,7 +100,7 @@ class TResultProxy {
       return fObjPtr.get();
    }
 
-   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
+   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &firstData)
       : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr)
    {
    }
