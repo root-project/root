@@ -32,9 +32,10 @@ class TActionBase;
 
 namespace Detail {
 namespace TDF {
+namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations for TLoopManager
-using ActionBasePtr_t = std::shared_ptr<ROOT::Internal::TDF::TActionBase>;
+using ActionBasePtr_t = std::shared_ptr<TDFInternal::TActionBase>;
 using ActionBaseVec_t = std::vector<ActionBasePtr_t>;
 class TCustomColumnBase;
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
@@ -101,6 +102,7 @@ public:
 
 namespace Internal {
 namespace TDF {
+using namespace ROOT::Detail::TDF;
 
 /**
 \class ROOT::Internal::TDF::TColumnValue
@@ -135,14 +137,14 @@ class TColumnValue {
                                                                           /// non-temporary columsn and
                                                                           /// T == std::array_view<U>.
    T *fValuePtr{nullptr}; //< Non-owning ptr to the value of a temporary column.
-   ROOT::Detail::TDF::TCustomColumnBase *fTmpColumn{
+   TCustomColumnBase *fTmpColumn{
       nullptr};           //< Non-owning ptr to the node responsible for the temporary column.
    unsigned int fSlot{0}; //< The slot this value belongs to. Only used for temporary columns, not for real branches.
 
 public:
    TColumnValue() = default;
 
-   void SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *tmpColumn);
+   void SetTmpColumn(unsigned int slot, TCustomColumnBase *tmpColumn);
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
@@ -197,13 +199,13 @@ using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 
 class TActionBase {
 protected:
-   ROOT::Detail::TDF::TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
+   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
                                               /// graph. It is only guaranteed to contain a valid address during an
                                               /// event loop.
-   const ROOT::Detail::TDF::ColumnNames_t fTmpBranches;
+   const ColumnNames_t fTmpBranches;
 
 public:
-   TActionBase(ROOT::Detail::TDF::TLoopManager *implPtr, const ROOT::Detail::TDF::ColumnNames_t &tmpBranches);
+   TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches);
    virtual ~TActionBase() {}
    virtual void Run(unsigned int slot, Long64_t entry) = 0;
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
@@ -215,12 +217,12 @@ class TAction final : public TActionBase {
    using TypeInd_t = typename TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    Helper fHelper;
-   const ROOT::Detail::TDF::ColumnNames_t fBranches;
+   const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TAction(Helper &&h, const ROOT::Detail::TDF::ColumnNames_t &bl, PrevDataFrame &pd)
+   TAction(Helper &&h, const ColumnNames_t &bl, PrevDataFrame &pd)
       : TActionBase(pd.GetImplPtr(), pd.GetTmpBranches()), fHelper(std::move(h)), fBranches(bl), fPrevData(pd)
    {
    }
@@ -231,8 +233,7 @@ public:
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                         TypeInd_t());
+      InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(), TypeInd_t());
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -286,9 +287,9 @@ public:
 
 template <typename F, typename PrevData>
 class TCustomColumn final : public TCustomColumnBase {
-   using BranchTypes_t = typename ROOT::Internal::TDF::TFunctionTraits<F>::Args_t;
-   using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
-   using Ret_t = typename ROOT::Internal::TDF::TFunctionTraits<F>::Ret_t;
+   using BranchTypes_t = typename TDFInternal::TFunctionTraits<F>::Args_t;
+   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using Ret_t = typename TDFInternal::TFunctionTraits<F>::Ret_t;
 
    F fExpression;
    const ColumnNames_t fBranches;
@@ -296,7 +297,7 @@ class TCustomColumn final : public TCustomColumnBase {
    PrevData &fPrevData;
    std::vector<Long64_t> fLastCheckedEntry = {-1};
 
-   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
    TCustomColumn(const std::string &name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
@@ -310,7 +311,7 @@ public:
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                          TypeInd_t());
    }
 
@@ -342,8 +343,8 @@ public:
    }
 
    template <int... S, typename... BranchTypes>
-   void UpdateHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDF::TStaticSeq<S...>,
-                     ROOT::Internal::TDF::TTypeList<BranchTypes...>)
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>,
+                     TDFInternal::TTypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
    }
@@ -392,13 +393,13 @@ public:
 
 template <typename FilterF, typename PrevDataFrame>
 class TFilter final : public TFilterBase {
-   using BranchTypes_t = typename ROOT::Internal::TDF::TFunctionTraits<FilterF>::Args_t;
-   using TypeInd_t = typename ROOT::Internal::TDF::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
+   using BranchTypes_t = typename TDFInternal::TFunctionTraits<FilterF>::Args_t;
+   using TypeInd_t = typename TDFInternal::TGenStaticSeq<BranchTypes_t::fgSize>::Type_t;
 
    FilterF fFilter;
    const ColumnNames_t fBranches;
    PrevDataFrame &fPrevData;
-   std::vector<ROOT::Internal::TDF::TDFValueTuple_t<BranchTypes_t>> fValues;
+   std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
@@ -439,14 +440,14 @@ public:
    }
 
    template <int... S>
-   bool CheckFilterHelper(unsigned int slot, Long64_t entry, ROOT::Internal::TDF::TStaticSeq<S...>)
+   bool CheckFilterHelper(unsigned int slot, Long64_t entry, TDFInternal::TStaticSeq<S...>)
    {
       return fFilter(std::get<S>(fValues[slot]).Get(entry)...);
    }
 
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
-      ROOT::Internal::TDF::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
+      TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
                                          TypeInd_t());
    }
 

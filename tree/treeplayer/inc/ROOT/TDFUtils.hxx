@@ -41,6 +41,8 @@ struct TInferType {
 
 namespace Internal {
 namespace TDF {
+using namespace ROOT::Detail::TDF;
+
 template <typename... Types>
 struct TTypeList {
    static constexpr std::size_t fgSize = sizeof...(Types);
@@ -166,7 +168,7 @@ struct TNeedJitting {
 };
 
 template <typename... Rest>
-struct TNeedJitting<ROOT::Detail::TDF::TInferType, Rest...> {
+struct TNeedJitting<TInferType, Rest...> {
    static constexpr bool value = true;
 };
 
@@ -176,14 +178,14 @@ struct TNeedJitting<T> {
 };
 
 template <>
-struct TNeedJitting<ROOT::Detail::TDF::TInferType> {
+struct TNeedJitting<TInferType> {
    static constexpr bool value = true;
 };
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, ROOT::Detail::TDF::TCustomColumnBase *);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, TCustomColumnBase *);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string s);
@@ -209,10 +211,9 @@ using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 /// TColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
-void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
-                   const ROOT::Detail::TDF::ColumnNames_t &bn, const ROOT::Detail::TDF::ColumnNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<ROOT::Detail::TDF::TCustomColumnBase>> &tmpBranches,
-                   TStaticSeq<S...>)
+void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
+                   const ColumnNames_t &tmpbn,
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, TStaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
@@ -263,8 +264,7 @@ void CheckReduce(F &, T)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const ROOT::Detail::TDF::ColumnNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::ColumnNames_t &bl,
-                                                        const ROOT::Detail::TDF::ColumnNames_t &defBl);
+const ColumnNames_t &PickBranchNames(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 namespace ActionTypes {
 struct Histo1D {
