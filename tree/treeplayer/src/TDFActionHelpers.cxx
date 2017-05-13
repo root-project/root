@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TDFOperations.hxx"
+#include "ROOT/TDFActionHelpers.hxx"
 
 namespace ROOT {
 namespace Internal {
