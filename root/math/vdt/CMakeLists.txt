@@ -1,4 +1,4 @@
-if (ROOT_vdt_FOUND AND NOT ROOT_CLASSIC_BUILD "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+if (ROOT_vdt_FOUND AND NOT ROOT_CLASSIC_BUILD AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
 
 set (testname stressVdt)
 set(additional_compile_flags "-Ofast")
