@@ -85,7 +85,7 @@ namespace ROOT {
 /// Class constructor.
 /// nWorkers is the number of times this ROOT session will be forked, i.e.
 /// the number of workers that will be spawned.
-TTreeProcessorMP::TTreeProcessorMP(unsigned nWorkers) : TMPClient(nWorkers)
+TTreeProcessorMP::TTreeProcessorMP(UInt_t nWorkers) : TMPClient(nWorkers)
 {
    Reset();
 }
@@ -97,7 +97,7 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList *e
 {
    //prepare environment
    Reset();
-   unsigned nWorkers = GetNWorkers();
+   UInt_t nWorkers = GetNWorkers();
    selector.Begin(nullptr);
 
    //fork
@@ -113,7 +113,7 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList *e
 
    //tell workers to start processing entries
    fNToProcess = nWorkers; //this is the total number of ranges that will be processed by all workers cumulatively
-   std::vector<unsigned> args(nWorkers);
+   std::vector<UInt_t> args(nWorkers);
    std::iota(args.begin(), args.end(), 0);
    fNProcessed = Broadcast(MPCode::kProcTree, args);
    if (fNProcessed < nWorkers)
@@ -152,7 +152,7 @@ TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSel
 
    //prepare environment
    Reset();
-   unsigned nWorkers = GetNWorkers();
+   UInt_t nWorkers = GetNWorkers();
    selector.Begin(nullptr);
 
    //fork
@@ -171,7 +171,7 @@ TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSel
          fTaskType = ETask::kProcByRange;
          // Tell workers to start processing entries
          fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-         std::vector<unsigned> args(nWorkers);
+         std::vector<UInt_t> args(nWorkers);
          std::iota(args.begin(), args.end(), 0);
          fNProcessed = Broadcast(MPCode::kProcRange, args);
          if (fNProcessed < nWorkers)
@@ -181,7 +181,7 @@ TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSel
          // File granularity: each worker processes one whole file as a single task
          fTaskType = ETask::kProcByFile;
          fNToProcess = fileNames.size();
-         std::vector<unsigned> args(nWorkers);
+         std::vector<UInt_t> args(nWorkers);
          std::iota(args.begin(), args.end(), 0);
          fNProcessed = Broadcast(MPCode::kProcFile, args);
          if (fNProcessed < nWorkers)
@@ -193,7 +193,7 @@ TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSel
       fTaskType = ETask::kProcByRange;
       // Tell workers to start processing entries
       fNToProcess = nWorkers*fileNames.size(); //this is the total number of ranges that will be processed by all workers cumulatively
-      std::vector<unsigned> args(nWorkers);
+      std::vector<UInt_t> args(nWorkers);
       std::iota(args.begin(), args.end(), 0);
       fNProcessed = Broadcast(MPCode::kProcRange, args);
       if (fNProcessed < nWorkers)
@@ -232,7 +232,7 @@ TList *TTreeProcessorMP::Process(TFileCollection &files, TSelector &selector, TE
                                  const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
 {
    std::vector<std::string> fileNames(files.GetNFiles());
-   unsigned count = 0;
+   UInt_t count = 0;
    for(auto f : *static_cast<THashList*>(files.GetList()))
       fileNames[count++] = static_cast<TFileInfo*>(f)->GetCurrentUrl()->GetUrl();
 
@@ -247,7 +247,7 @@ TList *TTreeProcessorMP::Process(TChain &files, TSelector &selector, TEntryList 
 {
    TObjArray* filelist = files.GetListOfFiles();
    std::vector<std::string> fileNames(filelist->GetEntries());
-   unsigned count = 0;
+   UInt_t count = 0;
    for(auto f : *filelist)
       fileNames[count++] = f->GetTitle();
 
