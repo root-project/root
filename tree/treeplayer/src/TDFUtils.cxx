@@ -19,6 +19,7 @@
 #include <stdexcept>
 #include <string>
 class TTree;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Internal {
@@ -26,8 +27,7 @@ namespace TDF {
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define.
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree,
-                                      ROOT::Detail::TDF::TCustomColumnBase *tmpBranch)
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &tree, TCustomColumnBase *tmpBranch)
 {
    if (auto branch = tree.GetBranch(colName.c_str())) {
       // this must be a real TTree branch
@@ -138,8 +138,7 @@ void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const ROOT::Detail::TDF::ColumnNames_t &PickBranchNames(unsigned int nArgs, const ROOT::Detail::TDF::ColumnNames_t &bl,
-                                                        const ROOT::Detail::TDF::ColumnNames_t &defBl)
+const ColumnNames_t &PickBranchNames(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl)
 {
    bool useDefBl = false;
    if (nArgs != bl.size()) {
