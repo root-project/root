@@ -113,6 +113,7 @@ In a nutshell, the functionality provided is:
     - Possibility to run on ranges of entries
     - Creating columns not present in the original dataset
     - Chain multiple actions to be executed on the same event loop
+    - Creation of events on-the-fly (e.g. via Pythia or user-define generator functors), with no need for an input TTree
     - Snapshot on a rootfile the dataset after cuts and after augmentation with columns created by the user
     - Run analyses expressed as chains of actions in parallel in a transparent way for the user
 See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Experimental_1_1TDF_1_1TDataFrame.html) for more details
