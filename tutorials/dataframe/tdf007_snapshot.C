@@ -23,7 +23,7 @@ void fill_tree(const char *filename, const char *treeName)
    float b2;
    t.Branch("b1", &b1);
    t.Branch("b2", &b2);
-   for (int i = 0; i < 100; ++i) {
+   for (int i = 0; i < 10000; ++i) {
       b1 = i;
       b2 = i * i;
       t.Fill();
@@ -35,7 +35,6 @@ void fill_tree(const char *filename, const char *treeName)
 
 int tdf007_snapshot()
 {
-
    // We prepare an input tree to run on
    auto fileName = "tdf007_snapshot.root";
    auto outFileName = "tdf007_snapshot_output.root";
@@ -99,7 +98,7 @@ int tdf007_snapshot()
    auto snapshot_tdf = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});
    auto h = snapshot_tdf.Histo1D();
    auto c = new TCanvas();
-   h->DrawClone();
+   h->Draw();
 
    return 0;
 }
