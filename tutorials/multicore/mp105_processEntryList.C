@@ -72,7 +72,7 @@ int mp105_processEntryList()
    std::cout << tutname << "processing the entry list with a lambda \n";
 
    // Run the analysis
-   auto hListFun = pool.Process(files, doH1useList, sumElist, "h42");
+   auto hListFun = pool.Process(files, doH1useList, *sumElist, "h42");
 
    // Check the output
    if (checkH1(hListFun) < 0) return -1;
@@ -92,7 +92,7 @@ int mp105_processEntryList()
    // In a second run we use sel
    sel->SetOption("useList");
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
-   auto hListSel = pool.Process(files, *sel, sumElist, "h42");
+   auto hListSel = pool.Process(files, *sel, *sumElist, "h42");
    gSystem->RedirectOutput(0, 0, &gRH);
 
    // Check the output
