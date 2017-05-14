@@ -38,6 +38,7 @@ namespace TDFInternal = ROOT::Internal::TDF;
 
 class TDataFrame : public TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
+
 public:
    TDataFrame(const std::string &treeName, const std::string &filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////

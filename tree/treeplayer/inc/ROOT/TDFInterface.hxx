@@ -57,9 +57,9 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr,
-                     const std::type_info &art, const std::type_info &at, const void *r, TTree &tree,
-                     unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace TDF
 } // namespace Internal
@@ -533,8 +533,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V = TDFDetail::TInferType,
-             typename W = TDFDetail::TInferType>
+   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1F> Histo1D(::TH1F &&model, const std::string &vName, const std::string &wName)
    {
       auto bl = GetBranchNames<V, W>({vName, wName}, "fill the histogram");
@@ -542,8 +541,7 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(bl, h);
    }
 
-   template <typename V = TDFDetail::TInferType,
-             typename W = TDFDetail::TInferType>
+   template <typename V = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH1F> Histo1D(const std::string &vName, const std::string &wName)
    {
       return Histo1D<V, W>(::TH1F{"", "", 128u, 0., 0.}, vName, wName);
@@ -566,8 +564,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType>
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name = "", const std::string &v2Name = "")
    {
       auto h = std::make_shared<::TH2F>(std::move(model));
@@ -591,8 +588,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType,
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
    TResultProxy<::TH2F> Histo2D(::TH2F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &wName)
@@ -624,8 +620,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType,
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name = "", const std::string &v2Name = "",
                                 const std::string &v3Name = "")
@@ -653,9 +648,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model histogram.
-   template <
-      typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
-      typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
+             typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TH3F> Histo3D(::TH3F &&model, const std::string &v1Name, const std::string &v2Name,
                                 const std::string &v3Name, const std::string &wName)
    {
@@ -684,8 +678,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType>
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name = "",
                                       const std::string &v2Name = "")
    {
@@ -710,8 +703,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType,
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
    TResultProxy<::TProfile> Profile1D(::TProfile &&model, const std::string &v1Name, const std::string &v2Name,
                                       const std::string &wName)
@@ -743,8 +735,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
-   template <typename V1 = TDFDetail::TInferType,
-             typename V2 = TDFDetail::TInferType,
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name = "",
                                         const std::string &v2Name = "", const std::string &v3Name = "")
@@ -772,9 +763,8 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile.
-   template <
-      typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
-      typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
+   template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
+             typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
    TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, const std::string &v1Name, const std::string &v2Name,
                                         const std::string &v3Name, const std::string &wName)
    {
@@ -1005,7 +995,7 @@ private:
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
       TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), this, typeid(std::shared_ptr<ActionResultType>),
-                                           typeid(ActionType), &r, *tree, nSlots, tmpBranches);
+                                   typeid(ActionType), &r, *tree, nSlots, tmpBranches);
       fProxiedPtr->IncrChildrenCount();
       return MakeResultProxy(r, df);
    }
@@ -1071,7 +1061,7 @@ protected:
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filename.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
-         std::vector<TTree*> trees(nSlots);
+         std::vector<TTree *> trees(nSlots);
 
          auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
             if (!trees[slot]) {
