@@ -36,8 +36,8 @@ class TMPWorkerTree : public TMPWorker {
 public:
    TMPWorkerTree();
    TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
-                 unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
-   TMPWorkerTree(TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
+                 UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
+   TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
    virtual ~TMPWorkerTree();
 
    // It doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
@@ -49,11 +49,11 @@ protected:
    void         CloseFile();
    ULong64_t    EvalMaxEntries(ULong64_t maxEntries);
    void         HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a MP client
-   void         Init(int fd, unsigned workerN);
-   Int_t LoadTree(unsigned int code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
+   void         Init(int fd, UInt_t workerN);
+   Int_t LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
                   std::string &errmsg);
    TFile       *OpenFile(const std::string& fileName);
-   virtual void Process(unsigned, MPCodeBufPair&) { }
+   virtual void Process(UInt_t, MPCodeBufPair&) { }
    TTree       *RetrieveTree(TFile *fp);
    virtual void SendResult() { }
    void         Setup();
@@ -79,12 +79,12 @@ template<class F>
 class TMPWorkerTreeFunc : public TMPWorkerTree {
 public:
    TMPWorkerTreeFunc(F procFunc, const std::vector<std::string> &fileNames, TEntryList *entries,
-                     const std::string &treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
+                     const std::string &treeName, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
       : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry), fProcFunc(procFunc),
         fReducedResult(), fCanReduce(false)
    {
    }
-   TMPWorkerTreeFunc(F procFunc, TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries,
+   TMPWorkerTreeFunc(F procFunc, TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries,
                      ULong64_t firstEntry)
       : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fProcFunc(procFunc), fReducedResult(),
         fCanReduce(false)
@@ -93,7 +93,7 @@ public:
    virtual ~TMPWorkerTreeFunc() {}
 
 private:
-   void Process(unsigned code, MPCodeBufPair& msg);
+   void Process(UInt_t code, MPCodeBufPair& msg);
    void SendResult();
 
    F  fProcFunc; ///< copy the function to be executed
@@ -104,12 +104,12 @@ private:
 class TMPWorkerTreeSel : public TMPWorkerTree {
 public:
    TMPWorkerTreeSel(TSelector &selector, const std::vector<std::string> &fileNames, TEntryList *entries,
-                    const std::string &treeName, unsigned nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
+                    const std::string &treeName, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
       : TMPWorkerTree(fileNames, entries, treeName, nWorkers, maxEntries, firstEntry), fSelector(selector),
         fCallBegin(true)
    {
    }
-   TMPWorkerTreeSel(TSelector &selector, TTree *tree, TEntryList *entries, unsigned nWorkers, ULong64_t maxEntries,
+   TMPWorkerTreeSel(TSelector &selector, TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries,
                     ULong64_t firstEntry)
       : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fSelector(selector), fCallBegin(true)
    {
@@ -117,7 +117,7 @@ public:
    virtual ~TMPWorkerTreeSel() {}
 
 private:
-   void Process(unsigned code, MPCodeBufPair& msg);
+   void Process(UInt_t code, MPCodeBufPair& msg);
    void SendResult();
 
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
@@ -169,7 +169,7 @@ void TMPWorkerTreeFunc<F>::SendResult()
 }
 
 template<class F>
-void TMPWorkerTreeFunc<F>::Process(unsigned code, MPCodeBufPair& msg)
+void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair& msg)
 {
 
    Long64_t start = 0;
