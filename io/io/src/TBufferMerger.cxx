@@ -267,8 +267,10 @@ namespace ROOT {
 namespace Experimental {
 
 TBufferMerger::TBufferMerger(const char *name, Option_t *option, const char *ftitle, Int_t compress)
-   : fFile(TFile::Open(name, option, ftitle, compress)), fMergingThread(new std::thread([this]() { this->Listen(); }))
+   : fMergingThread(new std::thread([this]() { this->Listen(); }))
 {
+   TDirectoryFile::TContext ctxt;
+   fFile.reset(TFile::Open(name, option, ftitle, compress));
 }
 
 TBufferMerger::~TBufferMerger()
@@ -285,6 +287,7 @@ TBufferMerger::~TBufferMerger()
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 {
+   TDirectory::TContext ctxt;
    std::shared_ptr<TBufferMergerFile> f;
    {
       std::lock_guard<std::mutex> lk(fFilesMutex);
@@ -337,6 +340,7 @@ void TBufferMerger::Listen()
          buffer->ReadTString(filename);
          buffer->ReadLong64(length);
 
+         TDirectory::TContext ctxt;
          // UPDATE because we need to remove the TTree after merging them.
          TMemFile *transient = new TMemFile(filename, buffer->Buffer() + buffer->Length(), length, "UPDATE");
 
