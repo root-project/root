@@ -503,8 +503,7 @@ thread-safety, see [here](#generic-actions).
 /// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
-   : TInterface<TDFDetail::TLoopManager>(
-        std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
@@ -530,8 +529,7 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Co
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
                        const ColumnNames_t &defaultBranches)
-   : TInterface<TDFDetail::TLoopManager>(
-        std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    chain->Add(filenameglob.c_str());
@@ -548,8 +546,7 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
-   : TInterface<TDFDetail::TLoopManager>(
-        std::make_shared<TDFDetail::TLoopManager>(&tree, defaultBranches))
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(&tree, defaultBranches))
 {
 }
 
