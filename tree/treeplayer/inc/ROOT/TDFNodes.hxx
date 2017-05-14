@@ -136,9 +136,8 @@ class TColumnValue {
    std::unique_ptr<TTreeReaderArray<ProxyParam_t>> fReaderArray{nullptr}; //< Owning ptr to a TTreeReaderArray. Used for
                                                                           /// non-temporary columsn and
                                                                           /// T == std::array_view<U>.
-   T *fValuePtr{nullptr}; //< Non-owning ptr to the value of a temporary column.
-   TCustomColumnBase *fTmpColumn{
-      nullptr};           //< Non-owning ptr to the node responsible for the temporary column.
+   T *fValuePtr{nullptr};                  //< Non-owning ptr to the value of a temporary column.
+   TCustomColumnBase *fTmpColumn{nullptr}; //< Non-owning ptr to the node responsible for the temporary column.
    unsigned int fSlot{0}; //< The slot this value belongs to. Only used for temporary columns, not for real branches.
 
 public:
@@ -200,8 +199,8 @@ using TDFValueTuple_t = typename TTDFValueTuple<BranchType>::type;
 class TActionBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
-                                              /// graph. It is only guaranteed to contain a valid address during an
-                                              /// event loop.
+                           /// graph. It is only guaranteed to contain a valid address during an
+                           /// event loop.
    const ColumnNames_t fTmpBranches;
 
 public:
@@ -312,7 +311,7 @@ public:
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                         TypeInd_t());
+                                 TypeInd_t());
    }
 
    void *GetValuePtr(unsigned int slot) final { return static_cast<void *>(fLastResultPtr[slot].get()); }
@@ -448,7 +447,7 @@ public:
    void BuildReaderValues(TTreeReader *r, unsigned int slot) final
    {
       TDFInternal::InitTDFValues(slot, fValues[slot], r, fBranches, fTmpBranches, fImplPtr->GetBookedBranches(),
-                                         TypeInd_t());
+                                 TypeInd_t());
    }
 
    // recursive chain of `Report`s
