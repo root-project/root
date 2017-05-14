@@ -59,19 +59,19 @@ public:
    /// \param[in] nToProcess Number of entries to process (0 means all)
    /// \param[in] jFirst     First entry to process (0 means the first of the first file)
    ///
-   template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc, TEntryList *entries,
+   template<class F> auto Process(const std::vector<std::string>& fileNames, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
                                   -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto Process(const std::string& fileName, F procFunc, TEntryList *entries,
+   template<class F> auto Process(const std::string& fileName, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
                                   -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto Process(TFileCollection& collection, F procFunc, TEntryList *entries,
+   template<class F> auto Process(TFileCollection& collection, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
                                   -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto Process(TChain& chain, F procFunc, TEntryList *entries,
+   template<class F> auto Process(TChain& chain, F procFunc, TEntryList &entries,
                                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
                                   -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
-   template<class F> auto Process(TTree& tree, F procFunc, TEntryList *entries,
+   template<class F> auto Process(TTree& tree, F procFunc, TEntryList &entries,
                                   ULong64_t nToProcess = 0, ULong64_t jFirst = 0)
                                   -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
 
@@ -122,15 +122,15 @@ public:
    /// \param[in] jFirst     First entry to process (0 means the first of the first file)
    ///
    // these versions require a TSelector
-   TList* Process(const std::vector<std::string>& fileNames, TSelector& selector, TEntryList *entries,
+   TList* Process(const std::vector<std::string>& fileNames, TSelector& selector, TEntryList &entries,
                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0);
-   TList* Process(const std::string &fileName, TSelector& selector, TEntryList *entries,
+   TList* Process(const std::string &fileName, TSelector& selector, TEntryList &entries,
                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0);
-   TList* Process(TFileCollection& files, TSelector& selector, TEntryList *entries,
+   TList* Process(TFileCollection& files, TSelector& selector, TEntryList &entries,
                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0);
-   TList* Process(TChain& files, TSelector& selector, TEntryList *entries,
+   TList* Process(TChain& files, TSelector& selector, TEntryList &entries,
                   const std::string& treeName = "", ULong64_t nToProcess = 0, ULong64_t jFirst = 0);
-   TList* Process(TTree& tree, TSelector& selector, TEntryList *entries,
+   TList* Process(TTree& tree, TSelector& selector, TEntryList &entries,
                   ULong64_t nToProcess = 0, ULong64_t jFirst = 0);
 
 
@@ -186,7 +186,7 @@ private:
 };
 
 template<class F>
-auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F procFunc,  TEntryList *entries,
+auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F procFunc,  TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
@@ -199,8 +199,10 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
    Reset();
    unsigned nWorkers = GetNWorkers();
 
+   // Check th entry list
+   TEntryList *elist = (entries.IsValid()) ? &entries : nullptr;
    //fork
-   TMPWorkerTreeFunc<F> worker(procFunc, fileNames, entries, treeName, nWorkers, nToProcess, jFirst);
+   TMPWorkerTreeFunc<F> worker(procFunc, fileNames, elist, treeName, nWorkers, nToProcess, jFirst);
    bool ok = Fork(worker);
    if(!ok) {
       Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation.");
@@ -245,7 +247,7 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
 
 
 template<class F>
-auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,  TEntryList *entries,
+auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,  TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
@@ -255,7 +257,7 @@ auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,  TEntryL
 
 
 template<class F>
-auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, TEntryList *entries,
+auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
@@ -269,7 +271,7 @@ auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc, TEntryList *e
 
 
 template<class F>
-auto TTreeProcessorMP::Process(TChain& files, F procFunc, TEntryList *entries,
+auto TTreeProcessorMP::Process(TChain& files, F procFunc, TEntryList &entries,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
@@ -284,7 +286,7 @@ auto TTreeProcessorMP::Process(TChain& files, F procFunc, TEntryList *entries,
 
 
 template<class F>
-auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList *entries,
+auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList &entries,
                                ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
@@ -295,8 +297,10 @@ auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList *entries,
    Reset();
    unsigned nWorkers = GetNWorkers();
 
+   // Check th entry list
+   TEntryList *elist = (entries.IsValid()) ? &entries : nullptr;
    //fork
-   TMPWorkerTreeFunc<F> worker(procFunc, &tree, entries, nWorkers, nToProcess, jFirst);
+   TMPWorkerTreeFunc<F> worker(procFunc, &tree, elist, nWorkers, nToProcess, jFirst);
    bool ok = Fork(worker);
    if(!ok) {
       Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation.");
@@ -338,7 +342,8 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   return Process(fileNames, procFunc, nullptr, treeName, nToProcess, jFirst);
+   TEntryList noelist;
+   return Process(fileNames, procFunc, noelist, treeName, nToProcess, jFirst);
 }
 
 
@@ -347,7 +352,8 @@ auto TTreeProcessorMP::Process(const std::string& fileName, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   return Process(fileName, procFunc, nullptr, treeName, nToProcess, jFirst);
+   TEntryList noelist;
+   return Process(fileName, procFunc, noelist, treeName, nToProcess, jFirst);
 }
 
 
@@ -356,7 +362,8 @@ auto TTreeProcessorMP::Process(TFileCollection& files, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   return Process(files, procFunc, nullptr, treeName, nToProcess, jFirst);
+   TEntryList noelist;
+   return Process(files, procFunc, noelist, treeName, nToProcess, jFirst);
 }
 
 
@@ -365,7 +372,8 @@ auto TTreeProcessorMP::Process(TChain& files, F procFunc,
                                const std::string& treeName, ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   return Process(files, procFunc, nullptr, treeName, nToProcess, jFirst);
+   TEntryList noelist;
+   return Process(files, procFunc, noelist, treeName, nToProcess, jFirst);
 }
 
 
@@ -374,7 +382,8 @@ auto TTreeProcessorMP::Process(TTree& tree, F procFunc,
                                ULong64_t nToProcess, ULong64_t jFirst)
                                -> typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type
 {
-   return Process(tree, procFunc, nullptr, nToProcess, jFirst);
+   TEntryList noelist;
+   return Process(tree, procFunc, noelist, nToProcess, jFirst);
 }
 
 //////////////////////////////////////////////////////////////////////////
