@@ -16,14 +16,16 @@
 #include <vector>
 #include <string>
 using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Internal::TDF;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
 // extern templates
-template class TInterface<ROOT::Detail::TDF::TLoopManager>;
-template class TInterface<ROOT::Detail::TDF::TFilterBase>;
-template class TInterface<ROOT::Detail::TDF::TCustomColumnBase>;
+template class TInterface<TLoopManager>;
+template class TInterface<TFilterBase>;
+template class TInterface<TCustomColumnBase>;
 }
 }
 
@@ -65,7 +67,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = ROOT::Internal::TDF::GetUsedBranchesNames(expression, branches, tmpBranches);
+   auto usedBranches = GetUsedBranchesNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -87,7 +89,7 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(brName, *tree, tmpBr);
+         auto brTypeName = ColumnName2ColumnTypeName(brName, *tree, tmpBr);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -171,7 +173,7 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
-   std::vector<ROOT::Detail::TDF::TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
+   std::vector<TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
    for (auto i = 0u; i < nBranches; ++i) {
       auto tmpBranchIt = tmpBranches.find(bl[i]);
       if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
@@ -180,7 +182,7 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
    // retrieve branch type names as strings
    std::vector<std::string> branchTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto branchTypeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      const auto branchTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
       if (branchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
