@@ -179,7 +179,8 @@ void TMPWorkerTree::SetupTreeCache(TTree *tree)
 //////////////////////////////////////////////////////////////////////////
 /// Init overload definign max entries
 
-void TMPWorkerTree::Init(Int_t fd, UInt_t workerN) {
+void TMPWorkerTree::Init(Int_t fd, UInt_t workerN)
+{
 
    TMPWorker::Init(fd, workerN);
    fMaxNEntries = EvalMaxEntries(fMaxNEntries);
@@ -235,7 +236,7 @@ void TMPWorkerTreeSel::SendResult()
 }
 
 /// Selector specialization
-void TMPWorkerTreeSel::Process(UInt_t code, MPCodeBufPair& msg)
+void TMPWorkerTreeSel::Process(UInt_t code, MPCodeBufPair &msg)
 {
    //evaluate the index of the file to process in fFileNames
    //(we actually don't need the parameter if code == kProcTree)
@@ -271,8 +272,8 @@ void TMPWorkerTreeSel::Process(UInt_t code, MPCodeBufPair& msg)
 
 /// Load the requierd tree and evaluate the processing range
 
-Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish,
-                              TEntryList **enl, std::string &errmsg)
+Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
+                              std::string &errmsg)
 {
    // evaluate the index of the file to process in fFileNames
    //(we actually don't need the parameter if code == kProcTree)
