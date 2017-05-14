@@ -23,33 +23,34 @@ namespace ROOT {
 
          TMpiMessage fMessage;     //!
          TMpiFileMerger *fMerger;  //!
-         Bool_t fSync;             //
-         Int_t fSyncType;          //
          TString fDiskOpenMode;    //
       protected:
          void CopyFrom(TDirectory *source, TMpiFile *file) ;
-         void SyncSave(Int_t type);
+         void CopyFrom(TDirectory *source) ;
+
          TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
+
       public:
          TMpiFile(const TMpiFile &file);
          ~TMpiFile() {};
          static TMpiFile *Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option = "", const Char_t *ftitle = "", Int_t compress = 1);
          //merge of all  TMpiFile in a  root process
-         void Merge(Int_t root, Int_t type = TFileMerger::kAllIncremental);
+         //save=ktrue to flush that memory to file in disk
+         void Merge(Int_t rank, Bool_t save = kFALSE, Int_t type = TFileMerger::kAllIncremental);
 
-         //method to synchronize all TMpiFile content in all process of a given TIntraCommunicator
-         void Merge(Int_t type = TFileMerger::kAllIncremental);
+         //method to synchronize all TMpiFile content in all process of current TIntraCommunicator
+         //if save=kTRUE Causes all previous writes to be transferred to the storage device
+         //All data is synchronized merging all in the given process (rank) and every TMpiFile is updated with
+         // a message using broadcast
+         void Sync(Int_t rank = 0, Int_t type = TFileMerger::kAllIncremental);
 
-         //save the file from memory to disk in the process that is called, but needs to be called with Sync
-         //and the Sync call must be visible for all processes
-         void Save(Int_t type = TFileMerger::kAllIncremental);
+         //save the file from memory to disk merging all in the given process (rank)
+         void Save(Int_t rank = 0, Int_t type = TFileMerger::kAllIncremental);
 
-
-         //Causes all previous writes to be transferred to the storage device
-         //This method are using the ring algorithm with blocking communication to do it
-         // in a sequential mode along of all processes in the intracommunicator
-         void Sync();
+         //save the file from memory to disk only from given rank
+         //useful after call sync method
+         void SyncSave(Int_t rank = 0);
 
          ClassDef(TMpiFile, 1)
 
