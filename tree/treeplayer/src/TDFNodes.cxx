@@ -26,12 +26,13 @@
 class TDirectory;
 class TTree;
 using namespace ROOT::Detail::TDF;
+using namespace ROOT::Internal::TDF;
 
 namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-TActionBase::TActionBase(ROOT::Detail::TDF::TLoopManager *implPtr, const ColumnNames_t &tmpBranches)
+TActionBase::TActionBase(TLoopManager *implPtr, const ColumnNames_t &tmpBranches)
    : fImplPtr(implPtr), fTmpBranches(tmpBranches)
 {
 }
@@ -124,12 +125,11 @@ unsigned int TSlotStack::Pop()
 
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultBranches(defaultBranches),
-     fNSlots(ROOT::Internal::TDF::GetNSlots())
+     fNSlots(TDFInternal::GetNSlots())
 {
 }
 
-TLoopManager::TLoopManager(Long64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(ROOT::Internal::TDF::GetNSlots())
+TLoopManager::TLoopManager(Long64_t nEmptyEntries) : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots())
 {
 }
 
