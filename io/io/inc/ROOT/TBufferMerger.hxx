@@ -56,6 +56,8 @@ public:
 
    /** Returns a TBufferMergerFile to which data can be written.
     *  At the end, all TBufferMergerFiles get merged into the output file.
+    *  The user is responsible to "cd" into the file to associate objects
+    *  such as histograms or trees to it.
     */
    std::shared_ptr<TBufferMergerFile> GetFile();
 

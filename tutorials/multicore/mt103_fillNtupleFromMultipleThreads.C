@@ -37,6 +37,7 @@ void mt103_fillNtupleFromMultipleThreads()
    // content.
    auto work_function = [&](int seed) {
       auto f = merger.GetFile();
+      f->cd();
       TNtuple ntrand("ntrand", "Random Numbers", "r");
       TRandom rnd(seed);
       for (auto i : ROOT::TSeqI(nEntries)) ntrand.Fill(rnd.Gaus());
