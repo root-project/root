@@ -78,7 +78,11 @@ class TEntryList: public TNamed
    virtual Int_t       GetTreeNumber() const { return fTreeNumber; }
    virtual Bool_t      GetReapplyCut() const { return fReapply; };
 
-   Bool_t  IsValid() const { if ((fLists || fBlocks)) return kTRUE; return kFALSE; }
+   Bool_t IsValid() const
+   {
+      if ((fLists || fBlocks)) return kTRUE;
+      return kFALSE;
+   }
 
    virtual Int_t       Merge(TCollection *list);
 

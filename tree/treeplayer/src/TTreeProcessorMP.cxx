@@ -274,34 +274,34 @@ TList *TTreeProcessorMP::Process(const std::string &fileName, TSelector &selecto
 TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSelector &selector,
                                  const std::string &treeName, ULong64_t nToProcess, ULong64_t jFirst)
 {
-   TEntryList noelist; 
+   TEntryList noelist;
    return Process(fileNames, selector, noelist, treeName, nToProcess, jFirst);
 }
 
 TList *TTreeProcessorMP::Process(const std::string &fileName, TSelector &selector, const std::string &treeName,
                                  ULong64_t nToProcess, ULong64_t jFirst)
 {
-   TEntryList noelist; 
+   TEntryList noelist;
    return Process(fileName, selector, noelist, treeName, nToProcess, jFirst);
 }
 
 TList *TTreeProcessorMP::Process(TFileCollection &files, TSelector &selector, const std::string &treeName,
                                  ULong64_t nToProcess, ULong64_t jFirst)
 {
-   TEntryList noelist; 
+   TEntryList noelist;
    return Process(files, selector, noelist, treeName, nToProcess, jFirst);
 }
 
 TList *TTreeProcessorMP::Process(TChain &files, TSelector &selector, const std::string &treeName, ULong64_t nToProcess,
                                  ULong64_t jFirst)
 {
-   TEntryList noelist; 
+   TEntryList noelist;
    return Process(files, selector, noelist, treeName, nToProcess, jFirst);
 }
 
 TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, ULong64_t nToProcess, ULong64_t jFirst)
 {
-   TEntryList noelist; 
+   TEntryList noelist;
    return Process(tree, selector, noelist, nToProcess, jFirst);
 }
 

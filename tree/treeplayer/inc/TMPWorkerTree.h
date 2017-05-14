@@ -49,11 +49,11 @@ protected:
    void         CloseFile();
    ULong64_t    EvalMaxEntries(ULong64_t maxEntries);
    void         HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a MP client
-   void         Init(int fd, UInt_t workerN);
+   void Init(int fd, UInt_t workerN);
    Int_t LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
                   std::string &errmsg);
    TFile       *OpenFile(const std::string& fileName);
-   virtual void Process(UInt_t, MPCodeBufPair&) { }
+   virtual void Process(UInt_t, MPCodeBufPair &) {}
    TTree       *RetrieveTree(TFile *fp);
    virtual void SendResult() { }
    void         Setup();
@@ -93,7 +93,7 @@ public:
    virtual ~TMPWorkerTreeFunc() {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair& msg);
+   void Process(UInt_t code, MPCodeBufPair &msg);
    void SendResult();
 
    F  fProcFunc; ///< copy the function to be executed
@@ -117,7 +117,7 @@ public:
    virtual ~TMPWorkerTreeSel() {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair& msg);
+   void Process(UInt_t code, MPCodeBufPair &msg);
    void SendResult();
 
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
@@ -168,8 +168,8 @@ void TMPWorkerTreeFunc<F>::SendResult()
    MPSend(GetSocket(), MPCode::kProcResult, fReducedResult);
 }
 
-template<class F>
-void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair& msg)
+template <class F>
+void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair &msg)
 {
 
    Long64_t start = 0;
