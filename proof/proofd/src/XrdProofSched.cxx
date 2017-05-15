@@ -402,6 +402,10 @@ int XrdProofSched::GetWorkers(XrdProofdProofServ *xps,
 
    int rc = 0;
 
+   // The caller must provide a proofserv session handler
+   if (!xps)
+      return -1;
+
    TRACE(REQ, "enter: query tag: "<< ((querytag) ? querytag : ""));
 
    // Static or dynamic

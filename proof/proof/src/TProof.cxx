@@ -897,7 +897,7 @@ Int_t TProof::Init(const char *, const char *conffile,
 
    if (IsMaster()) {
       // to make UploadPackage() method work on the master as well.
-      fPackMgr = gProofServ->GetPackMgr();
+      if (gProofServ) fPackMgr = gProofServ->GetPackMgr();
    } else {
 
       TString sandbox;

@@ -2135,7 +2135,7 @@ Int_t TXSocket::Reconnect()
    if (gDebug > 0) {
       Info("Reconnect", "%p (c:%p, v:%d): trying to reconnect to %s (logid: %d)",
                         this, fConn, (fConn ? fConn->IsValid() : 0),
-                        fUrl.Data(), fConn->GetLogConnID());
+                        fUrl.Data(), (fConn ? fConn->GetLogConnID() : -1));
    }
 
    Int_t tryreconnect = gEnv->GetValue("TXSocket.Reconnect", 0);

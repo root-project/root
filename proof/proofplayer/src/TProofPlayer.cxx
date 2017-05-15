@@ -4408,7 +4408,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    m << fb;
 
    // send message to client;
-   gProofServ->GetSocket()->Send(m);
+   if (gProofServ) gProofServ->GetSocket()->Send(m);
 
    delete fb;
 
