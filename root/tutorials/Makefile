@@ -60,6 +60,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   fit/minuit2FitBench \
   fit/minuit2FitBench2D \
   roostats/% \
+  multicore/% \
   http/%
 
 TUTORIALSTESTS_NEEDS_MINUIT2 := fit/fit2dHist fit/fit2dHist \
