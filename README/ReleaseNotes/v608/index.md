@@ -192,7 +192,6 @@ We added a cache specifically for the fast option of the TTreeCloner to signific
     *  `TRandomMixMax256` - old version of MIXMAX generator (N=256)
     *  `TRandomMT64`  - 64 bit Mersenenne Twister generator from the standard library (based on `std::mt19937_64`). This generates 64 bit random numbers, while `TRandom3` generates only 32 bit random numbers.
     *  `TRandomRanlux48` - 48 bit Ranlux generator. Note that `TRandom1` is a 24 bit generator. 
- * Improve thread safety of `TMinuit` constructor [ROOT-8217]
 * Vc has ben removed from the ROOT sources. If the option 'vc' is enabled, the package will be searched (by default),
   alternatively the source tarfile can be downloded and build with the option 'builtin_vc'.
 * Improve thread friendliness of the TMinuit class.
@@ -582,6 +581,7 @@ Released on March 2, 2017
 ### Core
 
 - Resolved an issue that lead to missing information the TClass of an STL collections that had more than one dictionary (including one with a rootpcm).
+- Correct out-of-order lock acquisition in the plugin handler.
 
 ### I/O
 
@@ -590,6 +590,11 @@ Released on March 2, 2017
 ### TTree
 
 - Repair support in TTree for the case of a split branch where a class A contains a class B which contains a class C (and possibly more nesting) which contains const data members.
+
+### Math
+
+- Improve thread safety of `TMinuit` constructor [ROOT-8217]
+- Set the kNotGlobal bit when removing a TF1 from the global list. This avoids spurrious warning about inconsitent state in the case where multiple thread create (for fitting) multiple function with the same name and remove them 'concurrently' with AddToGlobalList(false).
 
 ### Graphics
 
