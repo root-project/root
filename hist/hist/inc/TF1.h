@@ -226,7 +226,9 @@ protected:
    Int_t       fNpar;        //Number of parameters
    Int_t       fNdim;        //Function dimension
    Int_t       fNpx;         //Number of points used for the graphical representation
-   Int_t       fType;        //(=0 for standard functions, 1 if pointer to function, 3 vectorized interface)
+   Int_t       fType;        //(=0 for formula functions which can be stored, 1 if pointer to scalar free function,
+                             // 2, interpreted functions constructed by name,
+                             // 3 templated functors or vectorized free functions)
    Int_t       fNpfits;      //Number of points used in the fit
    Int_t       fNDF;         //Number of degrees of freedom in the fit
    Double_t    fChisquare;   //Function fit chisquare
@@ -245,7 +247,6 @@ protected:
    TMethodCall *fMethodCall; //!Pointer to MethodCall in case of interpreted function
    Bool_t      fNormalized;  //Normalization option (false by default)
    Double_t    fNormIntegral;//Integral of the function before being normalized
-//  ROOT::Math::ParamFunctor fFunctor;   //! Functor object to wrap any C++ callable object
    TF1FunctorPointer  *fFunctor = nullptr; //! Functor object to wrap any C++ callable object
    TFormula    *fFormula;    //Pointer to TFormula in case when user define formula
    TF1Parameters *fParams;   //Pointer to Function parameters object (exusts only for not-formula functions)
