@@ -343,7 +343,7 @@ bool Fitter::EvalFCN() {
 }
 
 
-bool Fitter::DoLeastSquareFit(unsigned executionPolicy) {
+bool Fitter::DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
 
    // perform a chi2 fit on a set of binned data
    std::shared_ptr<BinData> data = std::dynamic_pointer_cast<BinData>(fData);
@@ -462,7 +462,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended) {
 }
 
 
-bool Fitter::DoUnbinnedLikelihoodFit(bool extended, unsigned executionPolicy) {
+bool Fitter::DoUnbinnedLikelihoodFit(bool extended, ROOT::Fit::ExecutionPolicy executionPolicy) {
    // perform a likelihood fit on a set of unbinned data
 
    std::shared_ptr<UnBinData> data = std::dynamic_pointer_cast<UnBinData>(fData);
