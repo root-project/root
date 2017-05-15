@@ -37,6 +37,14 @@ void update(TString filename = "mpiupdate.root")
    delete f;
 }
 
+void read(TString filename = "mpiread.root")
+{
+   auto f = TMpiFile::Open(COMM_WORLD, filename, "READ");
+   auto funct = (TF1 *)f->Get(Form("f%d", COMM_WORLD.GetRank()));
+   f->Close();
+   delete f;
+}
+
 void test_sync(TString filename = "mpisync.root")
 {
    auto f = TMpiFile::Open(COMM_WORLD, filename, "RECREATE");
@@ -47,6 +55,17 @@ void test_sync(TString filename = "mpisync.root")
    delete f;
 }
 
+void clean(TString filename)
+{
+   if (COMM_WORLD.GetRank() == 0) {
+      if (!gSystem->AccessPathName(filename, kFileExists)) {
+         if (gSystem->Unlink(filename) != 0) {
+            COMM_WORLD.Abort(ERR_FILE);
+         }
+      }
+   }
+}
+
 void file(Int_t size = 10)
 {
    TEnvironment env;          //environment to start communication system
@@ -54,63 +73,23 @@ void file(Int_t size = 10)
 
    create();
    //TODO: add some extra test here
-   if (!gSystem->AccessPathName("mpicreate.root", kFileExists)) {
-      if (gSystem->Unlink("mpicreate.root") != 0) {
-         COMM_WORLD.Abort(ERR_FILE);
-      }
-   }
+   clean("mpicreate.root");
 
-   TDirectory::TContext ctxt0;
    recreate();
    //TODO: add some extra test here
-   if (!gSystem->AccessPathName("mpirecreate.root", kFileExists)) {
-      if (gSystem->Unlink("mpirecreate.root") != 0) {
-         COMM_WORLD.Abort(ERR_FILE);
-      }
-   }
+   clean("mpirecreate.root");
 
-   TDirectory::TContext ctxt1;
+   create("mpiupdate.root");
    update();
    //TODO: add some extra test here
-   if (!gSystem->AccessPathName("mpiupdate.root", kFileExists)) {
-      if (gSystem->Unlink("mpiupdate.root") != 0) {
-         COMM_WORLD.Abort(ERR_FILE);
-      }
-   }
+   clean("mpiupdate.root");
 
-   TDirectory::TContext ctxt2;
+   create("mpiread.root");
+   read();
+   //TODO: add some extra test here
+   clean("mpiread.root");
+
    test_sync();
    //TODO: add some extra test here
-   if (!gSystem->AccessPathName("mpisync.root", kFileExists)) {
-      if (gSystem->Unlink("mpisync.root") != 0) {
-         COMM_WORLD.Abort(ERR_FILE);
-      }
-   }
-
-   //    auto f = TMpiFile::Open(COMM_WORLD, "mpifile.root", "UPDATE");
-//
-//    auto rank = COMM_WORLD.GetRank();
-//    TF1 f1(Form("f%d", COMM_WORLD.GetRank()), Form("%d*sin(x)", rank + 1));
-//    f1.Write();
-// //
-// //    f->Merge(0);
-// //    f->Save();
-//    if (rank == 0) {
-//       TF1 fs("fspecial", Form("sin(x)/%d", rank + 1));
-//       fs.Write();
-// //        f->ls();
-//    }
-// //    f.Merge(0, TFileMerger::kAllIncremental);
-//
-//    f->Sync();
-// //    f->Merge(0);
-// //    f.ls();
-// //    f->Save();
-//    f->SyncSave();
-//
-// //    if (rank%2 == 0 ) f->Save();
-//
-// //    f->Sync();
-//    f->ls();
-//    f->Close();
+   clean("mpisync.root");
 }

@@ -41,13 +41,10 @@ Bool_t TMpiFileMerger::OutputMemFile(const char *outputfile, const char *mode, I
 
 }
 
-
-
 //______________________________________________________________________________
 TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Char_t *buffer, Long64_t size, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, buffer, size, option, ftitle, compress), fComm(comm)
 {
 }
-
 
 //______________________________________________________________________________
 TMpiFile::TMpiFile(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress): TMemFile(name, option, ftitle, compress), fComm(comm)
@@ -63,6 +60,15 @@ TMpiFile::TMpiFile(const TMpiFile &file): TMemFile(file)
 }
 
 //______________________________________________________________________________
+/*!
+   Method to create a TMpiFile instance, similar to TFile except that this needs a TIntraCommunicator object
+   to comunicate the mutiple file along multiple processes.
+   \param comm TIntraCommunicator for internal comminication
+   \param name File's name
+   \param option aperture mode "READ/CREATE/RECREATE/UPDATE"
+   \param ftitle optional title for the file
+   \param compress compression level
+ */
 TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Option_t *option, const Char_t *ftitle, Int_t compress)
 {
    TMpiFile *file = NULL;
@@ -90,23 +96,32 @@ TMpiFile *TMpiFile::Open(const TIntraCommunicator &comm, const Char_t *name, Opt
       }
       file = new TMpiFile(comm, name, option, ftitle, compress);
    } else {
+      std::vector<Char_t> buffer;
+      if (comm.IsMainProcess()) {
 
-      auto tfile = TFile::Open(name, option, ftitle, compress);
-      if (!tfile) {
-         comm.Abort(ERR_FILE);
+         auto tfile = TFile::Open(name, option, ftitle, compress);
+         if (!tfile) {
+            comm.Abort(ERR_FILE);
+         }
+         tfile->Close();
+         delete tfile;
+         buffer = ReadBytes(name);
       }
-      tfile->Close();
-      delete tfile;
-
-      auto buffer = ReadBytes(name);
+      comm.Bcast(buffer, comm.GetMainProcess());
       file = new TMpiFile(comm, name, &buffer[0], buffer.size(), option, ftitle, compress);
    }
+
    if (file) file->fDiskOpenMode = fOption;
    return file;
 }
 
 
 //______________________________________________________________________________
+/*! Method to copy the content one file to other.
+  \param source Source file.
+  \param file   Destination file.
+*/
+
 void TMpiFile::CopyFrom(TDirectory *source, TMpiFile *file)
 {
    TMpiFile *savdir = file;
@@ -143,19 +158,26 @@ void TMpiFile::CopyFrom(TDirectory *source, TMpiFile *file)
 }
 
 //______________________________________________________________________________
+/*! Method to copy the content from other file in the current file.
+  \param source Another file.
+*/
 void TMpiFile::CopyFrom(TDirectory *source)
 {
    CopyFrom(source, this);
 }
 
 //______________________________________________________________________________
-/// The type is defined by the bit values in EPartialMergeType:
-///   kRegular      : normal merge, overwritting the output file
-///   kIncremental  : merge the input file with the content of the output file (if already exising) (default)
-///   kAll          : merge all type of objects (default)
-///   kResetable    : merge only the objects with a MergeAfterReset member function.
-///   kNonResetable : merge only the objects without a MergeAfterReset member function.
+/*! Method to merge of all  TMpiFiles in a  root process
 
+  \param root root process (rank)  to merge the content of all files in all process
+  \param save kTRUE if you want to save the merge procedure in the file now
+  \param type type of merge is defined by the bit values in EPartialMergeType:
+    kRegular      : normal merge, overwritting the output file
+    kIncremental  : merge the input file with the content of the output file (if already exising) (default)
+    kAll          : merge all type of objects (default)
+    kResetable    : merge only the objects with a MergeAfterReset member function.
+    kNonResetable : merge only the objects without a MergeAfterReset member function.
+*/
 void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
 {
    Write();
@@ -198,6 +220,17 @@ void TMpiFile::Merge(Int_t root, Bool_t save, Int_t type)
 }
 
 //______________________________________________________________________________
+/*!
+   Method to save the file from memory to disk merging all in the given process (root)
+  \param root root process (rank)  to merge the content of all files in all process
+  \param type type of merge is defined by the bit values in EPartialMergeType:
+    kRegular      : normal merge, overwritting the output file
+    kIncremental  : merge the input file with the content of the output file (if already exising) (default)
+    kAll          : merge all type of objects (default)
+    kResetable    : merge only the objects with a MergeAfterReset member function.
+    kNonResetable : merge only the objects without a MergeAfterReset member function.
+
+*/
 void TMpiFile::Save(Int_t root, Int_t type)
 {
    Write();
@@ -237,9 +270,13 @@ void TMpiFile::Save(Int_t root, Int_t type)
 
 
 //______________________________________________________________________________
-//this method must be called only in one rank
-// the idea is to save current file in a rank for example after call sync method
-// to avoid repeated information
+/*!
+  Save the file from memory to disk only from given rank,
+  useful after call sync method to avoid repeated information and
+  must be called only in one rank along all application.
+  The idea is to save current file in a rank for example after call sync method
+  \param rank process to save the file from memory to disk.
+*/
 void TMpiFile::SyncSave(Int_t rank)
 {
    if (fComm.GetRank() == rank) {
@@ -256,6 +293,18 @@ void TMpiFile::SyncSave(Int_t rank)
 }
 
 //______________________________________________________________________________
+/*!
+    Pethod to synchronize all TMpiFile content in all process of current TIntraCommunicator.
+    All the data is synchronized merging all TMpiFiles in the given process (rank) and every TMpiFile is updated with
+    a message using broadcast
+    \param rank Process to merge the content of all files in all process
+    \param type type of merge for synchronization is defined by the bit values in EPartialMergeType:
+        kRegular      : normal merge, overwritting the output file
+        kIncremental  : merge the input file with the content of the output file (if already exising) (default)
+        kAll          : merge all type of objects (default)
+        kResetable    : merge only the objects with a MergeAfterReset member function.
+        kNonResetable : merge only the objects without a MergeAfterReset member function.
+*/
 void TMpiFile::Sync(Int_t rank, Int_t type)
 {
    Write();
