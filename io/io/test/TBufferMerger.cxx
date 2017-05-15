@@ -47,6 +47,7 @@ TEST(TBufferMerger, SequentialTreeFill)
       TBufferMerger merger("tbuffermerger_sequential.root");
 
       auto myfile = merger.GetFile();
+      myfile->cd();
       auto mytree = new TTree("mytree", "mytree");
 
       Fill(mytree, 0, nevents);
@@ -67,6 +68,7 @@ TEST(TBufferMerger, ParallelTreeFill)
       for (int i = 0; i < nthreads; ++i) {
          threads.emplace_back([=, &merger]() {
             auto myfile = merger.GetFile();
+            myfile->cd();
             auto mytree = new TTree("mytree", "mytree");
 
             Fill(mytree, i * nevents, nevents);
@@ -83,8 +85,8 @@ TEST(TBufferMerger, CheckTreeFillResults)
    int sum_s, sum_p;
 
    { // sum of all branch values in sequential mode
-      auto f = std::unique_ptr<TFile>(TFile::Open("tbuffermerger_sequential.root"));
-      auto t = std::unique_ptr<TTree>((TTree *)f->Get("mytree"));
+      TFile f("tbuffermerger_sequential.root");
+      auto t = (TTree *)f.Get("mytree");
 
       int n, sum = 0;
       int nentries = (int)t->GetEntries();
@@ -100,8 +102,8 @@ TEST(TBufferMerger, CheckTreeFillResults)
    }
 
    { // sum of all branch values in parallel mode
-      auto f = std::unique_ptr<TFile>(TFile::Open("tbuffermerger_parallel.root"));
-      auto t = std::unique_ptr<TTree>((TTree *)f->Get("mytree"));
+      TFile f("tbuffermerger_parallel.root");
+      auto t = (TTree *)f.Get("mytree");
 
       int n, sum = 0;
       int nentries = (int)t->GetEntries();
