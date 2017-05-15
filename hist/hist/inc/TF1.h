@@ -149,6 +149,8 @@ namespace ROOT {
          static void Build(TF1 *f, Func *func);
       };
 
+      // Internal class used by TF1 for obtaining the type from a functor
+      // out of the set of valid operator() signatures.
       template<typename T>
       struct GetFunctorType {
       };
@@ -173,6 +175,8 @@ namespace ROOT {
          using type = T;
       };
 
+      // Internal class used by TF1 to get the right operator() signature
+      // from a Functor with several ones.
       template<typename T, typename F>
       auto GetTheRightOp(T(F::*opPtr)(const T *, const double *)) -> decltype(opPtr)
       {
