@@ -105,7 +105,7 @@ public:
    */
    void CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func);
 #ifdef R__HAS_VECCORE
-   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<Double_v> & func);
+   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> & func);
 #endif
 
    /**

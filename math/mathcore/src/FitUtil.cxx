@@ -750,7 +750,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction & f, const BinData & dat
 
 // for LogLikelihood functions
 #ifdef R__HAS_VECCORE
-double FitUtil::EvaluatePdf(const IModelFunctionTempl<Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *) {
+double FitUtil::EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *) {
    // evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives
 
@@ -758,7 +758,7 @@ double FitUtil::EvaluatePdf(const IModelFunctionTempl<Double_v> & func, const Un
    //func.SetParameters(p);
 
 
-   const auto x = vecCore::FromPtr<Double_v>(data.GetCoordComponent(i,0));
+   const auto x = vecCore::FromPtr<ROOT::Double_v>(data.GetCoordComponent(i,0));
    auto fval = func (&x, p);
    auto logPdf = ROOT::Math::Util::EvalLog(fval);
    return logPdf[0];
@@ -988,7 +988,7 @@ nPoints = 0;
 }
 
 #ifdef R__HAS_VECCORE
-void FitUtil::EvaluateLogLGradient(const IModelFunctionTempl<Double_v> &, const UnBinData &, const double * , double *, unsigned int & ) {
+void FitUtil::EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double * , double *, unsigned int & ) {
 }
 #endif
 

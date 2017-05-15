@@ -237,7 +237,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       fitter->SetFunction(ROOT::Math::WrappedMultiTF1(*f1));
 #ifdef R__HAS_VECCORE      
    else if(f1->IsVectorized())
-      fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<Double_v>(*f1)));
+      fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> &>(ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v>(*f1)));
 #endif
    else
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunction &>(ROOT::Math::WrappedMultiTF1(*f1) ) );

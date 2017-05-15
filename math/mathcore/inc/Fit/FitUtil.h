@@ -217,9 +217,9 @@ namespace FitUtil {
             }
 
 #ifdef R__HAS_VECCORE
-            inline double ExecFunc(const IModelFunctionTempl<Double_v> *f, const double *x, const double *p) const{
-                Double_v xx;
-                vecCore::Load<Double_v>(xx, x);
+            inline double ExecFunc(const IModelFunctionTempl<ROOT::Double_v> *f, const double *x, const double *p) const{
+                ROOT::Double_v xx;
+                vecCore::Load<ROOT::Double_v>(xx, x);
                 const double *p0 = p;
                 auto res =  (*f)( &xx, (const double *)p0);
                 return res[0];
@@ -277,7 +277,7 @@ namespace FitUtil {
    */
    void EvaluateLogLGradient(const IModelFunction & func, const UnBinData & data, const double * x, double * grad, unsigned int & nPoints);
 #ifdef R__HAS_VECCORE
-   void EvaluateLogLGradient(const IModelFunctionTempl<Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) ;
+   void EvaluateLogLGradient(const IModelFunctionTempl<ROOT::Double_v> &, const UnBinData &, const double *, double *, unsigned int & ) ;
 #endif
 
    /**
@@ -317,7 +317,7 @@ namespace FitUtil {
    */
    double EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * x, unsigned int ipoint, double * g = 0);
 #ifdef R__HAS_VECCORE   
-   double EvaluatePdf(const IModelFunctionTempl<Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *);
+   double EvaluatePdf(const IModelFunctionTempl<ROOT::Double_v> & func, const UnBinData & data, const double * p, unsigned int i, double *);
 #endif
    /**
        evaluate the pdf contribution to the Poisson LogL given a model function and the BinPoint data.
@@ -688,7 +688,7 @@ namespace FitUtil {
 
 #ifdef R__HAS_VECCORE
 //Fixes alignment for structures of SIMD structures
-Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<Double_v>);
+Vc_DECLARE_ALLOCATOR(ROOT::Fit::FitUtil::LikelihoodAux<ROOT::Double_v>);
 #endif
 
 #endif /* ROOT_Fit_FitUtil */

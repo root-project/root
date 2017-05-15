@@ -79,7 +79,7 @@ public:
 
    typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
 #ifdef R__HAS_VECCORE
-   typedef ROOT::Math::IParametricFunctionMultiDimTempl<Double_v>  IModelFunction_v;
+   typedef ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v>  IModelFunction_v;
 #endif
    typedef ROOT::Math::IParamMultiGradFunction             IGradModelFunction;
    typedef ROOT::Math::IParamFunction                      IModel1DFunction;
