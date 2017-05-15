@@ -30,6 +30,8 @@ TEST(TBufferMerger, CreateAndDestroy)
 
 TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
 {
+   ROOT::EnableThreadSafety();
+
    TBufferMerger merger("tbuffermerger_create.root");
 
    auto f1 = merger.GetFile();
