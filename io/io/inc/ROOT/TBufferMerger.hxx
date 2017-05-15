@@ -49,7 +49,7 @@ public:
     * @param ftitle Output file title
     * @param compression Output file compression level
     */
-   TBufferMerger(const char *name, Option_t *option = "RECREATE", const char *ftitle = "", Int_t compress = 1);
+   TBufferMerger(const char *name, Option_t *option = "RECREATE", Int_t compress = 1);
 
    /** Destructor */
    virtual ~TBufferMerger();
@@ -71,17 +71,19 @@ private:
    TBufferMerger(const TBufferMerger &);
 
    /** TBufferMerger has no copy operator */
-   TBufferMerger& operator=(const TBufferMerger&);
+   TBufferMerger &operator=(const TBufferMerger &);
 
    void Push(TBufferFile *buffer);
-   void Listen();
+   void WriteOutputFile();
 
+   const char *fName;
+   const char *fOption;
+   const Int_t fCompress;
    std::mutex fFilesMutex;                                       //< Mutex used to lock fAttachedFiles
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::mutex fWriteMutex;                                       //< Mutex used for the condition variable
    std::condition_variable fCV;                                  //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
-   std::unique_ptr<TFile> fFile;                                 //< Output file, owned by this class
    std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 
@@ -99,8 +101,7 @@ private:
 
 class TBufferMergerFile : public TMemFile {
 private:
-   TBufferMerger &fMerger;              //< TBufferMerger this file is attached to
-   std::unique_ptr<TArrayC> fClassSent; //< StreamerInfo this file has already written
+   TBufferMerger &fMerger; //< TBufferMerger this file is attached to
 
    /** Constructor. Can only be called by TBufferMerger.
     * @param m Merger this file is attached to. */
@@ -113,7 +114,7 @@ private:
    TBufferMergerFile(const TBufferMergerFile &);
 
    /** TBufferMergerFile has no copy operator */
-   TBufferMergerFile& operator=(const TBufferMergerFile&);
+   TBufferMergerFile &operator=(const TBufferMergerFile &);
 
    friend class TBufferMerger;
 
@@ -131,9 +132,6 @@ public:
     * or no data is appended to the TBufferMerger.
     */
    virtual Int_t Write(const char *name = nullptr, Int_t opt = 0, Int_t bufsize = 0) override;
-
-   /** Write StreamerInfo for objects that have not already been written. */
-   virtual void WriteStreamerInfo() override;
 
    ClassDefOverride(TBufferMergerFile, 0);
 };
