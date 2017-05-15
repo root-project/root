@@ -62,8 +62,12 @@ void TProfile2PolyBin::UpdateError()
    if (fSumw != 0) tmp = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
 
    switch (fErrorMode) {
-   case kERRORMEAN: fError = std::sqrt(GetEffectiveEntries()) / tmp; break;
-   case kERRORSPREAD: fError = tmp; break;
+   case kERRORMEAN:
+       fError =  tmp / std::sqrt(GetEffectiveEntries());
+       break;
+   case kERRORSPREAD:
+       fError = tmp;
+       break;
    default: fError = tmp;
    }
 }
@@ -267,11 +271,114 @@ Double_t TProfile2Poly::GetBinEntries(Int_t bin) const
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntries();
 }
 
+Double_t TProfile2Poly::GetBinEntriesW2(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesW2();
+}
+
+Double_t TProfile2Poly::GetBinEntriesVW(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesVW();
+}
+
+Double_t TProfile2Poly::GetBinEntriesWV2(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin < 0) return fOverflow[-bin - 1];
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesWV2();
+}
+
 Double_t TProfile2Poly::GetBinError(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
    if (bin < 0) return fOverflow[-bin - 1];
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetBinError();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the array stats from the contents of this profile.
+/// The array stats must be correctly dimensioned in the calling program.
+///
+/// - stats[0] = sumw
+/// - stats[1] = sumw2
+/// - stats[2] = sumwx
+/// - stats[3] = sumwx2
+/// - stats[4] = sumwy
+/// - stats[5] = sumwy2
+/// - stats[6] = sumwxy
+/// - stats[7] = sumwz
+/// - stats[8] = sumwz2
+///
+/// If no axis-subrange is specified (via TAxis::SetRange), the array stats
+/// is simply a copy of the statistics quantities computed at filling time.
+/// If a sub-range is specified, the function recomputes these quantities
+/// from the bin contents in the current axis range.
+
+void TProfile2Poly::GetStats(Double_t *stats) const
+{
+   if (fBuffer) ((TProfile2Poly*)this)->BufferEmpty();
+
+   // Loop on bins
+   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+      Int_t bin, binx, biny;
+      Double_t w, w2;
+      Double_t x,y;
+      for (bin=0;bin<9;bin++) stats[bin] = 0;
+//      if (!fBinEntries.fArray) return;
+      Int_t firstBinX = fXaxis.GetFirst();
+      Int_t lastBinX  = fXaxis.GetLast();
+      Int_t firstBinY = fYaxis.GetFirst();
+      Int_t lastBinY  = fYaxis.GetLast();
+      // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
+      if (fgStatOverflows) {
+         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinX == 1) firstBinX = 0;
+            if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
+         }
+         if ( !fYaxis.TestBit(TAxis::kAxisRange) ) {
+            if (firstBinY == 1) firstBinY = 0;
+            if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
+         }
+      }
+      for (biny = firstBinY; biny <= lastBinY; biny++) {
+         y = fYaxis.GetBinCenter(biny);
+         for (binx = firstBinX; binx <= lastBinX; binx++) {
+            bin = GetBin(binx,biny);
+
+//            w         = fBinEntries.fArray[bin]; // getbin(bin).fsumw
+            w         = GetBinEntries(bin);
+//            w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );
+            w2        = GetBinEntriesW2(bin);
+
+            x         = fXaxis.GetBinCenter(binx);
+            stats[0] += w;
+            stats[1] += w2;
+            stats[2] += w*x;
+            stats[3] += w*x*x;
+            stats[4] += w*y;
+            stats[5] += w*y*y;
+            stats[6] += w*x*y;
+//            stats[7] += fArray[bin];
+            stats[7] += GetBinEntriesVW(bin);
+//            stats[8] += fSumw2.fArray[bin];
+            stats[8] += GetBinEntriesWV2(bin);
+         }
+      }
+   } else {
+      stats[0] = fTsumw;
+      stats[1] = fTsumw2;
+      stats[2] = fTsumwx;
+      stats[3] = fTsumwx2;
+      stats[4] = fTsumwy;
+      stats[5] = fTsumwy2;
+      stats[6] = fTsumwxy;
+      stats[7] = fTsumwz;
+      stats[8] = fTsumwz2;
+   }
 }
 
 void TProfile2Poly::printOverflowRegions()

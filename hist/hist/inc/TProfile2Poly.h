@@ -22,7 +22,11 @@ public:
 
    Double_t GetEffectiveEntries() { return (fSumw * fSumw) / fSumw2; }
    Double_t GetEntries() { return fSumw; }
+   Double_t GetEntriesW2() { return fSumw2; }
+   Double_t GetEntriesVW() { return fSumvw; }
+   Double_t GetEntriesWV2() { return fSumwv2; }
    Double_t GetBinError() { return fError; }
+
 
 
 private:
@@ -74,9 +78,15 @@ public:
 
    Double_t GetBinEffectiveEntries(Int_t bin) const;
    Double_t GetBinEntries(Int_t bin) const;
+   Double_t GetBinEntriesW2(Int_t bin) const;
+   Double_t GetBinEntriesVW(Int_t bin) const;
+   Double_t GetBinEntriesWV2(Int_t bin) const;
 
    using TH2Poly::GetBinError;
    virtual Double_t GetBinError(Int_t bin) const override;
+
+   virtual void GetStats(Double_t *stats) const override;
+
 
    Double_t GetOverflowContent(Int_t idx) { return regions[idx].fSumw; }
    void printOverflowRegions();
