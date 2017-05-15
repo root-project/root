@@ -428,7 +428,7 @@ protected:
 
    void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
 
-   void             PerformPostProcessing(TJSONStackObj *stack, const TStreamerElement *elem = 0);
+   void             PerformPostProcessing(TJSONStackObj *stack, Bool_t is_tobject = kFALSE);
 
    void              JsonWriteBasic(Char_t value);
    void              JsonWriteBasic(Short_t value);

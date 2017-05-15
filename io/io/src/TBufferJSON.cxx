@@ -1127,6 +1127,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       }
    }
 
+   // reuse post-processing code for TObject
+   if (cl == TObject::Class()) PerformPostProcessing(stack, kTRUE);
+
    if ((special_kind == 0) &&
          ((stack->fValues.GetLast() >= 0) || (fValue.Length() > 0))) {
       if (gDebug > 0)
@@ -1268,8 +1271,8 @@ void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
    TJSONStackObj *stack = Stack();
 
    if ((stack != 0) && stack->IsStreamerElement() && !stack->fIsObjStarted &&
-         ((stack->fElem->GetType() == TStreamerInfo::kObject) ||
-          (stack->fElem->GetType() == TStreamerInfo::kAny))) {
+        ((stack->fElem->GetType() == TStreamerInfo::kObject) ||
+         (stack->fElem->GetType() == TStreamerInfo::kAny))) {
 
       stack->fIsObjStarted = kTRUE;
 
@@ -1546,16 +1549,13 @@ void TBufferJSON::ClassMember(const char *name, const char *typeName,
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is converts TObject and TString structures to more compact representation
 
-void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
-                                        const TStreamerElement *elem)
+void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, Bool_t isTObject)
 {
-   if ((elem == 0) && stack->fIsPostProcessed) return;
-   if (elem == 0) elem = stack->fElem;
-   if (elem == 0) return;
+   if (stack->fIsPostProcessed) return;
 
-   if (gDebug > 3)
-      Info("PerformPostProcessing", "Element %s type %s",
-           elem->GetName(), elem->GetTypeName());
+   const TStreamerElement *elem = stack->fElem;
+
+   if (!elem && !isTObject) return;
 
    stack->fIsPostProcessed = kTRUE;
 
@@ -1565,13 +1565,16 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
       return;
    }
 
-   const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
-   Bool_t isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
-   Bool_t isTString = elem->GetType() == TStreamerInfo::kTString;
-   Bool_t isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
-   Bool_t isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
+   Bool_t isTString(kFALSE), isSTLstring(kFALSE), isOffsetPArray(kFALSE), isTArray(kFALSE);
 
-   Bool_t isTArray = (strncmp("TArray", typname, 6) == 0);
+   if (!isTObject) {
+      const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
+      isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
+      isTString = elem->GetType() == TStreamerInfo::kTString;
+      isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
+      isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
+      isTArray = (strncmp("TArray", typname, 6) == 0);
+   }
 
    if (isTString || isSTLstring) {
       // just remove all kind of string length information
@@ -1589,15 +1592,21 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
                  (strcmp(stack->fValues.Last()->GetName(), "1") == 0)) {
          stack->fValues.Delete();
       } else {
-         Error("PerformPostProcessing", "Wrong values for kOffsetP type %s name %s",
-               typname, (elem ? elem->GetName() : "---"));
+         Error("PerformPostProcessing", "Wrong values for kOffsetP element %s",
+                 (elem ? elem->GetName() : "---"));
          stack->fValues.Delete();
          fValue = "[]";
       }
    } else if (isTObject) {
-      if (stack->fValues.GetLast() != 0) {
+      // complex workaround for TObject streamer
+      // would be nice if other solution can be found
+
+      Int_t cnt = stack->fValues.GetLast()+1;
+      if (fValue.Length() > 0) cnt++;
+
+      if (cnt<2 || cnt>3) {
          if (gDebug > 0)
-            Error("PerformPostProcessing", "When storing TObject, number of items %d not equal to 2", stack->fValues.GetLast());
+            Error("PerformPostProcessing", "When storing TObject, strange number of items %d", cnt);
          AppendOutput(",", "\"dummy\"");
          AppendOutput(fSemicolon.Data());
       } else {
@@ -1606,15 +1615,24 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
          AppendOutput(stack->fValues.At(0)->GetName());
          AppendOutput(",", "\"fBits\"");
          AppendOutput(fSemicolon.Data());
+         AppendOutput((stack->fValues.GetLast()>0) ? stack->fValues.At(1)->GetName() : fValue.Data());
+         if (cnt==3) {
+            AppendOutput(",", "\"fPID\"");
+            AppendOutput(fSemicolon.Data());
+            AppendOutput((stack->fValues.GetLast()>1) ? stack->fValues.At(2)->GetName() : fValue.Data());
+         }
+
+         stack->fValues.Delete();
+         fValue.Clear();
+         return;
       }
 
-      stack->fValues.Delete();
    } else if (isTArray) {
       // for TArray one deletes complete stack
       stack->fValues.Delete();
    }
 
-   if (elem->IsBase() && (fValue.Length() == 0)) {
+   if (elem && elem->IsBase() && (fValue.Length() == 0)) {
       // here base class data already completely stored
       return;
    }
