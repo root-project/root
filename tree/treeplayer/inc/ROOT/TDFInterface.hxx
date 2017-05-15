@@ -110,6 +110,8 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, unsigned 
    // if we are here it means we are jitting, if we are jitting the loop manager must be alive
    auto &loopManager = *prevNode.GetImplPtr();
    BuildAndBook<BranchTypes...>(bl, r, nSlots, loopManager, prevNode, (ActionType *)nullptr);
+   auto rPtr = &r;
+   delete rPtr;
 }
 
 std::vector<std::string> GetUsedBranchesNames(const std::string, TObjArray *, const std::vector<std::string> &);
@@ -121,9 +123,9 @@ Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std
                          const std::vector<std::string> &tmpBranches,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree);
 
-void JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
-                     const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                     unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
+std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
+                            const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
+                            unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches);
 
 } // namespace TDF
 } // namespace Internal
@@ -1010,8 +1012,10 @@ private:
       unsigned int nSlots = df->GetNSlots();
       const auto &tmpBranches = df->GetBookedBranches();
       auto tree = df->GetTree();
-      TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), fProxiedPtr.get(), typeid(std::shared_ptr<ActionResultType>),
-                                   typeid(ActionType), &r, tree, nSlots, tmpBranches);
+      auto toJit = TDFInternal::JitBuildAndBook(bl, GetNodeTypeName(), fProxiedPtr.get(),
+                                                typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), &r, tree,
+                                                nSlots, tmpBranches);
+      df->Jit(toJit);
       return MakeResultProxy(r, df);
    }
 
