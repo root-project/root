@@ -233,6 +233,7 @@ struct ThreadFileMerger : public TObject {
             R__DeleteObject(fClients[f].fFile, true);
          } else {
             // We back up the file (probably due to memory constraint)
+            TDirectoryFile::TContext ctxt;
             TFile *file = TFile::Open(fClients[f].fLocalName, "UPDATE");
             // Remove object that can be incrementally merged and
             // will be reset by the client code.
