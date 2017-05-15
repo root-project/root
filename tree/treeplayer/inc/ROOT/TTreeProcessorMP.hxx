@@ -195,6 +195,12 @@ auto TTreeProcessorMP::Process(const std::vector<std::string>& fileNames, F proc
                  "procFunc must return a pointer to a class inheriting from TObject,"
                  " and must take a reference to TTreeReader as the only argument");
 
+   // Warn for yet unimplemented functionality
+   if (jFirst > 0) {
+      Warning("Process", "support for generic 'first entry' (jFirst > 0) not implemented yet - ignoring");
+      jFirst = 0;
+   }
+
    //prepare environment
    Reset();
    unsigned nWorkers = GetNWorkers();
@@ -292,6 +298,12 @@ auto TTreeProcessorMP::Process(TTree& tree, F procFunc, TEntryList &entries,
 {
    using retType = typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type;
    static_assert(std::is_constructible<TObject*, retType>::value, "procFunc must return a pointer to a class inheriting from TObject, and must take a reference to TTreeReader as the only argument");
+
+   // Warn for yet unimplemented functionality
+   if (jFirst > 0) {
+      Warning("Process", "support for generic 'first entry' (jFirst > 0) not implemented yet - ignoring");
+      jFirst = 0;
+   }
 
    //prepare environment
    Reset();
