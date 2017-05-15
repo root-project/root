@@ -25,6 +25,7 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FitConfig.h"
+#include "Fit/FitExecutionPolicy.h"
 #include "Fit/FitResult.h"
 #include "Math/IParamFunctionfwd.h"
 #include <memory>
@@ -128,7 +129,7 @@ public:
        it must implement the 1D or multidimensional parametric function interface
    */
    template < class Data , class Function, class cond = typename std::enable_if<!(std::is_same<Function, int>::value), Function>::type>
-   bool Fit( const Data & data, const Function & func, unsigned executionPolicy =0) {
+   bool Fit( const Data & data, const Function & func, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetFunction(func);
       return Fit(data, executionPolicy);
    }
@@ -136,11 +137,11 @@ public:
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data, unsigned executionPolicy=0) {
+   bool Fit(const BinData & data, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data, unsigned executionPolicy=0) {
+   bool Fit(const std::shared_ptr<BinData> & data, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoLeastSquareFit(executionPolicy);
    }
@@ -155,7 +156,7 @@ public:
    /**
        fit an unbinned data set using loglikelihood method
    */
-   bool Fit(const UnBinData & data, bool extended = false, unsigned executionPolicy=0) {
+   bool Fit(const UnBinData & data, bool extended = false, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -174,11 +175,11 @@ public:
    /**
       Unbinned Likelihood fit. Default is not extended
     */
-   bool LikelihoodFit(const UnBinData & data, bool extended = false, unsigned executionPolicy=0) {
+   bool LikelihoodFit(const UnBinData & data, bool extended = false, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, unsigned executionPolicy=0) {
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, unsigned executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
       return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
@@ -422,11 +423,11 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit(unsigned executionPolicy = 0);
+   bool DoLeastSquareFit(unsigned executionPolicy = ROOT::Fit::kSerial);
    /// binned likelihood fit
    bool DoBinnedLikelihoodFit( bool extended = true);
    /// un-binned likelihood fit
-   bool DoUnbinnedLikelihoodFit( bool extended = false, unsigned executionPolicy=0);
+   bool DoUnbinnedLikelihoodFit( bool extended = false, unsigned executionPolicy = ROOT::Fit::kSerial);
    /// linear least square fit
    bool DoLinearFit();
 

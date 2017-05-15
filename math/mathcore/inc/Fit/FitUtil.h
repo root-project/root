@@ -24,6 +24,7 @@
 
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
+#include "Fit/FitExecutionPolicy.h"
 
 #include "Math/Integrator.h"
 #include "Math/IntegratorMultiDim.h"
@@ -408,17 +409,17 @@ namespace FitUtil {
          };
 
          T res{};
-         if (executionPolicy == 0) {
+         if (executionPolicy == ROOT::Fit::kSerial) {
             for (unsigned int i = 0; i < (data.Size() / vecSize); i++) {
                res += mapFunction(i);
             }
 #ifdef R__USE_IMT
-         } else if (executionPolicy == 1) {
+         } else if (executionPolicy == ROOT::Fit::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
-            // } else if(executionPolicy == 2){
+            // } else if(executionPolicy == ROOT::Fit::kMultitProcess){
             //   ROOT::TProcessExecutor pool;
             //   res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size()/vecSize), redFunction);
          } else {
@@ -539,7 +540,7 @@ namespace FitUtil {
          T sumW_v{};
          T sumW2_v{};
 
-         if (executionPolicy == 0) {
+         if (executionPolicy == ROOT::Fit::kSerial) {
             for (unsigned int i = 0; i < n / vecSize; ++i) {
                auto resArray = mapFunction(i);
                logl_v += resArray.logvalue;
@@ -547,14 +548,14 @@ namespace FitUtil {
                sumW2_v += resArray.weight2;
             }
 #ifdef R__USE_IMT
-         } else if (executionPolicy == 1) {
+         } else if (executionPolicy == ROOT::Fit::kMultithread) {
             auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
             ROOT::TThreadExecutor pool;
             auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
             logl_v = resArray.logvalue;
             sumW_v = resArray.weight;
             sumW2_v = resArray.weight2;
-        //  } else if (executionPolicy == 2) {
+        //  } else if (executionPolicy == ROOT::Fit::kMultitProcess) {
             // ROOT::TProcessExecutor pool;
             // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
 #endif

@@ -356,17 +356,17 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
   };
 
   double res{};
-  if(executionPolicy == 0){
+  if(executionPolicy == ROOT::Fit::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == 1) {
+  } else if(executionPolicy == ROOT::Fit::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
 #endif
-//   } else if(executionPolicy == 2){
+//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
@@ -907,7 +907,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
   double logl{};
   double sumW{};
   double sumW2{};
-  if(executionPolicy == 0){
+  if(executionPolicy == ROOT::Fit::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       auto resArray = mapFunction(i);
       logl+=resArray.logvalue;
@@ -915,7 +915,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
       sumW2+=resArray.weight2;
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == 1) {
+  } else if(executionPolicy == ROOT::Fit::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -923,7 +923,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
     sumW=resArray.weight;
     sumW2=resArray.weight2;
 #endif
-//   } else if(executionPolicy == 2){
+//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
