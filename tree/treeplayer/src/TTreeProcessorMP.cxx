@@ -95,6 +95,13 @@ TTreeProcessorMP::TTreeProcessorMP(UInt_t nWorkers) : TMPClient(nWorkers)
 TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &entries, ULong64_t nToProcess,
                                  ULong64_t firstEntry)
 {
+
+   // Warn for yet unimplemented functionality
+   if (jFirst > 0) {
+      Warning("Process", "support for generic 'first entry' (jFirst > 0) not implemented yet - ignoring");
+      jFirst = 0;
+   }
+
    //prepare environment
    Reset();
    UInt_t nWorkers = GetNWorkers();
@@ -151,6 +158,12 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &e
 TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSelector &selector, TEntryList &entries,
                                  const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
 {
+
+   // Warn for yet unimplemented functionality
+   if (jFirst > 0) {
+      Warning("Process", "support for generic 'first entry' (jFirst > 0) not implemented yet - ignoring");
+      jFirst = 0;
+   }
 
    //prepare environment
    Reset();
