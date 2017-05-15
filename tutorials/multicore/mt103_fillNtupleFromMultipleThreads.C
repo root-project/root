@@ -28,7 +28,7 @@ void mt103_fillNtupleFromMultipleThreads()
    const size_t nEventsPerWorker = nEntries / nWorkers;
 
    // Create the TBufferMerger: this class orchestrates the parallel writing
-   auto fileName = "mp103_fillNtupleFromMultipleThreads.root";
+   auto fileName = "mt103_fillNtupleFromMultipleThreads.root";
    ROOT::Experimental::TBufferMerger merger(fileName);
 
    // Define what each worker will do
