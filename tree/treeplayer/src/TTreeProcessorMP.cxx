@@ -93,7 +93,7 @@ TTreeProcessorMP::TTreeProcessorMP(UInt_t nWorkers) : TMPClient(nWorkers)
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: memory resident tree
 TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &entries, ULong64_t nToProcess,
-                                 ULong64_t firstEntry)
+                                 ULong64_t jFirst)
 {
 
    // Warn for yet unimplemented functionality
@@ -110,7 +110,7 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &e
    // Check the entry list
    TEntryList *elist = (entries.IsValid()) ? &entries : nullptr;
    //fork
-   TMPWorkerTreeSel worker(selector, &tree, elist, nWorkers, nToProcess / nWorkers, firstEntry);
+   TMPWorkerTreeSel worker(selector, &tree, elist, nWorkers, nToProcess / nWorkers, jFirst);
    bool ok = Fork(worker);
    if(!ok) {
       Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation");
@@ -156,7 +156,7 @@ TList *TTreeProcessorMP::Process(TTree &tree, TSelector &selector, TEntryList &e
 //////////////////////////////////////////////////////////////////////////
 /// TSelector-based tree processing: dataset as a vector of files
 TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSelector &selector, TEntryList &entries,
-                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t firstEntry)
+                                 const std::string &treeName, ULong64_t nToProcess, ULong64_t jFirst)
 {
 
    // Warn for yet unimplemented functionality
@@ -173,7 +173,7 @@ TList *TTreeProcessorMP::Process(const std::vector<std::string> &fileNames, TSel
    // Check the entry list
    TEntryList *elist = (entries.IsValid()) ? &entries : nullptr;
    //fork
-   TMPWorkerTreeSel worker(selector, fileNames, elist, treeName, nWorkers, nToProcess, firstEntry);
+   TMPWorkerTreeSel worker(selector, fileNames, elist, treeName, nWorkers, nToProcess, jFirst);
    bool ok = Fork(worker);
    if (!ok) {
       Error("TTreeProcessorMP::Process", "[E][C] Could not fork. Aborting operation");
