@@ -1069,7 +1069,7 @@ protected:
 
          auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
             if (!trees[slot]) {
-               TDirectory::TContext ctxt;
+               ::TDirectory::TContext ctxt;
                files[slot] = merger.GetFile();
                files[slot]->cd();
                trees[slot] = new TTree(treename.c_str(), treename.c_str());
@@ -1087,7 +1087,7 @@ protected:
 
          for (auto &&file : files) file->Write();
       }
-      TDirectory::TContext ctxt;
+      ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
       TInterface<ROOT::Detail::TDataFrameImpl> snapshotTDF(
