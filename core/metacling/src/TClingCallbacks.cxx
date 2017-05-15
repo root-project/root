@@ -569,6 +569,11 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
       }
    } while ((Cursor = Cursor->getParent()));
 
+   if (!Wrapper) {
+      // The parent of S wasn't the TU?!
+      return false;
+   }
+
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
                                      /*TypeSourceInfo*/0, SC_None);
 
