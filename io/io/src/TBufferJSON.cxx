@@ -238,7 +238,6 @@ class TJSONStackObj : public TObject {
 public:
    TStreamerInfo    *fInfo;           //!
    TStreamerElement *fElem;           //! element in streamer info
-   Int_t             fElemNumber;     //! number of streamer element in streamer info
    Bool_t            fIsStreamerInfo; //!
    Bool_t            fIsElemOwner;    //!
    Bool_t            fIsPostProcessed;//! indicate that value is written
@@ -252,7 +251,6 @@ public:
       TObject(),
       fInfo(0),
       fElem(0),
-      fElemNumber(0),
       fIsStreamerInfo(kFALSE),
       fIsElemOwner(kFALSE),
       fIsPostProcessed(kFALSE),
@@ -299,7 +297,6 @@ TBufferJSON::TBufferJSON() :
    fJsonrMap(),
    fJsonrCnt(0),
    fStack(),
-   fExpectedChain(kFALSE),
    fCompact(0),
    fSemicolon(" : "),
    fArraySepar(", "),
@@ -1262,8 +1259,6 @@ void TBufferJSON::IncrementLevel(TVirtualStreamerInfo *info)
 
 void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 {
-   fExpectedChain = kFALSE;
-
    if (sinfo != 0) cl = sinfo->GetClass();
 
    if (cl == 0) return;
@@ -1300,8 +1295,6 @@ void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 
 void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
 {
-   fExpectedChain = kFALSE;
-
    if (gDebug > 2)
       Info("DecrementLevel", "Class: %s",
            (info ? info->GetClass()->GetName() : "custom"));
@@ -1346,10 +1339,8 @@ void TBufferJSON::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
 /// that class member will be streamed
 /// Name of element used in JSON
 
-void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
+void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 {
-   fExpectedChain = kFALSE;
-
    TJSONStackObj *stack = Stack();
    if (stack == 0) {
       Error("WorkWithElement", "stack is empty");
@@ -1392,19 +1383,10 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       return;
    }
 
-   Bool_t isBasicType = (elem->GetType() > 0) && (elem->GetType() < 20);
-
-   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-
-   if (fExpectedChain && (gDebug > 3))
-      Info("WorkWithElement", "    Expects chain for elem %s number %d",
-           elem->GetName(), number);
-
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : 0;
 
    stack = PushStack(0);
    stack->fElem = (TStreamerElement *) elem;
-   stack->fElemNumber = number;
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
@@ -2484,48 +2466,27 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
       TJSONPushValue();                                                      \
       if (n <= 0) { /*fJsonrCnt++;*/ fValue.Append("[]"); return; }          \
       TStreamerElement* elem = Stack(0)->fElem;                              \
-      if ((elem != 0) && (elem->GetType()>TStreamerInfo::kOffsetL) &&        \
-            (elem->GetType() < TStreamerInfo::kOffsetP) &&                   \
-            (elem->GetArrayLength() != n)) fExpectedChain = kTRUE;           \
-      if (fExpectedChain) {                                                  \
-         TStreamerInfo* info = Stack(1)->fInfo;                              \
-         Int_t startnumber = Stack(0)->fElemNumber;                          \
-         fExpectedChain = kFALSE;                                            \
-         Int_t index(0);                                                     \
-         while (index<n) {                                                   \
-            elem = (TStreamerElement*)info->GetElements()->At(startnumber++);\
-            if (index>0) JsonStartElement(elem);                             \
-            if (elem->GetType()<TStreamerInfo::kOffsetL) {                   \
-               JsonWriteBasic(vname[index]);                                 \
-               index++;                                                      \
-            } else {                                                         \
-               method((vname+index), elem->GetArrayLength(),typname);        \
-               index+=elem->GetArrayLength();                                \
+      if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
+         TArrayI indexes(elem->GetArrayDim() - 1);                           \
+         indexes.Reset(0);                                                   \
+         Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
+         while (cnt >= 0) {                                                  \
+            if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
+               fValue.Append("]");                                           \
+               indexes[cnt--] = 0;                                           \
+               if (cnt >= 0) indexes[cnt]++;                                 \
+               continue;                                                     \
             }                                                                \
-            PerformPostProcessing(Stack(0), elem);                           \
+            fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
+            if (++cnt == indexes.GetSize()) {                                \
+               method((vname+shift), len, typname);                          \
+               indexes[--cnt]++;                                             \
+               shift+=len;                                                   \
+            }                                                                \
          }                                                                   \
-      } else                                                                 \
-         if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
-            TArrayI indexes(elem->GetArrayDim() - 1);                           \
-            indexes.Reset(0);                                                   \
-            Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
-            while (cnt >= 0) {                                                  \
-               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
-                  fValue.Append("]");                                           \
-                  indexes[cnt--] = 0;                                           \
-                  if (cnt >= 0) indexes[cnt]++;                                 \
-                  continue;                                                     \
-               }                                                                \
-               fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
-               if (++cnt == indexes.GetSize()) {                                \
-                  method((vname+shift), len, typname);                          \
-                  indexes[--cnt]++;                                             \
-                  shift+=len;                                                   \
-               }                                                                \
-            }                                                                   \
-         } else {                                                               \
-            method(vname, n, typname);                                          \
-         }                                                                      \
+      } else {                                                               \
+         method(vname, n, typname);                                          \
+      }                                                                      \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3613,7 +3574,7 @@ Int_t TBufferJSON::WriteClassBuffer(const TClass *cl, void *pointer)
 
    //NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
-   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char *)pointer);
+   ApplySequence(*(sinfo->GetWriteTextActions()), (char *)pointer);
 
    //write the byte count at the start of the buffer
    // SetByteCount(R__c, kTRUE);
