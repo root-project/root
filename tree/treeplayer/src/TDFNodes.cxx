@@ -16,6 +16,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #endif
 #include "RtypesCore.h" // Long64_t
+#include "TInterpreter.h"
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
@@ -246,6 +247,16 @@ void TLoopManager::CleanUp()
 /// Also perform a few setup and clean-up operations (CreateSlots before running, clear booked actions after, etc.).
 void TLoopManager::Run()
 {
+   // jit-compile required actions
+   auto error = TInterpreter::EErrorCode::kNoError;
+   gInterpreter->ProcessLine(fToJit.c_str(), &error);
+   if (error) {
+      std::string exceptionText =
+         "An error occurred while jitting. The lines above might indicate the cause of the crash\n";
+      throw std::runtime_error(exceptionText.c_str());
+   }
+   fToJit.clear();
+
    CreateSlots(fNSlots);
 
 #ifdef R__USE_IMT

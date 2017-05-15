@@ -67,6 +67,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
+   std::string fToJit; ///< string containing all `BuildAndBook` actions that should be jitted before running
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -106,6 +107,7 @@ public:
    void SetTree(std::shared_ptr<TTree> tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
+   void Jit(const std::string& s) { fToJit.append(s); }
 };
 } // end ns TDF
 } // end ns Detail
