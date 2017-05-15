@@ -226,6 +226,23 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   INLINE_TEMPLATE_ARGS Int_t WriteTextTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      buf.StreamObject(x, TNamed::Class(), TNamed::Class());
+      return 0;
+   }
+
+   INLINE_TEMPLATE_ARGS Int_t WriteTextTObject(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      buf.StreamObject(x, TObject::Class(), TObject::Class());
+      return 0;
+   }
+
+
    class TConfWithFactor : public TConfiguration {
       // Configuration object for the Float16/Double32 where a factor has been specified.
    public:
@@ -2877,6 +2894,9 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       // Skip artificial element used for reading purposes.
       return;
    }
+
+   Bool_t generic = kFALSE;
+
    switch (compinfo->fType) {
       // write basic types
       case TStreamerInfo::kBool:    writeSequence->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
@@ -2892,7 +2912,23 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       case TStreamerInfo::kUInt:    writeSequence->AddAction( WriteBasicType<UInt_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
       case TStreamerInfo::kULong:   writeSequence->AddAction( WriteBasicType<ULong_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );   break;
       case TStreamerInfo::kULong64: writeSequence->AddAction( WriteBasicType<ULong64_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) ); break;
-       // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
+
+      case TStreamerInfo::kTObject:
+         if (element->IsBase())
+            generic = kTRUE;
+         else
+            writeSequence->AddAction( WriteTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
+      case TStreamerInfo::kTNamed:
+         if (element->IsBase())
+            generic = kTRUE;
+         else
+            writeSequence->AddAction( WriteTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
+
+      // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
      /*case TStreamerInfo::kFloat16: {
          if (element->GetFactor() != 0) {
             writeSequence->AddAction( WriteBasicType_WithFactor<float>, new TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
@@ -2958,9 +2994,13 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
         break;
      } */
       default:
-         writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+         generic = kTRUE;
          break;
    }
+
+   // use generic write action when special handling is not provided
+   if (generic)  writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+
 #if defined(CDJ_NO_COMPILE)
    if (element->TestBit(TStreamerElement::kCache)) {
       TConfiguredAction action( writeSequence->fActions.back() );  // Action is moved, we must pop it next.
