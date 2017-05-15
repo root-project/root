@@ -365,7 +365,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       fitok = fitter->LikelihoodFit(*fitdata, extended);
    }
    else{ // standard least square fit
-      fitok = fitter->Fit(*fitdata, fitOption.ExecPolicy);
+      fitok = fitter->Fit(*fitdata, fitOption.ExPolicy);
    }
    if ( !fitok  && !fitOption.Quiet )
       Warning("Fit","Abnormal termination of minimization.");
@@ -704,12 +704,12 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       }
 
       // if (opt.Contains("MULTIPROC")) {
-      //    fitOption.ExecPolicy = 2;
+      //    fitOption.ExPolicy = ROOT::Fit::kMultiprocess;
       //    opt.ReplaceAll("MULTIPROC","");
       // }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = 1;
+         fitOption.ExPolicy = ROOT::Fit::kMultithread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
