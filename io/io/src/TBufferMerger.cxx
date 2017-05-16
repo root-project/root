@@ -62,6 +62,8 @@ void TBufferMerger::WriteOutputFile()
    TDirectoryFile::TContext context;
    TFileMerger merger;
 
+   merger.ResetBit(kMustCleanup);
+
    {
       R__LOCKGUARD2(gROOTMutex);
       merger.OutputFile(fName.c_str(), fOption.c_str(), fCompress);
