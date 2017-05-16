@@ -49,7 +49,6 @@ TEST(TBufferMerger, SequentialTreeFill)
       TBufferMerger merger("tbuffermerger_sequential.root");
 
       auto myfile = merger.GetFile();
-      myfile->cd();
       auto mytree = new TTree("mytree", "mytree");
 
       Fill(mytree, 0, nevents);
@@ -70,7 +69,6 @@ TEST(TBufferMerger, ParallelTreeFill)
       for (int i = 0; i < nthreads; ++i) {
          threads.emplace_back([=, &merger]() {
             auto myfile = merger.GetFile();
-            myfile->cd();
             auto mytree = new TTree("mytree", "mytree");
 
             Fill(mytree, i * nevents, nevents);
