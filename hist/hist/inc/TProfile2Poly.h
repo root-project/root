@@ -20,12 +20,12 @@ public:
    void Update();
    void ClearStats();
 
-   Double_t GetEffectiveEntries() { return (fSumw * fSumw) / fSumw2; }
-   Double_t GetEntries() { return fSumw; }
-   Double_t GetEntriesW2() { return fSumw2; }
-   Double_t GetEntriesVW() { return fSumvw; }
-   Double_t GetEntriesWV2() { return fSumwv2; }
-   Double_t GetBinError() { return fError; }
+   Double_t GetEffectiveEntries() const { return (fSumw * fSumw) / fSumw2; }
+   Double_t GetEntries() const { return fSumw; }
+   Double_t GetEntriesW2() const { return fSumw2; }
+   Double_t GetEntriesVW() const { return fSumvw; }
+   Double_t GetEntriesWV2() const { return fSumwv2; }
+   Double_t GetBinError() const { return fError; }
 
 
 
@@ -88,11 +88,11 @@ public:
    virtual void GetStats(Double_t *stats) const override;
 
 
-   Double_t GetOverflowContent(Int_t idx) { return regions[idx].fSumw; }
+   Double_t GetOverflowContent(Int_t idx) { return fOverflowBins[idx].fSumw; }
    void printOverflowRegions();
 
 private:
-   TProfile2PolyBin regions[kNOverflow];
+   TProfile2PolyBin fOverflowBins[kNOverflow];
    EErrorType fErrorMode = kERRORMEAN;
    Double_t fTsumwz;
    Double_t fTsumwz2;

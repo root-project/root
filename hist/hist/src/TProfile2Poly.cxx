@@ -129,7 +129,7 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
    // Find region in which the hit occured
    Int_t tmp = GetOverflowRegionFromCoordinates(xcoord, ycoord);
    Int_t overflow_idx = OverflowIdxToArrayIdx(tmp);
-   regions[overflow_idx].Fill(value, weight);
+   fOverflowBins[overflow_idx].Fill(value, weight);
 
    // Find the cell to which (x,y) coordinates belong to
    Int_t n = (Int_t)(floor((xcoord - fXaxis.GetXmin()) / fStepX));
@@ -215,7 +215,7 @@ Long64_t TProfile2Poly::Merge(const std::vector<TProfile2Poly *> &list)
 
       // Merge overflow bins
       for (Int_t i = 0; i < kNOverflow; ++i) {
-         this->regions[i].Merge(&histo->regions[i]);
+         this->fOverflowBins[i].Merge(&histo->fOverflowBins[i]);
       }
    }
 
@@ -267,28 +267,28 @@ Double_t TProfile2Poly::GetBinEffectiveEntries(Int_t bin) const
 Double_t TProfile2Poly::GetBinEntries(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
+   if (bin < 0) return fOverflowBins[-bin - 1].GetEntries();
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntries();
 }
 
 Double_t TProfile2Poly::GetBinEntriesW2(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
+   if (bin < 0) return fOverflowBins[-bin - 1].GetEntriesW2();
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesW2();
 }
 
 Double_t TProfile2Poly::GetBinEntriesVW(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
+   if (bin < 0) return fOverflowBins[-bin - 1].GetEntriesVW();
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesVW();
 }
 
 Double_t TProfile2Poly::GetBinEntriesWV2(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
+   if (bin < 0) return fOverflowBins[-bin - 1].GetEntriesWV2();
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEntriesWV2();
 }
 
