@@ -58,6 +58,11 @@ public:
     *  At the end, all TBufferMergerFiles get merged into the output file.
     *  The user is responsible to "cd" into the file to associate objects
     *  such as histograms or trees to it.
+    *
+    *  After the creation of this file, the user must reset the kMustCleanup
+    *  bit on any objects attached to it and take care of their deletion, as
+    *  there is a possibility that a race condition will happen that causes
+    *  a crash if ROOT manages these objects.
     */
    std::shared_ptr<TBufferMergerFile> GetFile();
 
