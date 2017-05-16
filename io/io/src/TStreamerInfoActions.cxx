@@ -245,7 +245,7 @@ namespace TStreamerInfoActions
 
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
-   template<bool isText>
+   template<bool kIsTextT>
    INLINE_TEMPLATE_ARGS Int_t WriteSTLp(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       TClass *cl                 = config->fCompInfo->fClass;
@@ -285,7 +285,7 @@ namespace TStreamerInfoActions
          return 0;
       }
       UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
-      if (isText) {
+      if (kIsTextT) {
          // use same method which is used in kSTL
          buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, 0);
       } else
@@ -309,13 +309,13 @@ namespace TStreamerInfoActions
 
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
-   template<bool isText>
+   template<bool kIsTextT>
    INLINE_TEMPLATE_ARGS Int_t WriteStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
       UInt_t ioffset = eoffset + config->fOffset;
 
-      if (!isText && config->fCompInfo->fStreamer) {
+      if (!kIsTextT && config->fCompInfo->fStreamer) {
          // Get any private streamer which was set for the data member.
          TMemberStreamer* pstreamer = config->fCompInfo->fStreamer;
          // -- We have a private streamer.
@@ -341,7 +341,7 @@ namespace TStreamerInfoActions
       // By default assume the file version is the newest.
       Int_t fileVersion = kMaxInt;
 
-      if (!isText) {
+      if (!kIsTextT) {
          // At this point we do *not* have a private streamer.
          // Get the version of the file we are writing to.
          TFile* file = (TFile*) buf.GetParent();
@@ -385,7 +385,7 @@ namespace TStreamerInfoActions
                   } // isPtrPtr
                } // ndx
             } else // vlen
-            if (isText) {
+            if (kIsTextT) {
                // special handling for the text-based streamers
                for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
                   buf.WriteFastArray((void *) 0, cl, -1, 0);
