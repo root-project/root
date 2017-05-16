@@ -11,23 +11,26 @@
 #include "TClass.h"
 #include "TRegexp.h"
 
-#include "ROOT/TInterface.hxx"
+#include "ROOT/TDFInterface.hxx"
 
 #include <vector>
 #include <string>
 using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Internal::TDF;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
 // extern templates
-template class TInterface<ROOT::Detail::TDataFrameImpl>;
-template class TInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TInterface<ROOT::Detail::TDataFrameBranchBase>;
+template class TInterface<TLoopManager>;
+template class TInterface<TFilterBase>;
+template class TInterface<TCustomColumnBase>;
 }
 }
 
 namespace Internal {
+namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObjArray *branches,
@@ -59,12 +62,12 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
 
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
-                     const std::string &name, const std::string &expression, TObjArray *branches,
-                     const std::vector<std::string> &tmpBranches,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
+Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+                         const std::string &name, const std::string &expression, TObjArray *branches,
+                         const std::vector<std::string> &tmpBranches,
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = ROOT::Internal::GetUsedBranchesNames(expression, branches, tmpBranches);
+   auto usedBranches = GetUsedBranchesNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -86,7 +89,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *tree, tmpBr);
+         auto brTypeName = ColumnName2ColumnTypeName(brName, *tree, tmpBr);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -162,7 +165,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
 // (see comments in the body for actual jitted code)
-void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
                      const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
                      const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
@@ -170,7 +173,7 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    auto nBranches = bl.size();
 
    // retrieve pointers to temporary columns (null if the column is not temporary)
-   std::vector<ROOT::Detail::TDataFrameBranchBase *> tmpBranchPtrs(nBranches, nullptr);
+   std::vector<TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
    for (auto i = 0u; i < nBranches; ++i) {
       auto tmpBranchIt = tmpBranches.find(bl[i]);
       if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
@@ -179,7 +182,7 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    // retrieve branch type names as strings
    std::vector<std::string> branchTypeNames(nBranches);
    for (auto i = 0u; i < nBranches; ++i) {
-      const auto branchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      const auto branchTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
       if (branchTypeName.empty()) {
          std::string exceptionText = "The type of column ";
          exceptionText += bl[i];
@@ -206,16 +209,16 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
    const auto actionTypeName = actionTypeClass->GetName();
 
    // createAction_str will contain the following:
-   // ROOT::Internal::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
-   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::BranchNames_t*>(&bl),
+   // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
+   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
    //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
    std::stringstream createAction_str;
-   createAction_str << "ROOT::Internal::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
+   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
    for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
    createAction_str << ">("
                     << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
-                    << "*reinterpret_cast<ROOT::BranchNames_t*>(" << &bl << "), " << nSlots << ", *reinterpret_cast<"
-                    << actionResultTypeName << "*>(" << r << "));";
+                    << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
+                    << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
    auto error = TInterpreter::EErrorCode::kNoError;
    gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
    if (error) {
@@ -224,6 +227,6 @@ void JitBuildAndBook(const BranchNames_t &bl, const std::string &nodeTypename, v
       throw std::runtime_error(exceptionText.c_str());
    }
 }
-} // namespace Internal
-
-} // namespace ROOT
+} // end ns TDF
+} // end ns Internal
+} // end ns ROOT

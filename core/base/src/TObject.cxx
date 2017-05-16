@@ -273,7 +273,8 @@ void TObject::DrawClass() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw a clone of this object in the current pad
+/// Draw a clone of this object in the current selected pad for instance with:
+/// `gROOT->SetSelectedPad(gPad)`.
 
 TObject *TObject::DrawClone(Option_t *option) const
 {

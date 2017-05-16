@@ -28,7 +28,7 @@ void mt103_fillNtupleFromMultipleThreads()
    const size_t nEventsPerWorker = nEntries / nWorkers;
 
    // Create the TBufferMerger: this class orchestrates the parallel writing
-   auto fileName = "mp103_fillNtupleFromMultipleThreads.root";
+   auto fileName = "mt103_fillNtupleFromMultipleThreads.root";
    ROOT::Experimental::TBufferMerger merger(fileName);
 
    // Define what each worker will do
@@ -37,10 +37,10 @@ void mt103_fillNtupleFromMultipleThreads()
    // content.
    auto work_function = [&](int seed) {
       auto f = merger.GetFile();
+      f->cd();
       TNtuple ntrand("ntrand", "Random Numbers", "r");
       TRandom rnd(seed);
       for (auto i : ROOT::TSeqI(nEntries)) ntrand.Fill(rnd.Gaus());
-      ntrand.Write();
       f->Write();
    };
 

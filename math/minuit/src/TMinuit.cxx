@@ -341,9 +341,11 @@ into account the non-linearities much more precisely.
 #include "TPluginManager.h"
 #include "TClass.h"
 
+#include <atomic>
+
 TMinuit *gMinuit;
 
-const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+static const char charal[29] = " .ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
 ClassImp(TMinuit)
 
@@ -1138,7 +1140,7 @@ void TMinuit::mncler()
 
 void TMinuit::mncntr(Int_t ike1, Int_t ike2, Int_t &ierrf)
 {
-   static TString clabel = "0123456789ABCDEFGHIJ";
+   static const char *const clabel = "0123456789ABCDEFGHIJ";
 
    /* Local variables */
    Double_t d__1, d__2;
@@ -2673,7 +2675,7 @@ void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &i
    /* Initialized data */
 
    TString comand = command;
-   static const char *cname[40] = {
+   static const char *const cname[40] = {
       "MINImize  ",
       "SEEk      ",
       "SIMplex   ",
@@ -3372,7 +3374,6 @@ void TMinuit::mngrad()
    Double_t fzero, err;
    Int_t i, nparx, lc, istsav;
    Bool_t lnone;
-   static TString cwd = "    ";
 
    fISW[2] = 1;
    nparx   = fNpar;
@@ -3396,18 +3397,21 @@ void TMinuit::mngrad()
    lnone = kFALSE;
    for (lc = 1; lc <= fNpar; ++lc) {
       i   = fNexofi[lc-1];
-      cwd = "GOOD";
+      const char *cwd = "GOOD";
       err = fDgrd[lc-1];
-      if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err)  cwd = " BAD";
+      if (TMath::Abs(fGRADgf[lc-1] - fGrd[lc-1]) > err) {
+         cwd = " BAD";
+         fISW[2] = 0;
+      }
       if (fGin[i-1] == fUndefi) {
          cwd      = "NONE";
          lnone    = kTRUE;
          fGRADgf[lc-1] = 0;
+         fISW[2] = 0;
       }
-      if (cwd != "GOOD") fISW[2] = 0;
       Printf("       %5d  %10s%12.4e%12.4e%12.4e    %s",i
                     ,(const char*)fCpnam[i-1]
-                    ,fGRADgf[lc-1],fGrd[lc-1],err,(const char*)cwd);
+                    ,fGRADgf[lc-1],fGrd[lc-1],err,cwd);
    }
    if (lnone) {
       Printf("  AGREEMENT=NONE  MEANS FCN DID NOT CALCULATE THE DERIVATIVE");
@@ -4301,7 +4305,7 @@ void TMinuit::mnimpr()
 {
    /* Initialized data */
 
-   static Double_t rnum = 0;
+   Double_t rnum = 0;
 
    /* Local variables */
    Double_t amax, ycalf, ystar, ystst;
@@ -6083,9 +6087,6 @@ void TMinuit::mnplot(Double_t *xpt, Double_t *ypt, char *chpt, Int_t nxypt, Int_
       return;
    }
 
-   static TString cdot   = ".";
-   static TString cslash = "/";
-
    /* Local variables */
    Double_t xmin, ymin, xmax, ymax, savx, savy, yprt;
    Double_t bwidx, bwidy, xbest, ybest, ax, ay, bx, by;
@@ -6313,8 +6314,8 @@ void TMinuit::mnprin(Int_t inkode, Double_t fval)
 {
    /* Initialized data */
 
-   static TString cblank = "           ";
-   static TString cnambf = "           ";
+   static const TString cblank = "           ";
+   TString cnambf = "           ";
 
    /* Local variables */
    Double_t dcmax, x1, x2, x3, dc;
@@ -6626,20 +6627,34 @@ void TMinuit::mnrn15(Double_t &val, Int_t &inseed)
 {
    /* Initialized data */
 
-   static Int_t iseed = 12345;
+   static std::atomic<Int_t> g_iseed( 12345 );
 
    Int_t k;
 
-   if (val == 3) goto L100;
-   inseed = iseed;
-   k      = iseed / 53668;
-   iseed  = (iseed - k*53668)*40014 - k*12211;
-   if (iseed < 0) iseed += 2147483563;
-   val = Double_t(iseed*4.656613e-10);
-   return;
-//               "entry" to set seed, flag is VAL=3
-L100:
-   iseed = inseed;
+   if (val == 3) {
+      //  "entry" to set seed, flag is VAL=3
+      g_iseed.store(inseed, std::memory_order_release);
+   } else {
+      // Grab the local value.  Two threads might comes here at the same
+      // time and will end up with the same results.
+      int starting_seed = g_iseed.load( std::memory_order_acquire );
+      int next_seed;
+
+      do {
+         next_seed = inseed = starting_seed;
+
+         // Determine the next seed.
+         k      = next_seed / 53668;
+         next_seed  = (next_seed - k*53668)*40014 - k*12211;
+         if (next_seed < 0) next_seed += 2147483563;
+
+         val = Double_t(next_seed*4.656613e-10);
+
+         // If more than one thread gets here, one will manage the update
+         // of g_iseed the other we go for at least one more round.
+         // This is not reproduceable
+      } while (! g_iseed.compare_exchange_strong(starting_seed, next_seed) );
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6906,7 +6921,7 @@ void TMinuit::mnset()
 {
    /* Initialized data */
 
-   static const char *cname[30] = {
+   static const char *const cname[30] = {
       "FCN value ",
       "PARameters",
       "LIMits    ",
@@ -6938,21 +6953,21 @@ void TMinuit::mnset()
       "SHOw      ",
       "SET       "};
 
-   static Int_t nname = 25;
-   static Int_t nntot = 30;
-   static TString cprlev[5] = {
+   static constexpr Int_t nname = 25; // Must less than sizeof(cname)/sizeof(char*)
+   static constexpr Int_t nntot = sizeof(cname)/sizeof(char*);
+   static const TString cprlev[5] = {
       "-1: NO OUTPUT EXCEPT FROM SHOW    ",
       " 0: REDUCED OUTPUT                ",
       " 1: NORMAL OUTPUT                 ",
       " 2: EXTRA OUTPUT FOR PROBLEM CASES",
       " 3: MAXIMUM OUTPUT                "};
 
-   static TString cstrat[3] = {
+   static const TString cstrat[3] = {
       " 0: MINIMIZE THE NUMBER OF CALLS TO FUNCTION",
       " 1: TRY TO BALANCE SPEED AGAINST RELIABILITY",
       " 2: MAKE SURE MINIMUM TRUE, ERRORS CORRECT  "};
 
-   static TString cdbopt[7] = {
+   static const TString cdbopt[7] = {
       "REPORT ALL EXCEPTIONAL CONDITIONS      ",
       "MNLINE: LINE SEARCH MINIMIZATION       ",
       "MNDERI: FIRST DERIVATIVE CALCULATIONS  ",
@@ -7424,11 +7439,11 @@ void TMinuit::mnsimp()
 {
    /* Initialized data */
 
-   static Double_t alpha = 1;
-   static Double_t beta = .5;
-   static Double_t gamma = 2;
-   static Double_t rhomin = 4;
-   static Double_t rhomax = 8;
+   static constexpr Double_t alpha = 1;
+   static constexpr Double_t beta = .5;
+   static constexpr Double_t gamma = 2;
+   static constexpr Double_t rhomin = 4;
+   static constexpr Double_t rhomax = 8;
 
    /* Local variables */
    Double_t dmin_, dxdi, yrho, f, ynpp1, aming, ypbar;
@@ -7663,7 +7678,7 @@ Bool_t TMinuit::mnunpt(TString &cfname)
 {
    Int_t i, l, ic;
    Bool_t ret_val;
-   static TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
+   static const TString cpt = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890./;:[]$%*_!@#&+()";
 
    ret_val = kFALSE;
    l       = strlen((const char*)cfname);

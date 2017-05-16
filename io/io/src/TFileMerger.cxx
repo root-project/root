@@ -818,7 +818,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       if (file->TestBit(kCanDelete)) file->Close();
 
       // Remove the temporary file
-      if (fLocal) {
+      if (fLocal && !file->InheritsFrom(TMemFile::Class())) {
          TUrl u(file->GetPath(), kTRUE);
          if (gSystem->Unlink(u.GetFile()) != 0)
             Warning("PartialMerge", "problems removing temporary local file '%s'", u.GetFile());
@@ -843,7 +843,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          // close the files
          if (file->TestBit(kCanDelete)) file->Close();
          // remove the temporary files
-         if(fLocal) {
+         if(fLocal && !file->InheritsFrom(TMemFile::Class())) {
             TString p(file->GetPath());
             // coverity[unchecked_value] Index is return a value with range or NPos to select the whole name.
             p = p(0, p.Index(':',0));

@@ -79,6 +79,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Math Libraries
 
+* Improve thread friendliness of the TMinuit class.
 
 ## RooFit Libraries
 
@@ -90,13 +91,6 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTreeReader::SetLastEntry()` has been deprecated. Its name is misleading; please use `TTreePlayer::SetEntriesRange()` instead.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 - Allow reading of older version of TTreePerfStats (ROOT-8520)
-- Several improvements to TDataFrame: a modern, expressive interface to multithreaded ROOT data analyses
-    - Add support for the creation of events on-the-fly (e.g. via Pythia or user-define generator functors), with no need for an underlying TTree of data file
-    - Add runtime branch type inference to all relevant actions: TDataFrame checks the column types at runtime and just-in-time compiles the corresponding (templated) action
-    - Add `Range` transformation: for non-parallel runs, `Range`s are now available to filter events according to their `start`, `stop` and `stride` parameters
-    - Improve multi-thread speed-up through various optimisations of the parallel event-loop management
-    - Update the user guide to include the generic `Fill` action and ranges
-    - Bug fixes and improvements to Doxygen docs
 - In `TTree::OptimizeBaskets()` do not call GetBasket(0) to avoid disc reads
 - It is now possible to define the precision of the default histogram created
   by `TTree::Draw`. Three new parameters are available in `$ROOTSYS/etcsystem.rootrc`
@@ -120,6 +114,7 @@ In a nutshell, the functionality provided is:
     - Possibility to run on ranges of entries
     - Creating columns not present in the original dataset
     - Chain multiple actions to be executed on the same event loop
+    - Creation of events on-the-fly (e.g. via Pythia or user-define generator functors), with no need for an input TTree
     - Snapshot on a rootfile the dataset after cuts and after augmentation with columns created by the user
     - Run analyses expressed as chains of actions in parallel in a transparent way for the user
 See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Experimental_1_1TDF_1_1TDataFrame.html) for more details
@@ -348,4 +343,4 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 - The IMT switch is set to on by default.
 - A new library is now created, libImt. It contains all classes which depend on TBB. Those classes were previously part of libThread. As a consequence rootcling/genreflex do not depend anymore from TBB even in presence of imt builds.
 - Refactoring of several math tests to avoid exact comparisons of floating point numbers
--
+- Changed the default C++ standard depending of the version of the compiler: for GCC > 6, AppleClang > 8 and Clang > 5, the default is now c++14.

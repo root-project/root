@@ -16,7 +16,7 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
-#include "ROOT/TInterface.hxx"
+#include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "TChain.h"
@@ -33,10 +33,14 @@ R__LOAD_LIBRARY(libTreePlayer)
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
+namespace TDFDetail = ROOT::Detail::TDF;
+namespace TDFInternal = ROOT::Internal::TDF;
 
-class TDataFrame : public TInterface<ROOT::Detail::TDataFrameImpl> {
+class TDataFrame : public TInterface<TDFDetail::TLoopManager> {
+   using ColumnNames_t = TDFDetail::ColumnNames_t;
+
 public:
-   TDataFrame(const std::string &treeName, const std::string &filenameglob, const BranchNames_t &defaultBranches = {});
+   TDataFrame(const std::string &treeName, const std::string &filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Build the dataframe
    /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
@@ -48,24 +52,22 @@ public:
    /// booking of actions or transformations.
    /// See TInterface for the documentation of the
    /// methods available.
-   template <
-      typename FILENAMESCOLL,
-      typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
+   template <typename FILENAMESCOLL,
+             typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
    TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
-              const BranchNames_t &defaultBranches = {});
-   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const BranchNames_t &defaultBranches = {});
-   TDataFrame(TTree &tree, const BranchNames_t &defaultBranches = {});
+              const ColumnNames_t &defaultBranches = {});
+   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
+   TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(Long64_t numEntries);
 };
 
-template <typename FILENAMESCOLL,
-          typename std::enable_if<ROOT::Internal::TDFTraitsUtils::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
+template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
-                       const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+                       const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
-   for (auto &fileName : filenamescoll) chain->Add(ROOT::Internal::ToConstCharPtr(fileName));
+   for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 

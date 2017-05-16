@@ -114,7 +114,8 @@ if(NOT ROOT_fftw3_FOUND)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
-  set(opengl_veto tree/staff.C)
+  set(opengl_veto tree/staff.C
+                  gl/*.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)

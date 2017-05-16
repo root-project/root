@@ -12,7 +12,7 @@
 using namespace ROOT::Experimental::TDF;
 
 /**
-* \class ROOT::Experimental::TDataFrame
+* \class ROOT::Experimental::TDF::TDataFrame
 * \ingroup dataframe
 * \brief ROOT's TDataFrame offers a high level interface for analyses of data stored in TTrees.
 
@@ -502,9 +502,8 @@ thread-safety, see [here](#generic-actions).
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
@@ -529,9 +528,8 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Br
 /// See TInterface for the documentation of the
 /// methods available.
 TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
-                       const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDataFrameImpl>(nullptr, defaultBranches))
+                       const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    chain->Add(filenameglob.c_str());
@@ -547,9 +545,8 @@ TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameg
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDataFrameImpl>(&tree, defaultBranches))
+TDataFrame::TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(&tree, defaultBranches))
 {
 }
 
@@ -561,7 +558,6 @@ TDataFrame::TDataFrame(TTree &tree, const BranchNames_t &defaultBranches)
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined temporary branches.
 TDataFrame::TDataFrame(Long64_t numEntries)
-   : TInterface<ROOT::Detail::TDataFrameImpl>(
-        std::make_shared<ROOT::Detail::TDataFrameImpl>(numEntries))
+   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(numEntries))
 {
 }

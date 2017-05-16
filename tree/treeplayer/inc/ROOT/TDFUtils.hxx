@@ -30,17 +30,19 @@ class TTreeReader;
 
 namespace ROOT {
 
-using BranchNames_t = std::vector<std::string>;
-
-// forward declarations
 namespace Detail {
-class TDataFrameBranchBase; // for ColumnName2ColumnTypeName
-struct TDataFrameGuessedType {
+namespace TDF {
+using ColumnNames_t = std::vector<std::string>;
+class TCustomColumnBase; // fwd decl for ColumnName2ColumnTypeName
+struct TInferType {
 };
-}
+} // end ns Detail
+} // end ns TDF
 
 namespace Internal {
-namespace TDFTraitsUtils {
+namespace TDF {
+using namespace ROOT::Detail::TDF;
+
 template <typename... Types>
 struct TTypeList {
    static constexpr std::size_t fgSize = sizeof...(Types);
@@ -166,7 +168,7 @@ struct TNeedJitting {
 };
 
 template <typename... Rest>
-struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType, Rest...> {
+struct TNeedJitting<TInferType, Rest...> {
    static constexpr bool value = true;
 };
 
@@ -176,16 +178,14 @@ struct TNeedJitting<T> {
 };
 
 template <>
-struct TNeedJitting<ROOT::Detail::TDataFrameGuessedType> {
+struct TNeedJitting<TInferType> {
    static constexpr bool value = true;
 };
-
-} // end NS TDFTraitsUtils
 
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, ROOT::Detail::TDataFrameBranchBase *);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree &, TCustomColumnBase *);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string s);
@@ -206,15 +206,14 @@ struct TReaderValueOrArray<std::array_view<T>> {
 template <typename T>
 using ReaderValueOrArray_t = typename TReaderValueOrArray<T>::Proxy_t;
 
-/// Initialize a tuple of TDataFrameValues.
+/// Initialize a tuple of TColumnValues.
 /// For real TTree branches a TTreeReader{Array,Value} is built and passed to the
-/// TDataFrameValue. For temporary columns a pointer to the corresponding variable
+/// TColumnValue. For temporary columns a pointer to the corresponding variable
 /// is passed instead.
 template <typename TDFValueTuple, int... S>
-void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const BranchNames_t &bn,
-                   const BranchNames_t &tmpbn,
-                   const std::map<std::string, std::shared_ptr<ROOT::Detail::TDataFrameBranchBase>> &tmpBranches,
-                   ROOT::Internal::TDFTraitsUtils::TStaticSeq<S...>)
+void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r, const ColumnNames_t &bn,
+                   const ColumnNames_t &tmpbn,
+                   const std::map<std::string, std::shared_ptr<TCustomColumnBase>> &tmpBranches, TStaticSeq<S...>)
 {
    // isTmpBranch has length bn.size(). Elements are true if the corresponding
    // branch is a temporary branch created with Define, false if they are
@@ -238,7 +237,7 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
 template <typename Filter>
 void CheckFilter(Filter &)
 {
-   using FilterRet_t = typename TDFTraitsUtils::TFunctionTraits<Filter>::Ret_t;
+   using FilterRet_t = typename TDF::TFunctionTraits<Filter>::Ret_t;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
@@ -249,9 +248,9 @@ void CheckTmpBranch(const std::string &branchName, TTree *treePtr);
 /// - takes exactly two arguments of the same type
 /// - has a return value of the same type as the arguments
 template <typename F, typename T>
-void CheckReduce(F &, ROOT::Internal::TDFTraitsUtils::TTypeList<T, T>)
+void CheckReduce(F &, TTypeList<T, T>)
 {
-   using Ret_t = typename ROOT::Internal::TDFTraitsUtils::TFunctionTraits<F>::Ret_t;
+   using Ret_t = typename TFunctionTraits<F>::Ret_t;
    static_assert(std::is_same<Ret_t, T>::value, "reduce function must have return type equal to argument type");
    return;
 }
@@ -265,7 +264,7 @@ void CheckReduce(F &, T)
 }
 
 /// Returns local BranchNames or default BranchNames according to which one should be used
-const BranchNames_t &PickBranchNames(unsigned int nArgs, const BranchNames_t &bl, const BranchNames_t &defBl);
+const ColumnNames_t &PickBranchNames(unsigned int nArgs, const ColumnNames_t &bl, const ColumnNames_t &defBl);
 
 namespace ActionTypes {
 struct Histo1D {
@@ -288,16 +287,13 @@ struct Fill {
 };
 }
 
-// Utilities to accommodate v7
-namespace TDFV7Utils {
-
 template <typename T, bool ISV7HISTO = !std::is_base_of<TH1, T>::value>
 struct TIsV7Histo {
    const static bool fgValue = ISV7HISTO;
 };
 
 template <typename T, bool ISV7HISTO = TIsV7Histo<T>::fgValue>
-struct Histo {
+struct HistoUtils {
    static void SetCanExtendAllAxes(T &h) { h.SetCanExtend(::TH1::kAllAxes); }
    static bool HasAxisLimits(T &h)
    {
@@ -307,15 +303,13 @@ struct Histo {
 };
 
 template <typename T>
-struct Histo<T, true> {
+struct HistoUtils<T, true> {
    static void SetCanExtendAllAxes(T &) {}
    static bool HasAxisLimits(T &) { return true; }
 };
 
-} // end NS TDFV7Utils
-
+} // end NS TDF
 } // end NS Internal
-
 } // end NS ROOT
 
 /// \endcond
