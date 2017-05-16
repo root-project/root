@@ -1135,8 +1135,8 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       }
    }
 
-   // reuse post-processing code for TObject
-   if (cl == TObject::Class()) PerformPostProcessing(stack, kTRUE);
+   // reuse post-processing code for TObject or TRef
+   PerformPostProcessing(stack, cl);
 
    if ((special_kind == 0) &&
          ((stack->fValues.GetLast() >= 0) || (fValue.Length() > 0))) {
@@ -1557,13 +1557,13 @@ void TBufferJSON::ClassMember(const char *name, const char *typeName,
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is converts TObject and TString structures to more compact representation
 
-void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, Bool_t isTObject)
+void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl)
 {
    if (stack->fIsPostProcessed) return;
 
    const TStreamerElement *elem = stack->fElem;
 
-   if (!elem && !isTObject) return;
+   if (!elem && !obj_cl) return;
 
    stack->fIsPostProcessed = kTRUE;
 
@@ -1573,9 +1573,13 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, Bool_t isTObject)
       return;
    }
 
-   Bool_t isTString(kFALSE), isSTLstring(kFALSE), isOffsetPArray(kFALSE), isTArray(kFALSE);
+   Bool_t isTObject(kFALSE), isTRef(kFALSE), isTString(kFALSE), isSTLstring(kFALSE), isOffsetPArray(kFALSE), isTArray(kFALSE);
 
-   if (!isTObject) {
+   if (obj_cl) {
+      if (obj_cl == TObject::Class()) isTObject = kTRUE;
+      else if (obj_cl == TRef::Class()) isTRef = kTRUE;
+      else return;
+   } else {
       const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
       isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
       isTString = elem->GetType() == TStreamerInfo::kTString;
@@ -1605,16 +1609,17 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, Bool_t isTObject)
          stack->fValues.Delete();
          fValue = "[]";
       }
-   } else if (isTObject) {
-      // complex workaround for TObject streamer
+   } else if (isTObject || isTRef) {
+      // complex workaround for TObject/TRef streamer
       // would be nice if other solution can be found
+      // Here is not supported TRef on TRef (double reference)
 
       Int_t cnt = stack->fValues.GetLast()+1;
       if (fValue.Length() > 0) cnt++;
 
       if (cnt<2 || cnt>3) {
          if (gDebug > 0)
-            Error("PerformPostProcessing", "When storing TObject, strange number of items %d", cnt);
+            Error("PerformPostProcessing", "When storing TObject/TRef, strange number of items %d", cnt);
          AppendOutput(",", "\"dummy\"");
          AppendOutput(fSemicolon.Data());
       } else {
