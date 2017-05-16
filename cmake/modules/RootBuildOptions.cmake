@@ -249,6 +249,10 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL AppleClang AND
        CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8)
   set(cxx11_defvalue OFF)
   set(cxx14_defvalue ON)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
+  set(cxx11_defvalue OFF)
+  set(cxx14_defvalue ON)
 endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------
