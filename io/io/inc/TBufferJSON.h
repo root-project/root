@@ -361,7 +361,7 @@ public:
    }
    virtual   UShort_t    WriteProcessID(TProcessID * /*pid*/)
    {
-      Error("WriteProcessID", "useless");
+      // Error("WriteProcessID", "useless");
       return 0;
    }
 
@@ -428,7 +428,7 @@ protected:
 
    void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
 
-   void             PerformPostProcessing(TJSONStackObj *stack, Bool_t is_tobject = kFALSE);
+   void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = 0);
 
    void              JsonWriteBasic(Char_t value);
    void              JsonWriteBasic(Short_t value);
