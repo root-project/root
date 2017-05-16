@@ -94,6 +94,7 @@ class TArrayIndexProducer {
       TArrayI fIndicies;
       TArrayI fMaxIndex;
       TString fRes;
+      Bool_t fIsArray;
 
    public:
       TArrayIndexProducer(TStreamerElement* elem, Int_t arraylen, const char* separ) :
@@ -102,13 +103,15 @@ class TArrayIndexProducer {
          fSepar(separ),
          fIndicies(),
          fMaxIndex(),
-         fRes()
+         fRes(),
+         fIsArray(kFALSE)
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
+         Bool_t usearraylen = (arraylen > 1);
 
          if (usearrayindx && (arraylen > 0)) {
             if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
-                (elem->GetType() == TStreamerInfo::kStreamLoop)) usearrayindx = kFALSE;
+                (elem->GetType() == TStreamerInfo::kStreamLoop)) { usearrayindx = kFALSE; usearraylen = kTRUE; }
             else
                if (arraylen != elem->GetArrayLength()) {
                   printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
@@ -120,11 +123,13 @@ class TArrayIndexProducer {
             fMaxIndex.Set(elem->GetArrayDim());
             for(int dim=0;dim<elem->GetArrayDim();dim++)
                fMaxIndex[dim] = elem->GetMaxIndex(dim);
+            fIsArray = fTotalLen>1;
          } else
-         if (arraylen > 1) {
+         if (usearraylen) {
             fTotalLen = arraylen;
             fMaxIndex.Set(1);
             fMaxIndex[0] = arraylen;
+            fIsArray = kTRUE;
          }
 
          if (fMaxIndex.GetSize() > 0) {
@@ -139,7 +144,8 @@ class TArrayIndexProducer {
          fSepar(separ),
          fIndicies(),
          fMaxIndex(),
-         fRes()
+         fRes(),
+         fIsArray(kFALSE)
       {
          Int_t ndim = member->GetArrayDim();
          if (extradim > 0) ndim++;
@@ -159,6 +165,7 @@ class TArrayIndexProducer {
                fTotalLen *= extradim;
             }
          }
+         fIsArray = fTotalLen>1;
       }
 
       Int_t ReduceDimension()
@@ -171,13 +178,14 @@ class TArrayIndexProducer {
          fMaxIndex.Set(ndim);
          fIndicies.Set(ndim);
          fTotalLen = fTotalLen/len;
+         fIsArray = fTotalLen>1;
          return len;
       }
 
 
       Bool_t IsArray() const
       {
-         return (fTotalLen>1);
+         return fIsArray;
       }
 
       Bool_t IsDone() const
