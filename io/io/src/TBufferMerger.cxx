@@ -93,14 +93,14 @@ void TBufferMerger::WriteOutputFile()
 
          {
             TDirectory::TContext ctxt;
-            TMemFile *tmp;
+            std::unique_ptr<TMemFile> tmp;
             {
                R__LOCKGUARD2(gROOTMutex);
-               tmp = new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "READ");
+               tmp.reset(new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "read"));
+               buffer->SetBufferOffset(buffer->Length() + length);
+               merger.AddFile(tmp.get(), false);
+               merger.PartialMerge();
             }
-            buffer->SetBufferOffset(buffer->Length() + length);
-            merger.AddAdoptFile(tmp);
-            merger.PartialMerge();
             merger.Reset();
          }
       }
