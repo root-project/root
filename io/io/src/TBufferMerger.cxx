@@ -64,7 +64,7 @@ void TBufferMerger::WriteOutputFile()
 
    {
       R__LOCKGUARD2(gROOTMutex);
-      merger.OutputFile(fName, fOption, fCompress);
+      merger.OutputFile(fName.c_str(), fOption.c_str(), fCompress);
    }
 
    while (!done) {
@@ -94,7 +94,7 @@ void TBufferMerger::WriteOutputFile()
             TMemFile *tmp;
             {
                R__LOCKGUARD2(gROOTMutex);
-               tmp = new TMemFile(fName, buffer->Buffer() + buffer->Length(), length, "READ");
+               tmp = new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "READ");
             }
             buffer->SetBufferOffset(buffer->Length() + length);
             merger.AddAdoptFile(tmp);
