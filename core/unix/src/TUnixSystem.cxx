@@ -3017,6 +3017,17 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
    hints.ai_socktype = 0;           // any socket type
    hints.ai_protocol = 0;           // any protocol
    hints.ai_flags = AI_CANONNAME;   // get canonical name
+#ifdef R__MACOSX
+   // Anything ending on ".local" causes a 5 second delay in getaddrinfo().
+   // See e.g. https://apple.stackexchange.com/questions/175320/why-is-my-hostname-resolution-taking-so-long
+   // Only reasonable solution: remove the "domain" part if it's ".local".
+   size_t lenHostname = strlen(hostname);
+   std::string hostnameWithoutLocal{hostname};
+   if (lenHostname > 6 && !strcmp(hostname + lenHostname - 6, ".local")) {
+      hostnameWithoutLocal.erase(lenHostname - 6);
+      hostname = hostnameWithoutLocal.c_str();
+   }
+#endif
 
    // obsolete gethostbyname() replaced by getaddrinfo()
    int rc = getaddrinfo(hostname, nullptr, &hints, &result);
