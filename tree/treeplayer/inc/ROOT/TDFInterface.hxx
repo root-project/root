@@ -1056,7 +1056,24 @@ protected:
          throw std::runtime_error(err_msg.c_str());
       }
 
-      {
+      if (!ROOT::IsImplicitMTEnabled()) {
+         std::unique_ptr<TFile> ofile(TFile::Open(filename.c_str(), "RECREATE"));
+         TTree t(treename.c_str(), treename.c_str());
+
+         bool FirstEvent = true;
+         auto fillTree = [&t, &bnames, &FirstEvent](Args &... args) {
+            if (FirstEvent) {
+               // hack to call TTree::Branch on all variadic template arguments
+               std::initializer_list<int> expander = {(t.Branch(bnames[S].c_str(), &args), 0)..., 0};
+               (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+               FirstEvent = false;
+            }
+            t.Fill();
+         };
+
+         Foreach(fillTree, {bnames[S]...});
+         t.Write();
+      } else {
          auto df = GetDataFrameChecked();
          unsigned int nSlots = df->GetNSlots();
          TBufferMerger merger(filename.c_str(), "RECREATE");
@@ -1065,24 +1082,20 @@ protected:
 
          auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
             if (!trees[slot]) {
-               ::TDirectory::TContext ctxt;
                files[slot] = merger.GetFile();
-               files[slot]->cd();
                trees[slot] = new TTree(treename.c_str(), treename.c_str());
-
+               trees[slot]->ResetBit(kMustCleanup);
                // hack to call TTree::Branch on all variadic template arguments
                std::initializer_list<int> expander = {(trees[slot]->Branch(bnames[S].c_str(), &args), 0)..., 0};
-
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
             }
-
             trees[slot]->Fill();
          };
 
          ForeachSlot(fillTree, {bnames[S]...});
-
          for (auto &&file : files) file->Write();
       }
+
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
