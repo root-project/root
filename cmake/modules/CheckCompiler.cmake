@@ -141,7 +141,15 @@ else()
   set(CMAKE_THREAD_FLAG)
 endif()
 
-#---Setup details depending opn the major platform type----------------------------------------------
+
+#---Setup compiler-specific flags (warning etc)----------------------------------------------
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  # AppleClang and Clang proper.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc++11-narrowing -Wsign-compare -Wsometimes-uninitialized -Wconditional-uninitialized -Wheader-guard -Warray-bounds -Wcomment -Wtautological-compare -Wstrncat-size -Wloop-analysis -Wbool-conversion")
+endif()
+
+
+#---Setup details depending on the major platform type----------------------------------------------
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
   include(SetUpLinux)
 elseif(APPLE)
@@ -155,9 +163,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_THREAD_FLAG}")
 
 if(cxx11)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc++11-narrowing -Wsign-compare -Wsometimes-uninitialized -Wconditional-uninitialized -Wheader-guard -Warray-bounds -Wcomment -Wtautological-compare -Wstrncat-size -Wloop-analysis -Wbool-conversion")
-  endif()
 endif()
 
 if(cxx14)
