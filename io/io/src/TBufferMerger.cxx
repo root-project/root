@@ -57,7 +57,7 @@ void TBufferMerger::WriteOutputFile()
    bool done = false;
    std::unique_lock<std::mutex> wlock(fWriteMutex);
    TDirectoryFile::TContext context;
-   TFileMerger merger(false);
+   TFileMerger merger;
 
    merger.OutputFile(fName, fOption, fCompress);
 
@@ -87,10 +87,9 @@ void TBufferMerger::WriteOutputFile()
             TDirectory::TContext ctxt;
             auto tmp = new TMemFile(fName, buffer->Buffer() + buffer->Length(), length, "READ");
             buffer->SetBufferOffset(buffer->Length() + length);
-            merger.AddFile(tmp, true);
+            merger.AddAdoptFile(tmp);
             merger.PartialMerge();
             merger.Reset();
-            delete tmp;
          }
       }
    }
