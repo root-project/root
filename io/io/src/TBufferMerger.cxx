@@ -37,7 +37,6 @@ TBufferMerger::~TBufferMerger()
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 {
-   TDirectory::TContext ctxt;
    std::lock_guard<std::mutex> lk(fFilesMutex);
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
    fAttachedFiles.push_back(f);
