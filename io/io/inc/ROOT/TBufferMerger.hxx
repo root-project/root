@@ -76,8 +76,8 @@ private:
    void Push(TBufferFile *buffer);
    void WriteOutputFile();
 
-   const char *fName;
-   const char *fOption;
+   const std::string fName;
+   const std::string fOption;
    const Int_t fCompress;
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::mutex fWriteMutex;                                       //< Mutex used for the condition variable
