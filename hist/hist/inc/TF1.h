@@ -469,7 +469,7 @@ public:
    template<class T> T operator()(const T *data, const Double_t *params);
    virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual void     FixParameter(Int_t ipar, Double_t value);
-   bool      IsVectorized()
+   bool      IsTemplated()
    {
       return fType == 3;
    }
