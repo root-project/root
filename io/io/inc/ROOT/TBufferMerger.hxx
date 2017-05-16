@@ -79,7 +79,6 @@ private:
    const char *fName;
    const char *fOption;
    const Int_t fCompress;
-   std::mutex fFilesMutex;                                       //< Mutex used to lock fAttachedFiles
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
    std::mutex fWriteMutex;                                       //< Mutex used for the condition variable
    std::condition_variable fCV;                                  //< Condition variable used to wait for data
