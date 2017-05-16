@@ -856,18 +856,19 @@ if(xrootd)
 endif()
 if(builtin_xrootd)
   set(xrootd_version 4.6.1)
-  set(xrootd_versionnum 400030000)
+  set(xrootd_versionnum 400060001)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces many warnings  
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
-    # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-    URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
+    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    # URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
