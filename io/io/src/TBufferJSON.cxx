@@ -2654,31 +2654,38 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
       return;
    }
 
-   char *obj = (char *)start;
-   if (!n) n = 1;
-   int size = cl->Size();
-
-   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
-
-   if (indexes.IsArray()) {
+   if (n<0) {
+      // special handling of empty StreamLoop
+      AppendOutput("null");
       JsonDisablePostprocessing();
-      AppendOutput(indexes.GetBegin());
-   }
+   } else {
 
-   for (Int_t j = 0; j < n; j++, obj += size) {
+      char *obj = (char *)start;
+      if (!n) n = 1;
+      int size = cl->Size();
 
-      if (j>0) AppendOutput(indexes.NextSeparator());
+      TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
 
-      JsonWriteObject(obj, cl, kFALSE);
-
-      if (indexes.IsArray() && (fValue.Length() > 0)) {
-         AppendOutput(fValue.Data());
-         fValue.Clear();
+      if (indexes.IsArray()) {
+         JsonDisablePostprocessing();
+         AppendOutput(indexes.GetBegin());
       }
-   }
 
-   if (indexes.IsArray())
-      AppendOutput(indexes.GetEnd());
+      for (Int_t j = 0; j < n; j++, obj += size) {
+
+         if (j>0) AppendOutput(indexes.NextSeparator());
+
+         JsonWriteObject(obj, cl, kFALSE);
+
+         if (indexes.IsArray() && (fValue.Length() > 0)) {
+            AppendOutput(fValue.Data());
+            fValue.Clear();
+         }
+      }
+
+      if (indexes.IsArray())
+         AppendOutput(indexes.GetEnd());
+   }
 
    if (Stack(0)->fIndx)
       AppendOutput(Stack(0)->fIndx->NextSeparator());
