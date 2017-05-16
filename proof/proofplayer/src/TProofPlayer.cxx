@@ -3803,7 +3803,6 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
          }
       }
    }
-   PDB(kOutput,1) Info("HandleHistogram", "leaving");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
