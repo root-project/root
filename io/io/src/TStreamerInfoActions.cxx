@@ -245,19 +245,15 @@ namespace TStreamerInfoActions
 
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
-   INLINE_TEMPLATE_ARGS Int_t WriteTextStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
+   template<bool isText>
+   INLINE_TEMPLATE_ARGS Int_t WriteStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      // Get the class of the data member.
-      TClass* cl = config->fCompInfo->fClass;
-      // Get any private streamer which was set for the data member.
-      TMemberStreamer* pstreamer = config->fCompInfo->fStreamer;
-      // Which are we, an array of objects or an array of pointers to objects?
-      Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != 0);
-
       UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
       UInt_t ioffset = eoffset + config->fOffset;
 
-      if (pstreamer) {
+      if (!isText && config->fCompInfo->fStreamer) {
+         // Get any private streamer which was set for the data member.
+         TMemberStreamer* pstreamer = config->fCompInfo->fStreamer;
          // -- We have a private streamer.
          UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
          // Loop over the entries in the clones array or the STL container.
@@ -272,13 +268,22 @@ namespace TStreamerInfoActions
          // We are done, next streamer element.
          return 0;
       }
-      // At this point we do *not* have a private streamer.
-      // Get the version of the file we are writing to.
-      TFile* file = (TFile*) buf.GetParent();
+
+      // Get the class of the data member.
+      TClass* cl = config->fCompInfo->fClass;
+      // Which are we, an array of objects or an array of pointers to objects?
+      Bool_t isPtrPtr = (strstr(config->fCompInfo->fElem->GetTypeName(), "**") != 0);
+
       // By default assume the file version is the newest.
       Int_t fileVersion = kMaxInt;
-      if (file) {
-         fileVersion = file->GetVersion();
+
+      if (!isText) {
+         // At this point we do *not* have a private streamer.
+         // Get the version of the file we are writing to.
+         TFile* file = (TFile*) buf.GetParent();
+         if (file) {
+            fileVersion = file->GetVersion();
+         }
       }
       // Write the class version to the buffer.
       UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
@@ -290,23 +295,16 @@ namespace TStreamerInfoActions
             Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
 
             //b << vlen;
-            if (vlen || true) {
+            if (vlen) {
                // Get a pointer to the array of pointers.
                char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
                // Loop over each element of the array of pointers to varying-length arrays.
                for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-                  if (!vlen) {
-                     // special handling of empty arrays
-                     // here call only to provide correct formatting of arrays
-                     buf.WriteFastArray((void *) 0, cl, -1, 0);
-                     continue;
-                  }
-
                   if (!pp[ndx]) {
                      // -- We do not have a pointer to a varying-length array.
                      // Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                     // ::ErrorHandler(kError, "::WriteTextStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
-                     printf("Error - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
+                     // ::ErrorHandler(kError, "::WriteStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
+                     printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
                      continue;
                   }
                   if (!isPtrPtr) {
@@ -322,7 +320,12 @@ namespace TStreamerInfoActions
                      buf.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
                   } // isPtrPtr
                } // ndx
-            } // vlen
+            } else // vlen
+            if (isText) {
+               // special handling for the text-based streamers
+               for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
+                  buf.WriteFastArray((void *) 0, cl, -1, 0);
+            }
          //} // k
       }
       else {
@@ -332,7 +335,7 @@ namespace TStreamerInfoActions
             // Get the counter for the varying length array.
             Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
             //b << vlen;
-            if (vlen || true) {
+            if (vlen) {
                // Get a pointer to the array of pointers.
                char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
                // -- Older versions do *not* allow polymorphic pointers to objects.
@@ -342,6 +345,7 @@ namespace TStreamerInfoActions
                      // -- We do not have a pointer to a varying-length array.
                      //Error("WriteBufferAux", "The pointer to element %s::%s type %d (%s) is null\n", GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
                      // ::ErrorHandler(kError, "::WriteTextStreamerLoop", Form("The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName()));
+                     printf("WriteStreamerLoop - The pointer to element %s::%s type %d (%s) is null\n", config->fInfo->GetName(), config->fCompInfo->fElem->GetFullName(), config->fCompInfo->fType, config->fCompInfo->fElem->GetTypeName());
                      continue;
                   }
                   if (!isPtrPtr) {
@@ -3059,7 +3063,7 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
 
       case TStreamerInfo::kStreamLoop:
       case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-          writeSequence->AddAction( WriteTextStreamerLoop, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+          writeSequence->AddAction( WriteStreamerLoop<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
           break;
 
 
