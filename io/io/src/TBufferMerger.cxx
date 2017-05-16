@@ -14,6 +14,8 @@
 #include "TBufferFile.h"
 #include "TError.h"
 #include "TFileMerger.h"
+#include "TROOT.h"
+#include "TVirtualMutex.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -37,8 +39,9 @@ TBufferMerger::~TBufferMerger()
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 {
-   std::lock_guard<std::mutex> lk(fFilesMutex);
+   R__LOCKGUARD2(gROOTMutex);
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
+   gROOT->GetListOfFiles()->Remove(f.get());
    fAttachedFiles.push_back(f);
    return f;
 }
@@ -59,7 +62,10 @@ void TBufferMerger::WriteOutputFile()
    TDirectoryFile::TContext context;
    TFileMerger merger;
 
-   merger.OutputFile(fName, fOption, fCompress);
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      merger.OutputFile(fName, fOption, fCompress);
+   }
 
    while (!done) {
       fCV.wait(wlock, [this]() { return !this->fQueue.empty(); });
@@ -85,7 +91,11 @@ void TBufferMerger::WriteOutputFile()
 
          {
             TDirectory::TContext ctxt;
-            auto tmp = new TMemFile(fName, buffer->Buffer() + buffer->Length(), length, "READ");
+            TMemFile *tmp;
+            {
+               R__LOCKGUARD2(gROOTMutex);
+               tmp = new TMemFile(fName, buffer->Buffer() + buffer->Length(), length, "READ");
+            }
             buffer->SetBufferOffset(buffer->Length() + length);
             merger.AddAdoptFile(tmp);
             merger.PartialMerge();
