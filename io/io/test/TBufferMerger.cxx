@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <thread>
+#include <sys/stat.h>
 
 #include "gtest/gtest.h"
 
@@ -23,6 +24,12 @@ static void Fill(TTree* tree, int init, int count)
    }
 }
 
+static bool FileExists(const char *name)
+{
+   struct stat buffer;
+   return stat(name, &buffer) == 0;
+}
+
 TEST(TBufferMerger, CreateAndDestroy)
 {
    TBufferMerger merger("tbuffermerger_create.root");
@@ -32,11 +39,15 @@ TEST(TBufferMerger, CreateAndDestroyWithAttachedFiles)
 {
    ROOT::EnableThreadSafety();
 
-   TBufferMerger merger("tbuffermerger_create.root");
+   {
+      TBufferMerger merger("tbuffermerger_create.root");
 
-   auto f1 = merger.GetFile();
-   auto f2 = merger.GetFile();
-   auto f3 = merger.GetFile();
+      auto f1 = merger.GetFile();
+      auto f2 = merger.GetFile();
+      auto f3 = merger.GetFile();
+   }
+
+   EXPECT_TRUE(FileExists("tbuffermerger_create.root"));
 }
 
 TEST(TBufferMerger, SequentialTreeFill)
@@ -54,6 +65,8 @@ TEST(TBufferMerger, SequentialTreeFill)
       Fill(mytree, 0, nevents);
       myfile->Write();
    }
+
+   EXPECT_TRUE(FileExists("tbuffermerger_sequential.root"));
 }
 
 TEST(TBufferMerger, ParallelTreeFill)
@@ -78,11 +91,15 @@ TEST(TBufferMerger, ParallelTreeFill)
 
       for (auto &&t : threads) t.join();
    }
+
+   EXPECT_TRUE(FileExists("tbuffermerger_parallel.root"));
 }
 
 TEST(TBufferMerger, CheckTreeFillResults)
 {
    int sum_s, sum_p;
+
+   ASSERT_TRUE(FileExists("tbuffermerger_sequential.root"));
 
    { // sum of all branch values in sequential mode
       TFile f("tbuffermerger_sequential.root");
@@ -100,6 +117,8 @@ TEST(TBufferMerger, CheckTreeFillResults)
 
       sum_s = sum;
    }
+
+   ASSERT_TRUE(FileExists("tbuffermerger_parallel.root"));
 
    { // sum of all branch values in parallel mode
       TFile f("tbuffermerger_parallel.root");
