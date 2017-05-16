@@ -1273,6 +1273,16 @@ Bool_t TH2Poly::IsInsideBin(Int_t binnr, Double_t x, Double_t y)
    return bin->IsInside(x,y);
 }
 
+void TH2Poly::GetStats(Double_t *stats) const
+{
+   stats[0] = fTsumw;
+   stats[1] = fTsumw2;
+   stats[2] = fTsumwx;
+   stats[3] = fTsumwx2;
+   stats[4] = fTsumwy;
+   stats[5] = fTsumwy2;
+   stats[6] = fTsumwxy;
+}
 
 /** \class TH2PolyBin
     \ingroup Hist

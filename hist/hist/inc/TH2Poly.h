@@ -124,6 +124,8 @@ public:
    void         SetFloat(Bool_t flag = true);
    void         SetNewBinAdded(Bool_t flag){fNewBinAdded = flag;}
    Bool_t       IsInsideBin(Int_t binnr, Double_t x, Double_t y);
+   virtual void GetStats(Double_t *stats) const;
+
 
 protected:
     enum {
