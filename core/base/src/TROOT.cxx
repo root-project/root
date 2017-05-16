@@ -1156,12 +1156,15 @@ TObject *TROOT::FindObject(const char *name) const
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
    {
       R__LOCKGUARD2(gROOTMutex);
-      temp   = fFunctions->FindObject(name);   if (temp) return temp;
+      temp   = fFunctions->FindObject(name);if (temp) return temp;
    }
    temp   = fGeometries->FindObject(name);  if (temp) return temp;
    temp   = fCanvases->FindObject(name);    if (temp) return temp;
    temp   = fStyles->FindObject(name);      if (temp) return temp;
-   temp   = fSpecials->FindObject(name);    if (temp) return temp;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      temp = fSpecials->FindObject(name);   if (temp) return temp;
+   }
    TIter next(fGeometries);
    TObject *obj;
    while ((obj=next())) {
