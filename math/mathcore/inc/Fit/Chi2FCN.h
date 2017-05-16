@@ -25,12 +25,6 @@
 
 #include "Fit/FitUtil.h"
 
-//#define ROOT_FIT_PARALLEL
-
-#ifdef ROOT_FIT_PARALLEL
-#include "Fit/FitUtilParallel.h"
-#endif
-
 #include <memory>
 
 /**

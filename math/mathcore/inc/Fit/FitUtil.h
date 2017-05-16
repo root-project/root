@@ -294,12 +294,6 @@ namespace FitUtil {
    */
    void EvaluatePoissonLogLGradient(const IModelFunction & func, const BinData & data, const double * x, double * grad);
 
-//    /**
-//        Parallel evaluate the Chi2 given a model function and the data at the point x.
-//        return also nPoints as the effective number of used points in the Chi2 evaluation
-//    */
-//    double ParallelEvalChi2(const IModelFunction & func, const BinData & data, const double * x, unsigned int & nPoints);
-
    // methods required by dedicate minimizer like Fumili
 
    /**
