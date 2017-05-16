@@ -246,6 +246,70 @@ namespace TStreamerInfoActions
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
    template<bool isText>
+   INLINE_TEMPLATE_ARGS Int_t WriteSTLp(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      TClass *cl                 = config->fCompInfo->fClass;
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+      TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+      TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+      UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
+      UInt_t ioffset = eoffset + config->fOffset;
+
+      if (!buf.TestBit(TBuffer::kCannotHandleMemberWiseStreaming)
+          && proxy && vClass
+          && config->fInfo->GetStreamMemberWise()
+          && cl->CanSplit()
+          && !(strspn(config->fCompInfo->fElem->GetTitle(),"||") == 2)
+          && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+         // Let's save the collection member-wise.
+
+         UInt_t pos = buf.WriteVersionMemberWise(config->fInfo->IsA(),kTRUE);
+         buf.WriteVersion( vClass, kFALSE );
+
+         // TODO: subinfo used for WriteBufferSTL call, which is private for the moment
+         //TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
+
+         //for (int k = 0; k < narr; ++k) {
+            char **contp = (char **)((char *)addr + ioffset);
+            for(int j=0;j<config->fCompInfo->fLength;++j) {
+               char *cont = contp[j];
+               TVirtualCollectionProxy::TPushPop helper( proxy, cont );
+               Int_t nobjects = cont ? proxy->Size() : 0;
+               buf << nobjects;
+
+               // TODO: method is private, should be made accesible from here
+               // subinfo->WriteBufferSTL(buf,proxy,nobjects);
+            }
+         //}
+         buf.SetByteCount(pos,kTRUE);
+         return 0;
+      }
+      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
+      if (isText) {
+         // use same method which is used in kSTL
+         buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, 0);
+      } else
+      if (pstreamer == 0) {
+         //for (int k = 0; k < narr; ++k) {
+            char **contp = (char**)((char *) addr + ioffset);
+            for(int j=0; j<config->fCompInfo->fLength; ++j) {
+               char *cont = contp[j];
+               cl->Streamer( cont, buf );
+            }
+         // }
+      } else {
+         //for (int k = 0; k < narr; ++k) {
+            (*pstreamer)(buf,(char *) addr + ioffset, config->fCompInfo->fLength);
+         //}
+      }
+      buf.SetByteCount(pos,kTRUE);
+      return 0;
+   }
+
+
+   /** Direct copy of code from TStreamerInfo::WriteBufferAux,
+    * potentially can be used later for non-text streaming */
+   template<bool isText>
    INLINE_TEMPLATE_ARGS Int_t WriteStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
@@ -3059,6 +3123,11 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
             generic = kTRUE;
          else
             writeSequence->AddAction( WriteTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
+      case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
+      case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
+         writeSequence->AddAction( WriteSTLp<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kStreamLoop:
