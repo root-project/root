@@ -43,14 +43,8 @@ ROOTTEST_ADD_TEST(test_stringfiltercolumn
                   MACRO test_stringfiltercolumn.C+
                   OUTREF test_stringfiltercolumn.ref)
 
-# the version below makes test_glob hopefully more verbose
-#ROOTTEST_ADD_TEST(test_glob
-#                  MACRO test_glob.C+
-#                  OUTREF test_glob.ref)
 ROOTTEST_ADD_TEST(test_glob
-                  COPY_TO_BUILDDIR test_glob.C
-                  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/test_glob.sh
-                  FAILREGEX "ERROR"
+                  MACRO test_glob.C+
                   OUTREF test_glob.ref)
 
 ROOTTEST_ADD_TEST(test_reduce
