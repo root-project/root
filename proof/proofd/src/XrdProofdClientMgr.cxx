@@ -674,6 +674,11 @@ int XrdProofdClientMgr::MapClient(XrdProofdProtocol *p, bool all)
          psrv->SetProtVer(protver);
          // Assign this link to it
          XrdProofdResponse *resp = p->Response(1);
+         if (!resp) {
+            TRACEP(p, XERR, "proofsrv callback: could not get XrdProofdResponse object");
+            response->Send(kXP_nosession, "MapClient: proofsrv callback: memory issue?");
+            return -1;            
+         }
          psrv->SetConnection(resp);
          psrv->SetValid(1);
          // Set Trace ID

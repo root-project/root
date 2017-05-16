@@ -609,7 +609,8 @@ void TDirectoryFile::Delete(const char *namecycle)
    TDirectory::TContext ctxt(this);
    Short_t  cycle;
    char     name[kMaxLen];
-   DecodeNameCycle(namecycle, name, cycle, kMaxLen);
+   const char *nmcy = (namecycle) ? namecycle : "";
+   DecodeNameCycle(nmcy, name, cycle, kMaxLen);
 
    Int_t deleteall    = 0;
    Int_t deletetree   = 0;
