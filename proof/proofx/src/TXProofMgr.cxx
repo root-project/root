@@ -1737,7 +1737,7 @@ void TXProofMgr::CpProgress(const char *pfx, Long64_t bytes,
    watch->Stop();
    Double_t copytime = watch->RealTime();
    fprintf(stderr, "| %.02f %% [%.01f MB/s]\r",
-           100.0*(size?(bytes/size):1), bytes/copytime/1048576.);
+                   100.0*bytes/size, bytes/copytime/1048576.);
    if (cr) fprintf(stderr, "\n");
    watch->Continue();
 }

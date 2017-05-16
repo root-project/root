@@ -11121,7 +11121,7 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
       Info("VerifyDataSet", "Master-only verification");
       TMessage nameMess(kPROOF_DATASETS);
       nameMess << Int_t(kVerifyDataSet);
-      nameMess << TString(uri ? uri : "");
+      nameMess << TString(uri);
       nameMess << sopt;
       Broadcast(nameMess);
 

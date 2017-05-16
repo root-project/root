@@ -432,12 +432,7 @@ Int_t TSlave::OldAuthSetup(Bool_t master, TString wconf)
    }
    //
    // Setup
-   if (oldAuthSetupHook) {
-      return (*oldAuthSetupHook)(fSocket, master, fOrdinal, wconf);
-   } else {
-      Error("OldAuthSetup", "hook to method OldSlaveAuthSetup is undefined");
-      return -1;
-   }
+   return (*oldAuthSetupHook)(fSocket, master, fOrdinal, wconf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
