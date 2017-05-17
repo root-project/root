@@ -1,0 +1,45 @@
+
+Processing runBasicTypes.C...
+ ====== basic data types TJsonEx1 ===== 
+{
+  "_typename" : "TJsonEx1",
+  "fBool" : false,
+  "fChar" : 67,
+  "fShort" : 123,
+  "fInt" : 123456,
+  "fLong" : 7654321,
+  "fFloat" : 1.2,
+  "fDouble" : 3.8
+}
+
+ ====== arrays of basic data types TJsonEx2 ===== 
+{
+  "_typename" : "TJsonEx2",
+  "fTest1" : [11111, 22222, 33333, 44444],
+  "fTest2" : [[1, 2], [3, 4]],
+  "fBool" : [[[false, false, false, false], [true, true, true, true], [false, false, false, false]], [[true, true, true, true], [false, false, false, false], [true, true, true, true]]],
+  "fChar" : [["0123", "1234", "2345"], ["1234", "2345", "3456"]],
+  "fShort" : [[[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]], [[1, 2, 3, 4], [2, 3, 4, 5], [3, 4, 5, 6]]],
+  "fInt" : [[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]]],
+  "fLong" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]],
+  "fFloat" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]],
+  "fDouble" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]]
+}
+
+ ====== dinamin arrays of basic data types TJsonEx3 ===== 
+{
+  "_typename" : "TJsonEx3",
+  "fSize" : 5,
+  "fBool" : [false, false, false, false, false],
+  "fChar" : "12345",
+  "fShort" : [0, 2, 4, 6, 8],
+  "fInt" : [0, 5, 10, 15, 20],
+  "fLong" : [0, 123, 246, 369, 492],
+  "fFloat" : [0, 3, 6, 9, 12],
+  "fDouble" : [0, 7, 14, 21, 28]
+}
+
+ ============ selected data members ======== 
+ex2.fInt = [[[0, 1, 2, 3], [0, 1, 2, 3], [0, 1, 2, 3]], [[0, 1, 2, 3], [1, 2, 3, 4], [2, 3, 4, 5]]]
+ex3.fChar = "12345"
+ex3.fLong = [0, 123, 246, 369, 492]
