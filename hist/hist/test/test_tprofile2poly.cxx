@@ -2,18 +2,17 @@
 // #include "gtest/gtest.h"
 #include <algorithm>
 
-void printCompare(std::string s, TProfile2D* tp2d, TProfile2Poly* tpp) {
+void compareStats2DtoPoly(std::string s, TProfile2D* tp2d, TProfile2Poly* tpp) {
   cout << "----- " << s << endl;
   cout << "Mean | MeanError | StdDev" << endl << endl;
   for(Int_t c=1; c<=3; ++c) {
     cout << "Along Axis " << c << endl;
     cout << "2D:\t"   << tp2d->GetMean(c) << "\t" << tp2d->GetMeanError(c) << "\t" << tp2d->GetStdDev(c) << endl;
     cout << "Poly:\t" << tpp->GetMean(c) << "\t" << tpp->GetMeanError(c) << "\t" << tpp->GetStdDev(c) << endl << endl;
+    EXPECT_DOUBLE_EQ(tp2d->GetMean(c), tpp->GetMean(c));
+    EXPECT_DOUBLE_EQ(tp2d->GetMeanError(c), tpp->GetMeanError(c));
+    EXPECT_DOUBLE_EQ(tp2d->GetStdDev(c), tpp->GetStdDev(c));
   }
-
-  // ?????
-  // EXPECT_EQ(4,4);
-
 }
 
 void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
@@ -54,14 +53,13 @@ void test_tprofile2poly()
 
   // ----- first  comparison
   FillForTest(TP2D, TP2P, ran);
-  printCompare("first  comparison", TP2D, TP2P);
+  compareStats2DtoPoly("first  comparison", TP2D, TP2P);
 
   // ----- second  comparison
   FillForTest(TP2D_2, TP2P_2, ran);
-  printCompare("second  comparison", TP2D_2, TP2P_2);
+  compareStats2DtoPoly("second  comparison", TP2D_2, TP2P_2);
 
   // ----- Merging first and second one and then comparing
-
   TList DMerge;
   TList PMerge;
 
@@ -71,6 +69,5 @@ void test_tprofile2poly()
   TP2D->Merge(&DMerge);
   TP2P->Merge(&PMerge);
 
-  printCompare("Merge 1+2, then compare", TP2D, TP2P);
-
+  compareStats2DtoPoly("Merge 1+2, then compare", TP2D, TP2P);
 }
