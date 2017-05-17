@@ -68,7 +68,7 @@ void TProfile2PolyBin::UpdateError()
    case kERRORSPREAD:
        fError = tmp;
        break;
-   default: fError = tmp;
+   default: fError = tmp / std::sqrt(GetEffectiveEntries());
    }
 }
 
@@ -295,8 +295,8 @@ Double_t TProfile2Poly::GetBinEntriesWV2(Int_t bin) const
 Double_t TProfile2Poly::GetBinError(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
-   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetBinError();
+   if (bin < 0) return fOverflowBins[-bin - 1].GetError();
+   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetError();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

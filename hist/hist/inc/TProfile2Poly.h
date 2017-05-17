@@ -25,8 +25,7 @@ public:
    Double_t GetEntriesW2() const { return fSumw2; }
    Double_t GetEntriesVW() const { return fSumvw; }
    Double_t GetEntriesWV2() const { return fSumwv2; }
-   Double_t GetBinError() const { return fError; }
-
+   Double_t GetError() const { return fError; }
 
 
 private:

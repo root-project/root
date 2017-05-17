@@ -2,6 +2,11 @@
 
 #include <iostream>
 #include <fstream>
+#include <TProfile2Poly.h>
+#include <TProfile2D.h>
+#include <TCanvas.h>
+#include <TRandom.h>
+
 using namespace std;
 
 void tprofile2polyRealistic(Int_t numEvents=100000)
@@ -44,6 +49,8 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
    ifstream infile;
    infile.open("./tutorials/hist/data/tprofile2poly_tutorial.data");
 
+   std::cout << " WE ARE AFTER LOADING DATA " << std::endl;
+
    vector<pair<Double_t, Double_t>> allCoords;
    Double_t a, b;
    while (infile >> a >> b) {
@@ -72,6 +79,8 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
         det_avg_ls[l].AddBin(3, x, y);
       }
    }
+
+   std::cout << " WE ARE AFTER ADDING BINS " << std::endl;
 
    // -------------------- Simulate particles ------------------------
    TRandom ran;
