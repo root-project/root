@@ -12,10 +12,12 @@
    TJsonEx1* ex1 = new TJsonEx1;
    TJsonEx2* ex2 = new TJsonEx2;
    TJsonEx3* ex3 = new TJsonEx3;
-
+   TJsonEx11* ex11 = new TJsonEx11;
 
    cout << " ====== basic data types TJsonEx1 ===== " << endl;
    cout << TBufferJSON::ConvertToJSON(ex1, gROOT->GetClass("TJsonEx1")) << endl << endl;
+   cout << " ====== inheritance from TJsonEx1, TJsonEx11 ===== " << endl;
+   cout << TBufferJSON::ConvertToJSON(ex11, gROOT->GetClass("TJsonEx11")) << endl << endl;
    cout << " ====== arrays of basic data types TJsonEx2 ===== " << endl;
    cout << TBufferJSON::ConvertToJSON(ex2, gROOT->GetClass("TJsonEx2")) << endl << endl;
    cout << " ====== dinamin arrays of basic data types TJsonEx3 ===== " << endl;

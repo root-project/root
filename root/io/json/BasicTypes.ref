@@ -12,6 +12,19 @@ Processing runBasicTypes.C...
   "fDouble" : 3.8
 }
 
+ ====== inheritance from TJsonEx1, TJsonEx11 ===== 
+{
+  "_typename" : "TJsonEx11",
+  "fBool" : false,
+  "fChar" : 67,
+  "fShort" : 123,
+  "fInt" : 123456,
+  "fLong" : 7654321,
+  "fFloat" : 1.2,
+  "fDouble" : 3.8,
+  "fInt2" : 22
+}
+
  ====== arrays of basic data types TJsonEx2 ===== 
 {
   "_typename" : "TJsonEx2",
