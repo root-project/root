@@ -91,7 +91,7 @@ public:
    TGLVertex3(Double_t x, Double_t y, Double_t z);
    TGLVertex3(Double_t* v);
    TGLVertex3(const TGLVertex3 & other);
-   virtual ~TGLVertex3();
+   ~TGLVertex3();
 
    Bool_t       operator == (const TGLVertex3 & rhs) const;
    TGLVertex3 & operator =  (const TGLVertex3 & rhs);
@@ -127,7 +127,7 @@ public:
 
    void Dump() const;
 
-   ClassDef(TGLVertex3,1); // GL 3 component vertex helper/wrapper class
+   ClassDefNV(TGLVertex3,1); // GL 3 component vertex helper/wrapper class
 };
 
 //______________________________________________________________________________
@@ -250,7 +250,7 @@ public:
    TGLVector3(Double_t x, Double_t y, Double_t z);
    TGLVector3(const Double_t *src);
    TGLVector3(const TGLVector3 & other);
-   virtual ~TGLVector3();
+   ~TGLVector3();
 
    TGLVector3& operator = (const TGLVertex3& v)
    { fVals[0] = v[0]; fVals[1] = v[1]; fVals[2] = v[2]; return *this; }
@@ -261,7 +261,7 @@ public:
    Double_t Mag() const;
    void     Normalise();
 
-   ClassDef(TGLVector3,1); // GL 3 component vector helper/wrapper class
+   ClassDefNV(TGLVector3,1); // GL 3 component vector helper/wrapper class
 };
 
 // Inline for TGLVertex3 requiring full TGLVector definition
