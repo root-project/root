@@ -1101,11 +1101,10 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    for (Int_t lIdx = 0; lIdx < numLayers; lIdx++) {
       TObjArray *layer = (TObjArray *)fNetwork->At(lIdx);
       int numNodes = layer->GetEntries();
-      fout << "   double fWeights" << lIdx << "[" << numNodes << "];" << std::endl;
-      fout << "   for (int i=0; i<fLayerSize[" << lIdx << "]; i++) fWeights" << lIdx << "[i]=0;" << std::endl;
+      fout << "   std::array<double, " << numNodes << "> fWeights" << lIdx << " {{}};" << std::endl;
    }
    for (Int_t lIdx = 0; lIdx < numLayers - 1; lIdx++) {
-      fout << "   fWeights" << lIdx << "[fLayerSize[" << lIdx << "]-1]=1;" << std::endl;
+      fout << "   fWeights" << lIdx << ".back() = 1.;" << std::endl;
    }
    fout << std::endl;
    fout << "   for (int i=0; i<fLayerSize[0]-1; i++)" << std::endl;
@@ -1132,13 +1131,13 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
       else { // fNeuronInputType == TNeuronInputChooser::kAbsSum
          fout << "         fWeights" << i + 1 << "[o] += fabs(inputVal);" << std::endl;
       }
-      fout << "      }" << std::endl;
+      fout << "      } // loop over i" << std::endl;
       if (i+1 != numLayers-1) // in the last layer no activation function is applied
          fout << "      fWeights" << i + 1 << "[o] = ActivationFnc(fWeights" << i + 1 << "[o]);" << std::endl;
       else
          fout << "      fWeights" << i + 1 << "[o] = OutputActivationFnc(fWeights" << i + 1 << "[o]);"
               << std::endl; // zjh
-      fout << "   }" << std::endl;
+      fout << "   } // loop over o" << std::endl;
    }
    fout << std::endl;
    fout << "   return fWeights" << numLayers - 1 << "[0];" << std::endl;
