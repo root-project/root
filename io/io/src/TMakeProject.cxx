@@ -503,6 +503,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLunorderedset:
                      case ROOT::kSTLunorderedmultiset:
                         what = "unordered_set";
+                        break;
                      case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
