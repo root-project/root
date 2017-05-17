@@ -142,6 +142,8 @@ set(gui_veto fit/fitpanel_playback.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
+             hist/tprofile2polyRealistic.C
+             hist/tprofile2polyRealisticModuleError.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
