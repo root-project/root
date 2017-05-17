@@ -15,7 +15,6 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TGraph.h"
-#include "TGaxis.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
@@ -165,7 +164,8 @@ TGraph::TGraph(const TGraph &gr)
    fMaxSize = gr.fMaxSize;
    if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
    else fFunctions = new TList;
-   fHistogram = 0;
+   if (gr.fHistogram) fHistogram = (TH1F*)gr.fHistogram->Clone();
+   else fHistogram = 0;
    fMinimum = gr.fMinimum;
    fMaximum = gr.fMaximum;
    if (!fMaxSize) {
@@ -1517,10 +1517,9 @@ TH1F *TGraph::GetHistogram() const
       if (gPad && gPad->GetLogx()) uxmax = 1.1 * rwxmax;
       else                         uxmax = 0;
    }
-   if (minimum < 0 && rwymin >= 0) {
-      if (gPad && gPad->GetLogy()) minimum = 0.9 * rwymin;
-      else                         minimum = 0;
-   }
+
+   if (minimum < 0 && rwymin >= 0) minimum = 0.9 * rwymin;
+
    if (minimum <= 0 && gPad && gPad->GetLogy()) minimum = 0.001 * maximum;
    if (uxmin <= 0 && gPad && gPad->GetLogx()) {
       if (uxmax > 1000) uxmin = 1;

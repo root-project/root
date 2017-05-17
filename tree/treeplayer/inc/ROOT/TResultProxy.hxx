@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TACTIONRESULTPROXY
-#define ROOT_TACTIONRESULTPROXY
+#ifndef ROOT_TRESULTPROXY
+#define ROOT_TRESULTPROXY
 
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
@@ -18,23 +18,31 @@
 
 namespace ROOT {
 
-// Fwd declarations
 namespace Experimental {
+namespace TDF {
+// Fwd decl for MakeResultProxy
 template <typename T>
-class TActionResultProxy;
+class TResultProxy;
+}
 }
 
 namespace Detail {
+namespace TDF {
+using ROOT::Experimental::TDF::TResultProxy;
+// Fwd decl for TResultProxy
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
-                                                                const std::shared_ptr<TDataFrameImpl> &df);
-}
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
+} // ns TDF
+} // ns Detail
 
 namespace Experimental {
+namespace TDF {
+namespace TDFInternal = ROOT::Internal::TDF;
+namespace TDFDetail = ROOT::Detail::TDF;
 
 /// Smart pointer for the return type of actions
 /**
-\class ROOT::Experimental::TActionResultProxy
+\class ROOT::Experimental::TDF::TResultProxy
 \ingroup dataframe
 \brief A wrapper around the result of TDataFrame actions able to trigger calculations lazily.
 \tparam T Type of the action result
@@ -52,9 +60,9 @@ If iteration is not supported by the type of the proxied object, a compilation e
 
 */
 template <typename T>
-class TActionResultProxy {
+class TResultProxy {
    /// \cond HIDDEN_SYMBOLS
-   template <typename V, bool isCont = ROOT::Internal::TDFTraitsUtils::TIsContainer<V>::fgValue>
+   template <typename V, bool isCont = TDFInternal::TIsContainer<V>::fgValue>
    struct TIterationHelper {
       using Iterator_t = void;
       void GetBegin(const V &) { static_assert(sizeof(V) == 0, "It does not make sense to ask begin for this class."); }
@@ -69,45 +77,44 @@ class TActionResultProxy {
    };
    /// \endcond
    using SPT_t = std::shared_ptr<T>;
-   using SPTDFI_t = std::shared_ptr<ROOT::Detail::TDataFrameImpl>;
-   using WPTDFI_t = std::weak_ptr<ROOT::Detail::TDataFrameImpl>;
+   using SPTLM_t = std::shared_ptr<TDFDetail::TLoopManager>;
+   using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
    using ShrdPtrBool_t = std::shared_ptr<bool>;
    template <typename W>
-   friend TActionResultProxy<W> ROOT::Detail::MakeActionResultProxy(
-      const std::shared_ptr<W> &, const std::shared_ptr<ROOT::Detail::TDataFrameImpl> &);
+   friend TResultProxy<W> TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
    ShrdPtrBool_t fReadiness =
-      std::make_shared<bool>(false); ///< State registered also in the TDataFrameImpl until the event loop is executed
-   WPTDFI_t fImplWeakPtr;            ///< Points to the TDataFrameImpl at the root of the functional graph
+      std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
+   WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
    SPT_t fObjPtr;                    ///< Shared pointer encapsulating the wrapped result
 
-   /// Triggers the event loop in the TDataFrameImpl instance to which it's associated via the fImplWeakPtr
+   /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
 
    /// Get the pointer to the encapsulated result.
    /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *Get()
    {
       if (!*fReadiness) TriggerRun();
       return fObjPtr.get();
    }
 
-   TActionResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTDFI_t &firstData)
+   TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &firstData)
       : fReadiness(readiness), fImplWeakPtr(firstData), fObjPtr(objPtr)
    {
    }
 
 public:
-   TActionResultProxy() = delete;
+   TResultProxy() = delete;
 
    /// Get a reference to the encapsulated object.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T &operator*() { return *Get(); }
 
    /// Get a pointer to the encapsulated object.
    /// Ownership is not transferred to the caller.
-   /// Triggers event loop and execution of all actions booked in the associated TDataFrameImpl.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T *operator->() { return Get(); }
 
    /// Return an iterator to the beginning of the contained object if this makes
@@ -128,7 +135,7 @@ public:
 };
 
 template <typename T>
-void TActionResultProxy<T>::TriggerRun()
+void TResultProxy<T>::TriggerRun()
 {
    auto df = fImplWeakPtr.lock();
    if (!df) {
@@ -136,20 +143,21 @@ void TActionResultProxy<T>::TriggerRun()
    }
    df->Run();
 }
+} // end NS TDF
 } // end NS Experimental
 
 namespace Detail {
+namespace TDF {
 template <typename T>
-ROOT::Experimental::TActionResultProxy<T> MakeActionResultProxy(const std::shared_ptr<T> &r,
-                                                                const std::shared_ptr<TDataFrameImpl> &df)
+TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
 {
    auto readiness = std::make_shared<bool>(false);
-   auto resPtr = ROOT::Experimental::TActionResultProxy<T>(r, readiness, df);
+   auto resPtr = TResultProxy<T>(r, readiness, df);
    df->Book(readiness);
    return resPtr;
 }
-
-} // namespace Detail
+} // end NS TDF
+} // end NS Detail
 } // end NS ROOT
 
-#endif // ROOT_TACTIONRESULTPROXY
+#endif // ROOT_TRESULTPROXY

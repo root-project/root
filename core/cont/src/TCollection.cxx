@@ -266,6 +266,15 @@ void TCollection::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// 'Notify' all objects in this collection.
+Bool_t TCollection::Notify()
+{
+   Bool_t success = true;
+   for (auto obj : *this) success &= obj->Notify();
+   return success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint all objects in this collection.
 
 void TCollection::Paint(Option_t *option)

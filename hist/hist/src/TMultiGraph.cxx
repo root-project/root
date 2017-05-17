@@ -1095,8 +1095,17 @@ void TMultiGraph::Paint(Option_t *choptin)
       char *timeformat = 0;
 
       if (fHistogram) {
-         //cleanup in case of a previous unzoom
-         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {
+         //cleanup in case of a previous unzoom and in case one of the TGraph has changed
+         TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+         TGraph* gAti;
+         Int_t ngraphs = fGraphs->GetSize();
+         Bool_t reset_hist = kFALSE;
+         for (Int_t i=0;i<ngraphs;i++) {
+            gAti = (TGraph*)(fGraphs->At(i));
+            if(gAti->TestBit(TGraph::kResetHisto)) {reset_hist = kTRUE; break;}
+            lnk = (TObjOptLink*)lnk->Next();
+         }
+         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum() || reset_hist) {
             nch = strlen(fHistogram->GetXaxis()->GetTitle());
             firstx = fHistogram->GetXaxis()->GetFirst();
             lastx  = fHistogram->GetXaxis()->GetLast();

@@ -1384,8 +1384,8 @@
 
       // set attributes for debugging
       if (this.draw_object!==null) {
-         this.draw_g.attr('objname', this.draw_object.fName || "name");
-         this.draw_g.attr('objtype', this.draw_object._typename || "type");
+         this.draw_g.attr('objname', encodeURI(this.draw_object.fName || "name"));
+         this.draw_g.attr('objtype', encodeURI(this.draw_object._typename || "type"));
       }
 
       return this.draw_g;
@@ -1864,9 +1864,9 @@
 
          var id = "pat_" + this.pattern + "_" + this.colorindx;
 
-         var defs = svg.select('defs');
+         var defs = svg.select('.canvas_defs');
          if (defs.empty())
-            defs = svg.insert("svg:defs",":first-child");
+            defs = svg.insert("svg:defs",":first-child").attr("class","canvas_defs");
 
          var line_color = this.color;
          this.color = "url(#" + id + ")";

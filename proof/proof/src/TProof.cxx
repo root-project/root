@@ -897,7 +897,7 @@ Int_t TProof::Init(const char *, const char *conffile,
 
    if (IsMaster()) {
       // to make UploadPackage() method work on the master as well.
-      fPackMgr = gProofServ->GetPackMgr();
+      if (gProofServ) fPackMgr = gProofServ->GetPackMgr();
    } else {
 
       TString sandbox;
@@ -11121,7 +11121,7 @@ Int_t TProof::VerifyDataSet(const char *uri, const char *optStr)
       Info("VerifyDataSet", "Master-only verification");
       TMessage nameMess(kPROOF_DATASETS);
       nameMess << Int_t(kVerifyDataSet);
-      nameMess << TString(uri ? uri : "");
+      nameMess << TString(uri);
       nameMess << sopt;
       Broadcast(nameMess);
 

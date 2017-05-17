@@ -1787,7 +1787,7 @@ int XrdProofdProofServMgr::Create(XrdProofdProtocol *p)
    XpdSrvMgrCreateGuard mcGuard;
 
    // Check if we are allowed to start a new session
-   int mxsess = fMgr->ProofSched() ? fMgr->ProofSched()->MaxSessions() : -1;
+   int mxsess = (fMgr && fMgr->ProofSched()) ? fMgr->ProofSched()->MaxSessions() : -1;
    if (p->ConnType() == kXPD_ClientMaster && mxsess > 0) {
       XrdSysMutexHelper mhp(fMutex);
       int cursess = CurrentSessions();

@@ -88,6 +88,8 @@ int NetParSend(const void *buf, int len)
 {
    int i, alen = len, nsock = gParallel;
 
+   if (!buf) return -1;
+
    // If data buffer is < 4K use only one socket
    if (len < 4096)
       nsock = 1;

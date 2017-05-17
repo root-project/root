@@ -410,4 +410,3 @@ void make_gui()
    browser->SetTabTitle("Event Control", 0);
 }
 
-#endif

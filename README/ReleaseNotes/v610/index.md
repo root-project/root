@@ -49,6 +49,12 @@ The following interfaces have been removed, after deprecation in v6.08.
 - See "Build, Configuration and Testing Infrastructure" below for changes in the directory structure.
 - libCling now exports only a minimal set of symbols.
 - Add support for std::array_view also for C++11 builds. The implementation has been modified to work before C++14.
+- Added TCollection::Notify to allow nofitying more than one object.
+```{.cpp}
+  TList formulas;
+  // Add several TTreeFormula to the list;
+  chain.SetNotify(&formulas);
+```
 
 ## Histogram Libraries
 
@@ -73,6 +79,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 
 ## Math Libraries
 
+* Improve thread friendliness of the TMinuit class.
 
 ## RooFit Libraries
 
@@ -84,8 +91,33 @@ The following interfaces have been removed, after deprecation in v6.08.
 - `TTreeReader::SetLastEntry()` has been deprecated. Its name is misleading; please use `TTreePlayer::SetEntriesRange()` instead.
 - `TTree::Branch()` now complains for wrong leaf list strings, e.g. "value/F[4]" (which should really be spelled as "value[4]/F").
 - Allow reading of older version of TTreePerfStats (ROOT-8520)
-- Introduce TDataFrame which offers a new and highly efficient way to analyse data stored in TTrees
 - In `TTree::OptimizeBaskets()` do not call GetBasket(0) to avoid disc reads
+- It is now possible to define the precision of the default histogram created
+  by `TTree::Draw`. Three new parameters are available in `$ROOTSYS/etcsystem.rootrc`
+  ```{.cpp}
+   Hist.Precision.1D:           float
+   Hist.Precision.2D:           float
+   Hist.Precision.3D:           float
+  ```
+  the default values are `float`. They can be set to `double`.
+- Fix ROOT-8742: TTree::SetBranchAddress could not be invoked safely even when dealing with the same tree obtained from the same file opened in different threads.
+
+### TDataFrame
+- Creation of the TDataFrame class. The TDataFrame allows to interact with data
+stored in columnar format in a functional and intuitive way in order to perform
+data analysis. Parallelism is accessible simply by activating implicit
+multi-threading with the ROOT::EnableImplicitMT() function.
+In a nutshell, the functionality provided is:
+    - Create and fill histograms with one single method invocation
+    - Express filtering of entries with strings, lambdas or functions
+    - Easy creation of efficiencies of cut-flows
+    - Possibility to run on ranges of entries
+    - Creating columns not present in the original dataset
+    - Chain multiple actions to be executed on the same event loop
+    - Creation of events on-the-fly (e.g. via Pythia or user-define generator functors), with no need for an input TTree
+    - Snapshot on a rootfile the dataset after cuts and after augmentation with columns created by the user
+    - Run analyses expressed as chains of actions in parallel in a transparent way for the user
+See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Experimental_1_1TDF_1_1TDataFrame.html) for more details
 
 ## 2D Graphics Libraries
 - If one used "col2" or "colz2", the value of `TH1::fMaximum` got modified.
@@ -164,8 +196,6 @@ The following interfaces have been removed, after deprecation in v6.08.
   anti-aliasing for filled area for the Cocoa backend. Default is `no`.
 - The "BOX" option, to draw 3D histograms, has been reimplemented by Evgueni Tcherniaev
   The following picture show the old and new version
-- `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
-
 
 ![New box option for 3D histograms](NewBoxOption.png)
 
@@ -186,6 +216,31 @@ The following interfaces have been removed, after deprecation in v6.08.
    the axis title is automatically placed to avoid overlaps with the axis labels.
 - Implement the automatic placement of the `TLegend`. A new constructor not
   specifying the legend position is available. Only width and height are defined.
+- `ChangeLabel` is now available for log axis as well as requested [here](https://sft.its.cern.ch/jira/browse/ROOT-8537).
+- The `TGraph` copy constructor also copy the underlying `TH1F` if it exists (it
+  holds the axis titles).
+- `TGraph` axis range was computed differently depending on the order of SetLog[x|y]"
+  This issue was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-8751)
+- Add the new markers suggested [here](https://root-forum.cern.ch/t/adding-custom-markers/24506).
+  Improve the marker style for the OpenGl backend (some where wrong or missing).
+
+![New markers](NewMarkers.png)
+
+- Remove a large memory leak in TFITSHDU's GetArrayRow, GetArrayColumn and GetTabRealVectorColumn member functions.
+- When `TGraph`s belonging to a `TMultiGraph` were changed (for instance with `SetPoint`)
+  after the `TMultiGraph` was drawn, the `TMultiGraph` range was not recomputed.
+  This issue was discovered thanks to [this forum post](https://root-forum.cern.ch/t/multi-layer-perceptron/24561/2).
+- When a TGraph is drawn, the X-axis is drawn with increasing values from left to
+  right and the Y-axis from bottom to top. The two options `RX` and `RY` allow to
+  change this order. The option `RX` allows to draw the X-axis with increasing values
+  from right to left and the `RY` option allows to draw the Y-axis with increasing
+  values from top to bottom.
+~~~ {.cpp}
+   g->Draw("APL");
+   g->Draw("A RX RY PL");
+~~~
+
+![New box option for 3D histograms](ReverseAxis.png)
 
 ## 3D Graphics Libraries
 - In `TMarker3DBox::PaintH3` the boxes' sizes was not correct.
@@ -207,6 +262,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - TDavixFile: Added support for bucket name in path
 - Fix error sometimes prompted when trying to write std::array column-wise
 
+
 ## Database Libraries
 
 
@@ -222,6 +278,30 @@ The following interfaces have been removed, after deprecation in v6.08.
 ## Parallelism and PROOF
 - Add ROOT::GetImplicitMTPoolSize function to get the size of the pool used to enable implicit multi threading
 - Add the TThreadExecutor::Foreach method for parallelising functions featuring void return type
+- Add TBufferMerger and TBufferMergerFile classes
+
+  TBufferMerger is a class to facilitate writing data in
+  parallel from multiple threads, while writing to a single
+  output file. Its purpose is similar to TParallelMergingFile,
+  but instead of using processes that connect to a network
+  socket, TBufferMerger uses threads that each write to a
+  TBufferMergerFile, which in turn push data into a queue
+  managed by the TBufferMerger. An excerpt of the
+  [tutorial](https://github.com/root-project/root/blob/master/tutorials/multicore/mt103_fillNtuples.C)
+  is shown below.
+  ```{.cpp}
+  // Create the TBufferMerger
+  TBufferMerger merger("mp103_fillNtuple.root");
+
+  // Define what each worker will do
+  auto work_function = [&]() {
+     auto f = merger.GetFile();
+     TNtuple ntrand("ntrand", "Random Numbers", "r");
+     fill(ntrand, nEventsPerWorker);
+     ntrand.Write();
+     f->Write();
+  };
+  ```
 
 ## Language Bindings
 
@@ -260,3 +340,7 @@ The following interfaces have been removed, after deprecation in v6.08.
 - For rootcling_stage1 (formerly known as rootcling_tmp), the package structure was changed to enable homogenous visibility
   settings across object files. See core/README for an overview.
 - Several non-public headers are not copied into include/ anymore; they reside in the PACKAGE/res/ subdirectory in the source tree.
+- The IMT switch is set to on by default.
+- A new library is now created, libImt. It contains all classes which depend on TBB. Those classes were previously part of libThread. As a consequence rootcling/genreflex do not depend anymore from TBB even in presence of imt builds.
+- Refactoring of several math tests to avoid exact comparisons of floating point numbers
+- Changed the default C++ standard depending of the version of the compiler: for GCC > 6, AppleClang > 8 and Clang > 5, the default is now c++14.

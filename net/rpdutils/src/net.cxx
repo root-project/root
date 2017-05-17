@@ -179,7 +179,7 @@ int NetSendRaw(const void *buf, int len)
 
    } else {
 
-      if (gSockFd == -1) return -1;
+      if (gSockFd == -1 || !buf) return -1;
       if (Sendn(gSockFd, buf, len) != len) {
          Error(gErrFatal,-1,"NetSendRaw: Sendn error");
       }

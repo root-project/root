@@ -1731,6 +1731,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
        && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
+       && strcmp(modulename,"libImt")!=0
        && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
        && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libforward_listDict")!=0
        && strcmp(modulename,"libvectorDict")!=0
@@ -4468,7 +4469,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
-   func.Init(minfo);
+   func.Init(*minfo);
    func.SetArgs(listpar);
    // Now calculate the 'this' pointer offset for the method
    // when starting from the class described by cl.

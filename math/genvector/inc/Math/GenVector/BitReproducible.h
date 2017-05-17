@@ -30,9 +30,9 @@ namespace ROOT {
 class BitReproducibleException  : public std::exception
 {
 public:
-  BitReproducibleException(const std::string & w) throw() : fMsg(w) {}
-  ~BitReproducibleException() throw() {}
-  const char *what() const throw() override { return fMsg.c_str(); }
+  BitReproducibleException(const std::string & w) noexcept : fMsg(w) {}
+  ~BitReproducibleException() noexcept {}
+  const char *what() const noexcept override { return fMsg.c_str(); }
   private:
   std::string fMsg;
 };  // DoubConvException

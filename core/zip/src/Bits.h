@@ -571,6 +571,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   int err;
   int method   = Z_DEFLATED;
 
+  if (*srcsize < 1 + HDRSIZE + 1) {
+     *irep = 0;
+     return;
+  }
+
   if (cxlevel <= 0) {
     *irep = 0;
     return;
@@ -682,14 +687,11 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
        return;
     }
 
-    err = deflate(&stream, Z_FINISH);
-    if (err != Z_STREAM_END) {
-       deflateEnd(&stream);
-       /* No need to print an error message. We simply abandon the compression
-          the buffer cannot be compressed or compressed buffer would be larger than original buffer
-          printf("error %d in deflate (zlib) is not = %d\n",err,Z_STREAM_END);
-       */
-       return;
+    while ((err = deflate(&stream, Z_FINISH)) != Z_STREAM_END) {
+       if (err != Z_OK) {
+          deflateEnd(&stream);
+          return;
+       }
     }
 
     err = deflateEnd(&stream);

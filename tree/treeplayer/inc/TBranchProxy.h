@@ -140,6 +140,14 @@ namespace Detail {
                result &= (-1 != fBranch->GetEntry(fDirector->GetReadEntry()));
             }
             fRead = fDirector->GetReadEntry();
+            if (R__unlikely(fCollection)) {
+               fCollection->PopProxy(); // works even if no proxy env object was set.
+               if (IsaPointer()) {
+                  fCollection->PushProxy( *(void**)fWhere );
+               } else {
+                  fCollection->PushProxy( fWhere );
+               }
+            }
             return result;
          } else {
             return IsInitialized();

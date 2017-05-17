@@ -106,7 +106,7 @@ public:
    char          operator[](Ssiz_t i) const;     // Index with bounds checking
 
    operator std::string_view() const { return std::string_view(Data(),fExtent); }
-   operator std::string() const { return std::string_view(Data(),fExtent).to_string(); }
+   operator std::string() const { return std::string(Data(),fExtent); }
 
    const char   *Data() const;
    Ssiz_t        Length() const          { return fExtent; }
@@ -280,6 +280,9 @@ public:
    // Type conversion
    operator const char*() const { return GetPointer(); }
    operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
+#if __cplusplus >= 201700L
+   explicit operator std::string() const { return std::string(GetPointer(),Length()); }
+#endif
 
    // Assignment
    TString    &operator=(char s);                // Replace string
@@ -444,6 +447,12 @@ template <>
 #endif
 TBuffer  &operator>>(TBuffer &buf,       TString *&sp);
 TBuffer  &operator<<(TBuffer &buf, const TString * sp);
+
+// Conversion operator (per se).
+inline std::string& operator+=(std::string &left, const TString &right)
+{
+   return left.append(right.Data());
+}
 
 TString ToLower(const TString &s);    // Return lower-case version of argument
 TString ToUpper(const TString &s);    // Return upper-case version of argument

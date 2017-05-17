@@ -116,10 +116,19 @@ public:
       // function called in the user code before processing correspondent websocket data
       // returns kTRUE when user should ignore such http request - it is for internal use
 
+      // this is normal request, deliver and process it as any other
+      if (!strstr(arg->GetQuery(), "&dummy")) return kFALSE;
+
+      if (arg == fPoll) {
+         Error("PreviewData", "NEVER SHOULD HAPPEN");
+         exit(12);
+      }
+
       if (fPoll) {
+         Info("PreviewData", "Get dummy request when previous not completed");
          // if there are pending request, reply it immediately
          fPoll->SetContentType("text/plain");
-         fPoll->SetContent("");
+         fPoll->SetContent("<<nope>>"); // normally should never happen
          fPoll->NotifyCondition();
          fPoll = 0;
       }
@@ -134,7 +143,7 @@ public:
       }
 
       // if arguments has "&dummy" string, user should not process it
-      return strstr(arg->GetQuery(), "&dummy") != 0;
+      return kTRUE;
    }
 };
 
@@ -525,6 +534,29 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Submit http request, specified in THttpCallArg structure
+/// Contrary to ExecuteHttp, it will not block calling thread.
+/// User should reimplement THttpCallArg::HttpReplied() method
+/// to react when HTTP request is executed.
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+/// When called from main thread and can_run_immediately==kTRUE, will be
+/// executed immediately. Returns kTRUE when was executed.
+
+Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
+{
+   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
+      ProcessRequest(arg);
+      return kTRUE;
+   }
+
+   // add call arg to the list
+   std::unique_lock<std::mutex> lk(fMutex);
+   fCallArgs.Add(arg);
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
 /// Regularly invoked by THttpTimer, when somewhere in the code
 /// gSystem->ProcessEvents() is called.
@@ -561,7 +593,8 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->NotifyCondition();
+      // workaround for longpoll handle, it sometime notifies condition before server
+      if (!arg->fNotifyFlag) arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
@@ -797,6 +830,17 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetContentType("text/plain");
          } else {
             arg->SetMethod("WS_DATA");
+            const char *post = url.GetValueFromOptions("post");
+            if (post) {
+               // posted data transferred as URL parameter
+               // done due to limitation of webengine in qt
+               Int_t len = strlen(post);
+               void *buf = malloc(len / 2 + 1);
+               char *sbuf = (char *)buf;
+               for (int n = 0; n < len; n += 2) sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               sbuf[len / 2] = 0; // just in case of zero-terminated string
+               arg->SetPostData(buf, len / 2);
+            }
          }
          if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
       }

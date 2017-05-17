@@ -9,7 +9,9 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-if(cxx14)
+if(cxx17)
+  set(LLVM_ENABLE_CXX1Z ON CACHE BOOL "" FORCE)
+elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
@@ -78,8 +80,10 @@ set(LLVM_NOCLING "YES")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
-set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
+if(NOT CLING_INCLUDE_TESTS)
+  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
+endif()
 
 #---Remove the inherited include_directories()
 set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")

@@ -62,7 +62,7 @@ private:
    /// ROOT normalized context for that interpreter
    const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
-   TClingMethodInfo* fMethod;
+   std::unique_ptr<TClingMethodInfo> fMethod;
    /// Decl for the method
    const clang::FunctionDecl *fDecl = nullptr;
    /// Number of required arguments
@@ -135,29 +135,27 @@ private:
 
 public:
 
-   ~TClingCallFunc() {
-      delete fMethod;
-   }
+   ~TClingCallFunc() = default;
 
    explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
       : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
    {
-      fMethod = new TClingMethodInfo(interp);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
-   explicit TClingCallFunc(TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+   explicit TClingCallFunc(const TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
    : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false),
      fReturnIsRecordType(false)
 
    {
-      fMethod = new TClingMethodInfo(minfo);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
       : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs), fReturnIsRecordType(rhs.fReturnIsRecordType)
    {
-      fMethod = new TClingMethodInfo(*rhs.fMethod);
+      fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
 
    TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
@@ -179,7 +177,8 @@ public:
    void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void Init();
    void Init(const clang::FunctionDecl *);
-   void Init(TClingMethodInfo*);
+   void Init(const TClingMethodInfo&);
+   void Init(std::unique_ptr<TClingMethodInfo>);
    void Invoke(cling::Value* result = 0) const;
    void* InterfaceMethod();
    bool IsValid() const;

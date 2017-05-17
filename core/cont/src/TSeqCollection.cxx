@@ -229,6 +229,10 @@ Long64_t TSeqCollection::Merge(TCollection *list)
             SafeDelete(templist);
             return 0;
          }
+         if (indobj > ((TSeqCollection*)collcrt)->LastIndex()) {
+            // We reached the end of this collection.
+            continue;
+         }
          // The next object to be merged with is a collection
          // the iterator skips the 'holes' the collections, we also need to do so.
          objtomerge = ((TSeqCollection*)collcrt)->At(indobj);

@@ -399,6 +399,9 @@ namespace {
     // I would claim that the check should be relaxed to:
 
     if (Opts.CPlusPlus) {
+#if __cplusplus > 201402L
+      Opts.CPlusPlus1z = 1;
+#endif
 #if __cplusplus > 201103L
       Opts.CPlusPlus14 = 1;
 #endif
@@ -665,7 +668,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return false;
     }
   };
-  
+
   static CompilerInstance*
   createCIImpl(std::unique_ptr<llvm::MemoryBuffer> Buffer,
                const CompilerOptions& COpts, const char* LLVMDir,
@@ -674,15 +677,16 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     if (COpts.Verbose)
       cling::log() << "cling version " << ClingStringify(CLING_VERSION) << '\n';
 
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetMCs();
+
     // Create an instance builder, passing the LLVMDir and arguments.
     //
 
     CheckClangCompatibility();
-
-    //  Initialize the llvm library.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
 
     const size_t argc = COpts.Remaining.size();
     const char* const* argv = &COpts.Remaining[0];

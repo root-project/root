@@ -1040,6 +1040,7 @@ TMatrixDSparse *TUnfold::InvertMSparseSymmPos
    if(nError>0) {
       Fatal("InvertMSparseSymmPos",
             "Matrix has %d negative elements on the diagonal", nError);
+      delete[] isZero;
       return 0;
    }
 

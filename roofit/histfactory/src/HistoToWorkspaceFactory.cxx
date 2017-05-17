@@ -423,7 +423,8 @@ namespace HistFactory{
      RooDataSet* data = new RooDataSet("expData","", tree, obsList); // one experiment
 
      proto->import(*data);
-
+     delete[] obsForTree;
+     obsForTree = nullptr;
   }
 
   void HistoToWorkspaceFactory::Customize(RooWorkspace* proto, const char* pdfNameChar, map<string,string> renameMap) {

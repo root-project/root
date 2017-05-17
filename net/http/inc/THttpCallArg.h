@@ -50,6 +50,8 @@ protected:
    void *fBinData;        ///<! binary data, assigned with http call
    Long_t fBinDataLength; ///<! length of binary data
 
+   Bool_t fNotifyFlag; ///<!  indicate that notification called
+
    Bool_t IsBinData() const { return fBinData && fBinDataLength > 0; }
 
    TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
@@ -141,7 +143,7 @@ public:
    /** mark reply as 404 error - page/request not exists or refused */
    void Set404() { SetContentType("_404_"); }
 
-   /** mark reply as 404 error - page/request not exists or refused */
+   /** mark reply as postponed - submitting thread will not be inform */
    void SetPostponed() { SetContentType("_postponed_"); }
 
    /** indicate that http request should response with file content */
@@ -206,6 +208,8 @@ public:
    const void *GetContent() const { return IsBinData() ? fBinData : fContent.Data(); }
 
    void NotifyCondition();
+
+   virtual void HttpReplied();
 
    ClassDef(THttpCallArg, 0) // Arguments for single HTTP call
 };

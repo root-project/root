@@ -3,7 +3,6 @@ include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
-set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -404,7 +403,7 @@ if(mathmore OR builtin_gsl)
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-      URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
+      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -594,7 +593,7 @@ if(ssl OR builtin_openssl)
     set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
     ExternalProject_Add(
       OPENSSL
-      URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
+      URL ${lcgpackages}/openssl-${openssl_version}.tar.gz
       CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
       BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
       INSTALL_COMMAND make install_sw
@@ -770,7 +769,7 @@ if(builtin_fftw3)
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
-    URL ${repository_tarfiles}/fftw-${FFTW_VERSION}.tar.gz
+    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -793,7 +792,7 @@ if(fitsio OR builtin_cfitsio)
     ExternalProject_Add(
       CFITSIO
       # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -856,19 +855,20 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.3.0)
-  set(xrootd_versionnum 400030000)
+  set(xrootd_version 4.6.1)
+  set(xrootd_versionnum 400060001)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces many warnings  
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
-    # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-    URL ${repository_tarfiles}/xrootd-${xrootd_version}.tar.gz
+    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    # URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -1087,7 +1087,7 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
-      URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL ${lcgpackages}/davix-embedded-${DAVIX_VERSION}.tar.gz
       PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -1171,12 +1171,12 @@ if(imt)
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 44_20160413)
+  set(tbb_version 2017_U5)
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     TBB
-    URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
+    URL ${lcgpackages}/tbb${tbb_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND make CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
@@ -1433,7 +1433,7 @@ if(vdt OR builtin_vdt)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
-      URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
+      URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1488,6 +1488,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_TAG release-1.8.0
+    UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
     # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands

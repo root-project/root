@@ -440,7 +440,6 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   RooCurve* curve=frame->getCurve();
   Int_t curve_N=curve->GetN();
   Double_t* curve_x=curve->GetX();
-  delete frame;
 
   Double_t * x_arr = new Double_t[curve_N];
   Double_t * y_arr_nll = new Double_t[curve_N];
@@ -451,6 +450,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
     x_arr[i]=f;
     y_arr_nll[i]=nll->getVal();
   }
+
+  delete frame;
 
   TGraph* g = new TGraph(curve_N, x_arr, y_arr_nll);
   g->SetName( (FileNamePrefix +"_nll").c_str() );

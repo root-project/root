@@ -95,6 +95,7 @@ public:
    Bool_t             IsOwner() const { return TestBit(kIsOwner); }
    Bool_t             IsSortable() const { return kTRUE; }
    virtual void       ls(Option_t *option="") const ;
+   virtual Bool_t     Notify();
    virtual TIterator *MakeIterator(Bool_t dir = kIterForward) const = 0;
    virtual TIterator *MakeReverseIterator() const { return MakeIterator(kIterBackward); }
    virtual void       Paint(Option_t *option="");

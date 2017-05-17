@@ -212,7 +212,7 @@ int SelectionRules::CheckDuplicates(){
    return nDuplicates;
 }
 
-static bool Implies(ClassSelectionRule& patternRule, ClassSelectionRule& nameRule){
+static bool Implies(const ClassSelectionRule& patternRule, const ClassSelectionRule& nameRule){
 
    // Check if these both select or both exclude
    if (patternRule.GetSelected() != nameRule.GetSelected()) return false;
@@ -250,23 +250,19 @@ void SelectionRules::Optimize(){
 
    if (!IsSelectionXMLFile()) return;
 
-   auto ruleIt = fClassSelectionRules.begin();
-   std::list<decltype(ruleIt)> itPositionsToErase;
+   const auto& selectionRules = fClassSelectionRules;
 
-   for (; ruleIt != fClassSelectionRules.end(); ruleIt++ ){
-      if (ruleIt->HasAttributeName()) {
-         for (auto&& intRule : fClassSelectionRules){
-            if (intRule.HasAttributePattern() && Implies(intRule, *ruleIt)){
-               itPositionsToErase.push_back(ruleIt);
-            }
-         }
-      }
-   }
-   itPositionsToErase.unique();
-   for (auto&& itPositionToErase : itPositionsToErase){
-      fClassSelectionRules.erase(itPositionToErase);
-   }
-
+   auto predicate = [&selectionRules](const ClassSelectionRule &rule) -> bool {
+     if (rule.HasAttributeName()) {
+        for (auto&& intRule : selectionRules){
+           if (intRule.HasAttributePattern() && Implies(intRule, rule)) {
+              return true;
+           }
+        }
+     }
+     return false;
+   };
+   fClassSelectionRules.remove_if(predicate);
 }
 
 void SelectionRules::SetDeep(bool deep)

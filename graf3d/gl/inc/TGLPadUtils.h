@@ -130,10 +130,27 @@ public:
    void DrawFullTrianlgeUp(UInt_t n, const TPoint *xy)const;
    void DrawFullTrianlgeDown(UInt_t n, const TPoint *xy)const;
    void DrawDiamond(UInt_t n, const TPoint *xy)const;
-   void DrawCross(UInt_t n, const TPoint *xy)const;
+   void DrawFullDiamond(UInt_t n, const TPoint *xy)const;
+   void DrawOpenTrianlgeDown(UInt_t n, const TPoint *xy)const;
+   void DrawFullCross(UInt_t n, const TPoint *xy)const;
+   void DrawOpenCross(UInt_t n, const TPoint *xy)const;
    void DrawFullStar(UInt_t n, const TPoint *xy)const;
    void DrawOpenStar(UInt_t n, const TPoint *xy)const;
-
+   void DrawOpenSquareDiagonal(UInt_t n, const TPoint *xy)const;
+   void DrawOpenDiamondCross(UInt_t n, const TPoint *xy)const;
+   void DrawOpenThreeTriangles(UInt_t n, const TPoint *xy)const;
+   void DrawOctagonCross(UInt_t n, const TPoint *xy)const;
+   void DrawFullThreeTriangles(UInt_t n, const TPoint *xy)const;
+   void DrawOpenFourTrianglesX(UInt_t n, const TPoint *xy)const;
+   void DrawFullFourTrianglesX(UInt_t n, const TPoint *xy)const;
+   void DrawOpenDoubleDiamond(UInt_t n, const TPoint *xy)const;
+   void DrawFullDoubleDiamond(UInt_t n, const TPoint *xy)const;
+   void DrawOpenFourTrianglesPlus(UInt_t n, const TPoint *xy)const;
+   void DrawFullFourTrianglesPlus(UInt_t n, const TPoint *xy)const;
+   void DrawOpenCrossX(UInt_t n, const TPoint *xy)const;
+   void DrawFullCrossX(UInt_t n, const TPoint *xy)const;
+   void DrawFourSquaresX(UInt_t n, const TPoint *xy)const;
+   void DrawFourSquaresPlus(UInt_t n, const TPoint *xy)const;
 };
 
 //

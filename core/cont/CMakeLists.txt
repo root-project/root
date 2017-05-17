@@ -3,7 +3,7 @@
 ############################################################################
 
 if(testing)
-  ROOT_ADD_UNITTEST_SUBDIRECTORY(test LIBRARIES Core)
+  add_subdirectory(test)
 endif()
 
 ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)

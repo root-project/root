@@ -142,12 +142,8 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
          // Done
          return p;
       } else {
-         if (ext) {
-            Printf("getProof: could not get/start a valid session at %s", url);
-            return p;
-         } else {
-            Printf("getProof: could not get/start a valid session at %s - try resarting the daemon", url);
-         }
+         Printf("getProof: could not get/start a valid session at %s", url);
+         return p;
       }
       if (p) delete p;
       p = 0;

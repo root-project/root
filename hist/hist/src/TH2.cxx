@@ -1754,12 +1754,10 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    Int_t  inN = inAxis.GetNbins();
    const char *expectedName = ( onX ? "_pfx" : "_pfy" );
 
-   Int_t firstOutBin, lastOutBin;
-   firstOutBin = outAxis.GetFirst();
-   lastOutBin = outAxis.GetLast();
-   if (firstOutBin == 0 && lastOutBin == 0) {
-      firstOutBin = 1; lastOutBin = outAxis.GetNbins();
-   }
+   // outer axis cannot be outside original axis (this fixes ROOT-8781)
+   // and firstOutBin and lastOutBin cannot be both equal to zero
+   Int_t firstOutBin = std::max(outAxis.GetFirst(),1);
+   Int_t lastOutBin = std::min(outAxis.GetLast(),outAxis.GetNbins() ) ;
 
    if ( lastbin < firstbin && inAxis.TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis.GetFirst();
@@ -2025,7 +2023,6 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 {
    const char *expectedName = 0;
    Int_t inNbin;
-   Int_t firstOutBin, lastOutBin;
    const TAxis* outAxis;
    const TAxis* inAxis;
 
@@ -2054,11 +2051,10 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       inAxis = GetXaxis();
    }
 
-   firstOutBin = outAxis->GetFirst();
-   lastOutBin = outAxis->GetLast();
-   if (firstOutBin == 0 && lastOutBin == 0) {
-      firstOutBin = 1; lastOutBin = outAxis->GetNbins();
-   }
+   // outer axis cannot be outside original axis (this fixes ROOT-8781)
+   // and firstOutBin and lastOutBin cannot be both equal to zero
+   Int_t firstOutBin = std::max(outAxis->GetFirst(),1);
+   Int_t lastOutBin = std::min(outAxis->GetLast(),outAxis->GetNbins() ) ;
 
    if ( lastbin < firstbin && inAxis->TestBit(TAxis::kAxisRange) ) {
       firstbin = inAxis->GetFirst();
@@ -2416,8 +2412,8 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
       h1 = new TH1D(qname, GetTitle(), 1, 0, 1);
    }
    // set the bin content
-   Int_t firstOutBin = outAxis->GetFirst();
-   Int_t lastOutBin = outAxis->GetLast();
+   Int_t firstOutBin = std::max(outAxis->GetFirst(),1);
+   Int_t lastOutBin = std::max(outAxis->GetLast(),outAxis->GetNbins());
    const TArrayD *xbins = outAxis->GetXbins();
    if (xbins->fN == 0)
       h1->SetBins(lastOutBin-firstOutBin+1,outAxis->GetBinLowEdge(firstOutBin),outAxis->GetBinUpEdge(lastOutBin));

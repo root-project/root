@@ -11,14 +11,26 @@
 #include "TClass.h"
 #include "TRegexp.h"
 
-#include "ROOT/TDataFrameInterface.hxx"
+#include "ROOT/TDFInterface.hxx"
 
 #include <vector>
 #include <string>
+using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Internal::TDF;
+using namespace ROOT::Detail::TDF;
 
 namespace ROOT {
+namespace Experimental {
+namespace TDF {
+// extern templates
+template class TInterface<TLoopManager>;
+template class TInterface<TFilterBase>;
+template class TInterface<TCustomColumnBase>;
+}
+}
 
 namespace Internal {
+namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
 std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObjArray *branches,
@@ -50,12 +62,12 @@ std::vector<std::string> GetUsedBranchesNames(const std::string expression, TObj
 
 // Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
-                     const std::string &name, const std::string &expression, TObjArray *branches,
-                     const std::vector<std::string> &tmpBranches,
-                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
+Long_t JitTransformation(void *thisPtr, const std::string &methodName, const std::string &nodeTypeName,
+                         const std::string &name, const std::string &expression, TObjArray *branches,
+                         const std::vector<std::string> &tmpBranches,
+                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree)
 {
-   auto usedBranches = ROOT::Internal::GetUsedBranchesNames(expression, branches, tmpBranches);
+   auto usedBranches = GetUsedBranchesNames(expression, branches, tmpBranches);
    auto exprNeedsVariables = !usedBranches.empty();
 
    // Move to the preparation of the jitting
@@ -77,7 +89,7 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
          // The map is a const reference, so no operator[]
          auto tmpBrIt = tmpBookedBranches.find(brName);
          auto tmpBr = tmpBrIt == tmpBookedBranches.end() ? nullptr : tmpBrIt->second.get();
-         auto brTypeName = ROOT::Internal::ColumnName2ColumnTypeName(brName, *tree, tmpBr);
+         auto brTypeName = ColumnName2ColumnTypeName(brName, *tree, tmpBr);
          ss << brTypeName << " " << brName << ";\n";
          usedBranchesTypes.emplace_back(brTypeName);
       }
@@ -151,63 +163,70 @@ Long_t InterpretCall(void *thisPtr, const std::string &methodName, const std::st
    return retVal;
 }
 
-// Jit and call "this->Action(params...)" for all actions that support branch type inference
-// Return pointer to corresponding TActionResultProxy, cast to Long_t
-Long_t CreateActionGuessed(const BranchNames_t &bl, const std::string &nodeTypename, void *thisPtr,
-                           const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
-                           ROOT::Detail::TDataFrameBranchBase *bbase)
+// Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"
+// (see comments in the body for actual jitted code)
+void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, void *thisPtr, const std::type_info &art,
+                     const std::type_info &at, const void *r, TTree &tree, unsigned int nSlots,
+                     const std::map<std::string, TmpBranchBasePtr_t> &tmpBranches)
 {
    gInterpreter->ProcessLine("#include \"ROOT/TDataFrame.hxx\"");
+   auto nBranches = bl.size();
 
-   const auto &theBranchName = bl[0];
-   const auto theBranchTypeName = ROOT::Internal::ColumnName2ColumnTypeName(theBranchName, *tree, bbase);
-   if (theBranchTypeName.empty()) {
-      std::string exceptionText = "The type of column ";
-      exceptionText += theBranchName;
-      exceptionText += " could not be guessed. Please specify one.";
-      throw std::runtime_error(exceptionText.c_str());
+   // retrieve pointers to temporary columns (null if the column is not temporary)
+   std::vector<TCustomColumnBase *> tmpBranchPtrs(nBranches, nullptr);
+   for (auto i = 0u; i < nBranches; ++i) {
+      auto tmpBranchIt = tmpBranches.find(bl[i]);
+      if (tmpBranchIt != tmpBranches.end()) tmpBranchPtrs[i] = tmpBranchIt->second.get();
    }
+
+   // retrieve branch type names as strings
+   std::vector<std::string> branchTypeNames(nBranches);
+   for (auto i = 0u; i < nBranches; ++i) {
+      const auto branchTypeName = ColumnName2ColumnTypeName(bl[i], tree, tmpBranchPtrs[i]);
+      if (branchTypeName.empty()) {
+         std::string exceptionText = "The type of column ";
+         exceptionText += bl[i];
+         exceptionText += " could not be guessed. Please specify one.";
+         throw std::runtime_error(exceptionText.c_str());
+      }
+      branchTypeNames[i] = branchTypeName;
+   }
+
+   // retrieve type of result of the action as a string
    auto actionResultTypeClass = TClass::GetClass(art);
    if (!actionResultTypeClass) {
-      std::string exceptionText = "An error occurred while inferring the result type of the operation on column ";
-      exceptionText += theBranchName;
-      exceptionText += ".";
+      std::string exceptionText = "An error occurred while inferring the result type of an operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
    const auto actionResultTypeName = actionResultTypeClass->GetName();
+
+   // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
    if (!actionTypeClass) {
-      std::string exceptionText = "An error occurred while inferring the action type of the operation on column ";
-      exceptionText += theBranchName;
-      exceptionText += ".";
+      std::string exceptionText = "An error occurred while inferring the action type of the operation.";
       throw std::runtime_error(exceptionText.c_str());
    }
    const auto actionTypeName = actionTypeClass->GetName();
-   std::stringstream createAction_str;
 
-   createAction_str << "ROOT::Internal::CallCreateAction<" << nodeTypename << ", " << actionTypeName << ", "
-                    << theBranchTypeName << ", " << actionResultTypeName << "::element_type>("
-                    << "(" << nodeTypename << "*)" << thisPtr << ", "
-                    << "*(ROOT::BranchNames_t*)" << &bl << ", "
-                    << "*(" << actionResultTypeName << "*)" << r << ", "
-                    << "nullptr);";
-   auto retVal = gInterpreter->ProcessLine(createAction_str.str().c_str());
-   if (!retVal) {
-      std::string exceptionText = "An error occurred while jitting this action ";
+   // createAction_str will contain the following:
+   // ROOT::Internal::TDF::CallBuildAndBook<nodeType, actionType, branchType1, branchType2...>(
+   //    reinterpret_cast<nodeType*>(thisPtr), *reinterpret_cast<ROOT::ColumnNames_t*>(&bl),
+   //    *reinterpret_cast<actionResultType*>(r), reinterpret_cast<ActionType*>(nullptr))
+   std::stringstream createAction_str;
+   createAction_str << "ROOT::Internal::TDF::CallBuildAndBook<" << nodeTypename << ", " << actionTypeName;
+   for (auto &branchTypeName : branchTypeNames) createAction_str << ", " << branchTypeName;
+   createAction_str << ">("
+                    << "reinterpret_cast<" << nodeTypename << "*>(" << thisPtr << "), "
+                    << "*reinterpret_cast<ROOT::Detail::TDF::ColumnNames_t*>(" << &bl << "), " << nSlots
+                    << ", *reinterpret_cast<" << actionResultTypeName << "*>(" << r << "));";
+   auto error = TInterpreter::EErrorCode::kNoError;
+   gInterpreter->ProcessLine(createAction_str.str().c_str(), &error);
+   if (error) {
+      std::string exceptionText = "An error occurred while jitting this action:\n";
       exceptionText += createAction_str.str();
-      exceptionText += ".";
       throw std::runtime_error(exceptionText.c_str());
    }
-   return retVal;
 }
-} // namespace Internal
-
-namespace Experimental {
-
-// extern templates
-template class TDataFrameInterface<ROOT::Detail::TDataFrameImpl>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameFilterBase>;
-template class TDataFrameInterface<ROOT::Detail::TDataFrameBranchBase>;
-
-} // namespace Experimental
-} // namespace ROOT
+} // end ns TDF
+} // end ns Internal
+} // end ns ROOT

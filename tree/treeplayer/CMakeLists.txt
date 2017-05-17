@@ -24,7 +24,7 @@ endif()
 ROOT_GENERATE_DICTIONARY(G__${libname} ${dictHeaders} MODULE ${libname} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 ROOT_GENERATE_DICTIONARY(G__DataFrame ROOT/TDataFrame.hxx MULTIDICT MODULE ${libname} LINKDEF DataFrameLinkDef.h)
 
-ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx G__DataFrame.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc)
+ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx G__DataFrame.cxx LIBRARIES ${TBB_LIBRARIES} DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
 ROOT_INSTALL_HEADERS()
 
 
@@ -38,3 +38,6 @@ if(APPLE)
   endif()
 endif()
 
+if(testing)
+  add_subdirectory(test)
+endif()

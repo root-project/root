@@ -114,7 +114,8 @@ if(NOT ROOT_fftw3_FOUND)
 endif()
 
 if(NOT ROOT_opengl_FOUND)
-  set(opengl_veto tree/staff.C)
+  set(opengl_veto tree/staff.C
+                  gl/*.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
@@ -126,14 +127,18 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C)
+  set(imt_veto multicore/imt*.C multicore/mt*.C)
+endif()
+
+if(ROOT_CLASSIC_BUILD)
+  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
              geom/building.C geom/cheongwadae.C geom/geom*.C geom/lego.C geom/robot.C geom/south_gate.C geom/station*.C geom/tank.C
-             gl/*.C
+             gl/glViewerExercise.C gl/glViewerLOD.C gl/gviz3d.C gl/nucleus.C gl/viewer3DLocal.C gl/viewer3DMaster.C
              gui/*.C
              hist/exec1.C
              hist/exec2.C
@@ -196,7 +201,9 @@ set(all_veto hsimple.C
              ${r_veto}
              ${histfactory_veto}
              ${tbb_veto}
-             ${imt_veto})
+             ${imt_veto}
+             ${classic_veto}
+             )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -263,6 +270,7 @@ set(benchmarks-depends tutorial-hsimple
 set(geom-na49view-depends tutorial-geom-geometry)
 set(multicore-mt102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mt101_fillNtuples)
 set(multicore-mp102_readNtuplesFillHistosAndFit-depends tutorial-multicore-mp101_fillNtuples)
+set(multicore-mp105_processEntryList-depends tutorial-multicore-mp104_processH1)
 
 #--many roostats tutorials depending on having creating the file first with histfactory and example_combined_GaussExample_model.root
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo

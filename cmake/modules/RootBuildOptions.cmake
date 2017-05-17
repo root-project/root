@@ -98,6 +98,7 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(cuda OFF "Use CUDA if it is found in the system")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
+ROOT_BUILD_OPTION(cxx17 OFF "Build using C++17 compatible mode, requires gcc >= 7.1.0 or clang")
 ROOT_BUILD_OPTION(cxxmodules "Compile with C++ modules enabled." OFF)
 ROOT_BUILD_OPTION(davix ON "DavIx library for HTTP/WEBDAV access")
 ROOT_BUILD_OPTION(dcache ON "dCache support, requires libdcap from DESY")
@@ -176,6 +177,7 @@ option(gminimal "Do not automatically search for support libraries, but include 
 option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
+option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols visible in libCling." OFF)
 
 #--- Minor chnages in defaults due to platform--------------------------------------------------
 if(WIN32)
@@ -236,6 +238,21 @@ endif()
 #---Options depending of CMake Generator-------------------------------------------------------
 if( CMAKE_GENERATOR STREQUAL Ninja)
    set(fortran_defvalue OFF) 
+endif()
+
+#---Options depending on compiler and version
+if(CMAKE_CXX_COMPILER_ID STREQUAL GNU AND 
+   CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 6)
+  set(cxx11_defvalue OFF)
+  set(cxx14_defvalue ON)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL AppleClang AND 
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8)
+  set(cxx11_defvalue OFF)
+  set(cxx14_defvalue ON)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND
+       CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
+  set(cxx11_defvalue OFF)
+  set(cxx14_defvalue ON)
 endif()
 
 #---Apply minimal or gminimal------------------------------------------------------------------

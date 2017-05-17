@@ -1511,8 +1511,8 @@ namespace {
       if (stlkind == ROOT::kSTLmap || stlkind == ROOT::kSTLmultimap) {
 
          if (current->GetValueClass() == nullptr) {
-            // This should really never happen (the contain of map should always
-            // be a pair and thus have a TClass ... so lert's just give up
+            // This should really never happen (the content of map should always
+            // be a pair and thus have a TClass ... so let's just give up ...
             // It actually happens in the case where one of the member is an
             // enum that is part of dictionary payload that is not yet
             // autoloaded.

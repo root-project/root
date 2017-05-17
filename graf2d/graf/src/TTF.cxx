@@ -471,7 +471,7 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// |---------|---------------------------|------------------|
 /// |      1  | times-medium-i-normal     | timesi.ttf       |
 /// |      2  | times-bold-r-normal       | timesbd.ttf      |
-/// |      3  | times-bold-i-normal       | timesi.ttf       |
+/// |      3  | times-bold-i-normal       | timesbi.ttf      |
 /// |      4  | helvetica-medium-r-normal | arial.ttf        |
 /// |      5  | helvetica-medium-o-normal | ariali.ttf       |
 /// |      6  | helvetica-bold-r-normal   | arialbd.ttf      |

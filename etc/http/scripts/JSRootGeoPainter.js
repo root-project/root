@@ -1179,6 +1179,7 @@
 
             // keep full stack of nodes
             mesh.stack = entry.stack;
+            mesh.renderOrder = this._clones.maxdepth - entry.stack.length; // order of transparancy handling
 
             obj3d.add(mesh);
 

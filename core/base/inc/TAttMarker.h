@@ -49,7 +49,14 @@ public:
                       kFullTriangleDown=23, kOpenCircle=24, kOpenSquare=25,
                       kOpenTriangleUp=26, kOpenDiamond=27, kOpenCross=28,
                       kFullStar=29, kOpenStar=30, kOpenTriangleDown=32,
-                      kFullDiamond=33, kFullCross=34};
+                      kFullDiamond=33, kFullCross=34, kOpenDiamondCross=35,
+                      kOpenSquareDiagonal=36, kOpenThreeTriangles=37,
+                      kOctagonCross=38, kFullThreeTriangles=39,
+                      kOpenFourTrianglesX=40, kFullFourTrianglesX=41,
+                      kOpenDoubleDiamond=42, kFullDoubleDiamond=43,
+                      kOpenFourTrianglesPlus=44, kFullFourTrianglesPlus=45,
+                      kOpenCrossX=46, kFullCrossX=47, kFourSquaresX=48,
+                      kFourSquaresPlus=49 };
 
 #endif
 

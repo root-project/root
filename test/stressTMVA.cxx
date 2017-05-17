@@ -263,7 +263,7 @@ namespace UnitTesting
       long getNumFailed() const;
       const std::ostream* getStream() const;
       void setStream(std::ostream* osptr);
-      void addTest(UnitTest* t) throw (UnitTestSuiteError);
+      void addTest(UnitTest* t);
       void addSuite(const UnitTestSuite&);
       void run();  // Calls Test::run() repeatedly
       void intro() const;
@@ -309,7 +309,7 @@ namespace UnitTesting
 using namespace std;
 using namespace UnitTesting;
 
-void UnitTestSuite::addTest(UnitTest* t) throw(UnitTestSuiteError)
+void UnitTestSuite::addTest(UnitTest* t)
 {
    // Verify test is valid and has a stream:
    if (t == 0)

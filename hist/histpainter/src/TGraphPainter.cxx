@@ -53,6 +53,7 @@ ClassImp(TGraphPainter);
    - [TGraphBentErrors](#GP03c)
 - [TGraphPolar options](#GP04)
 - [Colors automatically picked in palette](#GP05)
+- [Reverse graphs' axis](#GP06)
 
 
 ### <a name="GP00"></a> Introduction
@@ -106,7 +107,8 @@ Graphs can be drawn with the following options:
 | "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
 | "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
 | "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
-
+| "RX"     | Reserve the X axis. |
+| "RY"     | Reserve the Y axis. |
 
 Drawing options can be combined. In the following example the graph
 is drawn as a smooth curve (option "C") with markers (option "P") and
@@ -114,7 +116,7 @@ with axes (option "A").
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",200,10,600,400);
+   auto c1 = new TCanvas("c1","c1",200,10,600,400);
 
    c1->SetFillColor(42);
    c1->SetGrid();
@@ -141,7 +143,6 @@ Begin_Macro(source)
    c1->GetFrame()->SetFillColor(21);
    c1->GetFrame()->SetBorderSize(12);
    c1->Modified();
-   return c1;
 }
 End_Macro
 
@@ -150,7 +151,7 @@ option "1".
 
 Begin_Macro(source)
 {
-   TCanvas *c47 = new TCanvas("c47","c47",200,10,600,400);
+   auto c47 = new TCanvas("c47","c47",200,10,600,400);
    c47->Divide(1,2);
    const Int_t n = 20;
    Double_t x[n], y[n];
@@ -162,7 +163,6 @@ Begin_Macro(source)
    gr->SetFillColor(38);
    c47->cd(1); gr->Draw("AB");
    c47->cd(2); gr->Draw("AB1");
- return c47;
 }
 End_Macro
 
@@ -223,14 +223,13 @@ along X and the bottom and up errors are the same along Y.
 
 Begin_Macro(source)
 {
-   TCanvas *c4 = new TCanvas("c4","c4",200,10,600,400);
+   auto c4 = new TCanvas("c4","c4",200,10,600,400);
    double x[] = {0, 1, 2, 3, 4};
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
    double ey[] = {1, 0.5, 1, 0.5, 1};
    TGraphErrors* ge = new TGraphErrors(5, x, y, ex, ey);
    ge->Draw("ap");
-   return c4;
 }
 End_Macro
 
@@ -238,7 +237,7 @@ The option "0" shows the error bars for data points outside range.
 
 Begin_Macro(source)
 {
-   TCanvas *c48 = new TCanvas("c48","c48",200,10,600,400);
+   auto c48 = new TCanvas("c48","c48",200,10,600,400);
    float x[]     = {1,2,3};
    float err_x[] = {0,0,0};
    float err_y[] = {5,5,5};
@@ -247,7 +246,6 @@ Begin_Macro(source)
    c48->Divide(2,1);
    c48->cd(1); gPad->DrawFrame(0,0,4,8); tg.Draw("PC");
    c48->cd(2); gPad->DrawFrame(0,0,4,8); tg.Draw("0PC");
-   return c48;
 }
 End_Macro
 
@@ -255,7 +253,7 @@ The option "3" shows the errors as a band.
 
 Begin_Macro(source)
 {
-   TCanvas *c41 = new TCanvas("c41","c41",200,10,600,400);
+   auto c41 = new TCanvas("c41","c41",200,10,600,400);
    double x[] = {0, 1, 2, 3, 4};
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
@@ -264,7 +262,6 @@ Begin_Macro(source)
    ge->SetFillColor(4);
    ge->SetFillStyle(3010);
    ge->Draw("a3");
-   return c41;
 }
 End_Macro
 
@@ -276,7 +273,7 @@ used carefully because the smoothing algorithm may show some (huge)
 
 Begin_Macro(source)
 {
-   TCanvas *c42 = new TCanvas("c42","c42",200,10,600,400);
+   auto c42 = new TCanvas("c42","c42",200,10,600,400);
    double x[] = {0, 1, 2, 3, 4};
    double y[] = {0, 2, 4, 1, 3};
    double ex[] = {0.1, 0.2, 0.3, 0.4, 0.5};
@@ -285,7 +282,6 @@ Begin_Macro(source)
    ge->SetFillColor(6);
    ge->SetFillStyle(3005);
    ge->Draw("a4");
-   return c42;
 }
 End_Macro
 
@@ -294,7 +290,7 @@ systematic errors on top of a graph with statistical errors.
 
 Begin_Macro(source)
 {
-   TCanvas *c43 = new TCanvas("c43","c43",200,10,600,400);
+   auto c43 = new TCanvas("c43","c43",200,10,600,400);
    c43->DrawFrame(0., -0.5, 6., 2);
 
    double x[5]    = {1, 2, 3, 4, 5};
@@ -333,7 +329,6 @@ Begin_Macro(source)
 
    TGraphErrors *graph2_sys = new TGraphErrors(5, x, y2, zero, ey_sys2);
    graph2_sys->Draw("[]");
-   return c43;
 }
 End_Macro
 
@@ -344,7 +339,7 @@ different along X and the bottom and up errors are different along Y.
 
 Begin_Macro(source)
 {
-   TCanvas *c44 = new TCanvas("c44","c44",200,10,600,400);
+   auto c44 = new TCanvas("c44","c44",200,10,600,400);
    double ax[] = {0, 1, 2, 3, 4};
    double ay[] = {0, 2, 4, 1, 3};
    double aexl[] = {0.1, 0.2, 0.3, 0.4, 0.5};
@@ -356,7 +351,6 @@ Begin_Macro(source)
    gae->SetFillStyle(3001);
    gae->Draw("a2");
    gae->Draw("p");
-   return c44;
 }
 End_Macro
 
@@ -368,7 +362,7 @@ when several graphs are drawn on the same plot.
 
 Begin_Macro(source)
 {
-   TCanvas *c45 = new TCanvas("c45","c45",200,10,600,400);
+   auto c45 = new TCanvas("c45","c45",200,10,600,400);
    const Int_t n = 10;
    Double_t x[n]  = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61,0.7,0.85,0.89,0.95};
    Double_t y[n]  = {1,2.9,5.6,7.4,9,9.6,8.7,6.3,4.5,1};
@@ -385,7 +379,6 @@ Begin_Macro(source)
    gr->SetMarkerColor(4);
    gr->SetMarkerStyle(21);
    gr->Draw("ALP");
-   return c45;
 }
 End_Macro
 
@@ -406,7 +399,7 @@ The drawing options for the polar graphs are the following:
 
 Begin_Macro(source)
 {
-   TCanvas *c46 = new TCanvas("c46","c46",500,500);
+   auto c46 = new TCanvas("c46","c46",500,500);
    TGraphPolar * grP1 = new TGraphPolar();
    grP1->SetTitle("TGraphPolar example");
 
@@ -428,8 +421,6 @@ Begin_Macro(source)
    // Update, otherwise GetPolargram returns 0
    c46->Update();
    grP1->GetPolargram()->SetToRadian();
-
-   return c46;
 }
 End_Macro
 
@@ -441,7 +432,7 @@ When several graphs are painted in the same canvas or when a multi-graph is draw
 it might be useful to have an easy and automatic way to choose
 their color. The simplest way is to pick colors in the current active color
 palette. Palette coloring for histogram is activated thanks to the options `PFC`
-(Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
+(Palette Fill Color), `PLC` (Palette Line Color) and `PMC` (Palette Marker Color).
 When one of these options is given to `TGraph::Draw` the graph get its color
 from the current color palette defined by `gStyle->SetPalette(…)`. The color
 is determined according to the number of objects having palette coloring in
@@ -454,7 +445,47 @@ End_Macro
 Begin_Macro(source)
 ../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
- */
+
+### <a name="GP06"></a> Reverse graphs' axis
+
+\since **ROOT version 6.09/03**
+
+When a TGraph is drawn, the X-axis is drawn with increasing values from left to
+right and the Y-axis from bottom to top. The two options `RX` and `RY` allow to
+change this order. The option `RX` allows to draw the X-axis with increasing values
+from right to left and the `RY` option allows to draw the Y-axis with increasing
+values from top to bottom. The following example illustrate how to use these options.
+
+Begin_Macro(source)
+{
+   auto *c = new TCanvas();
+   c->Divide(2,1);
+   auto *g = new TGraphErrors();
+   g->SetTitle("Simple Graph");
+
+   g->SetPoint(0,-4,-3);
+   g->SetPoint(1,1,1);
+   g->SetPoint(2,2,1);
+   g->SetPoint(3,3,4);
+   g->SetPoint(4,5,5);
+
+   g->SetPointError(0,1.,2.);
+   g->SetPointError(1,2,1);
+   g->SetPointError(2,2,3);
+   g->SetPointError(3,3,2);
+   g->SetPointError(4,4,5);
+
+   g->GetXaxis()->SetNdivisions(520);
+
+   g->SetMarkerStyle(21);
+   c->cd(1); gPad->SetGrid(1,1);
+   g->Draw("APL");
+
+   c->cd(2); gPad->SetGrid(1,1);
+   g->Draw("A RX RY PL");
+}
+End_Macro
+*/
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -926,6 +957,15 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       }
 
       SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
+
+      char *l4 = strstr(chopt,"rx"); // Reverse graph along X axis
+      char *l5 = strstr(chopt,"ry"); // Reverse graph along Y axis
+
+      if (l4 || l5) {
+         PaintGraphReverse(theGraph,chopt);
+         return;
+      }
+
       if (theGraph->InheritsFrom(TGraphBentErrors::Class())) {
          PaintGraphBentErrors(theGraph,chopt);
       } else if (theGraph->InheritsFrom(TGraphQQ::Class())) {
@@ -3190,6 +3230,139 @@ void TGraphPainter::PaintGraphQQ(TGraph *theGraph, Option_t *option)
    }
    else
       line3.PaintLine(xqmax, yqmax, xmax, yxmax);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint theGraph reverting values along X and/or Y axis. a new graph is created.
+
+void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
+{
+   TString opt = option;
+   opt.ToLower();
+   TH1F *theHist = (TH1F *)theGraph->GetHistogram();
+
+   Bool_t lrx = opt.Contains("rx");
+   Bool_t lry = opt.Contains("ry");
+
+   Double_t LOX = theHist->GetXaxis()->GetLabelOffset();
+   Double_t TLX = theHist->GetXaxis()->GetTickLength();
+   Double_t LOY = theHist->GetYaxis()->GetLabelOffset();
+   Double_t TLY = theHist->GetYaxis()->GetTickLength();
+   Int_t XACOL  = theHist->GetXaxis()->GetAxisColor();
+   Int_t YACOL  = theHist->GetYaxis()->GetAxisColor();
+
+   if (opt.Contains("a")) {
+      if (lrx) {
+         theHist->GetXaxis()->SetTickLength(0.);
+         theHist->GetXaxis()->SetLabelOffset(999.);
+         theHist->GetXaxis()->SetAxisColor(gPad->GetFrameFillColor());
+      }
+      if (lry) {
+         theHist->GetYaxis()->SetTickLength(0.);
+         theHist->GetYaxis()->SetLabelOffset(999.);
+         theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
+      }
+      theHist->Paint("0");
+      opt.ReplaceAll("a", "");
+   }
+
+   Int_t     N  = theGraph->GetN();
+   Double_t *X  = theGraph->GetX();
+   Double_t *Y  = theGraph->GetY();
+   Double_t XA1 = theGraph->GetXaxis()->GetXmin();
+   Double_t XA2 = theGraph->GetXaxis()->GetXmax();
+   Double_t YA1 = theGraph->GetYaxis()->GetXmin();
+   Double_t YA2 = theGraph->GetYaxis()->GetXmax();
+   Double_t dX  = XA1+XA2;
+   Double_t dY  = YA1+YA2;
+   Double_t newX[N];
+   Double_t newY[N];
+
+   if (lrx) {
+      opt.ReplaceAll("rx", "");
+
+      Double_t GL = 0.;
+      theHist->GetXaxis()->SetTickLength(0.);
+      theHist->GetXaxis()->SetLabelOffset(999.);
+
+      // Redraw the new X axis
+      gPad->Update();
+      TString optax = "-SDH";
+      if (gPad->GetGridx()) {
+         GL = (YA2-YA1)/(gPad->GetY2() - gPad->GetY1());
+         optax.Append("W");
+      }
+      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmax(),
+                                      gPad->GetUymin(),
+                                      gPad->GetUxmin(),
+                                      gPad->GetUymin(),
+                                      theGraph->GetXaxis()->GetXmin(),
+                                      theGraph->GetXaxis()->GetXmax(),
+                                      theHist->GetNdivisions("X"),
+                                      optax.Data(), -GL);
+      theNewAxis->SetLabelFont(theGraph->GetXaxis()->GetLabelFont());
+      theNewAxis->SetLabelSize(theGraph->GetXaxis()->GetLabelSize());
+      theNewAxis->SetLabelColor(theGraph->GetXaxis()->GetLabelColor());
+      theNewAxis->SetTickLength(TLX);
+      theNewAxis->SetLabelOffset(LOX-theGraph->GetXaxis()->GetLabelSize());
+      theNewAxis->Paint();
+
+      // Reverse X coordinates
+      for (Int_t i=0; i<N; i++) newX[i] = dX-X[i];
+   } else {
+      for (Int_t i=0; i<N; i++) newX[i] = X[i];
+   }
+
+   if (lry) {
+      opt.ReplaceAll("ry", "");
+      Double_t GL = 0.;
+
+      // Redraw the new Y axis
+      gPad->Update();
+      TString optax = "-SDH";
+
+      if (gPad->GetGridy()) {
+         GL = (XA2-XA1)/(gPad->GetX2() - gPad->GetX1());
+         optax.Append("W");
+      }
+      TGaxis *theNewAxis = new TGaxis(gPad->GetUxmin(),
+                                   gPad->GetUymax(),
+                                   gPad->GetUxmin(),
+                                   gPad->GetUymin(),
+                                   theGraph->GetYaxis()->GetXmin(),
+                                   theGraph->GetYaxis()->GetXmax(),
+                                   theHist->GetNdivisions("Y"),
+                                   optax.Data(), GL);
+      theNewAxis->SetLabelFont(theGraph->GetYaxis()->GetLabelFont());
+      theNewAxis->SetLabelSize(theGraph->GetYaxis()->GetLabelSize());
+      theNewAxis->SetLabelColor(theGraph->GetYaxis()->GetLabelColor());
+      theNewAxis->SetTickLength(-TLY);
+      theNewAxis->SetLabelOffset(LOY-TLY);
+      theNewAxis->Paint();
+
+      // Reverse Y coordinates
+      for (Int_t i=0; i<N; i++) newY[i] = dY-Y[i];
+   } else {
+      for (Int_t i=0; i<N; i++) newY[i] = Y[i];
+   }
+
+   // Create the new reversed graph
+   TGraph *theNewGraph = (TGraph*)theGraph->Clone();
+   for (Int_t i=0; i<N; i++) theNewGraph->SetPoint(i, newX[i], newY[i]);
+   theNewGraph->SetMarkerStyle(theGraph->GetMarkerStyle());
+   theNewGraph->SetMarkerColor(theGraph->GetMarkerColor());
+   theNewGraph->SetLineStyle(theGraph->GetLineStyle());
+   theNewGraph->SetLineColor(theGraph->GetLineColor());
+
+   PaintHelper(theNewGraph,opt.Data());
+
+   theHist->GetXaxis()->SetLabelOffset(LOX);
+   theHist->GetXaxis()->SetTickLength(TLX);
+   theHist->GetYaxis()->SetLabelOffset(LOY);
+   theHist->GetYaxis()->SetTickLength(TLY);
+   theHist->GetXaxis()->SetAxisColor(XACOL);
+   theHist->GetYaxis()->SetAxisColor(YACOL);
 }
 
 

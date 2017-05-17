@@ -1236,8 +1236,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          fSelected->ExecuteEvent(event, px, py);
          gVirtualX->Update();
-
-         if (!fSelected->InheritsFrom(TAxis::Class())) {
+         if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
                resize = ((TBox*)fSelected)->IsBeingResized();

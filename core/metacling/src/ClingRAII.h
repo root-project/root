@@ -38,6 +38,8 @@ namespace ROOT {
           };
           ~SemaExprCleanupsRAII() {
              Swapem();
+             assert(fFunctionScopes.size() == 1 && "Expected only my FunctionScopeInfo.");
+             delete fFunctionScopes.back();
           }
        };
 

@@ -2249,11 +2249,11 @@ void spstress_matrix_fill(Int_t rsize,Int_t csize)
 {
   Bool_t ok = kTRUE;
 
-  if (csize < 4) {
-    Error("spstress_matrix_fill","rsize should be >= 4");
-    ok = kFALSE;
-    StatusPrint(2,"Filling, Inserting, Using",ok);
-    return;
+  if (rsize < 4) {
+     Error("spstress_matrix_fill", "rsize should be >= 4");
+     ok = kFALSE;
+     StatusPrint(2, "Filling, Inserting, Using", ok);
+     return;
   }
 
   if (csize < 4) {

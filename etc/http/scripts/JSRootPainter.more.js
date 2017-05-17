@@ -975,8 +975,9 @@
                var xx = xmin + dx*n;
                // check if points need to be displayed at all, keep at least 4-5 points for Bezier curves
                if ((gxmin !== gxmax) && ((xx + 2*dx < gxmin) || (xx - 2*dx > gxmax))) continue;
+               var yy = tf1.fSave[n];
 
-               res.push({ x: xx, y: tf1.fSave[n] });
+               if (!isNaN(yy)) res.push({ x : xx, y : yy });
             }
             return res;
          }
@@ -1012,7 +1013,7 @@
          var xmin = 0, xmax = 1, ymin = 0, ymax = 1,
              bins = this.CreateBins(true);
 
-         if (bins!==null) {
+         if ((bins!==null) && (bins.length > 0)) {
 
             xmin = xmax = bins[0].x;
             ymin = ymax = bins[0].y;
@@ -1032,7 +1033,15 @@
              tf1 = this.GetObject();
 
          histo.fName = tf1.fName + "_hist";
-         histo.fTitle = tf1.fTitle;
+         if (tf1.fTitle.indexOf(';')!==0) {
+            var array = tf1.fTitle.split(';');
+            histo.fTitle = array[0];
+            if (array.length>1)
+               histo.fXaxis.fTitle = array[1];
+            if (array.length>2)
+               histo.fYaxis.fTitle = array[2];
+         }
+         else histo.fTitle = tf1.fTitle;
 
          histo.fXaxis.fXmin = xmin;
          histo.fXaxis.fXmax = xmax;

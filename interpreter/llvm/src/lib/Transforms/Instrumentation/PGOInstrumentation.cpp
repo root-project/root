@@ -152,7 +152,7 @@ public:
   PGOInstrumentationUseLegacyPass(std::string Filename = "")
       : ModulePass(ID), ProfileFileName(std::move(Filename)) {
     if (!PGOTestProfileFile.empty())
-      ProfileFileName = PGOTestProfileFile;
+      ProfileFileName = PGOTestProfileFile.getValue();
     initializePGOInstrumentationUseLegacyPassPass(
         *PassRegistry::getPassRegistry());
   }
@@ -917,7 +917,7 @@ static bool annotateAllFunctions(
 PGOInstrumentationUse::PGOInstrumentationUse(std::string Filename)
     : ProfileFileName(std::move(Filename)) {
   if (!PGOTestProfileFile.empty())
-    ProfileFileName = PGOTestProfileFile;
+    ProfileFileName = PGOTestProfileFile.getValue();
 }
 
 PreservedAnalyses PGOInstrumentationUse::run(Module &M,

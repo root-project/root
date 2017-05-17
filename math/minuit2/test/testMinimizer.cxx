@@ -652,12 +652,8 @@ int testRosenBrock() {
    double s0[2] = {0.01,0.01};
 
    // minimize using Rosenbrock Function
-#ifndef DEBUG
-   gNmin = 2000;
-#endif
 
    gNmin = 1;
-
 
    RosenBrockFunction fRB;
    double xRB[2] = { -1.,1.2};
@@ -687,11 +683,7 @@ int testChebyQuad() {
    const int n = 8;
    ChebyQuadFunction func(n);
 
-#ifndef DEBUG
-   gNmin = std::max(1, int(20000/n/n) );
-#endif
    gNmin = 1;
-
 
    double s0[n];
    double x0[n];
@@ -743,9 +735,7 @@ int testTrigoFletcher() {
 
 
    // test with fletcher trigonometric function
-#ifndef DEBUG
-   gNmin = 2;
-#endif
+
    gNmin = 1;
 
    const int nT = 50;
@@ -778,10 +768,6 @@ int testWood() {
    // test with Wood function (4d)
 //   minimum    : F(1,1,1,1)  =   0.
 
-
-#ifndef DEBUG
-   gNmin = 1000;
-#endif
    gNmin = 1;
 
    ROOT::Math::Functor f(&WoodFunction,4);
@@ -807,9 +793,7 @@ int testPowell() {
 
    // test with Powell function (4d)
    // minimum is at F(0,0,0,0) = 0
-#ifndef DEBUG
-   gNmin = 1000;
-#endif
+
    gNmin = 1;
 
    ROOT::Math::Functor f(&PowellFunction,4);
@@ -836,9 +820,7 @@ int testQuadFunc() {
 
    // test with a simple quadratic function 2d
    // minimum is at F(0,0) = 0
-#ifndef DEBUG
-   gNmin = 1000;
-#endif
+
    gNmin = 1;
 
    ROOT::Math::Functor f(&SimpleQuadFunction,2);
