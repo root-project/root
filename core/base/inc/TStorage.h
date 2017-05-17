@@ -85,7 +85,6 @@ public:
    ClassDef(TStorage,0)  //Storage manager class
 };
 
-#ifndef WIN32
 inline Bool_t TStorage::FilledByObjectAlloc(volatile UInt_t *member) {
    //called by TObject's constructor to determine if object was created by call to new
 
@@ -111,6 +110,7 @@ inline Bool_t TStorage::FilledByObjectAlloc(volatile UInt_t *member) {
    return *member == kObjectAllocMemValue;
 }
 
+#ifndef WIN32
 inline size_t TStorage::GetMaxBlockSize() { return fgMaxBlockSize; }
 
 inline void TStorage::SetMaxBlockSize(size_t size) { fgMaxBlockSize = size; }
