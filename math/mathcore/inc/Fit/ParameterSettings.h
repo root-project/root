@@ -54,7 +54,7 @@ public:
     fName(name)
    {}
 
-   ///constructor for double limited Parameter
+   ///constructor for double limited Parameter. The given value should be within the given limits [min,max]
    ParameterSettings(const std::string &  name, double val, double err,
                      double min, double max) :
       fValue(val), fStepSize(err), fFix(false),
@@ -81,7 +81,7 @@ public:
       SetStepSize(step);
    }
 
-   /// set a limited parameter
+   /// set a limited parameter. The given value should be within the given limits [min,max]
    void Set(const std::string & name, double value, double step, double lower, double upper ) {
       SetName(name);
       SetValue(value);
@@ -142,6 +142,8 @@ public:
    void SetStepSize(double err) {fStepSize = err;}
    /// set a double side limit,
    /// if low == up the parameter is fixed  if low > up the limits are removed
+   /// The current parameter value should be within the given limits [low,up].
+   /// If the value is outside the limits, then a new parameter value is set to = (up+low)/2
    void SetLimits(double low, double up) {
 
       if ( low > up ) {
