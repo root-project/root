@@ -58,7 +58,6 @@ Belle2::ExtHit::ExtHit(const ExtHit & rhs)
    , m_TOF(const_cast<ExtHit &>( rhs ).m_TOF)
    , m_Position(const_cast<ExtHit &>( rhs ).m_Position)
    , m_Momentum(const_cast<ExtHit &>( rhs ).m_Momentum)
-   , m_Covariance(const_cast<ExtHit &>( rhs ).m_Covariance)
 {
    // This is NOT a copy constructor. This is actually a move constructor (for stl container's sake).
    // Use at your own risk!
