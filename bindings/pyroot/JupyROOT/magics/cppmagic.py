@@ -18,7 +18,7 @@ class CppMagics(Magics):
         elif args.declare:
             utils.declareCppCode(cell)
         else:
-            utils.processCppCode(cell)
+            utils.processMagicCppCode(cell)
 
 def load_ipython_extension(ipython):
     ipython.register_magics(CppMagics)
