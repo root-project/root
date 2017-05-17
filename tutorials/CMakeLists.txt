@@ -127,7 +127,11 @@ if(NOT TBB_FOUND AND NOT builtin_tbb)
 endif()
 
 if(NOT ROOT_imt_FOUND)
-  set(imt_veto multicore/imt*.C)
+  set(imt_veto multicore/imt*.C multicore/mt*.C)
+endif()
+
+if(ROOT_CLASSIC_BUILD)
+  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
@@ -197,7 +201,9 @@ set(all_veto hsimple.C
              ${r_veto}
              ${histfactory_veto}
              ${tbb_veto}
-             ${imt_veto})
+             ${imt_veto}
+             ${classic_veto}
+             )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
