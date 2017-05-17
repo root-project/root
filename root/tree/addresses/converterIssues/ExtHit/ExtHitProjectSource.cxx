@@ -2,10 +2,6 @@ namespace std {}
 using namespace std;
 #include "ExtHitProjectHeaders.h"
 
-#include "ExtHitLinkDef.h"
-
-#include "ExtHitProjectDict.cxx"
-
 struct DeleteObjectFunctor {
    template <typename T>
    void operator()(const T *ptr) const {

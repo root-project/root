@@ -1,7 +1,9 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog test_file.root 
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog test_file.root \
+   ExtHit/ExtHit.*  ExtHit/*.$(ObjSuf) ExtHit/*.pcm ExtHit/*.log  ExtHit/ExtHitProjectDict*
+
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -67,3 +69,15 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 
 execReader.clog: execWriter.success
 
+
+
+
+ExtHit/ExtHitProjectDict.$(ObjSuf) ExtHit/ExtHitProjectSource.$(ObjSuf): $(ROOTCORELIBS)
+
+ExtHit/ExtHitProjectDict.cxx: ExtHit/ExtHitLinkDef.h
+	$(CMDECHO) cd ExtHit; rootcint -f ExtHitProjectDict.cxx -c ExtHitProjectHeaders.h ExtHitLinkDef.h
+
+ExtHit/ExtHit.$(DllSuf): ExtHit/ExtHitProjectDict.$(ObjSuf) ExtHit/ExtHitProjectSource.$(ObjSuf)  $(ROOT_LOC)/lib/libPhysics.so
+	$(BuildFromObjs)
+
+execROOT8794.log: ExtHit/ExtHit.$(DllSuf)
