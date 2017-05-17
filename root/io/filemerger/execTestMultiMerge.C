@@ -74,7 +74,7 @@ int execTestMultiMerge()
    result += testMergedFile("mfile1-4.root",1,4938, kIs32bits ? 3 : 0);
    result += testMergedFile("mzfile1-4.root",206,4992, kIs32bits ? 2 : 0);
 
-   result += testSimpleFile("hsimple.root",25000,1,414443, kIs32bits ? 10 : 8);
+   result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? 10 : 8);
    result += testSimpleFile("hsimple9.root",25000,9,432029,3);
    result += testSimpleFile("hsimple9x2.root",2*25000,9,851123,9);
    result += testSimpleFile("hsimple209.root",25000,209,394077,8);
