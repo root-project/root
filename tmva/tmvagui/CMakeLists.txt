@@ -12,7 +12,7 @@ if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
 endif()
 
 set(headers1 annconvergencetest.h  deviations.h mvaeffs.h PlotFoams.h  TMVAGui.h
-	 BDTControlPlots.h  correlationscatters.h efficiencies.h  mvas.h probas.h 
+	 BDTControlPlots.h  correlationscatters.h efficiencies.h efficienciesMulticlass.h mvas.h probas.h 
 	 BDT.h   correlationscattersMultiClass.h  likelihoodrefs.h  mvasMulticlass.h  regression_averagedevs.h  TMVAMultiClassGui.h
 	 BDT_Reg.h  correlations.h   mvaweights.h rulevisCorr.h  TMVARegGui.h
 	 BoostControlPlots.h correlationsMultiClass.h network.h rulevis.h   variables.h

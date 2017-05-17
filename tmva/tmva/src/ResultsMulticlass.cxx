@@ -40,9 +40,11 @@ Class which takes the results of a multiclass classification
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Results.h"
+#include "TMVA/ROCCurve.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
+#include "TGraph.h"
 #include "TH1F.h"
 
 #include <limits>
@@ -174,6 +176,65 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    }
 
    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create performance graphs for this classifier a multiclass setting.
+/// Requires that the method has already been evaluated (that a resultset
+/// already exists.)
+///
+/// Currently uses the new way of calculating ROC Curves. If anything looks
+/// fishy, please contact the ROOT TMVA team.
+///
+
+void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
+{
+   DataSet *ds = GetDataSet();
+   ds->SetCurrentType(GetTreeType());
+   const DataSetInfo *dsi = GetDataSetInfo();
+
+   UInt_t numClasses = dsi->GetNClasses();
+
+   std::vector<std::vector<Float_t>> *rawMvaRes = GetValueVector();
+
+   for (size_t iClass = 0; iClass < numClasses; ++iClass) {
+      // Format data
+      // TODO: Replace with calls to GetMvaValuesPerClass
+      std::vector<Float_t> mvaRes;
+      std::vector<Bool_t> mvaResTypes;
+      std::vector<Float_t> mvaResWeights;
+
+      // Vector transpose due to values being stored as
+      //    [ [0, 1, 2], [0, 1, 2], ... ]
+      // in ResultsMulticlass::GetValueVector.
+      mvaRes.reserve(rawMvaRes->size());
+      for (auto item : *rawMvaRes) {
+         mvaRes.push_back(item[iClass]);
+      }
+
+      auto eventCollection = ds->GetEventCollection();
+      mvaResTypes.reserve(eventCollection.size());
+      mvaResWeights.reserve(eventCollection.size());
+      for (auto ev : eventCollection) {
+         mvaResTypes.push_back(ev->GetClass() == iClass);
+         mvaResWeights.push_back(ev->GetWeight());
+      }
+
+      // Get ROC Curve
+      ROCCurve *roc = new ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
+      TGraph *rocGraph = new TGraph(*(roc->GetROCCurve()));
+      delete roc;
+
+      // Style ROC Curve
+      TString className = dsi->GetClassInfo(iClass)->GetName();
+      TString name = Form("%s_rejBvsS_%s", prefix.Data(), className.Data());
+      TString title = Form("%s_%s", prefix.Data(), className.Data());
+      rocGraph->SetName(name);
+      rocGraph->SetTitle(title);
+
+      // Store ROC Curve
+      Store(rocGraph);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

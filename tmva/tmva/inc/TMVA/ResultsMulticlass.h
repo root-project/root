@@ -76,6 +76,7 @@ namespace TMVA {
       std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
       std::vector<Float_t>& GetAchievablePur(){return fAchievablePur;}
       // histogramming
+      void CreateMulticlassPerformanceHistos(TString prefix);
       void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);
 
       Double_t EstimatorFunction( std::vector<Double_t> & );

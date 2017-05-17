@@ -189,63 +189,63 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
                            buttonType, defaultRequiredClassifier );
    /*
      title = Form( "(%ic) Classifier Probability Distributions (test sample)", ic );
-     MultiClassActionButton( cbar,  
+     MultiClassActionButton( cbar,
      Form( "(%ic) Classifier Probability Distributions (test sample)", ic ),
      Form( "TMVA::mvas(\"%s\",TMVA::kProbaType)", fName ),
      "Plots the probability of each classifier for the test data (macro mvas(...,1))",
      buttonType, defaultRequiredClassifier );
-     
+
      title =Form( "(%id) Classifier Rarity Distributions (test sample)", ic );
-     MultiClassActionButton( cbar,  
+     MultiClassActionButton( cbar,
      Form( "(%id) Classifier Rarity Distributions (test sample)", ic ),
      Form( "TMVA::mvas(\"%s\",TMVA::kRarityType)", fName ),
-     "Plots the Rarity of each classifier for the test data (macro mvas(...,2)) - background distribution should be uniform",
-     buttonType, defaultRequiredClassifier );
-   
-   
+     "Plots the Rarity of each classifier for the test data (macro mvas(...,2)) - background distribution should be
+     uniform", buttonType, defaultRequiredClassifier );
+
+
      title =Form( "(%ia) Classifier Cut Efficiencies", ++ic );
-     MultiClassActionButton( cbar,  
+     MultiClassActionButton( cbar,
      title,
      Form( "TMVA::mvaeffs(\"%s\")", fName ),
      "Plots signal and background efficiencies versus cut on classifier output (macro mvaeffs.cxx)",
      buttonType, defaultRequiredClassifier );
+    */
 
-     title = Form( "(%ib) Classifier Background Rejection vs Signal Efficiency (ROC curve)", ic );
-     MultiClassActionButton( cbar,  
-     title,
-     Form( "TMVA::efficiencies(\"%s\")", fName ),
-     "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands for \"Receiver Operation Characteristics\"]",
-     buttonType, defaultRequiredClassifier );
-                 
-   
-     title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
-     MultiClassActionButton( cbar,  
-     title,
-     Form( "TMVA::paracoor(\"%s\")", fName ),
-     "Plots parallel coordinates for classifiers and input variables (macro paracoor.cxx, requires ROOT >= 5.17)",
-     buttonType, defaultRequiredClassifier );
+   title = Form("(%i) Classifier Background Rejection vs Signal Efficiency (ROC curve)", ++ic);
+   MultiClassActionButton(cbar, title, Form("TMVA::efficienciesMulticlass(\"%s\", \"%s\")", dataset.Data(), fName),
+                          "Plots background rejection vs signal efficiencies (macro efficiencies.cxx) [\"ROC\" stands "
+                          "for \"Receiver Operation Characteristics\"]",
+                          buttonType, defaultRequiredClassifier);
 
-     // parallel coordinates only exist since ROOT 5.17
-     #if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
-     TMVAMultiClassGui_inactiveButtons.push_back( title );
-     #endif
-   
-   
-     title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
-     MultiClassActionButton( cbar,  
-     title,
-     Form( "TMVA::probas(\"%s\")", fName ),
-     "Plots the PDFs of the classifier output distributions for signal and background - if requested (macro probas.cxx)",
-     buttonType, defaultRequiredClassifier );
+   /*
+   title = Form( "(%i) Parallel Coordinates (requires ROOT-version >= 5.17)", ++ic );
+   MultiClassActionButton( cbar,
+   title,
+   Form( "TMVA::paracoor(\"%s\")", fName ),
+   "Plots parallel coordinates for classifiers and input variables (macro paracoor.cxx, requires ROOT >= 5.17)",
+   buttonType, defaultRequiredClassifier );
 
-     title = Form( "(%i) Likelihood Reference Distributiuons", ++ic);
-     MultiClassActionButton( cbar,  
-     title,
-     Form( "TMVA::likelihoodrefs(\"%s\")", fName ), 
-     "Plots to verify the likelihood reference distributions (macro likelihoodrefs.cxx)",
-     buttonType, "Likelihood" );
-   */
-   
+   // parallel coordinates only exist since ROOT 5.17
+   #if ROOT_VERSION_CODE < ROOT_VERSION(5,17,0)
+   TMVAMultiClassGui_inactiveButtons.push_back( title );
+   #endif
+
+
+   title =Form( "(%i) PDFs of Classifiers (requires \"CreateMVAPdfs\" option set)", ++ic );
+   MultiClassActionButton( cbar,
+   title,
+   Form( "TMVA::probas(\"%s\")", fName ),
+   "Plots the PDFs of the classifier output distributions for signal and background - if requested (macro probas.cxx)",
+   buttonType, defaultRequiredClassifier );
+
+   title = Form( "(%i) Likelihood Reference Distributiuons", ++ic);
+   MultiClassActionButton( cbar,
+   title,
+   Form( "TMVA::likelihoodrefs(\"%s\")", fName ),
+   "Plots to verify the likelihood reference distributions (macro likelihoodrefs.cxx)",
+   buttonType, "Likelihood" );
+ */
+
    title = Form( "(%ia) Network Architecture (MLP)", ++ic );
    TString call = Form( "TMVA::network(\"%s\",\"%s\")",dataset.Data() , fName );
    MultiClassActionButton( cbar,  

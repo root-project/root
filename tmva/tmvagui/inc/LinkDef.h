@@ -23,7 +23,8 @@
 #pragma link C++ function TMVA::CorrGui;                             
 #pragma link C++ function TMVA::CorrGuiMultiClass;                   
 #pragma link C++ function TMVA::deviations;                          
-#pragma link C++ function TMVA::efficiencies;                        
+#pragma link C++ function TMVA::efficiencies;
+#pragma link C++ function TMVA::efficienciesMulticlass;
 #pragma link C++ function TMVA::likelihoodrefs;                      
 #pragma link C++ function TMVA::MovieMaker;                          
 #pragma link C++ defined_in "TMVA/mvaeffs.h";                             
