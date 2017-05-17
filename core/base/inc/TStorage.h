@@ -80,13 +80,13 @@ public:
    static void   AddToHeap(ULong_t begin, ULong_t end);
    static Bool_t IsOnHeap(void *p);
 
-   static Bool_t FilledByObjectAlloc(UInt_t* member);
+   static Bool_t FilledByObjectAlloc(volatile UInt_t* member);
 
    ClassDef(TStorage,0)  //Storage manager class
 };
 
 #ifndef WIN32
-inline Bool_t TStorage::FilledByObjectAlloc(UInt_t *member) {
+inline Bool_t TStorage::FilledByObjectAlloc(volatile UInt_t *member) {
    //called by TObject's constructor to determine if object was created by call to new
 
    // This technique is necessary as there is one stack per thread
