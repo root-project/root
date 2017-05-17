@@ -156,12 +156,21 @@ def processCppCodeImpl(code):
     #code = commentRemover(code)
     ROOT.gInterpreter.ProcessLine(code)
 
+def processMagicCppCodeImpl(code):
+    err = ROOT.ProcessLineWrapper(code)
+    if err == ROOT.TInterpreter.kProcessing:
+        ROOT.gInterpreter.ProcessLine('.@')
+        ROOT.gInterpreter.ProcessLine('cerr << "Unbalanced braces. This cell was not processed." << endl;')
+
 def declareCppCodeImpl(code):
     #code = commentRemover(code)
     ROOT.gInterpreter.Declare(code)
 
 def processCppCode(code):
     processCppCodeImpl(code)
+
+def processMagicCppCode(code):
+    processMagicCppCodeImpl(code)
 
 def declareCppCode(code):
     declareCppCodeImpl(code)
@@ -226,18 +235,6 @@ class StreamCapture(object):
         # For the registration
         self.shell = ip
 
-        self.nbOutStream = sys.stdout
-        self.nbErrStream = sys.stderr
-
-        self.pyOutStream = sys.__stdout__
-        self.pyErrStream = sys.__stderr__
-
-        self.outStreamPipe_in = pty.openpty()[1]
-        self.errStreamPipe_in = pty.openpty()[1]
-
-        os.dup2(self.outStreamPipe_in, self.pyOutStream.fileno())
-        os.dup2(self.errStreamPipe_in, self.pyErrStream.fileno())
-
         self.ioHandler = handlers.IOHandler()
         self.flag = True
         self.outString = ""
@@ -265,11 +262,6 @@ class StreamCapture(object):
         if self.isFirstPreExecute:
             self.isFirstPreExecute = False
             return 0
-        # Unify C++ and Python outputs
-        self.nbOutStream = sys.stdout
-        sys.stdout = sys.__stdout__
-        self.nbErrStream = sys.stderr
-        sys.stderr = sys.__stderr__
 
         self.flag = True
         self.ioHandler.Clear()
@@ -286,16 +278,12 @@ class StreamCapture(object):
         self.ioHandler.Poll()
         self.ioHandler.EndCapture()
 
-        # Restore the stream
-        sys.stdout = self.nbOutStream
-        sys.stderr = self.nbErrStream
-
         # Print for the notebook
         out = self.ioHandler.GetStdout()
         err = self.ioHandler.GetStderr()
         if not transformers:
-            self.nbOutStream.write(out)
-            self.nbErrStream.write(err)
+            sys.stdout.write(out)
+            sys.stderr.write(err)
         else:
             for t in transformers:
                 (out, err, otype) = t(out, err)
@@ -489,6 +477,15 @@ def loadMagicsAndCapturers():
 
     for capture in captures: capture.register()
 
+def declareProcessLineWrapper():
+    ROOT.gInterpreter.Declare("""
+TInterpreter::EErrorCode ProcessLineWrapper(const char* line) {
+    TInterpreter::EErrorCode err;
+    gInterpreter->ProcessLine(line, &err);
+    return err;
+}
+""")
+
 def enhanceROOTModule():
     ROOT.enableJSVis = enableJSVis
     ROOT.disableJSVis = disableJSVis
@@ -503,6 +500,7 @@ def enableCppHighlighting():
 def iPythonize():
     setStyle()
     loadMagicsAndCapturers()
+    declareProcessLineWrapper()
     enableCppHighlighting()
     enhanceROOTModule()
     welcomeMsg()
