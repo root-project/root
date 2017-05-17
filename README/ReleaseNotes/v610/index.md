@@ -343,4 +343,4 @@ See [the online documentation](https://root.cern.ch/doc/master/classROOT_1_1Expe
 - The IMT switch is set to on by default.
 - A new library is now created, libImt. It contains all classes which depend on TBB. Those classes were previously part of libThread. As a consequence rootcling/genreflex do not depend anymore from TBB even in presence of imt builds.
 - Refactoring of several math tests to avoid exact comparisons of floating point numbers
-- Changed the default C++ standard depending of the version of the compiler: for GCC > 6, AppleClang > 8 and Clang > 5, the default is now c++14.
+-
