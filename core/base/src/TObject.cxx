@@ -55,69 +55,6 @@ Bool_t TObject::fgObjectStat = kTRUE;
 ClassImp(TObject)
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TObject constructor. It sets the two data words of TObject to their
-/// initial values. The unique ID is set to 0 and the status word is
-/// set depending if the object is created on the stack or allocated
-/// on the heap. Depending on the ROOT environment variable "Root.MemStat"
-/// (see TEnv) the object is added to the global TObjectTable for
-/// bookkeeping.
-
-TObject::TObject() : fBits(kNotDeleted) //Need to leave FUniqueID unset
-{
-   // This will be reported by valgrind as uninitialized memory reads for
-   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID))
-      fBits |= kIsOnHeap;
-
-   fUniqueID = 0;
-
-   if (fgObjectStat) TObjectTable::AddObj(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TObject copy ctor.
-
-TObject::TObject(const TObject &obj)
-{
-   fBits = obj.fBits;
-
-   // This will be reported by valgrind as uninitialized memory reads for
-   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
-   if (TStorage::FilledByObjectAlloc(&fUniqueID))
-      fBits |= kIsOnHeap;
-   else
-      fBits &= ~kIsOnHeap;
-
-   fBits &= ~kIsReferenced;
-   fBits &= ~kCanDelete;
-
-   //Set only after used in above call
-   fUniqueID = obj.fUniqueID;  // when really unique don't copy
-
-   if (fgObjectStat) TObjectTable::AddObj(this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// TObject assignment operator.
-
-TObject& TObject::operator=(const TObject &rhs)
-{
-   if (this != &rhs) {
-      fUniqueID = rhs.fUniqueID;  // when really unique don't copy
-      if (IsOnHeap()) {           // test uses fBits so don't move next line
-         fBits  = rhs.fBits;
-         fBits |= kIsOnHeap;
-      } else {
-         fBits  = rhs.fBits;
-         fBits &= ~kIsOnHeap;
-      }
-      fBits &= ~kIsReferenced;
-      fBits &= ~kCanDelete;
-   }
-   return *this;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.
 
 void TObject::Copy(TObject &obj) const
@@ -156,6 +93,16 @@ TObject::~TObject()
    fBits &= ~kNotDeleted;
 
    if (fgObjectStat && gObjectTable) gObjectTable->RemoveQuietly(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Private helper function which will dispatch to
+/// TObjectTable::AddObj.
+/// Included here to avoid circular dependency between header files.
+
+void TObject::AddToTObjectTable(TObject *op)
+{
+   TObjectTable::AddObj(op);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

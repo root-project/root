@@ -43,6 +43,8 @@ private:
    static Long_t  fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
    static Bool_t  fgObjectStat;  ///< if true keep track of objects in TObjectTable
 
+   static void AddToTObjectTable(TObject *);
+
 protected:
    void MakeZombie() { fBits |= kZombie; }
    virtual void DoError(int level, const char *location, const char *fmt, va_list va) const;
@@ -199,6 +201,68 @@ public:
 
    ClassDef(TObject,1)  //Basic ROOT object
 };
+
+////////////////////////////////////////////////////////////////////////////////
+/// TObject constructor. It sets the two data words of TObject to their
+/// initial values. The unique ID is set to 0 and the status word is
+/// set depending if the object is created on the stack or allocated
+/// on the heap. Depending on the ROOT environment variable "Root.MemStat"
+/// (see TEnv) the object is added to the global TObjectTable for
+/// bookkeeping.
+
+inline TObject::TObject() : fBits(kNotDeleted) // Need to leave FUniqueID unset
+{
+   // This will be reported by valgrind as uninitialized memory reads for
+   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
+   if (TStorage::FilledByObjectAlloc(&fUniqueID)) fBits |= kIsOnHeap;
+
+   fUniqueID = 0;
+
+   if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TObject copy ctor.
+
+inline TObject::TObject(const TObject &obj)
+{
+   fBits = obj.fBits;
+
+   // This will be reported by valgrind as uninitialized memory reads for
+   // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
+   if (TStorage::FilledByObjectAlloc(&fUniqueID))
+      fBits |= kIsOnHeap;
+   else
+      fBits &= ~kIsOnHeap;
+
+   fBits &= ~kIsReferenced;
+   fBits &= ~kCanDelete;
+
+   // Set only after used in above call
+   fUniqueID = obj.fUniqueID; // when really unique don't copy
+
+   if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TObject assignment operator.
+
+inline TObject &TObject::operator=(const TObject &rhs)
+{
+   if (R__likely(this != &rhs)) {
+      fUniqueID = rhs.fUniqueID; // when really unique don't copy
+      if (IsOnHeap()) {          // test uses fBits so don't move next line
+         fBits = rhs.fBits;
+         fBits |= kIsOnHeap;
+      } else {
+         fBits = rhs.fBits;
+         fBits &= ~kIsOnHeap;
+      }
+      fBits &= ~kIsReferenced;
+      fBits &= ~kCanDelete;
+   }
+   return *this;
+}
 
 // Global bits (can be set for any object and should not be reused).
 // Only here for backward compatibility reasons.
