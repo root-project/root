@@ -2034,11 +2034,14 @@ void TBranchElement::InitInfo()
                for (size_t i = fID+1+(fIDs.size()); i < ndata; ++i) {
                   TStreamerElement *nextel = fInfo->GetElement(i);
                   // Add all (and only) the Artificial Elements that follows this StreamerInfo.
+                  // fprintf(stderr,"%s/%d[%zu] passing trhough %zu %s\n",GetName(),fID,fIDs.size(),i,nextel->GetName());
                   if (fType==31||fType==41) {
                      // The nested objects are unfolded and their branch can not be used to
                      // execute StreamerElements of this StreamerInfo.
-                     if (nextel->GetType() == TStreamerInfo::kObject
-                         || nextel->GetType() == TStreamerInfo::kAny) {
+                     if ((nextel->GetType() == TStreamerInfo::kObject
+                         || nextel->GetType() == TStreamerInfo::kAny)
+                        && nextel->GetClassPointer()->CanSplit())
+                     {
                         continue;
                      }
                   }
@@ -2051,6 +2054,9 @@ void TBranchElement::InitInfo()
                       || nextel->GetType() == TStreamerInfo::kCacheDelete ) {
                      break;
                   }
+                  // NOTE: We should verify that the rule's source are 'before'
+                  // or 'at' this branch.
+                  // fprintf(stderr,"%s/%d[%zu] pushd %zu %s\n",GetName(),fID,fIDs.size(),i,nextel->GetName());
                   fIDs.push_back(i);
                }
             } else if (elt && offset==TStreamerInfo::kMissing) {
