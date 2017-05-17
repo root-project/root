@@ -710,6 +710,7 @@ root/meta/genreflex/XMLParsing/dicts/*
 
 # root/tree/addresses/converterIssues
 root/tree/addresses/converterIssues/test_file.root
+root/tree/addresses/converterIssues/ExtHit/ExtHitProjectDict.cxx
 
 # /root/tree/addresses/data/
 
