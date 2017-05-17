@@ -1,11 +1,13 @@
-#include "gtest/gtest.h"
+#include "TClass.h"
+#include "TList.h"
+#include "TRandom.h"
 #include "TProfile2D.h"
 #include "TProfile2Poly.h"
+
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <iostream>
-#include "TRandom.h"
-#include "TList.h"
-#include "TClass.h"
 
 using namespace std;
 
