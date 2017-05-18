@@ -174,29 +174,13 @@ static TReAllocInit gReallocInit;
 #   endif
 #endif
 
-#ifdef R__THROWNEWDELETE
-#   if __cplusplus <= 201402L
-#     ifdef R__OLDHPACC
-#       define R__THROW_BAD  throw(bad_alloc)
-#     else
-#       define R__THROW_BAD  throw(std::bad_alloc)
-#     endif
-#   else
-#     define R__THROW_BAD throw()
-#   endif
-#   define R__THROW_NULL throw()
-#else
-#   define R__THROW_BAD
-#   define R__THROW_NULL
-#endif
-
 static const char *gSpaceErr = "storage exhausted (failed to allocate %ld bytes)";
 static int gNewInit = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom new() operator.
 
-void *operator new(size_t size) R__THROW_BAD
+void *operator new(size_t size)
 {
    // use memory checker
    if (TROOT::MemCheck())
@@ -245,7 +229,7 @@ void *operator new(size_t size, std::align_val_t al, const std::nothrow_t&) noex
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom new() operator with placement argument.
 
-void *operator new(size_t size, void *vp) R__THROW_NULL
+void *operator new(size_t size, void *vp)
 {
    static const char *where = "operator new(void *at)";
 
@@ -276,7 +260,7 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom delete() operator.
 
-void operator delete(void *ptr) R__THROW_NULL
+void operator delete(void *ptr)
 {
    // use memory checker
    if (TROOT::MemCheck()) {
@@ -307,13 +291,13 @@ void operator delete(void *ptr) R__THROW_NULL
    }
 }
 
-void operator delete(void *ptr, const std::nothrow_t&) noexcept
+void operator delete(void *ptr, const std::nothrow_t&)
 {
    operator delete(ptr);
 }
 
 #if __cplusplus >= 201700L
-void operator delete(void *ptr, std::align_val_t al) R__THROW_NULL
+void operator delete(void *ptr, std::align_val_t al)
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
@@ -331,7 +315,7 @@ void operator delete(void* ptr, std::size_t) {
    operator delete(ptr);
 }
 #if __cplusplus >= 201700L
-void operator delete(void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+void operator delete(void *ptr, std::size_t, std::align_val_t al)
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
@@ -342,7 +326,7 @@ void operator delete(void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
 
-void *operator new[](size_t size) R__THROW_BAD
+void *operator new[](size_t size)
 {
    return ::operator new(size);
 }
@@ -354,7 +338,7 @@ void *operator new[](size_t size, const std::nothrow_t&) noexcept
 
 #if __cplusplus >= 201700L
 
-void *operator new[](size_t size, std::align_val_t al) R__THROW_BAD
+void *operator new[](size_t size, std::align_val_t al)
 {
    Fatal("operator new[]","with std::align_val_t is not implemented yet");
    return nullptr;
@@ -372,7 +356,7 @@ void *operator new[](size_t size, std::align_val_t al, const std::nothrow_t&) no
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new() operator with placement argument.
 
-void *operator new[](size_t size, void *vp) R__THROW_NULL
+void *operator new[](size_t size, void *vp)
 {
    return ::operator new(size, vp);
 }
@@ -380,13 +364,13 @@ void *operator new[](size_t size, void *vp) R__THROW_NULL
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void operator delete[](void *ptr) R__THROW_NULL
+void operator delete[](void *ptr)
 {
    ::operator delete(ptr);
 }
 
 #if __cplusplus >= 201700L
-void operator delete[](void *ptr, std::align_val_t al) R__THROW_NULL
+void operator delete[](void *ptr, std::align_val_t al)
 {
    Fatal("operator delete[]","with std::align_val_t is not implemented yet");
 }
@@ -399,7 +383,7 @@ void operator delete[](void* ptr, std::size_t) {
    operator delete[](ptr);
 }
 #if __cplusplus >= 201700L
-void operator delete[](void *ptr, std::size_t, std::align_val_t al) R__THROW_NULL
+void operator delete[](void *ptr, std::size_t, std::align_val_t al)
 {
    Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
 }
