@@ -31,7 +31,7 @@ The following people have contributed to this new version:
  Manuel Tobias Schiller,\
  David Smith, CERN/IT,\
  Matevz Tadel, UCSD/CMS, Eve,\
- Vassil Vassilev, Princeton University/CMS,\
+ Vassil Vassilev, Princeton University,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 ## Core Libraries
