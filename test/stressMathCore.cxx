@@ -1269,7 +1269,7 @@ int testSVector(int ngen, bool testio=false) {
    ir = a.testRead(v1);   iret |= a.check(name+" read",ir,0);
    s1 = a.testAdditionSV(v1);
 #if(defined __FAST_MATH__  && defined __clang__)
-   iret |= a.check(name+" after read",s1,sref1, 2);
+   iret |= a.check(name+" after read",s1,sref1, 10);
 #else
    iret |= a.check(name+" after read",s1,sref1);
 #endif
