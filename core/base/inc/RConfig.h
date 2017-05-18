@@ -509,6 +509,21 @@
 #define R__FAST_MATH
 #endif
 
+#if (__GNUC__ >= 7)
+#define R__DO_PRAGMA(x) _Pragma (#x)
+# define R__INTENTIONALLY_UNINIT_BEGIN \
+  R__DO_PRAGMA(GCC diagnostic push) \
+  R__DO_PRAGMA(GCC diagnostic ignored "-Wmaybe-uninitialized") \
+  R__DO_PRAGMA(GCC diagnostic ignored "-Wuninitialized")
+# define R__INTENTIONALLY_UNINIT_END \
+  R__DO_PRAGMA(GCC diagnostic pop)
+#else
+# define R__INTENTIONALLY_UNINIT_BEGIN
+# define R__INTENTIONALLY_UNINIT_END
+
+#endif
+
+
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:
 //   if (R__unlikely(expression)) { ... }
