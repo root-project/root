@@ -1332,7 +1332,7 @@ template <typename LAYERDATA>
                                                                                ItWeight itWeightEnd) const
     {
         typename std::vector<LayerData>::iterator itLayerData    = lastLayerData.begin ();
-        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
+//        typename std::vector<LayerData>::iterator itLayerDataEnd = lastLayerData.end ();
 
         typename std::vector<Pattern>::const_iterator itPattern = batch.begin ();
         typename std::vector<Pattern>::const_iterator itPatternEnd = batch.end ();
@@ -1341,6 +1341,7 @@ template <typename LAYERDATA>
         double sumError (0.0);
         
         size_t idxPattern = 0;
+// FIXME: check that iteration doesn't go beyond itLayerDataEnd!
         for ( ; itPattern != itPatternEnd; ++itPattern, ++itLayerData)
         {
             ++idxPattern;
@@ -1382,8 +1383,9 @@ template <typename LAYERDATA>
                 std::vector<LayerData>& prevLayerDataColl = *(itLayerPatternData+1);
                 
                 size_t idxPattern = 0;
+// FIXME: check that itPrevLayerData doesn't go beyond itPrevLayerDataEnd!
                 for (typename std::vector<LayerData>::iterator itCurrLayerData = begin (currLayerDataColl), itCurrLayerDataEnd = end (currLayerDataColl),
-                     itPrevLayerData = begin (prevLayerDataColl), itPrevLayerDataEnd = end (prevLayerDataColl);
+                     itPrevLayerData = begin (prevLayerDataColl) /*, itPrevLayerDataEnd = end (prevLayerDataColl)*/;
                      itCurrLayerData != itCurrLayerDataEnd; ++itCurrLayerData, ++itPrevLayerData, ++idxPattern)
                 {
                     LayerData& currLayerData = (*itCurrLayerData);
