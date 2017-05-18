@@ -147,6 +147,7 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 elseif(CMAKE_COMPILER_IS_GNUCXX)
   if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-implicit-fallthrough -Wno-noexcept-type")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-implicit-fallthrough")
   endif()
 endif()
 
