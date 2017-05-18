@@ -1317,7 +1317,7 @@ if(Vc_FOUND)
 endif()
 
 #---Check for VecCore--------------------------------------------------------------------
-if(veccore AND builtin_vc)
+if(veccore AND NOT builtin_veccore AND builtin_vc)
   message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
   set(builtin_veccore ON CACHE BOOL "" FORCE)
 endif()
