@@ -3186,10 +3186,10 @@ TString TFormula::GetExpFormula(Option_t *option) const
       TString opt = option;
       opt.ToLower();
       if (opt.Contains("p")) {
-         char pb[10];
+         char pb[13];
          char pbv[100];
          for (j=0;j<fNpar;j++) {
-            snprintf(pb,10,"[%d]",j);
+            snprintf(pb,sizeof(pb),"[%d]",j);
             snprintf(pbv,100,"%g",fParams[j]);
             ret.ReplaceAll(pb,pbv);
          }
