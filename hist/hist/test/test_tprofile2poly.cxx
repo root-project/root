@@ -11,6 +11,9 @@
 
 using namespace std;
 
+Float_t delta=0.00000000001;
+
+
 void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
     Double_t value, weight;
     Float_t px, py;
@@ -26,9 +29,9 @@ void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
 
 void globalStatsCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
     for(Int_t c=1; c<=3; ++c) {
-        EXPECT_DOUBLE_EQ(tp2d->GetMean(c), tpp->GetMean(c));
-        EXPECT_DOUBLE_EQ(tp2d->GetMeanError(c), tpp->GetMeanError(c));
-        EXPECT_DOUBLE_EQ(tp2d->GetStdDev(c), tpp->GetStdDev(c));
+        ASSERT_NEAR(tp2d->GetMean(c), tpp->GetMean(c), delta);
+        ASSERT_NEAR(tp2d->GetMeanError(c), tpp->GetMeanError(c), delta);
+        ASSERT_NEAR(tp2d->GetStdDev(c), tpp->GetStdDev(c), delta);
     }
 }
 
@@ -38,8 +41,7 @@ void binContentCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
         for(Double_t x=0.5; x<10; x+=1.0) {
             cont1 = tp2d->GetBinContent(tp2d->FindBin(x,y));
             cont2 = tpp->GetBinContent(tpp->FindBin(x,y));
-
-            EXPECT_DOUBLE_EQ(cont1, cont2);
+            ASSERT_NEAR(cont1, cont2, delta);
         }
 
     }
@@ -51,8 +53,7 @@ void binErrorCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
         for(Double_t x=0.5; x<10; x+=1.0) {
             cont1 = tp2d->GetBinError(tp2d->FindBin(x,y));
             cont2 = tpp->GetBinError(tpp->FindBin(x,y));
-
-            EXPECT_DOUBLE_EQ(cont1, cont2);
+            ASSERT_NEAR(cont1, cont2, delta);
         }
     }
 }
