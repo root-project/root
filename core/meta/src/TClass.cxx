@@ -974,7 +974,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
          bwname = name;
          int l = strcspn(bwname.Data(),"[ ");
          if (l<bwname.Length() && bwname[l]=='[') {
-            char cbuf[12]; snprintf(cbuf,12,"[%02d]",i);
+            char cbuf[13]; snprintf(cbuf,13,"[%02d]",i);
             ts.Replace(0,999,bwname,l);
             ts += cbuf;
             bwname = (const char*)ts;
