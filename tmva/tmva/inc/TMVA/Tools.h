@@ -250,9 +250,9 @@ namespace TMVA {
       template<typename T>
          inline void ReadAttr    ( void* node, const char* , T& value );
       void        ReadAttr    ( void* node, const char* attrname, TString& value );
-      void ReadAttr    ( void* node, const char* , float& value );
-      void ReadAttr    ( void* node, const char* , int& value );  
-      void ReadAttr    ( void* node, const char* , short& value );
+      void ReadAttr( void* node, const char* , float& value );
+      void ReadAttr( void* node, const char* , int& value );  
+      void ReadAttr( void* node, const char* , short& value );
 
       template<typename T>
          void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
@@ -289,15 +289,15 @@ namespace TMVA {
 
 template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
-  // read attribute from xml
-  const char* val = xmlengine().GetAttr(node, attrname);
-  if ( val == 0 ) {
-    const char * nodename = xmlengine().GetNodeName(node);
-    Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
-  }
-  std::stringstream s(val);
-  // coverity[tainted_data_argument]
-  s >> value;
+   // read attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
+   std::stringstream s(val);
+   // coverity[tainted_data_argument]
+   s >> value;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
