@@ -107,7 +107,9 @@ inline Bool_t TStorage::FilledByObjectAlloc(volatile UInt_t *member) {
 
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
+R__INTENTIONALLY_UNINIT_BEGIN
    return *member == kObjectAllocMemValue;
+R__INTENTIONALLY_UNINIT_END
 }
 
 #ifndef WIN32
