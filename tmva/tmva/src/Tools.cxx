@@ -557,7 +557,7 @@ void TMVA::Tools::UsefulSortAscending( std::vector<vector<Double_t> >& v, std::v
                for (UInt_t k=0; k< nArrays; k++) {
                   temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
                }
-               if (NULL != vs) {
+               if (nullptr != vs) {
                   TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
                }
             }
@@ -584,7 +584,7 @@ void TMVA::Tools::UsefulSortDescending( std::vector<std::vector<Double_t> >& v, 
                for (UInt_t k=0; k< nArrays; k++) {
                   temp = v[k][j-1]; v[k][j-1] = v[k][j]; v[k][j] = temp;
                }
-               if (NULL != vs) {
+               if (nullptr != vs) {
                   TString temps = (*vs)[j-1]; (*vs)[j-1] = (*vs)[j]; (*vs)[j] = temps;
                }
             }
@@ -1795,7 +1795,7 @@ void TMVA::Tools::ReadAttr(void *node, const char *attrname, float &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
-   if (val == NULL) {
+   if (val == nullptr) {
       const char *nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
@@ -1807,7 +1807,7 @@ void TMVA::Tools::ReadAttr(void *node, const char *attrname, int &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
-   if (val == NULL) {
+   if (val == nullptr) {
       const char *nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
@@ -1819,7 +1819,7 @@ void TMVA::Tools::ReadAttr(void *node, const char *attrname, short &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
-   if (val == NULL) {
+   if (val == nullptr) {
       const char *nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
