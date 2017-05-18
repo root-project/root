@@ -233,12 +233,12 @@ int main(int /*argc*/, char ** /*argv*/)
          std::cout << "Direction " << sc.direction << " " << vc.direction << std::endl;
 
          for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
-            ret |= compare(sc.position.x(), vc.position.x()[j], scale);
-            ret |= compare(sc.position.y(), vc.position.y()[j], scale);
-            ret |= compare(sc.position.z(), vc.position.z()[j], scale);
-            ret |= compare(sc.direction.x(), vc.direction.x()[j], scale);
-            ret |= compare(sc.direction.y(), vc.direction.y()[j], scale);
-            ret |= compare(sc.direction.z(), vc.direction.z()[j], scale);
+            ret |= compare(sc.position.x(), vc.position.x()[j]);
+            ret |= compare(sc.position.y(), vc.position.y()[j]);
+            ret |= compare(sc.position.z(), vc.position.z()[j]);
+            ret |= compare(sc.direction.x(), vc.direction.x()[j]);
+            ret |= compare(sc.direction.y(), vc.direction.y()[j]);
+            ret |= compare(sc.direction.z(), vc.direction.z()[j]);
          }
       }
 
