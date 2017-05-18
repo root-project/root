@@ -22,7 +22,7 @@ TProfile2PolyBin::TProfile2PolyBin()
    fSumwv2 = 0;
    fError = 0;
    fAverage = 0;
-   fErrorMode = kERRORSPREAD;
+   fErrorMode = kERRORMEAN;
 }
 
 TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin(poly, bin_number)
@@ -33,7 +33,7 @@ TProfile2PolyBin::TProfile2PolyBin(TObject *poly, Int_t bin_number) : TH2PolyBin
    fSumwv2 = 0;
    fError = 0;
    fAverage = 0;
-   fErrorMode = kERRORSPREAD;
+   fErrorMode = kERRORMEAN;
 }
 
 void TProfile2PolyBin::Merge(const TProfile2PolyBin *toMerge)
@@ -61,15 +61,10 @@ void TProfile2PolyBin::UpdateError()
    Double_t tmp = 0;
    if (fSumw != 0) tmp = std::sqrt((fSumwv2 / fSumw) - (fAverage * fAverage));
 
-   switch (fErrorMode) {
-   case kERRORMEAN:
-       fError =  tmp / std::sqrt(GetEffectiveEntries());
-       break;
-   case kERRORSPREAD:
-       fError = tmp;
-       break;
-   default: fError = tmp / std::sqrt(GetEffectiveEntries());
-   }
+   fError = tmp;
+
+   return; 
+  
 }
 
 void TProfile2PolyBin::ClearStats()
@@ -130,6 +125,7 @@ Int_t TProfile2Poly::Fill(Double_t xcoord, Double_t ycoord, Double_t value, Doub
    Int_t tmp = GetOverflowRegionFromCoordinates(xcoord, ycoord);
    Int_t overflow_idx = OverflowIdxToArrayIdx(tmp);
    fOverflowBins[overflow_idx].Fill(value, weight);
+   fOverflowBins[overflow_idx].SetContent(fOverflowBins[overflow_idx].fAverage ); 
 
    // Find the cell to which (x,y) coordinates belong to
    Int_t n = (Int_t)(floor((xcoord - fXaxis.GetXmin()) / fStepX));
@@ -257,10 +253,18 @@ void TProfile2Poly::SetContentToError()
    }
 }
 
+Double_t TProfile2Poly::GetBinContent(Int_t bin) const
+{
+   if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
+   if (bin<0) return fOverflowBins[-bin - 1].GetContent();
+   return ((TProfile2PolyBin*) fBins->At(bin-1))->GetContent();
+}
+
+
 Double_t TProfile2Poly::GetBinEffectiveEntries(Int_t bin) const
 {
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflow[-bin - 1];
+   if (bin < 0) return fOverflowBins[-bin - 1].GetEffectiveEntries();
    return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetEffectiveEntries();
 }
 
@@ -294,9 +298,15 @@ Double_t TProfile2Poly::GetBinEntriesWV2(Int_t bin) const
 
 Double_t TProfile2Poly::GetBinError(Int_t bin) const
 {
+   Double_t tmp = 0; 
    if (bin > GetNumberOfBins() || bin == 0 || bin < -kNOverflow) return 0;
-   if (bin < 0) return fOverflowBins[-bin - 1].GetError();
-   return ((TProfile2PolyBin *)fBins->At(bin - 1))->GetError();
+   if (bin < 0)
+      tmp =  fOverflowBins[-bin - 1].GetError();
+   else
+      tmp = ((TProfile2PolyBin *)fBins->At(bin - 1))->GetError();
+
+   return (fErrorMode == kERRORSPREAD) ?  tmp : tmp / std::sqrt(GetBinEffectiveEntries(bin)); 
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,12 +407,4 @@ Int_t TProfile2Poly::GetOverflowRegionFromCoordinates(Double_t x, Double_t y)
 void TProfile2Poly::SetErrorOption(EErrorType type)
 {
    fErrorMode = type;
-
-   TIter next(fBins);
-   TObject *obj;
-   TProfile2PolyBin *bin;
-   while ((obj = next())) {
-      bin = (TProfile2PolyBin *)obj;
-      bin->SetErrorOption(type);
-   }
 }
