@@ -1092,8 +1092,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    TLatex *textaxis = new TLatex();
    SetLineStyle(1); // axis line style
-   textaxis->SetTextColor(GetTextColor());
-   textaxis->SetTextFont(GetTextFont());
+   Int_t TitleColor = GetTextColor();
+   Int_t TitleFont  = GetTextFont();
 
    if (!gPad->IsBatch()) {
       gVirtualX->GetCharacterUp(chupxvsav, chupyvsav);
@@ -2111,6 +2111,8 @@ L200:
          }
       }
       Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+      textaxis->SetTextColor(TitleColor);
+      textaxis->SetTextFont(TitleFont);
       textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
                            phil*180/kPI,
