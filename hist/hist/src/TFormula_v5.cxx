@@ -2686,7 +2686,7 @@ Double_t TFormula::EvalParOld(const Double_t *x, const Double_t *uparams)
 {
    Int_t i,j;
    // coverity[uninit] the tab value of tab is guaranteed to be set properly by the control flow.
-   Double_t tab[kMAXFOUND] = {0};
+   Double_t tab[kMAXFOUND];
    const char *stringStack[gMAXSTRINGFOUND] = {0};
    Double_t param_calc[kMAXFOUND];
    char *string_calc[gMAXSTRINGFOUND] = {0};
