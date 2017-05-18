@@ -85,8 +85,7 @@ private:
    const std::string fOption;
    const Int_t fCompress;
    std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
-   std::mutex fWriteMutex;                                       //< Mutex used for the condition variable
-   std::condition_variable fCV;                                  //< Condition variable used to wait for data
+   std::condition_variable fDataAvailable;                       //< Condition variable used to wait for data
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
