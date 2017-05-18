@@ -1793,33 +1793,33 @@ TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
 
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, float& value )
 {
-  // read attribute from xml
-  const char* val = xmlengine().GetAttr(node, attrname);
-  if ( val == 0 ) {
-    const char * nodename = xmlengine().GetNodeName(node);
-    Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
-  }
-  value = atof(val);
+   // read attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
+   value = atof(val);
 }
 
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, int& value )
 {
-  // read attribute from xml
-  const char* val = xmlengine().GetAttr(node, attrname);
-  if ( val == 0 ) {
-    const char * nodename = xmlengine().GetNodeName(node);
-    Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
-  }
-  value = atoi(val);
+   // read attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
+   value = atoi(val);
 }
 
 void TMVA::Tools::ReadAttr( void* node, const char* attrname, short& value )
 {
-  // read attribute from xml
-  const char* val = xmlengine().GetAttr(node, attrname);
-  if ( val == 0 ) {
-    const char * nodename = xmlengine().GetNodeName(node);
-    Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
-  }
-  value = atoi(val);
+   // read attribute from xml
+   const char* val = xmlengine().GetAttr(node, attrname);
+   if ( val == 0 ) {
+      const char * nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" << Endl;
+   }
+   value = atoi(val);
 }
