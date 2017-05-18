@@ -145,7 +145,7 @@ ROOT_BUILD_OPTION(qtgsi OFF "GSI's Qt integration, requires libqt >= 4.8")
 ROOT_BUILD_OPTION(r OFF "R ROOT bindings, requires R, Rcpp and RInside")
 ROOT_BUILD_OPTION(rfio ON "RFIO support, requires libshift from CASTOR >= 1.5.2")
 ROOT_BUILD_OPTION(roofit OFF "Build the libRooFit advanced fitting package")
-ROOT_BUILD_OPTION(root7 OFF "Build the ROOT 7 interface prototype, requires cxx14")
+ROOT_BUILD_OPTION(root7 OFF "Build the ROOT 7 interface prototype, requires >= cxx14")
 ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and shared libraries (at installation area)")
 ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
 ROOT_BUILD_OPTION(sapdb ON "MaxDB/SapDB support, requires libsqlod and libsqlrte")
@@ -250,6 +250,11 @@ foreach(opt ${root_build_options})
     endif()
   endif()
 endforeach()
+
+#---Apply root7 versus language------------------------------------------------------------------
+if(cxx14 OR cxx17 OR cxx14_defval OR cxx17_defval)
+  set(root7_defvalue ON)
+endif()
 
 #---Define at moment the options with the selected default values-----------------------------
 ROOT_APPLY_OPTIONS()
