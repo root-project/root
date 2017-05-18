@@ -1090,6 +1090,10 @@ protected:
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
             }
             trees[slot]->Fill();
+            if (files[slot]->GetFileBytesWritten() > 96L*1024L*1024L) {
+               files[slot]->Write();
+               files[slot]->SetFileBytesWritten(0);
+            }
          };
 
          ForeachSlot(fillTree, {bnames[S]...});
