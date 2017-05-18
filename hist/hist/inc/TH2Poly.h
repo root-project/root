@@ -92,9 +92,9 @@ public:
    void         FillN(Int_t, const Double_t*, const Double_t*, Int_t){return;}  //MayNotUse
    Int_t        FindBin(Double_t x, Double_t y, Double_t z = 0);
    TList       *GetBins(){return fBins;}                                // Returns the TList of all bins in the histogram
-   Double_t     GetBinContent(Int_t bin) const;
-   Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
-   Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
+   virtual Double_t     GetBinContent(Int_t bin) const;
+   virtual Double_t     GetBinContent(Int_t, Int_t) const {return 0;}           //MayNotUse
+   virtual Double_t     GetBinContent(Int_t, Int_t, Int_t) const {return 0;}    //MayNotUse
    Bool_t       GetBinContentChanged() const{return fBinContentChanged;}
    virtual Double_t GetBinError(Int_t bin) const;
    virtual Double_t GetBinError(Int_t , Int_t) const {return 0;}            //MayNotUse

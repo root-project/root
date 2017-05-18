@@ -81,6 +81,9 @@ public:
    Double_t GetBinEntriesVW(Int_t bin) const;
    Double_t GetBinEntriesWV2(Int_t bin) const;
 
+   using TH2Poly::GetBinContent;
+   virtual Double_t GetBinContent(Int_t bin) const override;
+
    using TH2Poly::GetBinError;
    virtual Double_t GetBinError(Int_t bin) const override;
 
