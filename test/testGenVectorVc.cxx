@@ -21,7 +21,9 @@
 int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
 {
    //  ntest = ntest + 1;
-
+#ifdef __clang__ && __FAST_MATH__
+      scale *= 100;
+#endif
    // numerical double limit for epsilon
    const double eps     = scale * std::numeric_limits<double>::epsilon();
    int          iret    = 0;
@@ -216,6 +218,7 @@ int main(int /*argc*/, char ** /*argv*/)
 
       // Loop over the two containers and compare
       std::cout << "Ray Tracing :-" << std::endl;
+
       for (size_t i = 0; i < nPhotons; ++i) {
          auto &sc = scalar_data[i];
          auto &vc = vc_data[i];
@@ -230,12 +233,12 @@ int main(int /*argc*/, char ** /*argv*/)
          std::cout << "Direction " << sc.direction << " " << vc.direction << std::endl;
 
          for (std::size_t j = 0; j < Vc::double_v::Size; ++j) {
-            ret |= compare(sc.position.x(), vc.position.x()[j]);
-            ret |= compare(sc.position.y(), vc.position.y()[j]);
-            ret |= compare(sc.position.z(), vc.position.z()[j]);
-            ret |= compare(sc.direction.x(), vc.direction.x()[j]);
-            ret |= compare(sc.direction.y(), vc.direction.y()[j]);
-            ret |= compare(sc.direction.z(), vc.direction.z()[j]);
+            ret |= compare(sc.position.x(), vc.position.x()[j], scale);
+            ret |= compare(sc.position.y(), vc.position.y()[j], scale);
+            ret |= compare(sc.position.z(), vc.position.z()[j], scale);
+            ret |= compare(sc.direction.x(), vc.direction.x()[j], scale);
+            ret |= compare(sc.direction.y(), vc.direction.y()[j], scale);
+            ret |= compare(sc.direction.z(), vc.direction.z()[j], scale);
          }
       }
 
