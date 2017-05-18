@@ -672,7 +672,7 @@ void TUnixSystem::SetDisplay()
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           utmp_entry->ut_host);
                } else {
-                  char disp[64];
+                  char disp[260];
                   snprintf(disp, sizeof(disp), "%s:0.0", utmp_entry->ut_host);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
