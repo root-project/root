@@ -16,7 +16,8 @@ def customLineJunkFilter(line):
     # Skip the banner and empty lines
     junkLines =["Info in <TUnixSystem::ACLiC",
                 "Info in <TMacOSXSystem::ACLiC",
-                "Welcome to JupyROOT 6."]
+                "Welcome to JupyROOT 6.",
+                "FAILED TO establish the default connection to the WindowServer"]
     for junkLine in junkLines:
         if junkLine in line: return False
     return True
