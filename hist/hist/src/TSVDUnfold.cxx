@@ -359,7 +359,7 @@ TH1D* TSVDUnfold::Unfold( Int_t kreg )
          for (Int_t m=0; m<fNdim; m++) {
             a += mA(m,i)*mA(m,j);
          }
-         if(vxini(i)*vxini(j))
+         if(vxini(i) && vxini(j))
             Xinv(i,j) = a/vxini(i)/vxini(j);
       }
    }
