@@ -1791,37 +1791,37 @@ TH1* TMVA::Tools::GetCumulativeDist( TH1* h)
    return cumulativeDist;
 }
 
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, float& value )
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, float &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
    if (val == NULL) {
       const char *nodename = xmlengine().GetNodeName(node);
-      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" 
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
-   } else 
+   } else
       value = atof(val);
 }
 
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, int& value )
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, int &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
    if (val == NULL) {
       const char *nodename = xmlengine().GetNodeName(node);
-      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" 
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
    } else
       value = atoi(val);
 }
 
-void TMVA::Tools::ReadAttr( void* node, const char* attrname, short& value )
+void TMVA::Tools::ReadAttr(void *node, const char *attrname, short &value)
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
    if (val == NULL) {
       const char *nodename = xmlengine().GetNodeName(node);
-      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'" 
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;
    } else
       value = atoi(val);
