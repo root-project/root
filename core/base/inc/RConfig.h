@@ -108,9 +108,6 @@
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
 #   endif
-#   if __SUNPRO_CC >= 0x5110
-#      define R__THROWNEWDELETE
-#   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
 #   endif
@@ -251,7 +248,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #   define HAS_STRLCPY
 #endif
 
@@ -267,7 +263,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #   define HAS_STRLCPY
 #endif
 
@@ -357,7 +352,6 @@
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #   if __HP_aCC <= 015000
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
