@@ -126,9 +126,9 @@ void TProcessExecutor::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
-      if (fTaskType == ETask::kMapWithArg)
+      if (fTaskType == ETask::kMapRedWithArg)
          MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
-      else if (fTaskType == ETask::kMap)
+      else if (fTaskType == ETask::kMapRed)
          MPSend(s, MPCode::kExecFunc);
       ++fNProcessed;
    } else
