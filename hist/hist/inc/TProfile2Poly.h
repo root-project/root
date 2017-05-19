@@ -66,9 +66,6 @@ public:
    Long64_t Merge(TCollection *in) override;
    virtual void Reset(Option_t *option = "") override;
 
-   Int_t GetOverflowRegionFromCoordinates(Double_t x, Double_t y);
-   Int_t OverflowIdxToArrayIdx(Int_t val) { return -val - 1; }
-
    // option to dispay different measures on bins
    void SetContentToAverage(); // this one is used by default
    void SetContentToError();
@@ -101,6 +98,10 @@ private:
 
 protected:
    virtual TProfile2PolyBin *CreateBin(TObject *poly) override;
+
+   Int_t GetOverflowRegionFromCoordinates(Double_t x, Double_t y);
+   Int_t OverflowIdxToArrayIdx(Int_t val) { return -val - 1; }
+
 
    ClassDefOverride(TProfile2Poly, 1)
 };
