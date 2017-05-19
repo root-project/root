@@ -241,6 +241,11 @@ void TProfile2Poly::SetContentToAverage()
       bin->Update();
       bin->SetContent(bin->fAverage);
    }
+   for (Int_t i = 0; i < kNOverflow; ++i) {
+      TProfile2PolyBin & bin = fOverflowBins[i];
+      bin.Update();
+      bin.SetContent(bin.fAverage);
+   }
 }
 
 void TProfile2Poly::SetContentToError()
@@ -250,6 +255,11 @@ void TProfile2Poly::SetContentToError()
       TProfile2PolyBin *bin = (TProfile2PolyBin *)fBins->At(i);
       bin->Update();
       bin->SetContent(bin->fError);
+   }
+   for (Int_t i = 0; i < kNOverflow; ++i) {
+      TProfile2PolyBin & bin = fOverflowBins[i];
+      bin.Update();
+      bin.SetContent(bin.fError);
    }
 }
 

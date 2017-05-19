@@ -22,6 +22,7 @@ void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
       px = ran.Gaus(5,2);
       py = ran.Gaus(4,2);
       value = ran.Gaus(20, 5);
+      //value = ran.Uniform(0, 20);
       weight = ran.Gaus(17,20);
       tp2d->Fill(px, py, value, weight);
       tpp->Fill(px, py, value, weight);
@@ -44,8 +45,11 @@ void binContentCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
          cont2 = tpp->GetBinContent(tpp->FindBin(x,y));
          ASSERT_NEAR(cont1, cont2, delta);
       }
-
    }
+   // test overflow
+   cont1 = tp2d->GetBinContent(tp2d->FindBin(11,11));
+   cont2 = tpp->GetBinContent(tpp->FindBin(11,11));
+   ASSERT_NEAR(cont1, cont2, delta);
 }
 
 void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
@@ -58,6 +62,11 @@ void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
       }
 
    }
+   // test overflow
+   cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(11,11));
+   cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(11,11));
+   ASSERT_NEAR(cont1, cont2, delta);
+
 }
 
 void binErrorCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
@@ -71,6 +80,10 @@ void binErrorCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
          ASSERT_NEAR(cont1, cont2, delta);
       }
    }
+   // test overflow
+   cont1 = tp2d->GetBinError(tp2d->FindBin(11,11));
+   cont2 = tpp->GetBinError(tpp->FindBin(11,11));
+   ASSERT_NEAR(cont1, cont2, delta);
 }
 
 void SetupPlots(TProfile2Poly* TP2P_2, TProfile2Poly* TP2P, TProfile2D* TP2D_2, TProfile2D* TP2D, TString opt = "")
