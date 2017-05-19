@@ -64,6 +64,8 @@ namespace ROOT {
       // // other than checking that func is compatible with the type of arguments.
       // // a static_assert check in TThreadExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
       template<class F, class R, class Cond = noReferenceCond<F>>
+      auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
+      template<class F, class R, class Cond = noReferenceCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type;
       template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
       auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type;
@@ -71,6 +73,8 @@ namespace ROOT {
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
       /// \endcond
+      template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
+      auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
       using TExecutor<TThreadExecutor>::MapReduce;
@@ -313,6 +317,11 @@ namespace ROOT {
    /// adding, mixing the elements of the vector.\n
    /// The fourth argument indicates the number of chunks we want to divide our work in.
    template<class F, class R, class Cond>
+   auto TThreadExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
+      return Reduce(Map(func, nTimes), redfunc);
+   }
+
+   template<class F, class R, class Cond>
    auto TThreadExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
       return Reduce(Map(func, nTimes, redfunc, nChunks), redfunc);
    }
@@ -327,6 +336,12 @@ namespace ROOT {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
    }
    /// \endcond
+
+   template<class F, class T, class R, class Cond>
+   auto TThreadExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
+      return Reduce(Map(func, args), redfunc);
+   }
+
    template<class F, class T, class R, class Cond>
    auto TThreadExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
       return Reduce(Map(func, args, redfunc, nChunks), redfunc);
