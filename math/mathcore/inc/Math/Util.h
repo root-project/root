@@ -18,6 +18,8 @@
 
 #include <cmath>
 #include <limits>
+#include "Math_vectypes.hxx"
+
 
 // for defining unused variables in the interfaces
 //  and have still them in the documentation
@@ -49,6 +51,12 @@ namespace ROOT {
    /// safe evaluation of log(x) with a protections against negative or zero argument to the log
    /// smooth linear extrapolation below function values smaller than  epsilon
    /// (better than a simple cut-off)
+
+   template<class T>
+   inline T EvalLog(T x) {
+      return std::log(x);
+   }
+
    inline double EvalLog(double x)
    {
    // evaluate the log

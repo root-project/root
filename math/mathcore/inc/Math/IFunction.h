@@ -63,6 +63,7 @@ namespace ROOT {
 
       public:
 
+         typedef T BackendType;
          typedef  IBaseFunctionMultiDimTempl<T> BaseFunc;
 
 
@@ -427,5 +428,5 @@ namespace ROOT {
 
    } // namespace Math
 } // namespace ROOT
-
+ 
 #endif /* ROOT_Math_IFunction */

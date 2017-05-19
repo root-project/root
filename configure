@@ -7164,6 +7164,12 @@ fi
 
 ######################################################################
 #
+### echo %%% vecCore Library - Contributed library
+#
+hasveccore="undef"
+
+######################################################################
+#
 ### echo %%% GDML Library - Contributed library
 #
 message "Checking whether to build libGdml"
@@ -8121,6 +8127,7 @@ sed \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
+    -e "s|@hasveccore@|$hasveccore|"       \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@usec++14@|$usecxx14|"           \
     -e "s|@usec++17@|$usecxx17|"           \

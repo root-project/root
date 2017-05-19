@@ -25,10 +25,10 @@ Classes used for fitting (regression analysis) and estimation of parameter value
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/FitConfig.h"
+#include "Fit/FitExecutionPolicy.h"
 #include "Fit/FitResult.h"
 #include "Math/IParamFunctionfwd.h"
 #include <memory>
-
 
 namespace ROOT {
 
@@ -78,10 +78,13 @@ class Fitter {
 
 public:
 
-   typedef ROOT::Math::IParamMultiFunction       IModelFunction;
-   typedef ROOT::Math::IParamMultiGradFunction   IGradModelFunction;
-   typedef ROOT::Math::IParamFunction            IModel1DFunction;
-   typedef ROOT::Math::IParamGradFunction        IGradModel1DFunction;
+   typedef ROOT::Math::IParamMultiFunction                 IModelFunction;
+#ifdef R__HAS_VECCORE
+   typedef ROOT::Math::IParametricFunctionMultiDimTempl<ROOT::Double_v>  IModelFunction_v;
+#endif
+   typedef ROOT::Math::IParamMultiGradFunction             IGradModelFunction;
+   typedef ROOT::Math::IParamFunction                      IModel1DFunction;
+   typedef ROOT::Math::IParamGradFunction                  IGradModel1DFunction;
 
    typedef ROOT::Math::IMultiGenFunction BaseFunc;
    typedef ROOT::Math::IMultiGradFunction BaseGradFunc;
@@ -125,22 +128,22 @@ public:
        Pre-requisite on the function:
        it must implement the 1D or multidimensional parametric function interface
    */
-   template < class Data , class Function>
-   bool Fit( const Data & data, const Function & func ) {
+   template < class Data , class Function, class cond = typename std::enable_if<!(std::is_same<Function, int>::value), Function>::type>
+   bool Fit( const Data & data, const Function & func, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetFunction(func);
-      return Fit(data);
+      return Fit(data, executionPolicy);
    }
 
    /**
        Fit a binned data set using a least square fit (default method)
    */
-   bool Fit(const BinData & data) {
+   bool Fit(const BinData & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoLeastSquareFit();
+      return DoLeastSquareFit(executionPolicy);
    }
-   bool Fit(const std::shared_ptr<BinData> & data) {
+   bool Fit(const std::shared_ptr<BinData> & data, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoLeastSquareFit();
+      return DoLeastSquareFit(executionPolicy);
    }
 
    /**
@@ -153,9 +156,9 @@ public:
    /**
        fit an unbinned data set using loglikelihood method
    */
-   bool Fit(const UnBinData & data, bool extended = false) {
+   bool Fit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoUnbinnedLikelihoodFit(extended);
+      return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
 
    /**
@@ -172,13 +175,13 @@ public:
    /**
       Unbinned Likelihood fit. Default is not extended
     */
-   bool LikelihoodFit(const UnBinData & data, bool extended = false) {
+   bool LikelihoodFit(const UnBinData & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoUnbinnedLikelihoodFit(extended);
+      return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
-   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false) {
+   bool LikelihoodFit(const std::shared_ptr<UnBinData> & data, bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial) {
       SetData(data);
-      return DoUnbinnedLikelihoodFit(extended);
+      return DoUnbinnedLikelihoodFit(extended, executionPolicy);
    }
 
 
@@ -316,6 +319,13 @@ public:
        Set the fitted function (model function) from a parametric function interface
    */
    void  SetFunction(const IModelFunction & func, bool useGradient = false);
+
+   /**
+       Set the fitted function (model function) from a vectorized parametric function interface
+   */
+#ifdef R__HAS_VECCORE
+   void  SetFunction(const IModelFunction_v & func);
+#endif
    /**
       Set the fitted function from a parametric 1D function interface
     */
@@ -413,11 +423,11 @@ protected:
 
 
    /// least square fit
-   bool DoLeastSquareFit();
+   bool DoLeastSquareFit(ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// binned likelihood fit
    bool DoBinnedLikelihoodFit( bool extended = true);
    /// un-binned likelihood fit
-   bool DoUnbinnedLikelihoodFit( bool extended = false);
+   bool DoUnbinnedLikelihoodFit( bool extended = false, ROOT::Fit::ExecutionPolicy executionPolicy = ROOT::Fit::kSerial);
    /// linear least square fit
    bool DoLinearFit();
 
@@ -473,7 +483,11 @@ private:
    int fDataSize;  // size of data sets (need for Fumili or LM fitters)
 
    FitConfig fConfig;       // fitter configuration (options and parameter settings)
-
+#ifdef R__HAS_VECCORE
+   std::shared_ptr<IModelFunction_v> fFunc_v;  //! copy of the fitted  function containing on output the fit result
+#else
+    std::shared_ptr<IModelFunction> fFunc_v;   //dummy for when VecCore not available. Keeps the code cleaner.
+#endif
    std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
 
    std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
