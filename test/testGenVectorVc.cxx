@@ -21,8 +21,8 @@
 int compare(double v1, double v2, const std::string &name = "", double scale = 1000.0)
 {
    //  ntest = ntest + 1;
-#ifdef __clang__ && __FAST_MATH__
-      scale *= 100;
+#if defined(__clang__) && defined(__FAST_MATH__)
+   scale *= 100;
 #endif
    // numerical double limit for epsilon
    const double eps     = scale * std::numeric_limits<double>::epsilon();
