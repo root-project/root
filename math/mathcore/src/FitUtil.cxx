@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cassert>
 #include <algorithm>
+#include <numeric>
 //#include <memory>
 
 //#define DEBUG
