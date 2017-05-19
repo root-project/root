@@ -11,7 +11,7 @@ TEST(BinIterNBins, NumBins) {
   EXPECT_EQ(4*5, h.GetImpl()->GetNBins());
 
   int nBins = 0;
-  for (auto &&bin: h) {
+  for (auto bin: h) {
     (void)bin;
     ++nBins;
   }
@@ -46,7 +46,7 @@ TEST(BinIterNBins, BinRef) {
   std::array<double,2> foundcoord{};
 
   int nBins = 0;
-  for (auto &&bin: h) {
+  for (auto bin: h) {
     auto binCenter = bin.GetCenter();
     if (std::fabs(binCenter[0] - x) < 0.1 && std::fabs(binCenter[1] - y) < 0.1) {
       foundbin = nBins;
