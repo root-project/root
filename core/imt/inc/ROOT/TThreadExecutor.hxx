@@ -57,7 +57,6 @@ namespace ROOT {
       auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
       template<class F, class T, class Cond = noReferenceCond<F, T>>
       auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-      using TExecutor<TThreadExecutor>::Map;
 
       // // MapReduce
       // // the late return types also check at compile-time whether redfunc is compatible with func,
@@ -77,14 +76,11 @@ namespace ROOT {
       auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
-      using TExecutor<TThreadExecutor>::MapReduce;
 
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
-      using TExecutor<TThreadExecutor>::Reduce;
 
    protected:
-
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
       template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
