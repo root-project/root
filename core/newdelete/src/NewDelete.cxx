@@ -260,7 +260,7 @@ void *operator new(size_t size, void *vp)
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom delete() operator.
 
-void operator delete(void *ptr)
+void operator delete(void *ptr) noexcept
 {
    // use memory checker
    if (TROOT::MemCheck()) {
@@ -291,13 +291,13 @@ void operator delete(void *ptr)
    }
 }
 
-void operator delete(void *ptr, const std::nothrow_t&)
+void operator delete(void *ptr, const std::nothrow_t&) noexcept
 {
    operator delete(ptr);
 }
 
 #if __cplusplus >= 201700L
-void operator delete(void *ptr, std::align_val_t al)
+void operator delete(void *ptr, std::align_val_t al) noexcept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
@@ -311,11 +311,11 @@ void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noex
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
-void operator delete(void* ptr, std::size_t) {
+void operator delete(void* ptr, std::size_t) noexcept {
    operator delete(ptr);
 }
 #if __cplusplus >= 201700L
-void operator delete(void *ptr, std::size_t, std::align_val_t al)
+void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    Fatal("operator delete","with std::align_val_t is not implemented yet");
 }
@@ -364,13 +364,13 @@ void *operator new[](size_t size, void *vp)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void operator delete[](void *ptr)
+void operator delete[](void *ptr) noexcept
 {
    ::operator delete(ptr);
 }
 
 #if __cplusplus >= 201700L
-void operator delete[](void *ptr, std::align_val_t al)
+void operator delete[](void *ptr, std::align_val_t al) noexcept
 {
    Fatal("operator delete[]","with std::align_val_t is not implemented yet");
 }
@@ -379,11 +379,11 @@ void operator delete[](void *ptr, std::align_val_t al)
 #ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
-void operator delete[](void* ptr, std::size_t) {
+void operator delete[](void* ptr, std::size_t) noexcept {
    operator delete[](ptr);
 }
 #if __cplusplus >= 201700L
-void operator delete[](void *ptr, std::size_t, std::align_val_t al)
+void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    Fatal("operator delete[]","with size_t and std::align_val_t is not implemented yet");
 }
