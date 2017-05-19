@@ -51,6 +51,7 @@ namespace ROOT {
       template<class F, class T>
       void Foreach(F func, std::vector<T> &args);
 
+      using TExecutor<TThreadExecutor>::Map;
       template<class F, class Cond = noReferenceCond<F>>
       auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
       template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
@@ -62,6 +63,7 @@ namespace ROOT {
       // // the late return types also check at compile-time whether redfunc is compatible with func,
       // // other than checking that func is compatible with the type of arguments.
       // // a static_assert check in TThreadExecutor::Reduce is used to check that redfunc is compatible with the type returned by func
+      using TExecutor<TThreadExecutor>::MapReduce;
       template<class F, class R, class Cond = noReferenceCond<F>>
       auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
       template<class F, class R, class Cond = noReferenceCond<F>>
@@ -77,6 +79,7 @@ namespace ROOT {
       template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
       auto MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type;
 
+      using TExecutor<TThreadExecutor>::Reduce;
       template<class T, class BINARYOP> auto Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()));
       template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
