@@ -1583,7 +1583,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                   else break;
                }
-
+// if1 and if2 are the two digits defining the format used to produce the
+// labels. The format used will be %[if1].[if2]f .
+// if1 and if2 are positive (small) integers.
                if2 = na;
                if1 = TMath::Max(nf+na,maxDigits)+1;
 L110:
@@ -1600,7 +1602,7 @@ L110:
                if (if2 > 14) if2=14;
                if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
                else {
-                  if (if1 < -100) if1 = -100;
+                  if (if1 < -100) if1 = -100; // Silence a warning with gcc
                   snprintf(coded,8,"%%%d.%df",if1+1,1);
                }
 
