@@ -66,11 +66,23 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
 
 namespace Experimental {
 namespace TDF {
-namespace TDFDetail = ROOT::Detail::TDF;
-namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations
 class TDataFrame;
+
+} // namespace TDF
+} // namespace Experimental
+} // namespace ROOT
+
+namespace cling {
+  std::string printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the promp
+}
+
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
+namespace TDFDetail = ROOT::Detail::TDF;
+namespace TDFInternal = ROOT::Internal::TDF;
 
 /**
 * \class ROOT::Experimental::TDF::TInterface
