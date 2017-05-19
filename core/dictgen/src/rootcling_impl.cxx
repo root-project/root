@@ -3266,10 +3266,14 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 void CheckForMinusW(const char *arg,
                     std::list<std::string> &diagnosticPragmas)
 {
-   const std::string pattern("-Wno-");
+   static const std::string pattern("-Wno-");
 
    std::string localArg(arg);
    if (localArg.find(pattern) != 0) return;
+   if (localArg == "-Wno-noexcept-type") {
+      // GCC7 warning not supported by clang 3.9
+      return;
+   }
 
    ROOT::TMetaUtils::ReplaceAll(localArg, pattern, "#pragma clang diagnostic ignored \"-W");
    localArg += "\"";
