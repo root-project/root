@@ -104,6 +104,7 @@ public:
       fGrad = rhs.fGrad;
       fIsExtended = rhs.fIsExtended;
       fWeight = rhs.fWeight;
+      fExecutionPolicy = rhs.fExecutionPolicy;
    }
 
 
@@ -177,7 +178,7 @@ private:
 
    mutable std::vector<double> fGrad; // for derivatives
 
-   unsigned fExecutionPolicy;
+   ROOT::Fit::ExecutionPolicy fExecutionPolicy; //Execution policy
 
 };
       // define useful typedef's
