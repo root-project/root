@@ -11,7 +11,6 @@
 #ifndef ROOT_Foption
 #define ROOT_Foption
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // Foption                                                              //
@@ -20,6 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "Fit/FitExecutionPolicy.h"
 
 struct Foption_t {
 //*-*      chopt may be the concatenation of the following options:
@@ -49,6 +49,7 @@ struct Foption_t {
    int StoreResult; // "S": Stores the result in a TFitResult structure
    int BinVolume;   // "WIDTH": scale content by the bin width/volume
    double hRobust;  //  value of h parameter used in robust fitting
+   ROOT::Fit::ExecutionPolicy ExecPolicy;  //  Choose the execution Policy: kSerial, kMultithread, kMultiprocess
 
   Foption_t() :
       Quiet        (0),
@@ -73,7 +74,8 @@ struct Foption_t {
       Robust       (0),
       StoreResult  (0),
       BinVolume    (0),
-      hRobust      (0)
+      hRobust      (0),
+      ExecPolicy   (ROOT::Fit::kSerial)
    {}
 };
 

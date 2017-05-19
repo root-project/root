@@ -224,10 +224,30 @@ public :
   }
 
   /**
+    return a pointer to the value for the given fit point
+  */
+  const double *ValuePtr( unsigned int ipoint ) const
+  {
+    return &fDataPtr[ipoint];
+  }
+
+  /**
     return error on the value for the given fit point
     Safe (but slower) method returning correctly the error on the value
     in case of asymm errors return the average 0.5(eu + el)
   */
+
+  const double * ErrorPtr(unsigned int ipoint) const{
+    assert( ipoint < fMaxPoints );
+    assert( kValueError == fErrorType || kCoordError == fErrorType ||
+      kAsymError == fErrorType || kNoError == fErrorType );
+
+    if ( fErrorType == kNoError )
+      return nullptr;
+    // assert( fErrorType == kCoordError );
+    return &fDataErrorPtr[ ipoint ];
+  }
+
   double Error( unsigned int ipoint ) const
   {
     assert( ipoint < fMaxPoints );

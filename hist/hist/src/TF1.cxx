@@ -49,8 +49,6 @@
 
 #include "AnalyticalIntegrals.h"
 
-//#include <iostream>
-
 std::atomic<Bool_t> TF1::fgAbsValue(kFALSE);
 Bool_t TF1::fgRejectPoint = kFALSE;
 std::atomic<Bool_t> TF1::fgAddToGlobList(kTRUE);
@@ -536,7 +534,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 
@@ -570,7 +568,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(fcn)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 {
@@ -602,7 +600,7 @@ TF1::TF1(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
    fParent(0), fHistogram(0),
    fMethodCall(0),
    fNormalized(false), fNormIntegral(0),
-   fFunctor(ROOT::Math::ParamFunctor(f)),
+   fFunctor(new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f))),
    fFormula(0),
    fParams(new TF1Parameters(npar))
 
@@ -788,6 +786,7 @@ void TF1::Copy(TObject &obj) const
    ((TF1 &)obj).fNdim = fNdim;
    ((TF1 &)obj).fType = fType;
    ((TF1 &)obj).fFunctor   = fFunctor;
+   ((TF1 &)obj).fFunctp   = fFunctp;
    ((TF1 &)obj).fChisquare = fChisquare;
    ((TF1 &)obj).fNpfits  = fNpfits;
    ((TF1 &)obj).fNDF     = fNDF;
@@ -1236,10 +1235,10 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
    Double_t result = 0;
    if (fType == 1)  {
-      if (!fFunctor.Empty()) {
+      if (fFunctor) {
          assert(fParams);
-         if (params) result = fFunctor((Double_t *)x, (Double_t *)params);
-         else        result = fFunctor((Double_t *)x, (Double_t *)fParams->GetParameters());
+         if (params) result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)params);
+         else        result = ((TF1FunctorPointerImpl<Double_t> *)fFunctor)->fImpl((Double_t *)x, (Double_t *)fParams->GetParameters());
 
       } else          result = GetSave(x);
 
@@ -1259,7 +1258,8 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
 
    if (fType == 3) {
-      return EvalParVec(x, params);
+      if (params) return EvalParVec(x, params);
+      else return EvalParVec(x, (Double_t *) fParams->GetParameters());
    }
    return result;
 }
@@ -2658,7 +2658,7 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor.Empty() && fSave.empty()) return kFALSE;
+   if (fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 
@@ -2674,12 +2674,12 @@ void TF1::Print(Option_t *option) const
       fFormula->Print(option);
    } else if (fType >  0) {
       if (fType == 2)
-         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNdim(), GetNpar());
+         printf("Interpreted based function: %s(double *x, double *p).  Ndim = %d, Npar = %d  \n", GetName(), GetNpar(), GetNdim());
       else {
-         if (!fFunctor.Empty())
-            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNdim(), GetNpar());
+         if (fFunctor)
+            printf("Compiled based function: %s  based on a functor object.  Ndim = %d, Npar = %d\n", GetName(), GetNpar(), GetNdim());
          else {
-            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNdim(), GetNpar(), int(fSave.size()));
+            printf("Function based on a list of points from a compiled based function: %s.  Ndim = %d, Npar = %d, Npx = %d\n", GetName(), GetNpar(), GetNdim(), int(fSave.size()));
             if (fSave.empty())
                Warning("Print", "Function %s is based on a list of points but list is empty", GetName());
          }
@@ -3446,7 +3446,7 @@ void TF1::Update()
       fNormIntegral = 0;
 
    // std::vector<double>x(fNdim);
-   // if ((fType == 1) && !fFunctor.Empty())  fFunctor(x.data(), (Double_t*)fParams);
+   // if ((fType == 1) && !fFunctor->Empty())  (*fFunctor)x.data(), (Double_t*)fParams);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
