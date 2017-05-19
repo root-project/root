@@ -1599,7 +1599,11 @@ L110:
                if (if1 > 14) if1=14;
                if (if2 > 14) if2=14;
                if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
-               else       snprintf(coded,8,"%%%d.%df",if1+1,1);
+               else {
+                  if (if1 < -100) if1 = -100;
+                  snprintf(coded,8,"%%%d.%df",if1+1,1);
+               }
+
             }
 
 // We draw labels
