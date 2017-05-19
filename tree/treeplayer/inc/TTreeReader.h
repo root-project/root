@@ -178,15 +178,11 @@ public:
    /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 
-   /// \deprecated Please use SetEntriesRange() instead!
-   ///  Sets the entry that `Next()` will stop iteration on. Equivalent to the
-   ///  preferred `SetEntriesRange(0, end)`
+   ///  Sets the entry that `Next()` will stop iteration on.
    ///
+   /// \param beginEntry The first entry that `Next()` will load.
    /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
    ///   load anymore).
-   void SetLastEntry(Long64_t endEntry) R__DEPRECATED(6, 12, "Misnomer and duplication; please use SetEntriesRange()!")
-   { fEndEntry = endEntry; }
-
    EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
 
    /// Restart a Next() loop from entry 0 (of TEntryList index 0 of fEntryList is set).

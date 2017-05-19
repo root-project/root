@@ -34,6 +34,16 @@ The following people have contributed to this new version:
  Vassil Vassilev, Princeton University,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
+## Removed interfaces
+
+The following interfaces have been removed, after deprecation in v6.10.
+
+### TTreeReader
+
+`TTreeReader::SetLastEntry()` was replaced by `TTreeReader::SetEntriesRange()`.
+
+
+
 ## Core Libraries
 
 
