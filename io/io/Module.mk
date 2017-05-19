@@ -57,7 +57,7 @@ include/%.hxx:  $(IODIRI)/%.hxx
 $(IOLIB):       $(IOO) $(IODO) $(ROOTPCMO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libRIO.$(SOEXT) $@ "$(IOO) $(IODO) $(ROOTPCMO)" \
-		   "$(IOLIBEXTRA)"
+		   "$(IOLIBEXTRA) -lpthread"
 
 $(call pcmrule,IO)
 	$(noop)
