@@ -202,11 +202,10 @@ public:
    }
 
 private:
-   TH1D *h1f;
-   TF1 *fVec;
    TF1 *fSeq;
    ROOT::Math::WrappedMultiTF1Templ<double> *wfSeq;
 #ifdef R__HAS_VECCORE
+   TF1 *fVec;
    ROOT::Math::WrappedMultiTF1Templ<ROOT::Double_v> *wfVec;
 #endif
    std::chrono::time_point<std::chrono::system_clock> start, end;
