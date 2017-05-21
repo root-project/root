@@ -195,11 +195,11 @@ public:
 //    }
 
    inline double operator() (double * x, double * p)  {
-      return ((*fObj).*fMemFn)(x,p);
+      return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::Eval(fObj,fMemFn,x,p);
    }
 
    inline double operator() (const double * x, const double * p)  {
-      return ((*fObj).*fMemFn)(x,p);
+      return MemFuncEvaluator<PointerToObj,PointerToMemFn, double>::EvalConst(fObj,fMemFn,x,p);
    }
 
    // clone (use same pointer)
@@ -207,7 +207,44 @@ public:
       return new ParamMemFunHandler(fObj, fMemFn);
    }
 
+private:
 
+   // structure to distinguish pointer types
+   template <typename PObj, typename F,typename  T> struct MemFuncEvaluator {
+      inline static T Eval(PObj & pobj, F &  f, T *x, double * p) {
+         return ((*pobj).*f)(x, p);
+      }
+
+      inline static T EvalConst(PObj & pobj, F & f, const T *x, const double * p) {
+         return ((*pobj).*f)((T*)x, (double*)p);
+      }
+   };
+
+
+   // // these are needed ??
+   // template <typename PObj, typename F, typename T> struct MemFuncEvaluator<PObj,F*, T> {
+   //    inline static T Eval(PObj & pobj,  F * f, T *x, double * p) {
+   //       return ((*pobj).*f)f(x, p);
+   //    }
+
+   //    inline static T EvalConst(PObj & pobj,  F * f, const T *x, const double * p) {
+   //       return ((*pobj).*f)((T*)x, (double*)p);
+         
+   //    }
+   // };
+
+   // template <typename PObj, typename F,typename  T> struct FuncEvaluator<PObj,F* const, T> {
+   //    inline static T Eval(PObj &, const F * f, T *x, double * p) {
+   //       return ((*pobj).*f)f(x, p);
+   //    }
+
+   //    inline static T EvalConst(PObj & pobj, const F * f, const T *x, const double * p) {
+   //       return ((*pobj).*f)((T*)x, (double*)p);
+   //    }
+   // };
+
+
+   
 private :
    ParamMemFunHandler(const ParamMemFunHandler&); // Not implemented
    ParamMemFunHandler& operator=(const ParamMemFunHandler&); // Not implemented

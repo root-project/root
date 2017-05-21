@@ -1228,6 +1228,7 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
    if (fType == 0) {
       assert(fFormula);
+
       if (fNormalized && fNormIntegral != 0)
          return fFormula->EvalPar(x, params) / fNormIntegral;
       else
@@ -1258,8 +1259,18 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    }
 
    if (fType == 3) {
-      if (params) return EvalParVec(x, params);
-      else return EvalParVec(x, (Double_t *) fParams->GetParameters());
+      if (fFunctor) {
+         if (params) result =  EvalParVec(x, params);
+         else result =  EvalParVec(x, (Double_t *) fParams->GetParameters());
+      }
+      else {
+         result = GetSave(x);
+      }
+
+      if (fNormalized && fNormIntegral != 0)
+         result = result / fNormIntegral;
+
+      return result; 
    }
    return result;
 }

@@ -23,10 +23,12 @@
 
 #include "RConfigure.h"
 #include <functional>
+#include <cassert>
 #include "TFormula.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
+#include "TMath.h"
 
 #include "Math/ParamFunctor.h"
 
@@ -812,14 +814,18 @@ T TF1::EvalPar(const T *x, const Double_t *params)
 template<class T>
 inline T TF1::EvalParVec(const T *data, const Double_t *params)
 {
-   if (fType != 3) {
-      //This should throw an error
-      return TF1::EvalPar((double *) data, params);
-   }
+   // if (fType != 3) {
+   //    //This should throw an error
+   //    return TF1::EvalPar((double *) data, params);
+   // }
+   assert(fType == 3); 
    if (fFunctor != nullptr)
       return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
 
-   return ((TF1FunctionPointerImpl<T> *)(fFunctp))->fimpl(data, params);
+   // this should throw an error
+   // we nned to implement a vectorized GetSave(x)
+   return TMath::SignalingNaN(); 
+
 }
 
 inline void TF1::SetRange(Double_t xmin, Double_t,  Double_t xmax, Double_t)
