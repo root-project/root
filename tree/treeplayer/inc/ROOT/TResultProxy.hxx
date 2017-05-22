@@ -108,7 +108,14 @@ class TResultProxy {
 public:
    TResultProxy() = delete;
 
-   /// Get a reference to the encapsulated object.
+   /// Get a const reference to the encapsulated object.
+   /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
+   const T &GetValue()
+   {
+      return *Get();
+   }
+
+   /// Get a pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
    T &operator*() { return *Get(); }
 
