@@ -63,7 +63,7 @@ ROOT.fill_tree(fileName, treeName)
 # We read the tree from the file and create a TDataFrame, a class that
 # allows us to interact with the data contained in the tree.
 TDF = ROOT.ROOT.Experimental.TDF.TDataFrame
-d = TDF(treeName, fileName);
+d = TDF(treeName, fileName)
 
 # Operating on branches which are collection of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event
