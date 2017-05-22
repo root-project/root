@@ -102,6 +102,15 @@ and in the batch mode simply do:
 ~~~ {.cpp}
       c->SetCanvasSize(w,h);
 ~~~
+
+If the canvas size this exceed the window size, scroll bars will be added to the canvas
+This allows to display very large canvases (even bigger than the screen size). The
+Following example shows how to proceed.
+~~~ {.cpp}
+TCanvas *c1 = new TCanvas("c1","c1");
+c1->SetCanvasSize(1500, 1500);
+c1->SetWindowSize(500, 500);
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////
