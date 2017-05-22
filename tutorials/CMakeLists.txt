@@ -331,7 +331,7 @@ endforeach()
 if(ROOT_python_FOUND)
   find_package(PythonInterp REQUIRED)
 
-  file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/*.py)
+  file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} */*.py)
   set(pyveto pyroot/demo.py         # requires GUI
              pyroot/fit1_py.py      # not a tutorial
              pyroot/gui_ex.py       # requires GUI
@@ -341,6 +341,9 @@ if(ROOT_python_FOUND)
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/qtexample.py    # requires GUI/Qt
              pyroot/numberEntry.py  # requires GUI
+             histfactory/example.py # not a tutorial
+             histfactory/makeQuickModel.py # not a tutorial
+             eve/lineset.py         # requires GUI
              )
   list(REMOVE_ITEM pytutorials ${pyveto})
 
@@ -366,7 +369,7 @@ if(ROOT_python_FOUND)
     string(REPLACE ".py" "" tname ${t})
     string(REPLACE "/" "-" tname ${tname})
 
-    ROOT_ADD_TEST(tutorial-${tname}
+    ROOT_ADD_TEST(tutorial-${tname}-py
                 COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS tutorial
