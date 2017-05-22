@@ -132,9 +132,7 @@ TYPED_TEST_P(MathMoreStress, TestDerivative)
 
 TYPED_TEST_P(MathMoreStress, kBRENT)
 {
-   this->RunRangedTest([](StatFunction dist) {
-      dist.TestInverse1(RootFinder::kBRENT);
-   });
+   this->RunRangedTest([](StatFunction dist) { dist.TestInverse1(RootFinder::kBRENT); });
 }
 
 TYPED_TEST_P(MathMoreStress, kGSLBRENT)
