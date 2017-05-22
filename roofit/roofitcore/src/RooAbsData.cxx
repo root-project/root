@@ -113,7 +113,7 @@ Bool_t RooAbsData::releaseVars(RooAbsData* data)
 RooAbsData::RooAbsData()
 {
   claimVars(this) ;
-  _dstore    = nullptr;
+  _dstore = 0 ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
 
@@ -198,13 +198,12 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 //     }
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
-    _dstore          = std::unique_ptr<RooAbsDataStore>(
-       new RooCompositeDataStore(newname ? newname : other.GetName(), other.GetTitle(), _vars, *idx, smap));
+    _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
 
   } else {
 
     // Convert to vector store if default is vector
-    _dstore = std::unique_ptr<RooAbsDataStore>(other._dstore->clone(_vars, newname ? newname : other.GetName()));
+    _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
   }
 
   RooTrace::create(this) ;
@@ -222,6 +221,7 @@ RooAbsData::~RooAbsData()
   }
 
   // delete owned contents.
+  delete _dstore ;
   delete _iterator ;
   delete _cacheIter ;
 
@@ -238,9 +238,10 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-   auto tmp = dynamic_cast<RooTreeDataStore *>(&*_dstore);
-   if (tmp) {
-      _dstore = std::unique_ptr<RooAbsDataStore>(new RooVectorDataStore(*tmp, _vars, GetName()));
+  if (dynamic_cast<RooTreeDataStore*>(_dstore)) {
+    RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
+    delete _dstore ;
+    _dstore = newStore ;
   }
 }
 
@@ -2335,7 +2336,7 @@ Bool_t RooAbsData::hasFilledCache() const
 
 const TTree* RooAbsData::tree() const
 {
-   if (dynamic_cast<const RooTreeDataStore *>(&*_dstore)) {
+   if (dynamic_cast<const RooTreeDataStore *>(_dstore)) {
       return _dstore->tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
@@ -2364,7 +2365,9 @@ TTree *RooAbsData::GetClonedTree() const
 
 void RooAbsData::convertToTreeStore()
 {
-   if (nullptr == dynamic_cast<RooTreeDataStore *>(&*_dstore)) {
-      _dstore = std::unique_ptr<RooAbsDataStore>(new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore));
+   if (nullptr == dynamic_cast<RooTreeDataStore *>(_dstore)) {
+      RooTreeDataStore* newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
+      delete _dstore ;
+      _dstore = newStore ;
    }
 }
