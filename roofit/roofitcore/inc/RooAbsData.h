@@ -263,7 +263,6 @@ protected:
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
 private:
-
    ClassDef(RooAbsData, 5) // Abstract data collection
 };
 

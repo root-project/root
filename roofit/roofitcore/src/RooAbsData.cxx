@@ -2334,7 +2334,7 @@ Bool_t RooAbsData::hasFilledCache() const
 /// Return a pointer to the TTree which stores the data. Returns a nullpointer
 /// if vector-based storage is used. The RooAbsData remains owner of the tree
 
-const TTree* RooAbsData::tree() const
+const TTree *RooAbsData::tree() const
 {
    if (dynamic_cast<const RooTreeDataStore *>(_dstore)) {
       return _dstore->tree();
@@ -2366,8 +2366,8 @@ TTree *RooAbsData::GetClonedTree() const
 void RooAbsData::convertToTreeStore()
 {
    if (nullptr == dynamic_cast<RooTreeDataStore *>(_dstore)) {
-      RooTreeDataStore* newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
-      delete _dstore ;
-      _dstore = newStore ;
+      RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
+      delete _dstore;
+      _dstore = newStore;
    }
 }
