@@ -43,7 +43,7 @@ ROOT.fill_tree(fileName, treeName)
 # We read the tree from the file and create a TDataFrame, a class that
 # allows us to interact with the data contained in the tree.
 TDF = ROOT.ROOT.Experimental.TDF.TDataFrame
-d = TDF(treeName, fileName);
+d = TDF(treeName, fileName)
 
 # Operations on the dataframe
 # We now review some *actions* which can be performed on the data frame.
