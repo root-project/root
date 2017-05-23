@@ -182,7 +182,7 @@ void* ROOT::Internal::TTreeReaderValueBase::GetAddress() {
 
       return address + fStaticClassOffsets.back();
    }
-   return fProxy ? (Byte_t*)fProxy->GetWhere() : 0;
+   return (Byte_t*)fProxy->GetWhere();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
