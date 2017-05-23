@@ -975,7 +975,7 @@ if(cling)
   #---These are the libraries that we link ROOT with CLING---------------------------
   set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
   add_custom_target(CLING)
-  add_dependencies(CLING ${CLING_LIBRARIES} clang-headers)
+  add_dependencies(CLING ${CLING_LIBRARIES} clang-headers intrinsics_gen)
 endif()
 
 #---Check for gfal-------------------------------------------------------------------
