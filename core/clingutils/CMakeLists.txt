@@ -93,7 +93,6 @@ foreach(file wchar.h bits/stat.h bits/time.h)
 endforeach()
 
 foreach( file llvm/ADT/IntrusiveRefCntPtr.h
-        llvm/ADT/StringRef.h
         llvm/ADT/SmallVector.h
         llvm/ADT/iterator_range.h
         llvm/Config/llvm-config.h
