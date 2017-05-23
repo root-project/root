@@ -3034,7 +3034,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Invert the current color palette.
-/// The top of the palette becomes the bottom et vice versa.
+/// The top of the palette becomes the bottom and vice versa.
 
 void TColor::InvertPalette()
 {
