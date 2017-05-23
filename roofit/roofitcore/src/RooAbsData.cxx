@@ -118,7 +118,7 @@ RooAbsData::RooAbsData()
 {
   claimVars(this) ;
   _dstore = 0 ;
-  storageType = defaultStorageType ;
+  storageType = defaultStorageType;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
 
@@ -132,41 +132,41 @@ RooAbsData::RooAbsData()
 RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* dstore) :
   TNamed(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _dstore(dstore)
 {
-  if (dynamic_cast<RooTreeDataStore*>(dstore)) {
-    storageType = RooAbsData::Tree;
-  } else if (dynamic_cast<RooVectorDataStore*>(dstore)) {
-    storageType = RooAbsData::Vector;
-  } else {
-    storageType = RooAbsData::Composite;
-  }
-  //cout << "created dataset " << this << endl ;
-  claimVars(this) ;
+   if (dynamic_cast<RooTreeDataStore *>(dstore)) {
+      storageType = RooAbsData::Tree;
+   } else if (dynamic_cast<RooVectorDataStore *>(dstore)) {
+      storageType = RooAbsData::Vector;
+   } else {
+      storageType = RooAbsData::Composite;
+   }
+   // cout << "created dataset " << this << endl ;
+   claimVars(this);
 
-  // clone the fundamentals of the given data set into internal buffer
-  TIterator* iter = vars.createIterator() ;
-  RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
-    if (!var->isFundamental()) {
-      coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
-             << "): Data set cannot contain non-fundamental types, ignoring "
-             << var->GetName() << endl ;
-    } else {
-      _vars.addClone(*var);
-    }
-  }
-  delete iter ;
+   // clone the fundamentals of the given data set into internal buffer
+   TIterator *iter = vars.createIterator();
+   RooAbsArg *var;
+   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+      if (!var->isFundamental()) {
+         coutE(InputArguments) << "RooAbsDataStore::initialize(" << GetName()
+                               << "): Data set cannot contain non-fundamental types, ignoring " << var->GetName()
+                               << endl;
+      } else {
+         _vars.addClone(*var);
+      }
+   }
+   delete iter;
 
-  // reconnect any parameterized ranges to internal dataset observables
-  iter = _vars.createIterator() ;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {
-    var->attachDataSet(*this) ;
-  }
-  delete iter ;
+   // reconnect any parameterized ranges to internal dataset observables
+   iter = _vars.createIterator();
+   while ((0 != (var = (RooAbsArg *)iter->Next()))) {
+      var->attachDataSet(*this);
+   }
+   delete iter;
 
-  _iterator= _vars.createIterator();
-  _cacheIter = _cachedVars.createIterator() ;
+   _iterator = _vars.createIterator();
+   _cacheIter = _cachedVars.createIterator();
 
-  RooTrace::create(this) ;
+   RooTrace::create(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,12 +252,12 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-  if (storageType == RooAbsData::Tree) {
-    RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
-    delete _dstore ;
-    _dstore = newStore ;
-    storagType = RooAbsData::Vector;
-  }
+   if (storageType == RooAbsData::Tree) {
+      RooVectorDataStore *newStore = new RooVectorDataStore(*(RooTreeDataStore *)_dstore, _vars, GetName());
+      delete _dstore;
+      _dstore = newStore;
+      storagType = RooAbsData::Vector;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

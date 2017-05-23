@@ -55,7 +55,7 @@ public:
   RooAbsDataStore* store() { return _dstore ; }
   const RooAbsDataStore* store() const { return _dstore ; }
   const TTree* tree() const ;
-  TTree *                GetClonedTree() const;
+  TTree *GetClonedTree() const;
 
   void convertToVectorStore() ;
   void convertToTreeStore();
@@ -211,7 +211,7 @@ public:
   static void claimVars(RooAbsData*) ;
   static Bool_t releaseVars(RooAbsData*) ;
 
-  enum StorageType { Tree, Vector, Composite} ;
+  enum StorageType { Tree, Vector, Composite };
 
   static void setDefaultStorageType(StorageType s) ;
 
@@ -221,7 +221,7 @@ protected:
 
   static StorageType defaultStorageType ;
 
-  StorageType storageType ;
+  StorageType storageType;
 
   Double_t corrcov(RooRealVar &x,RooRealVar &y, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
   TMatrixDSym* corrcovMatrix(const RooArgList& vars, const char* cutSpec, const char* cutRange, Bool_t corr) const  ;
