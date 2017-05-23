@@ -60,6 +60,7 @@ The color creation and management class.
   - [Gray scale view of of canvas with colors](#C04)
   - [Color palettes](#C05)
   - [High quality predefined palettes](#C06)
+  - [Palette inversion](#C061)
   - [Color transparency](#C07)
 
 ## <a name="C00"></a> Introduction
@@ -895,6 +896,20 @@ Begin_Macro
 End_Macro
 </td></tr>
 </table>
+
+## <a name="C061"></a> Palette inversion
+Once a palette is defined, it is possible to invert the color order thanks to the
+method TColor::InvertPalette. The top of the palette becomes the bottom et vice versa.
+
+Begin_Macro(source)
+{
+   auto c  = new TCanvas("c","c",0,0,600,400);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kCherry);
+   TColor::InvertPalette();
+   f2->Draw("surf2Z"); f2->SetTitle("kCherry inverted");
+}
+End_Macro
 
 ## <a name="C07"></a> Color transparency
 To make a graphics object transparent it is enough to set its color to a
@@ -3016,3 +3031,12 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    paletteType = 3;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invert the current color palette.
+/// The top of the palette becomes the bottom et vice versa.
+
+void TColor::InvertPalette()
+{
+   std::reverse(fgPalette.fArray, fgPalette.fArray + fgPalette.GetSize());
+}
