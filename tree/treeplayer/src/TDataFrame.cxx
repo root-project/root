@@ -9,7 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/TDataFrame.hxx"
-using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Experimental;
 
 /**
 * \class ROOT::Experimental::TDF::TDataFrame
