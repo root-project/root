@@ -31,17 +31,19 @@
 using ::testing::TestWithParam;
 using ::testing::Values;
 
+using namespace ROOT::Math;
+
 template <typename T>
 class MathMoreStress : public testing::Test {
 private:
-   T statFunctionFactory;
+   T fStatFunctionFactory;
 
 protected:
    template <typename J>
    void RunRangedTest(J ref)
    {
-      for (int i = this->statFunctionFactory.GetRangeStart(); i < this->statFunctionFactory.GetRangeEnd(); i++) {
-         StatFunction dist = statFunctionFactory.Produce(i);
+      for (int i = this->fStatFunctionFactory.GetRangeStart(); i < this->fStatFunctionFactory.GetRangeEnd(); i++) {
+         StatFunction dist = fStatFunctionFactory.Produce(i);
          ref(dist);
       }
    }
@@ -148,6 +150,6 @@ TYPED_TEST_P(MathMoreStress, kGSLSTEFFENSON)
 REGISTER_TYPED_TEST_CASE_P(MathMoreStress, kADAPTIVESINGULAR, kGAUSS, TestDerivative, kBRENT, kGSLBRENT,
                            kGSLSTEFFENSON);
 
-typedef testing::Types<BetaTestFactory, GammaTestFactory> Factories;
+typedef testing::Types<BetaTestFactory, GammaTestFactory> Factories_t;
 
-INSTANTIATE_TYPED_TEST_CASE_P(StressMathMore, MathMoreStress, Factories);
+INSTANTIATE_TYPED_TEST_CASE_P(StressMathMore, MathMoreStress, Factories_t);

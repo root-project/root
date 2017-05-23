@@ -12,17 +12,19 @@
 
 #include "gtest/gtest.h"
 
+using namespace ROOT::Math;
+
 void StatFunction::TestIntegral(IntegrationOneDim::Type algoType)
 {
-   // scan all values from xmin to xmax
-   double dx = (xmax - xmin) / NFuncTest;
+   // scan all values from fXMin to fXMax
+   double dx = (fXMax - fXMin) / fNFuncTest;
 
    // create Integrator
    Integrator ig(algoType, 1.E-12, 1.E-12, 100000);
    ig.SetFunction(*this);
 
-   for (int i = 0; i < NFuncTest; ++i) {
-      double v1 = xmin + dx * i; // value used for testing
+   for (int i = 0; i < fNFuncTest; ++i) {
+      double v1 = fXMin + dx * i; // value used for testing
       double q1 = Cdf(v1);
       // calculate integral of pdf
       double q2 = 0;
@@ -31,7 +33,7 @@ void StatFunction::TestIntegral(IntegrationOneDim::Type algoType)
       if (!fHasLowRange)
          q2 = ig.IntegralLow(v1);
       else
-         q2 = ig.Integral(xlow, v1);
+         q2 = ig.Integral(fXLow, v1);
 
       EXPECT_EQ(ig.Status(), 0);
 
@@ -49,19 +51,19 @@ void StatFunction::TestIntegral(IntegrationOneDim::Type algoType)
 
 void StatFunction::TestDerivative()
 {
-   // scan all values from xmin to xmax
-   double dx = (xmax - xmin) / NFuncTest;
+   // scan all values from fXMin to fXMax
+   double dx = (fXMax - fXMin) / fNFuncTest;
    // create CDF function
    Functor1D func(this, &StatFunction::Cdf);
    Derivator d(func);
-   for (int i = 0; i < NFuncTest; ++i) {
-      double v1 = xmin + dx * i; // value used  for testing
+   for (int i = 0; i < fNFuncTest; ++i) {
+      double v1 = fXMin + dx * i; // value used  for testing
       double q1 = Pdf(v1);
       // calculate derivative of cdf
       double q2 = 0;
-      if (fHasLowRange && v1 == xlow)
+      if (fHasLowRange && v1 == fXLow)
          q2 = d.EvalForward(v1);
-      else if (fHasUpRange && v1 == xup)
+      else if (fHasUpRange && v1 == fXUp)
          q2 = d.EvalBackward(v1);
       else
          q2 = d.Eval(v1);
@@ -84,13 +86,13 @@ void StatFunction::TestInverse1(RootFinder::EType algoType)
    // scan all values from 0.05 to 0.95  to avoid problem at the border of definitions
    double x1 = 0.05;
    double x2 = 0.95;
-   double dx = (x2 - x1) / NFuncTest;
+   double dx = (x2 - x1) / fNFuncTest;
    double vmin = Quantile(dx / 2);
    double vmax = Quantile(1. - dx / 2);
 
    // test ROOT finder algorithm function without derivative
    RootFinder rf1(algoType);
-   for (int i = 1; i < NFuncTest; ++i) {
+   for (int i = 1; i < fNFuncTest; ++i) {
       double v1 = x1 + dx * i; // value used  for testing
       auto fInv = [this, v1](double x) { return this->Cdf(x) - v1; };
 
@@ -116,14 +118,14 @@ void StatFunction::TestInverse2(RootFinder::EType algoType)
    // scan all values from 0.05 to 0.95  to avoid problem at the border of definitions
    double x1 = 0.05;
    double x2 = 0.95;
-   double dx = (x2 - x1) / NFuncTest;
+   double dx = (x2 - x1) / fNFuncTest;
    // starting root is always on the left to avoid to go negative
    // it is very sensible at the starting point
    double vstart = fStartRoot; // depends on function shape
    // test ROOT finder algorithm function with derivative
    RootFinder rf1(algoType);
 
-   for (int i = 1; i < NFuncTest; ++i) {
+   for (int i = 1; i < fNFuncTest; ++i) {
       double v1 = x1 + dx * i; // value used  for testing
 
       auto fInv = [this, v1](double x) { return this->Cdf(x) - v1; };

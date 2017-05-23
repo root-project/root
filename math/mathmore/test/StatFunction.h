@@ -12,13 +12,11 @@
 
 #include <iomanip>
 
-using namespace ROOT::Math;
-
 #define INF std::numeric_limits<double>::infinity()
 
 // typedef for a free function like gamma(double x, double a, double b)
 
-typedef std::function<double(double, double, double)> AlgoFunc;
+typedef std::function<double(double, double, double)> AlgoFunc_t;
 
 // statistical function class
 const int N_PAR = 2;
@@ -31,34 +29,34 @@ private:
       return fPdf(x, fParams[0], fParams[1]);
    }
 
-   AlgoFunc fPdf;
-   AlgoFunc fCdf;
-   AlgoFunc fQuant;
+   AlgoFunc_t fPdf;
+   AlgoFunc_t fCdf;
+   AlgoFunc_t fQuant;
    double fParams[N_PAR];
    double fScaleIg;
    double fScaleDer;
    double fScaleInv;
-   int NFuncTest;
-   double xmin;
-   double xmax;
-   double xlow;
-   double xup;
+   int fNFuncTest;
+   double fXMin;
+   double fXMax;
+   double fXLow;
+   double fXUp;
    bool fHasLowRange;
    bool fHasUpRange;
    double fStartRoot;
 
 public:
-   StatFunction(AlgoFunc pdf, AlgoFunc cdf, AlgoFunc quant, double x1 = -INF, double x2 = INF)
-      : fPdf(pdf), fCdf(cdf), fQuant(quant), xmin(0.), xmax(0.), xlow(x1), xup(x2), fHasLowRange(false),
+   StatFunction(AlgoFunc_t pdf, AlgoFunc_t cdf, AlgoFunc_t quant, double x1 = -INF, double x2 = INF)
+      : fPdf(pdf), fCdf(cdf), fQuant(quant), fXMin(0.), fXMax(0.), fXLow(x1), fXUp(x2), fHasLowRange(false),
         fHasUpRange(false), fStartRoot(0.)
    {
       fScaleIg = 10;   // scale for integral test
       fScaleDer = 1;   // scale for der test
       fScaleInv = 100; // scale for inverse test
       for (int i = 0; i < N_PAR; ++i) fParams[i] = 0;
-      NFuncTest = 100;
-      if (xlow > -INF) fHasLowRange = true;
-      if (xup < INF) fHasUpRange = true;
+      fNFuncTest = 100;
+      if (fXLow > -INF) fHasLowRange = true;
+      if (fXUp < INF) fHasUpRange = true;
    }
 
    unsigned int NPar() const { return N_PAR; }
@@ -75,10 +73,10 @@ public:
 
    void SetTestRange(double x1, double x2)
    {
-      xmin = x1;
-      xmax = x2;
+      fXMin = x1;
+      fXMax = x2;
    }
-   void SetNTest(int n) { NFuncTest = n; }
+   void SetNTest(int n) { fNFuncTest = n; }
    void SetStartRoot(double x) { fStartRoot = x; }
 
    double Pdf(double x) const { return (*this)(x); }
@@ -88,16 +86,16 @@ public:
    double Quantile(double x) const { return fQuant(x, fParams[0], fParams[1]); }
 
    // test integral with cdf function
-   void TestIntegral(IntegrationOneDim::Type algotype);
+   void TestIntegral(ROOT::Math::IntegrationOneDim::Type algotype);
 
    // test derivative from cdf to pdf function
    void TestDerivative();
 
    // test root finding algorithm for finding inverse of cdf
-   void TestInverse1(RootFinder::EType algotype);
+   void TestInverse1(ROOT::Math::RootFinder::EType algotype);
 
    // test root finding algorithm for finding inverse of cdf using derivatives
-   void TestInverse2(RootFinder::EType algotype);
+   void TestInverse2(ROOT::Math::RootFinder::EType algotype);
 
    void SetScaleIg(double s) { fScaleIg = s; }
    void SetScaleDer(double s) { fScaleDer = s; }
