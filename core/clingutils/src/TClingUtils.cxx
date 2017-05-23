@@ -41,6 +41,7 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/ModuleMap.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
@@ -2908,8 +2909,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       // If we added default parameter, allocate new type in the AST.
       if (mightHaveChanged) {
          instanceType = Ctx.getTemplateSpecializationType(TST->getTemplateName(),
-                                                          desArgs.data(),
-                                                          desArgs.size(),
+                                                          desArgs,
                                                           TST->getCanonicalTypeInternal());
       }
    }
@@ -3204,7 +3204,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*RequestingModule*/, 0/*SuggestedModule*/,
+                                0/*IsMapped*/, 0/*RequestingModule*/, 0/*SuggestedModule*/,
                                 false /*SkipCache*/,
                                 false /*BuildSystemModule*/,
                                 false /*OpenFile*/, true /*CacheFailures*/);
@@ -3248,7 +3248,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                     true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                     ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
-                                    0/*Searchpath*/, 0/*RelPath*/,
+                                    0/*IsMapped*/, 0/*Searchpath*/, 0/*RelPath*/,
                                     0/*RequestingModule*/, 0/*SuggestedModule*/);
    }
 
@@ -3273,6 +3273,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
                                true /*isAngled*/, 0/*FromDir*/, FoundDir,
                                ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>>(),
+                               0/*IsMapped*/,
                                0/*Searchpath*/,
                                0/*RelPath*/,
                                0/*RequestingModule*/, 0 /*SuggestedModule*/) == FELong) {
@@ -3780,8 +3781,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    if (mightHaveChanged) {
       Qualifiers qualifiers = normalizedType.getLocalQualifiers();
       normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName,
-                                                             argsToKeep.data(),
-                                                             argsToKeep.size(),
+                                                             argsToKeep,
                                                              normalizedType.getTypePtr()->getCanonicalTypeInternal());
       normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
    }
@@ -3985,7 +3985,7 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                  false /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  llvm::ArrayRef<std::pair<const clang::FileEntry *,
                                     const clang::DirectoryEntry *>>(),
-                                 0 /*SearchPath*/, 0 /*RelativePath*/,
+                                 0/*IsMapped*/, 0 /*SearchPath*/, 0 /*RelativePath*/,
                                  0 /*RequestingModule*/, 0 /*SuggestedModule*/,
                                  false /*SkipCache*/, false /*BuildSystemModule*/,
                                  false /*OpenFile*/, true /*CacheFailures*/);
@@ -4633,8 +4633,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       if (mightHaveChanged) {
          clang::Qualifiers qualifiers = input.getLocalQualifiers();
          input = astCtxt.getTemplateSpecializationType(inputTST->getTemplateName(),
-                                                       desArgs.data(),
-                                                       desArgs.size(),
+                                                       desArgs,
                                                        inputTST->getCanonicalTypeInternal());
          input = astCtxt.getQualifiedType(input, qualifiers);
       }

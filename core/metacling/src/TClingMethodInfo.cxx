@@ -335,7 +335,7 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
 
    Sema::InstantiatingTemplate Inst(S, Info.getLocation(), FTDecl,
                                     defaultTemplateArgs,
-                                    Sema::ActiveTemplateInstantiation::DeducedTemplateArgumentSubstitution,
+                                    Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution,
                                     Info);
 
    // Collect the function arguments of the templated function, substituting

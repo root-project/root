@@ -221,6 +221,7 @@ const char *rootClingHelp =
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Mangle.h"
 #include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Lex/HeaderSearch.h"
@@ -2232,11 +2233,11 @@ int GenerateModule(TModuleGenerator &modGen,
    }
 
    // From PCHGenerator and friends:
-   llvm::SmallVector<char, 128> Buffer;
+   llvm::SmallString<128> Buffer;
    llvm::BitstreamWriter Stream(Buffer);
-   llvm::ArrayRef<llvm::IntrusiveRefCntPtr<clang::ModuleFileExtension>> Extensions;
-   clang::ASTWriter Writer(Stream, Extensions);
-   llvm::raw_ostream *OS
+   clang::MemoryBufferCache PCMCache;
+   clang::ASTWriter Writer(Stream, Buffer, PCMCache, {});
+   auto OS
       = CI->createOutputFile(modGen.GetModuleFileName().c_str(),
                              /*Binary=*/true,
                              /*RemoveFileOnSignal=*/false, /*InFile*/"",
@@ -3753,7 +3754,7 @@ public:
       if (!fileEntry) return;
       auto thisFileName = fileEntry->getName();
       auto fileNameAsString = FileName.str();
-      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName);
+      auto isThisLinkdef = ROOT::TMetaUtils::IsLinkdefFile(thisFileName.data());
       if (isThisLinkdef) {
          auto isTheIncludedLinkdef = ROOT::TMetaUtils::IsLinkdefFile(fileNameAsString.c_str());
          if (isTheIncludedLinkdef) {

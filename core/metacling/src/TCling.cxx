@@ -89,6 +89,7 @@ clang/LLVM technology.
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Parse/Parser.h"
@@ -2628,6 +2629,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*RelativePath*/ 0,
                                               /*RequestingModule*/ 0,
                                               /*SuggestedModule*/ 0,
+                                              /*IsMapped*/ 0,
                                               /*SkipCache*/ false,
                                               /*BuildSystemModule*/ false,
                                               /*OpenFile*/ false,
