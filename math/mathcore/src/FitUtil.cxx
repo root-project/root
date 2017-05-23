@@ -352,9 +352,13 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       return chi2;
   };
 
+#ifdef R__USE_IMT
   auto redFunction = [](const std::vector<double> & objs){
                           return std::accumulate(objs.begin(), objs.end(), double{});
   };
+#else
+  (void)nChunks;
+#endif
 
   double res{};
   if(executionPolicy == ROOT::Fit::kSerial){
@@ -898,12 +902,16 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
       return LikelihoodAux<double>(logval, W, W2);
    };
 
+#ifdef R__USE_IMT
   auto redFunction = [](const std::vector<LikelihoodAux<double>> & objs){
            return std::accumulate(objs.begin(), objs.end(), LikelihoodAux<double>(0.0,0.0,0.0),
                        [](const LikelihoodAux<double> &l1, const LikelihoodAux<double> &l2){
                            return l1+l2;
                   });
   };
+#else
+  (void)nChunks;
+#endif
 
   double logl{};
   double sumW{};
