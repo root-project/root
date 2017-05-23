@@ -85,7 +85,7 @@ namespace ROOT {
          fCoordsPtr[0] = dataX;
 
          if (fpTmpCoordVector) {
-            delete fpTmpCoordVector;
+            delete[] fpTmpCoordVector;
             fpTmpCoordVector = NULL;
          }
 
@@ -106,7 +106,7 @@ namespace ROOT {
          fCoordsPtr[1] = dataY;
 
          if (fpTmpCoordVector) {
-            delete fpTmpCoordVector;
+            delete[] fpTmpCoordVector;
             fpTmpCoordVector = NULL;
          }
 
@@ -129,7 +129,7 @@ namespace ROOT {
          fCoordsPtr[2] = dataZ;
 
          if (fpTmpCoordVector) {
-            delete fpTmpCoordVector;
+            delete[] fpTmpCoordVector;
             fpTmpCoordVector = NULL;
          }
 
@@ -204,6 +204,7 @@ namespace ROOT {
             assert(fWrapped == fCoords.empty());
             assert(fCoords.empty() || &fCoords[i].front() == fCoordsPtr[i]);
          }
+         if (fpTmpCoordVector)  delete[] fpTmpCoordVector;
 
       }
 
@@ -235,7 +236,7 @@ namespace ROOT {
          }
 
          if (fpTmpCoordVector) {
-            delete fpTmpCoordVector;
+            delete[] fpTmpCoordVector;
             fpTmpCoordVector = NULL;
          }
 
