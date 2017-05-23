@@ -20,7 +20,6 @@ void fill_tree(const char *filename, const char *treeName)
    TTree t(treeName, treeName);
    double b1;
    int b2;
-   Long
    t.Branch("b1", &b1);
    t.Branch("b2", &b2);
    for (int i = 0; i < 10; ++i) {
