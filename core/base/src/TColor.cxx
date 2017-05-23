@@ -899,7 +899,7 @@ End_Macro
 
 ## <a name="C061"></a> Palette inversion
 Once a palette is defined, it is possible to invert the color order thanks to the
-method TColor::InvertPalette. The top of the palette becomes the bottom et vice versa.
+method TColor::InvertPalette. The top of the palette becomes the bottom and vice versa.
 
 Begin_Macro(source)
 {
