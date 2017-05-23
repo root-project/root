@@ -65,12 +65,22 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
 } // namespace Internal
 
 namespace Experimental {
-namespace TDF {
-namespace TDFDetail = ROOT::Detail::TDF;
-namespace TDFInternal = ROOT::Internal::TDF;
 
 // forward declarations
 class TDataFrame;
+
+} // namespace Experimental
+} // namespace ROOT
+
+namespace cling {
+std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the promp
+}
+
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
+namespace TDFDetail = ROOT::Detail::TDF;
+namespace TDFInternal = ROOT::Internal::TDF;
 
 /**
 * \class ROOT::Experimental::TDF::TInterface
@@ -85,7 +95,7 @@ class TInterface {
    using TRangeBase = TDFDetail::TRangeBase;
    using TCustomColumnBase = TDFDetail::TCustomColumnBase;
    using TLoopManager = TDFDetail::TLoopManager;
-   friend std::string cling::printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the prompt
+   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>
@@ -241,14 +251,15 @@ public:
    /// \param[in] treename The name of the output TTree
    /// \param[in] filename The name of the output TFile
    /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] filecacheMB The cache size of each memory file in MB (default = 16)
    ///
    /// This function returns a `TDataFrame` built with the output tree as a source.
    template <typename... BranchTypes>
    TInterface<TLoopManager> Snapshot(const std::string &treename, const std::string &filename,
-                                     const ColumnNames_t &bnames)
+                                     const ColumnNames_t &bnames, Long_t filecacheMB = 16)
    {
       using TypeInd_t = typename TDFInternal::TGenStaticSeq<sizeof...(BranchTypes)>::Type_t;
-      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, TypeInd_t());
+      return SnapshotImpl<BranchTypes...>(treename, filename, bnames, filecacheMB, TypeInd_t());
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1036,6 +1047,7 @@ protected:
    /// \param[in] treename The name of the TTree
    /// \param[in] filename The name of the TFile
    /// \param[in] bnames The list of names of the branches to be written
+   /// \param[in] filecacheMB The cache size of each memory file in MB (default = 16)
    /// The implementation exploits Foreach. The association of the addresses to
    /// the branches takes place at the first event. This is possible because
    /// since there are no copies, the address of the value passed by reference
@@ -1043,7 +1055,8 @@ protected:
    /// the TTreeReaderValue/TemporaryBranch
    template <typename... Args, int... S>
    TInterface<TLoopManager> SnapshotImpl(const std::string &treename, const std::string &filename,
-                                         const ColumnNames_t &bnames, TDFInternal::TStaticSeq<S...> /*dummy*/)
+                                         const ColumnNames_t &bnames, Long_t filecacheMB,
+                                         TDFInternal::TStaticSeq<S...> /*dummy*/)
    {
       const auto templateParamsN = sizeof...(S);
       const auto bNamesN = bnames.size();
@@ -1076,11 +1089,12 @@ protected:
       } else {
          auto df = GetDataFrameChecked();
          unsigned int nSlots = df->GetNSlots();
+         auto cachesize = filecacheMB * 1024L * 1024L;
          TBufferMerger merger(filename.c_str(), "RECREATE");
          std::vector<std::shared_ptr<TBufferMergerFile>> files(nSlots);
          std::vector<TTree *> trees(nSlots);
 
-         auto fillTree = [&merger, &trees, &files, &bnames, &treename](unsigned int slot, Args &... args) {
+         auto fillTree = [&](unsigned int slot, Args &... args) {
             if (!trees[slot]) {
                files[slot] = merger.GetFile();
                trees[slot] = new TTree(treename.c_str(), treename.c_str());
@@ -1090,10 +1104,7 @@ protected:
                (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
             }
             trees[slot]->Fill();
-            if (files[slot]->GetFileBytesWritten() > 96L*1024L*1024L) {
-               files[slot]->Write();
-               files[slot]->SetFileBytesWritten(0);
-            }
+            if (files[slot]->GetBytesWritten() >= cachesize) files[slot]->Write();
          };
 
          ForeachSlot(fillTree, {bnames[S]...});
