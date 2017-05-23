@@ -26,7 +26,6 @@
 #include "RConfigure.h"
 #include "RConfig.h"
 #include "Rtypes.h"
-#include "compiledata.h"
 
 #include "RStl.h"
 
