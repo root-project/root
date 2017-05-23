@@ -76,7 +76,11 @@ RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 
 void RooAbsData::setDefaultStorageType(RooAbsData::StorageType s)
 {
-  defaultStorageType = s ;
+   if (RooAbsData::Composite == s) {
+      coutE << "Composite storage is not a valid *default* storage type." << endl;
+   } else {
+      defaultStorageType = s;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +118,7 @@ RooAbsData::RooAbsData()
 {
   claimVars(this) ;
   _dstore = 0 ;
+  storageType = defaultStorageType ;
   _iterator = _vars.createIterator() ;
   _cacheIter = _cachedVars.createIterator() ;
 
@@ -127,6 +132,13 @@ RooAbsData::RooAbsData()
 RooAbsData::RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* dstore) :
   TNamed(name,title), _vars("Dataset Variables"), _cachedVars("Cached Variables"), _dstore(dstore)
 {
+  if (dynamic_cast<RooTreeDataStore*>(dstore)) {
+    storageType = RooAbsData::Tree;
+  } else if (dynamic_cast<RooVectorDataStore*>(dstore)) {
+    storageType = RooAbsData::Vector;
+  } else {
+    storageType = RooAbsData::Composite;
+  }
   //cout << "created dataset " << this << endl ;
   claimVars(this) ;
 
@@ -199,11 +211,13 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
 
     RooCategory* idx = (RooCategory*) _vars.find(*((RooCompositeDataStore*)other.store())->index()) ;
     _dstore = new RooCompositeDataStore(newname?newname:other.GetName(),other.GetTitle(),_vars,*idx,smap) ;
+    storageType = RooAbsData::Composite;
 
   } else {
 
     // Convert to vector store if default is vector
     _dstore = other._dstore->clone(_vars,newname?newname:other.GetName()) ;
+    storageType = other.storageType;
   }
 
   RooTrace::create(this) ;
@@ -238,10 +252,11 @@ RooAbsData::~RooAbsData()
 
 void RooAbsData::convertToVectorStore()
 {
-  if (dynamic_cast<RooTreeDataStore*>(_dstore)) {
+  if (storageType == RooAbsData::Tree) {
     RooVectorDataStore* newStore =  new RooVectorDataStore(*(RooTreeDataStore*)_dstore,_vars,GetName()) ;
     delete _dstore ;
     _dstore = newStore ;
+    storagType = RooAbsData::Vector;
   }
 }
 
@@ -2336,7 +2351,7 @@ Bool_t RooAbsData::hasFilledCache() const
 
 const TTree *RooAbsData::tree() const
 {
-   if (dynamic_cast<const RooTreeDataStore *>(_dstore)) {
+   if (storageType == RooAbsData::Tree) {
       return _dstore->tree();
    } else {
       coutW(InputArguments) << "RooAbsData::tree(" << GetName() << ") WARNING: is not of StorageType::Tree. "
@@ -2351,7 +2366,7 @@ const TTree *RooAbsData::tree() const
 
 TTree *RooAbsData::GetClonedTree() const
 {
-   if (dynamic_cast<RooTreeDataStore *>(&*_dstore)) {
+   if (storageType == RooAbsData::Tree) {
       auto tmp = const_cast<TTree *>(_dstore->tree());
       return tmp->CloneTree();
    } else {
@@ -2365,7 +2380,7 @@ TTree *RooAbsData::GetClonedTree() const
 
 void RooAbsData::convertToTreeStore()
 {
-   if (nullptr == dynamic_cast<RooTreeDataStore *>(_dstore)) {
+   if (storageType != RooAbsData::Tree) {
       RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
       delete _dstore;
       _dstore = newStore;
