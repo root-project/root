@@ -34,8 +34,8 @@ void fill_tree(const char *filename, const char *treeName)
 '''
 
 # We prepare an input tree to run on
-fileName = "tdf002_dataModel_py.root"
-treeName = "myTree"
+fileName = 'tdf004_cutFlowReport_py.root'
+treeName = 'myTree'
 ROOT.gInterpreter.Declare(fill_tree_code)
 ROOT.fill_tree(fileName, treeName)
 
@@ -50,7 +50,7 @@ d = TDF(treeName, fileName)
 filtered1 = d.Filter('b1 > 25', 'Cut1')
 filtered2 = d.Filter('0 == b2 % 2', 'Cut2')
 
-augmented1 = filtered2.Define("b3", 'b1 / b2')
+augmented1 = filtered2.Define('b3', 'b1 / b2')
 filtered3 = augmented1.Filter('b3 < .5','Cut3')
 
 # Statistics are retrieved through a call to the Report method:
