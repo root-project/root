@@ -294,7 +294,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
          xc[0] = *x1;
          for (unsigned int j = 1; j < data.NDim(); ++j)
             xc[j] = *data.GetCoordComponent(i, j);
-            x = xc.data();
+         x = xc.data();
       } else {
             x = x1;
       }
@@ -861,27 +861,31 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double>  & func, const Un
    // needed to compue effective global weight in case of extended likelihood
 
     auto mapFunction = [&](const unsigned i){
-      double W = 0;
-      double W2 = 0;
-      const auto x1 = data.GetCoordComponent(i, 0);
+       double W = 0;
+       double W2 = 0;
+       double fval = 0; 
 
-      const double * x = nullptr;
-     if(data.NDim() > 1) {
-         std::vector<double> xc;
-         xc.resize(data.NDim());
-         xc[0] = *x1;
-         for (unsigned int j = 1; j < data.NDim(); ++j)
-            xc[j] = *data.GetCoordComponent(i, j);
-            x = xc.data();
-      } else {
-            x = x1;
-      }
-
+       if(data.NDim() > 1) {
+          std::vector<double> x(data.NDim());
+          for (unsigned int j = 0; j < data.NDim(); ++j)
+             x[j] = *data.GetCoordComponent(i, j);
 #ifdef USE_PARAMCACHE
-       double fval = func ( x );
+          fval = func ( x.data() );
 #else
-       double fval = func ( x, p );
+          fval = func ( x.data(), p );
 #endif
+
+          // one -dim case
+       } else {
+          const auto x = data.GetCoordComponent(i, 0);
+#ifdef USE_PARAMCACHE
+          fval = func ( x );
+#else
+          fval = func ( x, p );
+#endif
+
+       }
+
       if (normalizeFunc) fval = fval * (1/norm);
 
       // function EvalLog protects against negative or too small values of fval
