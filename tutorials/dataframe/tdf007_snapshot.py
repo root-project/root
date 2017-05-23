@@ -38,7 +38,7 @@ ROOT.gInterpreter.Declare(fill_tree_code)
 ROOT.fill_tree(fileName, treeName)
 
 # We read the tree from the file and create a TDataFrame.
-TDF = ROOT.ROOT.Experimental.TDF.TDataFrame
+TDF = ROOT.ROOT.Experimental.TDataFrame
 d = TDF(treeName, fileName)
 
 # ## Select entries

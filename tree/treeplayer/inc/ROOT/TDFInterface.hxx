@@ -65,17 +65,15 @@ void JitBuildAndBook(const ColumnNames_t &bl, const std::string &nodeTypename, v
 } // namespace Internal
 
 namespace Experimental {
-namespace TDF {
 
 // forward declarations
 class TDataFrame;
 
-} // namespace TDF
 } // namespace Experimental
 } // namespace ROOT
 
 namespace cling {
-std::string printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the promp
+std::string printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the promp
 }
 
 namespace ROOT {
@@ -97,7 +95,7 @@ class TInterface {
    using TRangeBase = TDFDetail::TRangeBase;
    using TCustomColumnBase = TDFDetail::TCustomColumnBase;
    using TLoopManager = TDFDetail::TLoopManager;
-   friend std::string cling::printValue(ROOT::Experimental::TDF::TDataFrame *tdf); // For a nice printing at the prompt
+   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
    template <typename TDFNode, typename ActionType, typename... BranchTypes, typename ActionResultType>

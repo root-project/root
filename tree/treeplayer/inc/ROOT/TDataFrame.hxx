@@ -32,11 +32,10 @@ R__LOAD_LIBRARY(libTreePlayer)
 
 namespace ROOT {
 namespace Experimental {
-namespace TDF {
 namespace TDFDetail = ROOT::Detail::TDF;
 namespace TDFInternal = ROOT::Internal::TDF;
 
-class TDataFrame : public TInterface<TDFDetail::TLoopManager> {
+class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
 
 public:
@@ -64,15 +63,13 @@ public:
 template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
 TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
-   : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
+   : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
    auto chain = new TChain(treeName.c_str());
    for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
 
-} // end NS TDF
-using TDF::TDataFrame; // let users access TDataFrame as ROOT::Experimental::TDataFrame
 } // end NS Experimental
 } // end NS ROOT
 
