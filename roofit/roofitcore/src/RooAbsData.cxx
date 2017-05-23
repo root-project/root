@@ -2384,5 +2384,6 @@ void RooAbsData::convertToTreeStore()
       RooTreeDataStore *newStore = new RooTreeDataStore(GetName(), GetTitle(), *get(), *_dstore);
       delete _dstore;
       _dstore = newStore;
+      storageType = RooAbsData::Tree;
    }
 }
