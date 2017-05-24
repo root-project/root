@@ -348,15 +348,15 @@ if(ROOT_python_FOUND)
   list(REMOVE_ITEM pytutorials ${pyveto})
 
   #---Python tutorials dependencies--------------------------------------
-  set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
-  set(pyroot-h1draw-depends tutorial-pyroot-hsimple)
-  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple
-                                tutorial-pyroot-fit1
-                                tutorial-pyroot-na49view
-                                tutorial-pyroot-h1draw
-                                tutorial-pyroot-ntuple1)
-  set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
-  set(pyroot-na49view-depends tutorial-pyroot-geometry)
+  set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
+  set(pyroot-h1draw-depends tutorial-pyroot-hsimple-py)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple-py
+                                tutorial-pyroot-fit1-py
+                                tutorial-pyroot-na49view-py
+                                tutorial-pyroot-h1draw-py
+                                tutorial-pyroot-ntuple1-py)
+  set(pyroot-fit1-depends tutorial-pyroot-fillrandom-py)
+  set(pyroot-na49view-depends tutorial-pyroot-geometry-py)
 
   foreach(t ${pytutorials})
     list(FIND returncode_1 ${t} index)
