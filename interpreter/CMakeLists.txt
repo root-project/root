@@ -42,9 +42,13 @@ endif()
 
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
-#---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
-if(NOT CLING_INCLUDE_TESTS)
+if(clingtest)
+  message("-- cling test suite enabled: llvm / clang symbols in libCling will be visible!")
+  set(CLING_INCLUDE_TESTS ON CACHE BOOL "")
+else()
+  #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
+  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 endif()
 
 #--- Build LLVM/Clang with modules -----------------------------------------------------------------
@@ -88,9 +92,6 @@ set(LLVM_NOCLING "YES")
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
-if(NOT CLING_INCLUDE_TESTS)
-  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
-endif()
 
 #---Remove the inherited include_directories()
 set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")

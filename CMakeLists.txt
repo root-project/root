@@ -379,10 +379,6 @@ if(testing)
       add_subdirectory(roottest)
     endif()
   endif()
-  if(clingtest)
-    message("-- cling test suite enabled: llvm / clang symbols in libCling will be exported!")
-    set(CLING_INCLUDE_TESTS ON)
-  endif()
 endif()
 
 #---Packaging-------------------------------------------------------------------------------------
