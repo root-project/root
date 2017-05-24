@@ -62,6 +62,8 @@ The following interfaces have been removed, after deprecation in v6.10.
 ## 2D Graphics Libraries
   - The method TColor::InvertPalette inverts the current palette. The top color becomes
     bottom and vice versa. This was [suggested by Karl Smith](https://root-forum.cern.ch/t/inverted-color-palettes/24826/2).
+  - New method `TColor::SetColorThreshold(Float_t t)` to specify the color
+    threshold used by GetColor to retrieve a color.
 
 ## 3D Graphics Libraries
 
