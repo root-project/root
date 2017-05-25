@@ -236,6 +236,7 @@ if(NOT builtin_lz4)
     set(builtin_lz4 ON CACHE BOOL "" FORCE)
   endif()
 endif()
+# Note: the above if-statement may change the value of builtin_lz4 to ON.
 if(builtin_lz4)
   set(lz4_version v1.7.5)
   message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
