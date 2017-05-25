@@ -128,7 +128,7 @@ int main(int argc, char **argv)
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
    if (argc > 6)  enable_imt = atoi(argv[6]);
-   if (argc > 7)  compAlg= atoi(argv[7]);
+   if (argc > 7) compAlg = atoi(argv[7]);
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}
@@ -158,7 +158,7 @@ int main(int argc, char **argv)
 
    TFile *hfile;
    TTree *tree;
-   TTreePerfStats *ioperf = NULL;
+   TTreePerfStats *ioperf = nullptr;
    Event *event = 0;
 
    // Fill event, header and tracks with some random numbers
@@ -225,17 +225,17 @@ int main(int argc, char **argv)
       hfile->SetCompressionLevel(comp);
       hfile->SetCompressionAlgorithm(compAlg);
 
-     // Create histogram to show write_time in function of time
-     Float_t curtime = -0.5;
-     Int_t ntime = nevent/printev;
-     TH1F *htime = new TH1F("htime","Real-Time to write versus time",ntime,0,ntime);
-     HistogramManager *hm = 0;
-     if (hfill) {
-        TDirectory *hdir = new TDirectory("histograms", "all histograms");
-        hm = new HistogramManager(hdir);
-     }
+      // Create histogram to show write_time in function of time
+      Float_t curtime = -0.5;
+      Int_t ntime = nevent / printev;
+      TH1F *htime = new TH1F("htime", "Real-Time to write versus time", ntime, 0, ntime);
+      HistogramManager *hm = 0;
+      if (hfill) {
+         TDirectory *hdir = new TDirectory("histograms", "all histograms");
+         hm = new HistogramManager(hdir);
+      }
 
-     // Create a ROOT Tree and one superbranch
+      // Create a ROOT Tree and one superbranch
       tree = new TTree("T","An example of a ROOT tree");
       tree->SetAutoSave(1000000000); // autosave when 1 Gbyte written
       tree->SetCacheSize(10000000);  // set a 10 MBytes cache (useless when writing local files)
@@ -284,11 +284,14 @@ int main(int argc, char **argv)
    printf("RealTime=%f seconds, CpuTime=%f seconds\n",rtime,ctime);
    if (read) {
       tree->PrintCacheStats();
-      if (ioperf) {ioperf->Print();}
-      printf("You read %f Mbytes/Realtime seconds\n",mbytes/rtime);
-      printf("You read %f Mbytes/Cputime seconds\n",mbytes/ctime);
+      if (ioperf) {
+         ioperf->Print();
+      }
+      printf("You read %f Mbytes/Realtime seconds\n", mbytes / rtime);
+      printf("You read %f Mbytes/Cputime seconds\n", mbytes / ctime);
    } else {
-      printf("compression level=%d, split=%d, arg4=%d, IMT=%d, compression algorithm=%d\n",comp, split, arg4, enable_imt, compAlg);
+      printf("compression level=%d, split=%d, arg4=%d, IMT=%d, compression algorithm=%d\n", comp, split, arg4,
+             enable_imt, compAlg);
       printf("You write %f Mbytes/Realtime seconds\n",mbytes/rtime);
       printf("You write %f Mbytes/Cputime seconds\n",mbytes/ctime);
       //printf("file compression factor = %f\n",hfile.GetCompressionFactor());
