@@ -1100,24 +1100,30 @@ int R__Inflate_free()
   return 0;
 }
 
-static int is_valid_header_zlib(uch *src) {
+static int is_valid_header_zlib(uch *src)
+{
    return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_old(uch *src) {
+static int is_valid_header_old(uch *src)
+{
    return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_lzma(uch *src) {
-   return  src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
+static int is_valid_header_lzma(uch *src)
+{
+   return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
-static int is_valid_header_lz4(uch *src) {
+static int is_valid_header_lz4(uch *src)
+{
    return src[0] == 'L' && src[1] == '4';
 }
 
-static int is_valid_header(uch *src) {
-   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) || is_valid_header_lz4(src);
+static int is_valid_header(uch *src)
+{
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
+          is_valid_header_lz4(src);
 }
 
 /***********************************************************************
@@ -1224,14 +1230,13 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
       return;
     }
 
-    inflateEnd(&stream);
+     inflateEnd(&stream);
 
-    *irep = stream.total_out;
-    return;
-  }
-  else if (is_valid_header_lzma(src)) {
-    R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
-    return;
+     *irep = stream.total_out;
+     return;
+  } else if (is_valid_header_lzma(src)) {
+     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+     return;
   } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
      return;
