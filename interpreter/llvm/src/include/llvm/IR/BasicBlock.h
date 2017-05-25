@@ -14,25 +14,27 @@
 #ifndef LLVM_IR_BASICBLOCK_H
 #define LLVM_IR_BASICBLOCK_H
 
-#include "llvm/ADT/Twine.h"
 #include "llvm/ADT/ilist.h"
+#include "llvm/ADT/ilist_node.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/SymbolTableListTraits.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/CBindingWrapping.h"
-#include "llvm/Support/DataTypes.h"
+#include "llvm/Support/Compiler.h"
+#include "llvm-c/Types.h"
+#include <cassert>
+#include <cstddef>
 
 namespace llvm {
 
 class CallInst;
-class LandingPadInst;
-class TerminatorInst;
-class LLVMContext;
-class BlockAddress;
 class Function;
-
-template <>
-struct SymbolTableListSentinelTraits<BasicBlock>
-    : public ilist_half_embedded_sentinel_traits<BasicBlock> {};
+class LandingPadInst;
+class LLVMContext;
+class Module;
+class TerminatorInst;
+class ValueSymbolTable;
 
 /// \brief LLVM Basic Block Representation
 ///
@@ -51,19 +53,17 @@ struct SymbolTableListSentinelTraits<BasicBlock>
 /// are "well formed".
 class BasicBlock : public Value, // Basic blocks are data objects also
                    public ilist_node_with_parent<BasicBlock, Function> {
-  friend class BlockAddress;
 public:
-  typedef SymbolTableList<Instruction> InstListType;
+  using InstListType = SymbolTableList<Instruction>;
 
 private:
+  friend class BlockAddress;
+  friend class SymbolTableListTraits<BasicBlock>;
+
   InstListType InstList;
   Function *Parent;
 
   void setParent(Function *parent);
-  friend class SymbolTableListTraits<BasicBlock>;
-
-  BasicBlock(const BasicBlock &) = delete;
-  void operator=(const BasicBlock &) = delete;
 
   /// \brief Constructor.
   ///
@@ -73,15 +73,20 @@ private:
   explicit BasicBlock(LLVMContext &C, const Twine &Name = "",
                       Function *Parent = nullptr,
                       BasicBlock *InsertBefore = nullptr);
+
 public:
+  BasicBlock(const BasicBlock &) = delete;
+  BasicBlock &operator=(const BasicBlock &) = delete;
+  ~BasicBlock() override;
+
   /// \brief Get the context in which this basic block lives.
   LLVMContext &getContext() const;
 
   /// Instruction iterators...
-  typedef InstListType::iterator iterator;
-  typedef InstListType::const_iterator const_iterator;
-  typedef InstListType::reverse_iterator reverse_iterator;
-  typedef InstListType::const_reverse_iterator const_reverse_iterator;
+  using iterator = InstListType::iterator;
+  using const_iterator = InstListType::const_iterator;
+  using reverse_iterator = InstListType::reverse_iterator;
+  using const_reverse_iterator = InstListType::const_reverse_iterator;
 
   /// \brief Creates a new BasicBlock.
   ///
@@ -93,7 +98,6 @@ public:
                             BasicBlock *InsertBefore = nullptr) {
     return new BasicBlock(Context, Name, Parent, InsertBefore);
   }
-  ~BasicBlock() override;
 
   /// \brief Return the enclosing method, or null if none.
   const Function *getParent() const { return Parent; }
@@ -104,27 +108,35 @@ public:
   ///
   /// Note: this is undefined behavior if the block does not have a parent.
   const Module *getModule() const;
-  Module *getModule();
+  Module *getModule() {
+    return const_cast<Module *>(
+                            static_cast<const BasicBlock *>(this)->getModule());
+  }
 
   /// \brief Returns the terminator instruction if the block is well formed or
   /// null if the block is not well formed.
-  TerminatorInst *getTerminator();
-  const TerminatorInst *getTerminator() const;
+  const TerminatorInst *getTerminator() const LLVM_READONLY;
+  TerminatorInst *getTerminator() {
+    return const_cast<TerminatorInst *>(
+                        static_cast<const BasicBlock *>(this)->getTerminator());
+  }
 
   /// \brief Returns the call instruction calling @llvm.experimental.deoptimize
   /// prior to the terminating return instruction of this basic block, if such a
   /// call is present.  Otherwise, returns null.
-  CallInst *getTerminatingDeoptimizeCall();
-  const CallInst *getTerminatingDeoptimizeCall() const {
-    return const_cast<BasicBlock *>(this)->getTerminatingDeoptimizeCall();
+  const CallInst *getTerminatingDeoptimizeCall() const;
+  CallInst *getTerminatingDeoptimizeCall() {
+    return const_cast<CallInst *>(
+         static_cast<const BasicBlock *>(this)->getTerminatingDeoptimizeCall());
   }
 
   /// \brief Returns the call instruction marked 'musttail' prior to the
   /// terminating return instruction of this basic block, if such a call is
   /// present.  Otherwise, returns null.
-  CallInst *getTerminatingMustTailCall();
-  const CallInst *getTerminatingMustTailCall() const {
-    return const_cast<BasicBlock *>(this)->getTerminatingMustTailCall();
+  const CallInst *getTerminatingMustTailCall() const;
+  CallInst *getTerminatingMustTailCall() {
+    return const_cast<CallInst *>(
+           static_cast<const BasicBlock *>(this)->getTerminatingMustTailCall());
   }
 
   /// \brief Returns a pointer to the first instruction in this block that is
@@ -133,32 +145,36 @@ public:
   /// When adding instructions to the beginning of the basic block, they should
   /// be added before the returned value, not before the first instruction,
   /// which might be PHI. Returns 0 is there's no non-PHI instruction.
-  Instruction* getFirstNonPHI();
-  const Instruction* getFirstNonPHI() const {
-    return const_cast<BasicBlock*>(this)->getFirstNonPHI();
+  const Instruction* getFirstNonPHI() const;
+  Instruction* getFirstNonPHI() {
+    return const_cast<Instruction *>(
+                       static_cast<const BasicBlock *>(this)->getFirstNonPHI());
   }
 
   /// \brief Returns a pointer to the first instruction in this block that is not
   /// a PHINode or a debug intrinsic.
-  Instruction* getFirstNonPHIOrDbg();
-  const Instruction* getFirstNonPHIOrDbg() const {
-    return const_cast<BasicBlock*>(this)->getFirstNonPHIOrDbg();
+  const Instruction* getFirstNonPHIOrDbg() const;
+  Instruction* getFirstNonPHIOrDbg() {
+    return const_cast<Instruction *>(
+                  static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbg());
   }
 
   /// \brief Returns a pointer to the first instruction in this block that is not
   /// a PHINode, a debug intrinsic, or a lifetime intrinsic.
-  Instruction* getFirstNonPHIOrDbgOrLifetime();
-  const Instruction* getFirstNonPHIOrDbgOrLifetime() const {
-    return const_cast<BasicBlock*>(this)->getFirstNonPHIOrDbgOrLifetime();
+  const Instruction* getFirstNonPHIOrDbgOrLifetime() const;
+  Instruction* getFirstNonPHIOrDbgOrLifetime() {
+    return const_cast<Instruction *>(
+        static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbgOrLifetime());
   }
 
   /// \brief Returns an iterator to the first instruction in this block that is
   /// suitable for inserting a non-PHI instruction.
   ///
   /// In particular, it skips all PHIs and LandingPad instructions.
-  iterator getFirstInsertionPt();
-  const_iterator getFirstInsertionPt() const {
-    return const_cast<BasicBlock*>(this)->getFirstInsertionPt();
+  const_iterator getFirstInsertionPt() const;
+  iterator getFirstInsertionPt() {
+    return static_cast<const BasicBlock *>(this)
+                                          ->getFirstInsertionPt().getNonConst();
   }
 
   /// \brief Unlink 'this' from the containing function, but do not delete it.
@@ -187,9 +203,10 @@ public:
 
   /// \brief Return the predecessor of this block if it has a single predecessor
   /// block. Otherwise return a null pointer.
-  BasicBlock *getSinglePredecessor();
-  const BasicBlock *getSinglePredecessor() const {
-    return const_cast<BasicBlock*>(this)->getSinglePredecessor();
+  const BasicBlock *getSinglePredecessor() const;
+  BasicBlock *getSinglePredecessor() {
+    return const_cast<BasicBlock *>(
+                 static_cast<const BasicBlock *>(this)->getSinglePredecessor());
   }
 
   /// \brief Return the predecessor of this block if it has a unique predecessor
@@ -198,27 +215,30 @@ public:
   /// Note that unique predecessor doesn't mean single edge, there can be
   /// multiple edges from the unique predecessor to this block (for example a
   /// switch statement with multiple cases having the same destination).
-  BasicBlock *getUniquePredecessor();
-  const BasicBlock *getUniquePredecessor() const {
-    return const_cast<BasicBlock*>(this)->getUniquePredecessor();
+  const BasicBlock *getUniquePredecessor() const;
+  BasicBlock *getUniquePredecessor() {
+    return const_cast<BasicBlock *>(
+                 static_cast<const BasicBlock *>(this)->getUniquePredecessor());
   }
 
   /// \brief Return the successor of this block if it has a single successor.
   /// Otherwise return a null pointer.
   ///
   /// This method is analogous to getSinglePredecessor above.
-  BasicBlock *getSingleSuccessor();
-  const BasicBlock *getSingleSuccessor() const {
-    return const_cast<BasicBlock*>(this)->getSingleSuccessor();
+  const BasicBlock *getSingleSuccessor() const;
+  BasicBlock *getSingleSuccessor() {
+    return const_cast<BasicBlock *>(
+                   static_cast<const BasicBlock *>(this)->getSingleSuccessor());
   }
 
   /// \brief Return the successor of this block if it has a unique successor.
   /// Otherwise return a null pointer.
   ///
   /// This method is analogous to getUniquePredecessor above.
-  BasicBlock *getUniqueSuccessor();
-  const BasicBlock *getUniqueSuccessor() const {
-    return const_cast<BasicBlock*>(this)->getUniqueSuccessor();
+  const BasicBlock *getUniqueSuccessor() const;
+  BasicBlock *getUniqueSuccessor() {
+    return const_cast<BasicBlock *>(
+                   static_cast<const BasicBlock *>(this)->getUniqueSuccessor());
   }
 
   //===--------------------------------------------------------------------===//
@@ -320,8 +340,11 @@ public:
   bool isLandingPad() const;
 
   /// \brief Return the landingpad instruction associated with the landing pad.
-  LandingPadInst *getLandingPadInst();
   const LandingPadInst *getLandingPadInst() const;
+  LandingPadInst *getLandingPadInst() {
+    return const_cast<LandingPadInst *>(
+                    static_cast<const BasicBlock *>(this)->getLandingPadInst());
+  }
 
 private:
   /// \brief Increment the internal refcount of the number of BlockAddresses
@@ -334,6 +357,7 @@ private:
     assert((int)(signed char)getSubclassDataFromValue() >= 0 &&
            "Refcount wrap-around");
   }
+
   /// \brief Shadow Value::setValueSubclassData with a private forwarding method
   /// so that any future subclasses cannot accidentally use it.
   void setValueSubclassData(unsigned short D) {
@@ -344,6 +368,6 @@ private:
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(BasicBlock, LLVMBasicBlockRef)
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_BASICBLOCK_H

@@ -16,26 +16,37 @@
 #define LLVM_LIB_TARGET_AMDGPU_SIREGISTERINFO_H
 
 #include "AMDGPURegisterInfo.h"
+#include "SIDefines.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 
 namespace llvm {
 
-class SISubtarget;
 class MachineRegisterInfo;
+class SISubtarget;
+class SIMachineFunctionInfo;
 
-struct SIRegisterInfo final : public AMDGPURegisterInfo {
+class SIRegisterInfo final : public AMDGPURegisterInfo {
 private:
-  unsigned SGPR32SetID;
-  unsigned VGPR32SetID;
+  unsigned SGPRSetID;
+  unsigned VGPRSetID;
   BitVector SGPRPressureSets;
   BitVector VGPRPressureSets;
+  bool SpillSGPRToVGPR;
+  bool SpillSGPRToSMEM;
 
   void reserveRegisterTuples(BitVector &, unsigned Reg) const;
   void classifyPressureSet(unsigned PSetID, unsigned Reg,
                            BitVector &PressureSets) const;
-
 public:
-  SIRegisterInfo();
+  SIRegisterInfo(const SISubtarget &ST);
+
+  bool spillSGPRToVGPR() const {
+    return SpillSGPRToVGPR;
+  }
+
+  bool spillSGPRToSMEM() const {
+    return SpillSGPRToSMEM;
+  }
 
   /// Return the end register initially reserved for the scratch buffer in case
   /// spilling is needed.
@@ -48,15 +59,15 @@ public:
 
   BitVector getReservedRegs(const MachineFunction &MF) const override;
 
-  unsigned getRegPressureSetLimit(const MachineFunction &MF,
-                                  unsigned Idx) const override;
-
-
   bool requiresRegisterScavenging(const MachineFunction &Fn) const override;
 
-
   bool requiresFrameIndexScavenging(const MachineFunction &MF) const override;
+  bool requiresFrameIndexReplacementScavenging(
+    const MachineFunction &MF) const override;
   bool requiresVirtualBaseRegisters(const MachineFunction &Fn) const override;
+  bool trackLivenessAfterRegAlloc(const MachineFunction &MF) const override;
+
+  int64_t getMUBUFInstrOffset(const MachineInstr *MI) const;
 
   int64_t getFrameIndexInstrOffset(const MachineInstr *MI,
                                    int Idx) const override;
@@ -76,9 +87,21 @@ public:
   const TargetRegisterClass *getPointerRegClass(
     const MachineFunction &MF, unsigned Kind = 0) const override;
 
+  /// If \p OnlyToVGPR is true, this will only succeed if this
+  bool spillSGPR(MachineBasicBlock::iterator MI,
+                 int FI, RegScavenger *RS,
+                 bool OnlyToVGPR = false) const;
+
+  bool restoreSGPR(MachineBasicBlock::iterator MI,
+                   int FI, RegScavenger *RS,
+                   bool OnlyToVGPR = false) const;
+
   void eliminateFrameIndex(MachineBasicBlock::iterator MI, int SPAdj,
                            unsigned FIOperandNum,
                            RegScavenger *RS) const override;
+
+  bool eliminateSGPRToVGPRSpillFrameIndex(MachineBasicBlock::iterator MI,
+                                          int FI, RegScavenger *RS) const;
 
   unsigned getHWRegIndex(unsigned Reg) const {
     return getEncodingValue(Reg) & 0xff;
@@ -110,13 +133,6 @@ public:
   /// \returns true if this class contains VGPR registers.
   bool hasVGPRs(const TargetRegisterClass *RC) const;
 
-  /// returns true if this is a pseudoregister class combination of VGPRs and
-  /// SGPRs for operand modeling. FIXME: We should set isAllocatable = 0 on
-  /// them.
-  static bool isPseudoRegClass(const TargetRegisterClass *RC) {
-    return RC == &AMDGPU::VS_32RegClass || RC == &AMDGPU::VS_64RegClass;
-  }
-
   /// \returns A VGPR reg class with the same width as \p SRC
   const TargetRegisterClass *getEquivalentVGPRClass(
                                           const TargetRegisterClass *SRC) const;
@@ -136,20 +152,21 @@ public:
                             const TargetRegisterClass *SrcRC,
                             unsigned SrcSubReg) const override;
 
-  /// \p Channel This is the register channel (e.g. a value from 0-16), not the
-  ///            SubReg index.
-  /// \returns The sub-register of Reg that is in Channel.
-  unsigned getPhysRegSubReg(unsigned Reg, const TargetRegisterClass *SubRC,
-                            unsigned Channel) const;
-
   /// \returns True if operands defined with this operand type can accept
   /// a literal constant (i.e. any 32-bit immediate).
-  bool opCanUseLiteralConstant(unsigned OpType) const;
+  bool opCanUseLiteralConstant(unsigned OpType) const {
+    // TODO: 64-bit operands have extending behavior from 32-bit literal.
+    return OpType >= AMDGPU::OPERAND_REG_IMM_FIRST &&
+           OpType <= AMDGPU::OPERAND_REG_IMM_LAST;
+  }
 
   /// \returns True if operands defined with this operand type can accept
   /// an inline constant. i.e. An integer value in the range (-16, 64) or
   /// -4.0f, -2.0f, -1.0f, -0.5f, 0.0f, 0.5f, 1.0f, 2.0f, 4.0f.
-  bool opCanUseInlineConstant(unsigned OpType) const;
+  bool opCanUseInlineConstant(unsigned OpType) const {
+    return OpType >= AMDGPU::OPERAND_SRC_FIRST &&
+           OpType <= AMDGPU::OPERAND_SRC_LAST;
+  }
 
   enum PreloadedValue {
     // SGPRS:
@@ -175,28 +192,53 @@ public:
   unsigned getPreloadedValue(const MachineFunction &MF,
                              enum PreloadedValue Value) const;
 
-  /// \brief Give the maximum number of VGPRs that can be used by \p WaveCount
-  ///        concurrent waves.
-  unsigned getNumVGPRsAllowed(unsigned WaveCount) const;
-
-  /// \brief Give the maximum number of SGPRs that can be used by \p WaveCount
-  ///        concurrent waves.
-  unsigned getNumSGPRsAllowed(const SISubtarget &ST, unsigned WaveCount) const;
-
   unsigned findUnusedRegister(const MachineRegisterInfo &MRI,
-                              const TargetRegisterClass *RC) const;
+                              const TargetRegisterClass *RC,
+                              const MachineFunction &MF) const;
 
-  unsigned getSGPR32PressureSet() const { return SGPR32SetID; };
-  unsigned getVGPR32PressureSet() const { return VGPR32SetID; };
+  unsigned getSGPRPressureSet() const { return SGPRSetID; };
+  unsigned getVGPRPressureSet() const { return VGPRSetID; };
 
+  const TargetRegisterClass *getRegClassForReg(const MachineRegisterInfo &MRI,
+                                               unsigned Reg) const;
   bool isVGPR(const MachineRegisterInfo &MRI, unsigned Reg) const;
 
+  bool isSGPRPressureSet(unsigned SetID) const {
+    return SGPRPressureSets.test(SetID) && !VGPRPressureSets.test(SetID);
+  }
+  bool isVGPRPressureSet(unsigned SetID) const {
+    return VGPRPressureSets.test(SetID) && !SGPRPressureSets.test(SetID);
+  }
+
+  ArrayRef<int16_t> getRegSplitParts(const TargetRegisterClass *RC,
+                                     unsigned EltSize) const;
+
+  bool shouldCoalesce(MachineInstr *MI,
+                      const TargetRegisterClass *SrcRC,
+                      unsigned SubReg,
+                      const TargetRegisterClass *DstRC,
+                      unsigned DstSubReg,
+                      const TargetRegisterClass *NewRC) const override;
+
+  unsigned getRegPressureLimit(const TargetRegisterClass *RC,
+                               MachineFunction &MF) const override;
+
+  unsigned getRegPressureSetLimit(const MachineFunction &MF,
+                                  unsigned Idx) const override;
+
+  const int *getRegUnitPressureSets(unsigned RegUnit) const override;
+
 private:
-  void buildScratchLoadStore(MachineBasicBlock::iterator MI,
-                             unsigned LoadStoreOp, const MachineOperand *SrcDst,
-                             unsigned ScratchRsrcReg, unsigned ScratchOffset,
-                             int64_t Offset,
-                             RegScavenger *RS) const;
+  void buildSpillLoadStore(MachineBasicBlock::iterator MI,
+                           unsigned LoadStoreOp,
+                           int Index,
+                           unsigned ValueReg,
+                           bool ValueIsKill,
+                           unsigned ScratchRsrcReg,
+                           unsigned ScratchOffsetReg,
+                           int64_t InstrOffset,
+                           MachineMemOperand *MMO,
+                           RegScavenger *RS) const;
 };
 
 } // End namespace llvm

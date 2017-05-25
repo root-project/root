@@ -22,6 +22,10 @@ class BodyIndexer : public RecursiveASTVisitor<BodyIndexer> {
   SmallVector<Stmt*, 16> StmtStack;
 
   typedef RecursiveASTVisitor<BodyIndexer> base;
+
+  Stmt *getParentStmt() const {
+    return StmtStack.size() < 2 ? nullptr : StmtStack.end()[-2];
+  }
 public:
   BodyIndexer(IndexingContext &indexCtx,
               const NamedDecl *Parent, const DeclContext *DC)
@@ -146,9 +150,53 @@ public:
                                     Parent, ParentDC, Roles, Relations, E);
   }
 
+  bool indexDependentReference(
+      const Expr *E, const Type *T, const DeclarationNameInfo &NameInfo,
+      llvm::function_ref<bool(const NamedDecl *ND)> Filter) {
+    if (!T)
+      return true;
+    const TemplateSpecializationType *TST =
+        T->getAs<TemplateSpecializationType>();
+    if (!TST)
+      return true;
+    TemplateName TN = TST->getTemplateName();
+    const ClassTemplateDecl *TD =
+        dyn_cast_or_null<ClassTemplateDecl>(TN.getAsTemplateDecl());
+    if (!TD)
+      return true;
+    CXXRecordDecl *RD = TD->getTemplatedDecl();
+    std::vector<const NamedDecl *> Symbols =
+        RD->lookupDependentName(NameInfo.getName(), Filter);
+    // FIXME: Improve overload handling.
+    if (Symbols.size() != 1)
+      return true;
+    SourceLocation Loc = NameInfo.getLoc();
+    if (Loc.isInvalid())
+      Loc = E->getLocStart();
+    SmallVector<SymbolRelation, 4> Relations;
+    SymbolRoleSet Roles = getRolesForRef(E, Relations);
+    return IndexCtx.handleReference(Symbols[0], Loc, Parent, ParentDC, Roles,
+                                    Relations, E);
+  }
+
+  bool VisitCXXDependentScopeMemberExpr(CXXDependentScopeMemberExpr *E) {
+    const DeclarationNameInfo &Info = E->getMemberNameInfo();
+    return indexDependentReference(
+        E, E->getBaseType().getTypePtrOrNull(), Info,
+        [](const NamedDecl *D) { return D->isCXXInstanceMember(); });
+  }
+
+  bool VisitDependentScopeDeclRefExpr(DependentScopeDeclRefExpr *E) {
+    const DeclarationNameInfo &Info = E->getNameInfo();
+    const NestedNameSpecifier *NNS = E->getQualifier();
+    return indexDependentReference(
+        E, NNS->getAsType(), Info,
+        [](const NamedDecl *D) { return !D->isCXXInstanceMember(); });
+  }
+
   bool VisitDesignatedInitExpr(DesignatedInitExpr *E) {
     for (DesignatedInitExpr::Designator &D : llvm::reverse(E->designators())) {
-      if (D.isFieldDesignator())
+      if (D.isFieldDesignator() && D.getField())
         return IndexCtx.handleReference(D.getField(), D.getFieldLoc(), Parent,
                                         ParentDC, SymbolRoleSet(), {}, E);
     }
@@ -178,7 +226,8 @@ public:
       SymbolRoleSet Roles{};
       SmallVector<SymbolRelation, 2> Relations;
       addCallRole(Roles, Relations);
-      if (E->isImplicit())
+      Stmt *Containing = getParentStmt();
+      if (E->isImplicit() || (Containing && isa<PseudoObjectExpr>(Containing)))
         Roles |= (unsigned)SymbolRole::Implicit;
 
       if (isDynamic(E)) {
@@ -194,9 +243,12 @@ public:
   }
 
   bool VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
-    if (E->isExplicitProperty())
+    if (E->isExplicitProperty()) {
+      SmallVector<SymbolRelation, 2> Relations;
+      SymbolRoleSet Roles = getRolesForRef(E, Relations);
       return IndexCtx.handleReference(E->getExplicitProperty(), E->getLocation(),
-                                      Parent, ParentDC, SymbolRoleSet(), {}, E);
+                                      Parent, ParentDC, Roles, Relations, E);
+    }
 
     // No need to do a handleReference for the objc method, because there will
     // be a message expr as part of PseudoObjectExpr.
@@ -269,14 +321,15 @@ public:
       const Decl *D = *I;
       if (!D)
         continue;
-      if (!IndexCtx.isFunctionLocalDecl(D))
+      if (!isFunctionLocalSymbol(D))
         IndexCtx.indexTopLevelDecl(D);
     }
 
     return true;
   }
 
-  bool TraverseLambdaCapture(LambdaExpr *LE, const LambdaCapture *C) {
+  bool TraverseLambdaCapture(LambdaExpr *LE, const LambdaCapture *C,
+                             Expr *Init) {
     if (C->capturesThis() || C->capturesVLAType())
       return true;
 
@@ -293,35 +346,20 @@ public:
   // Also visit things that are in the syntactic form but not the semantic one,
   // for example the indices in DesignatedInitExprs.
   bool TraverseInitListExpr(InitListExpr *S, DataRecursionQueue *Q = nullptr) {
-
-    class SyntacticFormIndexer :
-              public RecursiveASTVisitor<SyntacticFormIndexer> {
-      IndexingContext &IndexCtx;
-      const NamedDecl *Parent;
-      const DeclContext *ParentDC;
-
-    public:
-      SyntacticFormIndexer(IndexingContext &indexCtx,
-                            const NamedDecl *Parent, const DeclContext *DC)
-        : IndexCtx(indexCtx), Parent(Parent), ParentDC(DC) { }
-
-      bool shouldWalkTypesOfTypeLocs() const { return false; }
-
-      bool VisitDesignatedInitExpr(DesignatedInitExpr *E) {
-        for (DesignatedInitExpr::Designator &D : llvm::reverse(E->designators())) {
-          if (D.isFieldDesignator())
-            return IndexCtx.handleReference(D.getField(), D.getFieldLoc(),
-                                            Parent, ParentDC, SymbolRoleSet(),
-                                            {}, E);
-        }
-        return true;
-      }
-    };
-
     auto visitForm = [&](InitListExpr *Form) {
       for (Stmt *SubStmt : Form->children()) {
         if (!TraverseStmt(SubStmt, Q))
           return false;
+      }
+      return true;
+    };
+
+    auto visitSyntacticDesignatedInitExpr = [&](DesignatedInitExpr *E) -> bool {
+      for (DesignatedInitExpr::Designator &D : llvm::reverse(E->designators())) {
+        if (D.isFieldDesignator())
+          return IndexCtx.handleReference(D.getField(), D.getFieldLoc(),
+                                          Parent, ParentDC, SymbolRoleSet(),
+                                          {}, E);
       }
       return true;
     };
@@ -332,7 +370,10 @@ public:
     if (SemaForm) {
       // Visit things present in syntactic form but not the semantic form.
       if (SyntaxForm) {
-        SyntacticFormIndexer(IndexCtx, Parent, ParentDC).TraverseStmt(SyntaxForm);
+        for (Expr *init : SyntaxForm->inits()) {
+          if (auto *DIE = dyn_cast<DesignatedInitExpr>(init))
+            visitSyntacticDesignatedInitExpr(DIE);
+        }
       }
       return visitForm(SemaForm);
     }

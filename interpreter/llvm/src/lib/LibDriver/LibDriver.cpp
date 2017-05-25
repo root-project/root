@@ -121,7 +121,7 @@ int llvm::libDriverMain(llvm::ArrayRef<const char*> ArgsArr) {
   for (auto *Arg : Args.filtered(OPT_UNKNOWN))
     llvm::errs() << "ignoring unknown argument: " << Arg->getSpelling() << "\n";
 
-  if (Args.filtered_begin(OPT_INPUT) == Args.filtered_end()) {
+  if (!Args.hasArgNoClaim(OPT_INPUT)) {
     // No input files.  To match lib.exe, silently do nothing.
     return 0;
   }
@@ -141,6 +141,15 @@ int llvm::libDriverMain(llvm::ArrayRef<const char*> ArgsArr) {
       handleAllErrors(MOrErr.takeError(), [&](const llvm::ErrorInfoBase &EIB) {
         llvm::errs() << Arg->getValue() << ": " << EIB.message() << "\n";
       });
+      return 1;
+    }
+    sys::fs::file_magic Magic =
+        sys::fs::identify_magic(MOrErr->Buf->getBuffer());
+    if (Magic != sys::fs::file_magic::coff_object &&
+        Magic != sys::fs::file_magic::bitcode &&
+        Magic != sys::fs::file_magic::windows_resource) {
+      llvm::errs() << Arg->getValue()
+                   << ": not a COFF object, bitcode or resource file\n";
       return 1;
     }
     Members.emplace_back(std::move(*MOrErr));

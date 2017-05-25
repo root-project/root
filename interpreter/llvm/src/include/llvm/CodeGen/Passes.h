@@ -20,8 +20,8 @@
 
 namespace llvm {
 
-class Function;
 class FunctionPass;
+class MachineFunction;
 class MachineFunctionPass;
 class ModulePass;
 class Pass;
@@ -43,6 +43,9 @@ namespace llvm {
   /// the entry block.
   FunctionPass *createUnreachableBlockEliminationPass();
 
+  /// Insert mcount-like function calls.
+  FunctionPass *createCountingFunctionInserterPass();
+
   /// MachineFunctionPrinter pass - This pass prints out the machine function to
   /// the given stream as a debugging tool.
   MachineFunctionPass *
@@ -52,6 +55,14 @@ namespace llvm {
   /// MIRPrinting pass - this pass prints out the LLVM IR into the given stream
   /// using the MIR serialization format.
   MachineFunctionPass *createPrintMIRPass(raw_ostream &OS);
+
+  /// This pass resets a MachineFunction when it has the FailedISel property
+  /// as if it was just created.
+  /// If EmitFallbackDiag is true, the pass will emit a
+  /// DiagnosticInfoISelFallback for every MachineFunction it resets.
+  /// If AbortOnFailedISel is true, abort compilation instead of resetting.
+  MachineFunctionPass *createResetMachineFunctionPass(bool EmitFallbackDiag,
+                                                      bool AbortOnFailedISel);
 
   /// createCodeGenPreparePass - Transform the code to expose more pattern
   /// matching during instruction selection.
@@ -69,6 +80,9 @@ namespace llvm {
 
 /// MachineDominanaceFrontier - This pass is a machine dominators analysis pass.
   extern char &MachineDominanceFrontierID;
+
+  /// MachineRegionInfo - This pass computes SESE regions for machine functions.
+  extern char &MachineRegionInfoPassID;
 
   /// EdgeBundles analysis - Bundle machine CFG edges.
   extern char &EdgeBundlesID;
@@ -114,6 +128,13 @@ namespace llvm {
   /// ShrinkWrap pass. Look for the best place to insert save and restore
   // instruction and update the MachineFunctionInfo with that information.
   extern char &ShrinkWrapID;
+
+  /// LiveRangeShrink pass. Move instruction close to its definition to shrink
+  /// the definition's live range.
+  extern char &LiveRangeShrinkID;
+
+  /// Greedy register allocator.
+  extern char &RAGreedyID;
 
   /// VirtRegRewriter pass. Rewrite virtual registers to physical registers as
   /// assigned in VirtRegMap.
@@ -172,6 +193,10 @@ namespace llvm {
   /// branches.
   extern char &BranchFolderPassID;
 
+  /// BranchRelaxation - This pass replaces branches that need to jump further
+  /// than is supported by a branch instruction.
+  extern char &BranchRelaxationPassID;
+
   /// MachineFunctionPrinterPass - This pass prints out MachineInstr's.
   extern char &MachineFunctionPrinterPassID;
 
@@ -202,7 +227,8 @@ namespace llvm {
   /// IfConverter - This pass performs machine code if conversion.
   extern char &IfConverterID;
 
-  FunctionPass *createIfConverter(std::function<bool(const Function &)> Ftor);
+  FunctionPass *createIfConverter(
+      std::function<bool(const MachineFunction &)> Ftor);
 
   /// MachineBlockPlacement - This pass places basic blocks based on branch
   /// probabilities.
@@ -263,6 +289,13 @@ namespace llvm {
   /// \brief This pass lays out funclets contiguously.
   extern char &FuncletLayoutID;
 
+  /// This pass inserts the XRay instrumentation sleds if they are supported by
+  /// the target platform.
+  extern char &XRayInstrumentationID;
+
+  /// This pass inserts FEntry calls
+  extern char &FEntryInserterID;
+
   /// \brief This pass implements the "patchable-function" attribute.
   extern char &PatchableFunctionID;
 
@@ -297,19 +330,11 @@ namespace llvm {
   /// ExpandISelPseudos - This pass expands pseudo-instructions.
   extern char &ExpandISelPseudosID;
 
-  /// createExecutionDependencyFixPass - This pass fixes execution time
-  /// problems with dependent instructions, such as switching execution
-  /// domains to match.
-  ///
-  /// The pass will examine instructions using and defining registers in RC.
-  ///
-  FunctionPass *createExecutionDependencyFixPass(const TargetRegisterClass *RC);
-
   /// UnpackMachineBundles - This pass unpack machine instruction bundles.
   extern char &UnpackMachineBundlesID;
 
   FunctionPass *
-  createUnpackMachineBundles(std::function<bool(const Function &)> Ftor);
+  createUnpackMachineBundles(std::function<bool(const MachineFunction &)> Ftor);
 
   /// FinalizeMachineBundles - This pass finalize machine instruction
   /// bundles (created earlier, e.g. during pre-RA scheduling).
@@ -370,6 +395,24 @@ namespace llvm {
   /// and propagates register usage information of callee to caller
   /// if available with PysicalRegisterUsageInfo pass.
   FunctionPass *createRegUsageInfoPropPass();
+
+  /// This pass performs software pipelining on machine instructions.
+  extern char &MachinePipelinerID;
+
+  /// This pass frees the memory occupied by the MachineFunction.
+  FunctionPass *createFreeMachineFunctionPass();
+
+  /// This pass combine basic blocks guarded by the same branch.
+  extern char &BranchCoalescingID;
+
+  /// This pass performs outlining on machine instructions directly before
+  /// printing assembly.
+  ModulePass *createMachineOutlinerPass();
+
+  /// This pass expands the experimental reduction intrinsics into sequences of
+  /// shuffles.
+  FunctionPass *createExpandReductionsPass();
+
 } // End llvm namespace
 
 /// Target machine pass initializer for passes with dependencies. Use with
@@ -386,7 +429,7 @@ namespace llvm {
   Registry.registerPass(*PI, true);                                            \
   return PI;                                                                   \
   }                                                                            \
-  LLVM_DEFINE_ONCE_FLAG(Initialize##passName##PassFlag);                       \
+  static llvm::once_flag Initialize##passName##PassFlag;                       \
   void llvm::initialize##passName##Pass(PassRegistry &Registry) {              \
     llvm::call_once(Initialize##passName##PassFlag,                            \
                     initialize##passName##PassOnce, std::ref(Registry));       \

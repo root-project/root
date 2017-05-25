@@ -18,18 +18,18 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/DependenceAnalysis.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
-#include "llvm/Analysis/LoopPassManager.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/ScalarEvolutionAliasAnalysis.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/LoopPassManager.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
 using namespace llvm;
@@ -40,7 +40,7 @@ static bool simplifyLoopCFG(Loop &L, DominatorTree &DT, LoopInfo &LI) {
   bool Changed = false;
   // Copy blocks into a temporary array to avoid iterator invalidation issues
   // as we remove them.
-  SmallVector<WeakVH, 16> Blocks(L.blocks());
+  SmallVector<WeakTrackingVH, 16> Blocks(L.blocks());
 
   for (auto &Block : Blocks) {
     // Attempt to merge blocks in the trivial case. Don't modify blocks which
@@ -64,17 +64,12 @@ static bool simplifyLoopCFG(Loop &L, DominatorTree &DT, LoopInfo &LI) {
   return Changed;
 }
 
-PreservedAnalyses LoopSimplifyCFGPass::run(Loop &L, AnalysisManager<Loop> &AM) {
-  const auto &FAM =
-      AM.getResult<FunctionAnalysisManagerLoopProxy>(L).getManager();
-  Function *F = L.getHeader()->getParent();
-
-  auto *LI = FAM.getCachedResult<LoopAnalysis>(*F);
-  auto *DT = FAM.getCachedResult<DominatorTreeAnalysis>(*F);
-  assert((LI && DT) && "Analyses for LoopSimplifyCFG not available");
-
-  if (!simplifyLoopCFG(L, *DT, *LI))
+PreservedAnalyses LoopSimplifyCFGPass::run(Loop &L, LoopAnalysisManager &AM,
+                                           LoopStandardAnalysisResults &AR,
+                                           LPMUpdater &) {
+  if (!simplifyLoopCFG(L, AR.DT, AR.LI))
     return PreservedAnalyses::all();
+
   return getLoopPassPreservedAnalyses();
 }
 

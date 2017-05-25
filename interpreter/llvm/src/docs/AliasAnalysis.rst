@@ -136,7 +136,7 @@ be overlapping in some way, but do not start at the same address.
 
 The ``MustAlias`` response may only be returned if the two memory objects are
 guaranteed to always start at exactly the same location. A ``MustAlias``
-response implies that the pointers compare equal.
+response does not imply that the pointers compare equal.
 
 The ``getModRefInfo`` methods
 -----------------------------
@@ -701,6 +701,12 @@ algorithm will have a lower number of may aliases).
 
 Memory Dependence Analysis
 ==========================
+
+.. note::
+
+  We are currently in the process of migrating things from
+  ``MemoryDependenceAnalysis`` to :doc:`MemorySSA`. Please try to use
+  that instead.
 
 If you're just looking to be a client of alias analysis information, consider
 using the Memory Dependence Analysis interface instead.  MemDep is a lazy,

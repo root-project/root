@@ -118,19 +118,19 @@ static SPCC::CondCodes GetOppositeBranchCondition(SPCC::CondCodes CC)
   
   case SPCC::CPCC_A:   return SPCC::CPCC_N;
   case SPCC::CPCC_N:   return SPCC::CPCC_A;
-  case SPCC::CPCC_3:   // Fall through
-  case SPCC::CPCC_2:   // Fall through
-  case SPCC::CPCC_23:  // Fall through
-  case SPCC::CPCC_1:   // Fall through
-  case SPCC::CPCC_13:  // Fall through
-  case SPCC::CPCC_12:  // Fall through
-  case SPCC::CPCC_123: // Fall through
-  case SPCC::CPCC_0:   // Fall through
-  case SPCC::CPCC_03:  // Fall through
-  case SPCC::CPCC_02:  // Fall through
-  case SPCC::CPCC_023: // Fall through
-  case SPCC::CPCC_01:  // Fall through
-  case SPCC::CPCC_013: // Fall through
+  case SPCC::CPCC_3:   LLVM_FALLTHROUGH;
+  case SPCC::CPCC_2:   LLVM_FALLTHROUGH;
+  case SPCC::CPCC_23:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_1:   LLVM_FALLTHROUGH;
+  case SPCC::CPCC_13:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_12:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_123: LLVM_FALLTHROUGH;
+  case SPCC::CPCC_0:   LLVM_FALLTHROUGH;
+  case SPCC::CPCC_03:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_02:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_023: LLVM_FALLTHROUGH;
+  case SPCC::CPCC_01:  LLVM_FALLTHROUGH;
+  case SPCC::CPCC_013: LLVM_FALLTHROUGH;
   case SPCC::CPCC_012:
       // "Opposite" code is not meaningful, as we don't know
       // what the CoProc condition means here. The cond-code will
@@ -157,7 +157,7 @@ static void parseCondBranch(MachineInstr *LastInst, MachineBasicBlock *&Target,
   Target = LastInst->getOperand(0).getMBB();
 }
 
-bool SparcInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
+bool SparcInstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                    MachineBasicBlock *&TBB,
                                    MachineBasicBlock *&FBB,
                                    SmallVectorImpl<MachineOperand> &Cond,
@@ -170,7 +170,7 @@ bool SparcInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
     return false;
 
   // Get the last instruction in the block.
-  MachineInstr *LastInst = I;
+  MachineInstr *LastInst = &*I;
   unsigned LastOpc = LastInst->getOpcode();
 
   // If there is only one terminator instruction, process it.
@@ -188,7 +188,7 @@ bool SparcInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
   }
 
   // Get the instruction before it if it is a terminator.
-  MachineInstr *SecondLastInst = I;
+  MachineInstr *SecondLastInst = &*I;
   unsigned SecondLastOpc = SecondLastInst->getOpcode();
 
   // If AllowModify is true and the block ends with two or more unconditional
@@ -203,7 +203,7 @@ bool SparcInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
         TBB = LastInst->getOperand(0).getMBB();
         return false;
       } else {
-        SecondLastInst = I;
+        SecondLastInst = &*I;
         SecondLastOpc = SecondLastInst->getOpcode();
       }
     }
@@ -240,14 +240,16 @@ bool SparcInstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
   return true;
 }
 
-unsigned SparcInstrInfo::InsertBranch(MachineBasicBlock &MBB,
+unsigned SparcInstrInfo::insertBranch(MachineBasicBlock &MBB,
                                       MachineBasicBlock *TBB,
                                       MachineBasicBlock *FBB,
                                       ArrayRef<MachineOperand> Cond,
-                                      const DebugLoc &DL) const {
-  assert(TBB && "InsertBranch must not be told to insert a fallthrough");
+                                      const DebugLoc &DL,
+                                      int *BytesAdded) const {
+  assert(TBB && "insertBranch must not be told to insert a fallthrough");
   assert((Cond.size() == 1 || Cond.size() == 0) &&
          "Sparc branch conditions should have one component!");
+  assert(!BytesAdded && "code size not handled");
 
   if (Cond.empty()) {
     assert(!FBB && "Unconditional branch with multiple successors!");
@@ -269,8 +271,10 @@ unsigned SparcInstrInfo::InsertBranch(MachineBasicBlock &MBB,
   return 2;
 }
 
-unsigned SparcInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const
-{
+unsigned SparcInstrInfo::removeBranch(MachineBasicBlock &MBB,
+                                      int *BytesRemoved) const {
+  assert(!BytesRemoved && "code size not handled");
+
   MachineBasicBlock::iterator I = MBB.end();
   unsigned Count = 0;
   while (I != MBB.begin()) {
@@ -291,7 +295,7 @@ unsigned SparcInstrInfo::RemoveBranch(MachineBasicBlock &MBB) const
   return Count;
 }
 
-bool SparcInstrInfo::ReverseBranchCondition(
+bool SparcInstrInfo::reverseBranchCondition(
     SmallVectorImpl<MachineOperand> &Cond) const {
   assert(Cond.size() == 1);
   SPCC::CondCodes CC = static_cast<SPCC::CondCodes>(Cond[0].getImm());
@@ -397,7 +401,7 @@ storeRegToStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   if (I != MBB.end()) DL = I->getDebugLoc();
 
   MachineFunction *MF = MBB.getParent();
-  const MachineFrameInfo &MFI = *MF->getFrameInfo();
+  const MachineFrameInfo &MFI = MF->getFrameInfo();
   MachineMemOperand *MMO = MF->getMachineMemOperand(
       MachinePointerInfo::getFixedStack(*MF, FI), MachineMemOperand::MOStore,
       MFI.getObjectSize(FI), MFI.getObjectAlignment(FI));
@@ -436,7 +440,7 @@ loadRegFromStackSlot(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
   if (I != MBB.end()) DL = I->getDebugLoc();
 
   MachineFunction *MF = MBB.getParent();
-  const MachineFrameInfo &MFI = *MF->getFrameInfo();
+  const MachineFrameInfo &MFI = MF->getFrameInfo();
   MachineMemOperand *MMO = MF->getMachineMemOperand(
       MachinePointerInfo::getFixedStack(*MF, FI), MachineMemOperand::MOLoad,
       MFI.getObjectSize(FI), MFI.getObjectAlignment(FI));

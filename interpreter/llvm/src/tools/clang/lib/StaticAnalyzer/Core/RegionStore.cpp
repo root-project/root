@@ -26,7 +26,6 @@
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramState.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/ProgramStateTrait.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/SubEngine.h"
-#include "llvm/ADT/ImmutableList.h"
 #include "llvm/ADT/ImmutableMap.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/Support/raw_ostream.h"
@@ -493,6 +492,11 @@ public: // Part of public interface to class.
   ///       return symbolic
   SVal getBinding(Store S, Loc L, QualType T) override {
     return getBinding(getRegionBindings(S), L, T);
+  }
+
+  Optional<SVal> getDefaultBinding(Store S, const MemRegion *R) override {
+    RegionBindingsRef B = getRegionBindings(S);
+    return B.getDefaultBinding(R);
   }
 
   SVal getBinding(RegionBindingsConstRef B, Loc L, QualType T = QualType());
@@ -1334,10 +1338,14 @@ RegionStoreManager::getSizeInElements(ProgramStateRef state,
 ///  the array).  This is called by ExprEngine when evaluating casts
 ///  from arrays to pointers.
 SVal RegionStoreManager::ArrayToPointer(Loc Array, QualType T) {
+  if (Array.getAs<loc::ConcreteInt>())
+    return Array;
+
   if (!Array.getAs<loc::MemRegionVal>())
     return UnknownVal();
 
-  const MemRegion* R = Array.castAs<loc::MemRegionVal>().getRegion();
+  const SubRegion *R =
+      cast<SubRegion>(Array.castAs<loc::MemRegionVal>().getRegion());
   NonLoc ZeroIdx = svalBuilder.makeZeroArrayIndex();
   return loc::MemRegionVal(MRMgr.getElementRegion(T, ZeroIdx, R, Ctx));
 }
@@ -1380,7 +1388,7 @@ SVal RegionStoreManager::getBinding(RegionBindingsConstRef B, Loc L, QualType T)
         T = SR->getSymbol()->getType();
       }
     }
-    MR = GetElementZeroRegion(MR, T);
+    MR = GetElementZeroRegion(cast<SubRegion>(MR), T);
   }
 
   // FIXME: Perhaps this method should just take a 'const MemRegion*' argument
@@ -1675,7 +1683,8 @@ RegionStoreManager::getBindingForDerivedDefaultValue(RegionBindingsConstRef B,
 
     // Lazy bindings are usually handled through getExistingLazyBinding().
     // We should unify these two code paths at some point.
-    if (val.getAs<nonloc::LazyCompoundVal>())
+    if (val.getAs<nonloc::LazyCompoundVal>() ||
+        val.getAs<nonloc::CompoundVal>())
       return val;
 
     llvm_unreachable("Unknown default value");
@@ -1849,6 +1858,8 @@ SVal RegionStoreManager::getBindingForVar(RegionBindingsConstRef B,
 
     // Function-scoped static variables are default-initialized to 0; if they
     // have an initializer, it would have been processed by now.
+    // FIXME: This is only true when we're starting analysis from main().
+    // We're losing a lot of coverage here.
     if (isa<StaticGlobalSpaceRegion>(MS))
       return svalBuilder.makeZeroVal(T);
 
@@ -2073,11 +2084,10 @@ RegionStoreManager::bindArray(RegionBindingsConstRef B,
   if (Init.getAs<nonloc::LazyCompoundVal>())
     return bindAggregate(B, R, Init);
 
-  // Remaining case: explicit compound values.
-
   if (Init.isUnknown())
-    return setImplicitDefaultValue(B, R, ElementTy);
+    return bindAggregate(B, R, UnknownVal());
 
+  // Remaining case: explicit compound values.
   const nonloc::CompoundVal& CV = Init.castAs<nonloc::CompoundVal>();
   nonloc::CompoundVal::iterator VI = CV.begin(), VE = CV.end();
   uint64_t i = 0;

@@ -16,6 +16,7 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
@@ -51,8 +52,7 @@ int LEONMachineFunctionPass::GetRegIndexForOperand(MachineInstr &MI,
 int LEONMachineFunctionPass::getUnusedFPRegister(MachineRegisterInfo &MRI) {
   for (int RegisterIndex = SP::F0; RegisterIndex <= SP::F31; ++RegisterIndex) {
     if (!MRI.isPhysRegUsed(RegisterIndex) &&
-        !(std::find(UsedRegisters.begin(), UsedRegisters.end(),
-                    RegisterIndex) != UsedRegisters.end())) {
+        !is_contained(UsedRegisters, RegisterIndex)) {
       return RegisterIndex;
     }
   }
@@ -90,15 +90,6 @@ bool InsertNOPLoad::runOnMachineFunction(MachineFunction &MF) {
         MachineBasicBlock::iterator NMBBI = std::next(MBBI);
         BuildMI(MBB, NMBBI, DL, TII.get(SP::NOP));
         Modified = true;
-      } else if (MI.isInlineAsm()) {
-        // Look for an inline ld or ldf instruction.
-        StringRef AsmString =
-            MI.getOperand(InlineAsm::MIOp_AsmString).getSymbolName();
-        if (AsmString.startswith_lower("ld")) {
-          MachineBasicBlock::iterator NMBBI = std::next(MBBI);
-          BuildMI(MBB, NMBBI, DL, TII.get(SP::NOP));
-          Modified = true;
-        }
       }
     }
   }
@@ -148,32 +139,6 @@ bool FixFSMULD::runOnMachineFunction(MachineFunction &MF) {
         Reg1Index = MI.getOperand(0).getReg();
         Reg2Index = MI.getOperand(1).getReg();
         Reg3Index = MI.getOperand(2).getReg();
-      } else if (MI.isInlineAsm()) {
-        std::string AsmString(
-            MI.getOperand(InlineAsm::MIOp_AsmString).getSymbolName());
-        std::string FMULSOpCoode("fsmuld");
-        std::transform(AsmString.begin(), AsmString.end(), AsmString.begin(),
-                       ::tolower);
-        if (AsmString.find(FMULSOpCoode) ==
-            0) { // this is an inline FSMULD instruction
-
-          unsigned StartOp = InlineAsm::MIOp_FirstOperand;
-
-          // extracts the registers from the inline assembly instruction
-          for (unsigned i = StartOp, e = MI.getNumOperands(); i != e; ++i) {
-            const MachineOperand &MO = MI.getOperand(i);
-            if (MO.isReg()) {
-              if (Reg1Index == UNASSIGNED_INDEX)
-                Reg1Index = MO.getReg();
-              else if (Reg2Index == UNASSIGNED_INDEX)
-                Reg2Index = MO.getReg();
-              else if (Reg3Index == UNASSIGNED_INDEX)
-                Reg3Index = MO.getReg();
-            }
-            if (Reg3Index != UNASSIGNED_INDEX)
-              break;
-          }
-        }
       }
 
       if (Reg1Index != UNASSIGNED_INDEX && Reg2Index != UNASSIGNED_INDEX &&
@@ -263,31 +228,6 @@ bool ReplaceFMULS::runOnMachineFunction(MachineFunction &MF) {
         Reg1Index = MI.getOperand(0).getReg();
         Reg2Index = MI.getOperand(1).getReg();
         Reg3Index = MI.getOperand(2).getReg();
-      } else if (MI.isInlineAsm()) {
-        std::string AsmString(
-            MI.getOperand(InlineAsm::MIOp_AsmString).getSymbolName());
-        std::string FMULSOpCoode("fmuls");
-        std::transform(AsmString.begin(), AsmString.end(), AsmString.begin(),
-                       ::tolower);
-        if (AsmString.find(FMULSOpCoode) ==
-            0) { // this is an inline FMULS instruction
-          unsigned StartOp = InlineAsm::MIOp_FirstOperand;
-
-          // extracts the registers from the inline assembly instruction
-          for (unsigned i = StartOp, e = MI.getNumOperands(); i != e; ++i) {
-            const MachineOperand &MO = MI.getOperand(i);
-            if (MO.isReg()) {
-              if (Reg1Index == UNASSIGNED_INDEX)
-                Reg1Index = MO.getReg();
-              else if (Reg2Index == UNASSIGNED_INDEX)
-                Reg2Index = MO.getReg();
-              else if (Reg3Index == UNASSIGNED_INDEX)
-                Reg3Index = MO.getReg();
-            }
-            if (Reg3Index != UNASSIGNED_INDEX)
-              break;
-          }
-        }
       }
 
       if (Reg1Index != UNASSIGNED_INDEX && Reg2Index != UNASSIGNED_INDEX &&
@@ -335,6 +275,50 @@ bool ReplaceFMULS::runOnMachineFunction(MachineFunction &MF) {
   return Modified;
 }
 
+
+//*****************************************************************************
+//**** DetectRoundChange pass
+//*****************************************************************************
+// To prevent any explicit change of the default rounding mode, this pass
+// detects any call of the fesetround function.
+// A warning is generated to ensure the user knows this has happened.
+//
+// Detects an erratum in UT699 LEON 3 processor
+
+char DetectRoundChange::ID = 0;
+
+DetectRoundChange::DetectRoundChange(TargetMachine &tm)
+    : LEONMachineFunctionPass(tm, ID) {}
+
+bool DetectRoundChange::runOnMachineFunction(MachineFunction &MF) {
+  Subtarget = &MF.getSubtarget<SparcSubtarget>();
+
+  bool Modified = false;
+  for (auto MFI = MF.begin(), E = MF.end(); MFI != E; ++MFI) {
+    MachineBasicBlock &MBB = *MFI;
+    for (auto MBBI = MBB.begin(), E = MBB.end(); MBBI != E; ++MBBI) {
+      MachineInstr &MI = *MBBI;
+      unsigned Opcode = MI.getOpcode();
+      if (Opcode == SP::CALL && MI.getNumOperands() > 0) {
+        MachineOperand &MO = MI.getOperand(0);
+
+        if (MO.isGlobal()) {
+          StringRef FuncName = MO.getGlobal()->getName();
+          if (FuncName.compare_lower("fesetround") == 0) {
+            errs() << "Error: You are using the detectroundchange "
+                      "option to detect rounding changes that will "
+                      "cause LEON errata. The only way to fix this "
+                      "is to remove the call to fesetround from "
+                      "the source code.\n";
+          }
+        }
+      }
+    }
+  }
+
+  return Modified;
+}
+
 //*****************************************************************************
 //**** FixAllFDIVSQRT pass
 //*****************************************************************************
@@ -368,22 +352,6 @@ bool FixAllFDIVSQRT::runOnMachineFunction(MachineFunction &MF) {
     for (auto MBBI = MBB.begin(), E = MBB.end(); MBBI != E; ++MBBI) {
       MachineInstr &MI = *MBBI;
       unsigned Opcode = MI.getOpcode();
-
-      if (MI.isInlineAsm()) {
-        std::string AsmString(
-            MI.getOperand(InlineAsm::MIOp_AsmString).getSymbolName());
-        std::string FSQRTDOpCode("fsqrtd");
-        std::string FDIVDOpCode("fdivd");
-        std::transform(AsmString.begin(), AsmString.end(), AsmString.begin(),
-                       ::tolower);
-        if (AsmString.find(FSQRTDOpCode) ==
-            0) { // this is an inline fsqrts instruction
-          Opcode = SP::FSQRTD;
-        } else if (AsmString.find(FDIVDOpCode) ==
-                   0) { // this is an inline fsqrts instruction
-          Opcode = SP::FDIVD;
-        }
-      }
 
       // Note: FDIVS and FSQRTS cannot be generated when this erratum fix is
       // switched on so we don't need to check for them here. They will

@@ -81,7 +81,7 @@ HexagonAsmPrinter::HexagonAsmPrinter(TargetMachine &TM,
     : AsmPrinter(TM, std::move(Streamer)), Subtarget(nullptr) {}
 
 void HexagonAsmPrinter::printOperand(const MachineInstr *MI, unsigned OpNo,
-                                    raw_ostream &O) {
+                                     raw_ostream &O) {
   const MachineOperand &MO = MI->getOperand(OpNo);
 
   switch (MO.getType()) {
@@ -141,14 +141,22 @@ bool HexagonAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
       // Hexagon never has a prefix.
       printOperand(MI, OpNo, OS);
       return false;
-    case 'L': // Write second word of DImode reference.
-      // Verify that this operand has two consecutive registers.
-      if (!MI->getOperand(OpNo).isReg() ||
-          OpNo+1 == MI->getNumOperands() ||
-          !MI->getOperand(OpNo+1).isReg())
+    case 'L':
+    case 'H': { // The highest-numbered register of a pair.
+      const MachineOperand &MO = MI->getOperand(OpNo);
+      const MachineFunction &MF = *MI->getParent()->getParent();
+      const TargetRegisterInfo *TRI = MF.getSubtarget().getRegisterInfo();
+      if (!MO.isReg())
         return true;
-      ++OpNo;   // Return the high-part.
-      break;
+      unsigned RegNumber = MO.getReg();
+      // This should be an assert in the frontend.
+      if (Hexagon::DoubleRegsRegClass.contains(RegNumber))
+        RegNumber = TRI->getSubReg(RegNumber, ExtraCode[0] == 'L' ?
+                                              Hexagon::isub_lo :
+                                              Hexagon::isub_hi);
+      OS << HexagonInstPrinter::getRegisterName(RegNumber);
+      return false;
+    }
     case 'I':
       // Write 'i' if an integer constant, otherwise nothing.  Used to print
       // addi vs add, etc.
@@ -163,9 +171,9 @@ bool HexagonAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 }
 
 bool HexagonAsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
-                                            unsigned OpNo, unsigned AsmVariant,
-                                            const char *ExtraCode,
-                                            raw_ostream &O) {
+                                              unsigned OpNo, unsigned AsmVariant,
+                                              const char *ExtraCode,
+                                              raw_ostream &O) {
   if (ExtraCode && ExtraCode[0])
     return true; // Unknown modifier.
 
@@ -253,10 +261,34 @@ static MCSymbol *smallData(AsmPrinter &AP, const MachineInstr &MI,
   return Sym;
 }
 
+static MCInst ScaleVectorOffset(MCInst &Inst, unsigned OpNo,
+                                unsigned VectorSize, MCContext &Ctx) {
+  MCInst T;
+  T.setOpcode(Inst.getOpcode());
+  for (unsigned i = 0, n = Inst.getNumOperands(); i != n; ++i) {
+    if (i != OpNo) {
+      T.addOperand(Inst.getOperand(i));
+      continue;
+    }
+    MCOperand &ImmOp = Inst.getOperand(i);
+    const auto *HE = static_cast<const HexagonMCExpr*>(ImmOp.getExpr());
+    int32_t V = cast<MCConstantExpr>(HE->getExpr())->getValue();
+    auto *NewCE = MCConstantExpr::create(V / int32_t(VectorSize), Ctx);
+    auto *NewHE = HexagonMCExpr::create(NewCE, Ctx);
+    T.addOperand(MCOperand::createExpr(NewHE));
+  }
+  return T;
+}
+
 void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
                                                   const MachineInstr &MI) {
   MCInst &MappedInst = static_cast <MCInst &>(Inst);
   const MCRegisterInfo *RI = OutStreamer->getContext().getRegisterInfo();
+  const MachineFunction &MF = *MI.getParent()->getParent();
+  const auto &HST = MF.getSubtarget<HexagonSubtarget>();
+  const auto &VecRC = HST.useHVXSglOps() ? Hexagon::VectorRegsRegClass
+                                         : Hexagon::VectorRegs128BRegClass;
+  unsigned VectorSize = HST.getRegisterInfo()->getSpillSize(VecRC);
 
   switch (Inst.getOpcode()) {
   default: return;
@@ -266,7 +298,7 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     MCOperand Reg = Inst.getOperand(0);
     MCOperand S16 = Inst.getOperand(1);
     HexagonMCInstrInfo::setMustNotExtend(*S16.getExpr());
-    HexagonMCInstrInfo::setS23_2_reloc(*S16.getExpr());
+    HexagonMCInstrInfo::setS27_2_reloc(*S16.getExpr());
     Inst.clear();
     Inst.addOperand(Reg);
     Inst.addOperand(MCOperand::createReg(Hexagon::R0));
@@ -274,9 +306,38 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     break;
   }
 
+  case Hexagon::A2_tfrf: {
+    Inst.setOpcode(Hexagon::A2_paddif);
+    Inst.addOperand(MCOperand::createExpr(MCConstantExpr::create(0, OutContext)));
+    break;
+  }
+
+  case Hexagon::A2_tfrt: {
+    Inst.setOpcode(Hexagon::A2_paddit);
+    Inst.addOperand(MCOperand::createExpr(MCConstantExpr::create(0, OutContext)));
+    break;
+  }
+
+  case Hexagon::A2_tfrfnew: {
+    Inst.setOpcode(Hexagon::A2_paddifnew);
+    Inst.addOperand(MCOperand::createExpr(MCConstantExpr::create(0, OutContext)));
+    break;
+  }
+
+  case Hexagon::A2_tfrtnew: {
+    Inst.setOpcode(Hexagon::A2_padditnew);
+    Inst.addOperand(MCOperand::createExpr(MCConstantExpr::create(0, OutContext)));
+    break;
+  }
+
+  case Hexagon::A2_zxtb: {
+    Inst.setOpcode(Hexagon::A2_andir);
+    Inst.addOperand(MCOperand::createExpr(MCConstantExpr::create(255, OutContext)));
+    break;
+  }
+
   // "$dst = CONST64(#$src1)",
-  case Hexagon::CONST64_Float_Real:
-  case Hexagon::CONST64_Int_Real:
+  case Hexagon::CONST64:
     if (!OutStreamer->hasRawTextSupport()) {
       const MCOperand &Imm = MappedInst.getOperand(1);
       MCSectionSubPair Current = OutStreamer->getCurrentSection();
@@ -295,9 +356,6 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     }
     break;
   case Hexagon::CONST32:
-  case Hexagon::CONST32_Float_Real:
-  case Hexagon::CONST32_Int_Real:
-  case Hexagon::FCONST32_nsdata:
     if (!OutStreamer->hasRawTextSupport()) {
       MCOperand &Imm = MappedInst.getOperand(1);
       MCSectionSubPair Current = OutStreamer->getCurrentSection();
@@ -372,6 +430,9 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     Rs.setReg(getHexagonRegisterPair(Rs.getReg(), RI));
     return;
   }
+  case Hexagon::PS_call_nr:
+    Inst.setOpcode(Hexagon::J2_call);
+    break;
   case Hexagon::S5_asrhub_rnd_sat_goodsyntax: {
     MCOperand &MO = MappedInst.getOperand(2);
     int64_t Imm;
@@ -410,8 +471,8 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
       TmpInst.setOpcode(Hexagon::A2_combinew);
       TmpInst.addOperand(MappedInst.getOperand(0));
       MCOperand &MO1 = MappedInst.getOperand(1);
-      unsigned High = RI->getSubReg(MO1.getReg(), Hexagon::subreg_hireg);
-      unsigned Low = RI->getSubReg(MO1.getReg(), Hexagon::subreg_loreg);
+      unsigned High = RI->getSubReg(MO1.getReg(), Hexagon::isub_hi);
+      unsigned Low = RI->getSubReg(MO1.getReg(), Hexagon::isub_lo);
       // Add a new operand for the second register in the pair.
       TmpInst.addOperand(MCOperand::createReg(High));
       TmpInst.addOperand(MCOperand::createReg(Low));
@@ -458,21 +519,6 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     MappedInst = TmpInst;
     return;
   }
-  case Hexagon::TFRI_f:
-    MappedInst.setOpcode(Hexagon::A2_tfrsi);
-    return;
-  case Hexagon::TFRI_cPt_f:
-    MappedInst.setOpcode(Hexagon::C2_cmoveit);
-    return;
-  case Hexagon::TFRI_cNotPt_f:
-    MappedInst.setOpcode(Hexagon::C2_cmoveif);
-    return;
-  case Hexagon::MUX_ri_f:
-    MappedInst.setOpcode(Hexagon::C2_muxri);
-    return;
-  case Hexagon::MUX_ir_f:
-    MappedInst.setOpcode(Hexagon::C2_muxir);
-    return;
 
   // Translate a "$Rdd = #imm" to "$Rdd = combine(#[-1,0], #imm)"
   case Hexagon::A2_tfrpi: {
@@ -498,8 +544,8 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
   // Translate a "$Rdd = $Rss" to "$Rdd = combine($Rs, $Rt)"
   case Hexagon::A2_tfrp: {
     MCOperand &MO = MappedInst.getOperand(1);
-    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::subreg_hireg);
-    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::subreg_loreg);
+    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::isub_hi);
+    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::isub_lo);
     MO.setReg(High);
     // Add a new operand for the second register in the pair.
     MappedInst.addOperand(MCOperand::createReg(Low));
@@ -510,8 +556,8 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
   case Hexagon::A2_tfrpt:
   case Hexagon::A2_tfrpf: {
     MCOperand &MO = MappedInst.getOperand(2);
-    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::subreg_hireg);
-    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::subreg_loreg);
+    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::isub_hi);
+    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::isub_lo);
     MO.setReg(High);
     // Add a new operand for the second register in the pair.
     MappedInst.addOperand(MCOperand::createReg(Low));
@@ -523,8 +569,8 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
   case Hexagon::A2_tfrptnew:
   case Hexagon::A2_tfrpfnew: {
     MCOperand &MO = MappedInst.getOperand(2);
-    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::subreg_hireg);
-    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::subreg_loreg);
+    unsigned High = RI->getSubReg(MO.getReg(), Hexagon::isub_hi);
+    unsigned Low = RI->getSubReg(MO.getReg(), Hexagon::isub_lo);
     MO.setReg(High);
     // Add a new operand for the second register in the pair.
     MappedInst.addOperand(MCOperand::createReg(Low));
@@ -561,8 +607,8 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     Rt.setReg(getHexagonRegisterPair(Rt.getReg(), RI));
     return;
   }
-  case Hexagon::HEXAGON_V6_vd0_pseudo:
-  case Hexagon::HEXAGON_V6_vd0_pseudo_128B: {
+  case Hexagon::V6_vd0:
+  case Hexagon::V6_vd0_128B: {
     MCInst TmpInst;
     assert (Inst.getOperand(0).isReg() &&
             "Expected register and none was found");
@@ -575,6 +621,181 @@ void HexagonAsmPrinter::HexagonProcessInstruction(MCInst &Inst,
     return;
   }
 
+  case Hexagon::V6_vL32Ub_pi:
+  case Hexagon::V6_vL32b_cur_pi:
+  case Hexagon::V6_vL32b_nt_cur_pi:
+  case Hexagon::V6_vL32b_pi:
+  case Hexagon::V6_vL32b_nt_pi:
+  case Hexagon::V6_vL32b_nt_tmp_pi:
+  case Hexagon::V6_vL32b_tmp_pi:
+  case Hexagon::V6_vL32Ub_pi_128B:
+  case Hexagon::V6_vL32b_cur_pi_128B:
+  case Hexagon::V6_vL32b_nt_cur_pi_128B:
+  case Hexagon::V6_vL32b_pi_128B:
+  case Hexagon::V6_vL32b_nt_pi_128B:
+  case Hexagon::V6_vL32b_nt_tmp_pi_128B:
+  case Hexagon::V6_vL32b_tmp_pi_128B:
+    MappedInst = ScaleVectorOffset(Inst, 3, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vL32Ub_ai:
+  case Hexagon::V6_vL32b_ai:
+  case Hexagon::V6_vL32b_cur_ai:
+  case Hexagon::V6_vL32b_nt_ai:
+  case Hexagon::V6_vL32b_nt_cur_ai:
+  case Hexagon::V6_vL32b_nt_tmp_ai:
+  case Hexagon::V6_vL32b_tmp_ai:
+  case Hexagon::V6_vL32Ub_ai_128B:
+  case Hexagon::V6_vL32b_ai_128B:
+  case Hexagon::V6_vL32b_cur_ai_128B:
+  case Hexagon::V6_vL32b_nt_ai_128B:
+  case Hexagon::V6_vL32b_nt_cur_ai_128B:
+  case Hexagon::V6_vL32b_nt_tmp_ai_128B:
+  case Hexagon::V6_vL32b_tmp_ai_128B:
+    MappedInst = ScaleVectorOffset(Inst, 2, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vS32Ub_pi:
+  case Hexagon::V6_vS32b_new_pi:
+  case Hexagon::V6_vS32b_nt_new_pi:
+  case Hexagon::V6_vS32b_nt_pi:
+  case Hexagon::V6_vS32b_pi:
+  case Hexagon::V6_vS32Ub_pi_128B:
+  case Hexagon::V6_vS32b_new_pi_128B:
+  case Hexagon::V6_vS32b_nt_new_pi_128B:
+  case Hexagon::V6_vS32b_nt_pi_128B:
+  case Hexagon::V6_vS32b_pi_128B:
+    MappedInst = ScaleVectorOffset(Inst, 2, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vS32Ub_ai:
+  case Hexagon::V6_vS32b_ai:
+  case Hexagon::V6_vS32b_new_ai:
+  case Hexagon::V6_vS32b_nt_ai:
+  case Hexagon::V6_vS32b_nt_new_ai:
+  case Hexagon::V6_vS32Ub_ai_128B:
+  case Hexagon::V6_vS32b_ai_128B:
+  case Hexagon::V6_vS32b_new_ai_128B:
+  case Hexagon::V6_vS32b_nt_ai_128B:
+  case Hexagon::V6_vS32b_nt_new_ai_128B:
+    MappedInst = ScaleVectorOffset(Inst, 1, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vL32b_cur_npred_pi:
+  case Hexagon::V6_vL32b_cur_pred_pi:
+  case Hexagon::V6_vL32b_npred_pi:
+  case Hexagon::V6_vL32b_nt_cur_npred_pi:
+  case Hexagon::V6_vL32b_nt_cur_pred_pi:
+  case Hexagon::V6_vL32b_nt_npred_pi:
+  case Hexagon::V6_vL32b_nt_pred_pi:
+  case Hexagon::V6_vL32b_nt_tmp_npred_pi:
+  case Hexagon::V6_vL32b_nt_tmp_pred_pi:
+  case Hexagon::V6_vL32b_pred_pi:
+  case Hexagon::V6_vL32b_tmp_npred_pi:
+  case Hexagon::V6_vL32b_tmp_pred_pi:
+  case Hexagon::V6_vL32b_cur_npred_pi_128B:
+  case Hexagon::V6_vL32b_cur_pred_pi_128B:
+  case Hexagon::V6_vL32b_npred_pi_128B:
+  case Hexagon::V6_vL32b_nt_cur_npred_pi_128B:
+  case Hexagon::V6_vL32b_nt_cur_pred_pi_128B:
+  case Hexagon::V6_vL32b_nt_npred_pi_128B:
+  case Hexagon::V6_vL32b_nt_pred_pi_128B:
+  case Hexagon::V6_vL32b_nt_tmp_npred_pi_128B:
+  case Hexagon::V6_vL32b_nt_tmp_pred_pi_128B:
+  case Hexagon::V6_vL32b_pred_pi_128B:
+  case Hexagon::V6_vL32b_tmp_npred_pi_128B:
+  case Hexagon::V6_vL32b_tmp_pred_pi_128B:
+    MappedInst = ScaleVectorOffset(Inst, 4, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vL32b_cur_npred_ai:
+  case Hexagon::V6_vL32b_cur_pred_ai:
+  case Hexagon::V6_vL32b_npred_ai:
+  case Hexagon::V6_vL32b_nt_cur_npred_ai:
+  case Hexagon::V6_vL32b_nt_cur_pred_ai:
+  case Hexagon::V6_vL32b_nt_npred_ai:
+  case Hexagon::V6_vL32b_nt_pred_ai:
+  case Hexagon::V6_vL32b_nt_tmp_npred_ai:
+  case Hexagon::V6_vL32b_nt_tmp_pred_ai:
+  case Hexagon::V6_vL32b_pred_ai:
+  case Hexagon::V6_vL32b_tmp_npred_ai:
+  case Hexagon::V6_vL32b_tmp_pred_ai:
+  case Hexagon::V6_vL32b_cur_npred_ai_128B:
+  case Hexagon::V6_vL32b_cur_pred_ai_128B:
+  case Hexagon::V6_vL32b_npred_ai_128B:
+  case Hexagon::V6_vL32b_nt_cur_npred_ai_128B:
+  case Hexagon::V6_vL32b_nt_cur_pred_ai_128B:
+  case Hexagon::V6_vL32b_nt_npred_ai_128B:
+  case Hexagon::V6_vL32b_nt_pred_ai_128B:
+  case Hexagon::V6_vL32b_nt_tmp_npred_ai_128B:
+  case Hexagon::V6_vL32b_nt_tmp_pred_ai_128B:
+  case Hexagon::V6_vL32b_pred_ai_128B:
+  case Hexagon::V6_vL32b_tmp_npred_ai_128B:
+  case Hexagon::V6_vL32b_tmp_pred_ai_128B:
+    MappedInst = ScaleVectorOffset(Inst, 3, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vS32Ub_npred_pi:
+  case Hexagon::V6_vS32Ub_pred_pi:
+  case Hexagon::V6_vS32b_new_npred_pi:
+  case Hexagon::V6_vS32b_new_pred_pi:
+  case Hexagon::V6_vS32b_npred_pi:
+  case Hexagon::V6_vS32b_nqpred_pi:
+  case Hexagon::V6_vS32b_nt_new_npred_pi:
+  case Hexagon::V6_vS32b_nt_new_pred_pi:
+  case Hexagon::V6_vS32b_nt_npred_pi:
+  case Hexagon::V6_vS32b_nt_nqpred_pi:
+  case Hexagon::V6_vS32b_nt_pred_pi:
+  case Hexagon::V6_vS32b_nt_qpred_pi:
+  case Hexagon::V6_vS32b_pred_pi:
+  case Hexagon::V6_vS32b_qpred_pi:
+  case Hexagon::V6_vS32Ub_npred_pi_128B:
+  case Hexagon::V6_vS32Ub_pred_pi_128B:
+  case Hexagon::V6_vS32b_new_npred_pi_128B:
+  case Hexagon::V6_vS32b_new_pred_pi_128B:
+  case Hexagon::V6_vS32b_npred_pi_128B:
+  case Hexagon::V6_vS32b_nqpred_pi_128B:
+  case Hexagon::V6_vS32b_nt_new_npred_pi_128B:
+  case Hexagon::V6_vS32b_nt_new_pred_pi_128B:
+  case Hexagon::V6_vS32b_nt_npred_pi_128B:
+  case Hexagon::V6_vS32b_nt_nqpred_pi_128B:
+  case Hexagon::V6_vS32b_nt_pred_pi_128B:
+  case Hexagon::V6_vS32b_nt_qpred_pi_128B:
+  case Hexagon::V6_vS32b_pred_pi_128B:
+  case Hexagon::V6_vS32b_qpred_pi_128B:
+    MappedInst = ScaleVectorOffset(Inst, 3, VectorSize, OutContext);
+    return;
+
+  case Hexagon::V6_vS32Ub_npred_ai:
+  case Hexagon::V6_vS32Ub_pred_ai:
+  case Hexagon::V6_vS32b_new_npred_ai:
+  case Hexagon::V6_vS32b_new_pred_ai:
+  case Hexagon::V6_vS32b_npred_ai:
+  case Hexagon::V6_vS32b_nqpred_ai:
+  case Hexagon::V6_vS32b_nt_new_npred_ai:
+  case Hexagon::V6_vS32b_nt_new_pred_ai:
+  case Hexagon::V6_vS32b_nt_npred_ai:
+  case Hexagon::V6_vS32b_nt_nqpred_ai:
+  case Hexagon::V6_vS32b_nt_pred_ai:
+  case Hexagon::V6_vS32b_nt_qpred_ai:
+  case Hexagon::V6_vS32b_pred_ai:
+  case Hexagon::V6_vS32b_qpred_ai:
+  case Hexagon::V6_vS32Ub_npred_ai_128B:
+  case Hexagon::V6_vS32Ub_pred_ai_128B:
+  case Hexagon::V6_vS32b_new_npred_ai_128B:
+  case Hexagon::V6_vS32b_new_pred_ai_128B:
+  case Hexagon::V6_vS32b_npred_ai_128B:
+  case Hexagon::V6_vS32b_nqpred_ai_128B:
+  case Hexagon::V6_vS32b_nt_new_npred_ai_128B:
+  case Hexagon::V6_vS32b_nt_new_pred_ai_128B:
+  case Hexagon::V6_vS32b_nt_npred_ai_128B:
+  case Hexagon::V6_vS32b_nt_nqpred_ai_128B:
+  case Hexagon::V6_vS32b_nt_pred_ai_128B:
+  case Hexagon::V6_vS32b_nt_qpred_ai_128B:
+  case Hexagon::V6_vS32b_pred_ai_128B:
+  case Hexagon::V6_vS32b_qpred_ai_128B:
+    MappedInst = ScaleVectorOffset(Inst, 2, VectorSize, OutContext);
+    return;
   }
 }
 
@@ -589,13 +810,9 @@ void HexagonAsmPrinter::EmitInstruction(const MachineInstr *MI) {
   if (MI->isBundle()) {
     const MachineBasicBlock* MBB = MI->getParent();
     MachineBasicBlock::const_instr_iterator MII = MI->getIterator();
-    unsigned IgnoreCount = 0;
 
     for (++MII; MII != MBB->instr_end() && MII->isInsideBundle(); ++MII)
-      if (MII->getOpcode() == TargetOpcode::DBG_VALUE ||
-          MII->getOpcode() == TargetOpcode::IMPLICIT_DEF)
-        ++IgnoreCount;
-      else
+      if (!MII->isDebugValue() && !MII->isImplicitDef())
         HexagonLowerToMC(MCII, &*MII, MCB, *this);
   }
   else
@@ -611,5 +828,5 @@ void HexagonAsmPrinter::EmitInstruction(const MachineInstr *MI) {
 }
 
 extern "C" void LLVMInitializeHexagonAsmPrinter() {
-  RegisterAsmPrinter<HexagonAsmPrinter> X(TheHexagonTarget);
+  RegisterAsmPrinter<HexagonAsmPrinter> X(getTheHexagonTarget());
 }

@@ -37,7 +37,7 @@ code. By default, the back-end will emit device functions. Metadata is used to
 declare a function as a kernel function. This metadata is attached to the
 ``nvvm.annotations`` named metadata object, and has the following format:
 
-.. code-block:: llvm
+.. code-block:: text
 
    !0 = !{<function-ref>, metadata !"kernel", i32 1}
 
@@ -289,7 +289,7 @@ code often follows a pattern:
       return my_function_precise(a);
   }
 
-The default value for all unspecified reflection parameters is zero. 
+The default value for all unspecified reflection parameters is zero.
 
 The ``NVVMReflect`` pass should be executed early in the optimization
 pipeline, immediately after the link stage. The ``internalize`` pass is also
@@ -326,6 +326,16 @@ often leave behind dead code of the form:
 Therefore, it is recommended that ``NVVMReflect`` is executed early in the
 optimization pipeline before dead-code elimination.
 
+The NVPTX TargetMachine knows how to schedule ``NVVMReflect`` at the beginning
+of your pass manager; just use the following code when setting up your pass
+manager:
+
+.. code-block:: c++
+
+    std::unique_ptr<TargetMachine> TM = ...;
+    PassManagerBuilder PMBuilder(...);
+    if (TM)
+      TM->adjustPassManager(PMBuilder);
 
 Reflection Parameters
 ---------------------
@@ -339,35 +349,17 @@ Flag                 Description
 ``__CUDA_FTZ=[0,1]`` Use optimized code paths that flush subnormals to zero
 ==================== ======================================================
 
+The value of this flag is determined by the "nvvm-reflect-ftz" module flag.
+The following sets the ftz flag to 1.
 
-Invoking NVVMReflect
---------------------
+.. code-block:: llvm
 
-To ensure that all dead code caused by the reflection pass is eliminated, it
-is recommended that the reflection pass is executed early in the LLVM IR
-optimization pipeline. The pass takes an optional mapping of reflection
-parameter name to an integer value. This mapping can be specified as either a
-command-line option to ``opt`` or as an LLVM ``StringMap<int>`` object when
-programmatically creating a pass pipeline.
+    !llvm.module.flag = !{!0}
+    !0 = !{i32 4, !"nvvm-reflect-ftz", i32 1}
 
-With ``opt``:
-
-.. code-block:: text
-
-  # opt -nvvm-reflect -nvvm-reflect-list=<var>=<value>,<var>=<value> module.bc -o module.reflect.bc
-
-
-With programmatic pass pipeline:
-
-.. code-block:: c++
-
-  extern FunctionPass *llvm::createNVVMReflectPass(const StringMap<int>& Mapping);
-
-  StringMap<int> ReflectParams;
-  ReflectParams["__CUDA_FTZ"] = 1;
-  Passes.add(createNVVMReflectPass(ReflectParams));
-
-
+(``i32 4`` indicates that the value set here overrides the value in another
+module we link with.  See the `LangRef <LangRef.html#module-flags-metadata>`
+for details.)
 
 Executing PTX
 =============
@@ -566,7 +558,7 @@ Intrinsic                                        CUDA Equivalent
 ``i32 @llvm.nvvm.read.ptx.sreg.ctaid.{x,y,z}``   blockIdx.{x,y,z}
 ``i32 @llvm.nvvm.read.ptx.sreg.ntid.{x,y,z}``    blockDim.{x,y,z}
 ``i32 @llvm.nvvm.read.ptx.sreg.nctaid.{x,y,z}``  gridDim.{x,y,z}
-``void @llvm.cuda.syncthreads()``                __syncthreads()
+``void @llvm.nvvm.barrier0()``                   __syncthreads()
 ================================================ ====================
 
 

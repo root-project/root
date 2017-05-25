@@ -67,6 +67,34 @@ TLS models are mutually exclusive.
   }];
 }
 
+def DLLExportDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``__declspec(dllexport)`` attribute declares a variable, function, or
+Objective-C interface to be exported from the module.  It is available under the
+``-fdeclspec`` flag for compatibility with various compilers.  The primary use
+is for COFF object files which explicitly specify what interfaces are available
+for external use.  See the dllexport_ documentation on MSDN for more
+information.
+
+.. _dllexport: https://msdn.microsoft.com/en-us/library/3y1sfaz2.aspx
+  }];
+}
+
+def DLLImportDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+The ``__declspec(dllimport)`` attribute declares a variable, function, or
+Objective-C interface to be imported from an external module.  It is available
+under the ``-fdeclspec`` flag for compatibility with various compilers.  The
+primary use is for COFF object files which explicitly specify what interfaces
+are imported from external modules.  See the dllimport_ documentation on MSDN
+for more information.
+
+.. _dllimport: https://msdn.microsoft.com/en-us/library/3y1sfaz2.aspx
+  }];
+}
+
 def ThreadDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
@@ -91,7 +119,7 @@ The ``carries_dependency`` attribute specifies dependency propagation into and
 out of functions.
 
 When specified on a function or Objective-C method, the ``carries_dependency``
-attribute means that the return value carries a dependency out of the function, 
+attribute means that the return value carries a dependency out of the function,
 so that the implementation need not constrain ordering upon return from that
 function. Implementations of the function and its caller may choose to preserve
 dependencies instead of emitting memory ordering instructions such as fences.
@@ -175,6 +203,74 @@ specified alignment. The offset is taken to be zero if omitted.
 Note that this attribute provides information to the compiler regarding a
 condition that the code already ensures is true. It does not cause the compiler
 to enforce the provided alignment assumption.
+  }];
+}
+
+def AllocSizeDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``alloc_size`` attribute can be placed on functions that return pointers in
+order to hint to the compiler how many bytes of memory will be available at the
+returned poiner. ``alloc_size`` takes one or two arguments.
+
+- ``alloc_size(N)`` implies that argument number N equals the number of
+  available bytes at the returned pointer.
+- ``alloc_size(N, M)`` implies that the product of argument number N and
+  argument number M equals the number of available bytes at the returned
+  pointer.
+
+Argument numbers are 1-based.
+
+An example of how to use ``alloc_size``
+
+.. code-block:: c
+
+  void *my_malloc(int a) __attribute__((alloc_size(1)));
+  void *my_calloc(int a, int b) __attribute__((alloc_size(1, 2)));
+
+  int main() {
+    void *const p = my_malloc(100);
+    assert(__builtin_object_size(p, 0) == 100);
+    void *const a = my_calloc(20, 5);
+    assert(__builtin_object_size(a, 0) == 100);
+  }
+
+.. Note:: This attribute works differently in clang than it does in GCC.
+  Specifically, clang will only trace ``const`` pointers (as above); we give up
+  on pointers that are not marked as ``const``. In the vast majority of cases,
+  this is unimportant, because LLVM has support for the ``alloc_size``
+  attribute. However, this may cause mildly unintuitive behavior when used with
+  other attributes, such as ``enable_if``.
+  }];
+}
+
+def AllocAlignDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Use ``__attribute__((alloc_align(<alignment>))`` on a function
+declaration to specify that the return value of the function (which must be a
+pointer type) is at least as aligned as the value of the indicated parameter. The 
+parameter is given by its index in the list of formal parameters; the first
+parameter has index 1 unless the function is a C++ non-static member function,
+in which case the first parameter has index 2 to account for the implicit ``this``
+parameter.
+
+.. code-block:: c++
+
+  // The returned pointer has the alignment specified by the first parameter.
+  void *a(size_t align) __attribute__((alloc_align(1)));
+
+  // The returned pointer has the alignment specified by the second parameter.
+  void *b(void *v, size_t align) __attribute__((alloc_align(2)));
+
+  // The returned pointer has the alignment specified by the second visible
+  // parameter, however it must be adjusted for the implicit 'this' parameter.
+  void *Foo::b(void *v, size_t align) __attribute__((alloc_align(3)));
+
+Note that this attribute merely informs the compiler that a function always
+returns a sufficiently aligned pointer. It does not cause the compiler to 
+emit code to enforce that alignment.  The behavior is undefined if the returned
+poitner is not sufficiently aligned.
   }];
 }
 
@@ -312,6 +408,66 @@ template instantiation, so the value for ``T::number`` is known.
   }];
 }
 
+def DiagnoseIfDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``diagnose_if`` attribute can be placed on function declarations to emit
+warnings or errors at compile-time if calls to the attributed function meet
+certain user-defined criteria. For example:
+
+.. code-block:: c
+
+  void abs(int a)
+    __attribute__((diagnose_if(a >= 0, "Redundant abs call", "warning")));
+  void must_abs(int a)
+    __attribute__((diagnose_if(a >= 0, "Redundant abs call", "error")));
+
+  int val = abs(1); // warning: Redundant abs call
+  int val2 = must_abs(1); // error: Redundant abs call
+  int val3 = abs(val);
+  int val4 = must_abs(val); // Because run-time checks are not emitted for
+                            // diagnose_if attributes, this executes without
+                            // issue.
+
+
+``diagnose_if`` is closely related to ``enable_if``, with a few key differences:
+
+* Overload resolution is not aware of ``diagnose_if`` attributes: they're
+  considered only after we select the best candidate from a given candidate set.
+* Function declarations that differ only in their ``diagnose_if`` attributes are
+  considered to be redeclarations of the same function (not overloads).
+* If the condition provided to ``diagnose_if`` cannot be evaluated, no
+  diagnostic will be emitted.
+
+Otherwise, ``diagnose_if`` is essentially the logical negation of ``enable_if``.
+
+As a result of bullet number two, ``diagnose_if`` attributes will stack on the
+same function. For example:
+
+.. code-block:: c
+
+  int foo() __attribute__((diagnose_if(1, "diag1", "warning")));
+  int foo() __attribute__((diagnose_if(1, "diag2", "warning")));
+
+  int bar = foo(); // warning: diag1
+                   // warning: diag2
+  int (*fooptr)(void) = foo; // warning: diag1
+                             // warning: diag2
+
+  constexpr int supportsAPILevel(int N) { return N < 5; }
+  int baz(int a)
+    __attribute__((diagnose_if(!supportsAPILevel(10),
+                               "Upgrade to API level 10 to use baz", "error")));
+  int baz(int a)
+    __attribute__((diagnose_if(!a, "0 is not recommended.", "warning")));
+
+  int (*bazptr)(int) = baz; // error: Upgrade to API level 10 to use baz
+  int v = baz(0); // error: Upgrade to API level 10 to use baz
+
+Query for this feature with ``__has_attribute(diagnose_if)``.
+  }];
+}
+
 def PassObjectSizeDocs : Documentation {
   let Category = DocCatVariable; // Technically it's a parameter doc, but eh.
   let Content = [{
@@ -441,6 +597,12 @@ semantics:
 
 * A conversion from type ``T`` to a value of type ``U`` is permitted if ``T``
   and ``U`` are compatible types.  This conversion is given "conversion" rank.
+
+* If no viable candidates are otherwise available, we allow a conversion from a
+  pointer of type ``T*`` to a pointer of type ``U*``, where ``T`` and ``U`` are
+  incompatible. This conversion is ranked below all other types of conversions.
+  Please note: ``U`` lacking qualifiers that are present on ``T`` is sufficient
+  for ``T`` and ``U`` to be incompatible.
 
 The declaration of ``overloadable`` functions is restricted to function
 declarations and definitions.  Most importantly, if any function with a given
@@ -572,6 +734,33 @@ of the condition.
   }];
 }
 
+def ConvergentDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``convergent`` attribute can be placed on a function declaration. It is
+translated into the LLVM ``convergent`` attribute, which indicates that the call
+instructions of a function with this attribute cannot be made control-dependent
+on any additional values.
+
+In languages designed for SPMD/SIMT programming model, e.g. OpenCL or CUDA,
+the call instructions of a function with this attribute must be executed by
+all work items or threads in a work group or sub group.
+
+This attribute is different from ``noduplicate`` because it allows duplicating
+function calls if it can be proved that the duplicated function calls are
+not made control-dependent on any additional values, e.g., unrolling a loop
+executed by all work items.
+
+Sample usage:
+.. code-block:: c
+
+  void convfunc(void) __attribute__((convergent));
+  // Setting it as a C++11 attribute is also valid in a C++ program.
+  // void convfunc(void) [[clang::convergent]];
+
+  }];
+}
+
 def NoSplitStackDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -657,10 +846,10 @@ This attribute specifies that the Objective-C class to which it applies is visib
 def ObjCBoxableDocs : Documentation {
     let Category = DocCatFunction;
     let Content = [{
-Structs and unions marked with the ``objc_boxable`` attribute can be used 
+Structs and unions marked with the ``objc_boxable`` attribute can be used
 with the Objective-C boxed expression syntax, ``@(...)``.
 
-**Usage**: ``__attribute__((objc_boxable))``. This attribute 
+**Usage**: ``__attribute__((objc_boxable))``. This attribute
 can only be placed on a declaration of a trivially-copyable struct or union:
 
 .. code-block:: objc
@@ -801,6 +990,101 @@ When one method overrides another, the overriding method can be more widely avai
   }];
 }
 
+def ExternalSourceSymbolDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+The ``external_source_symbol`` attribute specifies that a declaration originates
+from an external source and describes the nature of that source.
+
+The fact that Clang is capable of recognizing declarations that were defined
+externally can be used to provide better tooling support for mixed-language
+projects or projects that rely on auto-generated code. For instance, an IDE that
+uses Clang and that supports mixed-language projects can use this attribute to
+provide a correct 'jump-to-definition' feature. For a concrete example,
+consider a protocol that's defined in a Swift file:
+
+.. code-block:: swift
+
+  @objc public protocol SwiftProtocol {
+    func method()
+  }
+
+This protocol can be used from Objective-C code by including a header file that
+was generated by the Swift compiler. The declarations in that header can use
+the ``external_source_symbol`` attribute to make Clang aware of the fact
+that ``SwiftProtocol`` actually originates from a Swift module:
+
+.. code-block:: objc
+
+  __attribute__((external_source_symbol(language="Swift",defined_in="module")))
+  @protocol SwiftProtocol
+  @required
+  - (void) method;
+  @end
+
+Consequently, when 'jump-to-definition' is performed at a location that
+references ``SwiftProtocol``, the IDE can jump to the original definition in
+the Swift source file rather than jumping to the Objective-C declaration in the
+auto-generated header file.
+
+The ``external_source_symbol`` attribute is a comma-separated list that includes
+clauses that describe the origin and the nature of the particular declaration.
+Those clauses can be:
+
+language=\ *string-literal*
+  The name of the source language in which this declaration was defined.
+
+defined_in=\ *string-literal*
+  The name of the source container in which the declaration was defined. The
+  exact definition of source container is language-specific, e.g. Swift's
+  source containers are modules, so ``defined_in`` should specify the Swift
+  module name.
+
+generated_declaration
+  This declaration was automatically generated by some tool.
+
+The clauses can be specified in any order. The clauses that are listed above are
+all optional, but the attribute has to have at least one clause.
+  }];
+}
+
+def RequireConstantInitDocs : Documentation {
+  let Category = DocCatVariable;
+  let Content = [{
+This attribute specifies that the variable to which it is attached is intended
+to have a `constant initializer <http://en.cppreference.com/w/cpp/language/constant_initialization>`_
+according to the rules of [basic.start.static]. The variable is required to
+have static or thread storage duration. If the initialization of the variable
+is not a constant initializer an error will be produced. This attribute may
+only be used in C++.
+
+Note that in C++03 strict constant expression checking is not done. Instead
+the attribute reports if Clang can emit the variable as a constant, even if it's
+not technically a 'constant initializer'. This behavior is non-portable.
+
+Static storage duration variables with constant initializers avoid hard-to-find
+bugs caused by the indeterminate order of dynamic initialization. They can also
+be safely used during dynamic initialization across translation units.
+
+This attribute acts as a compile time assertion that the requirements
+for constant initialization have been met. Since these requirements change
+between dialects and have subtle pitfalls it's important to fail fast instead
+of silently falling back on dynamic initialization.
+
+.. code-block:: c++
+
+  // -std=c++14
+  #define SAFE_STATIC [[clang::require_constant_initialization]]
+  struct T {
+    constexpr T(int) {}
+    ~T(); // non-trivial
+  };
+  SAFE_STATIC T x = {42}; // Initialization OK. Doesn't check destructor.
+  SAFE_STATIC T y = 42; // error: variable does not have a constant initializer
+  // copy initialization is not a constant expression on a non-literal type.
+  }];
+}
+
 def WarnMaybeUnusedDocs : Documentation {
   let Category = DocCatVariable;
   let Heading = "maybe_unused, unused, gnu::unused";
@@ -848,7 +1132,7 @@ potentially-evaluated discarded-value expression that is not explicitly cast to
     launch_missiles();
   }
   error_info &foo();
-  void f() { foo(); } // Does not diagnose, error_info is a reference.  
+  void f() { foo(); } // Does not diagnose, error_info is a reference.
   }];
 }
 
@@ -985,6 +1269,33 @@ The semantics are as follows:
   }];
 }
 
+def AVRInterruptDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Clang supports the GNU style ``__attribute__((interrupt))`` attribute on
+AVR targets. This attribute may be attached to a function definition and instructs
+the backend to generate appropriate function entry/exit code so that it can be used
+directly as an interrupt service routine.
+
+On the AVR, the hardware globally disables interrupts when an interrupt is executed.
+The first instruction of an interrupt handler declared with this attribute is a SEI
+instruction to re-enable interrupts. See also the signal attribute that
+does not insert a SEI instruction.
+  }];
+}
+
+def AVRSignalDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Clang supports the GNU style ``__attribute__((signal))`` attribute on
+AVR targets. This attribute may be attached to a function definition and instructs
+the backend to generate appropriate function entry/exit code so that it can be used
+directly as an interrupt service routine.
+
+Interrupt handler functions defined with the signal attribute do not re-enable interrupts.
+}];
+}
+
 def TargetDocs : Documentation {
   let Category = DocCatFunction;
   let Content = [{
@@ -1004,64 +1315,110 @@ the front end.
 }];
 }
 
-def DocCatAMDGPURegisterAttributes :
-  DocumentationCategory<"AMD GPU Register Attributes"> {
+def DocCatAMDGPUAttributes : DocumentationCategory<"AMD GPU Attributes">;
+
+def AMDGPUFlatWorkGroupSizeDocs : Documentation {
+  let Category = DocCatAMDGPUAttributes;
   let Content = [{
-Clang supports attributes for controlling register usage on AMD GPU
-targets. These attributes may be attached to a kernel function
-definition and is an optimization hint to the backend for the maximum
-number of registers to use. This is useful in cases where register
-limited occupancy is known to be an important factor for the
-performance for the kernel.
-
-The semantics are as follows:
-
-- The backend will attempt to limit the number of used registers to
-  the specified value, but the exact number used is not
-  guaranteed. The number used may be rounded up to satisfy the
-  allocation requirements or ABI constraints of the subtarget. For
-  example, on Southern Islands VGPRs may only be allocated in
-  increments of 4, so requesting a limit of 39 VGPRs will really
-  attempt to use up to 40. Requesting more registers than the
-  subtarget supports will truncate to the maximum allowed. The backend
-  may also use fewer registers than requested whenever possible.
-
-- 0 implies the default no limit on register usage.
-
-- Ignored on older VLIW subtargets which did not have separate scalar
-  and vector registers, R600 through Northern Islands.
-
-}];
-}
-
-
-def AMDGPUNumVGPRDocs : Documentation {
-  let Category = DocCatAMDGPURegisterAttributes;
-  let Content = [{
-Clang supports the
-``__attribute__((amdgpu_num_vgpr(<num_registers>)))`` attribute on AMD
-Southern Islands GPUs and later for controlling the number of vector
-registers. A typical value would be between 4 and 256 in increments
-of 4.
-}];
-}
-
-def AMDGPUNumSGPRDocs : Documentation {
-  let Category = DocCatAMDGPURegisterAttributes;
-  let Content = [{
+The flat work-group size is the number of work-items in the work-group size
+specified when the kernel is dispatched. It is the product of the sizes of the
+x, y, and z dimension of the work-group.
 
 Clang supports the
-``__attribute__((amdgpu_num_sgpr(<num_registers>)))`` attribute on AMD
-Southern Islands GPUs and later for controlling the number of scalar
-registers. A typical value would be between 8 and 104 in increments of
-8.
+``__attribute__((amdgpu_flat_work_group_size(<min>, <max>)))`` attribute for the
+AMDGPU target. This attribute may be attached to a kernel function definition
+and is an optimization hint.
 
-Due to common instruction constraints, an additional 2-4 SGPRs are
-typically required for internal use depending on features used. This
-value is a hint for the total number of SGPRs to use, and not the
-number of user SGPRs, so no special consideration needs to be given
-for these.
-}];
+``<min>`` parameter specifies the minimum flat work-group size, and ``<max>``
+parameter specifies the maximum flat work-group size (must be greater than
+``<min>``) to which all dispatches of the kernel will conform. Passing ``0, 0``
+as ``<min>, <max>`` implies the default behavior (``128, 256``).
+
+If specified, the AMDGPU target backend might be able to produce better machine
+code for barriers and perform scratch promotion by estimating available group
+segment size.
+
+An error will be given if:
+  - Specified values violate subtarget specifications;
+  - Specified values are not compatible with values provided through other
+    attributes.
+  }];
+}
+
+def AMDGPUWavesPerEUDocs : Documentation {
+  let Category = DocCatAMDGPUAttributes;
+  let Content = [{
+A compute unit (CU) is responsible for executing the wavefronts of a work-group.
+It is composed of one or more execution units (EU), which are responsible for
+executing the wavefronts. An EU can have enough resources to maintain the state
+of more than one executing wavefront. This allows an EU to hide latency by
+switching between wavefronts in a similar way to symmetric multithreading on a
+CPU. In order to allow the state for multiple wavefronts to fit on an EU, the
+resources used by a single wavefront have to be limited. For example, the number
+of SGPRs and VGPRs. Limiting such resources can allow greater latency hiding,
+but can result in having to spill some register state to memory.
+
+Clang supports the ``__attribute__((amdgpu_waves_per_eu(<min>[, <max>])))``
+attribute for the AMDGPU target. This attribute may be attached to a kernel
+function definition and is an optimization hint.
+
+``<min>`` parameter specifies the requested minimum number of waves per EU, and
+*optional* ``<max>`` parameter specifies the requested maximum number of waves
+per EU (must be greater than ``<min>`` if specified). If ``<max>`` is omitted,
+then there is no restriction on the maximum number of waves per EU other than
+the one dictated by the hardware for which the kernel is compiled. Passing
+``0, 0`` as ``<min>, <max>`` implies the default behavior (no limits).
+
+If specified, this attribute allows an advanced developer to tune the number of
+wavefronts that are capable of fitting within the resources of an EU. The AMDGPU
+target backend can use this information to limit resources, such as number of
+SGPRs, number of VGPRs, size of available group and private memory segments, in
+such a way that guarantees that at least ``<min>`` wavefronts and at most
+``<max>`` wavefronts are able to fit within the resources of an EU. Requesting
+more wavefronts can hide memory latency but limits available registers which
+can result in spilling. Requesting fewer wavefronts can help reduce cache
+thrashing, but can reduce memory latency hiding.
+
+This attribute controls the machine code generated by the AMDGPU target backend
+to ensure it is capable of meeting the requested values. However, when the
+kernel is executed, there may be other reasons that prevent meeting the request,
+for example, there may be wavefronts from other kernels executing on the EU.
+
+An error will be given if:
+  - Specified values violate subtarget specifications;
+  - Specified values are not compatible with values provided through other
+    attributes;
+  - The AMDGPU target backend is unable to create machine code that can meet the
+    request.
+  }];
+}
+
+def AMDGPUNumSGPRNumVGPRDocs : Documentation {
+  let Category = DocCatAMDGPUAttributes;
+  let Content = [{
+Clang supports the ``__attribute__((amdgpu_num_sgpr(<num_sgpr>)))`` and
+``__attribute__((amdgpu_num_vgpr(<num_vgpr>)))`` attributes for the AMDGPU
+target. These attributes may be attached to a kernel function definition and are
+an optimization hint.
+
+If these attributes are specified, then the AMDGPU target backend will attempt
+to limit the number of SGPRs and/or VGPRs used to the specified value(s). The
+number of used SGPRs and/or VGPRs may further be rounded up to satisfy the
+allocation requirements or constraints of the subtarget. Passing ``0`` as
+``num_sgpr`` and/or ``num_vgpr`` implies the default behavior (no limits).
+
+These attributes can be used to test the AMDGPU target backend. It is
+recommended that the ``amdgpu_waves_per_eu`` attribute be used to control
+resources such as SGPRs and VGPRs since it is aware of the limits for different
+subtargets.
+
+An error will be given if:
+  - Specified values violate subtarget specifications;
+  - Specified values are not compatible with values provided through other
+    attributes;
+  - The AMDGPU target backend is unable to create machine code that can meet the
+    request.
+  }];
 }
 
 def DocCatCallingConvs : DocumentationCategory<"Calling Conventions"> {
@@ -1138,6 +1495,18 @@ not require callee-cleanup.  See the documentation for `__fastcall`_ on MSDN.
   }];
 }
 
+def RegCallDocs : Documentation {
+  let Category = DocCatCallingConvs;
+  let Content = [{
+On x86 targets, this attribute changes the calling convention to
+`__regcall`_ convention. This convention aims to pass as many arguments
+as possible in registers. It also tries to utilize registers for the
+return value whenever it is possible.
+
+.. _`__regcall`: https://software.intel.com/en-us/node/693069
+  }];
+}
+
 def ThisCallDocs : Documentation {
   let Category = DocCatCallingConvs;
   let Content = [{
@@ -1166,7 +1535,7 @@ passed in RCX, RDX, R8, and R9 as is done for the default Windows x64 calling
 convention.
 
 On both 32-bit x86 and x86_64 targets, vector and floating point arguments are
-passed in XMM0-XMM5. Homogenous vector aggregates of up to four elements are
+passed in XMM0-XMM5. Homogeneous vector aggregates of up to four elements are
 passed in sequential SSE registers if enough are available. If AVX is enabled,
 256 bit vectors are passed in YMM0-YMM5. Any vector or aggregate type that
 cannot be passed in registers for any reason is passed by reference, which
@@ -1301,7 +1670,7 @@ def NoSanitizeMemoryDocs : Documentation {
 .. _langext-memory_sanitizer:
 
 Use ``__attribute__((no_sanitize_memory))`` on a function declaration to
-specify that checks for uninitialized memory should not be inserted 
+specify that checks for uninitialized memory should not be inserted
 (e.g. by MemorySanitizer). The function may still be instrumented by the tool
 to avoid false positives in other places.
   }];
@@ -1310,7 +1679,8 @@ to avoid false positives in other places.
 def DocCatTypeSafety : DocumentationCategory<"Type Safety Checking"> {
   let Content = [{
 Clang supports additional attributes to enable checking type safety properties
-that can't be enforced by the C type system.  Use cases include:
+that can't be enforced by the C type system. To see warnings produced by these
+checks, ensure that -Wtype-safety is enabled. Use cases include:
 
 * MPI library implementations, where these attributes enable checking that
   the buffer type matches the passed ``MPI_Datatype``;
@@ -1348,11 +1718,22 @@ def ArgumentWithTypeTagDocs : Documentation {
 Use ``__attribute__((argument_with_type_tag(arg_kind, arg_idx,
 type_tag_idx)))`` on a function declaration to specify that the function
 accepts a type tag that determines the type of some other argument.
-``arg_kind`` is an identifier that should be used when annotating all
-applicable type tags.
 
 This attribute is primarily useful for checking arguments of variadic functions
 (``pointer_with_type_tag`` can be used in most non-variadic cases).
+
+In the attribute prototype above:
+  * ``arg_kind`` is an identifier that should be used when annotating all
+    applicable type tags.
+  * ``arg_idx`` provides the position of a function argument. The expected type of
+    this function argument will be determined by the function argument specified
+    by ``type_tag_idx``. In the code example below, "3" means that the type of the
+    function's third argument will be determined by ``type_tag_idx``.
+  * ``type_tag_idx`` provides the position of a function argument. This function
+    argument will be a type tag. The type tag will determine the expected type of
+    the argument specified by ``arg_idx``. In the code example below, "2" means
+    that the type tag associated with the function's second argument should agree
+    with the type of the argument specified by ``arg_idx``.
 
 For example:
 
@@ -1360,6 +1741,8 @@ For example:
 
   int fcntl(int fd, int cmd, ...)
       __attribute__(( argument_with_type_tag(fcntl,3,2) ));
+  // The function's second argument will be a type tag; this type tag will
+  // determine the expected type of the function's third argument.
   }];
 }
 
@@ -1371,85 +1754,140 @@ Use ``__attribute__((pointer_with_type_tag(ptr_kind, ptr_idx, type_tag_idx)))``
 on a function declaration to specify that the function accepts a type tag that
 determines the pointee type of some other pointer argument.
 
+In the attribute prototype above:
+  * ``ptr_kind`` is an identifier that should be used when annotating all
+    applicable type tags.
+  * ``ptr_idx`` provides the position of a function argument; this function
+    argument will have a pointer type. The expected pointee type of this pointer
+    type will be determined by the function argument specified by
+    ``type_tag_idx``. In the code example below, "1" means that the pointee type
+    of the function's first argument will be determined by ``type_tag_idx``.
+  * ``type_tag_idx`` provides the position of a function argument; this function
+    argument will be a type tag. The type tag will determine the expected pointee
+    type of the pointer argument specified by ``ptr_idx``. In the code example
+    below, "3" means that the type tag associated with the function's third
+    argument should agree with the pointee type of the pointer argument specified
+    by ``ptr_idx``.
+
 For example:
 
 .. code-block:: c++
 
+  typedef int MPI_Datatype;
   int MPI_Send(void *buf, int count, MPI_Datatype datatype /*, other args omitted */)
       __attribute__(( pointer_with_type_tag(mpi,1,3) ));
+  // The function's 3rd argument will be a type tag; this type tag will
+  // determine the expected pointee type of the function's 1st argument.
   }];
 }
 
 def TypeTagForDatatypeDocs : Documentation {
   let Category = DocCatTypeSafety;
   let Content = [{
+When declaring a variable, use
+``__attribute__((type_tag_for_datatype(kind, type)))`` to create a type tag that
+is tied to the ``type`` argument given to the attribute.
+
+In the attribute prototype above:
+  * ``kind`` is an identifier that should be used when annotating all applicable
+    type tags.
+  * ``type`` indicates the name of the type.
+
 Clang supports annotating type tags of two forms.
 
-* **Type tag that is an expression containing a reference to some declared
-  identifier.** Use ``__attribute__((type_tag_for_datatype(kind, type)))`` on a
-  declaration with that identifier:
+  * **Type tag that is a reference to a declared identifier.**
+    Use ``__attribute__((type_tag_for_datatype(kind, type)))`` when declaring that
+    identifier:
 
-  .. code-block:: c++
+    .. code-block:: c++
 
-    extern struct mpi_datatype mpi_datatype_int
-        __attribute__(( type_tag_for_datatype(mpi,int) ));
-    #define MPI_INT ((MPI_Datatype) &mpi_datatype_int)
+      typedef int MPI_Datatype;
+      extern struct mpi_datatype mpi_datatype_int
+          __attribute__(( type_tag_for_datatype(mpi,int) ));
+      #define MPI_INT ((MPI_Datatype) &mpi_datatype_int)
+      // &mpi_datatype_int is a type tag. It is tied to type "int".
 
-* **Type tag that is an integral literal.** Introduce a ``static const``
-  variable with a corresponding initializer value and attach
-  ``__attribute__((type_tag_for_datatype(kind, type)))`` on that declaration,
-  for example:
+  * **Type tag that is an integral literal.**
+    Declare a ``static const`` variable with an initializer value and attach
+    ``__attribute__((type_tag_for_datatype(kind, type)))`` on that declaration:
 
-  .. code-block:: c++
+    .. code-block:: c++
 
-    #define MPI_INT ((MPI_Datatype) 42)
-    static const MPI_Datatype mpi_datatype_int
-        __attribute__(( type_tag_for_datatype(mpi,int) )) = 42
+      typedef int MPI_Datatype;
+      static const MPI_Datatype mpi_datatype_int
+          __attribute__(( type_tag_for_datatype(mpi,int) )) = 42;
+      #define MPI_INT ((MPI_Datatype) 42)
+      // The number 42 is a type tag. It is tied to type "int".
 
-The attribute also accepts an optional third argument that determines how the
-expression is compared to the type tag.  There are two supported flags:
 
-* ``layout_compatible`` will cause types to be compared according to
-  layout-compatibility rules (C++11 [class.mem] p 17, 18).  This is
-  implemented to support annotating types like ``MPI_DOUBLE_INT``.
+The ``type_tag_for_datatype`` attribute also accepts an optional third argument
+that determines how the type of the function argument specified by either
+``arg_idx`` or ``ptr_idx`` is compared against the type associated with the type
+tag. (Recall that for the ``argument_with_type_tag`` attribute, the type of the
+function argument specified by ``arg_idx`` is compared against the type
+associated with the type tag. Also recall that for the ``pointer_with_type_tag``
+attribute, the pointee type of the function argument specified by ``ptr_idx`` is
+compared against the type associated with the type tag.) There are two supported
+values for this optional third argument:
 
-  For example:
+  * ``layout_compatible`` will cause types to be compared according to
+    layout-compatibility rules (In C++11 [class.mem] p 17, 18, see the
+    layout-compatibility rules for two standard-layout struct types and for two
+    standard-layout union types). This is useful when creating a type tag
+    associated with a struct or union type. For example:
 
-  .. code-block:: c++
+    .. code-block:: c++
 
-    /* In mpi.h */
-    struct internal_mpi_double_int { double d; int i; };
-    extern struct mpi_datatype mpi_datatype_double_int
-        __attribute__(( type_tag_for_datatype(mpi, struct internal_mpi_double_int, layout_compatible) ));
+      /* In mpi.h */
+      typedef int MPI_Datatype;
+      struct internal_mpi_double_int { double d; int i; };
+      extern struct mpi_datatype mpi_datatype_double_int
+          __attribute__(( type_tag_for_datatype(mpi,
+                          struct internal_mpi_double_int, layout_compatible) ));
 
-    #define MPI_DOUBLE_INT ((MPI_Datatype) &mpi_datatype_double_int)
+      #define MPI_DOUBLE_INT ((MPI_Datatype) &mpi_datatype_double_int)
 
-    /* In user code */
-    struct my_pair { double a; int b; };
-    struct my_pair *buffer;
-    MPI_Send(buffer, 1, MPI_DOUBLE_INT /*, ...  */); // no warning
+      int MPI_Send(void *buf, int count, MPI_Datatype datatype, ...)
+          __attribute__(( pointer_with_type_tag(mpi,1,3) ));
 
-    struct my_int_pair { int a; int b; }
-    struct my_int_pair *buffer2;
-    MPI_Send(buffer2, 1, MPI_DOUBLE_INT /*, ...  */); // warning: actual buffer element
-                                                      // type 'struct my_int_pair'
-                                                      // doesn't match specified MPI_Datatype
+      /* In user code */
+      struct my_pair { double a; int b; };
+      struct my_pair *buffer;
+      MPI_Send(buffer, 1, MPI_DOUBLE_INT /*, ...  */); // no warning because the
+                                                       // layout of my_pair is
+                                                       // compatible with that of
+                                                       // internal_mpi_double_int
 
-* ``must_be_null`` specifies that the expression should be a null pointer
-  constant, for example:
+      struct my_int_pair { int a; int b; }
+      struct my_int_pair *buffer2;
+      MPI_Send(buffer2, 1, MPI_DOUBLE_INT /*, ...  */); // warning because the
+                                                        // layout of my_int_pair
+                                                        // does not match that of
+                                                        // internal_mpi_double_int
 
-  .. code-block:: c++
+  * ``must_be_null`` specifies that the function argument specified by either
+    ``arg_idx`` (for the ``argument_with_type_tag`` attribute) or ``ptr_idx`` (for
+    the ``pointer_with_type_tag`` attribute) should be a null pointer constant.
+    The second argument to the ``type_tag_for_datatype`` attribute is ignored. For
+    example:
 
-    /* In mpi.h */
-    extern struct mpi_datatype mpi_datatype_null
-        __attribute__(( type_tag_for_datatype(mpi, void, must_be_null) ));
+    .. code-block:: c++
 
-    #define MPI_DATATYPE_NULL ((MPI_Datatype) &mpi_datatype_null)
+      /* In mpi.h */
+      typedef int MPI_Datatype;
+      extern struct mpi_datatype mpi_datatype_null
+          __attribute__(( type_tag_for_datatype(mpi, void, must_be_null) ));
 
-    /* In user code */
-    MPI_Send(buffer, 1, MPI_DATATYPE_NULL /*, ...  */); // warning: MPI_DATATYPE_NULL
-                                                        // was specified but buffer
-                                                        // is not a null pointer
+      #define MPI_DATATYPE_NULL ((MPI_Datatype) &mpi_datatype_null)
+      int MPI_Send(void *buf, int count, MPI_Datatype datatype, ...)
+          __attribute__(( pointer_with_type_tag(mpi,1,3) ));
+
+      /* In user code */
+      struct my_pair { double a; int b; };
+      struct my_pair *buffer;
+      MPI_Send(buffer, 1, MPI_DATATYPE_NULL /*, ...  */); // warning: MPI_DATATYPE_NULL
+                                                          // was specified but buffer
+                                                          // is not a null pointer
   }];
 }
 
@@ -1552,6 +1990,55 @@ This attribute can be added to an enumerator to signal to the compiler that it
 is intended to be used as a flag type. This will cause the compiler to assume
 that the range of the type includes all of the values that you can get by
 manipulating bits of the enumerator when issuing warnings.
+  }];
+}
+
+def EnumExtensibilityDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+Attribute ``enum_extensibility`` is used to distinguish between enum definitions
+that are extensible and those that are not. The attribute can take either
+``closed`` or ``open`` as an argument. ``closed`` indicates a variable of the
+enum type takes a value that corresponds to one of the enumerators listed in the
+enum definition or, when the enum is annotated with ``flag_enum``, a value that
+can be constructed using values corresponding to the enumerators. ``open``
+indicates a variable of the enum type can take any values allowed by the
+standard and instructs clang to be more lenient when issuing warnings.
+
+.. code-block:: c
+
+  enum __attribute__((enum_extensibility(closed))) ClosedEnum {
+    A0, A1
+  };
+
+  enum __attribute__((enum_extensibility(open))) OpenEnum {
+    B0, B1
+  };
+
+  enum __attribute__((enum_extensibility(closed),flag_enum)) ClosedFlagEnum {
+    C0 = 1 << 0, C1 = 1 << 1
+  };
+
+  enum __attribute__((enum_extensibility(open),flag_enum)) OpenFlagEnum {
+    D0 = 1 << 0, D1 = 1 << 1
+  };
+
+  void foo1() {
+    enum ClosedEnum ce;
+    enum OpenEnum oe;
+    enum ClosedFlagEnum cfe;
+    enum OpenFlagEnum ofe;
+
+    ce = A1;           // no warnings
+    ce = 100;          // warning issued
+    oe = B1;           // no warnings
+    oe = 100;          // no warnings
+    cfe = C0 | C1;     // no warnings
+    cfe = C0 | C1 | 4; // warning issued
+    ofe = D0 | D1;     // no warnings
+    ofe = D0 | D1 | 4; // no warnings
+  }
+
   }];
 }
 
@@ -1729,6 +2216,21 @@ s6.11.5 for details.
   }];
 }
 
+def OpenCLIntelReqdSubGroupSizeDocs : Documentation {
+  let Category = DocCatStmt;
+  let Heading = "__attribute__((intel_reqd_sub_group_size))";
+  let Content = [{
+The optional attribute intel_reqd_sub_group_size can be used to indicate that
+the kernel must be compiled and executed with the specified subgroup size. When
+this attribute is present, get_max_sub_group_size() is guaranteed to return the
+specified integer value. This is important for the correctness of many subgroup
+algorithms, and in some cases may be used by the compiler to generate more optimal
+code. See `cl_intel_required_subgroup_size
+<https://www.khronos.org/registry/OpenCL/extensions/intel/cl_intel_required_subgroup_size.txt>`
+for details.
+  }];
+}
+
 def OpenCLAccessDocs : Documentation {
   let Category = DocCatStmt;
   let Heading = "__read_only, __write_only, __read_write (read_only, write_only, read_write)";
@@ -1850,7 +2352,7 @@ by Clang.
 }
 def NullabilityDocs : DocumentationCategory<"Nullability Attributes"> {
   let Content = [{
-Whether a particular pointer may be "null" is an important concern when working with pointers in the C family of languages. The various nullability attributes indicate whether a particular pointer can be null or not, which makes APIs more expressive and can help static analysis tools identify bugs involving null pointers. Clang supports several kinds of nullability attributes: the ``nonnull`` and ``returns_nonnull`` attributes indicate which function or method parameters and result types can never be null, while nullability type qualifiers indicate which pointer types can be null (``_Nullable``) or cannot be null (``_Nonnull``). 
+Whether a particular pointer may be "null" is an important concern when working with pointers in the C family of languages. The various nullability attributes indicate whether a particular pointer can be null or not, which makes APIs more expressive and can help static analysis tools identify bugs involving null pointers. Clang supports several kinds of nullability attributes: the ``nonnull`` and ``returns_nonnull`` attributes indicate which function or method parameters and result types can never be null, while nullability type qualifiers indicate which pointer types can be null (``_Nullable``) or cannot be null (``_Nonnull``).
 
 The nullability (type) qualifiers express whether a value of a given pointer type can be null (the ``_Nullable`` qualifier), doesn't have a defined meaning for null (the ``_Nonnull`` qualifier), or for which the purpose of null is unclear (the ``_Null_unspecified`` qualifier). Because nullability qualifiers are expressed within the type system, they are more general than the ``nonnull`` and ``returns_nonnull`` attributes, allowing one to express (for example) a nullable pointer to an array of nonnull pointers. Nullability qualifiers are written to the right of the pointer to which they apply. For example:
 
@@ -2170,6 +2672,40 @@ hardware design, touch the red zone.
   }];
 }
 
+def AnyX86NoCallerSavedRegistersDocs : Documentation {
+  let Category = DocCatFunction;
+  let Content = [{
+Use this attribute to indicate that the specified function has no
+caller-saved registers. That is, all registers are callee-saved except for
+registers used for passing parameters to the function or returning parameters
+from the function.
+The compiler saves and restores any modified registers that were not used for 
+passing or returning arguments to the function.
+
+The user can call functions specified with the 'no_caller_saved_registers'
+attribute from an interrupt handler without saving and restoring all
+call-clobbered registers.
+
+Note that 'no_caller_saved_registers' attribute is not a calling convention.
+In fact, it only overrides the decision of which registers should be saved by
+the caller, but not how the parameters are passed from the caller to the callee.
+
+For example:
+
+  .. code-block:: c
+
+    __attribute__ ((no_caller_saved_registers, fastcall))
+    void f (int arg1, int arg2) {
+      ...
+    }
+
+  In this case parameters 'arg1' and 'arg2' will be passed in registers.
+  In this case, on 32-bit x86 targets, the function 'f' will use ECX and EDX as
+  register parameters. However, it will not assume any scratch registers and
+  should save and restore any modified registers except for ECX and EDX.
+  }];
+}
+
 def SwiftCallDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
@@ -2290,7 +2826,7 @@ def SwiftIndirectResultDocs : Documentation {
   let Category = DocCatVariable;
   let Content = [{
 The ``swift_indirect_result`` attribute marks a parameter of a ``swiftcall``
-function as having the special indirect-result ABI treatmenet.
+function as having the special indirect-result ABI treatment.
 
 This treatment gives the parameter the target's normal indirect-result
 ABI treatment, which may involve passing it differently from an ordinary
@@ -2311,6 +2847,32 @@ value of type ``T``.
 Making indirect results explicit in the signature allows C functions to
 directly construct objects into them without relying on language
 optimizations like C++'s named return value optimization (NRVO).
+  }];
+}
+
+def SuppressDocs : Documentation {
+  let Category = DocCatStmt;
+  let Content = [{
+The ``[[gsl::suppress]]`` attribute suppresses specific
+clang-tidy diagnostics for rules of the `C++ Core Guidelines`_ in a portable
+way. The attribute can be attached to declarations, statements, and at
+namespace scope.
+
+.. code-block:: c++
+
+  [[gsl::suppress("Rh-public")]]
+  void f_() {
+    int *p;
+    [[gsl::suppress("type")]] {
+      p = reinterpret_cast<int*>(7);
+    }
+  }
+  namespace N {
+    [[clang::suppress("type", "bounds")]];
+    ...
+  }
+
+.. _`C++ Core Guidelines`: https://github.com/isocpp/CppCoreGuidelines/blob/master/CppCoreGuidelines.md#inforce-enforcement
   }];
 }
 
@@ -2448,5 +3010,45 @@ functions to run on computational resources such as multi-core CPUs and GPUs.
 See the RenderScript_ documentation for more information.
 
 .. _RenderScript: https://developer.android.com/guide/topics/renderscript/compute.html
+  }];
+}
+
+def XRayDocs : Documentation {
+  let Category = DocCatFunction;
+  let Heading = "xray_always_instrument (clang::xray_always_instrument), xray_never_instrument (clang::xray_never_instrument), xray_log_args (clang::xray_log_args)";
+  let Content = [{
+``__attribute__((xray_always_instrument))`` or ``[[clang::xray_always_instrument]]`` is used to mark member functions (in C++), methods (in Objective C), and free functions (in C, C++, and Objective C) to be instrumented with XRay. This will cause the function to always have space at the beginning and exit points to allow for runtime patching.
+
+Conversely, ``__attribute__((xray_never_instrument))`` or ``[[clang::xray_never_instrument]]`` will inhibit the insertion of these instrumentation points.
+
+If a function has neither of these attributes, they become subject to the XRay heuristics used to determine whether a function should be instrumented or otherwise.
+
+``__attribute__((xray_log_args(N)))`` or ``[[clang::xray_log_args(N)]]`` is used to preserve N function arguments for the logging function.  Currently, only N==1 is supported.
+  }];
+}
+
+def TransparentUnionDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+This attribute can be applied to a union to change the behaviour of calls to
+functions that have an argument with a transparent union type. The compiler
+behaviour is changed in the following manner:
+
+- A value whose type is any member of the transparent union can be passed as an
+  argument without the need to cast that value.
+
+- The argument is passed to the function using the calling convention of the
+  first member of the transparent union. Consequently, all the members of the
+  transparent union should have the same calling convention as its first member.
+
+Transparent unions are not supported in C++.
+  }];
+}
+
+def ObjCSubclassingRestrictedDocs : Documentation {
+  let Category = DocCatType;
+  let Content = [{
+This attribute can be added to an Objective-C ``@interface`` declaration to
+ensure that this class cannot be subclassed.
   }];
 }

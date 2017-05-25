@@ -54,7 +54,7 @@ handled by another build system (See: :doc:`CMake <CMake>`).
 The build system implementation will load the relevant contents of the
 LLVMBuild files and use that to drive the actual project build.
 Typically, the build system will only need to load this information at
-"configure" time, and use it to generative native information. Build
+"configure" time, and use it to generate native information. Build
 systems will also handle automatically reconfiguring their information
 when the contents of the ``LLVMBuild.txt`` files change.
 
@@ -321,4 +321,3 @@ the properties which are associated with that component.
    ``BuildTool`` components currently use the exact same properties as
    ``Tool`` components, the type distinction is only used to differentiate
    what the tool is built for.
-
