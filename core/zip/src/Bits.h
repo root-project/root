@@ -282,7 +282,6 @@ struct bits_internal_state {
   } \
 }
 
-
 /* ===========================================================================
    R__ZipMode is used to select the compression algorithm when R__zip is called
    and when R__zipMultipleAlgorithm is called with its last argument set to 0.
@@ -590,8 +589,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
     return;
   } else if (compressionAlgorithm == 4) {
-    R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
-    return;
+     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     return;
   }
 
   // The very old algorithm for backward compatibility
