@@ -12,7 +12,7 @@
 using namespace ROOT::Experimental;
 
 /**
-* \class ROOT::Experimental::TDF::TDataFrame
+* \class ROOT::Experimental::TDataFrame
 * \ingroup dataframe
 * \brief ROOT's TDataFrame offers a high level interface for analyses of data stored in TTrees.
 
