@@ -71,7 +71,7 @@ d = TDF(treeName, fileName)
 n_cut = 'tracks.size() > 8'
 nentries = d.Filter(n_cut).Count();
 
-print "%s passed all filters" %nentries.GetValue()
+print("%s passed all filters" %nentries.GetValue())
 
 # Another possibility consists in creating a new column containing the
 # quantity we are interested in.

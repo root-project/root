@@ -66,10 +66,10 @@ c_0_50_odd_b1 = d_0_50.Filter("1 == b1 % 2").Count()
 c_0_3_after_even_b1 = d.Filter("0 == b1 % 2").Range(0, 3).Count()
 
 # Ok, time to wrap up: let's print all counts!
-print "Usage of ranges:"
-print " - All entries:", c_all.GetValue()
-print " - Entries from 0 to 30:", c_0_30.GetValue()
-print " - Entries from 15 onwards:", c_15_end.GetValue()
-print " - Entries from 15 onwards in steps of 3:", c_15_end_3.GetValue()
-print " - Entries from 0 to 50, odd only:", c_0_50_odd_b1.GetValue()
-print " - First three entries of all even entries:", c_0_3_after_even_b1.GetValue()
+print("Usage of ranges:")
+print(" - All entries:", c_all.GetValue())
+print(" - Entries from 0 to 30:", c_0_30.GetValue())
+print(" - Entries from 15 onwards:", c_15_end.GetValue())
+print(" - Entries from 15 onwards in steps of 3:", c_15_end_3.GetValue())
+print(" - Entries from 0 to 50, odd only:", c_0_50_odd_b1.GetValue())
+print(" - First three entries of all even entries:", c_0_3_after_even_b1.GetValue())

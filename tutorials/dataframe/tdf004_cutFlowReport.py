@@ -59,7 +59,7 @@ filtered3 = augmented1.Filter('b3 < .5','Cut3')
 # section of the chain between the main TDataFrame and that node (included).
 # Stats are printed in the same order as named filters have been added to the graph, and refer to the latest
 # event-loop that has been run using the relevant TDataFrame.
-print 'Cut3 stats:'
+print('Cut3 stats:')
 filtered3.Report()
-print 'All stats:'
+print('All stats:')
 d.Report()
