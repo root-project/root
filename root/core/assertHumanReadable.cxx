@@ -83,10 +83,11 @@ int assertFromHumanReadable()
    printf("Checking FromHumanReadableSize\n");
    int num_failed = 0;
    num_failed += checkFail("wrong");
+   num_failed += checkFail("K");
    num_failed += checkFail("8ZiB");
    num_failed += checkFail("9.3ZB");
    num_failed += checkParsing("1",1);
-   num_failed += checkParsing("1K",1000);
+   num_failed += checkParsing("0K",0);
    num_failed += checkParsing("1Ki",1024);
    num_failed += checkParsing("1Kib",1024);
    num_failed += checkParsing("1KiB",1024);
