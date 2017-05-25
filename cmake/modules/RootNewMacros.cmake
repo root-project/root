@@ -260,9 +260,14 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       unset(headerFile CACHE)
     endif()
   endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}")
-  #---Get the list of include directories------------------
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
+  # Replace the non-standard folder layout of Core.
+  if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
+    # FIXME: Glob these folders.
+    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|lz4|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
+    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
+  endif()
+
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse

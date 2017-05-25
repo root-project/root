@@ -589,7 +589,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   if (compressionAlgorithm == kLZMA) {
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
-  } else if (compressionAlgorithm == 4) {
+  } else if (compressionAlgorithm == kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   }
