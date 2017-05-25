@@ -38,11 +38,12 @@ endif
 EVENTO        = Event.$(ObjSuf) EventDict.$(ObjSuf)
 EVENTS        = Event.$(SrcSuf) EventDict.$(SrcSuf)
 EVENTSO       = libEvent.$(DllSuf)
-EVENTLIBS     = -lTreePlayer
 EVENT         = Event$(ExeSuf)
 ifeq ($(PLATFORM),win32)
+EVENTLIBS     = $(ROOTSYS)/lib/libTreePlayer.lib
 EVENTLIB      = libEvent.lib
 else
+EVENTLIBS     = -lTreePlayer
 EVENTLIB      = $(shell pwd)/$(EVENTSO)
 endif
 
