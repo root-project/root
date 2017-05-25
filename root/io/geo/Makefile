@@ -44,6 +44,11 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+ifeq ($(findstring gdml2, $(shell root-config --features)),)
+#  TEST_TARGETS := $(filter-out execParse,$(TEST_TARGETS))
+endif
+execParse.success: ROOTBITS = -nogdml
+
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
 
@@ -98,3 +103,4 @@ readGeo.log: unpack.last aleph.root ams.root brahms.root btev.root d0.root e907.
 
 readGeo: readGeo.log
 	$(TestDiff)
+
