@@ -1100,6 +1100,26 @@ int R__Inflate_free()
   return 0;
 }
 
+static int is_valid_header_zlib(uch *src) {
+   return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
+}
+
+static int is_valid_header_old(uch *src) {
+   return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
+}
+
+static int is_valid_header_xz(uch *src) {
+   return  src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
+}
+
+static int is_valid_header_lz4(uch *src) {
+   return src[0] == 'L' && src[1] == '4';
+}
+
+static int is_valid_header(uch *src) {
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_xz(src) || is_valid_header_lz4(src);
+}
+
 /***********************************************************************
  *                                                                     *
  * Name: R__unzip                                    Date:    20.01.95 *
@@ -1128,9 +1148,7 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
   *tgtsize = 0;
 
   /*   C H E C K   H E A D E R   */
-  if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) && !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
-      !(src[0] == 'L' && src[1] == '4')) {
+  if (!is_valid_header(src)) {
      fprintf(stderr, "Error R__unzip_header: error in header.  Values: %c%c\n", src[0], src[1]);
      return 1;
   }
@@ -1157,9 +1175,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   }
 
   /*   C H E C K   H E A D E R   */
-  if (!(src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED) &&
-      !(src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED) && !(src[0] == 'X' && src[1] == 'Z' && src[2] == 0) &&
-      !(src[0] == 'L' && src[1] == '4')) {
+  if (!is_valid_header(src)) {
      fprintf(stderr, "Error R__unzip: error in header\n");
      return;
   }
@@ -1183,7 +1199,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   /*   D E C O M P R E S S   D A T A  */
 
   /* New zlib format */
-  if (src[0] == 'Z' && src[1] == 'L') {
+  if (is_valid_header_zlib(src)) {
     z_stream stream; /* decompression stream */
     int err = 0;
 
@@ -1214,10 +1230,10 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
     *irep = stream.total_out;
     return;
   }
-  else if (src[0] == 'X' && src[1] == 'Z') {
+  else if (is_valid_header_xz(src)) {
     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
     return;
-  } else if (src[0] == 'L' && src[1] == '4') {
+  } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
      return;
   }
