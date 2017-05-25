@@ -64,6 +64,9 @@
 //  By default 400 events are generated.
 //  The compression option can be activated/deactivated via the second argument.
 //
+//  Additionally, if the environment ENABLE_TTREEPERFSTATS is set, then detailed
+//  statistics about IO performance will be reported.
+//
 //   ---Running/Linking instructions----
 //  This program consists of the following files and procedures.
 //    - Event.h event class description
@@ -186,8 +189,8 @@ int main(int argc, char **argv)
       Int_t nentries = (Int_t)tree->GetEntries();
       nevent = TMath::Min(nevent,nentries);
       if (read == 1) {  //read sequential
+         ioperf = getenv("ENABLE_TTREEPERFSTATS") ? new TTreePerfStats("Perf Stats", tree) : nullptr;
          //by setting the read cache to -1 we set it to the AutoFlush value when writing
-         ioperf = new TTreePerfStats("Perf Stats", tree);
          Int_t cachesize = -1;
          if (punzip) tree->SetParallelUnzip();
          tree->SetCacheSize(cachesize);
@@ -203,7 +206,9 @@ int main(int argc, char **argv)
             }
             nb += tree->GetEntry(ev);        //read complete event in memory
          }
-         ioperf->Finish();
+         if (ioperf) {
+            ioperf->Finish();
+         }
       } else {    //read random
          Int_t evrandom;
          for (ev = 0; ev < nevent; ev++) {
