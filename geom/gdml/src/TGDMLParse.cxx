@@ -524,6 +524,9 @@ Double_t TGDMLParse::Value(const char* svalue) const
    char* end;
    double val = strtod(svalue, &end);
 
+   // ignore white spaces.
+   while( *end != 0 && isspace(*end) ) ++end;
+
    // Succesfully parsed all the characters up to the ending NULL, so svalue
    // was a simple number.
    if(*end == 0) return val;
