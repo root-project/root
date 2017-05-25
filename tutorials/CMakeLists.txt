@@ -131,7 +131,7 @@ if(NOT ROOT_imt_FOUND)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
-  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
+  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C dataframe/tdf*.py)
 endif()
 
 #---These ones requires a display to run-----------------------------
