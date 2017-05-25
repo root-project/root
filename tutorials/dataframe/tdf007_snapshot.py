@@ -74,9 +74,9 @@ d2.Snapshot(treeName, outFileName, branchList)
 # Open the new file and list the columns of the tree
 f1 = ROOT.TFile(outFileName)
 t = f1.myTree
-print "These are the columns b1, b1_square and b2_vector:"
+print("These are the columns b1, b1_square and b2_vector:")
 for branch in t.GetListOfBranches():
-    print "Branch: %s" %branch.GetName()
+    print("Branch: %s" %branch.GetName())
 
 f1.Close()
 
@@ -88,9 +88,9 @@ d2.Snapshot(treeName, outFileNameAllColumns)
 # Open the new file and list the columns of the tree
 f2 = ROOT.TFile(outFileNameAllColumns)
 t = f2.myTree
-print "These are all the columns available to this tdf:"
+print("These are all the columns available to this tdf:")
 for branch in t.GetListOfBranches():
-    print "Branch: %s" %branch.GetName()
+    print("Branch: %s" %branch.GetName())
 
 f2.Close()
 
