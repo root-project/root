@@ -1,4 +1,4 @@
-//===------------------- StackMaps.h - StackMaps ----------------*- C++ -*-===//
+//===- StackMaps.h - StackMaps ----------------------------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -13,7 +13,11 @@
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/MachineInstr.h"
-#include "llvm/MC/MCSymbol.h"
+#include "llvm/IR/CallingConv.h"
+#include "llvm/Support/Debug.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
 #include <vector>
 
 namespace llvm {
@@ -21,6 +25,40 @@ namespace llvm {
 class AsmPrinter;
 class MCExpr;
 class MCStreamer;
+class MCSymbol;
+class raw_ostream;
+class TargetRegisterInfo;
+
+/// \brief MI-level stackmap operands.
+///
+/// MI stackmap operations take the form:
+/// <id>, <numBytes>, live args...
+class StackMapOpers {
+public:
+  /// Enumerate the meta operands.
+  enum { IDPos, NBytesPos };
+
+private:
+  const MachineInstr* MI;
+
+public:
+  explicit StackMapOpers(const MachineInstr *MI);
+
+  /// Return the ID for the given stackmap
+  uint64_t getID() const { return MI->getOperand(IDPos).getImm(); }
+
+  /// Return the number of patchable bytes the given stackmap should emit.
+  uint32_t getNumPatchBytes() const {
+    return MI->getOperand(NBytesPos).getImm();
+  }
+
+  /// Get the operand index of the variable list of non-argument operands.
+  /// These hold the "live state".
+  unsigned getVarIdx() const {
+    // Skip ID, nShadowBytes.
+    return 2;
+  }
+};
 
 /// \brief MI-level patchpoint operands.
 ///
@@ -44,36 +82,57 @@ public:
 private:
   const MachineInstr *MI;
   bool HasDef;
-  bool IsAnyReg;
-
-public:
-  explicit PatchPointOpers(const MachineInstr *MI);
-
-  bool isAnyReg() const { return IsAnyReg; }
-  bool hasDef() const { return HasDef; }
 
   unsigned getMetaIdx(unsigned Pos = 0) const {
     assert(Pos < MetaEnd && "Meta operand index out of range.");
     return (HasDef ? 1 : 0) + Pos;
   }
 
-  const MachineOperand &getMetaOper(unsigned Pos) {
+  const MachineOperand &getMetaOper(unsigned Pos) const {
     return MI->getOperand(getMetaIdx(Pos));
+  }
+
+public:
+  explicit PatchPointOpers(const MachineInstr *MI);
+
+  bool isAnyReg() const { return (getCallingConv() == CallingConv::AnyReg); }
+  bool hasDef() const { return HasDef; }
+
+  /// Return the ID for the given patchpoint.
+  uint64_t getID() const { return getMetaOper(IDPos).getImm(); }
+
+  /// Return the number of patchable bytes the given patchpoint should emit.
+  uint32_t getNumPatchBytes() const {
+    return getMetaOper(NBytesPos).getImm();
+  }
+
+  /// Returns the target of the underlying call.
+  const MachineOperand &getCallTarget() const {
+    return getMetaOper(TargetPos);
+  }
+
+  /// Returns the calling convention
+  CallingConv::ID getCallingConv() const {
+    return getMetaOper(CCPos).getImm();
   }
 
   unsigned getArgIdx() const { return getMetaIdx() + MetaEnd; }
 
+  /// Return the number of call arguments
+  uint32_t getNumCallArgs() const {
+    return MI->getOperand(getMetaIdx(NArgPos)).getImm();
+  }
+
   /// Get the operand index of the variable list of non-argument operands.
   /// These hold the "live state".
   unsigned getVarIdx() const {
-    return getMetaIdx() + MetaEnd +
-           MI->getOperand(getMetaIdx(NArgPos)).getImm();
+    return getMetaIdx() + MetaEnd + getNumCallArgs();
   }
 
   /// Get the index at which stack map locations will be recorded.
   /// Arguments are not recorded unless the anyregcc convention is used.
   unsigned getStackMapStartIdx() const {
-    if (IsAnyReg)
+    if (isAnyReg())
       return getArgIdx();
     return getVarIdx();
   }
@@ -137,21 +196,22 @@ public:
       Constant,
       ConstantIndex
     };
-    LocationType Type;
-    unsigned Size;
-    unsigned Reg;
-    int64_t Offset;
-    Location() : Type(Unprocessed), Size(0), Reg(0), Offset(0) {}
+    LocationType Type = Unprocessed;
+    unsigned Size = 0;
+    unsigned Reg = 0;
+    int64_t Offset = 0;
+
+    Location() = default;
     Location(LocationType Type, unsigned Size, unsigned Reg, int64_t Offset)
         : Type(Type), Size(Size), Reg(Reg), Offset(Offset) {}
   };
 
   struct LiveOutReg {
-    unsigned short Reg;
-    unsigned short DwarfRegNum;
-    unsigned short Size;
+    unsigned short Reg = 0;
+    unsigned short DwarfRegNum = 0;
+    unsigned short Size = 0;
 
-    LiveOutReg() : Reg(0), DwarfRegNum(0), Size(0) {}
+    LiveOutReg() = default;
     LiveOutReg(unsigned short Reg, unsigned short DwarfRegNum,
                unsigned short Size)
         : Reg(Reg), DwarfRegNum(DwarfRegNum), Size(Size) {}
@@ -167,7 +227,7 @@ public:
   void reset() {
     CSInfos.clear();
     ConstPool.clear();
-    FnStackSize.clear();
+    FnInfos.clear();
   }
 
   /// \brief Generate a stackmap record for a stackmap instruction.
@@ -191,26 +251,35 @@ private:
   typedef SmallVector<Location, 8> LocationVec;
   typedef SmallVector<LiveOutReg, 8> LiveOutVec;
   typedef MapVector<uint64_t, uint64_t> ConstantPool;
-  typedef MapVector<const MCSymbol *, uint64_t> FnStackSizeMap;
+
+  struct FunctionInfo {
+    uint64_t StackSize = 0;
+    uint64_t RecordCount = 1;
+
+    FunctionInfo() = default;
+    explicit FunctionInfo(uint64_t StackSize) : StackSize(StackSize) {}
+  };
 
   struct CallsiteInfo {
-    const MCExpr *CSOffsetExpr;
-    uint64_t ID;
+    const MCExpr *CSOffsetExpr = nullptr;
+    uint64_t ID = 0;
     LocationVec Locations;
     LiveOutVec LiveOuts;
-    CallsiteInfo() : CSOffsetExpr(nullptr), ID(0) {}
+
+    CallsiteInfo() = default;
     CallsiteInfo(const MCExpr *CSOffsetExpr, uint64_t ID,
                  LocationVec &&Locations, LiveOutVec &&LiveOuts)
         : CSOffsetExpr(CSOffsetExpr), ID(ID), Locations(std::move(Locations)),
           LiveOuts(std::move(LiveOuts)) {}
   };
 
+  typedef MapVector<const MCSymbol *, FunctionInfo> FnInfoMap;
   typedef std::vector<CallsiteInfo> CallsiteInfoList;
 
   AsmPrinter &AP;
   CallsiteInfoList CSInfos;
   ConstantPool ConstPool;
-  FnStackSizeMap FnStackSize;
+  FnInfoMap FnInfos;
 
   MachineInstr::const_mop_iterator
   parseOperand(MachineInstr::const_mop_iterator MOI,
@@ -250,6 +319,7 @@ private:
   void print(raw_ostream &OS);
   void debug() { print(dbgs()); }
 };
-}
 
-#endif
+} // end namespace llvm
+
+#endif // LLVM_CODEGEN_STACKMAPS_H

@@ -66,8 +66,7 @@ Action(cl::desc("Action to perform:"),
                   clEnumValN(AC_PrintObjectLineInfo, "printobjline",
                              "Like -printlineinfo but does not load the object first"),
                   clEnumValN(AC_Verify, "verify",
-                             "Load, link and verify the resulting memory image."),
-                  clEnumValEnd));
+                             "Load, link and verify the resulting memory image.")));
 
 static cl::opt<std::string>
 EntryPoint("entry",
@@ -165,19 +164,18 @@ public:
     DummyExterns[Name] = Addr;
   }
 
-  RuntimeDyld::SymbolInfo findSymbol(const std::string &Name) override {
+  JITSymbol findSymbol(const std::string &Name) override {
     auto I = DummyExterns.find(Name);
 
     if (I != DummyExterns.end())
-      return RuntimeDyld::SymbolInfo(I->second, JITSymbolFlags::Exported);
+      return JITSymbol(I->second, JITSymbolFlags::Exported);
 
     return RTDyldMemoryManager::findSymbol(Name);
   }
 
   void registerEHFrames(uint8_t *Addr, uint64_t LoadAddr,
                         size_t Size) override {}
-  void deregisterEHFrames(uint8_t *Addr, uint64_t LoadAddr,
-                          size_t Size) override {}
+  void deregisterEHFrames() override {}
 
   void preallocateSlab(uint64_t Size) {
     std::string Err;
@@ -487,10 +485,7 @@ static int checkAllExpressions(RuntimeDyldChecker &Checker) {
   return 0;
 }
 
-static std::map<void *, uint64_t>
-applySpecificSectionMappings(RuntimeDyldChecker &Checker) {
-
-  std::map<void*, uint64_t> SpecificMappings;
+void applySpecificSectionMappings(RuntimeDyldChecker &Checker) {
 
   for (StringRef Mapping : SpecificSectionMappings) {
 
@@ -523,17 +518,14 @@ applySpecificSectionMappings(RuntimeDyldChecker &Checker) {
                          "'.");
 
     Checker.getRTDyld().mapSectionAddress(OldAddr, NewAddr);
-    SpecificMappings[OldAddr] = NewAddr;
   }
-
-  return SpecificMappings;
 }
 
 // Scatter sections in all directions!
 // Remaps section addresses for -verify mode. The following command line options
 // can be used to customize the layout of the memory within the phony target's
 // address space:
-// -target-addr-start <s> -- Specify where the phony target addres range starts.
+// -target-addr-start <s> -- Specify where the phony target address range starts.
 // -target-addr-end   <e> -- Specify where the phony target address range ends.
 // -target-section-sep <d> -- Specify how big a gap should be left between the
 //                            end of one section and the start of the next.
@@ -555,8 +547,7 @@ static void remapSectionsAndSymbols(const llvm::Triple &TargetTriple,
 
   // Apply any section-specific mappings that were requested on the command
   // line.
-  typedef std::map<void*, uint64_t> AppliedMappingsT;
-  AppliedMappingsT AppliedMappings = applySpecificSectionMappings(Checker);
+  applySpecificSectionMappings(Checker);
 
   // Keep an "already allocated" mapping of section target addresses to sizes.
   // Sections whose address mappings aren't specified on the command line will
@@ -564,15 +555,19 @@ static void remapSectionsAndSymbols(const llvm::Triple &TargetTriple,
   // minimum separation.
   std::map<uint64_t, uint64_t> AlreadyAllocated;
 
-  // Move the previously applied mappings into the already-allocated map.
+  // Move the previously applied mappings (whether explicitly specified on the
+  // command line, or implicitly set by RuntimeDyld) into the already-allocated
+  // map.
   for (WorklistT::iterator I = Worklist.begin(), E = Worklist.end();
        I != E;) {
     WorklistT::iterator Tmp = I;
     ++I;
-    AppliedMappingsT::iterator AI = AppliedMappings.find(Tmp->first);
+    auto LoadAddr = Checker.getSectionLoadAddress(Tmp->first);
 
-    if (AI != AppliedMappings.end()) {
-      AlreadyAllocated[AI->second] = Tmp->second;
+    if (LoadAddr &&
+        *LoadAddr != static_cast<uint64_t>(
+                       reinterpret_cast<uintptr_t>(Tmp->first))) {
+      AlreadyAllocated[*LoadAddr] = Tmp->second;
       Worklist.erase(Tmp);
     }
   }
@@ -607,7 +602,7 @@ static void remapSectionsAndSymbols(const llvm::Triple &TargetTriple,
 
   // Add dummy symbols to the memory manager.
   for (const auto &Mapping : DummySymbolMappings) {
-    size_t EqualsIdx = Mapping.find_first_of("=");
+    size_t EqualsIdx = Mapping.find_first_of('=');
 
     if (EqualsIdx == StringRef::npos)
       report_fatal_error("Invalid dummy symbol specification '" + Mapping +

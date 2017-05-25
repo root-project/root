@@ -21,6 +21,8 @@
 
 namespace llvm {
 
+class AArch64RegisterBankInfo;
+
 class AArch64TargetMachine : public LLVMTargetMachine {
 protected:
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
@@ -46,7 +48,7 @@ public:
   }
 
 private:
-  AArch64Subtarget Subtarget;
+  bool isLittle;
 };
 
 // AArch64 little endian target machine.

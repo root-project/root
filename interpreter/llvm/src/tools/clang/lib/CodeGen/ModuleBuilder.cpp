@@ -92,6 +92,10 @@ namespace clang {
       return M.get();
     }
 
+    CGDebugInfo *getCGDebugInfo() {
+      return Builder->getModuleDebugInfo();
+    }
+
     llvm::Module *ReleaseModule() {
       // Remove pending etc decls in case of error; the asserts in StartModule()
       // will rightfully be confused otherwise, as none of the decls were
@@ -117,10 +121,10 @@ namespace clang {
     }
 
     llvm::Constant *GetAddrOfGlobal(GlobalDecl global, bool isForDefinition) {
-      return Builder->GetAddrOfGlobal(global, isForDefinition);
+      return Builder->GetAddrOfGlobal(global, ForDefinition_t(isForDefinition));
     }
 
-    llvm::Module *StartModule(const std::string& ModuleName,
+    llvm::Module *StartModule(llvm::StringRef ModuleName,
                               llvm::LLVMContext& C,
                               const CodeGenOptions& CGO) {
       assert(!M && "Replacing existing Module?");
@@ -279,14 +283,6 @@ namespace clang {
           break;
         }
       }
-
-      for (auto I = Builder->DeferredDeclsToEmit.begin(),
-             E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
-         if (I->GV == GV) {
-          Builder->DeferredDeclsToEmit.erase(I);
-          break;
-        }
-      }
     }
 
     void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName) {
@@ -371,7 +367,7 @@ namespace clang {
       // Provide some coverage mapping even for methods that aren't emitted.
       // Don't do this for templated classes though, as they may not be
       // instantiable.
-      if (!MD->getParent()->getDescribedClassTemplate())
+      if (!MD->getParent()->isDependentContext())
         Builder->AddDeferredUnusedCoverageMapping(MD);
     }
 
@@ -477,6 +473,10 @@ llvm::Module *CodeGenerator::ReleaseModule() {
   return static_cast<CodeGeneratorImpl*>(this)->ReleaseModule();
 }
 
+CGDebugInfo *CodeGenerator::getCGDebugInfo() {
+  return static_cast<CodeGeneratorImpl*>(this)->getCGDebugInfo();
+}
+
 const Decl *CodeGenerator::GetDeclForMangledName(llvm::StringRef name) {
   return static_cast<CodeGeneratorImpl*>(this)->GetDeclForMangledName(name);
 }
@@ -501,7 +501,7 @@ void CodeGenerator::forgetDecl(const GlobalDecl& GD,
 }
 
 
-llvm::Module *CodeGenerator::StartModule(const std::string& ModuleName,
+llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext& C,
                                          const CodeGenOptions& CGO) {
   return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C, CGO);

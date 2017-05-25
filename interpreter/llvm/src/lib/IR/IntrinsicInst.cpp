@@ -21,10 +21,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Metadata.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/raw_ostream.h"
 using namespace llvm;
 
@@ -82,4 +84,44 @@ int llvm::Intrinsic::lookupLLVMIntrinsicByName(ArrayRef<const char *> NameTable,
       (Name.startswith(NameFound) && Name[NameFound.size()] == '.'))
     return LastLow - NameTable.begin();
   return -1;
+}
+
+Value *InstrProfIncrementInst::getStep() const {
+  if (InstrProfIncrementInstStep::classof(this)) {
+    return const_cast<Value *>(getArgOperand(4));
+  }
+  const Module *M = getModule();
+  LLVMContext &Context = M->getContext();
+  return ConstantInt::get(Type::getInt64Ty(Context), 1);
+}
+
+ConstrainedFPIntrinsic::RoundingMode
+ConstrainedFPIntrinsic::getRoundingMode() const {
+  Metadata *MD = dyn_cast<MetadataAsValue>(getOperand(2))->getMetadata();
+  if (!MD || !isa<MDString>(MD))
+    return rmInvalid;
+  StringRef RoundingArg = cast<MDString>(MD)->getString();
+
+  // For dynamic rounding mode, we use round to nearest but we will set the
+  // 'exact' SDNodeFlag so that the value will not be rounded.
+  return StringSwitch<RoundingMode>(RoundingArg)
+    .Case("round.dynamic",    rmDynamic)
+    .Case("round.tonearest",  rmToNearest)
+    .Case("round.downward",   rmDownward)
+    .Case("round.upward",     rmUpward)
+    .Case("round.towardzero", rmTowardZero)
+    .Default(rmInvalid);
+}
+
+ConstrainedFPIntrinsic::ExceptionBehavior
+ConstrainedFPIntrinsic::getExceptionBehavior() const {
+  Metadata *MD = dyn_cast<MetadataAsValue>(getOperand(3))->getMetadata();
+  if (!MD || !isa<MDString>(MD))
+    return ebInvalid;
+  StringRef ExceptionArg = cast<MDString>(MD)->getString();
+  return StringSwitch<ExceptionBehavior>(ExceptionArg)
+    .Case("fpexcept.ignore",  ebIgnore)
+    .Case("fpexcept.maytrap", ebMayTrap)
+    .Case("fpexcept.strict",  ebStrict)
+    .Default(ebInvalid);
 }

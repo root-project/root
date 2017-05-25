@@ -53,7 +53,8 @@ using namespace llvm;
 static cl::opt<bool> DisableBasicAA("disable-basicaa", cl::Hidden,
                                     cl::init(false));
 
-AAResults::AAResults(AAResults &&Arg) : TLI(Arg.TLI), AAs(std::move(Arg.AAs)) {
+AAResults::AAResults(AAResults &&Arg)
+    : TLI(Arg.TLI), AAs(std::move(Arg.AAs)), AADeps(std::move(Arg.AADeps)) {
   for (auto &AA : AAs)
     AA->setAAResults(this);
 }
@@ -67,6 +68,22 @@ AAResults::~AAResults() {
   for (auto &AA : AAs)
     AA->setAAResults(nullptr);
 #endif
+}
+
+bool AAResults::invalidate(Function &F, const PreservedAnalyses &PA,
+                           FunctionAnalysisManager::Invalidator &Inv) {
+  // Check if the AA manager itself has been invalidated.
+  auto PAC = PA.getChecker<AAManager>();
+  if (!PAC.preserved() && !PAC.preservedSet<AllAnalysesOn<Function>>())
+    return true; // The manager needs to be blown away, clear everything.
+
+  // Check all of the dependencies registered.
+  for (AnalysisKey *ID : AADeps)
+    if (Inv.invalidate(ID, F, PA))
+      return true;
+
+  // Everything we depend on is still fine, so are we. Nothing to invalidate.
+  return false;
 }
 
 //===----------------------------------------------------------------------===//
@@ -110,7 +127,10 @@ ModRefInfo AAResults::getModRefInfo(Instruction *I, ImmutableCallSite Call) {
   // We may have two calls
   if (auto CS = ImmutableCallSite(I)) {
     // Check if the two calls modify the same memory
-    return getModRefInfo(Call, CS);
+    return getModRefInfo(CS, Call);
+  } else if (I->isFenceLike()) {
+    // If this is a fence, just return MRI_ModRef.
+    return MRI_ModRef;
   } else {
     // Otherwise, check if the call modifies or references the
     // location this memory access defines.  The best we can say
@@ -138,7 +158,8 @@ ModRefInfo AAResults::getModRefInfo(ImmutableCallSite CS,
   // Try to refine the mod-ref info further using other API entry points to the
   // aggregate set of AA results.
   auto MRB = getModRefBehavior(CS);
-  if (MRB == FMRB_DoesNotAccessMemory)
+  if (MRB == FMRB_DoesNotAccessMemory ||
+      MRB == FMRB_OnlyAccessesInaccessibleMem)
     return MRI_NoModRef;
 
   if (onlyReadsMemory(MRB))
@@ -146,7 +167,7 @@ ModRefInfo AAResults::getModRefInfo(ImmutableCallSite CS,
   else if (doesNotReadMemory(MRB))
     Result = ModRefInfo(Result & MRI_Mod);
 
-  if (onlyAccessesArgPointees(MRB)) {
+  if (onlyAccessesArgPointees(MRB) || onlyAccessesInaccessibleOrArgMem(MRB)) {
     bool DoesAlias = false;
     ModRefInfo AllArgsMask = MRI_NoModRef;
     if (doesAccessArgPointees(MRB)) {
@@ -311,8 +332,8 @@ FunctionModRefBehavior AAResults::getModRefBehavior(const Function *F) {
 
 ModRefInfo AAResults::getModRefInfo(const LoadInst *L,
                                     const MemoryLocation &Loc) {
-  // Be conservative in the face of volatile/atomic.
-  if (!L->isUnordered())
+  // Be conservative in the face of atomic.
+  if (isStrongerThan(L->getOrdering(), AtomicOrdering::Unordered))
     return MRI_ModRef;
 
   // If the load address doesn't alias the given address, it doesn't read
@@ -326,8 +347,8 @@ ModRefInfo AAResults::getModRefInfo(const LoadInst *L,
 
 ModRefInfo AAResults::getModRefInfo(const StoreInst *S,
                                     const MemoryLocation &Loc) {
-  // Be conservative in the face of volatile/atomic.
-  if (!S->isUnordered())
+  // Be conservative in the face of atomic.
+  if (isStrongerThan(S->getOrdering(), AtomicOrdering::Unordered))
     return MRI_ModRef;
 
   if (Loc.Ptr) {
@@ -344,6 +365,14 @@ ModRefInfo AAResults::getModRefInfo(const StoreInst *S,
 
   // Otherwise, a store just writes.
   return MRI_Mod;
+}
+
+ModRefInfo AAResults::getModRefInfo(const FenceInst *S, const MemoryLocation &Loc) {
+  // If we know that the location is a constant memory location, the fence
+  // cannot modify this location.
+  if (Loc.Ptr && pointsToConstantMemory(Loc))
+    return MRI_Ref;
+  return MRI_ModRef;
 }
 
 ModRefInfo AAResults::getModRefInfo(const VAArgInst *V,
@@ -456,7 +485,8 @@ ModRefInfo AAResults::callCapturesBefore(const Instruction *I,
     // pointer were passed to arguments that were neither of these, then it
     // couldn't be no-capture.
     if (!(*CI)->getType()->isPointerTy() ||
-        (!CS.doesNotCapture(ArgNo) && !CS.isByValArgument(ArgNo)))
+        (!CS.doesNotCapture(ArgNo) &&
+         ArgNo < CS.getNumArgOperands() && !CS.isByValArgument(ArgNo)))
       continue;
 
     // If this is a no-capture pointer argument, see if we can tell that it
@@ -509,7 +539,7 @@ bool AAResults::canInstructionRangeModRef(const Instruction &I1,
 AAResults::Concept::~Concept() {}
 
 // Provide a definition for the static object used to identify passes.
-char AAManager::PassID;
+AnalysisKey AAManager::Key;
 
 namespace {
 /// A wrapper pass for external alias analyses. This just squirrels away the
@@ -667,7 +697,7 @@ AAResults llvm::createLegacyPMAAResults(Pass &P, Function &F,
 
 bool llvm::isNoAliasCall(const Value *V) {
   if (auto CS = ImmutableCallSite(V))
-    return CS.paramHasAttr(0, Attribute::NoAlias);
+    return CS.hasRetAttr(Attribute::NoAlias);
   return false;
 }
 

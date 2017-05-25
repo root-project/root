@@ -18,7 +18,6 @@
 
 #include "UnwrappedLineParser.h"
 #include "clang/Format/Format.h"
-#include <string>
 
 namespace clang {
 class SourceManager;
@@ -40,6 +39,7 @@ class AnnotatedLine {
 public:
   AnnotatedLine(const UnwrappedLine &Line)
       : First(Line.Tokens.front().Tok), Level(Line.Level),
+        MatchingOpeningBlockLineIndex(Line.MatchingOpeningBlockLineIndex),
         InPPDirective(Line.InPPDirective),
         MustBeDeclaration(Line.MustBeDeclaration), MightBeFunctionDecl(false),
         IsMultiVariableDeclStmt(false), Affected(false),
@@ -110,6 +110,7 @@ public:
 
   LineType Type;
   unsigned Level;
+  size_t MatchingOpeningBlockLineIndex;
   bool InPPDirective;
   bool MustBeDeclaration;
   bool MightBeFunctionDecl;
@@ -123,7 +124,7 @@ public:
   /// input ranges.
   bool LeadingEmptyLinesAffected;
 
-  /// \c True if a one of this line's children intersects with an input range.
+  /// \c True if one of this line's children intersects with an input range.
   bool ChildrenAffected;
 
 private:

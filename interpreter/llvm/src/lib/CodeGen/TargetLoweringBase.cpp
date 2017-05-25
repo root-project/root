@@ -14,12 +14,14 @@
 #include "llvm/Target/TargetLowering.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/CodeGen/Analysis.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
+#include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/StackMaps.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -43,6 +45,26 @@ static cl::opt<bool> JumpIsExpensiveOverride(
     "jump-is-expensive", cl::init(false),
     cl::desc("Do not create extra branches to split comparison logic."),
     cl::Hidden);
+
+static cl::opt<unsigned> MinimumJumpTableEntries
+  ("min-jump-table-entries", cl::init(4), cl::Hidden,
+   cl::desc("Set minimum number of entries to use a jump table."));
+
+static cl::opt<unsigned> MaximumJumpTableSize
+  ("max-jump-table-size", cl::init(0), cl::Hidden,
+   cl::desc("Set maximum size of jump tables; zero for no limit."));
+
+/// Minimum jump table density for normal functions.
+static cl::opt<unsigned>
+    JumpTableDensity("jump-table-density", cl::init(10), cl::Hidden,
+                     cl::desc("Minimum density for building a jump table in "
+                              "a normal function"));
+
+/// Minimum jump table density for -Os or -Oz functions.
+static cl::opt<unsigned> OptsizeJumpTableDensity(
+    "optsize-jump-table-density", cl::init(40), cl::Hidden,
+    cl::desc("Minimum density for building a jump table in "
+             "an optsize function"));
 
 // Although this default value is arbitrary, it is not random. It is assumed
 // that a condition that evaluates the same way by a higher percentage than this
@@ -352,6 +374,11 @@ static void InitLibcallNames(const char **Names, const Triple &TT) {
   Names[RTLIB::MEMCPY] = "memcpy";
   Names[RTLIB::MEMMOVE] = "memmove";
   Names[RTLIB::MEMSET] = "memset";
+  Names[RTLIB::MEMCPY_ELEMENT_ATOMIC_1] = "__llvm_memcpy_element_atomic_1";
+  Names[RTLIB::MEMCPY_ELEMENT_ATOMIC_2] = "__llvm_memcpy_element_atomic_2";
+  Names[RTLIB::MEMCPY_ELEMENT_ATOMIC_4] = "__llvm_memcpy_element_atomic_4";
+  Names[RTLIB::MEMCPY_ELEMENT_ATOMIC_8] = "__llvm_memcpy_element_atomic_8";
+  Names[RTLIB::MEMCPY_ELEMENT_ATOMIC_16] = "__llvm_memcpy_element_atomic_16";
   Names[RTLIB::UNWIND_RESUME] = "_Unwind_Resume";
   Names[RTLIB::SYNC_VAL_COMPARE_AND_SWAP_1] = "__sync_val_compare_and_swap_1";
   Names[RTLIB::SYNC_VAL_COMPARE_AND_SWAP_2] = "__sync_val_compare_and_swap_2";
@@ -488,12 +515,10 @@ static void InitLibcallNames(const char **Names, const Triple &TT) {
   Names[RTLIB::DEOPTIMIZE] = "__llvm_deoptimize";
 }
 
-/// InitLibcallCallingConvs - Set default libcall CallingConvs.
-///
+/// Set default libcall CallingConvs.
 static void InitLibcallCallingConvs(CallingConv::ID *CCs) {
-  for (int i = 0; i < RTLIB::UNKNOWN_LIBCALL; ++i) {
-    CCs[i] = CallingConv::C;
-  }
+  for (int LC = 0; LC < RTLIB::UNKNOWN_LIBCALL; ++LC)
+    CCs[LC] = CallingConv::C;
 }
 
 /// getFPEXT - Return the FPEXT_*_* value for the given types, or
@@ -756,6 +781,24 @@ RTLIB::Libcall RTLIB::getSYNC(unsigned Opc, MVT VT) {
   return UNKNOWN_LIBCALL;
 }
 
+RTLIB::Libcall RTLIB::getMEMCPY_ELEMENT_ATOMIC(uint64_t ElementSize) {
+  switch (ElementSize) {
+  case 1:
+    return MEMCPY_ELEMENT_ATOMIC_1;
+  case 2:
+    return MEMCPY_ELEMENT_ATOMIC_2;
+  case 4:
+    return MEMCPY_ELEMENT_ATOMIC_4;
+  case 8:
+    return MEMCPY_ELEMENT_ATOMIC_8;
+  case 16:
+    return MEMCPY_ELEMENT_ATOMIC_16;
+  default:
+    return UNKNOWN_LIBCALL;
+  }
+
+}
+
 /// InitCmpLibcallCCs - Set default comparison libcall CC.
 ///
 static void InitCmpLibcallCCs(ISD::CondCode *CCs) {
@@ -804,13 +847,10 @@ TargetLoweringBase::TargetLoweringBase(const TargetMachine &tm) : TM(tm) {
     = MaxStoresPerMemmoveOptSize = 4;
   UseUnderscoreSetJmp = false;
   UseUnderscoreLongJmp = false;
-  SelectIsExpensive = false;
   HasMultipleConditionRegisters = false;
   HasExtractBitsInsn = false;
-  FsqrtIsCheap = false;
   JumpIsExpensive = JumpIsExpensiveOverride;
   PredictableSelectIsExpensive = false;
-  MaskAndBranchFoldingIsLegal = false;
   EnableExtLdPromotion = false;
   HasFloatingPointExceptions = true;
   StackPointerRegisterToSaveRestore = 0;
@@ -823,9 +863,8 @@ TargetLoweringBase::TargetLoweringBase(const TargetMachine &tm) : TM(tm) {
   MinFunctionAlignment = 0;
   PrefFunctionAlignment = 0;
   PrefLoopAlignment = 0;
-  GatherAllAliasesMaxDepth = 6;
+  GatherAllAliasesMaxDepth = 18;
   MinStackArgumentAlignment = 1;
-  MinimumJumpTableEntries = 4;
   // TODO: the default will be switched to 0 in the next commit, along
   // with the Target-specific changes necessary.
   MaxAtomicSizeInBitsSupported = 1024;
@@ -874,6 +913,7 @@ void TargetLoweringBase::initActions() {
     setOperationAction(ISD::SMAX, VT, Expand);
     setOperationAction(ISD::UMIN, VT, Expand);
     setOperationAction(ISD::UMAX, VT, Expand);
+    setOperationAction(ISD::ABS, VT, Expand);
 
     // Overflow operations default to expand
     setOperationAction(ISD::SADDO, VT, Expand);
@@ -882,6 +922,10 @@ void TargetLoweringBase::initActions() {
     setOperationAction(ISD::USUBO, VT, Expand);
     setOperationAction(ISD::SMULO, VT, Expand);
     setOperationAction(ISD::UMULO, VT, Expand);
+
+    // ADDCARRY operations default to expand
+    setOperationAction(ISD::ADDCARRY, VT, Expand);
+    setOperationAction(ISD::SUBCARRY, VT, Expand);
 
     // These default to Expand so they will be expanded to CTLZ/CTTZ by default.
     setOperationAction(ISD::CTLZ_ZERO_UNDEF, VT, Expand);
@@ -956,15 +1000,11 @@ EVT TargetLoweringBase::getShiftAmountTy(EVT LHSTy,
   return getScalarShiftAmountTy(DL, LHSTy);
 }
 
-/// canOpTrap - Returns true if the operation can trap for the value type.
-/// VT must be a legal type.
 bool TargetLoweringBase::canOpTrap(unsigned Op, EVT VT) const {
   assert(isTypeLegal(VT));
   switch (Op) {
   default:
     return false;
-  case ISD::FDIV:
-  case ISD::FREM:
   case ISD::SDIV:
   case ISD::UDIV:
   case ISD::SREM:
@@ -1161,12 +1201,11 @@ static unsigned getVectorTypeBreakdownMVT(MVT VT, MVT &IntermediateVT,
 
 /// isLegalRC - Return true if the value types that can be represented by the
 /// specified register class are all legal.
-bool TargetLoweringBase::isLegalRC(const TargetRegisterClass *RC) const {
-  for (TargetRegisterClass::vt_iterator I = RC->vt_begin(), E = RC->vt_end();
-       I != E; ++I) {
+bool TargetLoweringBase::isLegalRC(const TargetRegisterInfo &TRI,
+                                   const TargetRegisterClass &RC) const {
+  for (auto I = TRI.legalclasstypes_begin(RC); *I != MVT::Other; ++I)
     if (isTypeLegal(*I))
       return true;
-  }
   return false;
 }
 
@@ -1177,7 +1216,7 @@ TargetLoweringBase::emitPatchPoint(MachineInstr &InitialMI,
                                    MachineBasicBlock *MBB) const {
   MachineInstr *MI = &InitialMI;
   MachineFunction &MF = *MI->getParent()->getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   // We're handling multiple types of operands here:
   // PATCHPOINT MetaArgs - live-in, read only, direct
@@ -1204,7 +1243,7 @@ TargetLoweringBase::emitPatchPoint(MachineInstr &InitialMI,
 
     // Copy operands before the frame-index.
     for (unsigned i = 0; i < OperIdx; ++i)
-      MIB.addOperand(MI->getOperand(i));
+      MIB.add(MI->getOperand(i));
     // Add frame index operands recognized by stackmaps.cpp
     if (MFI.isStatepointSpillSlotObjectIndex(FI)) {
       // indirect-mem-ref tag, size, #FI, offset.
@@ -1214,18 +1253,18 @@ TargetLoweringBase::emitPatchPoint(MachineInstr &InitialMI,
       assert(MI->getOpcode() == TargetOpcode::STATEPOINT && "sanity");
       MIB.addImm(StackMaps::IndirectMemRefOp);
       MIB.addImm(MFI.getObjectSize(FI));
-      MIB.addOperand(MI->getOperand(OperIdx));
+      MIB.add(MI->getOperand(OperIdx));
       MIB.addImm(0);
     } else {
       // direct-mem-ref tag, #FI, offset.
       // Used by patchpoint, and direct alloca arguments to statepoints
       MIB.addImm(StackMaps::DirectMemRefOp);
-      MIB.addOperand(MI->getOperand(OperIdx));
+      MIB.add(MI->getOperand(OperIdx));
       MIB.addImm(0);
     }
     // Copy the operands after the frame index.
     for (unsigned i = OperIdx + 1; i != MI->getNumOperands(); ++i)
-      MIB.addOperand(MI->getOperand(i));
+      MIB.add(MI->getOperand(i));
 
     // Inherit previous memory operands.
     MIB->setMemRefs(MI->memoperands_begin(), MI->memoperands_end());
@@ -1234,7 +1273,7 @@ TargetLoweringBase::emitPatchPoint(MachineInstr &InitialMI,
     // Add a new memory operand for this FI.
     assert(MFI.getObjectOffset(FI) != -1);
 
-    unsigned Flags = MachineMemOperand::MOLoad;
+    auto Flags = MachineMemOperand::MOLoad;
     if (MI->getOpcode() == TargetOpcode::STATEPOINT) {
       Flags |= MachineMemOperand::MOStore;
       Flags |= MachineMemOperand::MOVolatile;
@@ -1276,9 +1315,9 @@ TargetLoweringBase::findRepresentativeClass(const TargetRegisterInfo *TRI,
   for (int i = SuperRegRC.find_first(); i >= 0; i = SuperRegRC.find_next(i)) {
     const TargetRegisterClass *SuperRC = TRI->getRegClass(i);
     // We want the largest possible spill size.
-    if (SuperRC->getSize() <= BestRC->getSize())
+    if (TRI->getSpillSize(*SuperRC) <= TRI->getSpillSize(*BestRC))
       continue;
-    if (!isLegalRC(SuperRC))
+    if (!isLegalRC(*TRI, *SuperRC))
       continue;
     BestRC = SuperRC;
   }
@@ -1402,7 +1441,7 @@ void TargetLoweringBase::computeRegisterProperties(
         MVT SVT = (MVT::SimpleValueType) nVT;
         // Promote vectors of integers to vectors with the same number
         // of elements, with a wider element type.
-        if (SVT.getVectorElementType().getSizeInBits() > EltVT.getSizeInBits() &&
+        if (SVT.getScalarSizeInBits() > EltVT.getSizeInBits() &&
             SVT.getVectorNumElements() == NElts && isTypeLegal(SVT)) {
           TransformToType[i] = SVT;
           RegisterTypeForVT[i] = SVT;
@@ -1566,7 +1605,7 @@ unsigned TargetLoweringBase::getVectorTypeBreakdown(LLVMContext &Context, EVT VT
 /// type of the given function.  This does not require a DAG or a return value,
 /// and is suitable for use before any DAGs for the function are constructed.
 /// TODO: Move this out of TargetLowering.cpp.
-void llvm::GetReturnInfo(Type *ReturnType, AttributeSet attr,
+void llvm::GetReturnInfo(Type *ReturnType, AttributeList attr,
                          SmallVectorImpl<ISD::OutputArg> &Outs,
                          const TargetLowering &TLI, const DataLayout &DL) {
   SmallVector<EVT, 4> ValueVTs;
@@ -1578,9 +1617,9 @@ void llvm::GetReturnInfo(Type *ReturnType, AttributeSet attr,
     EVT VT = ValueVTs[j];
     ISD::NodeType ExtendKind = ISD::ANY_EXTEND;
 
-    if (attr.hasAttribute(AttributeSet::ReturnIndex, Attribute::SExt))
+    if (attr.hasAttribute(AttributeList::ReturnIndex, Attribute::SExt))
       ExtendKind = ISD::SIGN_EXTEND;
-    else if (attr.hasAttribute(AttributeSet::ReturnIndex, Attribute::ZExt))
+    else if (attr.hasAttribute(AttributeList::ReturnIndex, Attribute::ZExt))
       ExtendKind = ISD::ZERO_EXTEND;
 
     // FIXME: C calling convention requires the return type to be promoted to
@@ -1598,13 +1637,13 @@ void llvm::GetReturnInfo(Type *ReturnType, AttributeSet attr,
 
     // 'inreg' on function refers to return value
     ISD::ArgFlagsTy Flags = ISD::ArgFlagsTy();
-    if (attr.hasAttribute(AttributeSet::ReturnIndex, Attribute::InReg))
+    if (attr.hasAttribute(AttributeList::ReturnIndex, Attribute::InReg))
       Flags.setInReg();
 
     // Propagate extension type if any
-    if (attr.hasAttribute(AttributeSet::ReturnIndex, Attribute::SExt))
+    if (attr.hasAttribute(AttributeList::ReturnIndex, Attribute::SExt))
       Flags.setSExt();
-    else if (attr.hasAttribute(AttributeSet::ReturnIndex, Attribute::ZExt))
+    else if (attr.hasAttribute(AttributeList::ReturnIndex, Attribute::ZExt))
       Flags.setZExt();
 
     for (unsigned i = 0; i < NumParts; ++i)
@@ -1754,16 +1793,48 @@ TargetLoweringBase::getTypeLegalizationCost(const DataLayout &DL,
   }
 }
 
+Value *TargetLoweringBase::getDefaultSafeStackPointerLocation(IRBuilder<> &IRB,
+                                                              bool UseTLS) const {
+  // compiler-rt provides a variable with a magic name.  Targets that do not
+  // link with compiler-rt may also provide such a variable.
+  Module *M = IRB.GetInsertBlock()->getParent()->getParent();
+  const char *UnsafeStackPtrVar = "__safestack_unsafe_stack_ptr";
+  auto UnsafeStackPtr =
+      dyn_cast_or_null<GlobalVariable>(M->getNamedValue(UnsafeStackPtrVar));
+
+  Type *StackPtrTy = Type::getInt8PtrTy(M->getContext());
+
+  if (!UnsafeStackPtr) {
+    auto TLSModel = UseTLS ?
+        GlobalValue::InitialExecTLSModel :
+        GlobalValue::NotThreadLocal;
+    // The global variable is not defined yet, define it ourselves.
+    // We use the initial-exec TLS model because we do not support the
+    // variable living anywhere other than in the main executable.
+    UnsafeStackPtr = new GlobalVariable(
+        *M, StackPtrTy, false, GlobalValue::ExternalLinkage, nullptr,
+        UnsafeStackPtrVar, nullptr, TLSModel);
+  } else {
+    // The variable exists, check its type and attributes.
+    if (UnsafeStackPtr->getValueType() != StackPtrTy)
+      report_fatal_error(Twine(UnsafeStackPtrVar) + " must have void* type");
+    if (UseTLS != UnsafeStackPtr->isThreadLocal())
+      report_fatal_error(Twine(UnsafeStackPtrVar) + " must " +
+                         (UseTLS ? "" : "not ") + "be thread-local");
+  }
+  return UnsafeStackPtr;
+}
+
 Value *TargetLoweringBase::getSafeStackPointerLocation(IRBuilder<> &IRB) const {
   if (!TM.getTargetTriple().isAndroid())
-    return nullptr;
+    return getDefaultSafeStackPointerLocation(IRB, true);
 
   // Android provides a libc function to retrieve the address of the current
   // thread's unsafe stack pointer.
   Module *M = IRB.GetInsertBlock()->getParent()->getParent();
   Type *StackPtrTy = Type::getInt8PtrTy(M->getContext());
   Value *Fn = M->getOrInsertFunction("__safestack_pointer_address",
-                                     StackPtrTy->getPointerTo(0), nullptr);
+                                     StackPtrTy->getPointerTo(0));
   return IRB.CreateCall(Fn);
 }
 
@@ -1818,9 +1889,7 @@ Value *TargetLoweringBase::getIRStackGuard(IRBuilder<> &IRB) const {
   if (getTargetMachine().getTargetTriple().isOSOpenBSD()) {
     Module &M = *IRB.GetInsertBlock()->getParent()->getParent();
     PointerType *PtrTy = Type::getInt8PtrTy(M.getContext());
-    auto Guard = cast<GlobalValue>(M.getOrInsertGlobal("__guard_local", PtrTy));
-    Guard->setVisibility(GlobalValue::HiddenVisibility);
-    return Guard;
+    return M.getOrInsertGlobal("__guard_local", PtrTy);
   }
   return nullptr;
 }
@@ -1839,4 +1908,212 @@ Value *TargetLoweringBase::getSDagStackGuard(const Module &M) const {
 
 Value *TargetLoweringBase::getSSPStackGuardCheck(const Module &M) const {
   return nullptr;
+}
+
+unsigned TargetLoweringBase::getMinimumJumpTableEntries() const {
+  return MinimumJumpTableEntries;
+}
+
+void TargetLoweringBase::setMinimumJumpTableEntries(unsigned Val) {
+  MinimumJumpTableEntries = Val;
+}
+
+unsigned TargetLoweringBase::getMinimumJumpTableDensity(bool OptForSize) const {
+  return OptForSize ? OptsizeJumpTableDensity : JumpTableDensity;
+}
+
+unsigned TargetLoweringBase::getMaximumJumpTableSize() const {
+  return MaximumJumpTableSize;
+}
+
+void TargetLoweringBase::setMaximumJumpTableSize(unsigned Val) {
+  MaximumJumpTableSize = Val;
+}
+
+//===----------------------------------------------------------------------===//
+//  Reciprocal Estimates
+//===----------------------------------------------------------------------===//
+
+/// Get the reciprocal estimate attribute string for a function that will
+/// override the target defaults.
+static StringRef getRecipEstimateForFunc(MachineFunction &MF) {
+  const Function *F = MF.getFunction();
+  return F->getFnAttribute("reciprocal-estimates").getValueAsString();
+}
+
+/// Construct a string for the given reciprocal operation of the given type.
+/// This string should match the corresponding option to the front-end's
+/// "-mrecip" flag assuming those strings have been passed through in an
+/// attribute string. For example, "vec-divf" for a division of a vXf32.
+static std::string getReciprocalOpName(bool IsSqrt, EVT VT) {
+  std::string Name = VT.isVector() ? "vec-" : "";
+
+  Name += IsSqrt ? "sqrt" : "div";
+
+  // TODO: Handle "half" or other float types?
+  if (VT.getScalarType() == MVT::f64) {
+    Name += "d";
+  } else {
+    assert(VT.getScalarType() == MVT::f32 &&
+           "Unexpected FP type for reciprocal estimate");
+    Name += "f";
+  }
+
+  return Name;
+}
+
+/// Return the character position and value (a single numeric character) of a
+/// customized refinement operation in the input string if it exists. Return
+/// false if there is no customized refinement step count.
+static bool parseRefinementStep(StringRef In, size_t &Position,
+                                uint8_t &Value) {
+  const char RefStepToken = ':';
+  Position = In.find(RefStepToken);
+  if (Position == StringRef::npos)
+    return false;
+
+  StringRef RefStepString = In.substr(Position + 1);
+  // Allow exactly one numeric character for the additional refinement
+  // step parameter.
+  if (RefStepString.size() == 1) {
+    char RefStepChar = RefStepString[0];
+    if (RefStepChar >= '0' && RefStepChar <= '9') {
+      Value = RefStepChar - '0';
+      return true;
+    }
+  }
+  report_fatal_error("Invalid refinement step for -recip.");
+}
+
+/// For the input attribute string, return one of the ReciprocalEstimate enum
+/// status values (enabled, disabled, or not specified) for this operation on
+/// the specified data type.
+static int getOpEnabled(bool IsSqrt, EVT VT, StringRef Override) {
+  if (Override.empty())
+    return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+
+  SmallVector<StringRef, 4> OverrideVector;
+  SplitString(Override, OverrideVector, ",");
+  unsigned NumArgs = OverrideVector.size();
+
+  // Check if "all", "none", or "default" was specified.
+  if (NumArgs == 1) {
+    // Look for an optional setting of the number of refinement steps needed
+    // for this type of reciprocal operation.
+    size_t RefPos;
+    uint8_t RefSteps;
+    if (parseRefinementStep(Override, RefPos, RefSteps)) {
+      // Split the string for further processing.
+      Override = Override.substr(0, RefPos);
+    }
+
+    // All reciprocal types are enabled.
+    if (Override == "all")
+      return TargetLoweringBase::ReciprocalEstimate::Enabled;
+
+    // All reciprocal types are disabled.
+    if (Override == "none")
+      return TargetLoweringBase::ReciprocalEstimate::Disabled;
+
+    // Target defaults for enablement are used.
+    if (Override == "default")
+      return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+  }
+
+  // The attribute string may omit the size suffix ('f'/'d').
+  std::string VTName = getReciprocalOpName(IsSqrt, VT);
+  std::string VTNameNoSize = VTName;
+  VTNameNoSize.pop_back();
+  static const char DisabledPrefix = '!';
+
+  for (StringRef RecipType : OverrideVector) {
+    size_t RefPos;
+    uint8_t RefSteps;
+    if (parseRefinementStep(RecipType, RefPos, RefSteps))
+      RecipType = RecipType.substr(0, RefPos);
+
+    // Ignore the disablement token for string matching.
+    bool IsDisabled = RecipType[0] == DisabledPrefix;
+    if (IsDisabled)
+      RecipType = RecipType.substr(1);
+
+    if (RecipType.equals(VTName) || RecipType.equals(VTNameNoSize))
+      return IsDisabled ? TargetLoweringBase::ReciprocalEstimate::Disabled
+                        : TargetLoweringBase::ReciprocalEstimate::Enabled;
+  }
+
+  return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+}
+
+/// For the input attribute string, return the customized refinement step count
+/// for this operation on the specified data type. If the step count does not
+/// exist, return the ReciprocalEstimate enum value for unspecified.
+static int getOpRefinementSteps(bool IsSqrt, EVT VT, StringRef Override) {
+  if (Override.empty())
+    return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+
+  SmallVector<StringRef, 4> OverrideVector;
+  SplitString(Override, OverrideVector, ",");
+  unsigned NumArgs = OverrideVector.size();
+
+  // Check if "all", "default", or "none" was specified.
+  if (NumArgs == 1) {
+    // Look for an optional setting of the number of refinement steps needed
+    // for this type of reciprocal operation.
+    size_t RefPos;
+    uint8_t RefSteps;
+    if (!parseRefinementStep(Override, RefPos, RefSteps))
+      return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+
+    // Split the string for further processing.
+    Override = Override.substr(0, RefPos);
+    assert(Override != "none" &&
+           "Disabled reciprocals, but specifed refinement steps?");
+
+    // If this is a general override, return the specified number of steps.
+    if (Override == "all" || Override == "default")
+      return RefSteps;
+  }
+
+  // The attribute string may omit the size suffix ('f'/'d').
+  std::string VTName = getReciprocalOpName(IsSqrt, VT);
+  std::string VTNameNoSize = VTName;
+  VTNameNoSize.pop_back();
+
+  for (StringRef RecipType : OverrideVector) {
+    size_t RefPos;
+    uint8_t RefSteps;
+    if (!parseRefinementStep(RecipType, RefPos, RefSteps))
+      continue;
+
+    RecipType = RecipType.substr(0, RefPos);
+    if (RecipType.equals(VTName) || RecipType.equals(VTNameNoSize))
+      return RefSteps;
+  }
+
+  return TargetLoweringBase::ReciprocalEstimate::Unspecified;
+}
+
+int TargetLoweringBase::getRecipEstimateSqrtEnabled(EVT VT,
+                                                    MachineFunction &MF) const {
+  return getOpEnabled(true, VT, getRecipEstimateForFunc(MF));
+}
+
+int TargetLoweringBase::getRecipEstimateDivEnabled(EVT VT,
+                                                   MachineFunction &MF) const {
+  return getOpEnabled(false, VT, getRecipEstimateForFunc(MF));
+}
+
+int TargetLoweringBase::getSqrtRefinementSteps(EVT VT,
+                                               MachineFunction &MF) const {
+  return getOpRefinementSteps(true, VT, getRecipEstimateForFunc(MF));
+}
+
+int TargetLoweringBase::getDivRefinementSteps(EVT VT,
+                                              MachineFunction &MF) const {
+  return getOpRefinementSteps(false, VT, getRecipEstimateForFunc(MF));
+}
+
+void TargetLoweringBase::finalizeLowering(MachineFunction &MF) const {
+  MF.getRegInfo().freezeReservedRegs(MF);
 }

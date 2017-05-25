@@ -1,4 +1,4 @@
-//===-- llvm/MC/MCAsmBackend.h - MC Asm Backend -----------------*- C++ -*-===//
+//===- llvm/MC/MCAsmBackend.h - MC Asm Backend ------------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -12,34 +12,33 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/MC/MCDirectives.h"
-#include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCFixup.h"
-#include "llvm/Support/DataTypes.h"
-#include "llvm/Support/ErrorHandling.h"
+#include <cstdint>
 
 namespace llvm {
+
 class MCAsmLayout;
 class MCAssembler;
-class MCELFObjectTargetWriter;
+class MCCFIInstruction;
 struct MCFixupKindInfo;
 class MCFragment;
 class MCInst;
-class MCRelaxableFragment;
 class MCObjectWriter;
-class MCSection;
+class MCRelaxableFragment;
+class MCSubtargetInfo;
 class MCValue;
 class raw_pwrite_stream;
 
 /// Generic interface to target specific assembler backends.
 class MCAsmBackend {
-  MCAsmBackend(const MCAsmBackend &) = delete;
-  void operator=(const MCAsmBackend &) = delete;
-
 protected: // Can only create subclasses.
   MCAsmBackend();
 
 public:
+  MCAsmBackend(const MCAsmBackend &) = delete;
+  MCAsmBackend &operator=(const MCAsmBackend &) = delete;
   virtual ~MCAsmBackend();
 
   /// lifetime management
@@ -72,9 +71,11 @@ public:
 
   /// Apply the \p Value for given \p Fixup into the provided data fragment, at
   /// the offset specified by the fixup and following the fixup kind as
-  /// appropriate.
+  /// appropriate. Errors (such as an out of range fixup value) should be
+  /// reported via \p Ctx.
   virtual void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-                          uint64_t Value, bool IsPCRel) const = 0;
+                          uint64_t Value, bool IsPCRel,
+                          MCContext &Ctx) const = 0;
 
   /// @}
 
@@ -102,8 +103,10 @@ public:
   ///
   /// \param Inst The instruction to relax, which may be the same as the
   /// output.
+  /// \param STI the subtarget information for the associated instruction.
   /// \param [out] Res On return, the relaxed instruction.
-  virtual void relaxInstruction(const MCInst &Inst, MCInst &Res) const = 0;
+  virtual void relaxInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
+                                MCInst &Res) const = 0;
 
   /// @}
 
@@ -133,6 +136,6 @@ public:
   }
 };
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_MC_MCASMBACKEND_H

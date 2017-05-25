@@ -235,6 +235,7 @@ public:
 ///
 class LLVM_LIBRARY_VISIBILITY SplitEditor {
   SplitAnalysis &SA;
+  AliasAnalysis &AA;
   LiveIntervals &LIS;
   VirtRegMap &VRM;
   MachineRegisterInfo &MRI;
@@ -324,12 +325,30 @@ private:
     return LRCalc[SpillMode != SM_Partition && RegIdx != 0];
   }
 
+  /// Find a subrange corresponding to the lane mask @p LM in the live
+  /// interval @p LI. The interval @p LI is assumed to contain such a subrange.
+  /// This function is used to find corresponding subranges between the
+  /// original interval and the new intervals.
+  LiveInterval::SubRange &getSubRangeForMask(LaneBitmask LM, LiveInterval &LI);
+
+  /// Add a segment to the interval LI for the value number VNI. If LI has
+  /// subranges, corresponding segments will be added to them as well, but
+  /// with newly created value numbers. If Original is true, dead def will
+  /// only be added a subrange of LI if the corresponding subrange of the
+  /// original interval has a def at this index. Otherwise, all subranges
+  /// of LI will be updated.
+  void addDeadDef(LiveInterval &LI, VNInfo *VNI, bool Original);
+
   /// defValue - define a value in RegIdx from ParentVNI at Idx.
   /// Idx does not have to be ParentVNI->def, but it must be contained within
   /// ParentVNI's live range in ParentLI. The new value is added to the value
-  /// map.
+  /// map. The value being defined may either come from rematerialization
+  /// (or an inserted copy), or it may be coming from the original interval.
+  /// The parameter Original should be true in the latter case, otherwise
+  /// it should be false.
   /// Return the new LI value.
-  VNInfo *defValue(unsigned RegIdx, const VNInfo *ParentVNI, SlotIndex Idx);
+  VNInfo *defValue(unsigned RegIdx, const VNInfo *ParentVNI, SlotIndex Idx,
+                   bool Original);
 
   /// forceRecompute - Force the live range of ParentVNI in RegIdx to be
   /// recomputed by LiveRangeCalc::extend regardless of the number of defs.
@@ -367,6 +386,15 @@ private:
   /// Return true if any ranges were skipped.
   bool transferValues();
 
+  /// Live range @p LR corresponding to the lane Mask @p LM has a live
+  /// PHI def at the beginning of block @p B. Extend the range @p LR of
+  /// all predecessor values that reach this def. If @p LR is a subrange,
+  /// the array @p Undefs is the set of all locations where it is undefined
+  /// via <def,read-undef> in other subranges for the same register.
+  void extendPHIRange(MachineBasicBlock &B, LiveRangeCalc &LRC,
+                      LiveRange &LR, LaneBitmask LM,
+                      ArrayRef<SlotIndex> Undefs);
+
   /// extendPHIKillRanges - Extend the ranges of all values killed by original
   /// parent PHIDefs.
   void extendPHIKillRanges();
@@ -377,11 +405,23 @@ private:
   /// deleteRematVictims - Delete defs that are dead after rematerializing.
   void deleteRematVictims();
 
+  /// Add a copy instruction copying \p FromReg to \p ToReg before
+  /// \p InsertBefore. This can be invoked with a \p LaneMask which may make it
+  /// necessary to construct a sequence of copies to cover it exactly.
+  SlotIndex buildCopy(unsigned FromReg, unsigned ToReg, LaneBitmask LaneMask,
+      MachineBasicBlock &MBB, MachineBasicBlock::iterator InsertBefore,
+      bool Late, unsigned RegIdx);
+
+  SlotIndex buildSingleSubRegCopy(unsigned FromReg, unsigned ToReg,
+      MachineBasicBlock &MB, MachineBasicBlock::iterator InsertBefore,
+      unsigned SubIdx, LiveInterval &DestLI, bool Late, SlotIndex PrevCopy);
+
 public:
   /// Create a new SplitEditor for editing the LiveInterval analyzed by SA.
   /// Newly created intervals will be appended to newIntervals.
-  SplitEditor(SplitAnalysis &SA, LiveIntervals&, VirtRegMap&,
-              MachineDominatorTree&, MachineBlockFrequencyInfo &);
+  SplitEditor(SplitAnalysis &SA, AliasAnalysis &AA, LiveIntervals&,
+              VirtRegMap&, MachineDominatorTree&,
+              MachineBlockFrequencyInfo &);
 
   /// reset - Prepare for a new split.
   void reset(LiveRangeEdit&, ComplementSpillMode = SM_Partition);

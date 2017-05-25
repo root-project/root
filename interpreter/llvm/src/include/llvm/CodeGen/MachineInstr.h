@@ -39,9 +39,6 @@ class DIExpression;
 class TargetInstrInfo;
 class TargetRegisterClass;
 class TargetRegisterInfo;
-#ifdef LLVM_BUILD_GLOBAL_ISEL
-class Type;
-#endif
 class MachineFunction;
 class MachineMemOperand;
 
@@ -53,7 +50,8 @@ class MachineMemOperand;
 /// without having their destructor called.
 ///
 class MachineInstr
-    : public ilist_node_with_parent<MachineInstr, MachineBasicBlock> {
+    : public ilist_node_with_parent<MachineInstr, MachineBasicBlock,
+                                    ilist_sentinel_tracking<true>> {
 public:
   typedef MachineMemOperand **mmo_iterator;
 
@@ -62,7 +60,7 @@ public:
   /// otherwise easily derivable from the IR text.
   ///
   enum CommentFlag {
-    ReloadReuse = 0x1
+    ReloadReuse = 0x1 // higher bits are reserved for target dep comments.
   };
 
   enum MIFlag {
@@ -106,13 +104,6 @@ private:
 
   DebugLoc debugLoc;                    // Source line information.
 
-#ifdef LLVM_BUILD_GLOBAL_ISEL
-  /// Type of the instruction in case of a generic opcode.
-  /// \invariant This must be nullptr is getOpcode() is not
-  /// in the range of generic opcodes.
-  Type *Ty;
-#endif
-
   MachineInstr(const MachineInstr&) = delete;
   void operator=(const MachineInstr&) = delete;
   // Use MachineFunction::DeleteMachineInstr() instead.
@@ -120,7 +111,7 @@ private:
 
   // Intrusive list support
   friend struct ilist_traits<MachineInstr>;
-  friend struct ilist_traits<MachineBasicBlock>;
+  friend struct ilist_callback_traits<MachineBasicBlock>;
   void setParent(MachineBasicBlock *P) { Parent = P; }
 
   /// This constructor creates a copy of the given
@@ -152,8 +143,8 @@ public:
   }
 
   /// Set a flag for the AsmPrinter.
-  void setAsmPrinterFlag(CommentFlag Flag) {
-    AsmPrinterFlags |= (uint8_t)Flag;
+  void setAsmPrinterFlag(uint8_t Flag) {
+    AsmPrinterFlags |= Flag;
   }
 
   /// Clear specific AsmPrinter flags.
@@ -187,10 +178,6 @@ public:
     Flags &= ~((uint8_t)Flag);
   }
 
-  /// Set the type of the instruction.
-  /// \pre getOpcode() is in the range of the generic opcodes.
-  void setType(Type *Ty);
-  Type *getType() const;
 
   /// Return true if MI is in a bundle (but not the first MI in a bundle).
   ///
@@ -404,10 +391,10 @@ public:
   bool hasProperty(unsigned MCFlag, QueryType Type = AnyInBundle) const {
     // Inline the fast path for unbundled or bundle-internal instructions.
     if (Type == IgnoreBundle || !isBundled() || isBundledWithPred())
-      return getDesc().getFlags() & (1 << MCFlag);
+      return getDesc().getFlags() & (1ULL << MCFlag);
 
     // If this is the first instruction in a bundle, take the slow path.
-    return hasPropertyInBundle(1 << MCFlag, Type);
+    return hasPropertyInBundle(1ULL << MCFlag, Type);
   }
 
   /// Return true if this instruction can have a variable number of operands.
@@ -734,8 +721,11 @@ public:
     IgnoreVRegDefs  // Ignore virtual register definitions
   };
 
-  /// Return true if this instruction is identical to (same
-  /// opcode and same operands as) the specified instruction.
+  /// Return true if this instruction is identical to \p Other.
+  /// Two instructions are identical if they have the same opcode and all their
+  /// operands are identical (with respect to MachineOperand::isIdenticalTo()).
+  /// Note that this means liveness related flags (dead, undef, kill) do not
+  /// affect the notion of identical.
   bool isIdenticalTo(const MachineInstr &Other,
                      MICheckType Check = CheckDefs) const;
 
@@ -1118,18 +1108,32 @@ public:
   /// the instruction's location and its intended destination.
   bool isSafeToMove(AliasAnalysis *AA, bool &SawStore) const;
 
+  /// Returns true if this instruction's memory access aliases the memory
+  /// access of Other.
+  //
+  /// Assumes any physical registers used to compute addresses
+  /// have the same value for both instructions.  Returns false if neither
+  /// instruction writes to memory.
+  ///
+  /// @param AA Optional alias analysis, used to compare memory operands.
+  /// @param Other MachineInstr to check aliasing against.
+  /// @param UseTBAA Whether to pass TBAA information to alias analysis.
+  bool mayAlias(AliasAnalysis *AA, MachineInstr &Other, bool UseTBAA);
+
   /// Return true if this instruction may have an ordered
   /// or volatile memory reference, or if the information describing the memory
   /// reference is not available. Return false if it is known to have no
   /// ordered or volatile memory references.
   bool hasOrderedMemoryRef() const;
 
-  /// Return true if this instruction is loading from a
-  /// location whose value is invariant across the function.  For example,
-  /// loading a value from the constant pool or from the argument area of
-  /// a function if it does not change.  This should only return true of *all*
-  /// loads the instruction does are invariant (if it does multiple loads).
-  bool isInvariantLoad(AliasAnalysis *AA) const;
+  /// Return true if this load instruction never traps and points to a memory
+  /// location whose value doesn't change during the execution of this function.
+  ///
+  /// Examples include loading a value from the constant pool or from the
+  /// argument area of a function (if it does not change).  If the instruction
+  /// does multiple loads, this returns true only if all of the loads are
+  /// dereferenceable and invariant.
+  bool isDereferenceableInvariantLoad(AliasAnalysis *AA) const;
 
   /// If the specified instruction is a PHI that always merges together the
   /// same virtual register, return the register, otherwise return 0.
@@ -1154,13 +1158,21 @@ public:
   /// instruction to this instruction.
   void copyImplicitOps(MachineFunction &MF, const MachineInstr &MI);
 
-  //
-  // Debugging support
-  //
-  void print(raw_ostream &OS, bool SkipOpers = false) const;
-  void print(raw_ostream &OS, ModuleSlotTracker &MST,
-             bool SkipOpers = false) const;
+  /// Debugging support
+  /// @{
+  /// Print this MI to \p OS.
+  /// Only print the defs and the opcode if \p SkipOpers is true.
+  /// Otherwise, also print operands if \p SkipDebugLoc is true.
+  /// Otherwise, also print the debug loc, with a terminating newline.
+  /// \p TII is used to print the opcode name.  If it's not present, but the
+  /// MI is in a function, the opcode will be printed using the function's TII.
+  void print(raw_ostream &OS, bool SkipOpers = false, bool SkipDebugLoc = false,
+             const TargetInstrInfo *TII = nullptr) const;
+  void print(raw_ostream &OS, ModuleSlotTracker &MST, bool SkipOpers = false,
+             bool SkipDebugLoc = false,
+             const TargetInstrInfo *TII = nullptr) const;
   void dump() const;
+  /// @}
 
   //===--------------------------------------------------------------------===//
   // Accessors used to build up machine instructions.

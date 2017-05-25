@@ -89,7 +89,8 @@ public:
   /// \name MCStreamer Interface
   /// @{
 
-  void EmitLabel(MCSymbol *Symbol) override;
+  void EmitLabel(MCSymbol *Symbol, SMLoc Loc = SMLoc()) override;
+  virtual void EmitLabel(MCSymbol *Symbol, SMLoc Loc, MCFragment *F);
   void EmitAssignment(MCSymbol *Symbol, const MCExpr *Value) override;
   void EmitValueImpl(const MCExpr *Value, unsigned Size,
                      SMLoc Loc = SMLoc()) override;
@@ -97,7 +98,8 @@ public:
   void EmitSLEB128Value(const MCExpr *Value) override;
   void EmitWeakReference(MCSymbol *Alias, const MCSymbol *Symbol) override;
   void ChangeSection(MCSection *Section, const MCExpr *Subsection) override;
-  void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo& STI) override;
+  void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
+                       bool = false) override;
 
   /// \brief Emit an instruction to a special fragment, because this instruction
   /// can change its size during relaxation.
@@ -112,7 +114,8 @@ public:
                             unsigned MaxBytesToEmit = 0) override;
   void EmitCodeAlignment(unsigned ByteAlignment,
                          unsigned MaxBytesToEmit = 0) override;
-  void emitValueToOffset(const MCExpr *Offset, unsigned char Value) override;
+  void emitValueToOffset(const MCExpr *Offset, unsigned char Value,
+                         SMLoc Loc) override;
   void EmitDwarfLocDirective(unsigned FileNo, unsigned Line,
                              unsigned Column, unsigned Flags,
                              unsigned Isa, unsigned Discriminator,
@@ -124,18 +127,23 @@ public:
                                  const MCSymbol *Label);
   void EmitCVLocDirective(unsigned FunctionId, unsigned FileNo, unsigned Line,
                           unsigned Column, bool PrologueEnd, bool IsStmt,
-                          StringRef FileName) override;
+                          StringRef FileName, SMLoc Loc) override;
   void EmitCVLinetableDirective(unsigned FunctionId, const MCSymbol *Begin,
                                 const MCSymbol *End) override;
-  void EmitCVInlineLinetableDirective(
-      unsigned PrimaryFunctionId, unsigned SourceFileId, unsigned SourceLineNum,
-      const MCSymbol *FnStartSym, const MCSymbol *FnEndSym,
-      ArrayRef<unsigned> SecondaryFunctionIds) override;
+  void EmitCVInlineLinetableDirective(unsigned PrimaryFunctionId,
+                                      unsigned SourceFileId,
+                                      unsigned SourceLineNum,
+                                      const MCSymbol *FnStartSym,
+                                      const MCSymbol *FnEndSym) override;
   void EmitCVDefRangeDirective(
       ArrayRef<std::pair<const MCSymbol *, const MCSymbol *>> Ranges,
       StringRef FixedSizePortion) override;
   void EmitCVStringTableDirective() override;
   void EmitCVFileChecksumsDirective() override;
+  void EmitDTPRel32Value(const MCExpr *Value) override;
+  void EmitDTPRel64Value(const MCExpr *Value) override;
+  void EmitTPRel32Value(const MCExpr *Value) override;
+  void EmitTPRel64Value(const MCExpr *Value) override;
   void EmitGPRel32Value(const MCExpr *Value) override;
   void EmitGPRel64Value(const MCExpr *Value) override;
   bool EmitRelocDirective(const MCExpr &Offset, StringRef Name,
@@ -146,6 +154,7 @@ public:
                 SMLoc Loc = SMLoc()) override;
   void emitFill(const MCExpr &NumValues, int64_t Size, int64_t Expr,
                 SMLoc Loc = SMLoc()) override;
+  void EmitFileDirective(StringRef Filename) override;
 
   void FinishImpl() override;
 

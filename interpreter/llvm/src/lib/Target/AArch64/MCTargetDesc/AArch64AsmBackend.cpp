@@ -11,6 +11,7 @@
 #include "AArch64RegisterInfo.h"
 #include "MCTargetDesc/AArch64FixupKinds.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDirectives.h"
@@ -72,13 +73,14 @@ public:
   }
 
   void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
-                  uint64_t Value, bool IsPCRel) const override;
+                  uint64_t Value, bool IsPCRel, MCContext &Ctx) const override;
 
   bool mayNeedRelaxation(const MCInst &Inst) const override;
   bool fixupNeedsRelaxation(const MCFixup &Fixup, uint64_t Value,
                             const MCRelaxableFragment *DF,
                             const MCAsmLayout &Layout) const override;
-  void relaxInstruction(const MCInst &Inst, MCInst &Res) const override;
+  void relaxInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
+                        MCInst &Res) const override;
   bool writeNopData(uint64_t Count, MCObjectWriter *OW) const override;
 
   void HandleAssemblerFlag(MCAssemblerFlag Flag) {}
@@ -136,15 +138,15 @@ static unsigned AdrImmBits(unsigned Value) {
 }
 
 static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
-                                 MCContext *Ctx) {
+                                 MCContext &Ctx) {
   unsigned Kind = Fixup.getKind();
   int64_t SignedValue = static_cast<int64_t>(Value);
   switch (Kind) {
   default:
     llvm_unreachable("Unknown fixup kind!");
   case AArch64::fixup_aarch64_pcrel_adr_imm21:
-    if (Ctx && (SignedValue > 2097151 || SignedValue < -2097152))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
+    if (SignedValue > 2097151 || SignedValue < -2097152)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
     return AdrImmBits(Value & 0x1fffffULL);
   case AArch64::fixup_aarch64_pcrel_adrp_imm21:
     return AdrImmBits((Value & 0x1fffff000ULL) >> 12);
@@ -152,66 +154,65 @@ static uint64_t adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case AArch64::fixup_aarch64_pcrel_branch19:
     // Signed 21-bit immediate
     if (SignedValue > 2097151 || SignedValue < -2097152)
-      if (Ctx) Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Ctx && (Value & 0x3))
-      Ctx->reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value & 0x3)
+      Ctx.reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
     // Low two bits are not encoded.
     return (Value >> 2) & 0x7ffff;
   case AArch64::fixup_aarch64_add_imm12:
   case AArch64::fixup_aarch64_ldst_imm12_scale1:
     // Unsigned 12-bit immediate
-    if (Ctx && Value >= 0x1000)
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value >= 0x1000)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
     return Value;
   case AArch64::fixup_aarch64_ldst_imm12_scale2:
     // Unsigned 12-bit immediate which gets multiplied by 2
-    if (Ctx && (Value >= 0x2000))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Ctx && (Value & 0x1))
-      Ctx->reportError(Fixup.getLoc(), "fixup must be 2-byte aligned");
+    if (Value >= 0x2000)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value & 0x1)
+      Ctx.reportError(Fixup.getLoc(), "fixup must be 2-byte aligned");
     return Value >> 1;
   case AArch64::fixup_aarch64_ldst_imm12_scale4:
     // Unsigned 12-bit immediate which gets multiplied by 4
-    if (Ctx && (Value >= 0x4000))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Ctx && (Value & 0x3))
-      Ctx->reportError(Fixup.getLoc(), "fixup must be 4-byte aligned");
+    if (Value >= 0x4000)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value & 0x3)
+      Ctx.reportError(Fixup.getLoc(), "fixup must be 4-byte aligned");
     return Value >> 2;
   case AArch64::fixup_aarch64_ldst_imm12_scale8:
     // Unsigned 12-bit immediate which gets multiplied by 8
-    if (Ctx && (Value >= 0x8000))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Ctx && (Value & 0x7))
-      Ctx->reportError(Fixup.getLoc(), "fixup must be 8-byte aligned");
+    if (Value >= 0x8000)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value & 0x7)
+      Ctx.reportError(Fixup.getLoc(), "fixup must be 8-byte aligned");
     return Value >> 3;
   case AArch64::fixup_aarch64_ldst_imm12_scale16:
     // Unsigned 12-bit immediate which gets multiplied by 16
-    if (Ctx && (Value >= 0x10000))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
-    if (Ctx && (Value & 0xf))
-      Ctx->reportError(Fixup.getLoc(), "fixup must be 16-byte aligned");
+    if (Value >= 0x10000)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
+    if (Value & 0xf)
+      Ctx.reportError(Fixup.getLoc(), "fixup must be 16-byte aligned");
     return Value >> 4;
   case AArch64::fixup_aarch64_movw:
-    if (Ctx)
-      Ctx->reportError(Fixup.getLoc(),
-                       "no resolvable MOVZ/MOVK fixups supported yet");
+    Ctx.reportError(Fixup.getLoc(),
+                    "no resolvable MOVZ/MOVK fixups supported yet");
     return Value;
   case AArch64::fixup_aarch64_pcrel_branch14:
     // Signed 16-bit immediate
-    if (Ctx && (SignedValue > 32767 || SignedValue < -32768))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
+    if (SignedValue > 32767 || SignedValue < -32768)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
     // Low two bits are not encoded (4-byte alignment assumed).
-    if (Ctx && (Value & 0x3))
-      Ctx->reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
+    if (Value & 0x3)
+      Ctx.reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
     return (Value >> 2) & 0x3fff;
   case AArch64::fixup_aarch64_pcrel_branch26:
   case AArch64::fixup_aarch64_pcrel_call26:
     // Signed 28-bit immediate
-    if (Ctx && (SignedValue > 134217727 || SignedValue < -134217728))
-      Ctx->reportError(Fixup.getLoc(), "fixup value out of range");
+    if (SignedValue > 134217727 || SignedValue < -134217728)
+      Ctx.reportError(Fixup.getLoc(), "fixup value out of range");
     // Low two bits are not encoded (4-byte alignment assumed).
-    if (Ctx && (Value & 0x3))
-      Ctx->reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
+    if (Value & 0x3)
+      Ctx.reportError(Fixup.getLoc(), "fixup not sufficiently aligned");
     return (Value >> 2) & 0x3ffffff;
   case FK_Data_1:
   case FK_Data_2:
@@ -262,13 +263,13 @@ unsigned AArch64AsmBackend::getFixupKindContainereSizeInBytes(unsigned Kind) con
 
 void AArch64AsmBackend::applyFixup(const MCFixup &Fixup, char *Data,
                                    unsigned DataSize, uint64_t Value,
-                                   bool IsPCRel) const {
+                                   bool IsPCRel, MCContext &Ctx) const {
   unsigned NumBytes = getFixupKindNumBytes(Fixup.getKind());
   if (!Value)
     return; // Doesn't change encoding.
   MCFixupKindInfo Info = getFixupKindInfo(Fixup.getKind());
   // Apply any target-specific value adjustments.
-  Value = adjustFixupValue(Fixup, Value, nullptr);
+  Value = adjustFixupValue(Fixup, Value, Ctx);
 
   // Shift the value into position.
   Value <<= Info.TargetOffset;
@@ -313,6 +314,7 @@ bool AArch64AsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup,
 }
 
 void AArch64AsmBackend::relaxInstruction(const MCInst &Inst,
+                                         const MCSubtargetInfo &STI,
                                          MCInst &Res) const {
   llvm_unreachable("AArch64AsmBackend::relaxInstruction() unimplemented");
 }
@@ -527,12 +529,14 @@ namespace {
 class ELFAArch64AsmBackend : public AArch64AsmBackend {
 public:
   uint8_t OSABI;
+  bool IsILP32;
 
-  ELFAArch64AsmBackend(const Target &T, uint8_t OSABI, bool IsLittleEndian)
-    : AArch64AsmBackend(T, IsLittleEndian), OSABI(OSABI) {}
+  ELFAArch64AsmBackend(const Target &T, uint8_t OSABI, bool IsLittleEndian,
+                       bool IsILP32)
+    : AArch64AsmBackend(T, IsLittleEndian), OSABI(OSABI), IsILP32(IsILP32) {}
 
   MCObjectWriter *createObjectWriter(raw_pwrite_stream &OS) const override {
-    return createAArch64ELFObjectWriter(OS, OSABI, IsLittleEndian);
+    return createAArch64ELFObjectWriter(OS, OSABI, IsLittleEndian, IsILP32);
   }
 
   void processFixupValue(const MCAssembler &Asm, const MCAsmLayout &Layout,
@@ -559,12 +563,6 @@ void ELFAArch64AsmBackend::processFixupValue(
   // to the linker -- a relocation!
   if ((uint32_t)Fixup.getKind() == AArch64::fixup_aarch64_pcrel_adrp_imm21)
     IsResolved = false;
-
-  // Try to get the encoded value for the fixup as-if we're mapping it into
-  // the instruction. This allows adjustFixupValue() to issue a diagnostic
-  // if the value is invalid.
-  if (IsResolved)
-    (void)adjustFixupValue(Fixup, Value, &Asm.getContext());
 }
 
 }
@@ -572,22 +570,25 @@ void ELFAArch64AsmBackend::processFixupValue(
 MCAsmBackend *llvm::createAArch64leAsmBackend(const Target &T,
                                               const MCRegisterInfo &MRI,
                                               const Triple &TheTriple,
-                                              StringRef CPU) {
+                                              StringRef CPU,
+                                              const MCTargetOptions &Options) {
   if (TheTriple.isOSBinFormatMachO())
     return new DarwinAArch64AsmBackend(T, MRI);
 
   assert(TheTriple.isOSBinFormatELF() && "Expect either MachO or ELF target");
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
-  return new ELFAArch64AsmBackend(T, OSABI, /*IsLittleEndian=*/true);
+  bool IsILP32 = Options.getABIName() == "ilp32";
+  return new ELFAArch64AsmBackend(T, OSABI, /*IsLittleEndian=*/true, IsILP32);
 }
 
 MCAsmBackend *llvm::createAArch64beAsmBackend(const Target &T,
                                               const MCRegisterInfo &MRI,
                                               const Triple &TheTriple,
-                                              StringRef CPU) {
+                                              StringRef CPU,
+                                              const MCTargetOptions &Options) {
   assert(TheTriple.isOSBinFormatELF() &&
          "Big endian is only supported for ELF targets!");
   uint8_t OSABI = MCELFObjectTargetWriter::getOSABI(TheTriple.getOS());
-  return new ELFAArch64AsmBackend(T, OSABI,
-                                  /*IsLittleEndian=*/false);
+  bool IsILP32 = Options.getABIName() == "ilp32";
+  return new ELFAArch64AsmBackend(T, OSABI, /*IsLittleEndian=*/false, IsILP32);
 }

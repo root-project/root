@@ -36,10 +36,6 @@ We don't use the BRANCH ON INDEX instructions.
 
 --
 
-We don't use the TEST DATA CLASS instructions.
-
---
-
 We only use MVC, XC and CLC for constant-length block operations.
 We could extend them to variable-length operations too,
 using EXECUTE RELATIVE LONG.
@@ -67,7 +63,7 @@ via a register.)
 
 --
 
-We don't use ICM or STCM.
+We don't use ICM, STCM, or CLM.
 
 --
 

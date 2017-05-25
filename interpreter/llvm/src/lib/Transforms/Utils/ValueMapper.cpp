@@ -38,15 +38,6 @@ struct DelayedBasicBlock {
   BasicBlock *OldBB;
   std::unique_ptr<BasicBlock> TempBB;
 
-  // Explicit move for MSVC.
-  DelayedBasicBlock(DelayedBasicBlock &&X)
-      : OldBB(std::move(X.OldBB)), TempBB(std::move(X.TempBB)) {}
-  DelayedBasicBlock &operator=(DelayedBasicBlock &&X) {
-    OldBB = std::move(X.OldBB);
-    TempBB = std::move(X.TempBB);
-    return *this;
-  }
-
   DelayedBasicBlock(const BlockAddress &Old)
       : OldBB(Old.getBasicBlock()),
         TempBB(BasicBlock::Create(Old.getContext())) {}
@@ -130,6 +121,8 @@ public:
 
   void addFlags(RemapFlags Flags);
 
+  void remapGlobalObjectMetadata(GlobalObject &GO);
+
   Value *mapValue(const Value *V);
   void remapInstruction(Instruction *I);
   void remapFunction(Function &F);
@@ -184,17 +177,6 @@ class MDNodeMapper {
     bool HasChanged = false;
     unsigned ID = ~0u;
     TempMDNode Placeholder;
-
-    Data() {}
-    Data(Data &&X)
-        : HasChanged(std::move(X.HasChanged)), ID(std::move(X.ID)),
-          Placeholder(std::move(X.Placeholder)) {}
-    Data &operator=(Data &&X) {
-      HasChanged = std::move(X.HasChanged);
-      ID = std::move(X.ID);
-      Placeholder = std::move(X.Placeholder);
-      return *this;
-    }
   };
 
   /// A graph of uniqued nodes.
@@ -671,7 +653,7 @@ void MDNodeMapper::UniquedGraph::propagateChanges() {
       if (D.HasChanged)
         continue;
 
-      if (!llvm::any_of(N->operands(), [&](const Metadata *Op) {
+      if (none_of(N->operands(), [&](const Metadata *Op) {
             auto Where = Info.find(Op);
             return Where != Info.end() && Where->second.HasChanged;
           }))
@@ -701,6 +683,7 @@ void MDNodeMapper::mapNodesInPOT(UniquedGraph &G) {
     remapOperands(*ClonedN, [this, &D, &G](Metadata *Old) {
       if (Optional<Metadata *> MappedOp = getMappedOp(Old))
         return *MappedOp;
+      (void)D;
       assert(G.Info[Old].ID > D.ID && "Expected a forward reference");
       return &G.getFwdReference(*cast<MDNode>(Old));
     });
@@ -821,6 +804,7 @@ void Mapper::flush() {
     switch (E.Kind) {
     case WorklistEntry::MapGlobalInit:
       E.Data.GVInit.GV->setInitializer(mapConstant(E.Data.GVInit.Init));
+      remapGlobalObjectMetadata(*E.Data.GVInit.GV);
       break;
     case WorklistEntry::MapAppendingVar: {
       unsigned PrefixSize = AppendingInits.size() - E.AppendingGVNumNewMembers;
@@ -911,6 +895,14 @@ void Mapper::remapInstruction(Instruction *I) {
   I->mutateType(TypeMapper->remapType(I->getType()));
 }
 
+void Mapper::remapGlobalObjectMetadata(GlobalObject &GO) {
+  SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
+  GO.getAllMetadata(MDs);
+  GO.clearMetadata();
+  for (const auto &I : MDs)
+    GO.addMetadata(I.first, *cast<MDNode>(mapMetadata(I.second)));
+}
+
 void Mapper::remapFunction(Function &F) {
   // Remap the operands.
   for (Use &Op : F.operands())
@@ -918,11 +910,7 @@ void Mapper::remapFunction(Function &F) {
       Op = mapValue(Op);
 
   // Remap the metadata attachments.
-  SmallVector<std::pair<unsigned, MDNode *>, 8> MDs;
-  F.getAllMetadata(MDs);
-  F.clearMetadata();
-  for (const auto &I : MDs)
-    F.addMetadata(I.first, *cast<MDNode>(mapMetadata(I.second)));
+  remapGlobalObjectMetadata(F);
 
   // Remap the argument types.
   if (TypeMapper)
@@ -961,11 +949,10 @@ void Mapper::mapAppendingVariable(GlobalVariable &GV, Constant *InitPrefix,
     Constant *NewV;
     if (IsOldCtorDtor) {
       auto *S = cast<ConstantStruct>(V);
-      auto *E1 = mapValue(S->getOperand(0));
-      auto *E2 = mapValue(S->getOperand(1));
-      Value *Null = Constant::getNullValue(VoidPtrTy);
-      NewV =
-          ConstantStruct::get(cast<StructType>(EltTy), E1, E2, Null, nullptr);
+      auto *E1 = cast<Constant>(mapValue(S->getOperand(0)));
+      auto *E2 = cast<Constant>(mapValue(S->getOperand(1)));
+      Constant *Null = Constant::getNullValue(VoidPtrTy);
+      NewV = ConstantStruct::get(cast<StructType>(EltTy), E1, E2, Null);
     } else {
       NewV = cast_or_null<Constant>(mapValue(V));
     }

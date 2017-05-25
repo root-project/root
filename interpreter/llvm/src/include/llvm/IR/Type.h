@@ -1,4 +1,4 @@
-//===-- llvm/Type.h - Classes for handling data types -----------*- C++ -*-===//
+//===- llvm/Type.h - Classes for handling data types ------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -18,21 +18,22 @@
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/Support/CBindingWrapping.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/DataTypes.h"
+#include "llvm/Support/CBindingWrapping.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/ErrorHandling.h"
+#include <cassert>
+#include <cstdint>
+#include <iterator>
 
 namespace llvm {
 
-class PointerType;
-class IntegerType;
-class raw_ostream;
-class Module;
-class LLVMContext;
-class LLVMContextImpl;
-class StringRef;
 template<class GraphType> struct GraphTraits;
+class IntegerType;
+class LLVMContext;
+class PointerType;
+class raw_ostream;
+class StringRef;
 
 /// The instances of the Type class are immutable: once they are created,
 /// they are never changed.  Also note that only one instance of a particular
@@ -81,12 +82,14 @@ private:
 
   TypeID   ID : 8;            // The current base type of this type.
   unsigned SubclassData : 24; // Space for subclasses to store data.
+                              // Note that this should be synchronized with
+                              // MAX_INT_BITS value in IntegerType class.
 
 protected:
   friend class LLVMContextImpl;
+
   explicit Type(LLVMContext &C, TypeID tid)
-    : Context(C), ID(tid), SubclassData(0),
-      NumContainedTys(0), ContainedTys(nullptr) {}
+    : Context(C), ID(tid), SubclassData(0) {}
   ~Type() = default;
 
   unsigned getSubclassData() const { return SubclassData; }
@@ -98,17 +101,17 @@ protected:
   }
 
   /// Keeps track of how many Type*'s there are in the ContainedTys list.
-  unsigned NumContainedTys;
+  unsigned NumContainedTys = 0;
 
   /// A pointer to the array of Types contained by this Type. For example, this
   /// includes the arguments of a function type, the elements of a structure,
   /// the pointee of a pointer, the element type of an array, etc. This pointer
   /// may be 0 for types that don't contain other types (Integer, Double,
   /// Float).
-  Type * const *ContainedTys;
+  Type * const *ContainedTys = nullptr;
 
   static bool isSequentialType(TypeID TyID) {
-    return TyID == ArrayTyID || TyID == PointerTyID || TyID == VectorTyID;
+    return TyID == ArrayTyID || TyID == VectorTyID;
   }
 
 public:
@@ -120,6 +123,7 @@ public:
   /// inlined with the operands when printing an instruction.
   void print(raw_ostream &O, bool IsForDebug = false,
              bool NoDetails = false) const;
+
   void dump() const;
 
   /// Return the LLVMContext in which this type was uniqued.
@@ -164,12 +168,12 @@ public:
 
   const fltSemantics &getFltSemantics() const {
     switch (getTypeID()) {
-    case HalfTyID: return APFloat::IEEEhalf;
-    case FloatTyID: return APFloat::IEEEsingle;
-    case DoubleTyID: return APFloat::IEEEdouble;
-    case X86_FP80TyID: return APFloat::x87DoubleExtended;
-    case FP128TyID: return APFloat::IEEEquad;
-    case PPC_FP128TyID: return APFloat::PPCDoubleDouble;
+    case HalfTyID: return APFloat::IEEEhalf();
+    case FloatTyID: return APFloat::IEEEsingle();
+    case DoubleTyID: return APFloat::IEEEdouble();
+    case X86_FP80TyID: return APFloat::x87DoubleExtended();
+    case FP128TyID: return APFloat::IEEEquad();
+    case PPC_FP128TyID: return APFloat::PPCDoubleDouble();
     default: llvm_unreachable("Invalid floating type");
     }
   }
@@ -288,19 +292,25 @@ public:
 
   /// If this is a vector type, return the element type, otherwise return
   /// 'this'.
-  Type *getScalarType() const LLVM_READONLY;
+  Type *getScalarType() const {
+    if (isVectorTy())
+      return getVectorElementType();
+    return const_cast<Type*>(this);
+  }
 
   //===--------------------------------------------------------------------===//
   // Type Iteration support.
   //
-  typedef Type * const *subtype_iterator;
+  using subtype_iterator = Type * const *;
+
   subtype_iterator subtype_begin() const { return ContainedTys; }
   subtype_iterator subtype_end() const { return &ContainedTys[NumContainedTys];}
   ArrayRef<Type*> subtypes() const {
     return makeArrayRef(subtype_begin(), subtype_end());
   }
 
-  typedef std::reverse_iterator<subtype_iterator> subtype_reverse_iterator;
+  using subtype_reverse_iterator = std::reverse_iterator<subtype_iterator>;
+
   subtype_reverse_iterator subtype_rbegin() const {
     return subtype_reverse_iterator(subtype_end());
   }
@@ -342,12 +352,22 @@ public:
   }
 
   inline uint64_t getArrayNumElements() const;
-  Type *getArrayElementType() const { return getSequentialElementType(); }
+
+  Type *getArrayElementType() const {
+    assert(getTypeID() == ArrayTyID);
+    return ContainedTys[0];
+  }
 
   inline unsigned getVectorNumElements() const;
-  Type *getVectorElementType() const { return getSequentialElementType(); }
+  Type *getVectorElementType() const {
+    assert(getTypeID() == VectorTyID);
+    return ContainedTys[0];
+  }
 
-  Type *getPointerElementType() const { return getSequentialElementType(); }
+  Type *getPointerElementType() const {
+    assert(getTypeID() == PointerTyID);
+    return ContainedTys[0];
+  }
 
   /// Get the address space of this pointer or pointer vector type.
   inline unsigned getPointerAddressSpace() const;
@@ -412,7 +432,7 @@ private:
 };
 
 // Printing of types.
-static inline raw_ostream &operator<<(raw_ostream &OS, Type &T) {
+static inline raw_ostream &operator<<(raw_ostream &OS, const Type &T) {
   T.print(OS);
   return OS;
 }
@@ -429,29 +449,21 @@ template <> struct isa_impl<PointerType, Type> {
 // graph of sub types.
 
 template <> struct GraphTraits<Type *> {
-  typedef Type NodeType;
-  typedef Type::subtype_iterator ChildIteratorType;
+  using NodeRef = Type *;
+  using ChildIteratorType = Type::subtype_iterator;
 
-  static inline NodeType *getEntryNode(Type *T) { return T; }
-  static inline ChildIteratorType child_begin(NodeType *N) {
-    return N->subtype_begin();
-  }
-  static inline ChildIteratorType child_end(NodeType *N) {
-    return N->subtype_end();
-  }
+  static NodeRef getEntryNode(Type *T) { return T; }
+  static ChildIteratorType child_begin(NodeRef N) { return N->subtype_begin(); }
+  static ChildIteratorType child_end(NodeRef N) { return N->subtype_end(); }
 };
 
 template <> struct GraphTraits<const Type*> {
-  typedef const Type NodeType;
-  typedef Type::subtype_iterator ChildIteratorType;
+  using NodeRef = const Type *;
+  using ChildIteratorType = Type::subtype_iterator;
 
-  static inline NodeType *getEntryNode(NodeType *T) { return T; }
-  static inline ChildIteratorType child_begin(NodeType *N) {
-    return N->subtype_begin();
-  }
-  static inline ChildIteratorType child_end(NodeType *N) {
-    return N->subtype_end();
-  }
+  static NodeRef getEntryNode(NodeRef T) { return T; }
+  static ChildIteratorType child_begin(NodeRef N) { return N->subtype_begin(); }
+  static ChildIteratorType child_end(NodeRef N) { return N->subtype_end(); }
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
@@ -467,6 +479,6 @@ inline LLVMTypeRef *wrap(Type **Tys) {
   return reinterpret_cast<LLVMTypeRef*>(const_cast<Type**>(Tys));
 }
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_TYPE_H

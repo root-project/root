@@ -1,4 +1,4 @@
-//=-- InstrProf.cpp - Instrumented profiling format support -----------------=//
+//===- InstrProf.cpp - Instrumented profiling format support --------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -12,22 +12,68 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ProfileData/InstrProf.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Triple.h"
+#include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/MDBuilder.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Type.h"
+#include "llvm/ProfileData/InstrProf.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Compression.h"
+#include "llvm/Support/Endian.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/LEB128.h"
 #include "llvm/Support/ManagedStatic.h"
+#include "llvm/Support/MathExtras.h"
+#include "llvm/Support/Path.h"
+#include "llvm/Support/SwapByteOrder.h"
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstring>
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <system_error>
+#include <utility>
+#include <vector>
 
 using namespace llvm;
 
-namespace {
-std::string getInstrProfErrString(instrprof_error Err) {
+static cl::opt<bool> StaticFuncFullModulePrefix(
+    "static-func-full-module-prefix", cl::init(true),
+    cl::desc("Use full module build paths in the profile counter names for "
+             "static functions."));
+
+// This option is tailored to users that have different top-level directory in
+// profile-gen and profile-use compilation. Users need to specific the number
+// of levels to strip. A value larger than the number of directories in the
+// source file will strip all the directory names and only leave the basename.
+//
+// Note current ThinLTO module importing for the indirect-calls assumes
+// the source directory name not being stripped. A non-zero option value here
+// can potentially prevent some inter-module indirect-call-promotions.
+static cl::opt<unsigned> StaticFuncStripDirNamePrefix(
+    "static-func-strip-dirname-prefix", cl::init(0),
+    cl::desc("Strip specified level of directory name from source path in "
+             "the profile counter name for static functions."));
+
+static std::string getInstrProfErrString(instrprof_error Err) {
   switch (Err) {
   case instrprof_error::success:
     return "Success";
@@ -63,19 +109,25 @@ std::string getInstrProfErrString(instrprof_error Err) {
     return "Failed to compress data (zlib)";
   case instrprof_error::uncompress_failed:
     return "Failed to uncompress data (zlib)";
+  case instrprof_error::empty_raw_profile:
+    return "Empty raw profile file";
   }
   llvm_unreachable("A value of instrprof_error has no message.");
 }
+
+namespace {
 
 // FIXME: This class is only here to support the transition to llvm::Error. It
 // will be removed once this transition is complete. Clients should prefer to
 // deal with the Error value directly, rather than converting to error_code.
 class InstrProfErrorCategoryType : public std::error_category {
-  const char *name() const LLVM_NOEXCEPT override { return "llvm.instrprof"; }
+  const char *name() const noexcept override { return "llvm.instrprof"; }
+
   std::string message(int IE) const override {
     return getInstrProfErrString(static_cast<instrprof_error>(IE));
   }
 };
+
 } // end anonymous namespace
 
 static ManagedStatic<InstrProfErrorCategoryType> ErrorCategory;
@@ -84,7 +136,48 @@ const std::error_category &llvm::instrprof_category() {
   return *ErrorCategory;
 }
 
+namespace {
+
+const char *InstrProfSectNameCommon[] = {
+#define INSTR_PROF_SECT_ENTRY(Kind, SectNameCommon, SectNameCoff, Prefix)      \
+  SectNameCommon,
+#include "llvm/ProfileData/InstrProfData.inc"
+};
+
+const char *InstrProfSectNameCoff[] = {
+#define INSTR_PROF_SECT_ENTRY(Kind, SectNameCommon, SectNameCoff, Prefix)      \
+  SectNameCoff,
+#include "llvm/ProfileData/InstrProfData.inc"
+};
+
+const char *InstrProfSectNamePrefix[] = {
+#define INSTR_PROF_SECT_ENTRY(Kind, SectNameCommon, SectNameCoff, Prefix)      \
+  Prefix,
+#include "llvm/ProfileData/InstrProfData.inc"
+};
+
+} // namespace
+
 namespace llvm {
+
+std::string getInstrProfSectionName(InstrProfSectKind IPSK,
+                                    Triple::ObjectFormatType OF,
+                                    bool AddSegmentInfo) {
+  std::string SectName;
+
+  if (OF == Triple::MachO && AddSegmentInfo)
+    SectName = InstrProfSectNamePrefix[IPSK];
+
+  if (OF == Triple::COFF)
+    SectName += InstrProfSectNameCoff[IPSK];
+  else
+    SectName += InstrProfSectNameCommon[IPSK];
+
+  if (OF == Triple::MachO && IPSK == IPSK_data && AddSegmentInfo)
+    SectName += ",regular,live_support";
+
+  return SectName;
+}
 
 void SoftInstrProfErrors::addError(instrprof_error IE) {
   if (IE == instrprof_error::success)
@@ -124,20 +217,46 @@ std::string getPGOFuncName(StringRef RawFuncName,
   return GlobalValue::getGlobalIdentifier(RawFuncName, Linkage, FileName);
 }
 
+// Strip NumPrefix level of directory name from PathNameStr. If the number of
+// directory separators is less than NumPrefix, strip all the directories and
+// leave base file name only.
+static StringRef stripDirPrefix(StringRef PathNameStr, uint32_t NumPrefix) {
+  uint32_t Count = NumPrefix;
+  uint32_t Pos = 0, LastPos = 0;
+  for (auto & CI : PathNameStr) {
+    ++Pos;
+    if (llvm::sys::path::is_separator(CI)) {
+      LastPos = Pos;
+      --Count;
+    }
+    if (Count == 0)
+      break;
+  }
+  return PathNameStr.substr(LastPos);
+}
+
 // Return the PGOFuncName. This function has some special handling when called
 // in LTO optimization. The following only applies when calling in LTO passes
 // (when \c InLTO is true): LTO's internalization privatizes many global linkage
 // symbols. This happens after value profile annotation, but those internal
 // linkage functions should not have a source prefix.
+// Additionally, for ThinLTO mode, exported internal functions are promoted
+// and renamed. We need to ensure that the original internal PGO name is
+// used when computing the GUID that is compared against the profiled GUIDs.
 // To differentiate compiler generated internal symbols from original ones,
 // PGOFuncName meta data are created and attached to the original internal
 // symbols in the value profile annotation step
 // (PGOUseFunc::annotateIndirectCallSites). If a symbol does not have the meta
 // data, its original linkage must be non-internal.
 std::string getPGOFuncName(const Function &F, bool InLTO, uint64_t Version) {
-  if (!InLTO)
-    return getPGOFuncName(F.getName(), F.getLinkage(), F.getParent()->getName(),
-                          Version);
+  if (!InLTO) {
+    StringRef FileName = (StaticFuncFullModulePrefix
+                              ? F.getParent()->getName()
+                              : sys::path::filename(F.getParent()->getName()));
+    if (StaticFuncFullModulePrefix && StaticFuncStripDirNamePrefix != 0)
+      FileName = stripDirPrefix(FileName, StaticFuncStripDirNamePrefix);
+    return getPGOFuncName(F.getName(), F.getLinkage(), FileName, Version);
+  }
 
   // In LTO mode (when InLTO is true), first check if there is a meta data.
   if (MDNode *MD = getPGOFuncNameMetadata(F)) {
@@ -183,7 +302,6 @@ std::string getPGOFuncNameVarName(StringRef FuncName,
 GlobalVariable *createPGOFuncNameVar(Module &M,
                                      GlobalValue::LinkageTypes Linkage,
                                      StringRef PGOFuncName) {
-
   // We generally want to match the function's linkage, but available_externally
   // and extern_weak both have the wrong semantics, and anything that doesn't
   // need to link across compilation units doesn't need to be visible at all.
@@ -221,6 +339,17 @@ void InstrProfSymtab::create(Module &M, bool InLTO) {
     const std::string &PGOFuncName = getPGOFuncName(F, InLTO);
     addFuncName(PGOFuncName);
     MD5FuncMap.emplace_back(Function::getGUID(PGOFuncName), &F);
+    // In ThinLTO, local function may have been promoted to global and have
+    // suffix added to the function name. We need to add the stripped function
+    // name to the symbol table so that we can find a match from profile.
+    if (InLTO) {
+      auto pos = PGOFuncName.find('.');
+      if (pos != std::string::npos) {
+        const std::string &OtherFuncName = PGOFuncName.substr(0, pos);
+        addFuncName(OtherFuncName);
+        MD5FuncMap.emplace_back(Function::getGUID(OtherFuncName), &F);
+      }
+    }
   }
 
   finalizeSymtab();
@@ -228,7 +357,7 @@ void InstrProfSymtab::create(Module &M, bool InLTO) {
 
 Error collectPGOFuncNameStrings(const std::vector<std::string> &NameStrs,
                                 bool doCompression, std::string &Result) {
-  assert(NameStrs.size() && "No name data to emit");
+  assert(!NameStrs.empty() && "No name data to emit");
 
   uint8_t Header[16], *P = Header;
   std::string UncompressedNameStrings =
@@ -256,12 +385,12 @@ Error collectPGOFuncNameStrings(const std::vector<std::string> &NameStrs,
   }
 
   SmallString<128> CompressedNameStrings;
-  zlib::Status Success =
-      zlib::compress(StringRef(UncompressedNameStrings), CompressedNameStrings,
-                     zlib::BestSizeCompression);
-
-  if (Success != zlib::StatusOK)
+  Error E = zlib::compress(StringRef(UncompressedNameStrings),
+                           CompressedNameStrings, zlib::BestSizeCompression);
+  if (E) {
+    consumeError(std::move(E));
     return make_error<InstrProfError>(instrprof_error::compress_failed);
+  }
 
   return WriteStringToResult(CompressedNameStrings.size(),
                              CompressedNameStrings);
@@ -300,9 +429,12 @@ Error readPGOFuncNameStrings(StringRef NameStrings, InstrProfSymtab &Symtab) {
     if (isCompressed) {
       StringRef CompressedNameStrings(reinterpret_cast<const char *>(P),
                                       CompressedSize);
-      if (zlib::uncompress(CompressedNameStrings, UncompressedNameStrings,
-                           UncompressedSize) != zlib::StatusOK)
+      if (Error E =
+              zlib::uncompress(CompressedNameStrings, UncompressedNameStrings,
+                               UncompressedSize)) {
+        consumeError(std::move(E));
         return make_error<InstrProfError>(instrprof_error::uncompress_failed);
+      }
       P += CompressedSize;
       NameStrings = StringRef(UncompressedNameStrings.data(),
                               UncompressedNameStrings.size());
@@ -538,6 +670,7 @@ void ValueProfRecord::deserializeTo(InstrProfRecord &Record,
 void ValueProfRecord::swapBytes(support::endianness Old,
                                 support::endianness New) {
   using namespace support;
+
   if (Old == New)
     return;
 
@@ -574,6 +707,7 @@ void ValueProfData::deserializeTo(InstrProfRecord &Record,
 template <class T>
 static T swapToHostOrder(const unsigned char *&D, support::endianness Orig) {
   using namespace support;
+
   if (Orig == little)
     return endian::readNext<T, little, unaligned>(D);
   else
@@ -608,6 +742,7 @@ ValueProfData::getValueProfData(const unsigned char *D,
                                 const unsigned char *const BufferEnd,
                                 support::endianness Endianness) {
   using namespace support;
+
   if (D + sizeof(ValueProfData) > BufferEnd)
     return make_error<InstrProfError>(instrprof_error::truncated);
 
@@ -630,6 +765,7 @@ ValueProfData::getValueProfData(const unsigned char *D,
 
 void ValueProfData::swapBytesToHost(support::endianness Endianness) {
   using namespace support;
+
   if (Endianness == getHostEndianness())
     return;
 
@@ -645,6 +781,7 @@ void ValueProfData::swapBytesToHost(support::endianness Endianness) {
 
 void ValueProfData::swapBytesFromHost(support::endianness Endianness) {
   using namespace support;
+
   if (Endianness == getHostEndianness())
     return;
 
@@ -769,6 +906,96 @@ void createPGOFuncNameMetadata(Function &F, StringRef PGOFuncName) {
   LLVMContext &C = F.getContext();
   MDNode *N = MDNode::get(C, MDString::get(C, PGOFuncName));
   F.setMetadata(getPGOFuncNameMetadataName(), N);
+}
+
+bool needsComdatForCounter(const Function &F, const Module &M) {
+  if (F.hasComdat())
+    return true;
+
+  Triple TT(M.getTargetTriple());
+  if (!TT.isOSBinFormatELF() && !TT.isOSBinFormatWasm())
+    return false;
+
+  // See createPGOFuncNameVar for more details. To avoid link errors, profile
+  // counters for function with available_externally linkage needs to be changed
+  // to linkonce linkage. On ELF based systems, this leads to weak symbols to be
+  // created. Without using comdat, duplicate entries won't be removed by the
+  // linker leading to increased data segement size and raw profile size. Even
+  // worse, since the referenced counter from profile per-function data object
+  // will be resolved to the common strong definition, the profile counts for
+  // available_externally functions will end up being duplicated in raw profile
+  // data. This can result in distorted profile as the counts of those dups
+  // will be accumulated by the profile merger.
+  GlobalValue::LinkageTypes Linkage = F.getLinkage();
+  if (Linkage != GlobalValue::ExternalWeakLinkage &&
+      Linkage != GlobalValue::AvailableExternallyLinkage)
+    return false;
+
+  return true;
+}
+
+// Check if INSTR_PROF_RAW_VERSION_VAR is defined.
+bool isIRPGOFlagSet(const Module *M) {
+  auto IRInstrVar =
+      M->getNamedGlobal(INSTR_PROF_QUOTE(INSTR_PROF_RAW_VERSION_VAR));
+  if (!IRInstrVar || IRInstrVar->isDeclaration() ||
+      IRInstrVar->hasLocalLinkage())
+    return false;
+
+  // Check if the flag is set.
+  if (!IRInstrVar->hasInitializer())
+    return false;
+
+  const Constant *InitVal = IRInstrVar->getInitializer();
+  if (!InitVal)
+    return false;
+
+  return (dyn_cast<ConstantInt>(InitVal)->getZExtValue() &
+          VARIANT_MASK_IR_PROF) != 0;
+}
+
+// Check if we can safely rename this Comdat function.
+bool canRenameComdatFunc(const Function &F, bool CheckAddressTaken) {
+  if (F.getName().empty())
+    return false;
+  if (!needsComdatForCounter(F, *(F.getParent())))
+    return false;
+  // Unsafe to rename the address-taken function (which can be used in
+  // function comparison).
+  if (CheckAddressTaken && F.hasAddressTaken())
+    return false;
+  // Only safe to do if this function may be discarded if it is not used
+  // in the compilation unit.
+  if (!GlobalValue::isDiscardableIfUnused(F.getLinkage()))
+    return false;
+
+  // For AvailableExternallyLinkage functions.
+  if (!F.hasComdat()) {
+    assert(F.getLinkage() == GlobalValue::AvailableExternallyLinkage);
+    return true;
+  }
+  return true;
+}
+
+// Parse the value profile options.
+void getMemOPSizeRangeFromOption(std::string MemOPSizeRange,
+                                 int64_t &RangeStart, int64_t &RangeLast) {
+  static const int64_t DefaultMemOPSizeRangeStart = 0;
+  static const int64_t DefaultMemOPSizeRangeLast = 8;
+  RangeStart = DefaultMemOPSizeRangeStart;
+  RangeLast = DefaultMemOPSizeRangeLast;
+
+  if (!MemOPSizeRange.empty()) {
+    auto Pos = MemOPSizeRange.find(":");
+    if (Pos != std::string::npos) {
+      if (Pos > 0)
+        RangeStart = atoi(MemOPSizeRange.substr(0, Pos).c_str());
+      if (Pos < MemOPSizeRange.size() - 1)
+        RangeLast = atoi(MemOPSizeRange.substr(Pos + 1).c_str());
+    } else
+      RangeLast = atoi(MemOPSizeRange.c_str());
+  }
+  assert(RangeLast >= RangeStart);
 }
 
 } // end namespace llvm

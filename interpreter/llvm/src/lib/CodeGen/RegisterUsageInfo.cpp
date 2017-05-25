@@ -22,7 +22,7 @@ using namespace llvm;
 
 #define DEBUG_TYPE "ip-regalloc"
 
-cl::opt<bool> DumpRegUsage(
+static cl::opt<bool> DumpRegUsage(
     "print-regusage", cl::init(false), cl::Hidden,
     cl::desc("print register usage details collected for analysis."));
 
@@ -54,8 +54,9 @@ void PhysicalRegisterUsageInfo::storeUpdateRegUsageInfo(
 
 const std::vector<uint32_t> *
 PhysicalRegisterUsageInfo::getRegUsageInfo(const Function *FP) {
-  if (RegMasks.find(FP) != RegMasks.end())
-    return &(RegMasks.find(FP)->second);
+  auto It = RegMasks.find(FP);
+  if (It != RegMasks.end())
+    return &(It->second);
   return nullptr;
 }
 

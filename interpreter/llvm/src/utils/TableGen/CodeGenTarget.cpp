@@ -25,13 +25,18 @@
 #include <algorithm>
 using namespace llvm;
 
-static cl::opt<unsigned>
-AsmParserNum("asmparsernum", cl::init(0),
-             cl::desc("Make -gen-asm-parser emit assembly parser #N"));
+cl::OptionCategory AsmParserCat("Options for -gen-asm-parser");
+cl::OptionCategory AsmWriterCat("Options for -gen-asm-writer");
 
 static cl::opt<unsigned>
-AsmWriterNum("asmwriternum", cl::init(0),
-             cl::desc("Make -gen-asm-writer emit assembly writer #N"));
+    AsmParserNum("asmparsernum", cl::init(0),
+                 cl::desc("Make -gen-asm-parser emit assembly parser #N"),
+                 cl::cat(AsmParserCat));
+
+static cl::opt<unsigned>
+    AsmWriterNum("asmwriternum", cl::init(0),
+                 cl::desc("Make -gen-asm-writer emit assembly writer #N"),
+                 cl::cat(AsmWriterCat));
 
 /// getValueType - Return the MVT::SimpleValueType that the specified TableGen
 /// record corresponds to.
@@ -121,6 +126,45 @@ StringRef llvm::getEnumName(MVT::SimpleValueType T) {
   case MVT::v2f64:    return "MVT::v2f64";
   case MVT::v4f64:    return "MVT::v4f64";
   case MVT::v8f64:    return "MVT::v8f64";
+  case MVT::nxv2i1:   return "MVT::nxv2i1";
+  case MVT::nxv4i1:   return "MVT::nxv4i1";
+  case MVT::nxv8i1:   return "MVT::nxv8i1";
+  case MVT::nxv16i1:  return "MVT::nxv16i1";
+  case MVT::nxv32i1:  return "MVT::nxv32i1";
+  case MVT::nxv1i8:   return "MVT::nxv1i8";
+  case MVT::nxv2i8:   return "MVT::nxv2i8";
+  case MVT::nxv4i8:   return "MVT::nxv4i8";
+  case MVT::nxv8i8:   return "MVT::nxv8i8";
+  case MVT::nxv16i8:  return "MVT::nxv16i8";
+  case MVT::nxv32i8:  return "MVT::nxv32i8";
+  case MVT::nxv1i16:  return "MVT::nxv1i16";
+  case MVT::nxv2i16:  return "MVT::nxv2i16";
+  case MVT::nxv4i16:  return "MVT::nxv4i16";
+  case MVT::nxv8i16:  return "MVT::nxv8i16";
+  case MVT::nxv16i16: return "MVT::nxv16i16";
+  case MVT::nxv32i16: return "MVT::nxv32i16";
+  case MVT::nxv1i32:  return "MVT::nxv1i32";
+  case MVT::nxv2i32:  return "MVT::nxv2i32";
+  case MVT::nxv4i32:  return "MVT::nxv4i32";
+  case MVT::nxv8i32:  return "MVT::nxv8i32";
+  case MVT::nxv16i32: return "MVT::nxv16i32";
+  case MVT::nxv1i64:  return "MVT::nxv1i64";
+  case MVT::nxv2i64:  return "MVT::nxv2i64";
+  case MVT::nxv4i64:  return "MVT::nxv4i64";
+  case MVT::nxv8i64:  return "MVT::nxv8i64";
+  case MVT::nxv16i64: return "MVT::nxv16i64";
+  case MVT::nxv2f16:  return "MVT::nxv2f16";
+  case MVT::nxv4f16:  return "MVT::nxv4f16";
+  case MVT::nxv8f16:  return "MVT::nxv8f16";
+  case MVT::nxv1f32:  return "MVT::nxv1f32";
+  case MVT::nxv2f32:  return "MVT::nxv2f32";
+  case MVT::nxv4f32:  return "MVT::nxv4f32";
+  case MVT::nxv8f32:  return "MVT::nxv8f32";
+  case MVT::nxv16f32: return "MVT::nxv16f32";
+  case MVT::nxv1f64:  return "MVT::nxv1f64";
+  case MVT::nxv2f64:  return "MVT::nxv2f64";
+  case MVT::nxv4f64:  return "MVT::nxv4f64";
+  case MVT::nxv8f64:  return "MVT::nxv8f64";
   case MVT::token:    return "MVT::token";
   case MVT::Metadata: return "MVT::Metadata";
   case MVT::iPTR:     return "MVT::iPTR";
@@ -138,7 +182,7 @@ std::string llvm::getQualifiedName(const Record *R) {
   if (R->getValue("Namespace"))
      Namespace = R->getValueAsString("Namespace");
   if (Namespace.empty()) return R->getName();
-  return Namespace + "::" + R->getName();
+  return Namespace + "::" + R->getName().str();
 }
 
 
@@ -157,7 +201,7 @@ CodeGenTarget::CodeGenTarget(RecordKeeper &records)
 CodeGenTarget::~CodeGenTarget() {
 }
 
-const std::string &CodeGenTarget::getName() const {
+const StringRef CodeGenTarget::getName() const {
   return TargetRec->getName();
 }
 
@@ -301,7 +345,7 @@ GetInstByName(const char *Name,
 /// their enum value.
 void CodeGenTarget::ComputeInstrsByEnum() const {
   static const char *const FixedInstrs[] = {
-#define HANDLE_TARGET_OPCODE(OPC, NUM) #OPC,
+#define HANDLE_TARGET_OPCODE(OPC) #OPC,
 #include "llvm/Target/TargetOpcodes.def"
       nullptr};
   const auto &Insts = getInstructions();
@@ -393,6 +437,16 @@ ComplexPattern::ComplexPattern(Record *R) {
   SelectFunc  = R->getValueAsString("SelectFunc");
   RootNodes   = R->getValueAsListOfDefs("RootNodes");
 
+  // FIXME: This is a hack to statically increase the priority of patterns which
+  // maps a sub-dag to a complex pattern. e.g. favors LEA over ADD. To get best
+  // possible pattern match we'll need to dynamically calculate the complexity
+  // of all patterns a dag can potentially map to.
+  int64_t RawComplexity = R->getValueAsInt("Complexity");
+  if (RawComplexity == -1)
+    Complexity = NumOperands * 3;
+  else
+    Complexity = RawComplexity;
+
   // Parse the properties.
   Properties = 0;
   std::vector<Record*> PropList = R->getValueAsListOfDefs("Properties");
@@ -426,23 +480,29 @@ ComplexPattern::ComplexPattern(Record *R) {
 // CodeGenIntrinsic Implementation
 //===----------------------------------------------------------------------===//
 
-std::vector<CodeGenIntrinsic> llvm::LoadIntrinsics(const RecordKeeper &RC,
-                                                   bool TargetOnly) {
-  std::vector<Record*> I = RC.getAllDerivedDefinitions("Intrinsic");
+CodeGenIntrinsicTable::CodeGenIntrinsicTable(const RecordKeeper &RC,
+                                             bool TargetOnly) {
+  std::vector<Record*> Defs = RC.getAllDerivedDefinitions("Intrinsic");
 
-  std::vector<CodeGenIntrinsic> Result;
-  Result.reserve(I.size());
+  Intrinsics.reserve(Defs.size());
 
-  for (unsigned i = 0, e = I.size(); i != e; ++i) {
-    bool isTarget = I[i]->getValueAsBit("isTarget");
+  for (unsigned I = 0, e = Defs.size(); I != e; ++I) {
+    bool isTarget = Defs[I]->getValueAsBit("isTarget");
     if (isTarget == TargetOnly)
-      Result.push_back(CodeGenIntrinsic(I[i]));
+      Intrinsics.push_back(CodeGenIntrinsic(Defs[I]));
   }
-  std::sort(Result.begin(), Result.end(),
-            [](const CodeGenIntrinsic& LHS, const CodeGenIntrinsic& RHS) {
-              return LHS.Name < RHS.Name;
+  std::sort(Intrinsics.begin(), Intrinsics.end(),
+            [](const CodeGenIntrinsic &LHS, const CodeGenIntrinsic &RHS) {
+              return std::tie(LHS.TargetPrefix, LHS.Name) <
+                     std::tie(RHS.TargetPrefix, RHS.Name);
             });
-  return Result;
+  Targets.push_back({"", 0, 0});
+  for (size_t I = 0, E = Intrinsics.size(); I < E; ++I)
+    if (Intrinsics[I].TargetPrefix != Targets.back().Name) {
+      Targets.back().Count = I - Targets.back().Offset;
+      Targets.push_back({Intrinsics[I].TargetPrefix, I, 0});
+    }
+  Targets.back().Count = Intrinsics.size() - Targets.back().Offset;
 }
 
 CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
@@ -455,6 +515,8 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
   isNoReturn = false;
   isNoDuplicate = false;
   isConvergent = false;
+  isSpeculatable = false;
+  hasSideEffects = false;
 
   if (DefName.size() <= 4 ||
       std::string(DefName.begin(), DefName.begin() + 4) != "int_")
@@ -544,8 +606,7 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
       // overloaded, all the types can be specified directly.
       assert(((!TyEl->isSubClassOf("LLVMExtendedType") &&
                !TyEl->isSubClassOf("LLVMTruncatedType") &&
-               !TyEl->isSubClassOf("LLVMVectorSameWidth") &&
-               !TyEl->isSubClassOf("LLVMPointerToElt")) ||
+               !TyEl->isSubClassOf("LLVMVectorSameWidth")) ||
               VT == MVT::iAny || VT == MVT::vAny) &&
              "Expected iAny or vAny type");
     } else
@@ -578,7 +639,12 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
     else if (Property->getName() == "IntrWriteMem")
       ModRef = ModRefBehavior(ModRef & ~MR_Ref);
     else if (Property->getName() == "IntrArgMemOnly")
-      ModRef = ModRefBehavior(ModRef & ~MR_Anywhere);
+      ModRef = ModRefBehavior((ModRef & ~MR_Anywhere) | MR_ArgMem);
+    else if (Property->getName() == "IntrInaccessibleMemOnly")
+      ModRef = ModRefBehavior((ModRef & ~MR_Anywhere) | MR_InaccessibleMem);
+    else if (Property->getName() == "IntrInaccessibleMemOrArgMemOnly")
+      ModRef = ModRefBehavior((ModRef & ~MR_Anywhere) | MR_ArgMem |
+                              MR_InaccessibleMem);
     else if (Property->getName() == "Commutative")
       isCommutative = true;
     else if (Property->getName() == "Throws")
@@ -589,9 +655,16 @@ CodeGenIntrinsic::CodeGenIntrinsic(Record *R) {
       isConvergent = true;
     else if (Property->getName() == "IntrNoReturn")
       isNoReturn = true;
+    else if (Property->getName() == "IntrSpeculatable")
+      isSpeculatable = true;
+    else if (Property->getName() == "IntrHasSideEffects")
+      hasSideEffects = true;
     else if (Property->isSubClassOf("NoCapture")) {
       unsigned ArgNo = Property->getValueAsInt("ArgNo");
       ArgumentAttributes.push_back(std::make_pair(ArgNo, NoCapture));
+    } else if (Property->isSubClassOf("Returned")) {
+      unsigned ArgNo = Property->getValueAsInt("ArgNo");
+      ArgumentAttributes.push_back(std::make_pair(ArgNo, Returned));
     } else if (Property->isSubClassOf("ReadOnly")) {
       unsigned ArgNo = Property->getValueAsInt("ArgNo");
       ArgumentAttributes.push_back(std::make_pair(ArgNo, ReadOnly));

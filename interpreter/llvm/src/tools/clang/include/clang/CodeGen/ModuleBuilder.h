@@ -21,6 +21,7 @@ namespace llvm {
   class GlobalValue;
   class LLVMContext;
   class Module;
+  class StringRef;
   class raw_ostream;
 }
 
@@ -36,6 +37,7 @@ namespace clang {
 
 namespace CodeGen {
   class CodeGenModule;
+  class CGDebugInfo;
 }
 
 /// The primary public interface to the Clang code generator.
@@ -66,6 +68,9 @@ public:
   /// CodeGenerator after releasing its module.
   llvm::Module *ReleaseModule();
 
+  /// Return debug info code generator.
+  CodeGen::CGDebugInfo *getCGDebugInfo();
+
   /// Given a mangled name, return a declaration which mangles that way
   /// which has been added to this code generator via a Handle method.
   ///
@@ -85,7 +90,7 @@ public:
   void print(llvm::raw_ostream& out);
   void forgetGlobal(llvm::GlobalValue* GV);
   void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName);
-  llvm::Module* StartModule(const std::string& ModuleName,
+  llvm::Module* StartModule(llvm::StringRef ModuleName,
                             llvm::LLVMContext& C,
                             const CodeGenOptions& CGO);
 };

@@ -30,36 +30,6 @@ struct DenseMapInfo {
   //static bool isEqual(const T &LHS, const T &RHS);
 };
 
-template <typename T> struct CachedHash {
-  CachedHash(T Val) : Val(std::move(Val)) {
-    Hash = DenseMapInfo<T>::getHashValue(Val);
-  }
-  CachedHash(T Val, unsigned Hash) : Val(std::move(Val)), Hash(Hash) {}
-  T Val;
-  unsigned Hash;
-};
-
-// Provide DenseMapInfo for all CachedHash<T>.
-template <typename T> struct DenseMapInfo<CachedHash<T>> {
-  static CachedHash<T> getEmptyKey() {
-    T N = DenseMapInfo<T>::getEmptyKey();
-    return {N, 0};
-  }
-  static CachedHash<T> getTombstoneKey() {
-    T N = DenseMapInfo<T>::getTombstoneKey();
-    return {N, 0};
-  }
-  static unsigned getHashValue(CachedHash<T> Val) {
-    assert(!isEqual(Val, getEmptyKey()) && "Cannot hash the empty key!");
-    assert(!isEqual(Val, getTombstoneKey()) &&
-           "Cannot hash the tombstone key!");
-    return Val.Hash;
-  }
-  static bool isEqual(CachedHash<T> A, CachedHash<T> B) {
-    return DenseMapInfo<T>::isEqual(A.Val, B.Val);
-  }
-};
-
 // Provide DenseMapInfo for all pointers.
 template<typename T>
 struct DenseMapInfo<T*> {
@@ -86,6 +56,16 @@ template<> struct DenseMapInfo<char> {
   static inline char getTombstoneKey() { return ~0 - 1; }
   static unsigned getHashValue(const char& Val) { return Val * 37U; }
   static bool isEqual(const char &LHS, const char &RHS) {
+    return LHS == RHS;
+  }
+};
+
+// Provide DenseMapInfo for unsigned shorts.
+template <> struct DenseMapInfo<unsigned short> {
+  static inline unsigned short getEmptyKey() { return 0xFFFF; }
+  static inline unsigned short getTombstoneKey() { return 0xFFFF - 1; }
+  static unsigned getHashValue(const unsigned short &Val) { return Val * 37U; }
+  static bool isEqual(const unsigned short &LHS, const unsigned short &RHS) {
     return LHS == RHS;
   }
 };
@@ -123,6 +103,14 @@ template<> struct DenseMapInfo<unsigned long long> {
                       const unsigned long long& RHS) {
     return LHS == RHS;
   }
+};
+
+// Provide DenseMapInfo for shorts.
+template <> struct DenseMapInfo<short> {
+  static inline short getEmptyKey() { return 0x7FFF; }
+  static inline short getTombstoneKey() { return -0x7FFF - 1; }
+  static unsigned getHashValue(const short &Val) { return Val * 37U; }
+  static bool isEqual(const short &LHS, const short &RHS) { return LHS == RHS; }
 };
 
 // Provide DenseMapInfo for ints.

@@ -1,0 +1,197 @@
+commit 64e9f854ea77da326b0f052726a7e94f1cedaf0a
+Author: Axel Naumann <Axel.Naumann@cern.ch>
+Date:   Mon Aug 26 14:29:24 2013 +0200
+
+    Temporary parsers should not manipulate global parser state.
+
+diff --git a/include/clang/Parse/Parser.h b/include/clang/Parse/Parser.h
+index f5a7e02..e84bcf0 100644
+--- a/include/clang/Parse/Parser.h
++++ b/include/clang/Parse/Parser.h
+@@ -49,6 +49,7 @@ namespace clang {
+   class OMPClause;
+   class ObjCTypeParamList;
+   class ObjCTypeParameter;
++  class DestroyTemplateIdAnnotationsRAIIObj;
+ 
+ /// Parser - This implements a parser for the C family of languages.  After
+ /// parsing units of the grammar, productions are invoked to handle whatever has
+@@ -61,6 +62,7 @@ class Parser : public CodeCompletionHandler {
+   friend class ObjCDeclContextSwitch;
+   friend class ParenBraceBracketBalancer;
+   friend class BalancedDelimiterTracker;
++  friend class DestroyTemplateIdAnnotationsRAIIObj;
+ 
+   Preprocessor &PP;
+ 
+@@ -259,8 +261,10 @@ class Parser : public CodeCompletionHandler {
+   /// just a regular sub-expression.
+   SourceLocation ExprStatementTokLoc;
+ 
++  bool IsTemporary;
+ public:
+-  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
++  Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies, 
++         bool isTemp = false);
+   ~Parser() override;
+ 
+   const LangOptions &getLangOpts() const { return PP.getLangOpts(); }
+@@ -270,6 +274,34 @@ public:
+   AttributeFactory &getAttrFactory() { return AttrFactory; }
+ 
+   const Token &getCurToken() const { return Tok; }
++
++  /// A RAII object to temporarily reset PP's state and restore it.
++  class ParserCurTokRestoreRAII {
++  private:
++    Parser &P;
++    Token SavedTok;
++
++  public:
++    ParserCurTokRestoreRAII(Parser &P)
++      : P(P), SavedTok(P.Tok) 
++    {
++    }
++
++    void pop() {
++      if (SavedTok.is(tok::unknown))
++        return;
++
++      P.Tok = SavedTok;
++      
++      SavedTok.startToken();
++    }
++
++    ~ParserCurTokRestoreRAII() {
++      pop();
++    }
++  };
++
++
+   Scope *getCurScope() const { return Actions.getCurScope(); }
+   void incrementMSManglingNumber() const {
+     return Actions.incrementMSManglingNumber();
+@@ -890,7 +922,7 @@ public:
+     return Diag(Tok, DiagID);
+   }
+ 
+-private:
++protected:
+   void SuggestParentheses(SourceLocation Loc, unsigned DK,
+                           SourceRange ParenRange);
+   void CheckNestedObjCContexts(SourceLocation AtLoc);
+diff --git a/lib/Parse/ParsePragma.cpp b/lib/Parse/ParsePragma.cpp
+index c34cd09..e764f8d 100644
+--- a/lib/Parse/ParsePragma.cpp
++++ b/lib/Parse/ParsePragma.cpp
+@@ -197,6 +197,10 @@ struct PragmaAttributeHandler : public PragmaHandler {
+ }  // end namespace
+ 
+ void Parser::initializePragmaHandlers() {
++  // No pragma parsing for temporary parsers.
++  if (IsTemporary)
++     return;
++
+   AlignHandler.reset(new PragmaAlignHandler());
+   PP.AddPragmaHandler(AlignHandler.get());
+ 
+@@ -292,6 +296,10 @@ void Parser::initializePragmaHandlers() {
+ }
+ 
+ void Parser::resetPragmaHandlers() {
++  // No pragma parsing for temporary parsers.
++  if (IsTemporary)
++     return;
++
+   // Remove the pragma handlers we installed.
+   PP.RemovePragmaHandler(AlignHandler.get());
+   AlignHandler.reset();
+diff --git a/lib/Parse/Parser.cpp b/lib/Parse/Parser.cpp
+index 38476ce..461041d 100644
+--- a/lib/Parse/Parser.cpp
++++ b/lib/Parse/Parser.cpp
+@@ -47,15 +47,17 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
+   return Ident__except;
+ }
+ 
+-Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
++Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies,
++               bool isTemporary /*=false*/)
+   : PP(pp), Actions(actions), Diags(PP.getDiagnostics()),
+     GreaterThanIsOperator(true), ColonIsSacred(false), 
+     InMessageExpression(false), TemplateParameterDepth(0),
+-    ParsingInObjCContainer(false) {
++    ParsingInObjCContainer(false), IsTemporary(isTemporary) {
+   SkipFunctionBodies = pp.isCodeCompletionEnabled() || skipFunctionBodies;
+   Tok.startToken();
+   Tok.setKind(tok::eof);
+-  Actions.CurScope = nullptr;
++  if (!IsTemporary)
++    Actions.CurScope = nullptr;
+   NumCachedScopes = 0;
+   CurParsedObjCImpl = nullptr;
+ 
+@@ -64,9 +66,11 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
+   initializePragmaHandlers();
+ 
+   CommentSemaHandler.reset(new ActionCommentHandler(actions));
+-  PP.addCommentHandler(CommentSemaHandler.get());
++  if (!IsTemporary)
++    PP.addCommentHandler(CommentSemaHandler.get());
+ 
+-  PP.setCodeCompletionHandler(*this);
++  if (!IsTemporary)
++    PP.setCodeCompletionHandler(*this);
+ }
+ 
+ DiagnosticBuilder Parser::Diag(SourceLocation Loc, unsigned DiagID) {
+@@ -415,8 +419,10 @@ Parser::ParseScopeFlags::~ParseScopeFlags() {
+ 
+ Parser::~Parser() {
+   // If we still have scopes active, delete the scope tree.
++  if (!IsTemporary) {
+   delete getCurScope();
+   Actions.CurScope = nullptr;
++  }
+ 
+   // Free the scope cache.
+   for (unsigned i = 0, e = NumCachedScopes; i != e; ++i)
+@@ -530,7 +536,7 @@ void Parser::LateTemplateParserCleanupCallback(void *P) {
+   // While this RAII helper doesn't bracket any actual work, the destructor will
+   // clean up annotations that were created during ActOnEndOfTranslationUnit
+   // when incremental processing is enabled.
+-  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(((Parser *)P)->TemplateIds);
++   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*(Parser*)P);
+ }
+ 
+ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
+@@ -549,7 +555,7 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
+ /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
+ /// action tells us to.  This returns true if the EOF was encountered.
+ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+-  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
++  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*this);
+ 
+   // Skip over the EOF token, flagging end of previous input for incremental
+   // processing
+@@ -604,9 +610,8 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+                                     PP.isIncrementalProcessingEnabled() ?
+                                     LateTemplateParserCleanupCallback : nullptr,
+                                     this);
+-    if (!PP.isIncrementalProcessingEnabled())
+-      Actions.ActOnEndOfTranslationUnit();
+-    //else don't tell Sema that we ended parsing: more input might come.
++    Actions.ActOnEndOfTranslationUnit();
++
+     return true;
+ 
+   default:
+@@ -646,7 +651,7 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+ Parser::DeclGroupPtrTy
+ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
+                                  ParsingDeclSpec *DS) {
+-  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
++  DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(*this);
+   ParenBraceBracketBalancer BalancerRAIIObj(*this);
+ 
+   if (PP.isCodeCompletionReached()) {

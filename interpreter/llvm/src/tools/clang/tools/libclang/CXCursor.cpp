@@ -231,6 +231,7 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::TypeTraitExprClass:
   case Stmt::CoroutineBodyStmtClass:
   case Stmt::CoawaitExprClass:
+  case Stmt::DependentCoawaitExprClass:
   case Stmt::CoreturnStmtClass:
   case Stmt::CoyieldExprClass:
   case Stmt::CXXBindTemporaryExprClass:
@@ -243,6 +244,8 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::ChooseExprClass:
   case Stmt::DesignatedInitExprClass:
   case Stmt::DesignatedInitUpdateExprClass:
+  case Stmt::ArrayInitLoopExprClass:
+  case Stmt::ArrayInitIndexExprClass:
   case Stmt::ExprWithCleanupsClass:
   case Stmt::ExpressionTraitExprClass:
   case Stmt::ExtVectorElementExprClass:
@@ -447,7 +450,11 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
   case Stmt::ObjCBoolLiteralExprClass:
     K = CXCursor_ObjCBoolLiteralExpr;
     break;
-      
+
+  case Stmt::ObjCAvailabilityCheckExprClass:
+    K = CXCursor_ObjCAvailabilityCheckExpr;
+    break;
+
   case Stmt::ObjCBridgedCastExprClass:
     K = CXCursor_ObjCBridgedCastExpr;
     break;
@@ -642,6 +649,39 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
     break;
   case Stmt::OMPDistributeSimdDirectiveClass:
     K = CXCursor_OMPDistributeSimdDirective;
+    break;
+  case Stmt::OMPTargetParallelForSimdDirectiveClass:
+    K = CXCursor_OMPTargetParallelForSimdDirective;
+    break;
+  case Stmt::OMPTargetSimdDirectiveClass:
+    K = CXCursor_OMPTargetSimdDirective;
+    break;
+  case Stmt::OMPTeamsDistributeDirectiveClass:
+    K = CXCursor_OMPTeamsDistributeDirective;
+    break;
+  case Stmt::OMPTeamsDistributeSimdDirectiveClass:
+    K = CXCursor_OMPTeamsDistributeSimdDirective;
+    break;
+  case Stmt::OMPTeamsDistributeParallelForSimdDirectiveClass:
+    K = CXCursor_OMPTeamsDistributeParallelForSimdDirective;
+    break;
+  case Stmt::OMPTeamsDistributeParallelForDirectiveClass:
+    K = CXCursor_OMPTeamsDistributeParallelForDirective;
+    break;
+  case Stmt::OMPTargetTeamsDirectiveClass:
+    K = CXCursor_OMPTargetTeamsDirective;
+    break;
+  case Stmt::OMPTargetTeamsDistributeDirectiveClass:
+    K = CXCursor_OMPTargetTeamsDistributeDirective;
+    break;
+  case Stmt::OMPTargetTeamsDistributeParallelForDirectiveClass:
+    K = CXCursor_OMPTargetTeamsDistributeParallelForDirective;
+    break;
+  case Stmt::OMPTargetTeamsDistributeParallelForSimdDirectiveClass:
+    K = CXCursor_OMPTargetTeamsDistributeParallelForSimdDirective;
+    break;
+  case Stmt::OMPTargetTeamsDistributeSimdDirectiveClass:
+    K = CXCursor_OMPTargetTeamsDistributeSimdDirective;
     break;
   }
 
@@ -1080,8 +1120,6 @@ bool cxcursor::isFirstInDeclGroup(CXCursor C) {
 // libclang CXCursor APIs
 //===----------------------------------------------------------------------===//
 
-extern "C" {
-
 int clang_Cursor_isNull(CXCursor cursor) {
   return clang_equalCursors(cursor, clang_getNullCursor());
 }
@@ -1271,8 +1309,6 @@ unsigned long long clang_Cursor_getTemplateArgumentUnsignedValue(CXCursor C,
   return TA.getAsIntegral().getZExtValue();
 }
 
-} // end: extern "C"
-
 //===----------------------------------------------------------------------===//
 // CXCursorSet.
 //===----------------------------------------------------------------------===//
@@ -1306,7 +1342,6 @@ public:
 };
 }
 
-extern "C" {
 CXCursorSet clang_createCXCursorSet() {
   return packCXCursorSet(new CXCursorSet_Impl());
 }
@@ -1369,7 +1404,6 @@ CXCompletionString clang_getCursorCompletionString(CXCursor cursor) {
   }
   return nullptr;
 }
-} // end: extern C.
 
 namespace {
   struct OverridenCursorsPool {
@@ -1394,7 +1428,6 @@ void cxcursor::disposeOverridenCXCursorsPool(void *pool) {
   delete static_cast<OverridenCursorsPool*>(pool);
 }
  
-extern "C" {
 void clang_getOverriddenCursors(CXCursor cursor,
                                 CXCursor **overridden,
                                 unsigned *num_overridden) {
@@ -1490,6 +1523,10 @@ int clang_Cursor_isDynamicCall(CXCursor C) {
     return true;
   }
 
+  if (auto *PropRefE = dyn_cast<ObjCPropertyRefExpr>(E)) {
+    return !PropRefE->isSuperReceiver();
+  }
+
   const MemberExpr *ME = nullptr;
   if (isa<MemberExpr>(E))
     ME = cast<MemberExpr>(E);
@@ -1499,7 +1536,9 @@ int clang_Cursor_isDynamicCall(CXCursor C) {
   if (ME) {
     if (const CXXMethodDecl *
           MD = dyn_cast_or_null<CXXMethodDecl>(ME->getMemberDecl()))
-      return MD->isVirtual() && !ME->hasQualifier();
+      return MD->isVirtual() &&
+             ME->performsVirtualDispatch(
+                 cxcursor::getCursorContext(C).getLangOpts());
   }
 
   return 0;
@@ -1514,7 +1553,23 @@ CXType clang_Cursor_getReceiverType(CXCursor C) {
   if (const ObjCMessageExpr *MsgE = dyn_cast_or_null<ObjCMessageExpr>(E))
     return cxtype::MakeCXType(MsgE->getReceiverType(), TU);
 
+  if (auto *PropRefE = dyn_cast<ObjCPropertyRefExpr>(E)) {
+    return cxtype::MakeCXType(
+        PropRefE->getReceiverType(cxcursor::getCursorContext(C)), TU);
+  }
+
+  const MemberExpr *ME = nullptr;
+  if (isa<MemberExpr>(E))
+    ME = cast<MemberExpr>(E);
+  else if (const CallExpr *CE = dyn_cast<CallExpr>(E))
+    ME = dyn_cast_or_null<MemberExpr>(CE->getCallee());
+
+  if (ME) {
+    if (dyn_cast_or_null<CXXMethodDecl>(ME->getMemberDecl())) {
+      auto receiverTy = ME->getBase()->IgnoreImpCasts()->getType();
+      return cxtype::MakeCXType(receiverTy, TU);
+    }
+  }
+
   return cxtype::MakeCXType(QualType(), TU);
 }
-
-} // end: extern "C"

@@ -17,6 +17,21 @@
 using namespace clang;
 using namespace index;
 
+static bool isGeneratedDecl(const Decl *D) {
+  if (auto *attr = D->getAttr<ExternalSourceSymbolAttr>()) {
+    return attr->getGeneratedDeclaration();
+  }
+  return false;
+}
+
+bool IndexingContext::shouldIndex(const Decl *D) {
+  return !isGeneratedDecl(D);
+}
+
+const LangOptions &IndexingContext::getLangOpts() const {
+  return Ctx->getLangOpts();
+}
+
 bool IndexingContext::shouldIndexFunctionLocalSymbols() const {
   return IndexOpts.IndexFunctionLocals;
 }
@@ -24,9 +39,7 @@ bool IndexingContext::shouldIndexFunctionLocalSymbols() const {
 bool IndexingContext::handleDecl(const Decl *D,
                                  SymbolRoleSet Roles,
                                  ArrayRef<SymbolRelation> Relations) {
-  return handleDeclOccurrence(D, D->getLocation(), /*IsRef=*/false,
-                              cast<Decl>(D->getDeclContext()), Roles, Relations,
-                              nullptr, nullptr, D->getDeclContext());
+  return handleDecl(D, D->getLocation(), Roles, Relations);
 }
 
 bool IndexingContext::handleDecl(const Decl *D, SourceLocation Loc,
@@ -35,9 +48,14 @@ bool IndexingContext::handleDecl(const Decl *D, SourceLocation Loc,
                                  const DeclContext *DC) {
   if (!DC)
     DC = D->getDeclContext();
+
+  const Decl *OrigD = D;
+  if (isa<ObjCPropertyImplDecl>(D)) {
+    D = cast<ObjCPropertyImplDecl>(D)->getPropertyDecl();
+  }
   return handleDeclOccurrence(D, Loc, /*IsRef=*/false, cast<Decl>(DC),
                               Roles, Relations,
-                              nullptr, nullptr, DC);
+                              nullptr, OrigD, DC);
 }
 
 bool IndexingContext::handleReference(const NamedDecl *D, SourceLocation Loc,
@@ -47,7 +65,7 @@ bool IndexingContext::handleReference(const NamedDecl *D, SourceLocation Loc,
                                       ArrayRef<SymbolRelation> Relations,
                                       const Expr *RefE,
                                       const Decl *RefD) {
-  if (!shouldIndexFunctionLocalSymbols() && isFunctionLocalDecl(D))
+  if (!shouldIndexFunctionLocalSymbols() && isFunctionLocalSymbol(D))
     return true;
 
   if (isa<NonTypeTemplateParmDecl>(D) || isa<TemplateTypeParmDecl>(D))
@@ -83,46 +101,18 @@ bool IndexingContext::importedModule(const ImportDecl *ImportD) {
   if (SEntry.getFile().getFileCharacteristic() != SrcMgr::C_User) {
     switch (IndexOpts.SystemSymbolFilter) {
     case IndexingOptions::SystemSymbolFilterKind::None:
-    case IndexingOptions::SystemSymbolFilterKind::DeclarationsOnly:
       return true;
+    case IndexingOptions::SystemSymbolFilterKind::DeclarationsOnly:
     case IndexingOptions::SystemSymbolFilterKind::All:
       break;
     }
   }
 
-  SymbolRoleSet Roles = (unsigned)SymbolRole::Reference;
+  SymbolRoleSet Roles = (unsigned)SymbolRole::Declaration;
   if (ImportD->isImplicit())
     Roles |= (unsigned)SymbolRole::Implicit;
 
   return DataConsumer.handleModuleOccurence(ImportD, Roles, FID, Offset);
-}
-
-bool IndexingContext::isFunctionLocalDecl(const Decl *D) {
-  assert(D);
-
-  if (isa<TemplateTemplateParmDecl>(D))
-    return true;
-
-  if (isa<ObjCTypeParamDecl>(D))
-    return true;
-
-  if (!D->getParentFunctionOrMethod())
-    return false;
-
-  if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
-    switch (ND->getFormalLinkage()) {
-    case NoLinkage:
-    case VisibleNoLinkage:
-    case InternalLinkage:
-      return true;
-    case UniqueExternalLinkage:
-      llvm_unreachable("Not a sema linkage");
-    case ExternalLinkage:
-      return false;
-    }
-  }
-
-  return true;
 }
 
 bool IndexingContext::isTemplateImplicitInstantiation(const Decl *D) {
@@ -130,9 +120,10 @@ bool IndexingContext::isTemplateImplicitInstantiation(const Decl *D) {
   if (const ClassTemplateSpecializationDecl *
       SD = dyn_cast<ClassTemplateSpecializationDecl>(D)) {
     TKind = SD->getSpecializationKind();
-  }
-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+  } else if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     TKind = FD->getTemplateSpecializationKind();
+  } else if (auto *VD = dyn_cast<VarDecl>(D)) {
+    TKind = VD->getTemplateSpecializationKind();
   }
   switch (TKind) {
     case TSK_Undeclared:
@@ -164,9 +155,10 @@ static const Decl *adjustTemplateImplicitInstantiation(const Decl *D) {
   if (const ClassTemplateSpecializationDecl *
       SD = dyn_cast<ClassTemplateSpecializationDecl>(D)) {
     return SD->getTemplateInstantiationPattern();
-  }
-  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+  } else if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     return FD->getTemplateInstantiationPattern();
+  } else if (auto *VD = dyn_cast<VarDecl>(D)) {
+    return VD->getTemplateInstantiationPattern();
   }
   return nullptr;
 }
@@ -227,6 +219,51 @@ static const Decl *getCanonicalDecl(const Decl *D) {
   return D;
 }
 
+static bool shouldReportOccurrenceForSystemDeclOnlyMode(
+    bool IsRef, SymbolRoleSet Roles, ArrayRef<SymbolRelation> Relations) {
+  if (!IsRef)
+    return true;
+
+  auto acceptForRelation = [](SymbolRoleSet roles) -> bool {
+    bool accept = false;
+    applyForEachSymbolRoleInterruptible(roles, [&accept](SymbolRole r) -> bool {
+      switch (r) {
+      case SymbolRole::RelationChildOf:
+      case SymbolRole::RelationBaseOf:
+      case SymbolRole::RelationOverrideOf:
+      case SymbolRole::RelationExtendedBy:
+      case SymbolRole::RelationAccessorOf:
+      case SymbolRole::RelationIBTypeOf:
+        accept = true;
+        return false;
+      case SymbolRole::Declaration:
+      case SymbolRole::Definition:
+      case SymbolRole::Reference:
+      case SymbolRole::Read:
+      case SymbolRole::Write:
+      case SymbolRole::Call:
+      case SymbolRole::Dynamic:
+      case SymbolRole::AddressOf:
+      case SymbolRole::Implicit:
+      case SymbolRole::RelationReceivedBy:
+      case SymbolRole::RelationCalledBy:
+      case SymbolRole::RelationContainedBy:
+      case SymbolRole::RelationSpecializationOf:
+        return true;
+      }
+      llvm_unreachable("Unsupported SymbolRole value!");
+    });
+    return accept;
+  };
+
+  for (auto &Rel : Relations) {
+    if (acceptForRelation(Rel.Roles))
+      return true;
+  }
+
+  return false;
+}
+
 bool IndexingContext::handleDeclOccurrence(const Decl *D, SourceLocation Loc,
                                            bool IsRef, const Decl *Parent,
                                            SymbolRoleSet Roles,
@@ -262,7 +299,7 @@ bool IndexingContext::handleDeclOccurrence(const Decl *D, SourceLocation Loc,
     case IndexingOptions::SystemSymbolFilterKind::None:
       return true;
     case IndexingOptions::SystemSymbolFilterKind::DeclarationsOnly:
-      if (IsRef)
+      if (!shouldReportOccurrenceForSystemDeclOnlyMode(IsRef, Roles, Relations))
         return true;
       break;
     case IndexingOptions::SystemSymbolFilterKind::All:
@@ -284,25 +321,15 @@ bool IndexingContext::handleDeclOccurrence(const Decl *D, SourceLocation Loc,
 
   if (IsRef)
     Roles |= (unsigned)SymbolRole::Reference;
-  else if (isDeclADefinition(D, ContainerDC, *Ctx))
+  else if (isDeclADefinition(OrigD, ContainerDC, *Ctx))
     Roles |= (unsigned)SymbolRole::Definition;
   else
     Roles |= (unsigned)SymbolRole::Declaration;
 
   D = getCanonicalDecl(D);
-  if (D->isImplicit() && !isa<ObjCMethodDecl>(D) &&
-      !(isa<FunctionDecl>(D) && cast<FunctionDecl>(D)->getBuiltinID())) {
-    // operator new declarations will link to the implicit one as canonical.
-    return true;
-  }
   Parent = adjustParent(Parent);
   if (Parent)
     Parent = getCanonicalDecl(Parent);
-  assert((!Parent || !Parent->isImplicit() ||
-          (isa<FunctionDecl>(Parent) &&
-           cast<FunctionDecl>(Parent)->getBuiltinID()) ||
-          isa<ObjCInterfaceDecl>(Parent) || isa<ObjCMethodDecl>(Parent)) &&
-         "unexpected implicit parent!");
 
   SmallVector<SymbolRelation, 6> FinalRelations;
   FinalRelations.reserve(Relations.size()+1);
@@ -320,9 +347,20 @@ bool IndexingContext::handleDeclOccurrence(const Decl *D, SourceLocation Loc,
     Roles |= Rel.Roles;
   };
 
-  if (!IsRef && Parent && !cast<DeclContext>(Parent)->isFunctionOrMethod()) {
-    addRelation(SymbolRelation{(unsigned)SymbolRole::RelationChildOf, Parent});
+  if (Parent) {
+    if (IsRef || (!isa<ParmVarDecl>(D) && isFunctionLocalSymbol(D))) {
+      addRelation(SymbolRelation{
+        (unsigned)SymbolRole::RelationContainedBy,
+        Parent
+      });
+    } else {
+      addRelation(SymbolRelation{
+        (unsigned)SymbolRole::RelationChildOf,
+        Parent
+      });
+    }
   }
+
   for (auto &Rel : Relations) {
     addRelation(SymbolRelation(Rel.Roles,
                                Rel.RelatedSymbol->getCanonicalDecl()));

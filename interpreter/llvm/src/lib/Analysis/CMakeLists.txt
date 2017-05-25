@@ -30,31 +30,37 @@ add_llvm_library(LLVMAnalysis
   EHPersonalities.cpp
   GlobalsModRef.cpp
   IVUsers.cpp
+  IndirectCallPromotionAnalysis.cpp
   InlineCost.cpp
   InstCount.cpp
   InstructionSimplify.cpp
   Interval.cpp
   IntervalPartition.cpp
   IteratedDominanceFrontier.cpp
+  LazyBranchProbabilityInfo.cpp
+  LazyBlockFrequencyInfo.cpp
   LazyCallGraph.cpp
   LazyValueInfo.cpp
   Lint.cpp
   Loads.cpp
   LoopAccessAnalysis.cpp
+  LoopAnalysisManager.cpp
   LoopUnrollAnalyzer.cpp
   LoopInfo.cpp
   LoopPass.cpp
-  LoopPassManager.cpp
   MemDepPrinter.cpp
   MemDerefPrinter.cpp
   MemoryBuiltins.cpp
   MemoryDependenceAnalysis.cpp
   MemoryLocation.cpp
+  MemorySSA.cpp
+  MemorySSAUpdater.cpp
   ModuleDebugInfoPrinter.cpp
   ModuleSummaryAnalysis.cpp
   ObjCARCAliasAnalysis.cpp
   ObjCARCAnalysisUtils.cpp
   ObjCARCInstKind.cpp
+  OptimizationDiagnosticInfo.cpp
   OrderedBasicBlock.cpp
   PHITransAddr.cpp
   PostDominators.cpp
@@ -79,6 +85,7 @@ add_llvm_library(LLVMAnalysis
 
   ADDITIONAL_HEADER_DIRS
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/Analysis
-  )
 
-add_dependencies(LLVMAnalysis intrinsics_gen)
+  DEPENDS
+  intrinsics_gen
+  )

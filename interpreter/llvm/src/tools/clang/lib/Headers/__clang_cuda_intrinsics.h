@@ -35,62 +35,58 @@
 
 #pragma push_macro("__MAKE_SHUFFLES")
 #define __MAKE_SHUFFLES(__FnName, __IntIntrinsic, __FloatIntrinsic, __Mask)    \
-  inline __device__ int __FnName(int __in, int __offset,                       \
+  inline __device__ int __FnName(int __val, int __offset,                      \
                                  int __width = warpSize) {                     \
-    return __IntIntrinsic(__in, __offset,                                      \
+    return __IntIntrinsic(__val, __offset,                                     \
                           ((warpSize - __width) << 8) | (__Mask));             \
   }                                                                            \
-  inline __device__ float __FnName(float __in, int __offset,                   \
+  inline __device__ float __FnName(float __val, int __offset,                  \
                                    int __width = warpSize) {                   \
-    return __FloatIntrinsic(__in, __offset,                                    \
+    return __FloatIntrinsic(__val, __offset,                                   \
                             ((warpSize - __width) << 8) | (__Mask));           \
   }                                                                            \
-  inline __device__ unsigned int __FnName(unsigned int __in, int __offset,     \
+  inline __device__ unsigned int __FnName(unsigned int __val, int __offset,    \
                                           int __width = warpSize) {            \
     return static_cast<unsigned int>(                                          \
-        ::__FnName(static_cast<int>(__in), __offset, __width));                \
+        ::__FnName(static_cast<int>(__val), __offset, __width));               \
   }                                                                            \
-  inline __device__ long long __FnName(long long __in, int __offset,           \
+  inline __device__ long long __FnName(long long __val, int __offset,          \
                                        int __width = warpSize) {               \
     struct __Bits {                                                            \
       int __a, __b;                                                            \
     };                                                                         \
-    _Static_assert(sizeof(__in) == sizeof(__Bits));                            \
+    _Static_assert(sizeof(__val) == sizeof(__Bits));                           \
     _Static_assert(sizeof(__Bits) == 2 * sizeof(int));                         \
     __Bits __tmp;                                                              \
-    memcpy(&__in, &__tmp, sizeof(__in));                                       \
+    memcpy(&__val, &__tmp, sizeof(__val));                                     \
     __tmp.__a = ::__FnName(__tmp.__a, __offset, __width);                      \
     __tmp.__b = ::__FnName(__tmp.__b, __offset, __width);                      \
-    long long __out;                                                           \
-    memcpy(&__out, &__tmp, sizeof(__tmp));                                     \
-    return __out;                                                              \
+    long long __ret;                                                           \
+    memcpy(&__ret, &__tmp, sizeof(__tmp));                                     \
+    return __ret;                                                              \
   }                                                                            \
   inline __device__ unsigned long long __FnName(                               \
-      unsigned long long __in, int __offset, int __width = warpSize) {         \
-    return static_cast<unsigned long long>(                                    \
-        ::__FnName(static_cast<unsigned long long>(__in), __offset, __width)); \
+      unsigned long long __val, int __offset, int __width = warpSize) {        \
+    return static_cast<unsigned long long>(::__FnName(                         \
+        static_cast<unsigned long long>(__val), __offset, __width));           \
   }                                                                            \
-  inline __device__ double __FnName(double __in, int __offset,                 \
+  inline __device__ double __FnName(double __val, int __offset,                \
                                     int __width = warpSize) {                  \
     long long __tmp;                                                           \
-    _Static_assert(sizeof(__tmp) == sizeof(__in));                             \
-    memcpy(&__tmp, &__in, sizeof(__in));                                       \
+    _Static_assert(sizeof(__tmp) == sizeof(__val));                            \
+    memcpy(&__tmp, &__val, sizeof(__val));                                     \
     __tmp = ::__FnName(__tmp, __offset, __width);                              \
-    double __out;                                                              \
-    memcpy(&__out, &__tmp, sizeof(__out));                                     \
-    return __out;                                                              \
+    double __ret;                                                              \
+    memcpy(&__ret, &__tmp, sizeof(__ret));                                     \
+    return __ret;                                                              \
   }
 
-__MAKE_SHUFFLES(__shfl, __builtin_ptx_shfl_idx_i32, __builtin_ptx_shfl_idx_f32,
-                0x1f);
+__MAKE_SHUFFLES(__shfl, __nvvm_shfl_idx_i32, __nvvm_shfl_idx_f32, 0x1f);
 // We use 0 rather than 31 as our mask, because shfl.up applies to lanes >=
 // maxLane.
-__MAKE_SHUFFLES(__shfl_up, __builtin_ptx_shfl_up_i32, __builtin_ptx_shfl_up_f32,
-                0);
-__MAKE_SHUFFLES(__shfl_down, __builtin_ptx_shfl_down_i32,
-                __builtin_ptx_shfl_down_f32, 0x1f);
-__MAKE_SHUFFLES(__shfl_xor, __builtin_ptx_shfl_bfly_i32,
-                __builtin_ptx_shfl_bfly_f32, 0x1f);
+__MAKE_SHUFFLES(__shfl_up, __nvvm_shfl_up_i32, __nvvm_shfl_up_f32, 0);
+__MAKE_SHUFFLES(__shfl_down, __nvvm_shfl_down_i32, __nvvm_shfl_down_f32, 0x1f);
+__MAKE_SHUFFLES(__shfl_xor, __nvvm_shfl_bfly_i32, __nvvm_shfl_bfly_f32, 0x1f);
 
 #pragma pop_macro("__MAKE_SHUFFLES")
 

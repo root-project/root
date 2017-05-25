@@ -13,6 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
+#include "AMDGPUSubtarget.h"
+#include "llvm/ADT/Triple.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -25,7 +27,9 @@ namespace {
 
 class AMDGPUAnnotateKernelFeatures : public ModulePass {
 private:
-  static bool hasAddrSpaceCast(const Function &F);
+  const TargetMachine *TM;
+  AMDGPUAS AS;
+  static bool hasAddrSpaceCast(const Function &F, AMDGPUAS AS);
 
   void addAttrToCallers(Function *Intrin, StringRef AttrName);
   bool addAttrsForIntrinsics(Module &M, ArrayRef<StringRef[2]>);
@@ -33,9 +37,10 @@ private:
 public:
   static char ID;
 
-  AMDGPUAnnotateKernelFeatures() : ModulePass(ID) { }
+  AMDGPUAnnotateKernelFeatures(const TargetMachine *TM_ = nullptr) :
+                               ModulePass(ID), TM(TM_) {}
   bool runOnModule(Module &M) override;
-  const char *getPassName() const override {
+  StringRef getPassName() const override {
     return "AMDGPU Annotate Kernel Features";
   }
 
@@ -44,10 +49,11 @@ public:
     ModulePass::getAnalysisUsage(AU);
   }
 
-  static bool visitConstantExpr(const ConstantExpr *CE);
+  static bool visitConstantExpr(const ConstantExpr *CE, AMDGPUAS AS);
   static bool visitConstantExprsRecursively(
     const Constant *EntryC,
-    SmallPtrSet<const Constant *, 8> &ConstantExprVisited);
+    SmallPtrSet<const Constant *, 8> &ConstantExprVisited,
+    AMDGPUAS AS);
 };
 
 }
@@ -61,18 +67,20 @@ INITIALIZE_PASS(AMDGPUAnnotateKernelFeatures, DEBUG_TYPE,
 
 
 // The queue ptr is only needed when casting to flat, not from it.
-static bool castRequiresQueuePtr(unsigned SrcAS) {
-  return SrcAS == AMDGPUAS::LOCAL_ADDRESS || SrcAS == AMDGPUAS::PRIVATE_ADDRESS;
+static bool castRequiresQueuePtr(unsigned SrcAS, const AMDGPUAS &AS) {
+  return SrcAS == AS.LOCAL_ADDRESS || SrcAS == AS.PRIVATE_ADDRESS;
 }
 
-static bool castRequiresQueuePtr(const AddrSpaceCastInst *ASC) {
-  return castRequiresQueuePtr(ASC->getSrcAddressSpace());
+static bool castRequiresQueuePtr(const AddrSpaceCastInst *ASC,
+    const AMDGPUAS &AS) {
+  return castRequiresQueuePtr(ASC->getSrcAddressSpace(), AS);
 }
 
-bool AMDGPUAnnotateKernelFeatures::visitConstantExpr(const ConstantExpr *CE) {
+bool AMDGPUAnnotateKernelFeatures::visitConstantExpr(const ConstantExpr *CE,
+    AMDGPUAS AS) {
   if (CE->getOpcode() == Instruction::AddrSpaceCast) {
     unsigned SrcAS = CE->getOperand(0)->getType()->getPointerAddressSpace();
-    return castRequiresQueuePtr(SrcAS);
+    return castRequiresQueuePtr(SrcAS, AS);
   }
 
   return false;
@@ -80,7 +88,8 @@ bool AMDGPUAnnotateKernelFeatures::visitConstantExpr(const ConstantExpr *CE) {
 
 bool AMDGPUAnnotateKernelFeatures::visitConstantExprsRecursively(
   const Constant *EntryC,
-  SmallPtrSet<const Constant *, 8> &ConstantExprVisited) {
+  SmallPtrSet<const Constant *, 8> &ConstantExprVisited,
+  AMDGPUAS AS) {
 
   if (!ConstantExprVisited.insert(EntryC).second)
     return false;
@@ -93,7 +102,7 @@ bool AMDGPUAnnotateKernelFeatures::visitConstantExprsRecursively(
 
     // Check this constant expression.
     if (const auto *CE = dyn_cast<ConstantExpr>(C)) {
-      if (visitConstantExpr(CE))
+      if (visitConstantExpr(CE, AS))
         return true;
     }
 
@@ -114,13 +123,14 @@ bool AMDGPUAnnotateKernelFeatures::visitConstantExprsRecursively(
 }
 
 // Return true if an addrspacecast is used that requires the queue ptr.
-bool AMDGPUAnnotateKernelFeatures::hasAddrSpaceCast(const Function &F) {
+bool AMDGPUAnnotateKernelFeatures::hasAddrSpaceCast(const Function &F,
+    AMDGPUAS AS) {
   SmallPtrSet<const Constant *, 8> ConstantExprVisited;
 
   for (const BasicBlock &BB : F) {
     for (const Instruction &I : BB) {
       if (const AddrSpaceCastInst *ASC = dyn_cast<AddrSpaceCastInst>(&I)) {
-        if (castRequiresQueuePtr(ASC))
+        if (castRequiresQueuePtr(ASC, AS))
           return true;
       }
 
@@ -129,7 +139,7 @@ bool AMDGPUAnnotateKernelFeatures::hasAddrSpaceCast(const Function &F) {
         if (!OpC)
           continue;
 
-        if (visitConstantExprsRecursively(OpC, ConstantExprVisited))
+        if (visitConstantExprsRecursively(OpC, ConstantExprVisited, AS))
           return true;
       }
     }
@@ -169,6 +179,7 @@ bool AMDGPUAnnotateKernelFeatures::addAttrsForIntrinsics(
 
 bool AMDGPUAnnotateKernelFeatures::runOnModule(Module &M) {
   Triple TT(M.getTargetTriple());
+  AS = AMDGPU::getAMDGPUAS(M);
 
   static const StringRef IntrinsicToAttr[][2] = {
     // .x omitted
@@ -188,7 +199,10 @@ bool AMDGPUAnnotateKernelFeatures::runOnModule(Module &M) {
 
   static const StringRef HSAIntrinsicToAttr[][2] = {
     { "llvm.amdgcn.dispatch.ptr", "amdgpu-dispatch-ptr" },
-    { "llvm.amdgcn.queue.ptr", "amdgpu-queue-ptr" }
+    { "llvm.amdgcn.queue.ptr", "amdgpu-queue-ptr" },
+    { "llvm.amdgcn.dispatch.id", "amdgpu-dispatch-id" },
+    { "llvm.trap", "amdgpu-queue-ptr" },
+    { "llvm.debugtrap", "amdgpu-queue-ptr" }
   };
 
   // TODO: We should not add the attributes if the known compile time workgroup
@@ -200,14 +214,16 @@ bool AMDGPUAnnotateKernelFeatures::runOnModule(Module &M) {
   // always initialized.
 
   bool Changed = addAttrsForIntrinsics(M, IntrinsicToAttr);
-  if (TT.getOS() == Triple::AMDHSA) {
+  if (TT.getOS() == Triple::AMDHSA || TT.getOS() == Triple::Mesa3D) {
     Changed |= addAttrsForIntrinsics(M, HSAIntrinsicToAttr);
 
     for (Function &F : M) {
       if (F.hasFnAttribute("amdgpu-queue-ptr"))
         continue;
 
-      if (hasAddrSpaceCast(F))
+      bool HasApertureRegs =
+        TM && TM->getSubtarget<AMDGPUSubtarget>(F).hasApertureRegs();
+      if (!HasApertureRegs && hasAddrSpaceCast(F, AS))
         F.addFnAttr("amdgpu-queue-ptr");
     }
   }
@@ -215,6 +231,6 @@ bool AMDGPUAnnotateKernelFeatures::runOnModule(Module &M) {
   return Changed;
 }
 
-ModulePass *llvm::createAMDGPUAnnotateKernelFeaturesPass() {
-  return new AMDGPUAnnotateKernelFeatures();
+ModulePass *llvm::createAMDGPUAnnotateKernelFeaturesPass(const TargetMachine *TM) {
+  return new AMDGPUAnnotateKernelFeatures(TM);
 }

@@ -64,7 +64,7 @@ user a relationship between generated code and the original program source
 code.
 
 Currently, there are two backend consumers of debug info: DwarfDebug and
-CodeViewDebug. DwarfDebug produces DWARF sutable for use with GDB, LLDB, and
+CodeViewDebug. DwarfDebug produces DWARF suitable for use with GDB, LLDB, and
 other DWARF-based debuggers. :ref:`CodeViewDebug <codeview>` produces CodeView,
 the Microsoft debug info format, which is usable with Microsoft debuggers such
 as Visual Studio and WinDBG. LLVM's debug information format is mostly derived
@@ -92,11 +92,10 @@ information provides the following guarantees:
   as setting program variables, or calling functions that have been
   deleted.
 
-* As desired, LLVM optimizations can be upgraded to be aware of the LLVM
-  debugging information, allowing them to update the debugging information
-  as they perform aggressive optimizations.  This means that, with effort,
-  the LLVM optimizers could optimize debug code just as well as non-debug
-  code.
+* As desired, LLVM optimizations can be upgraded to be aware of debugging
+  information, allowing them to update the debugging information as they
+  perform aggressive optimizations.  This means that, with effort, the LLVM
+  optimizers could optimize debug code just as well as non-debug code.
 
 * LLVM debug information does not prevent optimizations from
   happening (for example inlining, basic block reordering/merging/cleanup,
@@ -113,10 +112,10 @@ the program as it executes from a debugger.  Compiling a program with
 "``-O3 -g``" gives you full debug information that is always available and
 accurate for reading (e.g., you get accurate stack traces despite tail call
 elimination and inlining), but you might lose the ability to modify the program
-and call functions where were optimized out of the program, or inlined away
+and call functions which were optimized out of the program, or inlined away
 completely.
 
-:ref:`LLVM test suite <test-suite-quickstart>` provides a framework to test
+The :ref:`LLVM test suite <test-suite-quickstart>` provides a framework to test
 optimizer's handling of debugging information.  It can be run like this:
 
 .. code-block:: bash
@@ -181,11 +180,27 @@ provide debug information at various points in generated code.
 
   void @llvm.dbg.declare(metadata, metadata, metadata)
 
-This intrinsic provides information about a local element (e.g., variable).
-The first argument is metadata holding the alloca for the variable.  The second
+This intrinsic provides information about a local element (e.g., variable).  The
+first argument is metadata holding the alloca for the variable.  The second
 argument is a `local variable <LangRef.html#dilocalvariable>`_ containing a
 description of the variable.  The third argument is a `complex expression
-<LangRef.html#diexpression>`_.
+<LangRef.html#diexpression>`_.  An `llvm.dbg.declare` instrinsic describes the
+*location* of a source variable.
+
+.. code-block:: llvm
+
+    %i.addr = alloca i32, align 4
+    call void @llvm.dbg.declare(metadata i32* %i.addr, metadata !1, metadata !2), !dbg !3
+    !1 = !DILocalVariable(name: "i", ...) ; int i
+    !2 = !DIExpression()
+    !3 = !DILocation(...)
+    ...
+    %buffer = alloca [256 x i8], align 8
+    ; The address of i is buffer+64.
+    call void @llvm.dbg.declare(metadata [256 x i8]* %buffer, metadata !1, metadata !2)
+    !1 = !DILocalVariable(name: "i", ...) ; int i
+    !2 = !DIExpression(DW_OP_plus, 64)
+
 
 ``llvm.dbg.value``
 ^^^^^^^^^^^^^^^^^^
@@ -230,7 +245,7 @@ following C fragment, for example:
 
 Compiled to LLVM, this function would be represented like this:
 
-.. code-block:: llvm
+.. code-block:: text
 
   ; Function Attrs: nounwind ssp uwtable
   define void @foo() #0 !dbg !4 {
@@ -303,7 +318,7 @@ The first intrinsic ``%llvm.dbg.declare`` encodes debugging information for the
 variable ``X``.  The metadata ``!dbg !14`` attached to the intrinsic provides
 scope information for the variable ``X``.
 
-.. code-block:: llvm
+.. code-block:: text
 
   !14 = !DILocation(line: 2, column: 9, scope: !4)
   !4 = distinct !DISubprogram(name: "foo", scope: !1, file: !1, line: 1, type: !5,
@@ -327,7 +342,7 @@ The third intrinsic ``%llvm.dbg.declare`` encodes debugging information for
 variable ``Z``.  The metadata ``!dbg !19`` attached to the intrinsic provides
 scope information for the variable ``Z``.
 
-.. code-block:: llvm
+.. code-block:: text
 
   !18 = distinct !DILexicalBlock(scope: !4, file: !1, line: 4, column: 5)
   !19 = !DILocation(line: 5, column: 11, scope: !18)
@@ -386,62 +401,67 @@ Given an integer global variable declared as follows:
 
 .. code-block:: c
 
-  int MyGlobal = 100;
+  _Alignas(8) int MyGlobal = 100;
 
 a C/C++ front-end would generate the following descriptors:
 
-.. code-block:: llvm
+.. code-block:: text
 
   ;;
   ;; Define the global itself.
   ;;
-  @MyGlobal = global i32 100, align 4
+  @MyGlobal = global i32 100, align 8, !dbg !0
 
   ;;
   ;; List of debug info of globals
   ;;
-  !llvm.dbg.cu = !{!0}
+  !llvm.dbg.cu = !{!1}
 
   ;; Some unrelated metadata.
   !llvm.module.flags = !{!6, !7}
+  !llvm.ident = !{!8}
+
+  ;; Define the global variable itself
+  !0 = distinct !DIGlobalVariable(name: "MyGlobal", scope: !1, file: !2, line: 1, type: !5, isLocal: false, isDefinition: true, align: 64)
 
   ;; Define the compile unit.
-  !0 = !DICompileUnit(language: DW_LANG_C99, file: !1,
-                      producer:
-                      "clang version 3.7.0 (trunk 231150) (llvm/trunk 231154)",
-                      isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug,
-                      enums: !2, retainedTypes: !2, subprograms: !2, globals:
-                      !3, imports: !2)
+  !1 = distinct !DICompileUnit(language: DW_LANG_C99, file: !2,
+                               producer: "clang version 4.0.0 (http://llvm.org/git/clang.git ae4deadbea242e8ea517eef662c30443f75bd086) (http://llvm.org/git/llvm.git 818b4c1539df3e51dc7e62c89ead4abfd348827d)",
+                               isOptimized: false, runtimeVersion: 0, emissionKind: FullDebug,
+                               enums: !3, globals: !4)
 
   ;;
   ;; Define the file
   ;;
-  !1 = !DIFile(filename: "/dev/stdin",
+  !2 = !DIFile(filename: "/dev/stdin",
                directory: "/Users/dexonsmith/data/llvm/debug-info")
 
   ;; An empty array.
-  !2 = !{}
+  !3 = !{}
 
   ;; The Array of Global Variables
-  !3 = !{!4}
-
-  ;;
-  ;; Define the global variable itself.
-  ;;
-  !4 = !DIGlobalVariable(name: "MyGlobal", scope: !0, file: !1, line: 1,
-                         type: !5, isLocal: false, isDefinition: true,
-                         variable: i32* @MyGlobal)
+  !4 = !{!0}
 
   ;;
   ;; Define the type
   ;;
-  !5 = !DIBasicType(name: "int", size: 32, align: 32, encoding: DW_ATE_signed)
+  !5 = !DIBasicType(name: "int", size: 32, encoding: DW_ATE_signed)
 
   ;; Dwarf version to output.
-  !6 = !{i32 2, !"Dwarf Version", i32 2}
+  !6 = !{i32 2, !"Dwarf Version", i32 4}
 
   ;; Debug info schema version.
   !7 = !{i32 2, !"Debug Info Version", i32 3}
+
+  ;; Compiler identification
+  !8 = !{!"clang version 4.0.0 (http://llvm.org/git/clang.git ae4deadbea242e8ea517eef662c30443f75bd086) (http://llvm.org/git/llvm.git 818b4c1539df3e51dc7e62c89ead4abfd348827d)"}
+
+
+The align value in DIGlobalVariable description specifies variable alignment in
+case it was forced by C11 _Alignas(), C++11 alignas() keywords or compiler
+attribute __attribute__((aligned ())). In other case (when this field is missing)
+alignment is considered default. This is used when producing DWARF output
+for DW_AT_alignment value.
 
 C/C++ function information
 --------------------------
@@ -456,7 +476,7 @@ Given a function declared as follows:
 
 a C/C++ front-end would generate the following descriptors:
 
-.. code-block:: llvm
+.. code-block:: text
 
   ;;
   ;; Define the anchor for subprograms.
@@ -681,7 +701,13 @@ New DWARF Constants
 | DW_APPLE_PROPERTY_strong             | 0x400 |
 +--------------------------------------+-------+
 | DW_APPLE_PROPERTY_unsafe_unretained  | 0x800 |
-+--------------------------------+-----+-------+
++--------------------------------------+-------+
+| DW_APPLE_PROPERTY_nullability        | 0x1000|
++--------------------------------------+-------+
+| DW_APPLE_PROPERTY_null_resettable    | 0x2000|
++--------------------------------------+-------+
+| DW_APPLE_PROPERTY_class              | 0x4000|
++--------------------------------------+-------+
 
 Name Accelerator Tables
 -----------------------
@@ -818,13 +844,13 @@ for the current string value.
 
 The problem with this layout for debuggers is that we need to optimize for the
 negative lookup case where the symbol we're searching for is not present.  So
-if we were to lookup "``printf``" in the table above, we would make a 32 hash
-for "``printf``", it might match ``bucket[3]``.  We would need to go to the
-offset 0x000034f0 and start looking to see if our 32 bit hash matches.  To do
-so, we need to read the next pointer, then read the hash, compare it, and skip
-to the next bucket.  Each time we are skipping many bytes in memory and
-touching new cache pages just to do the compare on the full 32 bit hash.  All
-of these accesses then tell us that we didn't have a match.
+if we were to lookup "``printf``" in the table above, we would make a 32-bit
+hash for "``printf``", it might match ``bucket[3]``.  We would need to go to
+the offset 0x000034f0 and start looking to see if our 32 bit hash matches.  To
+do so, we need to read the next pointer, then read the hash, compare it, and
+skip to the next bucket.  Each time we are skipping many bytes in memory and
+touching new pages just to do the compare on the full 32 bit hash.  All of
+these accesses then tell us that we didn't have a match.
 
 Name Hash Tables
 """"""""""""""""
@@ -1253,6 +1279,7 @@ tag is one of:
 * DW_TAG_packed_type
 * DW_TAG_volatile_type
 * DW_TAG_restrict_type
+* DW_TAG_atomic_type
 * DW_TAG_interface_type
 * DW_TAG_unspecified_type
 * DW_TAG_shared_type

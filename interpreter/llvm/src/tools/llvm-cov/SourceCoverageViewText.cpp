@@ -11,6 +11,7 @@
 ///
 //===----------------------------------------------------------------------===//
 
+#include "CoverageReport.h"
 #include "SourceCoverageViewText.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallString.h"
@@ -27,15 +28,20 @@ void CoveragePrinterText::closeViewFile(OwnedStream OS) {
   OS->operator<<('\n');
 }
 
-Error CoveragePrinterText::createIndexFile(ArrayRef<StringRef> SourceFiles) {
+Error CoveragePrinterText::createIndexFile(
+    ArrayRef<std::string> SourceFiles,
+    const coverage::CoverageMapping &Coverage) {
   auto OSOrErr = createOutputStream("index", "txt", /*InToplevel=*/true);
   if (Error E = OSOrErr.takeError())
     return E;
   auto OS = std::move(OSOrErr.get());
   raw_ostream &OSRef = *OS.get();
 
-  for (StringRef SF : SourceFiles)
-    OSRef << getOutputPath(SF, "txt", /*InToplevel=*/false) << '\n';
+  CoverageReport Report(Opts, Coverage);
+  Report.renderFileReports(OSRef, SourceFiles);
+
+  Opts.colored_ostream(OSRef, raw_ostream::CYAN) << "\n"
+                                                 << Opts.getLLVMVersionString();
 
   return Error::success();
 }
@@ -59,13 +65,11 @@ unsigned getDividerWidth(const CoverageViewOptions &Opts) {
 
 } // anonymous namespace
 
-void SourceCoverageViewText::renderViewHeader(
-    raw_ostream &OS LLVM_ATTRIBUTE_UNUSED) {}
+void SourceCoverageViewText::renderViewHeader(raw_ostream &) {}
 
-void SourceCoverageViewText::renderViewFooter(
-    raw_ostream &OS LLVM_ATTRIBUTE_UNUSED) {}
+void SourceCoverageViewText::renderViewFooter(raw_ostream &) {}
 
-void SourceCoverageViewText::renderSourceName(raw_ostream &OS) {
+void SourceCoverageViewText::renderSourceName(raw_ostream &OS, bool WholeFile) {
   getOptions().colored_ostream(OS, raw_ostream::CYAN) << getSourceName()
                                                       << ":\n";
 }
@@ -76,9 +80,7 @@ void SourceCoverageViewText::renderLinePrefix(raw_ostream &OS,
     OS << "  |";
 }
 
-void SourceCoverageViewText::renderLineSuffix(
-    raw_ostream &OS LLVM_ATTRIBUTE_UNUSED,
-    unsigned ViewDepth LLVM_ATTRIBUTE_UNUSED) {}
+void SourceCoverageViewText::renderLineSuffix(raw_ostream &, unsigned) {}
 
 void SourceCoverageViewText::renderViewDivider(raw_ostream &OS,
                                                unsigned ViewDepth) {
@@ -213,5 +215,25 @@ void SourceCoverageViewText::renderInstantiationView(raw_ostream &OS,
                                                      unsigned ViewDepth) {
   renderLinePrefix(OS, ViewDepth);
   OS << ' ';
-  ISV.View->print(OS, /*WholeFile=*/false, /*ShowSourceName=*/true, ViewDepth);
+  if (!ISV.View)
+    getOptions().colored_ostream(OS, raw_ostream::RED)
+        << "Unexecuted instantiation: " << ISV.FunctionName << "\n";
+  else
+    ISV.View->print(OS, /*WholeFile=*/false, /*ShowSourceName=*/true,
+                    ViewDepth);
 }
+
+void SourceCoverageViewText::renderTitle(raw_ostream &OS, StringRef Title) {
+  if (getOptions().hasProjectTitle())
+    getOptions().colored_ostream(OS, raw_ostream::CYAN)
+        << getOptions().ProjectTitle << "\n";
+
+  getOptions().colored_ostream(OS, raw_ostream::CYAN) << Title << "\n";
+
+  if (getOptions().hasCreatedTime())
+    getOptions().colored_ostream(OS, raw_ostream::CYAN)
+        << getOptions().CreatedTimeStr << "\n";
+}
+
+void SourceCoverageViewText::renderTableHeader(raw_ostream &, unsigned,
+                                               unsigned) {}

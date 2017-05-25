@@ -53,6 +53,31 @@ static Attr *handleFallThroughAttr(Sema &S, Stmt *St, const AttributeList &A,
   return ::new (S.Context) auto(Attr);
 }
 
+static Attr *handleSuppressAttr(Sema &S, Stmt *St, const AttributeList &A,
+                                SourceRange Range) {
+  if (A.getNumArgs() < 1) {
+    S.Diag(A.getLoc(), diag::err_attribute_too_few_arguments)
+        << A.getName() << 1;
+    return nullptr;
+  }
+
+  std::vector<StringRef> DiagnosticIdentifiers;
+  for (unsigned I = 0, E = A.getNumArgs(); I != E; ++I) {
+    StringRef RuleName;
+
+    if (!S.checkStringLiteralArgumentAttr(A, I, RuleName, nullptr))
+      return nullptr;
+
+    // FIXME: Warn if the rule name is unknown. This is tricky because only
+    // clang-tidy knows about available rules.
+    DiagnosticIdentifiers.push_back(RuleName);
+  }
+
+  return ::new (S.Context) SuppressAttr(
+      A.getRange(), S.Context, DiagnosticIdentifiers.data(),
+      DiagnosticIdentifiers.size(), A.getAttributeSpellingListIndex());
+}
+
 static Attr *handleLoopHintAttr(Sema &S, Stmt *St, const AttributeList &A,
                                 SourceRange) {
   IdentifierLoc *PragmaNameLoc = A.getArgAsIdent(0);
@@ -225,15 +250,11 @@ CheckForIncompatibleAttributes(Sema &S,
 
 static Attr *handleOpenCLUnrollHint(Sema &S, Stmt *St, const AttributeList &A,
                                     SourceRange Range) {
-  // OpenCL v2.0 s6.11.5 - opencl_unroll_hint can have 0 arguments (compiler
+  // Although the feature was introduced only in OpenCL C v2.0 s6.11.5, it's
+  // useful for OpenCL 1.x too and doesn't require HW support.
+  // opencl_unroll_hint can have 0 arguments (compiler
   // determines unrolling factor) or 1 argument (the unroll factor provided
   // by the user).
-
-  if (S.getLangOpts().OpenCLVersion < 200) {
-    S.Diag(A.getLoc(), diag::err_attribute_requires_opencl_version)
-        << A.getName() << "2.0" << 1;
-    return nullptr;
-  }
 
   unsigned NumArgs = A.getNumArgs();
 
@@ -283,6 +304,8 @@ static Attr *ProcessStmtAttribute(Sema &S, Stmt *St, const AttributeList &A,
     return handleLoopHintAttr(S, St, A, Range);
   case AttributeList::AT_OpenCLUnrollHint:
     return handleOpenCLUnrollHint(S, St, A, Range);
+  case AttributeList::AT_Suppress:
+    return handleSuppressAttr(S, St, A, Range);
   default:
     // if we're here, then we parsed a known attribute, but didn't recognize
     // it as a statement attribute => it is declaration attribute

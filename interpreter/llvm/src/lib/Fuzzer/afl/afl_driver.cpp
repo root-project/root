@@ -238,12 +238,24 @@ static void maybe_duplicate_stderr() {
   }
 }
 
+// Define LLVMFuzzerMutate to avoid link failures for targets that use it
+// with libFuzzer's LLVMFuzzerCustomMutator.
+extern "C" size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize) {
+  assert(false && "LLVMFuzzerMutate should not be called from afl_driver");
+  return 0;
+}
+
 int main(int argc, char **argv) {
-  fprintf(stderr, "Running in AFl-fuzz mode\nUsage:\n"
-                  "afl-fuzz [afl-flags] %s [N] "
+  fprintf(stderr, "======================= INFO =========================\n"
+                  "This binary is built for AFL-fuzz.\n"
+                  "To run the target function on a single input execute this:\n"
+                  "  %s < INPUT_FILE\n"
+                  "To run the fuzzing execute this:\n"
+                  "  afl-fuzz [afl-flags] %s [N] "
                   "-- run N fuzzing iterations before "
-                  "re-spawning the process (default: 1000)\n",
-          argv[0]);
+                  "re-spawning the process (default: 1000)\n"
+                  "======================================================\n",
+          argv[0], argv[0]);
   if (LLVMFuzzerInitialize)
     LLVMFuzzerInitialize(&argc, &argv);
   // Do any other expensive one-time initialization here.
@@ -258,6 +270,7 @@ int main(int argc, char **argv) {
     N = atoi(argv[1]);
   assert(N > 0);
   time_t unit_time_secs;
+  int num_runs = 0;
   while (__afl_persistent_loop(N)) {
     ssize_t n_read = read(0, AflInputBuf, kMaxAflInputSize);
     if (n_read > 0) {
@@ -270,6 +283,7 @@ int main(int argc, char **argv) {
       CHECK_ERROR(gettimeofday(&unit_start_time, NULL) == 0,
                   "Calling gettimeofday failed");
 
+      num_runs++;
       LLVMFuzzerTestOneInput(copy, n_read);
 
       struct timeval unit_stop_time;
@@ -284,4 +298,5 @@ int main(int argc, char **argv) {
       delete[] copy;
     }
   }
+  fprintf(stderr, "%s: successfully executed %d input(s)\n", argv[0], num_runs);
 }

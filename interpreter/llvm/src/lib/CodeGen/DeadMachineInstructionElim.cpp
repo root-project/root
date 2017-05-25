@@ -110,7 +110,7 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
     // Start out assuming that reserved registers are live out of this block.
     LivePhysRegs = MRI->getReservedRegs();
 
-    // Add live-ins from sucessors to LivePhysRegs. Normally, physregs are not
+    // Add live-ins from successors to LivePhysRegs. Normally, physregs are not
     // live across blocks, but some targets (x86) can have flags live out of a
     // block.
     for (MachineBasicBlock::succ_iterator S = MBB.succ_begin(),
@@ -122,7 +122,7 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
     // liveness as we go.
     for (MachineBasicBlock::reverse_iterator MII = MBB.rbegin(),
          MIE = MBB.rend(); MII != MIE; ) {
-      MachineInstr *MI = &*MII;
+      MachineInstr *MI = &*MII++;
 
       // If the instruction is dead, delete it!
       if (isDead(MI)) {
@@ -133,9 +133,6 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
         MI->eraseFromParentAndMarkDBGValuesForRemoval();
         AnyChanges = true;
         ++NumDeletes;
-        MIE = MBB.rend();
-        // MII is now pointing to the next instruction to process,
-        // so don't increment it.
         continue;
       }
 
@@ -169,10 +166,6 @@ bool DeadMachineInstructionElim::runOnMachineFunction(MachineFunction &MF) {
           }
         }
       }
-
-      // We didn't delete the current instruction, so increment MII to
-      // the next one.
-      ++MII;
     }
   }
 

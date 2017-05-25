@@ -24,6 +24,12 @@ static const EnumEntry<SymbolKind> SymbolTypeNames[] = {
 #undef CV_SYMBOL
 };
 
+static const EnumEntry<TypeLeafKind> TypeLeafNames[] = {
+#define CV_TYPE(name, val) {#name, name},
+#include "llvm/DebugInfo/CodeView/TypeRecords.def"
+#undef CV_TYPE
+};
+
 static const EnumEntry<uint16_t> RegisterNames[] = {
     CV_ENUM_CLASS_ENT(RegisterId, Unknown),
     CV_ENUM_CLASS_ENT(RegisterId, VFrame),
@@ -239,20 +245,20 @@ static const EnumEntry<uint32_t> FrameProcSymFlagNames[] = {
 };
 
 static const EnumEntry<uint32_t> ModuleSubstreamKindNames[] = {
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, None),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, Symbols),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, Lines),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, StringTable),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, FileChecksums),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, FrameData),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, InlineeLines),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, CrossScopeImports),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, CrossScopeExports),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, ILLines),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, FuncMDTokenMap),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, TypeMDTokenMap),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, MergedAssemblyInput),
-    CV_ENUM_CLASS_ENT(ModuleSubstreamKind, CoffSymbolRVA),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, None),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, Symbols),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, Lines),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, StringTable),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, FileChecksums),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, FrameData),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, InlineeLines),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, CrossScopeImports),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, CrossScopeExports),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, ILLines),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, FuncMDTokenMap),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, TypeMDTokenMap),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, MergedAssemblyInput),
+    CV_ENUM_CLASS_ENT(ModuleDebugFragmentKind, CoffSymbolRVA),
 };
 
 static const EnumEntry<uint16_t> ExportSymFlagNames[] = {
@@ -322,6 +328,10 @@ namespace llvm {
 namespace codeview {
 ArrayRef<EnumEntry<SymbolKind>> getSymbolTypeNames() {
   return makeArrayRef(SymbolTypeNames);
+}
+
+ArrayRef<EnumEntry<TypeLeafKind>> getTypeLeafNames() {
+  return makeArrayRef(TypeLeafNames);
 }
 
 ArrayRef<EnumEntry<uint16_t>> getRegisterNames() {

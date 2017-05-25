@@ -12,7 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "MIRPrinter.h"
+#include "llvm/CodeGen/MIRPrinter.h"
+
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MIRYamlMapping.h"
@@ -33,7 +34,7 @@ struct MIRPrintingPass : public MachineFunctionPass {
   MIRPrintingPass() : MachineFunctionPass(ID), OS(dbgs()) {}
   MIRPrintingPass(raw_ostream &OS) : MachineFunctionPass(ID), OS(OS) {}
 
-  const char *getPassName() const override { return "MIR Printing Pass"; }
+  StringRef getPassName() const override { return "MIR Printing Pass"; }
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesAll();

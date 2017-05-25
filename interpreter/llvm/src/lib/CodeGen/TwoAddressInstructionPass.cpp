@@ -29,7 +29,7 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
@@ -109,7 +109,7 @@ class TwoAddressInstructionPass : public MachineFunctionPass {
   bool isProfitableToCommute(unsigned regA, unsigned regB, unsigned regC,
                              MachineInstr *MI, unsigned Dist);
 
-  bool commuteInstruction(MachineInstr *MI,
+  bool commuteInstruction(MachineInstr *MI, unsigned DstIdx,
                           unsigned RegBIdx, unsigned RegCIdx, unsigned Dist);
 
   bool isProfitableToConv3Addr(unsigned RegA, unsigned RegB);
@@ -155,7 +155,7 @@ public:
 
   void getAnalysisUsage(AnalysisUsage &AU) const override {
     AU.setPreservesCFG();
-    AU.addRequired<AAResultsWrapperPass>();
+    AU.addUsedIfAvailable<AAResultsWrapperPass>();
     AU.addUsedIfAvailable<LiveVariables>();
     AU.addPreserved<LiveVariables>();
     AU.addPreserved<SlotIndexes>();
@@ -246,7 +246,7 @@ sink3AddrInstruction(MachineInstr *MI, unsigned SavedReg,
   // appropriate location, we can try to sink the current instruction
   // past it.
   if (!KillMI || KillMI->getParent() != MBB || KillMI == MI ||
-      KillMI == OldPos || KillMI->isTerminator())
+      MachineBasicBlock::iterator(KillMI) == OldPos || KillMI->isTerminator())
     return false;
 
   // If any of the definitions are used by another instruction between the
@@ -260,16 +260,15 @@ sink3AddrInstruction(MachineInstr *MI, unsigned SavedReg,
   ++KillPos;
 
   unsigned NumVisited = 0;
-  for (MachineBasicBlock::iterator I = std::next(OldPos); I != KillPos; ++I) {
-    MachineInstr *OtherMI = I;
+  for (MachineInstr &OtherMI : llvm::make_range(std::next(OldPos), KillPos)) {
     // DBG_VALUE cannot be counted against the limit.
-    if (OtherMI->isDebugValue())
+    if (OtherMI.isDebugValue())
       continue;
     if (NumVisited > 30)  // FIXME: Arbitrary limit to reduce compile time cost.
       return false;
     ++NumVisited;
-    for (unsigned i = 0, e = OtherMI->getNumOperands(); i != e; ++i) {
-      MachineOperand &MO = OtherMI->getOperand(i);
+    for (unsigned i = 0, e = OtherMI.getNumOperands(); i != e; ++i) {
+      MachineOperand &MO = OtherMI.getOperand(i);
       if (!MO.isReg())
         continue;
       unsigned MOReg = MO.getReg();
@@ -278,8 +277,8 @@ sink3AddrInstruction(MachineInstr *MI, unsigned SavedReg,
       if (DefReg == MOReg)
         return false;
 
-      if (MO.isKill() || (LIS && isPlainlyKilled(OtherMI, MOReg, LIS))) {
-        if (OtherMI == KillMI && MOReg == SavedReg)
+      if (MO.isKill() || (LIS && isPlainlyKilled(&OtherMI, MOReg, LIS))) {
+        if (&OtherMI == KillMI && MOReg == SavedReg)
           // Save the operand that kills the register. We want to unset the kill
           // marker if we can sink MI past it.
           KillMO = &MO;
@@ -540,6 +539,16 @@ regsAreCompatible(unsigned RegA, unsigned RegB, const TargetRegisterInfo *TRI) {
   return TRI->regsOverlap(RegA, RegB);
 }
 
+// Returns true if Reg is equal or aliased to at least one register in Set.
+static bool regOverlapsSet(const SmallVectorImpl<unsigned> &Set, unsigned Reg,
+                           const TargetRegisterInfo *TRI) {
+  for (unsigned R : Set)
+    if (TRI->regsOverlap(R, Reg))
+      return true;
+
+  return false;
+}
+
 /// Return true if it's potentially profitable to commute the two-address
 /// instruction that's being processed.
 bool
@@ -642,6 +651,7 @@ isProfitableToCommute(unsigned regA, unsigned regB, unsigned regC,
 /// Commute a two-address instruction and update the basic block, distance map,
 /// and live variables if needed. Return true if it is successful.
 bool TwoAddressInstructionPass::commuteInstruction(MachineInstr *MI,
+                                                   unsigned DstIdx,
                                                    unsigned RegBIdx,
                                                    unsigned RegCIdx,
                                                    unsigned Dist) {
@@ -662,7 +672,7 @@ bool TwoAddressInstructionPass::commuteInstruction(MachineInstr *MI,
   // Update source register map.
   unsigned FromRegC = getMappedReg(RegC, SrcRegMap);
   if (FromRegC) {
-    unsigned RegA = MI->getOperand(0).getReg();
+    unsigned RegA = MI->getOperand(DstIdx).getReg();
     SrcRegMap[RegA] = FromRegC;
   }
 
@@ -865,9 +875,9 @@ rescheduleMIBelowKill(MachineBasicBlock::iterator &mi,
     // FIXME: Needs more sophisticated heuristics.
     return false;
 
-  SmallSet<unsigned, 2> Uses;
-  SmallSet<unsigned, 2> Kills;
-  SmallSet<unsigned, 2> Defs;
+  SmallVector<unsigned, 2> Uses;
+  SmallVector<unsigned, 2> Kills;
+  SmallVector<unsigned, 2> Defs;
   for (const MachineOperand &MO : MI->operands()) {
     if (!MO.isReg())
       continue;
@@ -875,12 +885,12 @@ rescheduleMIBelowKill(MachineBasicBlock::iterator &mi,
     if (!MOReg)
       continue;
     if (MO.isDef())
-      Defs.insert(MOReg);
+      Defs.push_back(MOReg);
     else {
-      Uses.insert(MOReg);
+      Uses.push_back(MOReg);
       if (MOReg != Reg && (MO.isKill() ||
                            (LIS && isPlainlyKilled(MI, MOReg, LIS))))
-        Kills.insert(MOReg);
+        Kills.push_back(MOReg);
     }
   }
 
@@ -889,56 +899,56 @@ rescheduleMIBelowKill(MachineBasicBlock::iterator &mi,
   MachineBasicBlock::iterator AfterMI = std::next(Begin);
 
   MachineBasicBlock::iterator End = AfterMI;
-  while (End->isCopy() && Defs.count(End->getOperand(1).getReg())) {
-    Defs.insert(End->getOperand(0).getReg());
+  while (End->isCopy() &&
+         regOverlapsSet(Defs, End->getOperand(1).getReg(), TRI)) {
+    Defs.push_back(End->getOperand(0).getReg());
     ++End;
   }
 
-  // Check if the reschedule will not break depedencies.
+  // Check if the reschedule will not break dependencies.
   unsigned NumVisited = 0;
   MachineBasicBlock::iterator KillPos = KillMI;
   ++KillPos;
-  for (MachineBasicBlock::iterator I = End; I != KillPos; ++I) {
-    MachineInstr *OtherMI = I;
+  for (MachineInstr &OtherMI : llvm::make_range(End, KillPos)) {
     // DBG_VALUE cannot be counted against the limit.
-    if (OtherMI->isDebugValue())
+    if (OtherMI.isDebugValue())
       continue;
     if (NumVisited > 10)  // FIXME: Arbitrary limit to reduce compile time cost.
       return false;
     ++NumVisited;
-    if (OtherMI->hasUnmodeledSideEffects() || OtherMI->isCall() ||
-        OtherMI->isBranch() || OtherMI->isTerminator())
+    if (OtherMI.hasUnmodeledSideEffects() || OtherMI.isCall() ||
+        OtherMI.isBranch() || OtherMI.isTerminator())
       // Don't move pass calls, etc.
       return false;
-    for (const MachineOperand &MO : OtherMI->operands()) {
+    for (const MachineOperand &MO : OtherMI.operands()) {
       if (!MO.isReg())
         continue;
       unsigned MOReg = MO.getReg();
       if (!MOReg)
         continue;
       if (MO.isDef()) {
-        if (Uses.count(MOReg))
+        if (regOverlapsSet(Uses, MOReg, TRI))
           // Physical register use would be clobbered.
           return false;
-        if (!MO.isDead() && Defs.count(MOReg))
+        if (!MO.isDead() && regOverlapsSet(Defs, MOReg, TRI))
           // May clobber a physical register def.
           // FIXME: This may be too conservative. It's ok if the instruction
           // is sunken completely below the use.
           return false;
       } else {
-        if (Defs.count(MOReg))
+        if (regOverlapsSet(Defs, MOReg, TRI))
           return false;
-        bool isKill = MO.isKill() ||
-                      (LIS && isPlainlyKilled(OtherMI, MOReg, LIS));
-        if (MOReg != Reg &&
-            ((isKill && Uses.count(MOReg)) || Kills.count(MOReg)))
+        bool isKill =
+            MO.isKill() || (LIS && isPlainlyKilled(&OtherMI, MOReg, LIS));
+        if (MOReg != Reg && ((isKill && regOverlapsSet(Uses, MOReg, TRI)) ||
+                             regOverlapsSet(Kills, MOReg, TRI)))
           // Don't want to extend other live ranges and update kills.
           return false;
         if (MOReg == Reg && !isKill)
           // We can't schedule across a use of the register in question.
           return false;
         // Ensure that if this is register in question, its the kill we expect.
-        assert((MOReg != Reg || OtherMI == KillMI) &&
+        assert((MOReg != Reg || &OtherMI == KillMI) &&
                "Found multiple kills of a register in a basic block");
       }
     }
@@ -954,8 +964,7 @@ rescheduleMIBelowKill(MachineBasicBlock::iterator &mi,
     // We have to move the copies first so that the MBB is still well-formed
     // when calling handleMove().
     for (MachineBasicBlock::iterator MBBI = AfterMI; MBBI != End;) {
-      MachineInstr *CopyMI = MBBI;
-      ++MBBI;
+      auto CopyMI = MBBI++;
       MBB->splice(InsertPos, MBB, CopyMI);
       LIS->handleMove(*CopyMI);
       InsertPos = CopyMI;
@@ -1073,21 +1082,20 @@ rescheduleKillAboveMI(MachineBasicBlock::iterator &mi,
 
   // Check if the reschedule will not break depedencies.
   unsigned NumVisited = 0;
-  MachineBasicBlock::iterator KillPos = KillMI;
-  for (MachineBasicBlock::iterator I = mi; I != KillPos; ++I) {
-    MachineInstr *OtherMI = I;
+  for (MachineInstr &OtherMI :
+       llvm::make_range(mi, MachineBasicBlock::iterator(KillMI))) {
     // DBG_VALUE cannot be counted against the limit.
-    if (OtherMI->isDebugValue())
+    if (OtherMI.isDebugValue())
       continue;
     if (NumVisited > 10)  // FIXME: Arbitrary limit to reduce compile time cost.
       return false;
     ++NumVisited;
-    if (OtherMI->hasUnmodeledSideEffects() || OtherMI->isCall() ||
-        OtherMI->isBranch() || OtherMI->isTerminator())
+    if (OtherMI.hasUnmodeledSideEffects() || OtherMI.isCall() ||
+        OtherMI.isBranch() || OtherMI.isTerminator())
       // Don't move pass calls, etc.
       return false;
     SmallVector<unsigned, 2> OtherDefs;
-    for (const MachineOperand &MO : OtherMI->operands()) {
+    for (const MachineOperand &MO : OtherMI.operands()) {
       if (!MO.isReg())
         continue;
       unsigned MOReg = MO.getReg();
@@ -1101,8 +1109,8 @@ rescheduleKillAboveMI(MachineBasicBlock::iterator &mi,
         if (Kills.count(MOReg))
           // Don't want to extend other live ranges and update kills.
           return false;
-        if (OtherMI != MI && MOReg == Reg &&
-            !(MO.isKill() || (LIS && isPlainlyKilled(OtherMI, MOReg, LIS))))
+        if (&OtherMI != MI && MOReg == Reg &&
+            !(MO.isKill() || (LIS && isPlainlyKilled(&OtherMI, MOReg, LIS))))
           // We can't schedule across a use of the register in question.
           return false;
       } else {
@@ -1164,6 +1172,9 @@ bool TwoAddressInstructionPass::tryInstructionCommute(MachineInstr *MI,
                                                       unsigned BaseOpIdx,
                                                       bool BaseOpKilled,
                                                       unsigned Dist) {
+  if (!MI->isCommutable())
+    return false;
+
   unsigned DstOpReg = MI->getOperand(DstOpIdx).getReg();
   unsigned BaseOpReg = MI->getOperand(BaseOpIdx).getReg();
   unsigned OpsNum = MI->getDesc().getNumOperands();
@@ -1173,7 +1184,7 @@ bool TwoAddressInstructionPass::tryInstructionCommute(MachineInstr *MI,
     // and OtherOpIdx are commutable, it does not really search for
     // other commutable operands and does not change the values of passed
     // variables.
-    if (OtherOpIdx == BaseOpIdx ||
+    if (OtherOpIdx == BaseOpIdx || !MI->getOperand(OtherOpIdx).isReg() ||
         !TII->findCommutedOpIndices(*MI, BaseOpIdx, OtherOpIdx))
       continue;
 
@@ -1192,7 +1203,8 @@ bool TwoAddressInstructionPass::tryInstructionCommute(MachineInstr *MI,
     }
 
     // If it's profitable to commute, try to do so.
-    if (DoCommute && commuteInstruction(MI, BaseOpIdx, OtherOpIdx, Dist)) {
+    if (DoCommute && commuteInstruction(MI, DstOpIdx, BaseOpIdx, OtherOpIdx,
+                                        Dist)) {
       ++NumCommuted;
       if (AggressiveCommute)
         ++NumAggrCommuted;
@@ -1517,7 +1529,7 @@ TwoAddressInstructionPass::processTiedPairs(MachineInstr *MI,
     // Update DistanceMap.
     MachineBasicBlock::iterator PrevMI = MI;
     --PrevMI;
-    DistanceMap.insert(std::make_pair(PrevMI, Dist));
+    DistanceMap.insert(std::make_pair(&*PrevMI, Dist));
     DistanceMap[MI] = ++Dist;
 
     if (LIS) {
@@ -1560,14 +1572,14 @@ TwoAddressInstructionPass::processTiedPairs(MachineInstr *MI,
     if (!IsEarlyClobber) {
       // Replace other (un-tied) uses of regB with LastCopiedReg.
       for (MachineOperand &MO : MI->operands()) {
-        if (MO.isReg() && MO.getReg() == RegB && MO.getSubReg() == SubRegB &&
+        if (MO.isReg() && MO.getReg() == RegB &&
             MO.isUse()) {
           if (MO.isKill()) {
             MO.setIsKill(false);
             RemovedKillFlag = true;
           }
           MO.setReg(LastCopiedReg);
-          MO.setSubReg(0);
+          MO.setSubReg(MO.getSubReg());
         }
       }
     }
@@ -1615,7 +1627,10 @@ bool TwoAddressInstructionPass::runOnMachineFunction(MachineFunction &Func) {
   InstrItins = MF->getSubtarget().getInstrItineraryData();
   LV = getAnalysisIfAvailable<LiveVariables>();
   LIS = getAnalysisIfAvailable<LiveIntervals>();
-  AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+  if (auto *AAPass = getAnalysisIfAvailable<AAResultsWrapperPass>())
+    AA = &AAPass->getAAResults();
+  else
+    AA = nullptr;
   OptLevel = TM.getOptLevel();
 
   bool MadeChange = false;
@@ -1649,13 +1664,13 @@ bool TwoAddressInstructionPass::runOnMachineFunction(MachineFunction &Func) {
       if (mi->isRegSequence())
         eliminateRegSequence(mi);
 
-      DistanceMap.insert(std::make_pair(mi, ++Dist));
+      DistanceMap.insert(std::make_pair(&*mi, ++Dist));
 
       processCopy(&*mi);
 
       // First scan through all the tied register uses in this instruction
       // and record a list of pairs of tied operands for each register.
-      if (!collectTiedOperands(mi, TiedOperands)) {
+      if (!collectTiedOperands(&*mi, TiedOperands)) {
         mi = nmi;
         continue;
       }
@@ -1688,7 +1703,7 @@ bool TwoAddressInstructionPass::runOnMachineFunction(MachineFunction &Func) {
 
       // Now iterate over the information collected above.
       for (auto &TO : TiedOperands) {
-        processTiedPairs(mi, TO.second, Dist);
+        processTiedPairs(&*mi, TO.second, Dist);
         DEBUG(dbgs() << "\t\trewrite to:\t" << *mi);
       }
 
@@ -1732,27 +1747,27 @@ bool TwoAddressInstructionPass::runOnMachineFunction(MachineFunction &Func) {
 ///
 void TwoAddressInstructionPass::
 eliminateRegSequence(MachineBasicBlock::iterator &MBBI) {
-  MachineInstr *MI = MBBI;
-  unsigned DstReg = MI->getOperand(0).getReg();
-  if (MI->getOperand(0).getSubReg() ||
+  MachineInstr &MI = *MBBI;
+  unsigned DstReg = MI.getOperand(0).getReg();
+  if (MI.getOperand(0).getSubReg() ||
       TargetRegisterInfo::isPhysicalRegister(DstReg) ||
-      !(MI->getNumOperands() & 1)) {
-    DEBUG(dbgs() << "Illegal REG_SEQUENCE instruction:" << *MI);
+      !(MI.getNumOperands() & 1)) {
+    DEBUG(dbgs() << "Illegal REG_SEQUENCE instruction:" << MI);
     llvm_unreachable(nullptr);
   }
 
   SmallVector<unsigned, 4> OrigRegs;
   if (LIS) {
-    OrigRegs.push_back(MI->getOperand(0).getReg());
-    for (unsigned i = 1, e = MI->getNumOperands(); i < e; i += 2)
-      OrigRegs.push_back(MI->getOperand(i).getReg());
+    OrigRegs.push_back(MI.getOperand(0).getReg());
+    for (unsigned i = 1, e = MI.getNumOperands(); i < e; i += 2)
+      OrigRegs.push_back(MI.getOperand(i).getReg());
   }
 
   bool DefEmitted = false;
-  for (unsigned i = 1, e = MI->getNumOperands(); i < e; i += 2) {
-    MachineOperand &UseMO = MI->getOperand(i);
+  for (unsigned i = 1, e = MI.getNumOperands(); i < e; i += 2) {
+    MachineOperand &UseMO = MI.getOperand(i);
     unsigned SrcReg = UseMO.getReg();
-    unsigned SubIdx = MI->getOperand(i+1).getImm();
+    unsigned SubIdx = MI.getOperand(i+1).getImm();
     // Nothing needs to be inserted for <undef> operands.
     if (UseMO.isUndef())
       continue;
@@ -1762,18 +1777,18 @@ eliminateRegSequence(MachineBasicBlock::iterator &MBBI) {
     bool isKill = UseMO.isKill();
     if (isKill)
       for (unsigned j = i + 2; j < e; j += 2)
-        if (MI->getOperand(j).getReg() == SrcReg) {
-          MI->getOperand(j).setIsKill();
+        if (MI.getOperand(j).getReg() == SrcReg) {
+          MI.getOperand(j).setIsKill();
           UseMO.setIsKill(false);
           isKill = false;
           break;
         }
 
     // Insert the sub-register copy.
-    MachineInstr *CopyMI = BuildMI(*MI->getParent(), MI, MI->getDebugLoc(),
+    MachineInstr *CopyMI = BuildMI(*MI.getParent(), MI, MI.getDebugLoc(),
                                    TII->get(TargetOpcode::COPY))
-      .addReg(DstReg, RegState::Define, SubIdx)
-      .addOperand(UseMO);
+                               .addReg(DstReg, RegState::Define, SubIdx)
+                               .add(UseMO);
 
     // The first def needs an <undef> flag because there is no live register
     // before it.
@@ -1786,7 +1801,7 @@ eliminateRegSequence(MachineBasicBlock::iterator &MBBI) {
 
     // Update LiveVariables' kill info.
     if (LV && isKill && !TargetRegisterInfo::isPhysicalRegister(SrcReg))
-      LV->replaceKillInstruction(SrcReg, *MI, *CopyMI);
+      LV->replaceKillInstruction(SrcReg, MI, *CopyMI);
 
     DEBUG(dbgs() << "Inserted: " << *CopyMI);
   }
@@ -1795,13 +1810,13 @@ eliminateRegSequence(MachineBasicBlock::iterator &MBBI) {
       std::next(MachineBasicBlock::iterator(MI));
 
   if (!DefEmitted) {
-    DEBUG(dbgs() << "Turned: " << *MI << " into an IMPLICIT_DEF");
-    MI->setDesc(TII->get(TargetOpcode::IMPLICIT_DEF));
-    for (int j = MI->getNumOperands() - 1, ee = 0; j > ee; --j)
-      MI->RemoveOperand(j);
+    DEBUG(dbgs() << "Turned: " << MI << " into an IMPLICIT_DEF");
+    MI.setDesc(TII->get(TargetOpcode::IMPLICIT_DEF));
+    for (int j = MI.getNumOperands() - 1, ee = 0; j > ee; --j)
+      MI.RemoveOperand(j);
   } else {
-    DEBUG(dbgs() << "Eliminated: " << *MI);
-    MI->eraseFromParent();
+    DEBUG(dbgs() << "Eliminated: " << MI);
+    MI.eraseFromParent();
   }
 
   // Udpate LiveIntervals.

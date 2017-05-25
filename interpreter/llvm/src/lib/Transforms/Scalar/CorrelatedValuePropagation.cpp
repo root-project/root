@@ -11,12 +11,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/Scalar.h"
+#include "llvm/Transforms/Scalar/CorrelatedValuePropagation.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LazyValueInfo.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
@@ -24,6 +26,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
 using namespace llvm;
 
@@ -36,10 +39,13 @@ STATISTIC(NumCmps,      "Number of comparisons propagated");
 STATISTIC(NumReturns,   "Number of return values propagated");
 STATISTIC(NumDeadCases, "Number of switch cases removed");
 STATISTIC(NumSDivs,     "Number of sdiv converted to udiv");
+STATISTIC(NumAShrs,     "Number of ashr converted to lshr");
+STATISTIC(NumSRems,     "Number of srem converted to urem");
+
+static cl::opt<bool> DontProcessAdds("cvp-dont-process-adds", cl::init(true));
 
 namespace {
   class CorrelatedValuePropagation : public FunctionPass {
-    LazyValueInfo *LVI;
   public:
     static char ID;
     CorrelatedValuePropagation(): FunctionPass(ID) {
@@ -90,7 +96,8 @@ static bool processSelect(SelectInst *S, LazyValueInfo *LVI) {
   return true;
 }
 
-static bool processPHI(PHINode *P, LazyValueInfo *LVI) {
+static bool processPHI(PHINode *P, LazyValueInfo *LVI,
+                       const SimplifyQuery &SQ) {
   bool Changed = false;
 
   BasicBlock *BB = P->getParent();
@@ -144,9 +151,7 @@ static bool processPHI(PHINode *P, LazyValueInfo *LVI) {
     Changed = true;
   }
 
-  // FIXME: Provide TLI, DT, AT to SimplifyInstruction.
-  const DataLayout &DL = BB->getModule()->getDataLayout();
-  if (Value *V = SimplifyInstruction(P, DL)) {
+  if (Value *V = SimplifyInstruction(P, SQ)) {
     P->replaceAllUsesWith(V);
     P->eraseFromParent();
     Changed = true;
@@ -230,9 +235,8 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
   // Analyse each switch case in turn.  This is done in reverse order so that
   // removing a case doesn't cause trouble for the iteration.
   bool Changed = false;
-  for (SwitchInst::CaseIt CI = SI->case_end(), CE = SI->case_begin(); CI-- != CE;
-       ) {
-    ConstantInt *Case = CI.getCaseValue();
+  for (auto CI = SI->case_begin(), CE = SI->case_end(); CI != CE;) {
+    ConstantInt *Case = CI->getCaseValue();
 
     // Check to see if the switch condition is equal to/not equal to the case
     // value on every incoming edge, equal/not equal being the same each time.
@@ -265,8 +269,9 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
 
     if (State == LazyValueInfo::False) {
       // This case never fires - remove it.
-      CI.getCaseSuccessor()->removePredecessor(BB);
-      SI->removeCase(CI); // Does not invalidate the iterator.
+      CI->getCaseSuccessor()->removePredecessor(BB);
+      CI = SI->removeCase(CI);
+      CE = SI->case_end();
 
       // The condition can be modified by removePredecessor's PHI simplification
       // logic.
@@ -274,7 +279,9 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
 
       ++NumDeadCases;
       Changed = true;
-    } else if (State == LazyValueInfo::True) {
+      continue;
+    }
+    if (State == LazyValueInfo::True) {
       // This case always fires.  Arrange for the switch to be turned into an
       // unconditional branch by replacing the switch condition with the case
       // value.
@@ -283,6 +290,9 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
       Changed = true;
       break;
     }
+
+    // Increment the case iterator sense we didn't delete it.
+    ++CI;
   }
 
   if (Changed)
@@ -303,12 +313,12 @@ static bool processCallSite(CallSite CS, LazyValueInfo *LVI) {
     // Try to mark pointer typed parameters as non-null.  We skip the
     // relatively expensive analysis for constants which are obviously either
     // null or non-null to start with.
-    if (Type && !CS.paramHasAttr(ArgNo + 1, Attribute::NonNull) &&
+    if (Type && !CS.paramHasAttr(ArgNo, Attribute::NonNull) &&
         !isa<Constant>(V) && 
         LVI->getPredicateAt(ICmpInst::ICMP_EQ, V,
                             ConstantPointerNull::get(Type),
                             CS.getInstruction()) == LazyValueInfo::False)
-      Indices.push_back(ArgNo + 1);
+      Indices.push_back(ArgNo + AttributeList::FirstArgIndex);
     ArgNo++;
   }
 
@@ -317,11 +327,46 @@ static bool processCallSite(CallSite CS, LazyValueInfo *LVI) {
   if (Indices.empty())
     return false;
 
-  AttributeSet AS = CS.getAttributes();
+  AttributeList AS = CS.getAttributes();
   LLVMContext &Ctx = CS.getInstruction()->getContext();
   AS = AS.addAttribute(Ctx, Indices, Attribute::get(Ctx, Attribute::NonNull));
   CS.setAttributes(AS);
 
+  return true;
+}
+
+// Helper function to rewrite srem and sdiv. As a policy choice, we choose not
+// to waste compile time on anything where the operands are local defs.  While
+// LVI can sometimes reason about such cases, it's not its primary purpose.
+static bool hasLocalDefs(BinaryOperator *SDI) {
+  for (Value *O : SDI->operands()) {
+    auto *I = dyn_cast<Instruction>(O);
+    if (I && I->getParent() == SDI->getParent())
+      return true;
+  }
+  return false;
+}
+
+static bool hasPositiveOperands(BinaryOperator *SDI, LazyValueInfo *LVI) {
+  Constant *Zero = ConstantInt::get(SDI->getType(), 0);
+  for (Value *O : SDI->operands()) {
+    auto Result = LVI->getPredicateAt(ICmpInst::ICMP_SGE, O, Zero, SDI);
+    if (Result != LazyValueInfo::True)
+      return false;
+  }
+  return true;
+}
+
+static bool processSRem(BinaryOperator *SDI, LazyValueInfo *LVI) {
+  if (SDI->getType()->isVectorTy() || hasLocalDefs(SDI) ||
+      !hasPositiveOperands(SDI, LVI))
+    return false;
+
+  ++NumSRems;
+  auto *BO = BinaryOperator::CreateURem(SDI->getOperand(0), SDI->getOperand(1),
+                                        SDI->getName(), SDI);
+  SDI->replaceAllUsesWith(BO);
+  SDI->eraseFromParent();
   return true;
 }
 
@@ -331,25 +376,9 @@ static bool processCallSite(CallSite CS, LazyValueInfo *LVI) {
 /// conditions, this can sometimes prove conditions instcombine can't by
 /// exploiting range information.
 static bool processSDiv(BinaryOperator *SDI, LazyValueInfo *LVI) {
-  if (SDI->getType()->isVectorTy())
+  if (SDI->getType()->isVectorTy() || hasLocalDefs(SDI) ||
+      !hasPositiveOperands(SDI, LVI))
     return false;
-
-  for (Value *O : SDI->operands()) {
-    // As a policy choice, we choose not to waste compile time on anything where
-    // the operands are local defs.  While LVI can sometimes reason about such
-    // cases, it's not its primary purpose.
-    auto *I = dyn_cast<Instruction>(O);
-    if (I && I->getParent() == SDI->getParent())
-      return false;
-  }
-
-  Constant *Zero = ConstantInt::get(SDI->getType(), 0);
-  for (Value *O : SDI->operands()) {
-    LazyValueInfo::Tristate Result =
-        LVI->getPredicateAt(ICmpInst::ICMP_SGE, O, Zero, SDI);
-    if (Result != LazyValueInfo::True)
-      return false;
-  }
 
   ++NumSDivs;
   auto *BO = BinaryOperator::CreateUDiv(SDI->getOperand(0), SDI->getOperand(1),
@@ -359,6 +388,81 @@ static bool processSDiv(BinaryOperator *SDI, LazyValueInfo *LVI) {
   SDI->eraseFromParent();
 
   return true;
+}
+
+static bool processAShr(BinaryOperator *SDI, LazyValueInfo *LVI) {
+  if (SDI->getType()->isVectorTy() || hasLocalDefs(SDI))
+    return false;
+
+  Constant *Zero = ConstantInt::get(SDI->getType(), 0);
+  if (LVI->getPredicateAt(ICmpInst::ICMP_SGE, SDI->getOperand(0), Zero, SDI) !=
+      LazyValueInfo::True)
+    return false;
+
+  ++NumAShrs;
+  auto *BO = BinaryOperator::CreateLShr(SDI->getOperand(0), SDI->getOperand(1),
+                                        SDI->getName(), SDI);
+  BO->setIsExact(SDI->isExact());
+  SDI->replaceAllUsesWith(BO);
+  SDI->eraseFromParent();
+
+  return true;
+}
+
+static bool processAdd(BinaryOperator *AddOp, LazyValueInfo *LVI) {
+  typedef OverflowingBinaryOperator OBO;
+
+  if (DontProcessAdds)
+    return false;
+
+  if (AddOp->getType()->isVectorTy() || hasLocalDefs(AddOp))
+    return false;
+
+  bool NSW = AddOp->hasNoSignedWrap();
+  bool NUW = AddOp->hasNoUnsignedWrap();
+  if (NSW && NUW)
+    return false;
+
+  BasicBlock *BB = AddOp->getParent();
+
+  Value *LHS = AddOp->getOperand(0);
+  Value *RHS = AddOp->getOperand(1);
+
+  ConstantRange LRange = LVI->getConstantRange(LHS, BB, AddOp);
+
+  // Initialize RRange only if we need it. If we know that guaranteed no wrap
+  // range for the given LHS range is empty don't spend time calculating the
+  // range for the RHS.
+  Optional<ConstantRange> RRange;
+  auto LazyRRange = [&] () {
+      if (!RRange)
+        RRange = LVI->getConstantRange(RHS, BB, AddOp);
+      return RRange.getValue();
+  };
+
+  bool Changed = false;
+  if (!NUW) {
+    ConstantRange NUWRange =
+            LRange.makeGuaranteedNoWrapRegion(BinaryOperator::Add, LRange,
+                                              OBO::NoUnsignedWrap);
+    if (!NUWRange.isEmptySet()) {
+      bool NewNUW = NUWRange.contains(LazyRRange());
+      AddOp->setHasNoUnsignedWrap(NewNUW);
+      Changed |= NewNUW;
+    }
+  }
+  if (!NSW) {
+    ConstantRange NSWRange =
+            LRange.makeGuaranteedNoWrapRegion(BinaryOperator::Add, LRange,
+                                              OBO::NoSignedWrap);
+    if (!NSWRange.isEmptySet()) {
+      bool NewNSW = NSWRange.contains(LazyRRange());
+      AddOp->setHasNoSignedWrap(NewNSW);
+      Changed |= NewNSW;
+    }
+  }
+
+  return Changed;
 }
 
 static Constant *getConstantAt(Value *V, Instruction *At, LazyValueInfo *LVI) {
@@ -384,24 +488,23 @@ static Constant *getConstantAt(Value *V, Instruction *At, LazyValueInfo *LVI) {
     ConstantInt::getFalse(C->getContext());
 }
 
-bool CorrelatedValuePropagation::runOnFunction(Function &F) {
-  if (skipFunction(F))
-    return false;
-
-  LVI = &getAnalysis<LazyValueInfoWrapperPass>().getLVI();
-
+static bool runImpl(Function &F, LazyValueInfo *LVI, const SimplifyQuery &SQ) {
   bool FnChanged = false;
-
-  for (BasicBlock &BB : F) {
+  // Visiting in a pre-order depth-first traversal causes us to simplify early
+  // blocks before querying later blocks (which require us to analyze early
+  // blocks).  Eagerly simplifying shallow blocks means there is strictly less
+  // work to do for deep blocks.  This also means we don't visit unreachable
+  // blocks. 
+  for (BasicBlock *BB : depth_first(&F.getEntryBlock())) {
     bool BBChanged = false;
-    for (BasicBlock::iterator BI = BB.begin(), BE = BB.end(); BI != BE;) {
+    for (BasicBlock::iterator BI = BB->begin(), BE = BB->end(); BI != BE;) {
       Instruction *II = &*BI++;
       switch (II->getOpcode()) {
       case Instruction::Select:
         BBChanged |= processSelect(cast<SelectInst>(II), LVI);
         break;
       case Instruction::PHI:
-        BBChanged |= processPHI(cast<PHINode>(II), LVI);
+        BBChanged |= processPHI(cast<PHINode>(II), LVI, SQ);
         break;
       case Instruction::ICmp:
       case Instruction::FCmp:
@@ -415,13 +518,22 @@ bool CorrelatedValuePropagation::runOnFunction(Function &F) {
       case Instruction::Invoke:
         BBChanged |= processCallSite(CallSite(II), LVI);
         break;
+      case Instruction::SRem:
+        BBChanged |= processSRem(cast<BinaryOperator>(II), LVI);
+        break;
       case Instruction::SDiv:
         BBChanged |= processSDiv(cast<BinaryOperator>(II), LVI);
+        break;
+      case Instruction::AShr:
+        BBChanged |= processAShr(cast<BinaryOperator>(II), LVI);
+        break;
+      case Instruction::Add:
+        BBChanged |= processAdd(cast<BinaryOperator>(II), LVI);
         break;
       }
     }
 
-    Instruction *Term = BB.getTerminator();
+    Instruction *Term = BB->getTerminator();
     switch (Term->getOpcode()) {
     case Instruction::Switch:
       BBChanged |= processSwitch(cast<SwitchInst>(Term), LVI);
@@ -446,4 +558,25 @@ bool CorrelatedValuePropagation::runOnFunction(Function &F) {
   }
 
   return FnChanged;
+}
+
+bool CorrelatedValuePropagation::runOnFunction(Function &F) {
+  if (skipFunction(F))
+    return false;
+
+  LazyValueInfo *LVI = &getAnalysis<LazyValueInfoWrapperPass>().getLVI();
+  return runImpl(F, LVI, getBestSimplifyQuery(*this, F));
+}
+
+PreservedAnalyses
+CorrelatedValuePropagationPass::run(Function &F, FunctionAnalysisManager &AM) {
+
+  LazyValueInfo *LVI = &AM.getResult<LazyValueAnalysis>(F);
+  bool Changed = runImpl(F, LVI, getBestSimplifyQuery(AM, F));
+
+  if (!Changed)
+    return PreservedAnalyses::all();
+  PreservedAnalyses PA;
+  PA.preserve<GlobalsAA>();
+  return PA;
 }

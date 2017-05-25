@@ -24,6 +24,7 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSwitch.h"
 #include <algorithm>
 
 namespace clang {
@@ -106,10 +107,14 @@ public:
   bool HasDroppedStmt : 1;
 
   /// \brief True if current scope is for OpenMP declare reduction combiner.
-  bool HasOMPDeclareReductionCombiner;
+  bool HasOMPDeclareReductionCombiner : 1;
 
   /// \brief Whether there is a fallthrough statement in this function.
   bool HasFallthroughStmt : 1;
+
+  /// \brief Whether we make reference to a declaration that could be
+  /// unavailable.
+  bool HasPotentialAvailabilityViolations : 1;
 
   /// A flag that is set when parsing a method that must call super's
   /// implementation, such as \c -dealloc, \c -finalize, or any method marked
@@ -130,6 +135,18 @@ public:
   /// This starts true for a secondary initializer method and will be set to
   /// false if there is an invocation of an initializer on 'self'.
   bool ObjCWarnForNoInitDelegation : 1;
+
+  /// \brief True only when this function has not already built, or attempted
+  /// to build, the initial and final coroutine suspend points
+  bool NeedsCoroutineSuspends : 1;
+
+  /// \brief An enumeration represeting the kind of the first coroutine statement
+  /// in the function. One of co_return, co_await, or co_yield.
+  unsigned char FirstCoroutineStmtKind : 2;
+
+  /// First coroutine statement in the current function.
+  /// (ex co_return, co_await, co_yield)
+  SourceLocation FirstCoroutineStmtLoc;
 
   /// First 'return' statement in the current function.
   SourceLocation FirstReturnLoc;
@@ -153,12 +170,10 @@ public:
   SmallVector<ReturnStmt*, 4> Returns;
 
   /// \brief The promise object for this coroutine, if any.
-  VarDecl *CoroutinePromise;
+  VarDecl *CoroutinePromise = nullptr;
 
-  /// \brief The list of coroutine control flow constructs (co_await, co_yield,
-  /// co_return) that occur within the function or block. Empty if and only if
-  /// this function or block is not (yet known to be) a coroutine.
-  SmallVector<Stmt*, 4> CoroutineStmts;
+  /// \brief The initial and final coroutine suspend points.
+  std::pair<Stmt *, Stmt *> CoroutineSuspends;
 
   /// \brief The stack of currently active compound stamement scopes in the
   /// function.
@@ -372,7 +387,47 @@ public:
         (HasIndirectGoto ||
           (HasBranchProtectedScope && HasBranchIntoScope));
   }
-  
+
+  void setFirstCoroutineStmt(SourceLocation Loc, StringRef Keyword) {
+    assert(FirstCoroutineStmtLoc.isInvalid() &&
+                   "first coroutine statement location already set");
+    FirstCoroutineStmtLoc = Loc;
+    FirstCoroutineStmtKind = llvm::StringSwitch<unsigned char>(Keyword)
+            .Case("co_return", 0)
+            .Case("co_await", 1)
+            .Case("co_yield", 2);
+  }
+
+  StringRef getFirstCoroutineStmtKeyword() const {
+    assert(FirstCoroutineStmtLoc.isValid()
+                   && "no coroutine statement available");
+    switch (FirstCoroutineStmtKind) {
+    case 0: return "co_return";
+    case 1: return "co_await";
+    case 2: return "co_yield";
+    default:
+      llvm_unreachable("FirstCoroutineStmtKind has an invalid value");
+    };
+  }
+
+  void setNeedsCoroutineSuspends(bool value = true) {
+    assert((!value || CoroutineSuspends.first == nullptr) &&
+            "we already have valid suspend points");
+    NeedsCoroutineSuspends = value;
+  }
+
+  bool hasInvalidCoroutineSuspends() const {
+    return !NeedsCoroutineSuspends && CoroutineSuspends.first == nullptr;
+  }
+
+  void setCoroutineSuspends(Stmt *Initial, Stmt *Final) {
+    assert(Initial && Final && "suspend points cannot be null");
+    assert(CoroutineSuspends.first == nullptr && "suspend points already set");
+    NeedsCoroutineSuspends = false;
+    CoroutineSuspends.first = Initial;
+    CoroutineSuspends.second = Final;
+  }
+
   FunctionScopeInfo(DiagnosticsEngine &Diag)
     : Kind(SK_Function),
       HasBranchProtectedScope(false),
@@ -381,11 +436,13 @@ public:
       HasDroppedStmt(false),
       HasOMPDeclareReductionCombiner(false),
       HasFallthroughStmt(false),
+      HasPotentialAvailabilityViolations(false),
       ObjCShouldCallSuper(false),
       ObjCIsDesignatedInit(false),
       ObjCWarnForNoDesignatedInitChain(false),
       ObjCIsSecondaryInit(false),
       ObjCWarnForNoInitDelegation(false),
+      NeedsCoroutineSuspends(true),
       ErrorTrap(Diag) { }
 
   virtual ~FunctionScopeInfo();
@@ -447,6 +504,14 @@ public:
     /// non-static data member that would hold the capture.
     QualType CaptureType;
 
+    /// \brief Whether an explicit capture has been odr-used in the body of the
+    /// lambda.
+    bool ODRUsed;
+
+    /// \brief Whether an explicit capture has been non-odr-used in the body of
+    /// the lambda.
+    bool NonODRUsed;
+
   public:
     Capture(VarDecl *Var, bool Block, bool ByRef, bool IsNested,
             SourceLocation Loc, SourceLocation EllipsisLoc,
@@ -455,7 +520,8 @@ public:
           InitExprAndCaptureKind(
               Cpy, !Var ? Cap_VLA : Block ? Cap_Block : ByRef ? Cap_ByRef
                                                               : Cap_ByCopy),
-          Loc(Loc), EllipsisLoc(EllipsisLoc), CaptureType(CaptureType) {}
+          Loc(Loc), EllipsisLoc(EllipsisLoc), CaptureType(CaptureType),
+          ODRUsed(false), NonODRUsed(false) {}
 
     enum IsThisCapture { ThisCapture };
     Capture(IsThisCapture, bool IsNested, SourceLocation Loc,
@@ -463,7 +529,8 @@ public:
         : VarAndNestedAndThis(
               nullptr, (IsThisCaptured | (IsNested ? IsNestedCapture : 0))),
           InitExprAndCaptureKind(Cpy, ByCopy ? Cap_ByCopy : Cap_ByRef),
-          Loc(Loc), EllipsisLoc(), CaptureType(CaptureType) {}
+          Loc(Loc), EllipsisLoc(), CaptureType(CaptureType), ODRUsed(false),
+          NonODRUsed(false) {}
 
     bool isThisCapture() const {
       return VarAndNestedAndThis.getInt() & IsThisCaptured;
@@ -486,6 +553,9 @@ public:
     bool isNested() const {
       return VarAndNestedAndThis.getInt() & IsNestedCapture;
     }
+    bool isODRUsed() const { return ODRUsed; }
+    bool isNonODRUsed() const { return NonODRUsed; }
+    void markUsed(bool IsODRUse) { (IsODRUse ? ODRUsed : NonODRUsed) = true; }
 
     VarDecl *getVariable() const {
       return VarAndNestedAndThis.getPointer();
@@ -730,7 +800,16 @@ public:
   ///  to local variables that are usable as constant expressions and
   ///  do not involve an odr-use (they may still need to be captured
   ///  if the enclosing full-expression is instantiation dependent).
-  llvm::SmallSet<Expr*, 8> NonODRUsedCapturingExprs; 
+  llvm::SmallSet<Expr *, 8> NonODRUsedCapturingExprs;
+
+  /// Contains all of the variables defined in this lambda that shadow variables
+  /// that were defined in parent contexts. Used to avoid warnings when the
+  /// shadowed variables are uncaptured by this lambda.
+  struct ShadowedOuterDecl {
+    const VarDecl *VD;
+    const VarDecl *ShadowedDecl;
+  };
+  llvm::SmallVector<ShadowedOuterDecl, 4> ShadowingDecls;
 
   SourceLocation PotentialThisCaptureLocation;
 

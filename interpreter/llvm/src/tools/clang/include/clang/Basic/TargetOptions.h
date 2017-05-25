@@ -24,8 +24,7 @@ namespace clang {
 /// \brief Options for controlling the target.
 class TargetOptions {
 public:
-  /// If given, the name of the target triple to compile for. If not given the
-  /// target will be selected to match the host.
+  /// The name of the target triple to compile for.
   std::string Triple;
 
   /// When compiling for the device side, contains the triple used to compile
@@ -58,6 +57,10 @@ public:
 
   /// Supported OpenCL extensions and optional core features.
   OpenCLOptions SupportedOpenCLOptions;
+
+  /// \brief The list of OpenCL extensions to enable or disable, as written on
+  /// the command line.
+  std::vector<std::string> OpenCLExtensionsAsWritten;
 };
 
 }  // end namespace clang

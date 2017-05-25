@@ -10,6 +10,8 @@ import threading
 
 def to_bytes(str):
     # Encode to UTF-8 to get binary data.
+    if isinstance(str, bytes):
+        return str
     return str.encode('utf-8')
 
 def to_string(bytes):
@@ -20,6 +22,8 @@ def to_string(bytes):
 def convert_string(bytes):
     try:
         return to_string(bytes.decode('utf-8'))
+    except AttributeError: # 'str' object has no attribute 'decode'.
+        return str(bytes)
     except UnicodeError:
         return str(bytes)
 
@@ -65,11 +69,18 @@ def mkdir_p(path):
 
 def capture(args, env=None):
     """capture(command) - Run the given command (or argv list) in a shell and
-    return the standard output."""
+    return the standard output. Raises a CalledProcessError if the command
+    exits with a non-zero status."""
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                          env=env)
-    out,_ = p.communicate()
-    return convert_string(out)
+    out, err = p.communicate()
+    out = convert_string(out)
+    err = convert_string(err)
+    if p.returncode != 0:
+        raise subprocess.CalledProcessError(cmd=args,
+                                            returncode=p.returncode,
+                                            output="{}\n{}".format(out, err))
+    return out
 
 def which(command, paths = None):
     """which(command, [paths]) - Look up the given command in the paths string
@@ -105,8 +116,8 @@ def which(command, paths = None):
 def checkToolsPath(dir, tools):
     for tool in tools:
         if not os.path.exists(os.path.join(dir, tool)):
-            return False;
-    return True;
+            return False
+    return True
 
 def whichTools(tools, paths):
     for path in paths.split(os.pathsep):
@@ -191,6 +202,8 @@ def executeCommand(command, cwd=None, env=None, input=None, timeout=0):
         If the timeout is hit an ``ExecuteCommandTimeoutException``
         is raised.
     """
+    if input is not None:
+        input = to_bytes(input)
     p = subprocess.Popen(command, cwd=cwd,
                          stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
@@ -242,7 +255,7 @@ def usePlatformSdkOnDarwin(config, lit_config):
     # default system root path.
     if 'darwin' in config.target_triple:
         try:
-            cmd = subprocess.Popen(['xcrun', '--show-sdk-path'],
+            cmd = subprocess.Popen(['xcrun', '--show-sdk-path', '--sdk', 'macosx'],
                                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             out, err = cmd.communicate()
             out = out.strip()

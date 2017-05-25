@@ -1,6 +1,10 @@
-set(LLVM_LINK_COMPONENTS support)
+set(LLVM_LINK_COMPONENTS
+  Option
+  Support
+  )
 
 add_subdirectory(Core)
+add_subdirectory(Refactoring)
 
 add_clang_library(clangTooling
   ArgumentsAdjusters.cpp
@@ -12,6 +16,9 @@ add_clang_library(clangTooling
   Refactoring.cpp
   RefactoringCallbacks.cpp
   Tooling.cpp
+
+  DEPENDS
+  ClangDriverOptions
 
   LINK_LIBS
   clangAST

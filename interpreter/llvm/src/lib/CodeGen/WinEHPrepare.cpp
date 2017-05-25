@@ -62,7 +62,7 @@ public:
 
   void getAnalysisUsage(AnalysisUsage &AU) const override;
 
-  const char *getPassName() const override {
+  StringRef getPassName() const override {
     return "Windows exception handling preparation";
   }
 
@@ -86,6 +86,7 @@ private:
   // All fields are reset by runOnFunction.
   EHPersonality Personality = EHPersonality::Unknown;
 
+  const DataLayout *DL = nullptr;
   DenseMap<BasicBlock *, ColorVector> BlockColors;
   MapVector<BasicBlock *, std::vector<BasicBlock *>> FuncletBlocks;
 };
@@ -111,6 +112,7 @@ bool WinEHPrepare::runOnFunction(Function &Fn) {
   if (!isFuncletEHPersonality(Personality))
     return false;
 
+  DL = &Fn.getParent()->getDataLayout();
   return prepareExplicitEH(Fn);
 }
 
@@ -521,7 +523,7 @@ void llvm::calculateClrEHStateNumbers(const Function *Fn,
 
     if (const auto *Cleanup = dyn_cast<CleanupPadInst>(Pad)) {
       // Create the entry for this cleanup with the appropriate handler
-      // properties.  Finaly and fault handlers are distinguished by arity.
+      // properties.  Finally and fault handlers are distinguished by arity.
       ClrHandlerType HandlerType =
           (Cleanup->getNumArgOperands() ? ClrHandlerType::Fault
                                         : ClrHandlerType::Finally);
@@ -708,7 +710,7 @@ void WinEHPrepare::demotePHIsOnFunclets(Function &F) {
 
 void WinEHPrepare::cloneCommonBlocks(Function &F) {
   // We need to clone all blocks which belong to multiple funclets.  Values are
-  // remapped throughout the funclet to propogate both the new instructions
+  // remapped throughout the funclet to propagate both the new instructions
   // *and* the new basic blocks themselves.
   for (auto &Funclets : FuncletBlocks) {
     BasicBlock *FuncletPadBB = Funclets.first;
@@ -1070,7 +1072,7 @@ AllocaInst *WinEHPrepare::insertPHILoads(PHINode *PN, Function &F) {
   if (!isa<TerminatorInst>(EHPad)) {
     // If the EHPad isn't a terminator, then we can insert a load in this block
     // that will dominate all uses.
-    SpillSlot = new AllocaInst(PN->getType(), nullptr,
+    SpillSlot = new AllocaInst(PN->getType(), DL->getAllocaAddrSpace(), nullptr,
                                Twine(PN->getName(), ".wineh.spillslot"),
                                &F.getEntryBlock().front());
     Value *V = new LoadInst(SpillSlot, Twine(PN->getName(), ".wineh.reload"),
@@ -1157,7 +1159,7 @@ void WinEHPrepare::replaceUseWithLoad(Value *V, Use &U, AllocaInst *&SpillSlot,
                                       Function &F) {
   // Lazilly create the spill slot.
   if (!SpillSlot)
-    SpillSlot = new AllocaInst(V->getType(), nullptr,
+    SpillSlot = new AllocaInst(V->getType(), DL->getAllocaAddrSpace(), nullptr,
                                Twine(V->getName(), ".wineh.spillslot"),
                                &F.getEntryBlock().front());
 
@@ -1202,8 +1204,12 @@ void WinEHPrepare::replaceUseWithLoad(Value *V, Use &U, AllocaInst *&SpillSlot,
       Goto->setSuccessor(0, PHIBlock);
       CatchRet->setSuccessor(NewBlock);
       // Update the color mapping for the newly split edge.
+      // Grab a reference to the ColorVector to be inserted before getting the
+      // reference to the vector we are copying because inserting the new
+      // element in BlockColors might cause the map to be reallocated.
+      ColorVector &ColorsForNewBlock = BlockColors[NewBlock];
       ColorVector &ColorsForPHIBlock = BlockColors[PHIBlock];
-      BlockColors[NewBlock] = ColorsForPHIBlock;
+      ColorsForNewBlock = ColorsForPHIBlock;
       for (BasicBlock *FuncletPad : ColorsForPHIBlock)
         FuncletBlocks[FuncletPad].push_back(NewBlock);
       // Treat the new block as incoming for load insertion.

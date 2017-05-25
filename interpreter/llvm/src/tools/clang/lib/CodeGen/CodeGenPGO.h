@@ -18,9 +18,7 @@
 #include "CodeGenModule.h"
 #include "CodeGenTypes.h"
 #include "clang/Frontend/CodeGenOptions.h"
-#include "llvm/ADT/StringMap.h"
 #include "llvm/ProfileData/InstrProfReader.h"
-#include "llvm/Support/MemoryBuffer.h"
 #include <array>
 #include <memory>
 
@@ -42,14 +40,11 @@ private:
   std::unique_ptr<llvm::InstrProfRecord> ProfRecord;
   std::vector<uint64_t> RegionCounts;
   uint64_t CurrentRegionCount;
-  /// \brief A flag that is set to true when this function doesn't need
-  /// to have coverage mapping data.
-  bool SkipCoverageMapping;
 
 public:
   CodeGenPGO(CodeGenModule &CGM)
-      : CGM(CGM), NumValueSites({{0}}), NumRegionCounters(0),
-        FunctionHash(0), CurrentRegionCount(0), SkipCoverageMapping(false) {}
+      : CGM(CGM), NumValueSites({{0}}), NumRegionCounters(0), FunctionHash(0),
+        CurrentRegionCount(0) {}
 
   /// Whether or not we have PGO region data for the current function. This is
   /// false both when we have no data at all and when our data has been
@@ -103,10 +98,12 @@ private:
                                llvm::Function *Fn);
   void loadRegionCounts(llvm::IndexedInstrProfReader *PGOReader,
                         bool IsInMainFile);
+  bool skipRegionMappingForDecl(const Decl *D);
   void emitCounterRegionMapping(const Decl *D);
 
 public:
-  void emitCounterIncrement(CGBuilderTy &Builder, const Stmt *S);
+  void emitCounterIncrement(CGBuilderTy &Builder, const Stmt *S,
+                            llvm::Value *StepV);
 
   /// Return the region count for the counter at the given index.
   uint64_t getRegionCount(const Stmt *S) {

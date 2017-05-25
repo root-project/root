@@ -1,4 +1,4 @@
-//===- lib/CodeGen/MachineTraceMetrics.cpp ----------------------*- C++ -*-===//
+//===- lib/CodeGen/MachineTraceMetrics.cpp --------------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -7,21 +7,35 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/CodeGen/MachineTraceMetrics.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PostOrderIterator.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/SparseSet.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
+#include "llvm/CodeGen/MachineFunction.h"
+#include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
+#include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/Passes.h"
-#include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/CodeGen/MachineTraceMetrics.h"
+#include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
 #include "llvm/Target/TargetRegisterInfo.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <tuple>
+#include <utility>
 
 using namespace llvm;
 
@@ -37,9 +51,7 @@ INITIALIZE_PASS_DEPENDENCY(MachineLoopInfo)
 INITIALIZE_PASS_END(MachineTraceMetrics,
                   "machine-trace-metrics", "Machine Trace Metrics", false, true)
 
-MachineTraceMetrics::MachineTraceMetrics()
-  : MachineFunctionPass(ID), MF(nullptr), TII(nullptr), TRI(nullptr),
-    MRI(nullptr), Loops(nullptr) {
+MachineTraceMetrics::MachineTraceMetrics() : MachineFunctionPass(ID) {
   std::fill(std::begin(Ensembles), std::end(Ensembles), nullptr);
 }
 
@@ -137,7 +149,6 @@ MachineTraceMetrics::getProcResourceCycles(unsigned MBBNum) const {
   return makeArrayRef(ProcResourceCycles.data() + MBBNum * PRKinds, PRKinds);
 }
 
-
 //===----------------------------------------------------------------------===//
 //                         Ensemble utility functions
 //===----------------------------------------------------------------------===//
@@ -151,7 +162,7 @@ MachineTraceMetrics::Ensemble::Ensemble(MachineTraceMetrics *ct)
 }
 
 // Virtual destructor serves as an anchor.
-MachineTraceMetrics::Ensemble::~Ensemble() {}
+MachineTraceMetrics::Ensemble::~Ensemble() = default;
 
 const MachineLoop*
 MachineTraceMetrics::Ensemble::getLoopFor(const MachineBasicBlock *MBB) const {
@@ -297,6 +308,7 @@ static bool isExitingLoop(const MachineLoop *From, const MachineLoop *To) {
 // MinInstrCountEnsemble - Pick the trace that executes the least number of
 // instructions.
 namespace {
+
 class MinInstrCountEnsemble : public MachineTraceMetrics::Ensemble {
   const char *getName() const override { return "MinInstr"; }
   const MachineBasicBlock *pickTracePred(const MachineBasicBlock*) override;
@@ -306,7 +318,8 @@ public:
   MinInstrCountEnsemble(MachineTraceMetrics *mtm)
     : MachineTraceMetrics::Ensemble(mtm) {}
 };
-}
+
+} // end anonymous namespace
 
 // Select the preferred predecessor for MBB.
 const MachineBasicBlock*
@@ -409,37 +422,43 @@ void MachineTraceMetrics::verifyAnalysis() const {
 // revisit blocks.
 
 namespace {
+
 struct LoopBounds {
   MutableArrayRef<MachineTraceMetrics::TraceBlockInfo> Blocks;
   SmallPtrSet<const MachineBasicBlock*, 8> Visited;
   const MachineLoopInfo *Loops;
-  bool Downward;
+  bool Downward = false;
+
   LoopBounds(MutableArrayRef<MachineTraceMetrics::TraceBlockInfo> blocks,
-             const MachineLoopInfo *loops)
-    : Blocks(blocks), Loops(loops), Downward(false) {}
+             const MachineLoopInfo *loops) : Blocks(blocks), Loops(loops) {}
 };
-}
+
+} // end anonymous namespace
 
 // Specialize po_iterator_storage in order to prune the post-order traversal so
 // it is limited to the current loop and doesn't traverse the loop back edges.
 namespace llvm {
+
 template<>
 class po_iterator_storage<LoopBounds, true> {
   LoopBounds &LB;
+
 public:
   po_iterator_storage(LoopBounds &lb) : LB(lb) {}
+
   void finishPostorder(const MachineBasicBlock*) {}
 
-  bool insertEdge(const MachineBasicBlock *From, const MachineBasicBlock *To) {
+  bool insertEdge(Optional<const MachineBasicBlock *> From,
+                  const MachineBasicBlock *To) {
     // Skip already visited To blocks.
     MachineTraceMetrics::TraceBlockInfo &TBI = LB.Blocks[To->getNumber()];
     if (LB.Downward ? TBI.hasValidHeight() : TBI.hasValidDepth())
       return false;
     // From is null once when To is the trace center block.
     if (From) {
-      if (const MachineLoop *FromLoop = LB.Loops->getLoopFor(From)) {
+      if (const MachineLoop *FromLoop = LB.Loops->getLoopFor(*From)) {
         // Don't follow backedges, don't leave FromLoop when going upwards.
-        if ((LB.Downward ? To : From) == FromLoop->getHeader())
+        if ((LB.Downward ? To : *From) == FromLoop->getHeader())
           return false;
         // Don't leave FromLoop.
         if (isExitingLoop(FromLoop, LB.Loops->getLoopFor(To)))
@@ -451,7 +470,8 @@ public:
     return LB.Visited.insert(To).second;
   }
 };
-}
+
+} // end namespace llvm
 
 /// Compute the trace through MBB.
 void MachineTraceMetrics::Ensemble::computeTrace(const MachineBasicBlock *MBB) {
@@ -602,6 +622,7 @@ void MachineTraceMetrics::Ensemble::verify() const {
 // A data dependency is represented as a defining MI and operand numbers on the
 // defining and using MI.
 namespace {
+
 struct DataDep {
   const MachineInstr *DefMI;
   unsigned DefOp;
@@ -621,7 +642,8 @@ struct DataDep {
     assert((++DefI).atEnd() && "Register has multiple defs");
   }
 };
-}
+
+} // end anonymous namespace
 
 // Get the input data dependencies that must be ready before UseMI can issue.
 // Return true if UseMI has any physreg operands.
@@ -677,17 +699,19 @@ static void getPHIDeps(const MachineInstr &UseMI,
 // direction instructions are scanned, it could be the operand that defined the
 // regunit, or the highest operand to read the regunit.
 namespace {
+
 struct LiveRegUnit {
   unsigned RegUnit;
-  unsigned Cycle;
-  const MachineInstr *MI;
-  unsigned Op;
+  unsigned Cycle = 0;
+  const MachineInstr *MI = nullptr;
+  unsigned Op = 0;
 
   unsigned getSparseSetIndex() const { return RegUnit; }
 
-  LiveRegUnit(unsigned RU) : RegUnit(RU), Cycle(0), MI(nullptr), Op(0) {}
+  LiveRegUnit(unsigned RU) : RegUnit(RU) {}
 };
-}
+
+} // end anonymous namespace
 
 // Identify physreg dependencies for UseMI, and update the live regunit
 // tracking set when scanning instructions downwards.
@@ -920,7 +944,6 @@ static unsigned updatePhysDepsUpwards(const MachineInstr &MI, unsigned Height,
 
   return Height;
 }
-
 
 typedef DenseMap<const MachineInstr *, unsigned> MIHeightMap;
 

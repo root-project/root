@@ -23,7 +23,13 @@ namespace llvm {
 
   // Various helper functions.
   LLVM_ATTRIBUTE_NORETURN void reportError(Twine Msg);
-  void error(std::error_code ec);
+  void error(std::error_code EC);
+  void error(llvm::Error EC);
+  template <typename T> T error(llvm::Expected<T> &&E) {
+    error(E.takeError());
+    return std::move(*E);
+  }
+
   template <class T> T unwrapOrError(ErrorOr<T> EO) {
     if (EO)
       return *EO;

@@ -15,9 +15,11 @@
 #define LLVM_ANALYSIS_BRANCHPROBABILITYINFO_H
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/BranchProbability.h"
@@ -116,9 +118,28 @@ public:
 
   void calculate(const Function &F, const LoopInfo &LI);
 
+  /// Forget analysis results for the given basic block.
+  void eraseBlock(const BasicBlock *BB);
+
 private:
   void operator=(const BranchProbabilityInfo &) = delete;
   BranchProbabilityInfo(const BranchProbabilityInfo &) = delete;
+
+  // We need to store CallbackVH's in order to correctly handle basic block
+  // removal.
+  class BasicBlockCallbackVH final : public CallbackVH {
+    BranchProbabilityInfo *BPI;
+    void deleted() override {
+      assert(BPI != nullptr);
+      BPI->eraseBlock(cast<BasicBlock>(getValPtr()));
+      BPI->Handles.erase(*this);
+    }
+
+  public:
+    BasicBlockCallbackVH(const Value *V, BranchProbabilityInfo *BPI=nullptr)
+        : CallbackVH(const_cast<Value *>(V)), BPI(BPI) {}
+  };
+  DenseSet<BasicBlockCallbackVH, DenseMapInfo<Value*>> Handles;
 
   // Since we allow duplicate edges from one basic block to another, we use
   // a pair (PredBlock and an index in the successors) to specify an edge.
@@ -143,6 +164,8 @@ private:
   /// \brief Track the set of blocks that always lead to a cold call.
   SmallPtrSet<const BasicBlock *, 16> PostDominatedByColdCall;
 
+  void updatePostDominatedByUnreachable(const BasicBlock *BB);
+  void updatePostDominatedByColdCall(const BasicBlock *BB);
   bool calcUnreachableHeuristics(const BasicBlock *BB);
   bool calcMetadataWeights(const BasicBlock *BB);
   bool calcColdCallHeuristics(const BasicBlock *BB);
@@ -157,14 +180,14 @@ private:
 class BranchProbabilityAnalysis
     : public AnalysisInfoMixin<BranchProbabilityAnalysis> {
   friend AnalysisInfoMixin<BranchProbabilityAnalysis>;
-  static char PassID;
+  static AnalysisKey Key;
 
 public:
   /// \brief Provide the result typedef for this analysis pass.
   typedef BranchProbabilityInfo Result;
 
   /// \brief Run the analysis pass over a function and produce BPI.
-  BranchProbabilityInfo run(Function &F, AnalysisManager<Function> &AM);
+  BranchProbabilityInfo run(Function &F, FunctionAnalysisManager &AM);
 };
 
 /// \brief Printer pass for the \c BranchProbabilityAnalysis results.
@@ -174,7 +197,7 @@ class BranchProbabilityPrinterPass
 
 public:
   explicit BranchProbabilityPrinterPass(raw_ostream &OS) : OS(OS) {}
-  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 
 /// \brief Legacy analysis pass which computes \c BranchProbabilityInfo.

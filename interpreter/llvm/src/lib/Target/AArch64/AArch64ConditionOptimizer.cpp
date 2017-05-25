@@ -95,7 +95,9 @@ public:
   typedef std::tuple<int, unsigned, AArch64CC::CondCode> CmpInfo;
 
   static char ID;
-  AArch64ConditionOptimizer() : MachineFunctionPass(ID) {}
+  AArch64ConditionOptimizer() : MachineFunctionPass(ID) {
+    initializeAArch64ConditionOptimizerPass(*PassRegistry::getPassRegistry());
+  }
   void getAnalysisUsage(AnalysisUsage &AU) const override;
   MachineInstr *findSuitableCompare(MachineBasicBlock *MBB);
   CmpInfo adjustCmp(MachineInstr *CmpMI, AArch64CC::CondCode Cmp);
@@ -103,17 +105,13 @@ public:
   bool adjustTo(MachineInstr *CmpMI, AArch64CC::CondCode Cmp, MachineInstr *To,
                 int ToImm);
   bool runOnMachineFunction(MachineFunction &MF) override;
-  const char *getPassName() const override {
+  StringRef getPassName() const override {
     return "AArch64 Condition Optimizer";
   }
 };
 } // end anonymous namespace
 
 char AArch64ConditionOptimizer::ID = 0;
-
-namespace llvm {
-void initializeAArch64ConditionOptimizerPass(PassRegistry &);
-}
 
 INITIALIZE_PASS_BEGIN(AArch64ConditionOptimizer, "aarch64-condopt",
                       "AArch64 CondOpt Pass", false, false)
@@ -173,7 +171,7 @@ MachineInstr *AArch64ConditionOptimizer::findSuitableCompare(
         DEBUG(dbgs() << "Destination of cmp is not dead, " << *I << '\n');
         return nullptr;
       }
-      return I;
+      return &*I;
     }
     // Prevent false positive case like:
     // cmp      w19, #0
@@ -267,21 +265,21 @@ void AArch64ConditionOptimizer::modifyCmp(MachineInstr *CmpMI,
 
   // Change immediate in comparison instruction (ADDS or SUBS).
   BuildMI(*MBB, CmpMI, CmpMI->getDebugLoc(), TII->get(Opc))
-      .addOperand(CmpMI->getOperand(0))
-      .addOperand(CmpMI->getOperand(1))
+      .add(CmpMI->getOperand(0))
+      .add(CmpMI->getOperand(1))
       .addImm(Imm)
-      .addOperand(CmpMI->getOperand(3));
+      .add(CmpMI->getOperand(3));
   CmpMI->eraseFromParent();
 
   // The fact that this comparison was picked ensures that it's related to the
   // first terminator instruction.
-  MachineInstr *BrMI = MBB->getFirstTerminator();
+  MachineInstr &BrMI = *MBB->getFirstTerminator();
 
   // Change condition in branch instruction.
-  BuildMI(*MBB, BrMI, BrMI->getDebugLoc(), TII->get(AArch64::Bcc))
+  BuildMI(*MBB, BrMI, BrMI.getDebugLoc(), TII->get(AArch64::Bcc))
       .addImm(Cmp)
-      .addOperand(BrMI->getOperand(1));
-  BrMI->eraseFromParent();
+      .add(BrMI.getOperand(1));
+  BrMI.eraseFromParent();
 
   MBB->updateTerminator();
 
@@ -337,7 +335,7 @@ bool AArch64ConditionOptimizer::runOnMachineFunction(MachineFunction &MF) {
 
     SmallVector<MachineOperand, 4> HeadCond;
     MachineBasicBlock *TBB = nullptr, *FBB = nullptr;
-    if (TII->AnalyzeBranch(*HBB, TBB, FBB, HeadCond)) {
+    if (TII->analyzeBranch(*HBB, TBB, FBB, HeadCond)) {
       continue;
     }
 
@@ -348,7 +346,7 @@ bool AArch64ConditionOptimizer::runOnMachineFunction(MachineFunction &MF) {
 
     SmallVector<MachineOperand, 4> TrueCond;
     MachineBasicBlock *TBB_TBB = nullptr, *TBB_FBB = nullptr;
-    if (TII->AnalyzeBranch(*TBB, TBB_TBB, TBB_FBB, TrueCond)) {
+    if (TII->analyzeBranch(*TBB, TBB_TBB, TBB_FBB, TrueCond)) {
       continue;
     }
 

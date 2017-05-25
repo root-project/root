@@ -203,11 +203,18 @@ namespace Mips {
     // resulting in - R_MICROMIPS_TLS_DTPREL_LO16
     fixup_MICROMIPS_TLS_DTPREL_LO16,
 
+    // resulting in - R_MICROMIPS_TLS_GOTTPREL.
+    fixup_MICROMIPS_GOTTPREL,
+
     // resulting in - R_MICROMIPS_TLS_TPREL_HI16
     fixup_MICROMIPS_TLS_TPREL_HI16,
 
     // resulting in - R_MICROMIPS_TLS_TPREL_LO16
     fixup_MICROMIPS_TLS_TPREL_LO16,
+
+    // resulting in - R_MIPS_SUB/R_MICROMIPS_SUB
+    fixup_Mips_SUB,
+    fixup_MICROMIPS_SUB,
 
     // Marker
     LastTargetFixupKind,

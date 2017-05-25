@@ -46,6 +46,9 @@ void appendToGlobalDtors(Module &M, Function *F, int Priority,
 // getOrInsertFunction returns a bitcast.
 Function *checkSanitizerInterfaceFunction(Constant *FuncOrBitcast);
 
+Function *declareSanitizerInitFunction(Module &M, StringRef InitName,
+                                       ArrayRef<Type *> InitArgTypes);
+
 /// \brief Creates sanitizer constructor function, and calls sanitizer's init
 /// function from it.
 /// \return Returns pair of pointers to constructor, and init functions
@@ -55,9 +58,42 @@ std::pair<Function *, Function *> createSanitizerCtorAndInitFunctions(
     ArrayRef<Type *> InitArgTypes, ArrayRef<Value *> InitArgs,
     StringRef VersionCheckName = StringRef());
 
-/// Rename all the anon functions in the module using a hash computed from
+/// Rename all the anon globals in the module using a hash computed from
 /// the list of public globals in the module.
-bool nameUnamedFunctions(Module &M);
+bool nameUnamedGlobals(Module &M);
+
+/// \brief Adds global values to the llvm.used list.
+void appendToUsed(Module &M, ArrayRef<GlobalValue *> Values);
+
+/// \brief Adds global values to the llvm.compiler.used list.
+void appendToCompilerUsed(Module &M, ArrayRef<GlobalValue *> Values);
+
+/// Filter out potentially dead comdat functions where other entries keep the
+/// entire comdat group alive.
+///
+/// This is designed for cases where functions appear to become dead but remain
+/// alive due to other live entries in their comdat group.
+///
+/// The \p DeadComdatFunctions container should only have pointers to
+/// `Function`s which are members of a comdat group and are believed to be
+/// dead.
+///
+/// After this routine finishes, the only remaining `Function`s in \p
+/// DeadComdatFunctions are those where every member of the comdat is listed
+/// and thus removing them is safe (provided *all* are removed).
+void filterDeadComdatFunctions(
+    Module &M, SmallVectorImpl<Function *> &DeadComdatFunctions);
+
+/// \brief Produce a unique identifier for this module by taking the MD5 sum of
+/// the names of the module's strong external symbols.
+///
+/// This identifier is normally guaranteed to be unique, or the program would
+/// fail to link due to multiply defined symbols.
+///
+/// If the module has no strong external symbols (such a module may still have a
+/// semantic effect if it performs global initialization), we cannot produce a
+/// unique identifier for this module, so we return the empty string.
+std::string getUniqueModuleId(Module *M);
 
 } // End llvm namespace
 

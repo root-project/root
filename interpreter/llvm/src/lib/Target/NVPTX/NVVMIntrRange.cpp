@@ -65,6 +65,10 @@ INITIALIZE_PASS(NVVMIntrRange, "nvvm-intr-range",
 // Adds the passed-in [Low,High) range information as metadata to the
 // passed-in call instruction.
 static bool addRangeMetadata(uint64_t Low, uint64_t High, CallInst *C) {
+  // This call already has range metadata, nothing to do.
+  if (C->getMetadata(LLVMContext::MD_range))
+    return false;
+
   LLVMContext &Context = C->getParent()->getContext();
   IntegerType *Int32Ty = Type::getInt32Ty(Context);
   Metadata *LowAndHigh[] = {
@@ -85,57 +89,45 @@ bool NVVMIntrRange::runOnFunction(Function &F) {
     if (Function *Callee = Call->getCalledFunction()) {
       switch (Callee->getIntrinsicID()) {
       // Index within block
-      case Intrinsic::ptx_read_tid_x:
       case Intrinsic::nvvm_read_ptx_sreg_tid_x:
         Changed |= addRangeMetadata(0, MaxBlockSize.x, Call);
         break;
-      case Intrinsic::ptx_read_tid_y:
       case Intrinsic::nvvm_read_ptx_sreg_tid_y:
         Changed |= addRangeMetadata(0, MaxBlockSize.y, Call);
         break;
-      case Intrinsic::ptx_read_tid_z:
       case Intrinsic::nvvm_read_ptx_sreg_tid_z:
         Changed |= addRangeMetadata(0, MaxBlockSize.z, Call);
         break;
 
       // Block size
-      case Intrinsic::ptx_read_ntid_x:
       case Intrinsic::nvvm_read_ptx_sreg_ntid_x:
         Changed |= addRangeMetadata(1, MaxBlockSize.x+1, Call);
         break;
-      case Intrinsic::ptx_read_ntid_y:
       case Intrinsic::nvvm_read_ptx_sreg_ntid_y:
         Changed |= addRangeMetadata(1, MaxBlockSize.y+1, Call);
         break;
-      case Intrinsic::ptx_read_ntid_z:
       case Intrinsic::nvvm_read_ptx_sreg_ntid_z:
         Changed |= addRangeMetadata(1, MaxBlockSize.z+1, Call);
         break;
 
       // Index within grid
-      case Intrinsic::ptx_read_ctaid_x:
       case Intrinsic::nvvm_read_ptx_sreg_ctaid_x:
         Changed |= addRangeMetadata(0, MaxGridSize.x, Call);
         break;
-      case Intrinsic::ptx_read_ctaid_y:
       case Intrinsic::nvvm_read_ptx_sreg_ctaid_y:
         Changed |= addRangeMetadata(0, MaxGridSize.y, Call);
         break;
-      case Intrinsic::ptx_read_ctaid_z:
       case Intrinsic::nvvm_read_ptx_sreg_ctaid_z:
         Changed |= addRangeMetadata(0, MaxGridSize.z, Call);
         break;
 
       // Grid size
-      case Intrinsic::ptx_read_nctaid_x:
       case Intrinsic::nvvm_read_ptx_sreg_nctaid_x:
         Changed |= addRangeMetadata(1, MaxGridSize.x+1, Call);
         break;
-      case Intrinsic::ptx_read_nctaid_y:
       case Intrinsic::nvvm_read_ptx_sreg_nctaid_y:
         Changed |= addRangeMetadata(1, MaxGridSize.y+1, Call);
         break;
-      case Intrinsic::ptx_read_nctaid_z:
       case Intrinsic::nvvm_read_ptx_sreg_nctaid_z:
         Changed |= addRangeMetadata(1, MaxGridSize.z+1, Call);
         break;
@@ -146,7 +138,7 @@ bool NVVMIntrRange::runOnFunction(Function &F) {
         break;
 
       // Lane ID is [0..warpsize)
-      case Intrinsic::ptx_read_laneid:
+      case Intrinsic::nvvm_read_ptx_sreg_laneid:
         Changed |= addRangeMetadata(0, 32, Call);
         break;
 

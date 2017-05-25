@@ -144,9 +144,10 @@ namespace EEVT {
     /// be a vector type VT.
     bool EnforceVectorSubVectorTypeIs(EEVT::TypeSet &VT, TreePattern &TP);
 
-    /// EnforceVectorSameNumElts - 'this' is now constrained to
-    /// be a vector with same num elements as VT.
-    bool EnforceVectorSameNumElts(EEVT::TypeSet &VT, TreePattern &TP);
+    /// EnforceSameNumElts - If VTOperand is a scalar, then 'this' is a scalar.
+    /// If VTOperand is a vector, then 'this' must have the same number of
+    /// elements.
+    bool EnforceSameNumElts(EEVT::TypeSet &VT, TreePattern &TP);
 
     /// EnforceSameSize - 'this' is now constrained to be the same size as VT.
     bool EnforceSameSize(EEVT::TypeSet &VT, TreePattern &TP);
@@ -412,8 +413,7 @@ public:
   }
   void addPredicateFn(const TreePredicateFn &Fn) {
     assert(!Fn.isAlwaysTrue() && "Empty predicate string!");
-    if (std::find(PredicateFns.begin(), PredicateFns.end(), Fn) ==
-          PredicateFns.end())
+    if (!is_contained(PredicateFns, Fn))
       PredicateFns.push_back(Fn);
   }
 
@@ -716,8 +716,8 @@ public:
 class CodeGenDAGPatterns {
   RecordKeeper &Records;
   CodeGenTarget Target;
-  std::vector<CodeGenIntrinsic> Intrinsics;
-  std::vector<CodeGenIntrinsic> TgtIntrinsics;
+  CodeGenIntrinsicTable Intrinsics;
+  CodeGenIntrinsicTable TgtIntrinsics;
 
   std::map<Record*, SDNodeInfo, LessRecordByID> SDNodes;
   std::map<Record*, std::pair<Record*, std::string>, LessRecordByID> SDNodeXForms;
@@ -810,11 +810,13 @@ public:
                    LessRecordByID>::const_iterator pf_iterator;
   pf_iterator pf_begin() const { return PatternFragments.begin(); }
   pf_iterator pf_end() const { return PatternFragments.end(); }
+  iterator_range<pf_iterator> ptfs() const { return PatternFragments; }
 
   // Patterns to match information.
   typedef std::vector<PatternToMatch>::const_iterator ptm_iterator;
   ptm_iterator ptm_begin() const { return PatternsToMatch.begin(); }
   ptm_iterator ptm_end() const { return PatternsToMatch.end(); }
+  iterator_range<ptm_iterator> ptms() const { return PatternsToMatch; }
 
   /// Parse the Pattern for an instruction, and insert the result in DAGInsts.
   typedef std::map<Record*, DAGInstruction, LessRecordByID> DAGInstMap;

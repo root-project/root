@@ -179,10 +179,18 @@ bool isOpenMPTargetExecutionDirective(OpenMPDirectiveKind DKind);
 /// otherwise - false.
 bool isOpenMPTargetDataManagementDirective(OpenMPDirectiveKind DKind);
 
-/// \brief Checks if the specified directive is a teams-kind directive.
+/// Checks if the specified composite/combined directive constitutes a teams
+/// directive in the outermost nest.  For example
+/// 'omp teams distribute' or 'omp teams distribute parallel for'.
 /// \param DKind Specified directive.
-/// \return true - the directive is a teams-like directive like 'omp teams',
-/// otherwise - false.
+/// \return true - the directive has teams on the outermost nest, otherwise -
+/// false.
+bool isOpenMPNestingTeamsDirective(OpenMPDirectiveKind DKind);
+
+/// Checks if the specified directive is a teams-kind directive.  For example,
+/// 'omp teams distribute' or 'omp target teams'.
+/// \param DKind Specified directive.
+/// \return true - the directive is a teams-like directive, otherwise - false.
 bool isOpenMPTeamsDirective(OpenMPDirectiveKind DKind);
 
 /// \brief Checks if the specified directive is a simd directive.
@@ -197,6 +205,14 @@ bool isOpenMPSimdDirective(OpenMPDirectiveKind DKind);
 /// distribute',
 /// otherwise - false.
 bool isOpenMPDistributeDirective(OpenMPDirectiveKind DKind);
+
+/// Checks if the specified composite/combined directive constitutes a
+/// distribute directive in the outermost nest.  For example,
+/// 'omp distribute parallel for' or 'omp distribute'.
+/// \param DKind Specified directive.
+/// \return true - the directive has distribute on the outermost nest.
+/// otherwise - false.
+bool isOpenMPNestingDistributeDirective(OpenMPDirectiveKind DKind);
 
 /// \brief Checks if the specified clause is one of private clauses like
 /// 'private', 'firstprivate', 'reduction' etc..
@@ -218,6 +234,11 @@ bool isOpenMPTaskingDirective(OpenMPDirectiveKind Kind);
 /// directives that need loop bound sharing across loops outlined in nested
 /// functions
 bool isOpenMPLoopBoundSharingDirective(OpenMPDirectiveKind Kind);
+
+/// Return the captured regions of an OpenMP directive.
+void getOpenMPCaptureRegions(
+    llvm::SmallVectorImpl<OpenMPDirectiveKind> &CaptureRegions,
+    OpenMPDirectiveKind DKind);
 }
 
 #endif

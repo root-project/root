@@ -249,6 +249,31 @@ Optional<unsigned> TemplateArgument::getNumTemplateExpansions() const {
   return None; 
 }
 
+QualType TemplateArgument::getNonTypeTemplateArgumentType() const {
+  switch (getKind()) {
+  case TemplateArgument::Null:
+  case TemplateArgument::Type:
+  case TemplateArgument::Template:
+  case TemplateArgument::TemplateExpansion:
+  case TemplateArgument::Pack:
+    return QualType();
+
+  case TemplateArgument::Integral:
+    return getIntegralType();
+
+  case TemplateArgument::Expression:
+    return getAsExpr()->getType();
+
+  case TemplateArgument::Declaration:
+    return getParamTypeForDecl();
+
+  case TemplateArgument::NullPtr:
+    return getNullPtrType();
+  }
+
+  llvm_unreachable("Invalid TemplateArgument Kind!");
+}
+
 void TemplateArgument::Profile(llvm::FoldingSetNodeID &ID,
                                const ASTContext &Context) const {
   ID.AddInteger(getKind());
@@ -434,10 +459,6 @@ LLVM_DUMP_METHOD void TemplateArgument::dump() const { dump(llvm::errs()); }
 // TemplateArgumentLoc Implementation
 //===----------------------------------------------------------------------===//
 
-TemplateArgumentLocInfo::TemplateArgumentLocInfo() {
-  memset((void*)this, 0, sizeof(TemplateArgumentLocInfo));
-}
-
 SourceRange TemplateArgumentLoc::getSourceRange() const {
   switch (Argument.getKind()) {
   case TemplateArgument::Expression:
@@ -536,7 +557,7 @@ const ASTTemplateArgumentListInfo *
 ASTTemplateArgumentListInfo::Create(ASTContext &C,
                                     const TemplateArgumentListInfo &List) {
   std::size_t size = totalSizeToAlloc<TemplateArgumentLoc>(List.size());
-  void *Mem = C.Allocate(size, llvm::alignOf<ASTTemplateArgumentListInfo>());
+  void *Mem = C.Allocate(size, alignof(ASTTemplateArgumentListInfo));
   return new (Mem) ASTTemplateArgumentListInfo(List);
 }
 

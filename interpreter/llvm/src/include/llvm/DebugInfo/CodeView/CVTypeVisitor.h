@@ -10,8 +10,10 @@
 #ifndef LLVM_DEBUGINFO_CODEVIEW_CVTYPEVISITOR_H
 #define LLVM_DEBUGINFO_CODEVIEW_CVTYPEVISITOR_H
 
+#include "llvm/ADT/TinyPtrVector.h"
 #include "llvm/DebugInfo/CodeView/CVRecord.h"
 #include "llvm/DebugInfo/CodeView/TypeRecord.h"
+#include "llvm/DebugInfo/CodeView/TypeServerHandler.h"
 #include "llvm/DebugInfo/CodeView/TypeVisitorCallbacks.h"
 #include "llvm/Support/Error.h"
 
@@ -22,20 +24,27 @@ class CVTypeVisitor {
 public:
   explicit CVTypeVisitor(TypeVisitorCallbacks &Callbacks);
 
-  Error visitTypeRecord(const CVRecord<TypeLeafKind> &Record);
+  void addTypeServerHandler(TypeServerHandler &Handler);
+
+  Error visitTypeRecord(CVType &Record, TypeIndex Index);
+  Error visitTypeRecord(CVType &Record);
+  Error visitMemberRecord(CVMemberRecord &Record);
 
   /// Visits the type records in Data. Sets the error flag on parse failures.
   Error visitTypeStream(const CVTypeArray &Types);
+  Error visitTypeStream(CVTypeRange Types);
 
-  Error skipPadding(ArrayRef<uint8_t> &Data);
-
-  /// Visits individual member records of a field list record. Member records do
-  /// not describe their own length, and need special handling.
-  Error visitFieldList(const CVRecord<TypeLeafKind> &Record);
+  Error visitFieldListMemberStream(ArrayRef<uint8_t> FieldList);
+  Error visitFieldListMemberStream(BinaryStreamReader Reader);
 
 private:
+  Expected<bool> handleTypeServer(CVType &Record);
+  Error finishVisitation(CVType &Record);
+
   /// The interface to the class that gets notified of each visitation.
   TypeVisitorCallbacks &Callbacks;
+
+  TinyPtrVector<TypeServerHandler *> Handlers;
 };
 
 } // end namespace codeview

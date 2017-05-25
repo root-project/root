@@ -1,4 +1,4 @@
-//===- FuzzerTracePC.h - INTERNAL - Path tracer. --------*- C++ -* ===//
+//===- FuzzerTracePC.h - Internal header for the Fuzzer ---------*- C++ -* ===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -6,32 +6,157 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-// Trace PCs.
-// This module implements __sanitizer_cov_trace_pc, a callback required
-// for -fsanitize-coverage=trace-pc instrumentation.
+// fuzzer::TracePC
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_FUZZER_TRACE_PC_H
-#define LLVM_FUZZER_TRACE_PC_H
+#ifndef LLVM_FUZZER_TRACE_PC
+#define LLVM_FUZZER_TRACE_PC
+
+#include "FuzzerDefs.h"
+#include "FuzzerDictionary.h"
+#include "FuzzerValueBitMap.h"
+
+#include <set>
 
 namespace fuzzer {
-struct PcCoverageMap {
-  static const size_t kMapSizeInBits = 65371;        // Prime.
-  static const size_t kMapSizeInBitsAligned = 65536; // 2^16
-  static const size_t kBitsInWord = (sizeof(uintptr_t) * 8);
-  static const size_t kMapSizeInWords = kMapSizeInBitsAligned / kBitsInWord;
 
-  void Reset();
-  inline void Update(uintptr_t Addr);
-  size_t MergeFrom(const PcCoverageMap &Other);
+// TableOfRecentCompares (TORC) remembers the most recently performed
+// comparisons of type T.
+// We record the arguments of CMP instructions in this table unconditionally
+// because it seems cheaper this way than to compute some expensive
+// conditions inside __sanitizer_cov_trace_cmp*.
+// After the unit has been executed we may decide to use the contents of
+// this table to populate a Dictionary.
+template<class T, size_t kSizeT>
+struct TableOfRecentCompares {
+  static const size_t kSize = kSizeT;
+  struct Pair {
+    T A, B;
+  };
+  ATTRIBUTE_NO_SANITIZE_ALL
+  void Insert(size_t Idx, const T &Arg1, const T &Arg2) {
+    Idx = Idx % kSize;
+    Table[Idx].A = Arg1;
+    Table[Idx].B = Arg2;
+  }
 
-  uintptr_t Map[kMapSizeInWords] __attribute__((aligned(512)));
+  Pair Get(size_t I) { return Table[I % kSize]; }
+
+  Pair Table[kSize];
 };
 
-// Clears the current PC Map.
-void PcMapResetCurrent();
-// Merges the current PC Map into the combined one, and clears the former.
-size_t PcMapMergeInto(PcCoverageMap *Map);
+class TracePC {
+ public:
+  static const size_t kNumPCs = 1 << 21;
+  // How many bits of PC are used from __sanitizer_cov_trace_pc.
+  static const size_t kTracePcBits = 18;
+
+  void HandleInit(uint32_t *start, uint32_t *stop);
+  void HandleCallerCallee(uintptr_t Caller, uintptr_t Callee);
+  template <class T> void HandleCmp(uintptr_t PC, T Arg1, T Arg2);
+  size_t GetTotalPCCoverage();
+  void SetUseCounters(bool UC) { UseCounters = UC; }
+  void SetUseValueProfile(bool VP) { UseValueProfile = VP; }
+  void SetPrintNewPCs(bool P) { DoPrintNewPCs = P; }
+  template <class Callback> void CollectFeatures(Callback CB) const;
+
+  void ResetMaps() {
+    ValueProfileMap.Reset();
+    memset(Counters(), 0, GetNumPCs());
+    ClearExtraCounters();
+  }
+
+  void UpdateFeatureSet(size_t CurrentElementIdx, size_t CurrentElementSize);
+  void PrintFeatureSet();
+
+  void PrintModuleInfo();
+
+  void PrintCoverage();
+  void DumpCoverage();
+
+  void AddValueForMemcmp(void *caller_pc, const void *s1, const void *s2,
+                         size_t n, bool StopAtZero);
+
+  TableOfRecentCompares<uint32_t, 32> TORC4;
+  TableOfRecentCompares<uint64_t, 32> TORC8;
+  TableOfRecentCompares<Word, 32> TORCW;
+
+  void PrintNewPCs();
+  void InitializePrintNewPCs();
+  size_t GetNumPCs() const {
+    return NumGuards == 0 ? (1 << kTracePcBits) : Min(kNumPCs, NumGuards + 1);
+  }
+  uintptr_t GetPC(size_t Idx) {
+    assert(Idx < GetNumPCs());
+    return PCs()[Idx];
+  }
+
+private:
+  bool UseCounters = false;
+  bool UseValueProfile = false;
+  bool DoPrintNewPCs = false;
+
+  struct Module {
+    uint32_t *Start, *Stop;
+  };
+
+  Module Modules[4096];
+  size_t NumModules;  // linker-initialized.
+  size_t NumGuards;  // linker-initialized.
+
+  uint8_t *Counters() const;
+  uintptr_t *PCs() const;
+
+  std::set<uintptr_t> *PrintedPCs;
+
+  ValueBitMap ValueProfileMap;
+};
+
+template <class Callback> // void Callback(size_t Idx, uint8_t Value);
+ATTRIBUTE_NO_SANITIZE_ALL
+void ForEachNonZeroByte(const uint8_t *Begin, const uint8_t *End,
+                        size_t FirstFeature, Callback Handle8bitCounter) {
+  typedef uintptr_t LargeType;
+  const size_t Step = sizeof(LargeType) / sizeof(uint8_t);
+  assert(!(reinterpret_cast<uintptr_t>(Begin) % 64));
+  for (auto P = Begin; P < End; P += Step)
+    if (LargeType Bundle = *reinterpret_cast<const LargeType *>(P))
+      for (size_t I = 0; I < Step; I++, Bundle >>= 8)
+        if (uint8_t V = Bundle & 0xff)
+          Handle8bitCounter(FirstFeature + P - Begin + I, V);
 }
 
-#endif
+template <class Callback>  // bool Callback(size_t Feature)
+ATTRIBUTE_NO_SANITIZE_ALL
+__attribute__((noinline))
+void TracePC::CollectFeatures(Callback HandleFeature) const {
+  uint8_t *Counters = this->Counters();
+  size_t N = GetNumPCs();
+  auto Handle8bitCounter = [&](size_t Idx, uint8_t Counter) {
+    assert(Counter);
+    unsigned Bit = 0;
+    /**/ if (Counter >= 128) Bit = 7;
+    else if (Counter >= 32) Bit = 6;
+    else if (Counter >= 16) Bit = 5;
+    else if (Counter >= 8) Bit = 4;
+    else if (Counter >= 4) Bit = 3;
+    else if (Counter >= 3) Bit = 2;
+    else if (Counter >= 2) Bit = 1;
+    HandleFeature(Idx * 8 + Bit);
+  };
+
+  ForEachNonZeroByte(Counters, Counters + N, 0, Handle8bitCounter);
+  ForEachNonZeroByte(ExtraCountersBegin(), ExtraCountersEnd(), N * 8,
+                     Handle8bitCounter);
+
+  if (UseValueProfile)
+    ValueProfileMap.ForEach([&](size_t Idx) {
+      HandleFeature(N * 8 + Idx);
+    });
+}
+
+extern TracePC TPC;
+
+}  // namespace fuzzer
+
+#endif  // LLVM_FUZZER_TRACE_PC

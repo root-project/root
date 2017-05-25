@@ -3,15 +3,18 @@ set(LLVM_LINK_COMPONENTS
   BitReader
   BitWriter
   Core
+  Coroutines
   Coverage
   IPO
   IRReader
   InstCombine
   Instrumentation
+  LTO
   Linker
   MC
   ObjCARCOpts
   Object
+  Passes
   ProfileData
   ScalarOpts
   Support
@@ -33,7 +36,6 @@ add_clang_library(clangCodeGen
   CGAtomic.cpp
   CGBlocks.cpp
   CGBuiltin.cpp
-  CGCUDABuiltin.cpp
   CGCUDANV.cpp
   CGCUDARuntime.cpp
   CGCXX.cpp
@@ -41,6 +43,7 @@ add_clang_library(clangCodeGen
   CGCall.cpp
   CGClass.cpp
   CGCleanup.cpp
+  CGCoroutine.cpp
   CGDebugInfo.cpp
   CGDecl.cpp
   CGDeclCXX.cpp
@@ -51,6 +54,7 @@ add_clang_library(clangCodeGen
   CGExprComplex.cpp
   CGExprConstant.cpp
   CGExprScalar.cpp
+  CGGPUBuiltin.cpp
   CGLoopInfo.cpp
   CGObjC.cpp
   CGObjCGNU.cpp
@@ -71,20 +75,25 @@ add_clang_library(clangCodeGen
   CodeGenPGO.cpp
   CodeGenTBAA.cpp
   CodeGenTypes.cpp
+  ConstantInitBuilder.cpp
   CoverageMappingGen.cpp
   ItaniumCXXABI.cpp
+  MacroPPCallbacks.cpp
   MicrosoftCXXABI.cpp
   ModuleBuilder.cpp
   ObjectFilePCHContainerOperations.cpp
   SanitizerMetadata.cpp
   SwiftCallingConv.cpp
   TargetInfo.cpp
+  VarBypassDetector.cpp
 
   DEPENDS
   ${codegen_deps}
 
   LINK_LIBS
+  clangAnalysis
   clangAST
+  clangAnalysis
   clangBasic
   clangFrontend
   clangLex

@@ -17,8 +17,11 @@
 
 // FIXME: Move to this file: BasicBlock::removePredecessor, BB::splitBasicBlock
 
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/InstrTypes.h"
+#include <cassert>
 
 namespace llvm {
 
@@ -29,7 +32,6 @@ class Instruction;
 class MDNode;
 class ReturnInst;
 class TargetLibraryInfo;
-class TerminatorInst;
 
 /// Delete the specified block, which must have no predecessors.
 void DeleteDeadBlock(BasicBlock *BB);
@@ -76,14 +78,13 @@ void ReplaceInstWithInst(Instruction *From, Instruction *To);
 struct CriticalEdgeSplittingOptions {
   DominatorTree *DT;
   LoopInfo *LI;
-  bool MergeIdenticalEdges;
-  bool DontDeleteUselessPHIs;
-  bool PreserveLCSSA;
+  bool MergeIdenticalEdges = false;
+  bool DontDeleteUselessPHIs = false;
+  bool PreserveLCSSA = false;
 
   CriticalEdgeSplittingOptions(DominatorTree *DT = nullptr,
                                LoopInfo *LI = nullptr)
-      : DT(DT), LI(LI), MergeIdenticalEdges(false),
-        DontDeleteUselessPHIs(false), PreserveLCSSA(false) {}
+      : DT(DT), LI(LI) {}
 
   CriticalEdgeSplittingOptions &setMergeIdenticalEdges() {
     MergeIdenticalEdges = true;
@@ -154,7 +155,7 @@ SplitCriticalEdge(BasicBlock *Src, BasicBlock *Dst,
                       CriticalEdgeSplittingOptions()) {
   TerminatorInst *TI = Src->getTerminator();
   unsigned i = 0;
-  while (1) {
+  while (true) {
     assert(i != TI->getNumSuccessors() && "Edge doesn't exist!");
     if (TI->getSuccessor(i) == Dst)
       return SplitCriticalEdge(TI, i, Options);
@@ -228,8 +229,8 @@ ReturnInst *FoldReturnIntoUncondBranch(ReturnInst *RI, BasicBlock *BB,
                                        BasicBlock *Pred);
 
 /// Split the containing block at the specified instruction - everything before
-/// and including SplitBefore stays in the old basic block, and everything after
-/// SplitBefore is moved to a new block. The two blocks are connected by a
+/// SplitBefore stays in the old basic block, and the rest of the instructions
+/// in the BB are moved to a new block. The two blocks are connected by a
 /// conditional branch (with value of Cmp being the condition).
 /// Before:
 ///   Head
@@ -282,6 +283,7 @@ void SplitBlockAndInsertIfThenElse(Value *Cond, Instruction *SplitBefore,
 /// instructions in them.
 Value *GetIfCondition(BasicBlock *BB, BasicBlock *&IfTrue,
                       BasicBlock *&IfFalse);
-} // End llvm namespace
 
-#endif
+} // end namespace llvm
+
+#endif // LLVM_TRANSFORMS_UTILS_BASICBLOCKUTILS_H

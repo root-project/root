@@ -37,6 +37,14 @@ def LeonCASA : SubtargetFeature<
   "Enable CASA instruction for LEON3 and LEON4 processors"
 >;
 
+
+def ReplaceSDIV : SubtargetFeature<
+  "replacesdiv",
+  "PerformSDIVReplace",
+  "true",
+  "AT697E erratum fix: Do not emit SDIV, emit SDIVCC instead"
+>;
+          
 def InsertNOPLoad: SubtargetFeature<
   "insertnopload",
   "InsertNOPLoad",
@@ -56,6 +64,14 @@ def ReplaceFMULS : SubtargetFeature<
   "ReplaceFMULS",
   "true",
   "LEON erratum fix: Replace FMULS instruction with FMULD and relevant conversion instructions" 
+>;
+
+def DetectRoundChange : SubtargetFeature<
+  "detectroundchange",
+  "DetectRoundChange",
+  "true",
+  "LEON3 erratum detection: Detects any rounding mode change "
+  "request: use only the round-to-nearest rounding mode"
 >;
 
 def FixAllFDIVSQRT : SubtargetFeature<

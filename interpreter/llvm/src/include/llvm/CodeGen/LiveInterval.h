@@ -23,7 +23,6 @@
 
 #include "llvm/ADT/IntEqClasses.h"
 #include "llvm/CodeGen/SlotIndexes.h"
-#include "llvm/Support/AlignOf.h"
 #include "llvm/Support/Allocator.h"
 #include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
@@ -58,7 +57,7 @@ namespace llvm {
       : id(i), def(d)
     { }
 
-    /// VNInfo construtor, copies values from orig, except for the value number.
+    /// VNInfo constructor, copies values from orig, except for the value number.
     VNInfo(unsigned i, const VNInfo &orig)
       : id(i), def(orig.def)
     { }
@@ -228,15 +227,22 @@ namespace llvm {
     LiveRange(const LiveRange &Other, BumpPtrAllocator &Allocator) {
       assert(Other.segmentSet == nullptr &&
              "Copying of LiveRanges with active SegmentSets is not supported");
+      assign(Other, Allocator);
+    }
 
+    /// Copies values numbers and live segments from \p Other into this range.
+    void assign(const LiveRange &Other, BumpPtrAllocator &Allocator) {
+      if (this == &Other)
+        return;
+
+      assert(Other.segmentSet == nullptr &&
+             "Copying of LiveRanges with active SegmentSets is not supported");
       // Duplicate valnos.
-      for (const VNInfo *VNI : Other.valnos) {
+      for (const VNInfo *VNI : Other.valnos)
         createValueCopy(VNI, Allocator);
-      }
       // Now we can copy segments and remap their valnos.
-      for (const Segment &S : Other.segments) {
+      for (const Segment &S : Other.segments)
         segments.push_back(Segment(S.start, S.end, valnos[S.valno->id]));
-      }
     }
 
     /// advanceTo - Advance the specified iterator to point to the Segment
@@ -315,6 +321,10 @@ namespace llvm {
     /// If one already exists, return it. Otherwise allocate a new value and
     /// add liveness for a dead def.
     VNInfo *createDeadDef(SlotIndex Def, VNInfo::Allocator &VNInfoAllocator);
+
+    /// Create a def of value @p VNI. Return @p VNI. If there already exists
+    /// a definition at VNI->def, the value defined there must be @p VNI.
+    VNInfo *createDeadDef(VNInfo *VNI);
 
     /// Create a copy of the given value. The new value will be identical except
     /// for the Value number.
@@ -451,10 +461,29 @@ namespace llvm {
     /// may have grown since it was inserted).
     iterator addSegment(Segment S);
 
+    /// Attempt to extend a value defined after @p StartIdx to include @p Use.
+    /// Both @p StartIdx and @p Use should be in the same basic block. In case
+    /// of subranges, an extension could be prevented by an explicit "undef"
+    /// caused by a <def,read-undef> on a non-overlapping lane. The list of
+    /// location of such "undefs" should be provided in @p Undefs.
+    /// The return value is a pair: the first element is VNInfo of the value
+    /// that was extended (possibly nullptr), the second is a boolean value
+    /// indicating whether an "undef" was encountered.
     /// If this range is live before @p Use in the basic block that starts at
-    /// @p StartIdx, extend it to be live up to @p Use, and return the value. If
-    /// there is no segment before @p Use, return nullptr.
-    VNInfo *extendInBlock(SlotIndex StartIdx, SlotIndex Use);
+    /// @p StartIdx, and there is no intervening "undef", extend it to be live
+    /// up to @p Use, and return the pair {value, false}. If there is no
+    /// segment before @p Use and there is no "undef" between @p StartIdx and
+    /// @p Use, return {nullptr, false}. If there is an "undef" before @p Use,
+    /// return {nullptr, true}.
+    std::pair<VNInfo*,bool> extendInBlock(ArrayRef<SlotIndex> Undefs,
+        SlotIndex StartIdx, SlotIndex Use);
+
+    /// Simplified version of the above "extendInBlock", which assumes that
+    /// no register lanes are undefined by <def,read-undef> operands.
+    /// If this range is live before @p Use in the basic block that starts
+    /// at @p StartIdx, extend it to be live up to @p Use, and return the
+    /// value. If there is no segment before @p Use, return nullptr.
+    VNInfo *extendInBlock(SlotIndex StartIdx, SlotIndex Kill);
 
     /// join - Join two live ranges (this, and other) together.  This applies
     /// mappings to the value numbers in the LHS/RHS ranges as specified.  If
@@ -555,6 +584,16 @@ namespace llvm {
       return thisIndex < otherIndex;
     }
 
+    /// Returns true if there is an explicit "undef" between @p Begin
+    /// @p End.
+    bool isUndefIn(ArrayRef<SlotIndex> Undefs, SlotIndex Begin,
+                   SlotIndex End) const {
+      return std::any_of(Undefs.begin(), Undefs.end(),
+                [Begin,End] (SlotIndex Idx) -> bool {
+                  return Begin <= Idx && Idx < End;
+                });
+    }
+
     /// Flush segment set into the regular segment vector.
     /// The method is to be called after the live range
     /// has been created, if use of the segment set was
@@ -581,7 +620,6 @@ namespace llvm {
     friend class LiveRangeUpdater;
     void addSegmentToSet(Segment S);
     void markValNoForDeletion(VNInfo *V);
-
   };
 
   inline raw_ostream &operator<<(raw_ostream &OS, const LiveRange &LR) {
@@ -613,6 +651,9 @@ namespace llvm {
                BumpPtrAllocator &Allocator)
         : LiveRange(Other, Allocator), Next(nullptr), LaneMask(LaneMask) {
       }
+
+      void print(raw_ostream &OS) const;
+      void dump() const;
     };
 
   private:
@@ -638,7 +679,7 @@ namespace llvm {
         P = P->Next;
         return *this;
       }
-      SingleLinkedListIterator<T> &operator++(int) {
+      SingleLinkedListIterator<T> operator++(int) {
         SingleLinkedListIterator res = *this;
         ++*this;
         return res;
@@ -726,6 +767,26 @@ namespace llvm {
       weight = llvm::huge_valf;
     }
 
+    /// For a given lane mask @p LaneMask, compute indexes at which the
+    /// lane is marked undefined by subregister <def,read-undef> definitions.
+    void computeSubRangeUndefs(SmallVectorImpl<SlotIndex> &Undefs,
+                               LaneBitmask LaneMask,
+                               const MachineRegisterInfo &MRI,
+                               const SlotIndexes &Indexes) const;
+
+    /// Refines the subranges to support \p LaneMask. This may only be called
+    /// for LI.hasSubrange()==true. Subregister ranges are split or created
+    /// until \p LaneMask can be matched exactly. \p Mod is executed on the
+    /// matching subranges.
+    ///
+    /// Example:
+    ///    Given an interval with subranges with lanemasks L0F00, L00F0 and
+    ///    L000F, refining for mask L0018. Will split the L00F0 lane into
+    ///    L00E0 and L0010 and the L000F lane into L0007 and L0008. The Mod
+    ///    function will be applied to the L0010 and L0008 subranges.
+    void refineSubRanges(BumpPtrAllocator &Allocator, LaneBitmask LaneMask,
+                         std::function<void(LiveInterval::SubRange&)> Mod);
+
     bool operator<(const LiveInterval& other) const {
       const SlotIndex &thisIndex = beginIndex();
       const SlotIndex &otherIndex = other.beginIndex();
@@ -754,6 +815,12 @@ namespace llvm {
     /// Free memory held by SubRange.
     void freeSubRange(SubRange *S);
   };
+
+  inline raw_ostream &operator<<(raw_ostream &OS,
+                                 const LiveInterval::SubRange &SR) {
+    SR.print(OS);
+    return OS;
+  }
 
   inline raw_ostream &operator<<(raw_ostream &OS, const LiveInterval &LI) {
     LI.print(OS);

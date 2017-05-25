@@ -29,17 +29,9 @@ bool TargetOptions::DisableFramePointerElim(const MachineFunction &MF) const {
 
   // Check to see if we should eliminate non-leaf frame pointers.
   if (MF.getFunction()->hasFnAttribute("no-frame-pointer-elim-non-leaf"))
-    return MF.getFrameInfo()->hasCalls();
+    return MF.getFrameInfo().hasCalls();
 
   return false;
-}
-
-/// LessPreciseFPMAD - This flag return true when -enable-fp-mad option
-/// is specified on the command line.  When this flag is off(default), the
-/// code generator is not allowed to generate mad (multiply add) if the
-/// result is "less precise" than doing those operations individually.
-bool TargetOptions::LessPreciseFPMAD() const {
-  return UnsafeFPMath || LessPreciseFPMADOption;
 }
 
 /// HonorSignDependentRoundingFPMath - Return true if the codegen must assume

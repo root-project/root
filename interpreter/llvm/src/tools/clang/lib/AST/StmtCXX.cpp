@@ -28,7 +28,7 @@ CXXTryStmt *CXXTryStmt::Create(const ASTContext &C, SourceLocation tryLoc,
   std::size_t Size = sizeof(CXXTryStmt);
   Size += ((handlers.size() + 1) * sizeof(Stmt *));
 
-  void *Mem = C.Allocate(Size, llvm::alignOf<CXXTryStmt>());
+  void *Mem = C.Allocate(Size, alignof(CXXTryStmt));
   return new (Mem) CXXTryStmt(tryLoc, tryBlock, handlers);
 }
 
@@ -37,7 +37,7 @@ CXXTryStmt *CXXTryStmt::Create(const ASTContext &C, EmptyShell Empty,
   std::size_t Size = sizeof(CXXTryStmt);
   Size += ((numHandlers + 1) * sizeof(Stmt *));
 
-  void *Mem = C.Allocate(Size, llvm::alignOf<CXXTryStmt>());
+  void *Mem = C.Allocate(Size, alignof(CXXTryStmt));
   return new (Mem) CXXTryStmt(Empty, numHandlers);
 }
 
@@ -85,4 +85,31 @@ VarDecl *CXXForRangeStmt::getLoopVariable() {
 
 const VarDecl *CXXForRangeStmt::getLoopVariable() const {
   return const_cast<CXXForRangeStmt *>(this)->getLoopVariable();
+}
+
+CoroutineBodyStmt *CoroutineBodyStmt::Create(
+    const ASTContext &C, CoroutineBodyStmt::CtorArgs const& Args) {
+  std::size_t Size = totalSizeToAlloc<Stmt *>(
+      CoroutineBodyStmt::FirstParamMove + Args.ParamMoves.size());
+
+  void *Mem = C.Allocate(Size, alignof(CoroutineBodyStmt));
+  return new (Mem) CoroutineBodyStmt(Args);
+}
+
+CoroutineBodyStmt::CoroutineBodyStmt(CoroutineBodyStmt::CtorArgs const &Args)
+    : Stmt(CoroutineBodyStmtClass), NumParams(Args.ParamMoves.size()) {
+  Stmt **SubStmts = getStoredStmts();
+  SubStmts[CoroutineBodyStmt::Body] = Args.Body;
+  SubStmts[CoroutineBodyStmt::Promise] = Args.Promise;
+  SubStmts[CoroutineBodyStmt::InitSuspend] = Args.InitialSuspend;
+  SubStmts[CoroutineBodyStmt::FinalSuspend] = Args.FinalSuspend;
+  SubStmts[CoroutineBodyStmt::OnException] = Args.OnException;
+  SubStmts[CoroutineBodyStmt::OnFallthrough] = Args.OnFallthrough;
+  SubStmts[CoroutineBodyStmt::Allocate] = Args.Allocate;
+  SubStmts[CoroutineBodyStmt::Deallocate] = Args.Deallocate;
+  SubStmts[CoroutineBodyStmt::ReturnValue] = Args.ReturnValue;
+  SubStmts[CoroutineBodyStmt::ReturnStmtOnAllocFailure] =
+      Args.ReturnStmtOnAllocFailure;
+  std::copy(Args.ParamMoves.begin(), Args.ParamMoves.end(),
+            const_cast<Stmt **>(getParamMoves().data()));
 }

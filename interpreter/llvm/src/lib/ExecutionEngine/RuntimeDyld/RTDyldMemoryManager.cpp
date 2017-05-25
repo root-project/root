@@ -97,7 +97,8 @@ static const char *processFDE(const char *Entry, bool isDeregister) {
 void RTDyldMemoryManager::registerEHFramesInProcess(uint8_t *Addr,
                                                     size_t Size) {
   // On OS X OS X __register_frame takes a single FDE as an argument.
-  // See http://lists.llvm.org/pipermail/llvm-dev/2013-April/061768.html
+  // See http://lists.llvm.org/pipermail/llvm-dev/2013-April/061737.html
+  // and projects/libunwind/src/UnwindLevel1-gcc-ext.c.
   const char *P = (const char *)Addr;
   const char *End = P + Size;
   do  {
@@ -132,6 +133,18 @@ void RTDyldMemoryManager::deregisterEHFramesInProcess(uint8_t *Addr,
 }
 
 #endif
+
+void RTDyldMemoryManager::registerEHFrames(uint8_t *Addr, uint64_t LoadAddr,
+                                          size_t Size) {
+  registerEHFramesInProcess(Addr, Size);
+  EHFrames.push_back({Addr, Size});
+}
+
+void RTDyldMemoryManager::deregisterEHFrames() {
+  for (auto &Frame : EHFrames)
+    deregisterEHFramesInProcess(Frame.Addr, Frame.Size);
+  EHFrames.clear();
+}
 
 static int jit_noop() {
   return 0;

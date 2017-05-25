@@ -106,6 +106,11 @@ OPTIONS
  conjunction with -instr. Defaults to false, since it can inhibit compiler
  optimization during PGO.
 
+.. option:: -num-threads=N, -j=N
+
+ Use N threads to perform profile merging. When N=0, llvm-profdata auto-detects
+ an appropriate number of threads to use. This is the default.
+
 EXAMPLES
 ^^^^^^^^
 Basic Usage
@@ -190,6 +195,10 @@ OPTIONS
 .. option:: -sample
 
  Specify that the input profile is a sample-based profile.
+
+.. option:: -memop-sizes
+
+ Show the profiled sizes of the memory intrinsic calls for shown functions.
 
 EXIT STATUS
 -----------

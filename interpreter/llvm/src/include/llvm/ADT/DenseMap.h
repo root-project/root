@@ -19,20 +19,20 @@
 #include "llvm/Support/AlignOf.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/MathExtras.h"
-#include "llvm/Support/PointerLikeTypeTraits.h"
 #include "llvm/Support/type_traits.h"
 #include <algorithm>
 #include <cassert>
-#include <climits>
 #include <cstddef>
 #include <cstring>
 #include <iterator>
+#include <limits>
 #include <new>
 #include <utility>
 
 namespace llvm {
 
 namespace detail {
+
 // We extend a pair to allow users to override the bucket type with their own
 // implementation without requiring two members.
 template <typename KeyT, typename ValueT>
@@ -42,7 +42,8 @@ struct DenseMapPair : public std::pair<KeyT, ValueT> {
   ValueT &getSecond() { return std::pair<KeyT, ValueT>::second; }
   const ValueT &getSecond() const { return std::pair<KeyT, ValueT>::second; }
 };
-}
+
+} // end namespace detail
 
 template <
     typename KeyT, typename ValueT, typename KeyInfoT = DenseMapInfo<KeyT>,
@@ -52,6 +53,9 @@ class DenseMapIterator;
 template <typename DerivedT, typename KeyT, typename ValueT, typename KeyInfoT,
           typename BucketT>
 class DenseMapBase : public DebugEpochBase {
+  template <typename T>
+  using const_arg_type_t = typename const_pointer_or_const_ref<T>::type;
+
 public:
   typedef unsigned size_type;
   typedef KeyT key_type;
@@ -76,7 +80,7 @@ public:
     return const_iterator(getBucketsEnd(), getBucketsEnd(), *this, true);
   }
 
-  bool LLVM_ATTRIBUTE_UNUSED_RESULT empty() const {
+  LLVM_NODISCARD bool empty() const {
     return getNumEntries() == 0;
   }
   unsigned size() const { return getNumEntries(); }
@@ -118,18 +122,18 @@ public:
   }
 
   /// Return 1 if the specified key is in the map, 0 otherwise.
-  size_type count(const KeyT &Val) const {
+  size_type count(const_arg_type_t<KeyT> Val) const {
     const BucketT *TheBucket;
     return LookupBucketFor(Val, TheBucket) ? 1 : 0;
   }
 
-  iterator find(const KeyT &Val) {
+  iterator find(const_arg_type_t<KeyT> Val) {
     BucketT *TheBucket;
     if (LookupBucketFor(Val, TheBucket))
       return iterator(TheBucket, getBucketsEnd(), *this, true);
     return end();
   }
-  const_iterator find(const KeyT &Val) const {
+  const_iterator find(const_arg_type_t<KeyT> Val) const {
     const BucketT *TheBucket;
     if (LookupBucketFor(Val, TheBucket))
       return const_iterator(TheBucket, getBucketsEnd(), *this, true);
@@ -158,7 +162,7 @@ public:
 
   /// lookup - Return the entry for the specified key, or a default
   /// constructed value if no such entry exists.
-  ValueT lookup(const KeyT &Val) const {
+  ValueT lookup(const_arg_type_t<KeyT> Val) const {
     const BucketT *TheBucket;
     if (LookupBucketFor(Val, TheBucket))
       return TheBucket->getSecond();
@@ -169,30 +173,45 @@ public:
   // If the key is already in the map, it returns false and doesn't update the
   // value.
   std::pair<iterator, bool> insert(const std::pair<KeyT, ValueT> &KV) {
-    BucketT *TheBucket;
-    if (LookupBucketFor(KV.first, TheBucket))
-      return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
-                            false); // Already in map.
-
-    // Otherwise, insert the new element.
-    TheBucket = InsertIntoBucket(KV.first, KV.second, TheBucket);
-    return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
-                          true);
+    return try_emplace(KV.first, KV.second);
   }
 
   // Inserts key,value pair into the map if the key isn't already in the map.
   // If the key is already in the map, it returns false and doesn't update the
   // value.
   std::pair<iterator, bool> insert(std::pair<KeyT, ValueT> &&KV) {
+    return try_emplace(std::move(KV.first), std::move(KV.second));
+  }
+
+  // Inserts key,value pair into the map if the key isn't already in the map.
+  // The value is constructed in-place if the key is not in the map, otherwise
+  // it is not moved.
+  template <typename... Ts>
+  std::pair<iterator, bool> try_emplace(KeyT &&Key, Ts &&... Args) {
     BucketT *TheBucket;
-    if (LookupBucketFor(KV.first, TheBucket))
+    if (LookupBucketFor(Key, TheBucket))
       return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
                             false); // Already in map.
 
     // Otherwise, insert the new element.
-    TheBucket = InsertIntoBucket(std::move(KV.first),
-                                 std::move(KV.second),
-                                 TheBucket);
+    TheBucket =
+        InsertIntoBucket(TheBucket, std::move(Key), std::forward<Ts>(Args)...);
+    return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
+                          true);
+  }
+
+  // Inserts key,value pair into the map if the key isn't already in the map.
+  // The value is constructed in-place if the key is not in the map, otherwise
+  // it is not moved.
+  template <typename... Ts>
+  std::pair<iterator, bool> try_emplace(const KeyT &Key, Ts &&... Args) {
+    BucketT *TheBucket;
+    if (LookupBucketFor(Key, TheBucket))
+      return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
+                            false); // Already in map.
+
+    // Otherwise, insert the new element.
+    TheBucket = InsertIntoBucket(TheBucket, Key, std::forward<Ts>(Args)...);
     return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
                           true);
   }
@@ -211,8 +230,8 @@ public:
                             false); // Already in map.
 
     // Otherwise, insert the new element.
-    TheBucket = InsertIntoBucket(std::move(KV.first), std::move(KV.second), Val,
-                                 TheBucket);
+    TheBucket = InsertIntoBucketWithLookup(TheBucket, std::move(KV.first),
+                                           std::move(KV.second), Val);
     return std::make_pair(iterator(TheBucket, getBucketsEnd(), *this, true),
                           true);
   }
@@ -223,7 +242,6 @@ public:
     for (; I != E; ++I)
       insert(*I);
   }
-
 
   bool erase(const KeyT &Val) {
     BucketT *TheBucket;
@@ -249,7 +267,7 @@ public:
     if (LookupBucketFor(Key, TheBucket))
       return *TheBucket;
 
-    return *InsertIntoBucket(Key, ValueT(), TheBucket);
+    return *InsertIntoBucket(TheBucket, Key);
   }
 
   ValueT &operator[](const KeyT &Key) {
@@ -261,7 +279,7 @@ public:
     if (LookupBucketFor(Key, TheBucket))
       return *TheBucket;
 
-    return *InsertIntoBucket(std::move(Key), ValueT(), TheBucket);
+    return *InsertIntoBucket(TheBucket, std::move(Key));
   }
 
   ValueT &operator[](KeyT &&Key) {
@@ -374,6 +392,8 @@ protected:
     return KeyInfoT::getHashValue(Val);
   }
   static const KeyT getEmptyKey() {
+    static_assert(std::is_base_of<DenseMapBase, DerivedT>::value,
+                  "Must pass the derived type to this template!");
     return KeyInfoT::getEmptyKey();
   }
   static const KeyT getTombstoneKey() {
@@ -429,36 +449,19 @@ private:
     static_cast<DerivedT *>(this)->shrink_and_clear();
   }
 
-
-  BucketT *InsertIntoBucket(const KeyT &Key, const ValueT &Value,
-                            BucketT *TheBucket) {
+  template <typename KeyArg, typename... ValueArgs>
+  BucketT *InsertIntoBucket(BucketT *TheBucket, KeyArg &&Key,
+                            ValueArgs &&... Values) {
     TheBucket = InsertIntoBucketImpl(Key, Key, TheBucket);
 
-    TheBucket->getFirst() = Key;
-    ::new (&TheBucket->getSecond()) ValueT(Value);
-    return TheBucket;
-  }
-
-  BucketT *InsertIntoBucket(const KeyT &Key, ValueT &&Value,
-                            BucketT *TheBucket) {
-    TheBucket = InsertIntoBucketImpl(Key, Key, TheBucket);
-
-    TheBucket->getFirst() = Key;
-    ::new (&TheBucket->getSecond()) ValueT(std::move(Value));
-    return TheBucket;
-  }
-
-  BucketT *InsertIntoBucket(KeyT &&Key, ValueT &&Value, BucketT *TheBucket) {
-    TheBucket = InsertIntoBucketImpl(Key, Key, TheBucket);
-
-    TheBucket->getFirst() = std::move(Key);
-    ::new (&TheBucket->getSecond()) ValueT(std::move(Value));
+    TheBucket->getFirst() = std::forward<KeyArg>(Key);
+    ::new (&TheBucket->getSecond()) ValueT(std::forward<ValueArgs>(Values)...);
     return TheBucket;
   }
 
   template <typename LookupKeyT>
-  BucketT *InsertIntoBucket(KeyT &&Key, ValueT &&Value, LookupKeyT &Lookup,
-                            BucketT *TheBucket) {
+  BucketT *InsertIntoBucketWithLookup(BucketT *TheBucket, KeyT &&Key,
+                                      ValueT &&Value, LookupKeyT &Lookup) {
     TheBucket = InsertIntoBucketImpl(Key, Lookup, TheBucket);
 
     TheBucket->getFirst() = std::move(Key);
@@ -530,7 +533,7 @@ private:
 
     unsigned BucketNo = getHashValue(Val) & (NumBuckets-1);
     unsigned ProbeAmt = 1;
-    while (1) {
+    while (true) {
       const BucketT *ThisBucket = BucketsPtr + BucketNo;
       // Found Val's bucket?  If so, return it.
       if (LLVM_LIKELY(KeyInfoT::isEqual(Val, ThisBucket->getFirst()))) {
@@ -744,6 +747,8 @@ class SmallDenseMap
   // simplicity of referring to them.
   typedef DenseMapBase<SmallDenseMap, KeyT, ValueT, KeyInfoT, BucketT> BaseT;
   friend class DenseMapBase<SmallDenseMap, KeyT, ValueT, KeyInfoT, BucketT>;
+  static_assert(isPowerOf2_64(InlineBuckets),
+                "InlineBuckets must be a power of 2.");
 
   unsigned Small : 1;
   unsigned NumEntries : 31;
@@ -968,7 +973,8 @@ private:
     return NumEntries;
   }
   void setNumEntries(unsigned Num) {
-    assert(Num < INT_MAX && "Cannot support more than INT_MAX entries");
+    // NumEntries is hardcoded to be 31 bits wide.
+    assert(Num < (1U << 31) && "Cannot support more than 1<<31 entries");
     NumEntries = Num;
   }
 
@@ -1042,8 +1048,10 @@ public:
   typedef value_type *pointer;
   typedef value_type &reference;
   typedef std::forward_iterator_tag iterator_category;
+
 private:
   pointer Ptr, End;
+
 public:
   DenseMapIterator() : Ptr(nullptr), End(nullptr) {}
 
@@ -1117,4 +1125,4 @@ capacity_in_bytes(const DenseMap<KeyT, ValueT, KeyInfoT> &X) {
 
 } // end namespace llvm
 
-#endif
+#endif // LLVM_ADT_DENSEMAP_H

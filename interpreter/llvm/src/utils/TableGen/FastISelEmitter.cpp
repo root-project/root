@@ -1,4 +1,4 @@
-//===- FastISelEmitter.cpp - Generate an instruction selector -------------===//
+///===- FastISelEmitter.cpp - Generate an instruction selector -------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -564,8 +564,7 @@ void FastISelMap::collectPatterns(CodeGenDAGPatterns &CGP) {
     Operands.PrintManglingSuffix(SuffixOS, ImmediatePredicates, true);
     SuffixOS.flush();
     if (!StringSwitch<bool>(ManglingSuffix)
-        .Cases("", "r", "rr", "ri", "rf", true)
-        .Cases("rri", "i", "f", true)
+        .Cases("", "r", "rr", "ri", "i", "f", true)
         .Default(false))
       continue;
 
@@ -641,12 +640,9 @@ void FastISelMap::emitInstructionCode(raw_ostream &OS,
       OneHadNoPredicate = true;
     } else {
       if (OneHadNoPredicate) {
-        // FIXME: This should be a PrintError once the x86 target
-        // fixes PR21575.
-        PrintWarning("Multiple instructions match and one with no "
-                     "predicate came before one with a predicate!  "
-                     "name:" + Memo.Name + "  predicate: " + 
-                     PredicateCheck);
+        PrintFatalError("Multiple instructions match and one with no "
+                        "predicate came before one with a predicate!  "
+                        "name:" + Memo.Name + "  predicate: " + PredicateCheck);
       }
       OS << "  if (" + PredicateCheck + ") {\n";
       OS << "  ";
@@ -874,7 +870,7 @@ void EmitFastISel(RecordKeeper &RK, raw_ostream &OS) {
   CodeGenDAGPatterns CGP(RK);
   const CodeGenTarget &Target = CGP.getTargetInfo();
   emitSourceFileHeader("\"Fast\" Instruction Selector for the " +
-                       Target.getName() + " target", OS);
+                       Target.getName().str() + " target", OS);
 
   // Determine the target's namespace name.
   std::string InstNS = Target.getInstNamespace() + "::";

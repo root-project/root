@@ -37,7 +37,7 @@
 ///
 /// \headerfile <x86intrin.h>
 ///
-/// This intrinsic corresponds to the \c VCVTPH2PS instruction.
+/// This intrinsic corresponds to the <c> VCVTPH2PS </c> instruction.
 ///
 /// \param __a
 ///    A 16-bit half-precision float value.
@@ -59,22 +59,22 @@ _cvtsh_ss(unsigned short __a)
 /// unsigned short _cvtss_sh(float a, const int imm);
 /// \endcode
 ///
-/// This intrinsic corresponds to the \c VCVTPS2PH instruction.
+/// This intrinsic corresponds to the <c> VCVTPS2PH </c> instruction.
 ///
 /// \param a
 ///    A 32-bit single-precision float value to be converted to a 16-bit
 ///    half-precision float value.
 /// \param imm
-///    An immediate value controlling rounding using bits [2:0]:
-///    000: Nearest
-///    001: Down
-///    010: Up
-///    011: Truncate
+///    An immediate value controlling rounding using bits [2:0]: \n
+///    000: Nearest \n
+///    001: Down \n
+///    010: Up \n
+///    011: Truncate \n
 ///    1XX: Use MXCSR.RC for rounding
 /// \returns The converted 16-bit half-precision float value.
-#define _cvtss_sh(a, imm)  \
-  ((unsigned short)(((__v8hi)__builtin_ia32_vcvtps2ph((__v4sf){a, 0, 0, 0}, \
-                                                      (imm)))[0]))
+#define _cvtss_sh(a, imm) __extension__ ({ \
+  (unsigned short)(((__v8hi)__builtin_ia32_vcvtps2ph((__v4sf){a, 0, 0, 0}, \
+                                                     (imm)))[0]); })
 
 /// \brief Converts a 128-bit vector containing 32-bit float values into a
 ///    128-bit vector containing 16-bit half-precision float values.
@@ -85,29 +85,29 @@ _cvtsh_ss(unsigned short __a)
 /// __m128i _mm_cvtps_ph(__m128 a, const int imm);
 /// \endcode
 ///
-/// This intrinsic corresponds to the \c VCVTPS2PH instruction.
+/// This intrinsic corresponds to the <c> VCVTPS2PH </c> instruction.
 ///
 /// \param a
 ///    A 128-bit vector containing 32-bit float values.
 /// \param imm
-///    An immediate value controlling rounding using bits [2:0]:
-///    000: Nearest
-///    001: Down
-///    010: Up
-///    011: Truncate
+///    An immediate value controlling rounding using bits [2:0]: \n
+///    000: Nearest \n
+///    001: Down \n
+///    010: Up \n
+///    011: Truncate \n
 ///    1XX: Use MXCSR.RC for rounding
 /// \returns A 128-bit vector containing converted 16-bit half-precision float
 ///    values. The lower 64 bits are used to store the converted 16-bit
 ///    half-precision floating-point values.
-#define _mm_cvtps_ph(a, imm) \
-  ((__m128i)__builtin_ia32_vcvtps2ph((__v4sf)(__m128)(a), (imm)))
+#define _mm_cvtps_ph(a, imm) __extension__ ({ \
+  (__m128i)__builtin_ia32_vcvtps2ph((__v4sf)(__m128)(a), (imm)); })
 
 /// \brief Converts a 128-bit vector containing 16-bit half-precision float
 ///    values into a 128-bit vector containing 32-bit float values.
 ///
 /// \headerfile <x86intrin.h>
 ///
-/// This intrinsic corresponds to the \c VCVTPH2PS instruction.
+/// This intrinsic corresponds to the <c> VCVTPH2PS </c> instruction.
 ///
 /// \param __a
 ///    A 128-bit vector containing 16-bit half-precision float values. The lower

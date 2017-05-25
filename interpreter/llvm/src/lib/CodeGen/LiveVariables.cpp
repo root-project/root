@@ -64,8 +64,8 @@ LiveVariables::VarInfo::findKill(const MachineBasicBlock *MBB) const {
   return nullptr;
 }
 
-LLVM_DUMP_METHOD void LiveVariables::VarInfo::dump() const {
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+LLVM_DUMP_METHOD void LiveVariables::VarInfo::dump() const {
   dbgs() << "  Alive in blocks: ";
   for (SparseBitVector<>::iterator I = AliveBlocks.begin(),
            E = AliveBlocks.end(); I != E; ++I)
@@ -78,8 +78,8 @@ LLVM_DUMP_METHOD void LiveVariables::VarInfo::dump() const {
       dbgs() << "\n    #" << i << ": " << *Kills[i];
     dbgs() << "\n";
   }
-#endif
 }
+#endif
 
 /// getVarInfo - Get (possibly creating) a VarInfo object for the given vreg.
 LiveVariables::VarInfo &LiveVariables::getVarInfo(unsigned RegIdx) {
@@ -643,7 +643,7 @@ bool LiveVariables::runOnMachineFunction(MachineFunction &mf) {
   // register before its uses due to dominance properties of SSA (except for PHI
   // nodes, which are treated as a special case).
   MachineBasicBlock *Entry = &MF->front();
-  SmallPtrSet<MachineBasicBlock*,16> Visited;
+  df_iterator_default_set<MachineBasicBlock*,16> Visited;
 
   for (MachineBasicBlock *MBB : depth_first_ext(Entry, Visited)) {
     runOnBlock(MBB, NumRegs);
@@ -767,7 +767,7 @@ void LiveVariables::addNewBlock(MachineBasicBlock *BB,
                                 MachineBasicBlock *SuccBB) {
   const unsigned NumNew = BB->getNumber();
 
-  SmallSet<unsigned, 16> Defs, Kills;
+  DenseSet<unsigned> Defs, Kills;
 
   MachineBasicBlock::iterator BBI = SuccBB->begin(), BBE = SuccBB->end();
   for (; BBI != BBE && BBI->isPHI(); ++BBI) {

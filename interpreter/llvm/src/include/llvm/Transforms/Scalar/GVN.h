@@ -22,12 +22,14 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/PassManager.h"
 
 namespace llvm {
+class OptimizationRemarkEmitter;
 
 /// A private "module" namespace for types and utilities used by GVN. These
 /// are implementation details and should not be used by clients.
@@ -45,7 +47,7 @@ class GVN : public PassInfoMixin<GVN> {
 public:
 
   /// \brief Run the pass over the function.
-  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 
   /// This removes the specified instruction from
   /// our various maps and marks it for deletion.
@@ -58,11 +60,7 @@ public:
   AliasAnalysis *getAliasAnalysis() const { return VN.getAliasAnalysis(); }
   MemoryDependenceResults &getMemDep() const { return *MD; }
 
-private:
-  friend class gvn::GVNLegacyPass;
-
   struct Expression;
-  friend struct DenseMapInfo<Expression>;
 
   /// This class holds the mapping between values and value numbers.  It is used
   /// as an efficient mechanism to determine the expression-wise equivalence of
@@ -104,11 +102,16 @@ private:
     void verifyRemoved(const Value *) const;
   };
 
+private:
+  friend class gvn::GVNLegacyPass;
+  friend struct DenseMapInfo<Expression>;
+
   MemoryDependenceResults *MD;
   DominatorTree *DT;
   const TargetLibraryInfo *TLI;
   AssumptionCache *AC;
   SetVector<BasicBlock *> DeadBlocks;
+  OptimizationRemarkEmitter *ORE;
 
   ValueTable VN;
 
@@ -134,7 +137,8 @@ private:
 
   bool runImpl(Function &F, AssumptionCache &RunAC, DominatorTree &RunDT,
                const TargetLibraryInfo &RunTLI, AAResults &RunAA,
-               MemoryDependenceResults *RunMD);
+               MemoryDependenceResults *RunMD, LoopInfo *LI,
+               OptimizationRemarkEmitter *ORE);
 
   /// Push a new Value to the LeaderTable onto the list for its value number.
   void addToLeaderTable(uint32_t N, Value *V, const BasicBlock *BB) {
@@ -227,6 +231,13 @@ private:
 /// Create a legacy GVN pass. This also allows parameterizing whether or not
 /// loads are eliminated by the pass.
 FunctionPass *createGVNPass(bool NoLoads = false);
+
+/// \brief A simple and fast domtree-based GVN pass to hoist common expressions
+/// from sibling branches.
+struct GVNHoistPass : PassInfoMixin<GVNHoistPass> {
+  /// \brief Run the pass over the function.
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
+};
 
 }
 

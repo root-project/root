@@ -13,24 +13,28 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCExpr.h"
+#include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCValue.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/ErrorHandling.h"
+#include <cassert>
+#include <cstdint>
 
 using namespace llvm;
 
 namespace {
-  class X86ELFObjectWriter : public MCELFObjectTargetWriter {
-  public:
-    X86ELFObjectWriter(bool IsELF64, uint8_t OSABI, uint16_t EMachine);
 
-    ~X86ELFObjectWriter() override;
+class X86ELFObjectWriter : public MCELFObjectTargetWriter {
+public:
+  X86ELFObjectWriter(bool IsELF64, uint8_t OSABI, uint16_t EMachine);
+  ~X86ELFObjectWriter() override = default;
 
-  protected:
-    unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
-                          const MCFixup &Fixup, bool IsPCRel) const override;
-  };
-}
+protected:
+  unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
+                        const MCFixup &Fixup, bool IsPCRel) const override;
+};
+
+} // end anonymous namespace
 
 X86ELFObjectWriter::X86ELFObjectWriter(bool IsELF64, uint8_t OSABI,
                                        uint16_t EMachine)
@@ -39,9 +43,6 @@ X86ELFObjectWriter::X86ELFObjectWriter(bool IsELF64, uint8_t OSABI,
                               /*HasRelocationAddend*/
                               (EMachine != ELF::EM_386) &&
                                   (EMachine != ELF::EM_IAMCU)) {}
-
-X86ELFObjectWriter::~X86ELFObjectWriter()
-{}
 
 enum X86_64RelType { RT64_64, RT64_32, RT64_32S, RT64_16, RT64_8 };
 
@@ -58,6 +59,7 @@ static X86_64RelType getType64(unsigned Kind,
   case FK_Data_8:
     return RT64_64;
   case X86::reloc_signed_4byte:
+  case X86::reloc_signed_4byte_relax:
     if (Modifier == MCSymbolRefExpr::VK_None && !IsPCRel)
       return RT64_32S;
     return RT64_32;
@@ -95,6 +97,7 @@ static unsigned getRelocType64(MCContext &Ctx, SMLoc Loc,
   default:
     llvm_unreachable("Unimplemented");
   case MCSymbolRefExpr::VK_None:
+  case MCSymbolRefExpr::VK_X86_ABS8:
     switch (Type) {
     case RT64_64:
       return IsPCRel ? ELF::R_X86_64_PC64 : ELF::R_X86_64_64;
@@ -210,12 +213,15 @@ static X86_32RelType getType32(X86_64RelType T) {
   llvm_unreachable("unexpected relocation type!");
 }
 
-static unsigned getRelocType32(MCSymbolRefExpr::VariantKind Modifier,
-                               X86_32RelType Type, bool IsPCRel) {
+static unsigned getRelocType32(MCContext &Ctx,
+                               MCSymbolRefExpr::VariantKind Modifier,
+                               X86_32RelType Type, bool IsPCRel,
+                               unsigned Kind) {
   switch (Modifier) {
   default:
     llvm_unreachable("Unimplemented");
   case MCSymbolRefExpr::VK_None:
+  case MCSymbolRefExpr::VK_X86_ABS8:
     switch (Type) {
     case RT32_32:
       return IsPCRel ? ELF::R_386_PC32 : ELF::R_386_32;
@@ -226,7 +232,15 @@ static unsigned getRelocType32(MCSymbolRefExpr::VariantKind Modifier,
     }
   case MCSymbolRefExpr::VK_GOT:
     assert(Type == RT32_32);
-    return IsPCRel ? ELF::R_386_GOTPC : ELF::R_386_GOT32;
+    if (IsPCRel)
+      return ELF::R_386_GOTPC;
+    // Older versions of ld.bfd/ld.gold/lld do not support R_386_GOT32X and we
+    // want to maintain compatibility.
+    if (!Ctx.getAsmInfo()->canRelaxRelocations())
+      return ELF::R_386_GOT32;
+
+    return Kind == X86::reloc_signed_4byte_relax ? ELF::R_386_GOT32X
+                                                 : ELF::R_386_GOT32;
   case MCSymbolRefExpr::VK_GOTOFF:
     assert(Type == RT32_32);
     assert(!IsPCRel);
@@ -273,14 +287,14 @@ unsigned X86ELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
                                           const MCFixup &Fixup,
                                           bool IsPCRel) const {
   MCSymbolRefExpr::VariantKind Modifier = Target.getAccessVariant();
-  X86_64RelType Type = getType64(Fixup.getKind(), Modifier, IsPCRel);
+  unsigned Kind = Fixup.getKind();
+  X86_64RelType Type = getType64(Kind, Modifier, IsPCRel);
   if (getEMachine() == ELF::EM_X86_64)
-    return getRelocType64(Ctx, Fixup.getLoc(), Modifier, Type, IsPCRel,
-                          Fixup.getKind());
+    return getRelocType64(Ctx, Fixup.getLoc(), Modifier, Type, IsPCRel, Kind);
 
   assert((getEMachine() == ELF::EM_386 || getEMachine() == ELF::EM_IAMCU) &&
          "Unsupported ELF machine type.");
-  return getRelocType32(Modifier, getType32(Type), IsPCRel);
+  return getRelocType32(Ctx, Modifier, getType32(Type), IsPCRel, Kind);
 }
 
 MCObjectWriter *llvm::createX86ELFObjectWriter(raw_pwrite_stream &OS,

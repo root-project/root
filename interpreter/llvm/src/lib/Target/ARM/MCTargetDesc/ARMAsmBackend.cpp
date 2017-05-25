@@ -258,7 +258,9 @@ bool ARMAsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup, uint64_t Value,
   return reasonForFixupRelaxation(Fixup, Value);
 }
 
-void ARMAsmBackend::relaxInstruction(const MCInst &Inst, MCInst &Res) const {
+void ARMAsmBackend::relaxInstruction(const MCInst &Inst,
+                                     const MCSubtargetInfo &STI,
+                                     MCInst &Res) const {
   unsigned RelaxedOp = getRelaxedOpcode(Inst.getOpcode());
 
   // Sanity check w/ diagnostic if we get here w/ a bogus instruction.
@@ -355,13 +357,14 @@ static uint32_t joinHalfWords(uint32_t FirstHalf, uint32_t SecondHalf,
 }
 
 unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
-                                         bool IsPCRel, MCContext *Ctx,
+                                         bool IsPCRel, MCContext &Ctx,
                                          bool IsLittleEndian,
                                          bool IsResolved) const {
   unsigned Kind = Fixup.getKind();
   switch (Kind) {
   default:
-    llvm_unreachable("Unknown fixup kind!");
+    Ctx.reportError(Fixup.getLoc(), "bad relocation fixup type");
+    return 0;
   case FK_Data_1:
   case FK_Data_2:
   case FK_Data_4:
@@ -373,7 +376,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_movt_hi16:
     if (!IsPCRel)
       Value >>= 16;
-  // Fallthrough
+    LLVM_FALLTHROUGH;
   case ARM::fixup_arm_movw_lo16: {
     unsigned Hi4 = (Value & 0xF000) >> 12;
     unsigned Lo12 = Value & 0x0FFF;
@@ -385,7 +388,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_t2_movt_hi16:
     if (!IsPCRel)
       Value >>= 16;
-  // Fallthrough
+    LLVM_FALLTHROUGH;
   case ARM::fixup_t2_movw_lo16: {
     unsigned Hi4 = (Value & 0xF000) >> 12;
     unsigned i = (Value & 0x800) >> 11;
@@ -401,7 +404,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_ldst_pcrel_12:
     // ARM PC-relative values are offset by 8.
     Value -= 4;
-  // FALLTHROUGH
+    LLVM_FALLTHROUGH;
   case ARM::fixup_t2_ldst_pcrel_12: {
     // Offset by 4, adjusted by two due to the half-word ordering of thumb.
     Value -= 4;
@@ -410,8 +413,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
       Value = -Value;
       isAdd = false;
     }
-    if (Ctx && Value >= 4096) {
-      Ctx->reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+    if (Value >= 4096) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
       return 0;
     }
     Value |= isAdd << 23;
@@ -431,8 +434,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
       Value = -Value;
       opc = 2; // 0b0010
     }
-    if (Ctx && ARM_AM::getSOImmVal(Value) == -1) {
-      Ctx->reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+    if (ARM_AM::getSOImmVal(Value) == -1) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
       return 0;
     }
     // Encode the immediate and shift the opcode into place.
@@ -539,8 +542,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     //
     // Note that the halfwords are stored high first, low second; so we need
     // to transpose the fixup value here to map properly.
-    if (Ctx && Value  % 4 != 0) {
-      Ctx->reportError(Fixup.getLoc(), "misaligned ARM call destination");
+    if (Value % 4 != 0) {
+      Ctx.reportError(Fixup.getLoc(), "misaligned ARM call destination");
       return 0;
     }
 
@@ -566,16 +569,23 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_thumb_cp:
     // On CPUs supporting Thumb2, this will be relaxed to an ldr.w, otherwise we
     // could have an error on our hands.
-    if (Ctx && !STI->getFeatureBits()[ARM::FeatureThumb2] && IsResolved) {
+    if (!STI->getFeatureBits()[ARM::FeatureThumb2] && IsResolved) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
       if (FixupDiagnostic) {
-        Ctx->reportError(Fixup.getLoc(), FixupDiagnostic);
+        Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
         return 0;
       }
     }
     // Offset by 4, and don't encode the low two bits.
     return ((Value - 4) >> 2) & 0xff;
   case ARM::fixup_arm_thumb_cb: {
+    // CB instructions can only branch to offsets in [4, 126] in multiples of 2
+    // so ensure that the raw value LSB is zero and it lies in [2, 130].
+    // An offset of 2 will be relaxed to a NOP.
+    if ((int64_t)Value < 2 || Value > 0x82 || Value & 1) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+      return 0;
+    }
     // Offset by 4 and don't encode the lower bit, which is always 0.
     // FIXME: diagnose if no Thumb2
     uint32_t Binary = (Value - 4) >> 1;
@@ -583,21 +593,21 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   }
   case ARM::fixup_arm_thumb_br:
     // Offset by 4 and don't encode the lower bit, which is always 0.
-    if (Ctx && !STI->getFeatureBits()[ARM::FeatureThumb2] &&
-               !STI->getFeatureBits()[ARM::HasV8MBaselineOps]) {
+    if (!STI->getFeatureBits()[ARM::FeatureThumb2] &&
+        !STI->getFeatureBits()[ARM::HasV8MBaselineOps]) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
       if (FixupDiagnostic) {
-        Ctx->reportError(Fixup.getLoc(), FixupDiagnostic);
+        Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
         return 0;
       }
     }
     return ((Value - 4) >> 1) & 0x7ff;
   case ARM::fixup_arm_thumb_bcc:
     // Offset by 4 and don't encode the lower bit, which is always 0.
-    if (Ctx && !STI->getFeatureBits()[ARM::FeatureThumb2]) {
+    if (!STI->getFeatureBits()[ARM::FeatureThumb2]) {
       const char *FixupDiagnostic = reasonForFixupRelaxation(Fixup, Value);
       if (FixupDiagnostic) {
-        Ctx->reportError(Fixup.getLoc(), FixupDiagnostic);
+        Ctx.reportError(Fixup.getLoc(), FixupDiagnostic);
         return 0;
       }
     }
@@ -611,8 +621,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
       isAdd = false;
     }
     // The value has the low 4 bits encoded in [3:0] and the high 4 in [11:8].
-    if (Ctx && Value >= 256) {
-      Ctx->reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+    if (Value >= 256) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
       return 0;
     }
     Value = (Value & 0xf) | ((Value & 0xf0) << 4);
@@ -621,7 +631,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_pcrel_10:
     Value = Value - 4; // ARM fixups offset by an additional word and don't
                        // need to adjust for the half-word ordering.
-                       // Fall through.
+    LLVM_FALLTHROUGH;
   case ARM::fixup_t2_pcrel_10: {
     // Offset by 4, adjusted by two due to the half-word ordering of thumb.
     Value = Value - 4;
@@ -632,8 +642,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     }
     // These values don't encode the low two bits since they're always zero.
     Value >>= 2;
-    if (Ctx && Value >= 256) {
-      Ctx->reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+    if (Value >= 256) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
       return 0;
     }
     Value |= isAdd << 23;
@@ -648,7 +658,7 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_pcrel_9:
     Value = Value - 4; // ARM fixups offset by an additional word and don't
                        // need to adjust for the half-word ordering.
-                       // Fall through.
+    LLVM_FALLTHROUGH;
   case ARM::fixup_t2_pcrel_9: {
     // Offset by 4, adjusted by two due to the half-word ordering of thumb.
     Value = Value - 4;
@@ -658,13 +668,13 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
       isAdd = false;
     }
     // These values don't encode the low bit since it's always zero.
-    if (Ctx && (Value & 1)) {
-      Ctx->reportError(Fixup.getLoc(), "invalid value for this fixup");
+    if (Value & 1) {
+      Ctx.reportError(Fixup.getLoc(), "invalid value for this fixup");
       return 0;
     }
     Value >>= 1;
-    if (Ctx && Value >= 256) {
-      Ctx->reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
+    if (Value >= 256) {
+      Ctx.reportError(Fixup.getLoc(), "out of range pc-relative fixup value");
       return 0;
     }
     Value |= isAdd << 23;
@@ -678,8 +688,8 @@ unsigned ARMAsmBackend::adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   }
   case ARM::fixup_arm_mod_imm:
     Value = ARM_AM::getSOImmVal(Value);
-    if (Ctx && Value >> 12) {
-      Ctx->reportError(Fixup.getLoc(), "out of range immediate fixup value");
+    if (Value >> 12) {
+      Ctx.reportError(Fixup.getLoc(), "out of range immediate fixup value");
       return 0;
     }
     return Value;
@@ -694,14 +704,16 @@ void ARMAsmBackend::processFixupValue(const MCAssembler &Asm,
                                       bool &IsResolved) {
   const MCSymbolRefExpr *A = Target.getSymA();
   const MCSymbol *Sym = A ? &A->getSymbol() : nullptr;
-  // Some fixups to thumb function symbols need the low bit (thumb bit)
-  // twiddled.
-  if ((unsigned)Fixup.getKind() != ARM::fixup_arm_ldst_pcrel_12 &&
-      (unsigned)Fixup.getKind() != ARM::fixup_t2_ldst_pcrel_12 &&
-      (unsigned)Fixup.getKind() != ARM::fixup_arm_adr_pcrel_12 &&
-      (unsigned)Fixup.getKind() != ARM::fixup_thumb_adr_pcrel_10 &&
-      (unsigned)Fixup.getKind() != ARM::fixup_t2_adr_pcrel_12 &&
-      (unsigned)Fixup.getKind() != ARM::fixup_arm_thumb_cp) {
+  // MachO (the only user of "Value") tries to make .o files that look vaguely
+  // pre-linked, so for MOVW/MOVT and .word relocations they put the Thumb bit
+  // into the addend if possible. Other relocation types don't want this bit
+  // though (branches couldn't encode it if it *was* present, and no other
+  // relocations exist) and it can interfere with checking valid expressions.
+  if ((unsigned)Fixup.getKind() == FK_Data_4 ||
+      (unsigned)Fixup.getKind() == ARM::fixup_arm_movw_lo16 ||
+      (unsigned)Fixup.getKind() == ARM::fixup_arm_movt_hi16 ||
+      (unsigned)Fixup.getKind() == ARM::fixup_t2_movw_lo16 ||
+      (unsigned)Fixup.getKind() == ARM::fixup_t2_movt_hi16) {
     if (Sym) {
       if (Asm.isThumbFunc(Sym))
         Value |= 1;
@@ -726,12 +738,6 @@ void ARMAsmBackend::processFixupValue(const MCAssembler &Asm,
             (unsigned)Fixup.getKind() == ARM::fixup_arm_uncondbl ||
             (unsigned)Fixup.getKind() == ARM::fixup_arm_condbl))
     IsResolved = false;
-
-  // Try to get the encoded value for the fixup as-if we're mapping it into
-  // the instruction. This allows adjustFixupValue() to issue a diagnostic
-  // if the value aren't invalid.
-  (void)adjustFixupValue(Fixup, Value, false, &Asm.getContext(),
-                         IsLittleEndian, IsResolved);
 }
 
 /// getFixupKindNumBytes - The number of bytes the fixup may change.
@@ -835,11 +841,10 @@ static unsigned getFixupKindContainerSizeBytes(unsigned Kind) {
 }
 
 void ARMAsmBackend::applyFixup(const MCFixup &Fixup, char *Data,
-                               unsigned DataSize, uint64_t Value,
-                               bool IsPCRel) const {
+                               unsigned DataSize, uint64_t Value, bool IsPCRel,
+                               MCContext &Ctx) const {
   unsigned NumBytes = getFixupKindNumBytes(Fixup.getKind());
-  Value =
-      adjustFixupValue(Fixup, Value, IsPCRel, nullptr, IsLittleEndian, true);
+  Value = adjustFixupValue(Fixup, Value, IsPCRel, Ctx, IsLittleEndian, true);
   if (!Value)
     return; // Doesn't change encoding.
 
@@ -1109,6 +1114,7 @@ static MachO::CPUSubTypeARM getMachOSubTypeFromArch(StringRef Arch) {
 MCAsmBackend *llvm::createARMAsmBackend(const Target &T,
                                         const MCRegisterInfo &MRI,
                                         const Triple &TheTriple, StringRef CPU,
+                                        const MCTargetOptions &Options,
                                         bool isLittle) {
   switch (TheTriple.getObjectFormat()) {
   default:
@@ -1129,24 +1135,28 @@ MCAsmBackend *llvm::createARMAsmBackend(const Target &T,
 
 MCAsmBackend *llvm::createARMLEAsmBackend(const Target &T,
                                           const MCRegisterInfo &MRI,
-                                          const Triple &TT, StringRef CPU) {
-  return createARMAsmBackend(T, MRI, TT, CPU, true);
+                                          const Triple &TT, StringRef CPU,
+                                          const MCTargetOptions &Options) {
+  return createARMAsmBackend(T, MRI, TT, CPU, Options, true);
 }
 
 MCAsmBackend *llvm::createARMBEAsmBackend(const Target &T,
                                           const MCRegisterInfo &MRI,
-                                          const Triple &TT, StringRef CPU) {
-  return createARMAsmBackend(T, MRI, TT, CPU, false);
+                                          const Triple &TT, StringRef CPU,
+                                          const MCTargetOptions &Options) {
+  return createARMAsmBackend(T, MRI, TT, CPU, Options, false);
 }
 
 MCAsmBackend *llvm::createThumbLEAsmBackend(const Target &T,
                                             const MCRegisterInfo &MRI,
-                                            const Triple &TT, StringRef CPU) {
-  return createARMAsmBackend(T, MRI, TT, CPU, true);
+                                            const Triple &TT, StringRef CPU,
+                                            const MCTargetOptions &Options) {
+  return createARMAsmBackend(T, MRI, TT, CPU, Options, true);
 }
 
 MCAsmBackend *llvm::createThumbBEAsmBackend(const Target &T,
                                             const MCRegisterInfo &MRI,
-                                            const Triple &TT, StringRef CPU) {
-  return createARMAsmBackend(T, MRI, TT, CPU, false);
+                                            const Triple &TT, StringRef CPU,
+                                            const MCTargetOptions &Options) {
+  return createARMAsmBackend(T, MRI, TT, CPU, Options, false);
 }

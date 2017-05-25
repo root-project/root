@@ -161,11 +161,13 @@ void AggressiveAntiDepBreaker::StartBlock(MachineBasicBlock *BB) {
   // Mark live-out callee-saved registers. In a return block this is
   // all callee-saved registers. In non-return this is any
   // callee-saved register that is not saved in the prolog.
-  const MachineFrameInfo *MFI = MF.getFrameInfo();
-  BitVector Pristine = MFI->getPristineRegs(MF);
-  for (const MCPhysReg *I = TRI->getCalleeSavedRegs(&MF); *I; ++I) {
+  const MachineFrameInfo &MFI = MF.getFrameInfo();
+  BitVector Pristine = MFI.getPristineRegs(MF);
+  for (const MCPhysReg *I = MF.getRegInfo().getCalleeSavedRegs(); *I;
+       ++I) {
     unsigned Reg = *I;
-    if (!IsReturnBlock && !Pristine.test(Reg)) continue;
+    if (!IsReturnBlock && !(Pristine.test(Reg) || BB->isLiveIn(Reg)))
+      continue;
     for (MCRegAliasIterator AI(Reg, TRI, true); AI.isValid(); ++AI) {
       unsigned AliasReg = *AI;
       State->UnionGroups(AliasReg, 0);
@@ -962,10 +964,8 @@ unsigned AggressiveAntiDepBreaker::BreakAntiDependencies(
               // sure to update that as well.
               const SUnit *SU = MISUnitMap[Q.second.Operand->getParent()];
               if (!SU) continue;
-              for (DbgValueVector::iterator DVI = DbgValues.begin(),
-                     DVE = DbgValues.end(); DVI != DVE; ++DVI)
-                if (DVI->second == Q.second.Operand->getParent())
-                  UpdateDbgValue(*DVI->first, AntiDepReg, NewReg);
+              UpdateDbgValues(DbgValues, Q.second.Operand->getParent(),
+                              AntiDepReg, NewReg);
             }
 
             // We just went back in time and modified history; the

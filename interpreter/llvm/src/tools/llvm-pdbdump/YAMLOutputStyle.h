@@ -13,12 +13,14 @@
 #include "OutputStyle.h"
 #include "PdbYaml.h"
 
-#include "llvm/DebugInfo/CodeView/TypeDumper.h"
+#include "llvm/DebugInfo/CodeView/CVTypeDumper.h"
 #include "llvm/Support/ScopedPrinter.h"
 #include "llvm/Support/YAMLTraits.h"
 
 namespace llvm {
 namespace pdb {
+class ModuleDebugStreamRef;
+
 class YAMLOutputStyle : public OutputStyle {
 public:
   YAMLOutputStyle(PDBFile &File);
@@ -26,9 +28,17 @@ public:
   Error dump() override;
 
 private:
+  Expected<Optional<llvm::pdb::yaml::PdbSourceFileInfo>>
+  getFileLineInfo(const pdb::ModuleDebugStreamRef &ModS);
+
+  Error dumpStringTable();
   Error dumpFileHeaders();
   Error dumpStreamMetadata();
   Error dumpStreamDirectory();
+  Error dumpPDBStream();
+  Error dumpDbiStream();
+  Error dumpTpiStream();
+  Error dumpIpiStream();
 
   void flush();
 

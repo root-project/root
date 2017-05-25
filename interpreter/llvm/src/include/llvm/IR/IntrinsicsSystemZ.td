@@ -374,3 +374,19 @@ let TargetPrefix = "s390" in {
                                  [llvm_v2f64_ty, llvm_i32_ty, llvm_i32_ty],
                                  [IntrNoMem]>;
 }
+
+//===----------------------------------------------------------------------===//
+//
+// Misc intrinsics
+//
+//===----------------------------------------------------------------------===//
+
+let TargetPrefix = "s390" in {
+  def int_s390_sfpc : GCCBuiltin<"__builtin_s390_sfpc">,
+                      Intrinsic<[], [llvm_i32_ty], []>;
+  def int_s390_efpc : GCCBuiltin<"__builtin_s390_efpc">,
+                      Intrinsic<[llvm_i32_ty], [], []>;
+
+  def int_s390_tdc : Intrinsic<[llvm_i32_ty], [llvm_anyfloat_ty, llvm_i64_ty],
+                               [IntrNoMem]>;
+}

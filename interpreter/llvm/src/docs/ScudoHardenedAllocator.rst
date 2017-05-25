@@ -8,15 +8,24 @@ Scudo Hardened Allocator
 
 Introduction
 ============
+
 The Scudo Hardened Allocator is a user-mode allocator based on LLVM Sanitizer's
 CombinedAllocator, which aims at providing additional mitigations against heap
 based vulnerabilities, while maintaining good performance.
+
+Currently, the allocator supports (was tested on) the following architectures:
+
+- i386 (& i686) (32-bit);
+- x86_64 (64-bit);
+- armhf (32-bit);
+- AArch64 (64-bit).
 
 The name "Scudo" has been retained from the initial implementation (Escudo
 meaning Shield in Spanish and Portuguese).
 
 Design
 ======
+
 Chunk Header
 ------------
 Every chunk of heap memory will be preceded by a chunk header. This has two
@@ -29,29 +38,25 @@ header is accessed, and the process terminated.
 The following information is stored in the header:
 
 - the 16-bit checksum;
-- the user requested size for that chunk, which is necessary for reallocation
-  purposes;
+- the unused bytes amount for that chunk, which is necessary for computing the
+  size of the chunk;
 - the state of the chunk (available, allocated or quarantined);
 - the allocation type (malloc, new, new[] or memalign), to detect potential
   mismatches in the allocation APIs used;
-- whether or not the chunk is offseted (ie: if the chunk beginning is different
-  than the backend allocation beginning, which is most often the case with some
-  aligned allocations);
-- the associated offset;
-- a 16-bit salt.
+- the offset of the chunk, which is the distance in bytes from the beginning of
+  the returned chunk to the beginning of the backend allocation;
+- a 8-bit salt.
 
-On x64, which is currently the only architecture supported, the header fits
-within 16-bytes, which works nicely with the minimum alignment requirements.
+This header fits within 8 bytes, on all platforms supported.
 
-The checksum is computed as a CRC32 (requiring the SSE 4.2 instruction set)
-of the global secret, the chunk pointer itself, and the 16 bytes of header with
+The checksum is computed as a CRC32 (made faster with hardware support)
+of the global secret, the chunk pointer itself, and the 8 bytes of header with
 the checksum field zeroed out.
 
-The header is atomically loaded and stored to prevent races (this requires
-platform support such as the cmpxchg16b instruction). This is important as two
-consecutive chunks could belong to different threads. We also want to avoid
-any type of double fetches of information located in the header, and use local
-copies of the header for this purpose.
+The header is atomically loaded and stored to prevent races. This is important
+as two consecutive chunks could belong to different threads. We also want to
+avoid any type of double fetches of information located in the header, and use
+local copies of the header for this purpose.
 
 Delayed Freelist
 -----------------
@@ -77,41 +82,89 @@ Usage
 Library
 -------
 The allocator static library can be built from the LLVM build tree thanks to
-the "scudo" CMake rule. The associated tests can be exercised thanks to the
-"check-scudo" CMake rule.
+the ``scudo`` CMake rule. The associated tests can be exercised thanks to the
+``check-scudo`` CMake rule.
 
 Linking the static library to your project can require the use of the
-"whole-archive" linker flag (or equivalent), depending on your linker.
+``whole-archive`` linker flag (or equivalent), depending on your linker.
 Additional flags might also be necessary.
 
 Your linked binary should now make use of the Scudo allocation and deallocation
 functions.
 
+You may also build Scudo like this: 
+
+.. code::
+
+  cd $LLVM/projects/compiler-rt/lib
+  clang++ -fPIC -std=c++11 -msse4.2 -O2 -I. scudo/*.cpp \
+    $(\ls sanitizer_common/*.{cc,S} | grep -v "sanitizer_termination\|sanitizer_common_nolibc") \
+    -shared -o scudo-allocator.so -pthread
+
+and then use it with existing binaries as follows:
+
+.. code::
+
+  LD_PRELOAD=`pwd`/scudo-allocator.so ./a.out
+
 Options
 -------
-Several aspects of the allocator can be configured through environment options,
-following the usual ASan options syntax, through the variable SCUDO_OPTIONS.
+Several aspects of the allocator can be configured through the following ways:
 
-For example: SCUDO_OPTIONS="DeleteSizeMismatch=1:QuarantineSizeMb=16".
+- by defining a ``__scudo_default_options`` function in one's program that
+  returns the options string to be parsed. Said function must have the following
+  prototype: ``extern "C" const char* __scudo_default_options()``.
+
+- through the environment variable SCUDO_OPTIONS, containing the options string
+  to be parsed. Options defined this way will override any definition made
+  through ``__scudo_default_options``;
+
+The options string follows a syntax similar to ASan, where distinct options
+can be assigned in the same string, separated by colons.
+
+For example, using the environment variable:
+
+.. code::
+
+  SCUDO_OPTIONS="DeleteSizeMismatch=1:QuarantineSizeMb=16" ./a.out
+
+Or using the function:
+
+.. code::
+
+  extern "C" const char *__scudo_default_options() {
+    return "DeleteSizeMismatch=1:QuarantineSizeMb=16";
+  }
+
 
 The following options are available:
 
-- QuarantineSizeMb (integer, defaults to 64): the size (in Mb) of quarantine
-  used to delay the actual deallocation of chunks. Lower value may reduce
-  memory usage but decrease the effectiveness of the mitigation; a negative
-  value will fallback to a default of 64Mb;
++-----------------------------+----------------+----------------+------------------------------------------------+
+| Option                      | 64-bit default | 32-bit default | Description                                    |
++-----------------------------+----------------+----------------+------------------------------------------------+
+| QuarantineSizeMb            | 64             | 16             | The size (in Mb) of quarantine used to delay   |
+|                             |                |                | the actual deallocation of chunks. Lower value |
+|                             |                |                | may reduce memory usage but decrease the       |
+|                             |                |                | effectiveness of the mitigation; a negative    |
+|                             |                |                | value will fallback to a default of 64Mb.      |
++-----------------------------+----------------+----------------+------------------------------------------------+
+| ThreadLocalQuarantineSizeKb | 1024           | 256            | The size (in Kb) of per-thread cache use to    |
+|                             |                |                | offload the global quarantine. Lower value may |
+|                             |                |                | reduce memory usage but might increase         |
+|                             |                |                | contention on the global quarantine.           |
++-----------------------------+----------------+----------------+------------------------------------------------+
+| DeallocationTypeMismatch    | true           | true           | Whether or not we report errors on             |
+|                             |                |                | malloc/delete, new/free, new/delete[], etc.    |
++-----------------------------+----------------+----------------+------------------------------------------------+
+| DeleteSizeMismatch          | true           | true           | Whether or not we report errors on mismatch    |
+|                             |                |                | between sizes of new and delete.               |
++-----------------------------+----------------+----------------+------------------------------------------------+
+| ZeroContents                | false          | false          | Whether or not we zero chunk contents on       |
+|                             |                |                | allocation and deallocation.                   |
++-----------------------------+----------------+----------------+------------------------------------------------+
 
-- ThreadLocalQuarantineSizeKb (integer, default to 1024): the size (in Kb) of
-  per-thread cache used to offload the global quarantine. Lower value may
-  reduce memory usage but might increase the contention on the global
-  quarantine.
-
-- DeallocationTypeMismatch (boolean, defaults to true): whether or not we report
-  errors on malloc/delete, new/free, new/delete[], etc;
-
-- DeleteSizeMismatch (boolean, defaults to true): whether or not we report
-  errors on mismatch between size of new and delete;
-
-- ZeroContents (boolean, defaults to false): whether or not we zero chunk
-  contents on allocation and deallocation.
+Allocator related common Sanitizer options can also be passed through Scudo
+options, such as ``allocator_may_return_null``. A detailed list including those
+can be found here:
+https://github.com/google/sanitizers/wiki/SanitizerCommonFlags.
 

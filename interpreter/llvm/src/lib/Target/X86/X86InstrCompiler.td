@@ -43,7 +43,8 @@ let hasSideEffects = 0, isNotDuplicable = 1, Uses = [ESP] in
 // Pessimistically assume ADJCALLSTACKDOWN / ADJCALLSTACKUP will become
 // sub / add which can clobber EFLAGS.
 let Defs = [ESP, EFLAGS], Uses = [ESP] in {
-def ADJCALLSTACKDOWN32 : I<0, Pseudo, (outs), (ins i32imm:$amt1, i32imm:$amt2),
+def ADJCALLSTACKDOWN32 : I<0, Pseudo, (outs),
+                           (ins i32imm:$amt1, i32imm:$amt2, i32imm:$amt3),
                            "#ADJCALLSTACKDOWN",
                            []>,
                           Requires<[NotLP64]>;
@@ -52,8 +53,8 @@ def ADJCALLSTACKUP32   : I<0, Pseudo, (outs), (ins i32imm:$amt1, i32imm:$amt2),
                            [(X86callseq_end timm:$amt1, timm:$amt2)]>,
                           Requires<[NotLP64]>;
 }
-def : Pat<(X86callseq_start timm:$amt1),
-          (ADJCALLSTACKDOWN32 i32imm:$amt1, 0)>, Requires<[NotLP64]>;
+def : Pat<(X86callseq_start timm:$amt1, timm:$amt2),
+       (ADJCALLSTACKDOWN32 i32imm:$amt1, i32imm:$amt2, 0)>, Requires<[NotLP64]>;
 
 
 // ADJCALLSTACKDOWN/UP implicitly use/def RSP because they may be expanded into
@@ -62,7 +63,8 @@ def : Pat<(X86callseq_start timm:$amt1),
 // Pessimistically assume ADJCALLSTACKDOWN / ADJCALLSTACKUP will become
 // sub / add which can clobber EFLAGS.
 let Defs = [RSP, EFLAGS], Uses = [RSP] in {
-def ADJCALLSTACKDOWN64 : I<0, Pseudo, (outs), (ins i32imm:$amt1, i32imm:$amt2),
+def ADJCALLSTACKDOWN64 : I<0, Pseudo, (outs),
+                           (ins i32imm:$amt1, i32imm:$amt2, i32imm:$amt3),
                            "#ADJCALLSTACKDOWN",
                            []>,
                           Requires<[IsLP64]>;
@@ -71,8 +73,8 @@ def ADJCALLSTACKUP64   : I<0, Pseudo, (outs), (ins i32imm:$amt1, i32imm:$amt2),
                            [(X86callseq_end timm:$amt1, timm:$amt2)]>,
                           Requires<[IsLP64]>;
 }
-def : Pat<(X86callseq_start timm:$amt1),
-          (ADJCALLSTACKDOWN64 i32imm:$amt1, 0)>, Requires<[IsLP64]>;
+def : Pat<(X86callseq_start timm:$amt1, timm:$amt2),
+        (ADJCALLSTACKDOWN64 i32imm:$amt1, i32imm:$amt2, 0)>, Requires<[IsLP64]>;
 
 
 // x86-64 va_start lowering magic.
@@ -259,20 +261,20 @@ def MORESTACK_RET_RESTORE_R10 : I<0, Pseudo, (outs), (ins),
 // Alias instruction mapping movr0 to xor.
 // FIXME: remove when we can teach regalloc that xor reg, reg is ok.
 let Defs = [EFLAGS], isReMaterializable = 1, isAsCheapAsAMove = 1,
-    isPseudo = 1, AddedComplexity = 20 in
+    isPseudo = 1, AddedComplexity = 10 in
 def MOV32r0  : I<0, Pseudo, (outs GR32:$dst), (ins), "",
                  [(set GR32:$dst, 0)], IIC_ALU_NONMEM>, Sched<[WriteZero]>;
 
 // Other widths can also make use of the 32-bit xor, which may have a smaller
 // encoding and avoid partial register updates.
+let AddedComplexity = 10 in {
 def : Pat<(i8 0), (EXTRACT_SUBREG (MOV32r0), sub_8bit)>;
 def : Pat<(i16 0), (EXTRACT_SUBREG (MOV32r0), sub_16bit)>;
-def : Pat<(i64 0), (SUBREG_TO_REG (i64 0), (MOV32r0), sub_32bit)> {
-  let AddedComplexity = 20;
+def : Pat<(i64 0), (SUBREG_TO_REG (i64 0), (MOV32r0), sub_32bit)>;
 }
 
 let Predicates = [OptForSize, NotSlowIncDec, Not64BitMode],
-    AddedComplexity = 15 in {
+    AddedComplexity = 10 in {
   // Pseudo instructions for materializing 1 and -1 using XOR+INC/DEC,
   // which only require 3 bytes compared to MOV32ri which requires 5.
   let Defs = [EFLAGS], isReMaterializable = 1, isPseudo = 1 in {
@@ -287,7 +289,7 @@ let Predicates = [OptForSize, NotSlowIncDec, Not64BitMode],
   def : Pat<(i16 -1), (EXTRACT_SUBREG (MOV32r_1), sub_16bit)>;
 }
 
-let isReMaterializable = 1, isPseudo = 1, AddedComplexity = 10 in {
+let isReMaterializable = 1, isPseudo = 1, AddedComplexity = 5 in {
 // AddedComplexity higher than MOV64ri but lower than MOV32r0 and MOV32r1.
 // FIXME: Add itinerary class and Schedule.
 def MOV32ImmSExti8 : I<0, Pseudo, (outs GR32:$dst), (ins i32i8imm:$src), "",
@@ -723,7 +725,7 @@ defm LOCK_DEC    : LOCK_ArithUnOp<0xFE, 0xFF, MRM1m, -1, "dec">;
 multiclass LCMPXCHG_UnOp<bits<8> Opc, Format Form, string mnemonic,
                          SDPatternOperator frag, X86MemOperand x86memop,
                          InstrItinClass itin> {
-let isCodeGenOnly = 1 in {
+let isCodeGenOnly = 1, usesCustomInserter = 1 in {
   def NAME : I<Opc, Form, (outs), (ins x86memop:$ptr),
                !strconcat(mnemonic, "\t$ptr"),
                [(frag addr:$ptr)], itin>, TB, LOCK;
@@ -772,11 +774,11 @@ defm LCMPXCHG8B : LCMPXCHG_UnOp<0xC7, MRM1m, "cmpxchg8b",
 // the pseudo. The argument feeding EBX is ebx_input.
 //
 // The additional argument, $ebx_save, is a temporary register used to
-// save the value of RBX accross the actual instruction.
+// save the value of RBX across the actual instruction.
 //
 // To make sure the register assigned to $ebx_save does not interfere with
 // the definition of the actual instruction, we use a definition $dst which
-// is tied to $rbx_save. That way, the live-range of $rbx_save spans accross
+// is tied to $rbx_save. That way, the live-range of $rbx_save spans across
 // the instruction and we are sure we will have a valid register to restore
 // the value of RBX.
 let Defs = [EAX, EDX, EBX, EFLAGS], Uses = [EAX, ECX, EDX],
@@ -1025,53 +1027,6 @@ def : Pat<(store (i32 -1), addr:$dst), (OR32mi8 addr:$dst, -1)>;
 def : Pat<(store (i64 -1), addr:$dst), (OR64mi8 addr:$dst, -1)>;
 }
 
-// ConstantPool GlobalAddress, ExternalSymbol, and JumpTable
-def : Pat<(i32 (X86Wrapper tconstpool  :$dst)), (MOV32ri tconstpool  :$dst)>;
-def : Pat<(i32 (X86Wrapper tjumptable  :$dst)), (MOV32ri tjumptable  :$dst)>;
-def : Pat<(i32 (X86Wrapper tglobaltlsaddr:$dst)),(MOV32ri tglobaltlsaddr:$dst)>;
-def : Pat<(i32 (X86Wrapper tglobaladdr :$dst)), (MOV32ri tglobaladdr :$dst)>;
-def : Pat<(i32 (X86Wrapper texternalsym:$dst)), (MOV32ri texternalsym:$dst)>;
-def : Pat<(i32 (X86Wrapper mcsym:$dst)), (MOV32ri mcsym:$dst)>;
-def : Pat<(i32 (X86Wrapper tblockaddress:$dst)), (MOV32ri tblockaddress:$dst)>;
-
-def : Pat<(add GR32:$src1, (X86Wrapper tconstpool:$src2)),
-          (ADD32ri GR32:$src1, tconstpool:$src2)>;
-def : Pat<(add GR32:$src1, (X86Wrapper tjumptable:$src2)),
-          (ADD32ri GR32:$src1, tjumptable:$src2)>;
-def : Pat<(add GR32:$src1, (X86Wrapper tglobaladdr :$src2)),
-          (ADD32ri GR32:$src1, tglobaladdr:$src2)>;
-def : Pat<(add GR32:$src1, (X86Wrapper texternalsym:$src2)),
-          (ADD32ri GR32:$src1, texternalsym:$src2)>;
-def : Pat<(add GR32:$src1, (X86Wrapper mcsym:$src2)),
-          (ADD32ri GR32:$src1, mcsym:$src2)>;
-def : Pat<(add GR32:$src1, (X86Wrapper tblockaddress:$src2)),
-          (ADD32ri GR32:$src1, tblockaddress:$src2)>;
-
-def : Pat<(store (i32 (X86Wrapper tglobaladdr:$src)), addr:$dst),
-          (MOV32mi addr:$dst, tglobaladdr:$src)>;
-def : Pat<(store (i32 (X86Wrapper texternalsym:$src)), addr:$dst),
-          (MOV32mi addr:$dst, texternalsym:$src)>;
-def : Pat<(store (i32 (X86Wrapper mcsym:$src)), addr:$dst),
-          (MOV32mi addr:$dst, mcsym:$src)>;
-def : Pat<(store (i32 (X86Wrapper tblockaddress:$src)), addr:$dst),
-          (MOV32mi addr:$dst, tblockaddress:$src)>;
-
-// ConstantPool GlobalAddress, ExternalSymbol, and JumpTable when not in small
-// code model mode, should use 'movabs'.  FIXME: This is really a hack, the
-//  'movabs' predicate should handle this sort of thing.
-def : Pat<(i64 (X86Wrapper tconstpool  :$dst)),
-          (MOV64ri tconstpool  :$dst)>, Requires<[FarData]>;
-def : Pat<(i64 (X86Wrapper tjumptable  :$dst)),
-          (MOV64ri tjumptable  :$dst)>, Requires<[FarData]>;
-def : Pat<(i64 (X86Wrapper tglobaladdr :$dst)),
-          (MOV64ri tglobaladdr :$dst)>, Requires<[FarData]>;
-def : Pat<(i64 (X86Wrapper texternalsym:$dst)),
-          (MOV64ri texternalsym:$dst)>, Requires<[FarData]>;
-def : Pat<(i64 (X86Wrapper mcsym:$dst)),
-          (MOV64ri mcsym:$dst)>, Requires<[FarData]>;
-def : Pat<(i64 (X86Wrapper tblockaddress:$dst)),
-          (MOV64ri tblockaddress:$dst)>, Requires<[FarData]>;
-
 // In kernel code model, we can get the address of a label
 // into a register with 'movq'.  FIXME: This is a hack, the 'imm' predicate of
 // the MOV64ri32 should accept these.
@@ -1289,15 +1244,13 @@ def : Pat<(i64 (anyext GR32:$src)),
 
 // Any instruction that defines a 32-bit result leaves the high half of the
 // register. Truncate can be lowered to EXTRACT_SUBREG. CopyFromReg may
-// be copying from a truncate. And x86's cmov doesn't do anything if the
-// condition is false. But any other 32-bit operation will zero-extend
+// be copying from a truncate. Any other 32-bit operation will zero-extend
 // up to 64 bits.
 def def32 : PatLeaf<(i32 GR32:$src), [{
   return N->getOpcode() != ISD::TRUNCATE &&
          N->getOpcode() != TargetOpcode::EXTRACT_SUBREG &&
          N->getOpcode() != ISD::CopyFromReg &&
-         N->getOpcode() != ISD::AssertSext &&
-         N->getOpcode() != X86ISD::CMOV;
+         N->getOpcode() != ISD::AssertSext;
 }]>;
 
 // In the case of a 32-bit def that is known to implicitly zero-extend,
@@ -1320,11 +1273,11 @@ def or_is_add : PatFrag<(ops node:$lhs, node:$rhs), (or node:$lhs, node:$rhs),[{
   if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(N->getOperand(1)))
     return CurDAG->MaskedValueIsZero(N->getOperand(0), CN->getAPIntValue());
 
-  APInt KnownZero0, KnownOne0;
-  CurDAG->computeKnownBits(N->getOperand(0), KnownZero0, KnownOne0, 0);
-  APInt KnownZero1, KnownOne1;
-  CurDAG->computeKnownBits(N->getOperand(1), KnownZero1, KnownOne1, 0);
-  return (~KnownZero0 & ~KnownZero1) == 0;
+  KnownBits Known0;
+  CurDAG->computeKnownBits(N->getOperand(0), Known0, 0);
+  KnownBits Known1;
+  CurDAG->computeKnownBits(N->getOperand(1), Known1, 0);
+  return (~Known0.Zero & ~Known1.Zero) == 0;
 }]>;
 
 
@@ -1405,7 +1358,7 @@ def : Pat<(store (add (loadi64 addr:$dst), 128), addr:$dst),
 // instructions.
 def : Pat<(add GR64:$src1, 0x0000000080000000),
           (SUB64ri32 GR64:$src1, 0xffffffff80000000)>;
-def : Pat<(store (add (loadi64 addr:$dst), 0x00000000800000000), addr:$dst),
+def : Pat<(store (add (loadi64 addr:$dst), 0x0000000080000000), addr:$dst),
           (SUB64mi32 addr:$dst, 0xffffffff80000000)>;
 
 // To avoid needing to materialize an immediate in a register, use a 32-bit and
@@ -1711,6 +1664,22 @@ defm : MaskedShiftAmountPats<sra, "SAR">;
 defm : MaskedShiftAmountPats<rotl, "ROL">;
 defm : MaskedShiftAmountPats<rotr, "ROR">;
 
+// Double shift amount is implicitly masked.
+multiclass MaskedDoubleShiftAmountPats<SDNode frag, string name> {
+  // (shift x (and y, 31)) ==> (shift x, y)
+  def : Pat<(frag GR16:$src1, GR16:$src2, (and CL, immShift32)),
+            (!cast<Instruction>(name # "16rrCL") GR16:$src1, GR16:$src2)>;
+  def : Pat<(frag GR32:$src1, GR32:$src2, (and CL, immShift32)),
+            (!cast<Instruction>(name # "32rrCL") GR32:$src1, GR32:$src2)>;
+
+  // (shift x (and y, 63)) ==> (shift x, y)
+  def : Pat<(frag GR64:$src1, GR64:$src2, (and CL, immShift64)),
+            (!cast<Instruction>(name # "64rrCL") GR64:$src1, GR64:$src2)>;
+}
+
+defm : MaskedDoubleShiftAmountPats<X86shld, "SHLD">;
+defm : MaskedDoubleShiftAmountPats<X86shrd, "SHRD">;
+
 // (anyext (setcc_carry)) -> (setcc_carry)
 def : Pat<(i16 (anyext (i8 (X86setcc_c X86_COND_B, EFLAGS)))),
           (SETB_C16r)>;
@@ -1718,9 +1687,6 @@ def : Pat<(i32 (anyext (i8 (X86setcc_c X86_COND_B, EFLAGS)))),
           (SETB_C32r)>;
 def : Pat<(i32 (anyext (i16 (X86setcc_c X86_COND_B, EFLAGS)))),
           (SETB_C32r)>;
-
-
-
 
 //===----------------------------------------------------------------------===//
 // EFLAGS-defining Patterns
@@ -1778,6 +1744,12 @@ def : Pat<(X86sub_flag 0, GR8 :$src), (NEG8r  GR8 :$src)>;
 def : Pat<(X86sub_flag 0, GR16:$src), (NEG16r GR16:$src)>;
 def : Pat<(X86sub_flag 0, GR32:$src), (NEG32r GR32:$src)>;
 def : Pat<(X86sub_flag 0, GR64:$src), (NEG64r GR64:$src)>;
+
+// sub reg, relocImm
+def : Pat<(X86sub_flag GR64:$src1, i64relocImmSExt8_su:$src2),
+          (SUB64ri8 GR64:$src1, i64relocImmSExt8_su:$src2)>;
+def : Pat<(X86sub_flag GR64:$src1, i64relocImmSExt32_su:$src2),
+          (SUB64ri32 GR64:$src1, i64relocImmSExt32_su:$src2)>;
 
 // mul reg, reg
 def : Pat<(mul GR16:$src1, GR16:$src2),

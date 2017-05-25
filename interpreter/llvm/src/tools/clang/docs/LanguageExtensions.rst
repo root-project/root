@@ -356,7 +356,7 @@ is:
 
 Query for this feature with ``__has_extension(attribute_ext_vector_type)``.
 
-Giving ``-faltivec`` option to clang enables support for AltiVec vector syntax
+Giving ``-maltivec`` option to clang enables support for AltiVec vector syntax
 and functions.  For example:
 
 .. code-block:: c++
@@ -780,14 +780,14 @@ Use ``__has_feature(cxx_variadic_templates)`` or
 ``__has_extension(cxx_variadic_templates)`` to determine if support for
 variadic templates is enabled.
 
-C++1y
+C++14
 -----
 
-The features listed below are part of the committee draft for the C++1y
-standard.  As a result, all these features are enabled with the ``-std=c++1y``
-or ``-std=gnu++1y`` option when compiling C++ code.
+The features listed below are part of the C++14 standard.  As a result, all
+these features are enabled with the ``-std=C++14`` or ``-std=gnu++14`` option
+when compiling C++ code.
 
-C++1y binary literals
+C++14 binary literals
 ^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_binary_literals)`` or
@@ -795,37 +795,37 @@ Use ``__has_feature(cxx_binary_literals)`` or
 binary literals (for instance, ``0b10010``) are recognized. Clang supports this
 feature as an extension in all language modes.
 
-C++1y contextual conversions
+C++14 contextual conversions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_contextual_conversions)`` or
-``__has_extension(cxx_contextual_conversions)`` to determine if the C++1y rules
+``__has_extension(cxx_contextual_conversions)`` to determine if the C++14 rules
 are used when performing an implicit conversion for an array bound in a
 *new-expression*, the operand of a *delete-expression*, an integral constant
 expression, or a condition in a ``switch`` statement.
 
-C++1y decltype(auto)
+C++14 decltype(auto)
 ^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_decltype_auto)`` or
 ``__has_extension(cxx_decltype_auto)`` to determine if support
 for the ``decltype(auto)`` placeholder type is enabled.
 
-C++1y default initializers for aggregates
+C++14 default initializers for aggregates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_aggregate_nsdmi)`` or
 ``__has_extension(cxx_aggregate_nsdmi)`` to determine if support
 for default initializers in aggregate members is enabled.
 
-C++1y digit separators
+C++14 digit separators
 ^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__cpp_digit_separators`` to determine if support for digit separators
 using single quotes (for instance, ``10'000``) is enabled. At this time, there
 is no corresponding ``__has_feature`` name
 
-C++1y generalized lambda capture
+C++14 generalized lambda capture
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_init_captures)`` or
@@ -833,7 +833,7 @@ Use ``__has_feature(cxx_init_captures)`` or
 lambda captures with explicit initializers is enabled
 (for instance, ``[n(0)] { return ++n; }``).
 
-C++1y generic lambdas
+C++14 generic lambdas
 ^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_generic_lambdas)`` or
@@ -841,7 +841,7 @@ Use ``__has_feature(cxx_generic_lambdas)`` or
 (polymorphic) lambdas is enabled
 (for instance, ``[] (auto x) { return x + 1; }``).
 
-C++1y relaxed constexpr
+C++14 relaxed constexpr
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_relaxed_constexpr)`` or
@@ -849,7 +849,7 @@ Use ``__has_feature(cxx_relaxed_constexpr)`` or
 declarations, local variable modification, and control flow constructs
 are permitted in ``constexpr`` functions.
 
-C++1y return type deduction
+C++14 return type deduction
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_return_type_deduction)`` or
@@ -857,7 +857,7 @@ Use ``__has_feature(cxx_return_type_deduction)`` or
 for return type deduction for functions (using ``auto`` as a return type)
 is enabled.
 
-C++1y runtime-sized arrays
+C++14 runtime-sized arrays
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_runtime_array)`` or
@@ -866,7 +866,7 @@ for arrays of runtime bound (a restricted form of variable-length arrays)
 is enabled.
 Clang's implementation of this feature is incomplete.
 
-C++1y variable templates
+C++14 variable templates
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Use ``__has_feature(cxx_variable_templates)`` or
@@ -993,6 +993,7 @@ The following type trait primitives are supported by Clang:
 * ``__has_trivial_destructor`` (GNU, Microsoft)
 * ``__has_virtual_destructor`` (GNU, Microsoft)
 * ``__is_abstract`` (GNU, Microsoft)
+* ``__is_aggregate`` (GNU, Microsoft)
 * ``__is_base_of`` (GNU, Microsoft)
 * ``__is_class`` (GNU, Microsoft)
 * ``__is_convertible_to`` (Microsoft)
@@ -1776,6 +1777,46 @@ numeric primitives such as frexp. See `LLVM canonicalize intrinsic
 <http://llvm.org/docs/LangRef.html#llvm-canonicalize-intrinsic>`_ for
 more information on the semantics.
 
+String builtins
+---------------
+
+Clang provides constant expression evaluation support for builtins forms of
+the following functions from the C standard library ``<string.h>`` header:
+
+* ``memchr``
+* ``memcmp``
+* ``strchr``
+* ``strcmp``
+* ``strlen``
+* ``strncmp``
+* ``wcschr``
+* ``wcscmp``
+* ``wcslen``
+* ``wcsncmp``
+* ``wmemchr``
+* ``wmemcmp``
+
+In each case, the builtin form has the name of the C library function prefixed
+by ``__builtin_``. Example:
+
+.. code-block:: c
+
+  void *p = __builtin_memchr("foobar", 'b', 5);
+
+In addition to the above, one further builtin is provided:
+
+.. code-block:: c
+
+  char *__builtin_char_memchr(const char *haystack, int needle, size_t size);
+
+``__builtin_char_memchr(a, b, c)`` is identical to
+``(char*)__builtin_memchr(a, b, c)`` except that its use is permitted within
+constant expressions in C++11 onwards (where a cast from ``void*`` to ``char*``
+is disallowed in general).
+
+Support for constant expression evaluation for the above builtins be detected
+with ``__has_feature(cxx_constexpr_string_builtins)``.
+
 .. _langext-__c11_atomic:
 
 __c11_atomic builtins
@@ -1864,6 +1905,82 @@ The types ``T`` currently supported are:
 
 Note that the compiler does not guarantee that non-temporal loads or stores
 will be used.
+
+C++ Coroutines support builtins
+--------------------------------
+
+.. warning::
+  This is a work in progress. Compatibility across Clang/LLVM releases is not 
+  guaranteed.
+
+Clang provides experimental builtins to support C++ Coroutines as defined by
+http://wg21.link/P0057. The following four are intended to be used by the
+standard library to implement `std::experimental::coroutine_handle` type.
+
+**Syntax**:
+
+.. code-block:: c
+
+  void  __builtin_coro_resume(void *addr);
+  void  __builtin_coro_destroy(void *addr);
+  bool  __builtin_coro_done(void *addr);
+  void *__builtin_coro_promise(void *addr, int alignment, bool from_promise)
+
+**Example of use**:
+
+.. code-block:: c++
+
+  template <> struct coroutine_handle<void> {
+    void resume() const { __builtin_coro_resume(ptr); }
+    void destroy() const { __builtin_coro_destroy(ptr); }
+    bool done() const { return __builtin_coro_done(ptr); }
+    // ...
+  protected:
+    void *ptr;
+  };
+
+  template <typename Promise> struct coroutine_handle : coroutine_handle<> {
+    // ...
+    Promise &promise() const {
+      return *reinterpret_cast<Promise *>(
+        __builtin_coro_promise(ptr, alignof(Promise), /*from-promise=*/false));
+    }
+    static coroutine_handle from_promise(Promise &promise) {
+      coroutine_handle p;
+      p.ptr = __builtin_coro_promise(&promise, alignof(Promise),
+                                                      /*from-promise=*/true);
+      return p;
+    }
+  };
+
+
+Other coroutine builtins are either for internal clang use or for use during
+development of the coroutine feature. See `Coroutines in LLVM
+<http://llvm.org/docs/Coroutines.html#intrinsics>`_ for
+more information on their semantics. Note that builtins matching the intrinsics
+that take token as the first parameter (llvm.coro.begin, llvm.coro.alloc, 
+llvm.coro.free and llvm.coro.suspend) omit the token parameter and fill it to
+an appropriate value during the emission.
+
+**Syntax**:
+
+.. code-block:: c
+
+  size_t __builtin_coro_size()
+  void  *__builtin_coro_frame()
+  void  *__builtin_coro_free(void *coro_frame)
+
+  void  *__builtin_coro_id(int align, void *promise, void *fnaddr, void *parts)
+  bool   __builtin_coro_alloc()
+  void  *__builtin_coro_begin(void *memory)
+  void   __builtin_coro_end(void *coro_frame, bool unwind)
+  char   __builtin_coro_suspend(bool final)
+  bool   __builtin_coro_param(void *original, void *copy)
+
+Note that there is no builtin matching the `llvm.coro.save` intrinsic. LLVM
+automatically will insert one if the first argument to `llvm.coro.suspend` is
+token `none`. If a user calls `__builin_suspend`, clang will insert `token none`
+as the first argument to the intrinsic.
 
 Non-standard C++11 Attributes
 =============================
@@ -2196,3 +2313,211 @@ For example, the hint ``vectorize_width(4)`` is ignored if the loop is not
 proven safe to vectorize. To identify and diagnose optimization issues use
 `-Rpass`, `-Rpass-missed`, and `-Rpass-analysis` command line options. See the
 user guide for details.
+
+Extensions to specify floating-point flags
+====================================================
+
+The ``#pragma clang fp`` pragma allows floating-point options to be specified
+for a section of the source code. This pragma can only appear at file scope or
+at the start of a compound statement (excluding comments). When using within a
+compound statement, the pragma is active within the scope of the compound
+statement.
+
+Currently, only FP contraction can be controlled with the pragma. ``#pragma
+clang fp contract`` specifies whether the compiler should contract a multiply
+and an addition (or subtraction) into a fused FMA operation when supported by
+the target.
+
+The pragma can take three values: ``on``, ``fast`` and ``off``.  The ``on``
+option is identical to using ``#pragma STDC FP_CONTRACT(ON)`` and it allows
+fusion as specified the language standard.  The ``fast`` option allows fusiong
+in cases when the language standard does not make this possible (e.g. across
+statements in C)
+
+.. code-block:: c++
+
+  for(...) {
+    #pragma clang fp contract(fast)
+    a = b[i] * c[i];
+    d[i] += a;
+  }
+
+
+The pragma can also be used with ``off`` which turns FP contraction off for a
+section of the code. This can be useful when fast contraction is otherwise
+enabled for the translation unit with the ``-ffp-contract=fast`` flag.
+
+Specifying an attribute for multiple declarations (#pragma clang attribute)
+===========================================================================
+
+The ``#pragma clang attribute`` directive can be used to apply an attribute to
+multiple declarations. The ``#pragma clang attribute push`` variation of the
+directive pushes a new attribute to the attribute stack. The declarations that
+follow the pragma receive the attributes that are on the attribute stack, until
+the stack is cleared using a ``#pragma clang attribute pop`` directive. Multiple
+push directives can be nested inside each other.
+
+The attributes that are used in the ``#pragma clang attribute`` directives
+can be written using the GNU-style syntax:
+
+.. code-block:: c++
+
+  #pragma clang attribute push(__attribute__((annotate("custom"))), apply_to = function)
+
+  void function(); // The function now has the annotate("custom") attribute
+
+  #pragma clang attribute pop
+
+The attributes can also be written using the C++11 style syntax:
+
+.. code-block:: c++
+
+  #pragma clang attribute push([[noreturn]], apply_to = function)
+
+  void function(); // The function now has the [[noreturn]] attribute
+
+  #pragma clang attribute pop
+
+The ``__declspec`` style syntax is also supported:
+
+.. code-block:: c++
+
+  #pragma clang attribute push(__declspec(dllexport), apply_to = function)
+
+  void function(); // The function now has the __declspec(dllexport) attribute
+
+  #pragma clang attribute pop
+
+A single push directive accepts only one attribute regardless of the syntax
+used.
+
+Subject Match Rules
+-------------------
+
+The set of declarations that receive a single attribute from the attribute stack
+depends on the subject match rules that were specified in the pragma. Subject
+match rules are specified after the attribute. The compiler expects an
+identifier that corresponds to the subject set specifier. The ``apply_to``
+specifier is currently the only supported subject set specifier. It allows you
+to specify match rules that form a subset of the attribute's allowed subject
+set, i.e. the compiler doesn't require all of the attribute's subjects. For
+example, an attribute like ``[[nodiscard]]`` whose subject set includes
+``enum``, ``record`` and ``hasType(functionType)``, requires the presence of at
+least one of these rules after ``apply_to``:
+
+.. code-block:: c++
+
+  #pragma clang attribute push([[nodiscard]], apply_to = enum)
+
+  enum Enum1 { A1, B1 }; // The enum will receive [[nodiscard]]
+
+  struct Record1 { }; // The struct will *not* receive [[nodiscard]]
+
+  #pragma clang attribute pop
+
+  #pragma clang attribute push([[nodiscard]], apply_to = any(record, enum))
+
+  enum Enum2 { A2, B2 }; // The enum will receive [[nodiscard]]
+
+  struct Record2 { }; // The struct *will* receive [[nodiscard]]
+
+  #pragma clang attribute pop
+
+  // This is an error, since [[nodiscard]] can't be applied to namespaces:
+  #pragma clang attribute push([[nodiscard]], apply_to = any(record, namespace))
+
+  #pragma clang attribute pop
+
+Multiple match rules can be specified using the ``any`` match rule, as shown
+in the example above. The ``any`` rule applies attributes to all declarations
+that are matched by at least one of the rules in the ``any``. It doesn't nest
+and can't be used inside the other match rules. Redundant match rules or rules
+that conflict with one another should not be used inside of ``any``.
+
+Clang supports the following match rules:
+
+- ``function``: Can be used to apply attributes to functions. This includes C++
+  member functions, static functions, operators, and constructors/destructors.
+
+- ``function(is_member)``: Can be used to apply attributes to C++ member
+  functions. This includes members like static functions, operators, and
+  constructors/destructors.
+
+- ``hasType(functionType)``: Can be used to apply attributes to functions, C++
+  member functions, and variables/fields whose type is a function pointer. It
+  does not apply attributes to Objective-C methods or blocks.
+
+- ``type_alias``: Can be used to apply attributes to ``typedef`` declarations
+  and C++11 type aliases.
+
+- ``record``: Can be used to apply attributes to ``struct``, ``class``, and
+  ``union`` declarations.
+
+- ``record(unless(is_union))``: Can be used to apply attributes only to
+  ``struct`` and ``class`` declarations.
+
+- ``enum``: Can be be used to apply attributes to enumeration declarations.
+
+- ``enum_constant``: Can be used to apply attributes to enumerators.
+
+- ``variable``: Can be used to apply attributes to variables, including
+  local variables, parameters, global variables, and static member variables.
+  It does not apply attributes to instance member variables or Objective-C
+  ivars.
+
+- ``variable(is_thread_local)``: Can be used to apply attributes to thread-local
+  variables only.
+
+- ``variable(is_global)``: Can be used to apply attributes to global variables
+  only.
+
+- ``variable(is_parameter)``: Can be used to apply attributes to parameters
+  only.
+
+- ``variable(unless(is_parameter))``: Can be used to apply attributes to all
+  the variables that are not parameters.
+
+- ``field``: Can be used to apply attributes to non-static member variables
+  in a record. This includes Objective-C ivars.
+
+- ``namespace``: Can be used to apply attributes to ``namespace`` declarations.
+
+- ``objc_interface``: Can be used to apply attributes to ``@interface``
+  declarations.
+
+- ``objc_protocol``: Can be used to apply attributes to ``@protocol``
+  declarations.
+
+- ``objc_category``: Can be used to apply attributes to category declarations,
+  including class extensions.
+
+- ``objc_method``: Can be used to apply attributes to Objective-C methods,
+  including instance and class methods. Implicit methods like implicit property
+  getters and setters do not receive the attribute.
+
+- ``objc_method(is_instance)``: Can be used to apply attributes to Objective-C
+  instance methods.
+
+- ``objc_property``: Can be used to apply attributes to ``@property``
+  declarations.
+
+- ``block``: Can be used to apply attributes to block declarations. This does
+  not include variables/fields of block pointer type.
+
+The use of ``unless`` in match rules is currently restricted to a strict set of
+sub-rules that are used by the supported attributes. That means that even though
+``variable(unless(is_parameter))`` is a valid match rule,
+``variable(unless(is_thread_local))`` is not.
+
+Supported Attributes
+--------------------
+
+Not all attributes can be used with the ``#pragma clang attribute`` directive.
+Notably, statement attributes like ``[[fallthrough]]`` or type attributes
+like ``address_space`` aren't supported by this directive. You can determine
+whether or not an attribute is supported by the pragma by referring to the
+:doc:`individual documentation for that attribute <AttributeReference>`.
+
+The attributes are applied to all matching declarations individually, even when
+the attribute is semantically incorrect. The attributes that aren't applied to
+any declaration are not verified semantically.

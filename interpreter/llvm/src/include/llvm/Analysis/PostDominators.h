@@ -27,20 +27,16 @@ struct PostDominatorTree : public DominatorTreeBase<BasicBlock> {
 
   PostDominatorTree() : DominatorTreeBase<BasicBlock>(true) {}
 
-  PostDominatorTree(PostDominatorTree &&Arg)
-    : Base(std::move(static_cast<Base &>(Arg))) {}
-
-  PostDominatorTree &operator=(PostDominatorTree &&RHS) {
-    Base::operator=(std::move(static_cast<Base &>(RHS)));
-    return *this;
-  }
+  /// Handle invalidation explicitly.
+  bool invalidate(Function &F, const PreservedAnalyses &PA,
+                  FunctionAnalysisManager::Invalidator &);
 };
 
 /// \brief Analysis pass which computes a \c PostDominatorTree.
 class PostDominatorTreeAnalysis
     : public AnalysisInfoMixin<PostDominatorTreeAnalysis> {
   friend AnalysisInfoMixin<PostDominatorTreeAnalysis>;
-  static char PassID;
+  static AnalysisKey Key;
 
 public:
   /// \brief Provide the result typedef for this analysis pass.
@@ -58,7 +54,7 @@ class PostDominatorTreePrinterPass
 
 public:
   explicit PostDominatorTreePrinterPass(raw_ostream &OS);
-  PreservedAnalyses run(Function &F, AnalysisManager<Function> &AM);
+  PreservedAnalyses run(Function &F, FunctionAnalysisManager &AM);
 };
 
 struct PostDominatorTreeWrapperPass : public FunctionPass {
@@ -89,7 +85,7 @@ FunctionPass* createPostDomTree();
 
 template <> struct GraphTraits<PostDominatorTree*>
   : public GraphTraits<DomTreeNode*> {
-  static NodeType *getEntryNode(PostDominatorTree *DT) {
+  static NodeRef getEntryNode(PostDominatorTree *DT) {
     return DT->getRootNode();
   }
 

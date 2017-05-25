@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "clang/Basic/CharInfo.h"
 #include "clang/Basic/DiagnosticOptions.h"
 #include "clang/Driver/Compilation.h"
 #include "clang/Driver/Driver.h"
@@ -25,7 +24,6 @@
 #include "clang/Frontend/TextDiagnosticPrinter.h"
 #include "clang/Frontend/Utils.h"
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Config/llvm-config.h"
@@ -37,7 +35,6 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/ManagedStatic.h"
-#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
 #include "llvm/Support/Process.h"
@@ -49,6 +46,7 @@
 #include "llvm/Support/Timer.h"
 #include "llvm/Support/raw_ostream.h"
 #include <memory>
+#include <set>
 #include <system_error>
 using namespace clang;
 using namespace clang::driver;
@@ -395,7 +393,7 @@ int main(int argc_, const char **argv_) {
 
   // Handle CL and _CL_ which permits additional command line options to be
   // prepended or appended.
-  if (Tokenizer == &llvm::cl::TokenizeWindowsCommandLine) {
+  if (ClangCLMode) {
     // Arguments in "CL" are prepended.
     llvm::Optional<std::string> OptCL = llvm::sys::Process::GetEnv("CL");
     if (OptCL.hasValue()) {
@@ -462,8 +460,9 @@ int main(int argc_, const char **argv_) {
     Res = TheDriver.ExecuteCompilation(*C, FailingCommands);
 
   // Force a crash to test the diagnostics.
-  if (::getenv("FORCE_CLANG_DIAGNOSTICS_CRASH")) {
-    Diags.Report(diag::err_drv_force_crash) << "FORCE_CLANG_DIAGNOSTICS_CRASH";
+  if (TheDriver.GenReproducer) {
+    Diags.Report(diag::err_drv_force_crash)
+        << !::getenv("FORCE_CLANG_DIAGNOSTICS_CRASH");
 
     // Pretend that every command failed.
     FailingCommands.clear();

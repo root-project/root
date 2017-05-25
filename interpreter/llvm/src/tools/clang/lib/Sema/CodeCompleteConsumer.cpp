@@ -328,9 +328,9 @@ StringRef CodeCompletionTUInfo::getParentName(const DeclContext *DC) {
 
 CodeCompletionString *CodeCompletionBuilder::TakeString() {
   void *Mem = getAllocator().Allocate(
-                  sizeof(CodeCompletionString) + sizeof(Chunk) * Chunks.size()
-                                    + sizeof(const char *) * Annotations.size(),
-                                 llvm::alignOf<CodeCompletionString>());
+      sizeof(CodeCompletionString) + sizeof(Chunk) * Chunks.size() +
+          sizeof(const char *) * Annotations.size(),
+      alignof(CodeCompletionString));
   CodeCompletionString *Result 
     = new (Mem) CodeCompletionString(Chunks.data(), Chunks.size(),
                                      Priority, Availability,
@@ -445,8 +445,8 @@ bool PrintingCodeCompleteConsumer::isResultFilteredOut(StringRef Filter,
   case CodeCompletionResult::RK_Pattern: {
     return !StringRef(Result.Pattern->getAsString()).startswith(Filter);
   }
-  default: llvm_unreachable("Unknown code completion result Kind.");
   }
+  llvm_unreachable("Unknown code completion result Kind.");
 }
 
 void 
@@ -460,7 +460,7 @@ PrintingCodeCompleteConsumer::ProcessCodeCompleteResults(Sema &SemaRef,
 
   // Print the results.
   for (unsigned I = 0; I != NumResults; ++I) {
-    if (!Filter.empty() && isResultFilteredOut(Filter, Results[I]))
+    if(!Filter.empty() && isResultFilteredOut(Filter, Results[I]))
       continue;
     OS << "COMPLETION: ";
     switch (Results[I].Kind) {

@@ -18,6 +18,8 @@
 #ifndef LLVM_ADT_GRAPHTRAITS_H
 #define LLVM_ADT_GRAPHTRAITS_H
 
+#include "llvm/ADT/iterator_range.h"
+
 namespace llvm {
 
 // GraphTraits - This class should be specialized by different graph types...
@@ -27,20 +29,21 @@ template<class GraphType>
 struct GraphTraits {
   // Elements to provide:
 
-  // typedef NodeType          - Type of Node in the graph
-  // typedef ChildIteratorType - Type used to iterate over children in graph
+  // typedef NodeRef           - Type of Node token in the graph, which should
+  //                             be cheap to copy.
+  // typedef ChildIteratorType - Type used to iterate over children in graph,
+  //                             dereference to a NodeRef.
 
-  // static NodeType *getEntryNode(const GraphType &)
+  // static NodeRef getEntryNode(const GraphType &)
   //    Return the entry node of the graph
 
-  // static ChildIteratorType child_begin(NodeType *)
-  // static ChildIteratorType child_end  (NodeType *)
+  // static ChildIteratorType child_begin(NodeRef)
+  // static ChildIteratorType child_end  (NodeRef)
   //    Return iterators that point to the beginning and ending of the child
   //    node list for the specified node.
   //
 
-
-  // typedef  ...iterator nodes_iterator;
+  // typedef  ...iterator nodes_iterator; - dereference to a NodeRef
   // static nodes_iterator nodes_begin(GraphType *G)
   // static nodes_iterator nodes_end  (GraphType *G)
   //    nodes_iterator/begin/end - Allow iteration over all nodes in the graph
@@ -57,7 +60,7 @@ struct GraphTraits {
   // your argument to XXX_begin(...) is unknown or needs to have the proper .h
   // file #include'd.
   //
-  typedef typename GraphType::UnknownGraphTypeError NodeType;
+  typedef typename GraphType::UnknownGraphTypeError NodeRef;
 };
 
 
@@ -83,24 +86,35 @@ struct Inverse {
 
 // Provide a partial specialization of GraphTraits so that the inverse of an
 // inverse falls back to the original graph.
-template<class T>
-struct GraphTraits<Inverse<Inverse<T> > > {
-  typedef typename GraphTraits<T>::NodeType NodeType;
-  typedef typename GraphTraits<T>::ChildIteratorType ChildIteratorType;
+template <class T> struct GraphTraits<Inverse<Inverse<T>>> : GraphTraits<T> {};
 
-  static NodeType *getEntryNode(Inverse<Inverse<T> > *G) {
-    return GraphTraits<T>::getEntryNode(G->Graph.Graph);
-  }
+// Provide iterator ranges for the graph traits nodes and children
+template <class GraphType>
+iterator_range<typename GraphTraits<GraphType>::nodes_iterator>
+nodes(const GraphType &G) {
+  return make_range(GraphTraits<GraphType>::nodes_begin(G),
+                    GraphTraits<GraphType>::nodes_end(G));
+}
+template <class GraphType>
+iterator_range<typename GraphTraits<Inverse<GraphType>>::nodes_iterator>
+inverse_nodes(const GraphType &G) {
+  return make_range(GraphTraits<Inverse<GraphType>>::nodes_begin(G),
+                    GraphTraits<Inverse<GraphType>>::nodes_end(G));
+}
 
-  static ChildIteratorType child_begin(NodeType* N) {
-    return GraphTraits<T>::child_begin(N);
-  }
+template <class GraphType>
+iterator_range<typename GraphTraits<GraphType>::ChildIteratorType>
+children(const typename GraphTraits<GraphType>::NodeRef &G) {
+  return make_range(GraphTraits<GraphType>::child_begin(G),
+                    GraphTraits<GraphType>::child_end(G));
+}
 
-  static ChildIteratorType child_end(NodeType* N) {
-    return GraphTraits<T>::child_end(N);
-  }
-};
-
+template <class GraphType>
+iterator_range<typename GraphTraits<Inverse<GraphType>>::ChildIteratorType>
+inverse_children(const typename GraphTraits<GraphType>::NodeRef &G) {
+  return make_range(GraphTraits<Inverse<GraphType>>::child_begin(G),
+                    GraphTraits<Inverse<GraphType>>::child_end(G));
+}
 } // End llvm namespace
 
 #endif
