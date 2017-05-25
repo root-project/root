@@ -62,7 +62,11 @@ module "stl" {
   }
   module "cmath" {
     export *
-    header "cmath"
+    // FIXME: We include this in textual mode because it has to #undef macros
+    // from a possibly previously included <math.h> header. This only works
+    // in textual mode right now. Check if this is a bug or if cmath just
+    // violates the modules semantics with this.
+    textual header "cmath"
   }
   module "complex" {
     export *
