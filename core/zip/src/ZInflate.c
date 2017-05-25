@@ -1100,24 +1100,30 @@ int R__Inflate_free()
   return 0;
 }
 
-static int is_valid_header_zlib(uch *src) {
+static int is_valid_header_zlib(uch *src)
+{
    return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_old(uch *src) {
+static int is_valid_header_old(uch *src)
+{
    return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
 }
 
-static int is_valid_header_lzma(uch *src) {
-   return  src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
+static int is_valid_header_lzma(uch *src)
+{
+   return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
 }
 
-static int is_valid_header_lz4(uch *src) {
+static int is_valid_header_lz4(uch *src)
+{
    return src[0] == 'L' && src[1] == '4';
 }
 
-static int is_valid_header(uch *src) {
-   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) || is_valid_header_lz4(src);
+static int is_valid_header(uch *src)
+{
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
+          is_valid_header_lz4(src);
 }
 
 /***********************************************************************
@@ -1200,39 +1206,38 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /* New zlib format */
   if (is_valid_header_zlib(src)) {
-    z_stream stream; /* decompression stream */
-    int err = 0;
+     z_stream stream; /* decompression stream */
+     int err = 0;
 
-    stream.next_in   = (Bytef*)(&src[HDRSIZE]);
-    stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
-    stream.next_out  = (Bytef*)tgt;
-    stream.avail_out = (uInt)(*tgtsize);
-    stream.zalloc    = (alloc_func)0;
-    stream.zfree     = (free_func)0;
-    stream.opaque    = (voidpf)0;
+     stream.next_in = (Bytef *)(&src[HDRSIZE]);
+     stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
+     stream.next_out = (Bytef *)tgt;
+     stream.avail_out = (uInt)(*tgtsize);
+     stream.zalloc = (alloc_func)0;
+     stream.zfree = (free_func)0;
+     stream.opaque = (voidpf)0;
 
-    err = inflateInit(&stream);
-    if (err != Z_OK) {
-      fprintf(stderr,"R__unzip: error %d in inflateInit (zlib)\n",err);
-      return;
-    }
+     err = inflateInit(&stream);
+     if (err != Z_OK) {
+        fprintf(stderr, "R__unzip: error %d in inflateInit (zlib)\n", err);
+        return;
+     }
 
-    while ((err = inflate(&stream, Z_FINISH)) != Z_STREAM_END) {
-       if (err != Z_OK) {
-          inflateEnd(&stream);
-          fprintf(stderr, "R__unzip: error %d in inflate (zlib)\n", err);
-          return;
-       }
-    }
+     while ((err = inflate(&stream, Z_FINISH)) != Z_STREAM_END) {
+        if (err != Z_OK) {
+           inflateEnd(&stream);
+           fprintf(stderr, "R__unzip: error %d in inflate (zlib)\n", err);
+           return;
+        }
+     }
 
-    inflateEnd(&stream);
+     inflateEnd(&stream);
 
-    *irep = stream.total_out;
-    return;
-  }
-  else if (is_valid_header_lzma(src)) {
-    R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
-    return;
+     *irep = stream.total_out;
+     return;
+  } else if (is_valid_header_lzma(src)) {
+     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+     return;
   } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
      return;
