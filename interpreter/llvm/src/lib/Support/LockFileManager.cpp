@@ -6,13 +6,22 @@
 // License. See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
+
 #include "llvm/Support/LockFileManager.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/Errc.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Signals.h"
+#include <cerrno>
+#include <ctime>
+#include <memory>
+#include <tuple>
+#include <system_error>
 #include <sys/stat.h>
 #include <sys/types.h>
 #if LLVM_ON_WIN32
@@ -31,6 +40,7 @@
 #if USE_OSX_GETHOSTUUID
 #include <uuid/uuid.h>
 #endif
+
 using namespace llvm;
 
 /// \brief Attempt to read the lock file with the given name, if it exists.
@@ -112,6 +122,7 @@ bool LockFileManager::processStillExecuting(StringRef HostID, int PID) {
 }
 
 namespace {
+
 /// An RAII helper object ensure that the unique lock file is removed.
 ///
 /// Ensures that if there is an error or a signal before we finish acquiring the
@@ -127,6 +138,7 @@ public:
   : Filename(Name), RemoveImmediately(true) {
     sys::RemoveFileOnSignal(Filename, nullptr);
   }
+
   ~RemoveUniqueLockFileOnSignal() {
     if (!RemoveImmediately) {
       // Leave the signal handler enabled. It will be removed when the lock is
@@ -136,8 +148,10 @@ public:
     sys::fs::remove(Filename);
     sys::DontRemoveFileOnSignal(Filename);
   }
+
   void lockAcquired() { RemoveImmediately = false; }
 };
+
 } // end anonymous namespace
 
 LockFileManager::LockFileManager(StringRef FileName)
@@ -202,7 +216,7 @@ LockFileManager::LockFileManager(StringRef FileName)
   // held since the .lock symlink will point to a nonexistent file.
   RemoveUniqueLockFileOnSignal RemoveUniqueFile(UniqueLockFileName);
 
-  while (1) {
+  while (true) {
     // Create a link from the lock file name. If this succeeds, we're done.
     std::error_code EC =
         sys::fs::create_link(UniqueLockFileName, LockFileName);
@@ -290,9 +304,9 @@ LockFileManager::WaitForUnlockResult LockFileManager::waitForUnlock() {
   Interval.tv_sec = 0;
   Interval.tv_nsec = 1000000;
 #endif
-  // Don't wait more than five minutes per iteration. Total timeout for the file
-  // to appear is ~8.5 mins.
-  const unsigned MaxSeconds = 5*60;
+  // Don't wait more than 40s per iteration. Total timeout for the file
+  // to appear is ~1.5 minutes.
+  const unsigned MaxSeconds = 40;
   do {
     // Sleep for the designated interval, to allow the owning process time to
     // finish up and remove the lock file.

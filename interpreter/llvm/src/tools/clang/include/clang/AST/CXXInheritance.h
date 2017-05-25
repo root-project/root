@@ -16,7 +16,6 @@
 
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
-#include "clang/AST/DeclarationName.h"
 #include "clang/AST/Type.h"
 #include "clang/AST/TypeOrdering.h"
 #include "llvm/ADT/MapVector.h"
@@ -24,7 +23,6 @@
 #include "llvm/ADT/SmallVector.h"
 #include <cassert>
 #include <list>
-#include <map>
 
 namespace clang {
   
@@ -163,7 +161,8 @@ class CXXBasePaths {
   void ComputeDeclsFound();
 
   bool lookupInBases(ASTContext &Context, const CXXRecordDecl *Record,
-                     CXXRecordDecl::BaseMatchesCallback BaseMatches);
+                     CXXRecordDecl::BaseMatchesCallback BaseMatches,
+                     bool LookupInDependent = false);
 
 public:
   typedef std::list<CXXBasePath>::iterator paths_iterator;
@@ -174,7 +173,7 @@ public:
   /// paths for a derived-to-base search.
   explicit CXXBasePaths(bool FindAmbiguities = true, bool RecordPaths = true,
                         bool DetectVirtual = true)
-      : FindAmbiguities(FindAmbiguities), RecordPaths(RecordPaths),
+      : Origin(), FindAmbiguities(FindAmbiguities), RecordPaths(RecordPaths),
         DetectVirtual(DetectVirtual), DetectedVirtual(nullptr),
         NumDeclsFound(0) {}
 

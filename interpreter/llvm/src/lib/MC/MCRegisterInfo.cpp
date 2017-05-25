@@ -1,4 +1,4 @@
-//=== MC/MCRegisterInfo.cpp - Target Register Description -------*- C++ -*-===//
+//===- MC/MCRegisterInfo.cpp - Target Register Description ----------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -11,7 +11,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/MC/MCRegisterInfo.h"
+#include "llvm/Support/ErrorHandling.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
 
 using namespace llvm;
 
@@ -62,6 +67,8 @@ int MCRegisterInfo::getDwarfRegNum(unsigned RegNum, bool isEH) const {
   const DwarfLLVMRegPair *M = isEH ? EHL2DwarfRegs : L2DwarfRegs;
   unsigned Size = isEH ? EHL2DwarfRegsSize : L2DwarfRegsSize;
 
+  if (!M)
+    return -1;
   DwarfLLVMRegPair Key = { RegNum, 0 };
   const DwarfLLVMRegPair *I = std::lower_bound(M, M+Size, Key);
   if (I == M+Size || I->FromReg != RegNum)
@@ -73,6 +80,8 @@ int MCRegisterInfo::getLLVMRegNum(unsigned RegNum, bool isEH) const {
   const DwarfLLVMRegPair *M = isEH ? EHDwarf2LRegs : Dwarf2LRegs;
   unsigned Size = isEH ? EHDwarf2LRegsSize : Dwarf2LRegsSize;
 
+  if (!M)
+    return -1;
   DwarfLLVMRegPair Key = { RegNum, 0 };
   const DwarfLLVMRegPair *I = std::lower_bound(M, M+Size, Key);
   assert(I != M+Size && I->FromReg == RegNum && "Invalid RegNum");

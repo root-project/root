@@ -33,10 +33,6 @@ class ARMTTIImpl : public BasicTTIImplBase<ARMTTIImpl> {
   const ARMSubtarget *ST;
   const ARMTargetLowering *TLI;
 
-  /// Estimate the overhead of scalarizing an instruction. Insert and Extract
-  /// are set if the result needs to be inserted and/or extracted from vectors.
-  unsigned getScalarizationOverhead(Type *Ty, bool Insert, bool Extract);
-
   const ARMSubtarget *getST() const { return ST; }
   const ARMTargetLowering *getTLI() const { return TLI; }
 
@@ -44,13 +40,6 @@ public:
   explicit ARMTTIImpl(const ARMBaseTargetMachine *TM, const Function &F)
       : BaseT(TM, F.getParent()->getDataLayout()), ST(TM->getSubtargetImpl(F)),
         TLI(ST->getTargetLowering()) {}
-
-  // Provide value semantics. MSVC requires that we spell all of these out.
-  ARMTTIImpl(const ARMTTIImpl &Arg)
-      : BaseT(static_cast<const BaseT &>(Arg)), ST(Arg.ST), TLI(Arg.TLI) {}
-  ARMTTIImpl(ARMTTIImpl &&Arg)
-      : BaseT(std::move(static_cast<BaseT &>(Arg))), ST(std::move(Arg.ST)),
-        TLI(std::move(Arg.TLI)) {}
 
   bool enableInterleavedAccessVectorization() { return true; }
 
@@ -63,6 +52,9 @@ public:
 
   /// \name Scalar TTI Implementations
   /// @{
+
+  int getIntImmCodeSizeCost(unsigned Opcode, unsigned Idx, const APInt &Imm,
+                            Type *Ty);
 
   using BaseT::getIntImmCost;
   int getIntImmCost(const APInt &Imm, Type *Ty);
@@ -102,13 +94,16 @@ public:
 
   int getShuffleCost(TTI::ShuffleKind Kind, Type *Tp, int Index, Type *SubTp);
 
-  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src);
+  int getCastInstrCost(unsigned Opcode, Type *Dst, Type *Src,
+                       const Instruction *I = nullptr);
 
-  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy);
+  int getCmpSelInstrCost(unsigned Opcode, Type *ValTy, Type *CondTy,
+                         const Instruction *I = nullptr);
 
   int getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index);
 
-  int getAddressComputationCost(Type *Val, bool IsComplex);
+  int getAddressComputationCost(Type *Val, ScalarEvolution *SE, 
+                                const SCEV *Ptr);
 
   int getFPOpCost(Type *Ty);
 
@@ -117,14 +112,25 @@ public:
       TTI::OperandValueKind Op1Info = TTI::OK_AnyValue,
       TTI::OperandValueKind Op2Info = TTI::OK_AnyValue,
       TTI::OperandValueProperties Opd1PropInfo = TTI::OP_None,
-      TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None);
+      TTI::OperandValueProperties Opd2PropInfo = TTI::OP_None,
+      ArrayRef<const Value *> Args = ArrayRef<const Value *>());
 
   int getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
-                      unsigned AddressSpace);
+                      unsigned AddressSpace, const Instruction *I = nullptr);
 
   int getInterleavedMemoryOpCost(unsigned Opcode, Type *VecTy, unsigned Factor,
                                  ArrayRef<unsigned> Indices, unsigned Alignment,
                                  unsigned AddressSpace);
+
+  bool shouldBuildLookupTablesForConstant(Constant *C) const {
+    // In the ROPI and RWPI relocation models we can't have pointers to global
+    // variables or functions in constant data, so don't convert switches to
+    // lookup tables if any of the values would need relocation.
+    if (ST->isROPI() || ST->isRWPI())
+      return !C->needsRelocation();
+
+    return true;
+  }
   /// @}
 };
 

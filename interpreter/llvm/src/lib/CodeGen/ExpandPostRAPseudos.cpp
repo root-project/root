@@ -51,7 +51,7 @@ private:
   bool LowerSubregToReg(MachineInstr *MI);
   bool LowerCopy(MachineInstr *MI);
 
-  void TransferImplicitDefs(MachineInstr *MI);
+  void TransferImplicitOperands(MachineInstr *MI);
 };
 } // end anonymous namespace
 
@@ -61,20 +61,16 @@ char &llvm::ExpandPostRAPseudosID = ExpandPostRA::ID;
 INITIALIZE_PASS(ExpandPostRA, "postrapseudos",
                 "Post-RA pseudo instruction expansion pass", false, false)
 
-/// TransferImplicitDefs - MI is a pseudo-instruction, and the lowered
-/// replacement instructions immediately precede it.  Copy any implicit-def
+/// TransferImplicitOperands - MI is a pseudo-instruction, and the lowered
+/// replacement instructions immediately precede it.  Copy any implicit
 /// operands from MI to the replacement instruction.
-void
-ExpandPostRA::TransferImplicitDefs(MachineInstr *MI) {
+void ExpandPostRA::TransferImplicitOperands(MachineInstr *MI) {
   MachineBasicBlock::iterator CopyMI = MI;
   --CopyMI;
 
-  for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
-    MachineOperand &MO = MI->getOperand(i);
-    if (!MO.isReg() || !MO.isImplicit() || MO.isUse())
-      continue;
-    CopyMI->addOperand(MachineOperand::CreateReg(MO.getReg(), true, true));
-  }
+  for (const MachineOperand &MO : MI->implicit_operands())
+    if (MO.isReg())
+      CopyMI->addOperand(MO);
 }
 
 bool ExpandPostRA::LowerSubregToReg(MachineInstr *MI) {
@@ -146,8 +142,9 @@ bool ExpandPostRA::LowerCopy(MachineInstr *MI) {
   MachineOperand &DstMO = MI->getOperand(0);
   MachineOperand &SrcMO = MI->getOperand(1);
 
-  if (SrcMO.getReg() == DstMO.getReg()) {
-    DEBUG(dbgs() << "identity copy: " << *MI);
+  bool IdentityCopy = (SrcMO.getReg() == DstMO.getReg());
+  if (IdentityCopy || SrcMO.isUndef()) {
+    DEBUG(dbgs() << (IdentityCopy ? "identity copy: " : "undef copy:    ") << *MI);
     // No need to insert an identity copy instruction, but replace with a KILL
     // if liveness is changed.
     if (SrcMO.isUndef() || MI->getNumOperands() > 2) {
@@ -167,7 +164,7 @@ bool ExpandPostRA::LowerCopy(MachineInstr *MI) {
                    DstMO.getReg(), SrcMO.getReg(), SrcMO.isKill());
 
   if (MI->getNumOperands() > 2)
-    TransferImplicitDefs(MI);
+    TransferImplicitOperands(MI);
   DEBUG({
     MachineBasicBlock::iterator dMI = MI;
     dbgs() << "replaced by: " << *(--dMI);

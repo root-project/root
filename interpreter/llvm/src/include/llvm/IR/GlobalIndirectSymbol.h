@@ -16,20 +16,25 @@
 #ifndef LLVM_IR_GLOBALINDIRECTSYMBOL_H
 #define LLVM_IR_GLOBALINDIRECTSYMBOL_H
 
+#include "llvm/IR/GlobalObject.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/OperandTraits.h"
+#include "llvm/IR/User.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
+#include <cstddef>
 
 namespace llvm {
 
 class GlobalIndirectSymbol : public GlobalValue {
-  void operator=(const GlobalIndirectSymbol &) = delete;
-  GlobalIndirectSymbol(const GlobalIndirectSymbol &) = delete;
-
 protected:
   GlobalIndirectSymbol(Type *Ty, ValueTy VTy, unsigned AddressSpace,
       LinkageTypes Linkage, const Twine &Name, Constant *Symbol);
 
 public:
+  GlobalIndirectSymbol(const GlobalIndirectSymbol &) = delete;
+  GlobalIndirectSymbol &operator=(const GlobalIndirectSymbol &) = delete;
+
   // allocate space for exactly one operand
   void *operator new(size_t s) {
     return User::operator new(s, 1);
@@ -43,26 +48,30 @@ public:
     setOperand(0, Symbol);
   }
   const Constant *getIndirectSymbol() const {
-    return const_cast<GlobalIndirectSymbol *>(this)->getIndirectSymbol();
+    return getOperand(0);
   }
   Constant *getIndirectSymbol() {
-    return getOperand(0);
+    return const_cast<Constant *>(
+          static_cast<const GlobalIndirectSymbol *>(this)->getIndirectSymbol());
   }
 
   const GlobalObject *getBaseObject() const {
-    return const_cast<GlobalIndirectSymbol *>(this)->getBaseObject();
+    return dyn_cast<GlobalObject>(getIndirectSymbol()->stripInBoundsOffsets());
   }
   GlobalObject *getBaseObject() {
-    return dyn_cast<GlobalObject>(getIndirectSymbol()->stripInBoundsOffsets());
+    return const_cast<GlobalObject *>(
+              static_cast<const GlobalIndirectSymbol *>(this)->getBaseObject());
   }
 
   const GlobalObject *getBaseObject(const DataLayout &DL, APInt &Offset) const {
-    return const_cast<GlobalIndirectSymbol *>(this)->getBaseObject(DL, Offset);
-  }
-  GlobalObject *getBaseObject(const DataLayout &DL, APInt &Offset) {
     return dyn_cast<GlobalObject>(
         getIndirectSymbol()->stripAndAccumulateInBoundsConstantOffsets(DL,
                                                                        Offset));
+  }
+  GlobalObject *getBaseObject(const DataLayout &DL, APInt &Offset) {
+    return const_cast<GlobalObject *>(
+                                 static_cast<const GlobalIndirectSymbol *>(this)
+                                   ->getBaseObject(DL, Offset));
   }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
@@ -79,6 +88,6 @@ struct OperandTraits<GlobalIndirectSymbol> :
 
 DEFINE_TRANSPARENT_OPERAND_ACCESSORS(GlobalIndirectSymbol, Constant)
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_GLOBALINDIRECTSYMBOL_H

@@ -26,12 +26,11 @@ namespace format {
 FormatTokenLexer::FormatTokenLexer(const SourceManager &SourceMgr, FileID ID,
                                    const FormatStyle &Style,
                                    encoding::Encoding Encoding)
-    : FormatTok(nullptr), IsFirstToken(true), GreaterStashed(false),
-      LessStashed(false), Column(0), TrailingWhitespace(0),
-      SourceMgr(SourceMgr), ID(ID), Style(Style),
-      IdentTable(getFormattingLangOpts(Style)), Keywords(IdentTable),
-      Encoding(Encoding), FirstInLineIndex(0), FormattingDisabled(false),
-      MacroBlockBeginRegex(Style.MacroBlockBegin),
+    : FormatTok(nullptr), IsFirstToken(true), StateStack({LexerState::NORMAL}),
+      Column(0), TrailingWhitespace(0), SourceMgr(SourceMgr), ID(ID),
+      Style(Style), IdentTable(getFormattingLangOpts(Style)),
+      Keywords(IdentTable), Encoding(Encoding), FirstInLineIndex(0),
+      FormattingDisabled(false), MacroBlockBeginRegex(Style.MacroBlockBegin),
       MacroBlockEndRegex(Style.MacroBlockEnd) {
   Lex.reset(new Lexer(ID, SourceMgr.getBuffer(ID), SourceMgr,
                       getFormattingLangOpts(Style)));
@@ -49,7 +48,7 @@ ArrayRef<FormatToken *> FormatTokenLexer::lex() {
     Tokens.push_back(getNextToken());
     if (Style.Language == FormatStyle::LK_JavaScript) {
       tryParseJSRegexLiteral();
-      tryParseTemplateString();
+      handleTemplateStrings();
     }
     tryMergePreviousTokens();
     if (Tokens.back()->NewlinesBefore > 0 || Tokens.back()->IsMultiline)
@@ -65,6 +64,8 @@ void FormatTokenLexer::tryMergePreviousTokens() {
     return;
   if (tryMergeLessLess())
     return;
+  if (tryMergeNSStringLiteral())
+    return;
 
   if (Style.Language == FormatStyle::LK_JavaScript) {
     static const tok::TokenKind JSIdentity[] = {tok::equalequal, tok::equal};
@@ -73,6 +74,10 @@ void FormatTokenLexer::tryMergePreviousTokens() {
     static const tok::TokenKind JSShiftEqual[] = {tok::greater, tok::greater,
                                                   tok::greaterequal};
     static const tok::TokenKind JSRightArrow[] = {tok::equal, tok::greater};
+    static const tok::TokenKind JSExponentiation[] = {tok::star, tok::star};
+    static const tok::TokenKind JSExponentiationEqual[] = {tok::star,
+                                                           tok::starequal};
+
     // FIXME: Investigate what token type gives the correct operator priority.
     if (tryMergeTokens(JSIdentity, TT_BinaryOperator))
       return;
@@ -82,7 +87,42 @@ void FormatTokenLexer::tryMergePreviousTokens() {
       return;
     if (tryMergeTokens(JSRightArrow, TT_JsFatArrow))
       return;
+    if (tryMergeTokens(JSExponentiation, TT_JsExponentiation))
+      return;
+    if (tryMergeTokens(JSExponentiationEqual, TT_JsExponentiationEqual)) {
+      Tokens.back()->Tok.setKind(tok::starequal);
+      return;
+    }
   }
+
+  if (Style.Language == FormatStyle::LK_Java) {
+    static const tok::TokenKind JavaRightLogicalShift[] = {tok::greater,
+                                                           tok::greater,
+                                                           tok::greater};
+    static const tok::TokenKind JavaRightLogicalShiftAssign[] = {tok::greater,
+                                                                 tok::greater,
+                                                                 tok::greaterequal};
+    if (tryMergeTokens(JavaRightLogicalShift, TT_BinaryOperator))
+      return;
+    if (tryMergeTokens(JavaRightLogicalShiftAssign, TT_BinaryOperator))
+      return;
+  }
+}
+
+bool FormatTokenLexer::tryMergeNSStringLiteral() {
+  if (Tokens.size() < 2)
+    return false;
+  auto &At = *(Tokens.end() - 2);
+  auto &String = *(Tokens.end() - 1);
+  if (!At->is(tok::at) || !String->is(tok::string_literal))
+    return false;
+  At->Tok.setKind(tok::string_literal);
+  At->TokenText = StringRef(At->TokenText.begin(),
+                            String->TokenText.end() - At->TokenText.begin());
+  At->ColumnWidth += String->ColumnWidth;
+  At->Type = TT_ObjCStringLiteral;
+  Tokens.erase(Tokens.end() - 1);
+  return true;
 }
 
 bool FormatTokenLexer::tryMergeLessLess() {
@@ -158,7 +198,9 @@ bool FormatTokenLexer::canPrecedeRegexLiteral(FormatToken *Prev) {
   // postfix unary operators. If the '++' is followed by a non-operand
   // introducing token, the slash here is the operand and not the start of a
   // regex.
-  if (Prev->isOneOf(tok::plusplus, tok::minusminus))
+  // `!` is an unary prefix operator, but also a post-fix operator that casts
+  // away nullability, so the same check applies.
+  if (Prev->isOneOf(tok::plusplus, tok::minusminus, tok::exclaim))
     return (Tokens.size() < 3 || precedesOperand(Tokens[Tokens.size() - 3]));
 
   // The previous token must introduce an operand location where regex
@@ -228,17 +270,44 @@ void FormatTokenLexer::tryParseJSRegexLiteral() {
   resetLexer(SourceMgr.getFileOffset(Lex->getSourceLocation(Offset)));
 }
 
-void FormatTokenLexer::tryParseTemplateString() {
+void FormatTokenLexer::handleTemplateStrings() {
   FormatToken *BacktickToken = Tokens.back();
-  if (!BacktickToken->is(tok::unknown) || BacktickToken->TokenText != "`")
+
+  if (BacktickToken->is(tok::l_brace)) {
+    StateStack.push(LexerState::NORMAL);
     return;
+  }
+  if (BacktickToken->is(tok::r_brace)) {
+    if (StateStack.size() == 1)
+      return;
+    StateStack.pop();
+    if (StateStack.top() != LexerState::TEMPLATE_STRING)
+      return;
+    // If back in TEMPLATE_STRING, fallthrough and continue parsing the
+  } else if (BacktickToken->is(tok::unknown) &&
+             BacktickToken->TokenText == "`") {
+    StateStack.push(LexerState::TEMPLATE_STRING);
+  } else {
+    return; // Not actually a template
+  }
 
   // 'Manually' lex ahead in the current file buffer.
   const char *Offset = Lex->getBufferLocation();
   const char *TmplBegin = Offset - BacktickToken->TokenText.size(); // at "`"
-  for (; Offset != Lex->getBuffer().end() && *Offset != '`'; ++Offset) {
-    if (*Offset == '\\')
+  for (; Offset != Lex->getBuffer().end(); ++Offset) {
+    if (Offset[0] == '`') {
+      StateStack.pop();
+      break;
+    }
+    if (Offset[0] == '\\') {
       ++Offset; // Skip the escaped character.
+    } else if (Offset + 1 < Lex->getBuffer().end() && Offset[0] == '$' &&
+               Offset[1] == '{') {
+      // '${' introduces an expression interpolation in the template string.
+      StateStack.push(LexerState::NORMAL);
+      ++Offset;
+      break;
+    }
   }
 
   StringRef LiteralText(TmplBegin, Offset - TmplBegin + 1);
@@ -262,7 +331,10 @@ void FormatTokenLexer::tryParseTemplateString() {
         Style.TabWidth, Encoding);
   }
 
-  resetLexer(SourceMgr.getFileOffset(Lex->getSourceLocation(Offset + 1)));
+  SourceLocation loc = Offset < Lex->getBuffer().end()
+                           ? Lex->getSourceLocation(Offset + 1)
+                           : SourceMgr.getLocForEndOfFile(ID);
+  resetLexer(SourceMgr.getFileOffset(loc));
 }
 
 bool FormatTokenLexer::tryMerge_TMacro() {
@@ -384,12 +456,8 @@ FormatToken *FormatTokenLexer::getStashedToken() {
 }
 
 FormatToken *FormatTokenLexer::getNextToken() {
-  if (GreaterStashed) {
-    GreaterStashed = false;
-    return getStashedToken();
-  }
-  if (LessStashed) {
-    LessStashed = false;
+  if (StateStack.top() == LexerState::TOKEN_STASHED) {
+    StateStack.pop();
     return getStashedToken();
   }
 
@@ -409,6 +477,9 @@ FormatToken *FormatTokenLexer::getNextToken() {
       if (pos >= 0 && Text[pos] == '\r')
         --pos;
       // See whether there is an odd number of '\' before this.
+      // FIXME: This is wrong. A '\' followed by a newline is always removed,
+      // regardless of whether there is another '\' before it.
+      // FIXME: Newlines can also be escaped by a '?' '?' '/' trigraph.
       unsigned count = 0;
       for (; pos >= 0; --pos, ++count)
         if (Text[pos] != '\\')
@@ -500,11 +571,13 @@ FormatToken *FormatTokenLexer::getNextToken() {
   } else if (FormatTok->Tok.is(tok::greatergreater)) {
     FormatTok->Tok.setKind(tok::greater);
     FormatTok->TokenText = FormatTok->TokenText.substr(0, 1);
-    GreaterStashed = true;
+    ++Column;
+    StateStack.push(LexerState::TOKEN_STASHED);
   } else if (FormatTok->Tok.is(tok::lessless)) {
     FormatTok->Tok.setKind(tok::less);
     FormatTok->TokenText = FormatTok->TokenText.substr(0, 1);
-    LessStashed = true;
+    ++Column;
+    StateStack.push(LexerState::TOKEN_STASHED);
   }
 
   // Now FormatTok is the next non-whitespace token.
@@ -531,7 +604,7 @@ FormatToken *FormatTokenLexer::getNextToken() {
     Column = FormatTok->LastLineColumnWidth;
   }
 
-  if (Style.Language == FormatStyle::LK_Cpp) {
+  if (Style.isCpp()) {
     if (!(Tokens.size() > 0 && Tokens.back()->Tok.getIdentifierInfo() &&
           Tokens.back()->Tok.getIdentifierInfo()->getPPKeywordID() ==
               tok::pp_define) &&

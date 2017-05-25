@@ -2,6 +2,8 @@ create_subdirectory_options(CLANG TOOL)
 
 add_clang_subdirectory(diagtool)
 add_clang_subdirectory(clang-fuzzer)
+add_clang_subdirectory(clang-import-test)
+add_clang_subdirectory(clang-offload-bundler)
 
 add_clang_subdirectory(c-index-test)
 

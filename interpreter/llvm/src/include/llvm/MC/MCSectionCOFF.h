@@ -16,8 +16,11 @@
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/MC/MCSection.h"
+#include "llvm/MC/SectionKind.h"
+#include <cassert>
 
 namespace llvm {
+
 class MCSymbol;
 
 /// This represents a section on Windows
@@ -73,7 +76,8 @@ public:
 
   void setSelection(int Selection) const;
 
-  void PrintSwitchToSection(const MCAsmInfo &MAI, raw_ostream &OS,
+  void PrintSwitchToSection(const MCAsmInfo &MAI, const Triple &T,
+                            raw_ostream &OS,
                             const MCExpr *Subsection) const override;
   bool UseCodeAlign() const override;
   bool isVirtualSection() const override;
@@ -84,9 +88,13 @@ public:
     return WinCFISectionID;
   }
 
+  static bool isImplicitlyDiscardable(StringRef Name) {
+    return Name.startswith(".debug");
+  }
+
   static bool classof(const MCSection *S) { return S->getVariant() == SV_COFF; }
 };
 
 } // end namespace llvm
 
-#endif
+#endif // LLVM_MC_MCSECTIONCOFF_H

@@ -195,7 +195,8 @@ def SPsjlj_longjmp: SDNode<"SPISD::EH_SJLJ_LONGJMP",
                            [SDNPHasChain, SDNPSideEffect]>;
 
 //  These are target-independent nodes, but have target-specific formats.
-def SDT_SPCallSeqStart : SDCallSeqStart<[ SDTCisVT<0, i32> ]>;
+def SDT_SPCallSeqStart : SDCallSeqStart<[ SDTCisVT<0, i32>,
+                                          SDTCisVT<1, i32> ]>;
 def SDT_SPCallSeqEnd   : SDCallSeqEnd<[ SDTCisVT<0, i32>,
                                         SDTCisVT<1, i32> ]>;
 
@@ -404,9 +405,9 @@ let Defs = [O7] in {
 }
 
 let Defs = [O6], Uses = [O6] in {
-def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt),
-                               "!ADJCALLSTACKDOWN $amt",
-                               [(callseq_start timm:$amt)]>;
+def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                               "!ADJCALLSTACKDOWN $amt1, $amt2",
+                               [(callseq_start timm:$amt1, timm:$amt2)]>;
 def ADJCALLSTACKUP : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                             "!ADJCALLSTACKUP $amt1",
                             [(callseq_end timm:$amt1, timm:$amt2)]>;
@@ -734,8 +735,8 @@ let Defs = [ICC], rd = 0 in {
 
 // Section B.18 - Multiply Instructions, p. 113
 let Defs = [Y] in {
-  defm UMUL : F3_12np<"umul", 0b001010, IIC_iu_umul>;
-  defm SMUL : F3_12  <"smul", 0b001011, mul, IntRegs, i32, simm13Op, IIC_iu_smul>;
+  defm UMUL : F3_12<"umul", 0b001010, umullohi, IntRegs, i32, simm13Op, IIC_iu_umul>;
+  defm SMUL : F3_12<"smul", 0b001011, smullohi, IntRegs, i32, simm13Op, IIC_iu_smul>;
 }
 
 let Defs = [Y, ICC] in {
@@ -1131,32 +1132,32 @@ def FQTOI : F3_3u<2, 0b110100, 0b011010011,
 def FSTOD : F3_3u<2, 0b110100, 0b011001001,
                  (outs DFPRegs:$rd), (ins FPRegs:$rs2),
                  "fstod $rs2, $rd",
-                 [(set f64:$rd, (fextend f32:$rs2))],
+                 [(set f64:$rd, (fpextend f32:$rs2))],
                  IIC_fpu_stod>;
 def FSTOQ : F3_3u<2, 0b110100, 0b011001101,
                  (outs QFPRegs:$rd), (ins FPRegs:$rs2),
                  "fstoq $rs2, $rd",
-                 [(set f128:$rd, (fextend f32:$rs2))]>,
+                 [(set f128:$rd, (fpextend f32:$rs2))]>,
                  Requires<[HasHardQuad]>;
 def FDTOS : F3_3u<2, 0b110100, 0b011000110,
                  (outs FPRegs:$rd), (ins DFPRegs:$rs2),
                  "fdtos $rs2, $rd",
-                 [(set f32:$rd, (fround f64:$rs2))],
+                 [(set f32:$rd, (fpround f64:$rs2))],
                  IIC_fpu_fast_instr>;
 def FDTOQ : F3_3u<2, 0b110100, 0b011001110,
                  (outs QFPRegs:$rd), (ins DFPRegs:$rs2),
                  "fdtoq $rs2, $rd",
-                 [(set f128:$rd, (fextend f64:$rs2))]>,
+                 [(set f128:$rd, (fpextend f64:$rs2))]>,
                  Requires<[HasHardQuad]>;
 def FQTOS : F3_3u<2, 0b110100, 0b011000111,
                  (outs FPRegs:$rd), (ins QFPRegs:$rs2),
                  "fqtos $rs2, $rd",
-                 [(set f32:$rd, (fround f128:$rs2))]>,
+                 [(set f32:$rd, (fpround f128:$rs2))]>,
                  Requires<[HasHardQuad]>;
 def FQTOD : F3_3u<2, 0b110100, 0b011001011,
                  (outs DFPRegs:$rd), (ins QFPRegs:$rs2),
                  "fqtod $rs2, $rd",
-                 [(set f64:$rd, (fround f128:$rs2))]>,
+                 [(set f64:$rd, (fpround f128:$rs2))]>,
                  Requires<[HasHardQuad]>;
 
 // Floating-point Move Instructions, p. 144
@@ -1255,14 +1256,14 @@ let Predicates = [HasNoFsmuldFix] in
 def FSMULD : F3_3<2, 0b110100, 0b001101001,
                   (outs DFPRegs:$rd), (ins FPRegs:$rs1, FPRegs:$rs2),
                   "fsmuld $rs1, $rs2, $rd",
-                  [(set f64:$rd, (fmul (fextend f32:$rs1),
-                                        (fextend f32:$rs2)))],
+                  [(set f64:$rd, (fmul (fpextend f32:$rs1),
+                                        (fpextend f32:$rs2)))],
                   IIC_fpu_muld>;
 def FDMULQ : F3_3<2, 0b110100, 0b001101110,
                   (outs QFPRegs:$rd), (ins DFPRegs:$rs1, DFPRegs:$rs2),
                   "fdmulq $rs1, $rs2, $rd",
-                  [(set f128:$rd, (fmul (fextend f64:$rs1),
-                                         (fextend f64:$rs2)))]>,
+                  [(set f128:$rd, (fmul (fpextend f64:$rs1),
+                                         (fpextend f64:$rs2)))]>,
                   Requires<[HasHardQuad]>;
 
 // FDIVS generates an erratum on LEON processors, so by disabling this instruction

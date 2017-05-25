@@ -366,6 +366,7 @@ def IIC_SSE_MWAIT : InstrItinClass;
 def IIC_SSE_MONITOR : InstrItinClass;
 def IIC_SSE_MWAITX : InstrItinClass;
 def IIC_SSE_MONITORX : InstrItinClass;
+def IIC_SSE_CLZERO : InstrItinClass;
 
 def IIC_SSE_PREFETCH : InstrItinClass;
 def IIC_SSE_PAUSE : InstrItinClass;
@@ -496,6 +497,7 @@ def IIC_IN_RI : InstrItinClass;
 def IIC_OUT_RR : InstrItinClass;
 def IIC_OUT_IR : InstrItinClass;
 def IIC_INS : InstrItinClass;
+def IIC_LWP : InstrItinClass;
 def IIC_MOV_REG_DR : InstrItinClass;
 def IIC_MOV_DR_REG : InstrItinClass;
 def IIC_MOV_REG_CR : InstrItinClass;

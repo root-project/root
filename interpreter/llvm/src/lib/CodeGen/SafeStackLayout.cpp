@@ -100,7 +100,8 @@ void StackLayout::layoutObject(StackObject &Obj) {
   }
 
   // Split starting and ending regions if necessary.
-  for (StackRegion &R : Regions) {
+  for (unsigned i = 0; i < Regions.size(); ++i) {
+    StackRegion &R = Regions[i];
     if (Start > R.Start && Start < R.End) {
       StackRegion R0 = R;
       R.Start = R0.End = Start;
@@ -131,6 +132,14 @@ void StackLayout::computeLayout() {
   // If this is replaced with something smarter, it must preserve the property
   // that the first object is always at the offset 0 in the stack frame (for
   // StackProtectorSlot), or handle stack protector in some other way.
+
+  // Sort objects by size (largest first) to reduce fragmentation.
+  if (StackObjects.size() > 2)
+    std::stable_sort(StackObjects.begin() + 1, StackObjects.end(),
+                     [](const StackObject &a, const StackObject &b) {
+                       return a.Size > b.Size;
+                     });
+
   for (auto &Obj : StackObjects)
     layoutObject(Obj);
 

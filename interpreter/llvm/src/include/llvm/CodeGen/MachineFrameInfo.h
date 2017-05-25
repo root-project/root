@@ -21,15 +21,9 @@
 
 namespace llvm {
 class raw_ostream;
-class DataLayout;
-class TargetRegisterClass;
-class Type;
 class MachineFunction;
 class MachineBasicBlock;
-class TargetFrameLowering;
-class TargetMachine;
 class BitVector;
-class Value;
 class AllocaInst;
 
 /// The CalleeSavedInfo class tracks the information need to locate where a
@@ -103,7 +97,7 @@ class MachineFrameInfo {
 
     /// If true, this stack slot is used to spill a value (could be deopt
     /// and/or GC related) over a statepoint. We know that the address of the
-    /// slot can't alias any LLVM IR value.  This is very similiar to a Spill
+    /// slot can't alias any LLVM IR value.  This is very similar to a Spill
     /// Slot, but is created by statepoint lowering is SelectionDAG, not the
     /// register allocator. 
     bool isStatepointSpillSlot;
@@ -148,8 +142,7 @@ class MachineFrameInfo {
   /// grouping overaligned allocas into a "secondary stack frame" and
   /// then only use a single alloca to allocate this frame and only a
   /// single virtual register to access it. Currently, without such an
-  /// optimization, each such alloca gets it's own dynamic
-  /// realignment.
+  /// optimization, each such alloca gets its own dynamic realignment.
   bool StackRealignable;
 
   /// Whether the function has the \c alignstack attribute.
@@ -227,7 +220,7 @@ class MachineFrameInfo {
   /// setup/destroy pseudo instructions (as defined in the TargetFrameInfo
   /// class).  This information is important for frame pointer elimination.
   /// It is only valid during and after prolog/epilog code insertion.
-  unsigned MaxCallFrameSize = 0;
+  unsigned MaxCallFrameSize = ~0u;
 
   /// The prolog/epilog code inserter fills in this vector with each
   /// callee saved register saved in the frame.  Beyond its use by the prolog/
@@ -527,12 +520,29 @@ public:
   bool hasTailCall() const { return HasTailCall; }
   void setHasTailCall() { HasTailCall = true; }
 
+  /// Computes the maximum size of a callframe and the AdjustsStack property.
+  /// This only works for targets defining
+  /// TargetInstrInfo::getCallFrameSetupOpcode(), getCallFrameDestroyOpcode(),
+  /// and getFrameSize().
+  /// This is usually computed by the prologue epilogue inserter but some
+  /// targets may call this to compute it earlier.
+  void computeMaxCallFrameSize(const MachineFunction &MF);
+
   /// Return the maximum size of a call frame that must be
   /// allocated for an outgoing function call.  This is only available if
   /// CallFrameSetup/Destroy pseudo instructions are used by the target, and
   /// then only during or after prolog/epilog code insertion.
   ///
-  unsigned getMaxCallFrameSize() const { return MaxCallFrameSize; }
+  unsigned getMaxCallFrameSize() const {
+    // TODO: Enable this assert when targets are fixed.
+    //assert(isMaxCallFrameSizeComputed() && "MaxCallFrameSize not computed yet");
+    if (!isMaxCallFrameSizeComputed())
+      return 0;
+    return MaxCallFrameSize;
+  }
+  bool isMaxCallFrameSizeComputed() const {
+    return MaxCallFrameSize != ~0u;
+  }
   void setMaxCallFrameSize(unsigned S) { MaxCallFrameSize = S; }
 
   /// Create a new object at a fixed location on the stack.
@@ -544,7 +554,8 @@ public:
 
   /// Create a spill slot at a fixed location on the stack.
   /// Returns an index with a negative value.
-  int CreateFixedSpillStackObject(uint64_t Size, int64_t SPOffset);
+  int CreateFixedSpillStackObject(uint64_t Size, int64_t SPOffset,
+                                  bool Immutable = false);
 
   /// Returns true if the specified index corresponds to a fixed stack object.
   bool isFixedObjectIndex(int ObjectIdx) const {
@@ -559,8 +570,7 @@ public:
     return Objects[ObjectIdx+NumFixedObjects].isAliased;
   }
 
-  /// isImmutableObjectIndex - Returns true if the specified index corresponds
-  /// to an immutable object.
+  /// Returns true if the specified index corresponds to an immutable object.
   bool isImmutableObjectIndex(int ObjectIdx) const {
     // Tail calling functions can clobber their function arguments.
     if (HasTailCall)
@@ -568,6 +578,13 @@ public:
     assert(unsigned(ObjectIdx+NumFixedObjects) < Objects.size() &&
            "Invalid Object Idx!");
     return Objects[ObjectIdx+NumFixedObjects].isImmutable;
+  }
+
+  /// Marks the immutability of an object.
+  void setIsImmutableObjectIndex(int ObjectIdx, bool Immutable) {
+    assert(unsigned(ObjectIdx+NumFixedObjects) < Objects.size() &&
+           "Invalid Object Idx!");
+    Objects[ObjectIdx+NumFixedObjects].isImmutable = Immutable;
   }
 
   /// Returns true if the specified index corresponds to a spill slot.

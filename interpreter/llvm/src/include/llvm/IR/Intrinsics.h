@@ -28,7 +28,7 @@ class FunctionType;
 class Function;
 class LLVMContext;
 class Module;
-class AttributeSet;
+class AttributeList;
 
 /// This namespace contains an enum with a value for every intrinsic/builtin
 /// function known by LLVM. The enum values are returned by
@@ -45,7 +45,16 @@ namespace Intrinsic {
   };
 
   /// Return the LLVM name for an intrinsic, such as "llvm.ppc.altivec.lvx".
-  std::string getName(ID id, ArrayRef<Type*> Tys = None);
+  /// Note, this version is for intrinsics with no overloads.  Use the other
+  /// version of getName if overloads are required.
+  StringRef getName(ID id);
+
+  /// Return the LLVM name for an intrinsic, such as "llvm.ppc.altivec.lvx".
+  /// Note, this version of getName supports overloads, but is less efficient
+  /// than the StringRef version of this function.  If no overloads are
+  /// requried, it is safe to use this version, but better to use the StringRef
+  /// version.
+  std::string getName(ID id, ArrayRef<Type*> Tys);
 
   /// Return the function type for an intrinsic.
   FunctionType *getType(LLVMContext &Context, ID id,
@@ -60,7 +69,7 @@ namespace Intrinsic {
   bool isLeaf(ID id);
 
   /// Return the attributes for an intrinsic.
-  AttributeSet getAttributes(LLVMContext &C, ID id);
+  AttributeList getAttributes(LLVMContext &C, ID id);
 
   /// Create or insert an LLVM Function declaration for an intrinsic, and return
   /// it.
@@ -79,10 +88,10 @@ namespace Intrinsic {
                                 StringRef Name);
 
   /// Map a GCC builtin name to an intrinsic ID.
-  ID getIntrinsicForGCCBuiltin(const char *Prefix, const char *BuiltinName);
+  ID getIntrinsicForGCCBuiltin(const char *Prefix, StringRef BuiltinName);
 
   /// Map a MS builtin name to an intrinsic ID.
-  ID getIntrinsicForMSBuiltin(const char *Prefix, const char *BuiltinName);
+  ID getIntrinsicForMSBuiltin(const char *Prefix, StringRef BuiltinName);
 
   /// This is a type descriptor which explains the type requirements of an
   /// intrinsic. This is returned by getIntrinsicInfoTableEntries.
@@ -91,7 +100,7 @@ namespace Intrinsic {
       Void, VarArg, MMX, Token, Metadata, Half, Float, Double,
       Integer, Vector, Pointer, Struct,
       Argument, ExtendArgument, TruncArgument, HalfVecArgument,
-      SameVecWidthArgument, PtrToArgument, VecOfPtrsToElt
+      SameVecWidthArgument, PtrToArgument, PtrToElt, VecOfAnyPtrsToElt
     } Kind;
 
     union {
@@ -110,23 +119,41 @@ namespace Intrinsic {
       AK_AnyVector,
       AK_AnyPointer
     };
+
     unsigned getArgumentNumber() const {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == HalfVecArgument ||
              Kind == SameVecWidthArgument || Kind == PtrToArgument ||
-             Kind == VecOfPtrsToElt);
+             Kind == PtrToElt);
       return Argument_Info >> 3;
     }
     ArgKind getArgumentKind() const {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == HalfVecArgument ||
-             Kind == SameVecWidthArgument || Kind == PtrToArgument ||
-             Kind == VecOfPtrsToElt);
+             Kind == SameVecWidthArgument || Kind == PtrToArgument);
       return (ArgKind)(Argument_Info & 7);
+    }
+
+    // VecOfAnyPtrsToElt uses both an overloaded argument (for address space)
+    // and a reference argument (for matching vector width and element types)
+    unsigned getOverloadArgNumber() const {
+      assert(Kind == VecOfAnyPtrsToElt);
+      return Argument_Info >> 16;
+    }
+    unsigned getRefArgNumber() const {
+      assert(Kind == VecOfAnyPtrsToElt);
+      return Argument_Info & 0xFFFF;
     }
 
     static IITDescriptor get(IITDescriptorKind K, unsigned Field) {
       IITDescriptor Result = { K, { Field } };
+      return Result;
+    }
+
+    static IITDescriptor get(IITDescriptorKind K, unsigned short Hi,
+                             unsigned short Lo) {
+      unsigned Field = Hi << 16 | Lo;
+      IITDescriptor Result = {K, {Field}};
       return Result;
     }
   };

@@ -1,4 +1,4 @@
-//===-- llvm/ModuleSummaryIndex.h - Module Summary Index --------*- C++ -*-===//
+//===- llvm/ModuleSummaryIndex.h - Module Summary Index ---------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -16,70 +16,100 @@
 #ifndef LLVM_IR_MODULESUMMARYINDEX_H
 #define LLVM_IR_MODULESUMMARYINDEX_H
 
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/Module.h"
-
+#include "llvm/IR/GlobalValue.h"
+#include <algorithm>
 #include <array>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <map>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace llvm {
 
+namespace yaml {
+
+template <typename T> struct MappingTraits;
+
+} // end namespace yaml
+
 /// \brief Class to accumulate and hold information about a callee.
 struct CalleeInfo {
-  /// The static number of callsites calling corresponding function.
-  unsigned CallsiteCount;
-  /// The cumulative profile count of calls to corresponding function
-  /// (if using PGO, otherwise 0).
-  uint64_t ProfileCount;
-  CalleeInfo() : CallsiteCount(0), ProfileCount(0) {}
-  CalleeInfo(unsigned CallsiteCount, uint64_t ProfileCount)
-      : CallsiteCount(CallsiteCount), ProfileCount(ProfileCount) {}
-  CalleeInfo &operator+=(uint64_t RHSProfileCount) {
-    CallsiteCount++;
-    ProfileCount += RHSProfileCount;
-    return *this;
+  enum class HotnessType : uint8_t { Unknown = 0, Cold = 1, None = 2, Hot = 3 };
+  HotnessType Hotness = HotnessType::Unknown;
+
+  CalleeInfo() = default;
+  explicit CalleeInfo(HotnessType Hotness) : Hotness(Hotness) {}
+
+  void updateHotness(const HotnessType OtherHotness) {
+    Hotness = std::max(Hotness, OtherHotness);
   }
 };
 
-/// Struct to hold value either by GUID or Value*, depending on whether this
-/// is a combined or per-module index, respectively.
+class GlobalValueSummary;
+
+using GlobalValueSummaryList = std::vector<std::unique_ptr<GlobalValueSummary>>;
+
+struct GlobalValueSummaryInfo {
+  /// The GlobalValue corresponding to this summary. This is only used in
+  /// per-module summaries.
+  const GlobalValue *GV = nullptr;
+
+  /// List of global value summary structures for a particular value held
+  /// in the GlobalValueMap. Requires a vector in the case of multiple
+  /// COMDAT values of the same name.
+  GlobalValueSummaryList SummaryList;
+};
+
+/// Map from global value GUID to corresponding summary structures. Use a
+/// std::map rather than a DenseMap so that pointers to the map's value_type
+/// (which are used by ValueInfo) are not invalidated by insertion. Also it will
+/// likely incur less overhead, as the value type is not very small and the size
+/// of the map is unknown, resulting in inefficiencies due to repeated
+/// insertions and resizing.
+using GlobalValueSummaryMapTy =
+    std::map<GlobalValue::GUID, GlobalValueSummaryInfo>;
+
+/// Struct that holds a reference to a particular GUID in a global value
+/// summary.
 struct ValueInfo {
-  /// The value representation used in this instance.
-  enum ValueInfoKind {
-    VI_GUID,
-    VI_Value,
-  };
+  const GlobalValueSummaryMapTy::value_type *Ref = nullptr;
 
-  /// Union of the two possible value types.
-  union ValueUnion {
-    GlobalValue::GUID Id;
-    const Value *V;
-    ValueUnion(GlobalValue::GUID Id) : Id(Id) {}
-    ValueUnion(const Value *V) : V(V) {}
-  };
+  ValueInfo() = default;
+  ValueInfo(const GlobalValueSummaryMapTy::value_type *Ref) : Ref(Ref) {}
 
-  /// The value being represented.
-  ValueUnion TheValue;
-  /// The value representation.
-  ValueInfoKind Kind;
-  /// Constructor for a GUID value
-  ValueInfo(GlobalValue::GUID Id = 0) : TheValue(Id), Kind(VI_GUID) {}
-  /// Constructor for a Value* value
-  ValueInfo(const Value *V) : TheValue(V), Kind(VI_Value) {}
-  /// Accessor for GUID value
-  GlobalValue::GUID getGUID() const {
-    assert(Kind == VI_GUID && "Not a GUID type");
-    return TheValue.Id;
+  operator bool() const { return Ref; }
+
+  GlobalValue::GUID getGUID() const { return Ref->first; }
+  const GlobalValue *getValue() const { return Ref->second.GV; }
+
+  ArrayRef<std::unique_ptr<GlobalValueSummary>> getSummaryList() const {
+    return Ref->second.SummaryList;
   }
-  /// Accessor for Value* value
-  const Value *getValue() const {
-    assert(Kind == VI_Value && "Not a Value type");
-    return TheValue.V;
+};
+
+template <> struct DenseMapInfo<ValueInfo> {
+  static inline ValueInfo getEmptyKey() {
+    return ValueInfo((GlobalValueSummaryMapTy::value_type *)-1);
   }
+
+  static inline ValueInfo getTombstoneKey() {
+    return ValueInfo((GlobalValueSummaryMapTy::value_type *)-2);
+  }
+
+  static bool isEqual(ValueInfo L, ValueInfo R) { return L.Ref == R.Ref; }
+  static unsigned getHashValue(ValueInfo I) { return (uintptr_t)I.Ref; }
 };
 
 /// \brief Function and variable summary information to aid decisions and
@@ -87,9 +117,9 @@ struct ValueInfo {
 class GlobalValueSummary {
 public:
   /// \brief Sububclass discriminator (for dyn_cast<> et al.)
-  enum SummaryKind { AliasKind, FunctionKind, GlobalVarKind };
+  enum SummaryKind : unsigned { AliasKind, FunctionKind, GlobalVarKind };
 
-  /// Group flags (Linkage, hasSection, isOptSize, etc.) as a bitfield.
+  /// Group flags (Linkage, NotEligibleToImport, etc.) as a bitfield.
   struct GVFlags {
     /// \brief The linkage type of the associated global value.
     ///
@@ -100,24 +130,32 @@ public:
     /// types based on global summary-based analysis.
     unsigned Linkage : 4;
 
-    /// Indicate if the global value is located in a specific section.
-    unsigned HasSection : 1;
+    /// Indicate if the global value cannot be imported (e.g. it cannot
+    /// be renamed or references something that can't be renamed).
+    unsigned NotEligibleToImport : 1;
+
+    /// Indicate that the global value must be considered a live root for
+    /// index-based liveness analysis. Used for special LLVM values such as
+    /// llvm.global_ctors that the linker does not know about.
+    unsigned LiveRoot : 1;
 
     /// Convenience Constructors
-    explicit GVFlags(GlobalValue::LinkageTypes Linkage, bool HasSection)
-        : Linkage(Linkage), HasSection(HasSection) {}
-    GVFlags(const GlobalValue &GV)
-        : Linkage(GV.getLinkage()), HasSection(GV.hasSection()) {}
+    explicit GVFlags(GlobalValue::LinkageTypes Linkage,
+                     bool NotEligibleToImport, bool LiveRoot)
+        : Linkage(Linkage), NotEligibleToImport(NotEligibleToImport),
+          LiveRoot(LiveRoot) {}
   };
 
 private:
   /// Kind of summary for use in dyn_cast<> et al.
   SummaryKind Kind;
 
+  GVFlags Flags;
+
   /// This is the hash of the name of the symbol in the original file. It is
   /// identical to the GUID for global symbols, but differs for local since the
   /// GUID includes the module level id in the hash.
-  GlobalValue::GUID OriginalName;
+  GlobalValue::GUID OriginalName = 0;
 
   /// \brief Path of module IR containing value's definition, used to locate
   /// module during importing.
@@ -128,8 +166,6 @@ private:
   /// module path string table.
   StringRef ModulePath;
 
-  GVFlags Flags;
-
   /// List of values referenced by this global value's definition
   /// (either by the initializer of a global variable, or referenced
   /// from within a function). This does not include functions called, which
@@ -137,8 +173,8 @@ private:
   std::vector<ValueInfo> RefEdgeList;
 
 protected:
-  /// GlobalValueSummary constructor.
-  GlobalValueSummary(SummaryKind K, GVFlags Flags) : Kind(K), Flags(Flags) {}
+  GlobalValueSummary(SummaryKind K, GVFlags Flags, std::vector<ValueInfo> Refs)
+      : Kind(K), Flags(Flags), RefEdgeList(std::move(Refs)) {}
 
 public:
   virtual ~GlobalValueSummary() = default;
@@ -174,31 +210,22 @@ public:
     Flags.Linkage = Linkage;
   }
 
-  /// Return true if this summary is for a GlobalValue that needs promotion
-  /// to be referenced from another module.
-  bool needsRenaming() const { return GlobalValue::isLocalLinkage(linkage()); }
+  /// Return true if this global value can't be imported.
+  bool notEligibleToImport() const { return Flags.NotEligibleToImport; }
 
-  /// Return true if this global value is located in a specific section.
-  bool hasSection() const { return Flags.HasSection; }
+  /// Return true if this global value must be considered a root for live
+  /// value analysis on the index.
+  bool liveRoot() const { return Flags.LiveRoot; }
 
-  /// Record a reference from this global value to the global value identified
-  /// by \p RefGUID.
-  void addRefEdge(GlobalValue::GUID RefGUID) { RefEdgeList.push_back(RefGUID); }
+  /// Flag that this global value must be considered a root for live
+  /// value analysis on the index.
+  void setLiveRoot() { Flags.LiveRoot = true; }
 
-  /// Record a reference from this global value to the global value identified
-  /// by \p RefV.
-  void addRefEdge(const Value *RefV) { RefEdgeList.push_back(RefV); }
-
-  /// Record a reference from this global value to each global value identified
-  /// in \p RefEdges.
-  void addRefEdges(DenseSet<const Value *> &RefEdges) {
-    for (auto &RI : RefEdges)
-      addRefEdge(RI);
-  }
+  /// Flag that this global value cannot be imported.
+  void setNotEligibleToImport() { Flags.NotEligibleToImport = true; }
 
   /// Return the list of values referenced by this global value definition.
-  std::vector<ValueInfo> &refs() { return RefEdgeList; }
-  const std::vector<ValueInfo> &refs() const { return RefEdgeList; }
+  ArrayRef<ValueInfo> refs() const { return RefEdgeList; }
 };
 
 /// \brief Alias summary information.
@@ -206,8 +233,8 @@ class AliasSummary : public GlobalValueSummary {
   GlobalValueSummary *AliaseeSummary;
 
 public:
-  /// Summary constructors.
-  AliasSummary(GVFlags Flags) : GlobalValueSummary(AliasKind, Flags) {}
+  AliasSummary(GVFlags Flags, std::vector<ValueInfo> Refs)
+      : GlobalValueSummary(AliasKind, Flags, std::move(Refs)) {}
 
   /// Check if this is an alias summary.
   static bool classof(const GlobalValueSummary *GVS) {
@@ -217,12 +244,13 @@ public:
   void setAliasee(GlobalValueSummary *Aliasee) { AliaseeSummary = Aliasee; }
 
   const GlobalValueSummary &getAliasee() const {
-    return const_cast<AliasSummary *>(this)->getAliasee();
+    assert(AliaseeSummary && "Unexpected missing aliasee summary");
+    return *AliaseeSummary;
   }
 
   GlobalValueSummary &getAliasee() {
-    assert(AliaseeSummary && "Unexpected missing aliasee summary");
-    return *AliaseeSummary;
+    return const_cast<GlobalValueSummary &>(
+                         static_cast<const AliasSummary *>(this)->getAliasee());
   }
 };
 
@@ -231,7 +259,24 @@ public:
 class FunctionSummary : public GlobalValueSummary {
 public:
   /// <CalleeValueInfo, CalleeInfo> call edge pair.
-  typedef std::pair<ValueInfo, CalleeInfo> EdgeTy;
+  using EdgeTy = std::pair<ValueInfo, CalleeInfo>;
+
+  /// An "identifier" for a virtual function. This contains the type identifier
+  /// represented as a GUID and the offset from the address point to the virtual
+  /// function pointer, where "address point" is as defined in the Itanium ABI:
+  /// https://mentorembedded.github.io/cxx-abi/abi.html#vtable-general
+  struct VFuncId {
+    GlobalValue::GUID GUID;
+    uint64_t Offset;
+  };
+
+  /// A specification for a virtual function call with all constant integer
+  /// arguments. This is used to perform virtual constant propagation on the
+  /// summary.
+  struct ConstVCall {
+    VFuncId VFunc;
+    std::vector<uint64_t> Args;
+  };
 
 private:
   /// Number of instructions (ignoring debug instructions, e.g.) computed
@@ -241,10 +286,46 @@ private:
   /// List of <CalleeValueInfo, CalleeInfo> call edge pairs from this function.
   std::vector<EdgeTy> CallGraphEdgeList;
 
+  /// All type identifier related information. Because these fields are
+  /// relatively uncommon we only allocate space for them if necessary.
+  struct TypeIdInfo {
+    /// List of type identifiers used by this function in llvm.type.test
+    /// intrinsics other than by an llvm.assume intrinsic, represented as GUIDs.
+    std::vector<GlobalValue::GUID> TypeTests;
+
+    /// List of virtual calls made by this function using (respectively)
+    /// llvm.assume(llvm.type.test) or llvm.type.checked.load intrinsics that do
+    /// not have all constant integer arguments.
+    std::vector<VFuncId> TypeTestAssumeVCalls, TypeCheckedLoadVCalls;
+
+    /// List of virtual calls made by this function using (respectively)
+    /// llvm.assume(llvm.type.test) or llvm.type.checked.load intrinsics with
+    /// all constant integer arguments.
+    std::vector<ConstVCall> TypeTestAssumeConstVCalls,
+        TypeCheckedLoadConstVCalls;
+  };
+
+  std::unique_ptr<TypeIdInfo> TIdInfo;
+
 public:
-  /// Summary constructors.
-  FunctionSummary(GVFlags Flags, unsigned NumInsts)
-      : GlobalValueSummary(FunctionKind, Flags), InstCount(NumInsts) {}
+  FunctionSummary(GVFlags Flags, unsigned NumInsts, std::vector<ValueInfo> Refs,
+                  std::vector<EdgeTy> CGEdges,
+                  std::vector<GlobalValue::GUID> TypeTests,
+                  std::vector<VFuncId> TypeTestAssumeVCalls,
+                  std::vector<VFuncId> TypeCheckedLoadVCalls,
+                  std::vector<ConstVCall> TypeTestAssumeConstVCalls,
+                  std::vector<ConstVCall> TypeCheckedLoadConstVCalls)
+      : GlobalValueSummary(FunctionKind, Flags, std::move(Refs)),
+        InstCount(NumInsts), CallGraphEdgeList(std::move(CGEdges)) {
+    if (!TypeTests.empty() || !TypeTestAssumeVCalls.empty() ||
+        !TypeCheckedLoadVCalls.empty() || !TypeTestAssumeConstVCalls.empty() ||
+        !TypeCheckedLoadConstVCalls.empty())
+      TIdInfo = llvm::make_unique<TypeIdInfo>(TypeIdInfo{
+          std::move(TypeTests), std::move(TypeTestAssumeVCalls),
+          std::move(TypeCheckedLoadVCalls),
+          std::move(TypeTestAssumeConstVCalls),
+          std::move(TypeCheckedLoadConstVCalls)});
+  }
 
   /// Check if this is a function summary.
   static bool classof(const GlobalValueSummary *GVS) {
@@ -254,30 +335,94 @@ public:
   /// Get the instruction count recorded for this function.
   unsigned instCount() const { return InstCount; }
 
-  /// Record a call graph edge from this function to the function identified
-  /// by \p CalleeGUID, with \p CalleeInfo including the cumulative profile
-  /// count (across all calls from this function) or 0 if no PGO.
-  void addCallGraphEdge(GlobalValue::GUID CalleeGUID, CalleeInfo Info) {
-    CallGraphEdgeList.push_back(std::make_pair(CalleeGUID, Info));
-  }
-
-  /// Record a call graph edge from this function to the function identified
-  /// by \p CalleeV, with \p CalleeInfo including the cumulative profile
-  /// count (across all calls from this function) or 0 if no PGO.
-  void addCallGraphEdge(const Value *CalleeV, CalleeInfo Info) {
-    CallGraphEdgeList.push_back(std::make_pair(CalleeV, Info));
-  }
-
-  /// Record a call graph edge from this function to each function recorded
-  /// in \p CallGraphEdges.
-  void addCallGraphEdges(DenseMap<const Value *, CalleeInfo> &CallGraphEdges) {
-    for (auto &EI : CallGraphEdges)
-      addCallGraphEdge(EI.first, EI.second);
-  }
-
   /// Return the list of <CalleeValueInfo, CalleeInfo> pairs.
-  std::vector<EdgeTy> &calls() { return CallGraphEdgeList; }
-  const std::vector<EdgeTy> &calls() const { return CallGraphEdgeList; }
+  ArrayRef<EdgeTy> calls() const { return CallGraphEdgeList; }
+
+  /// Returns the list of type identifiers used by this function in
+  /// llvm.type.test intrinsics other than by an llvm.assume intrinsic,
+  /// represented as GUIDs.
+  ArrayRef<GlobalValue::GUID> type_tests() const {
+    if (TIdInfo)
+      return TIdInfo->TypeTests;
+    return {};
+  }
+
+  /// Returns the list of virtual calls made by this function using
+  /// llvm.assume(llvm.type.test) intrinsics that do not have all constant
+  /// integer arguments.
+  ArrayRef<VFuncId> type_test_assume_vcalls() const {
+    if (TIdInfo)
+      return TIdInfo->TypeTestAssumeVCalls;
+    return {};
+  }
+
+  /// Returns the list of virtual calls made by this function using
+  /// llvm.type.checked.load intrinsics that do not have all constant integer
+  /// arguments.
+  ArrayRef<VFuncId> type_checked_load_vcalls() const {
+    if (TIdInfo)
+      return TIdInfo->TypeCheckedLoadVCalls;
+    return {};
+  }
+
+  /// Returns the list of virtual calls made by this function using
+  /// llvm.assume(llvm.type.test) intrinsics with all constant integer
+  /// arguments.
+  ArrayRef<ConstVCall> type_test_assume_const_vcalls() const {
+    if (TIdInfo)
+      return TIdInfo->TypeTestAssumeConstVCalls;
+    return {};
+  }
+
+  /// Returns the list of virtual calls made by this function using
+  /// llvm.type.checked.load intrinsics with all constant integer arguments.
+  ArrayRef<ConstVCall> type_checked_load_const_vcalls() const {
+    if (TIdInfo)
+      return TIdInfo->TypeCheckedLoadConstVCalls;
+    return {};
+  }
+
+  /// Add a type test to the summary. This is used by WholeProgramDevirt if we
+  /// were unable to devirtualize a checked call.
+  void addTypeTest(GlobalValue::GUID Guid) {
+    if (!TIdInfo)
+      TIdInfo = llvm::make_unique<TypeIdInfo>();
+    TIdInfo->TypeTests.push_back(Guid);
+  }
+};
+
+template <> struct DenseMapInfo<FunctionSummary::VFuncId> {
+  static FunctionSummary::VFuncId getEmptyKey() { return {0, uint64_t(-1)}; }
+
+  static FunctionSummary::VFuncId getTombstoneKey() {
+    return {0, uint64_t(-2)};
+  }
+
+  static bool isEqual(FunctionSummary::VFuncId L, FunctionSummary::VFuncId R) {
+    return L.GUID == R.GUID && L.Offset == R.Offset;
+  }
+
+  static unsigned getHashValue(FunctionSummary::VFuncId I) { return I.GUID; }
+};
+
+template <> struct DenseMapInfo<FunctionSummary::ConstVCall> {
+  static FunctionSummary::ConstVCall getEmptyKey() {
+    return {{0, uint64_t(-1)}, {}};
+  }
+
+  static FunctionSummary::ConstVCall getTombstoneKey() {
+    return {{0, uint64_t(-2)}, {}};
+  }
+
+  static bool isEqual(FunctionSummary::ConstVCall L,
+                      FunctionSummary::ConstVCall R) {
+    return DenseMapInfo<FunctionSummary::VFuncId>::isEqual(L.VFunc, R.VFunc) &&
+           L.Args == R.Args;
+  }
+
+  static unsigned getHashValue(FunctionSummary::ConstVCall I) {
+    return I.VFunc.GUID;
+  }
 };
 
 /// \brief Global variable summary information to aid decisions and
@@ -289,8 +434,8 @@ public:
 class GlobalVarSummary : public GlobalValueSummary {
 
 public:
-  /// Summary constructors.
-  GlobalVarSummary(GVFlags Flags) : GlobalValueSummary(GlobalVarKind, Flags) {}
+  GlobalVarSummary(GVFlags Flags, std::vector<ValueInfo> Refs)
+      : GlobalValueSummary(GlobalVarKind, Flags, std::move(Refs)) {}
 
   /// Check if this is a global variable summary.
   static bool classof(const GlobalValueSummary *GVS) {
@@ -298,34 +443,77 @@ public:
   }
 };
 
+struct TypeTestResolution {
+  /// Specifies which kind of type check we should emit for this byte array.
+  /// See http://clang.llvm.org/docs/ControlFlowIntegrityDesign.html for full
+  /// details on each kind of check; the enumerators are described with
+  /// reference to that document.
+  enum Kind {
+    Unsat,     ///< Unsatisfiable type (i.e. no global has this type metadata)
+    ByteArray, ///< Test a byte array (first example)
+    Inline,    ///< Inlined bit vector ("Short Inline Bit Vectors")
+    Single,    ///< Single element (last example in "Short Inline Bit Vectors")
+    AllOnes,   ///< All-ones bit vector ("Eliminating Bit Vector Checks for
+               ///  All-Ones Bit Vectors")
+  } TheKind = Unsat;
+
+  /// Range of size-1 expressed as a bit width. For example, if the size is in
+  /// range [1,256], this number will be 8. This helps generate the most compact
+  /// instruction sequences.
+  unsigned SizeM1BitWidth = 0;
+};
+
+struct WholeProgramDevirtResolution {
+  enum Kind {
+    Indir,      ///< Just do a regular virtual call
+    SingleImpl, ///< Single implementation devirtualization
+  } TheKind = Indir;
+
+  std::string SingleImplName;
+
+  struct ByArg {
+    enum Kind {
+      Indir,            ///< Just do a regular virtual call
+      UniformRetVal,    ///< Uniform return value optimization
+      UniqueRetVal,     ///< Unique return value optimization
+      VirtualConstProp, ///< Virtual constant propagation
+    } TheKind = Indir;
+
+    /// Additional information for the resolution:
+    /// - UniformRetVal: the uniform return value.
+    /// - UniqueRetVal: the return value associated with the unique vtable (0 or
+    ///   1).
+    uint64_t Info = 0;
+  };
+
+  /// Resolutions for calls with all constant integer arguments (excluding the
+  /// first argument, "this"), where the key is the argument vector.
+  std::map<std::vector<uint64_t>, ByArg> ResByArg;
+};
+
+struct TypeIdSummary {
+  TypeTestResolution TTRes;
+
+  /// Mapping from byte offset to whole-program devirt resolution for that
+  /// (typeid, byte offset) pair.
+  std::map<uint64_t, WholeProgramDevirtResolution> WPDRes;
+};
+
 /// 160 bits SHA1
-typedef std::array<uint32_t, 5> ModuleHash;
-
-/// List of global value summary structures for a particular value held
-/// in the GlobalValueMap. Requires a vector in the case of multiple
-/// COMDAT values of the same name.
-typedef std::vector<std::unique_ptr<GlobalValueSummary>> GlobalValueSummaryList;
-
-/// Map from global value GUID to corresponding summary structures.
-/// Use a std::map rather than a DenseMap since it will likely incur
-/// less overhead, as the value type is not very small and the size
-/// of the map is unknown, resulting in inefficiencies due to repeated
-/// insertions and resizing.
-typedef std::map<GlobalValue::GUID, GlobalValueSummaryList>
-    GlobalValueSummaryMapTy;
+using ModuleHash = std::array<uint32_t, 5>;
 
 /// Type used for iterating through the global value summary map.
-typedef GlobalValueSummaryMapTy::const_iterator const_gvsummary_iterator;
-typedef GlobalValueSummaryMapTy::iterator gvsummary_iterator;
+using const_gvsummary_iterator = GlobalValueSummaryMapTy::const_iterator;
+using gvsummary_iterator = GlobalValueSummaryMapTy::iterator;
 
 /// String table to hold/own module path strings, which additionally holds the
 /// module ID assigned to each module during the plugin step, as well as a hash
 /// of the module. The StringMap makes a copy of and owns inserted strings.
-typedef StringMap<std::pair<uint64_t, ModuleHash>> ModulePathStringTableTy;
+using ModulePathStringTableTy = StringMap<std::pair<uint64_t, ModuleHash>>;
 
 /// Map of global value GUID to its summary, used to identify values defined in
 /// a particular module, and provide efficient access to their summary.
-typedef std::map<GlobalValue::GUID, GlobalValueSummary *> GVSummaryMapTy;
+using GVSummaryMapTy = std::map<GlobalValue::GUID, GlobalValueSummary *>;
 
 /// Class to hold module path string table and global value map,
 /// and encapsulate methods for operating on them.
@@ -338,63 +526,96 @@ private:
   /// Holds strings for combined index, mapping to the corresponding module ID.
   ModulePathStringTableTy ModulePathStringTable;
 
+  /// Mapping from type identifiers to summary information for that type
+  /// identifier.
+  // FIXME: Add bitcode read/write support for this field.
+  std::map<std::string, TypeIdSummary> TypeIdMap;
+
+  /// Mapping from original ID to GUID. If original ID can map to multiple
+  /// GUIDs, it will be mapped to 0.
+  std::map<GlobalValue::GUID, GlobalValue::GUID> OidGuidMap;
+
+  // YAML I/O support.
+  friend yaml::MappingTraits<ModuleSummaryIndex>;
+
+  GlobalValueSummaryMapTy::value_type *
+  getOrInsertValuePtr(GlobalValue::GUID GUID) {
+    return &*GlobalValueMap.emplace(GUID, GlobalValueSummaryInfo{}).first;
+  }
+
 public:
-  ModuleSummaryIndex() = default;
-
-  // Disable the copy constructor and assignment operators, so
-  // no unexpected copying/moving occurs.
-  ModuleSummaryIndex(const ModuleSummaryIndex &) = delete;
-  void operator=(const ModuleSummaryIndex &) = delete;
-
   gvsummary_iterator begin() { return GlobalValueMap.begin(); }
   const_gvsummary_iterator begin() const { return GlobalValueMap.begin(); }
   gvsummary_iterator end() { return GlobalValueMap.end(); }
   const_gvsummary_iterator end() const { return GlobalValueMap.end(); }
+  size_t size() const { return GlobalValueMap.size(); }
 
-  /// Get the list of global value summary objects for a given value name.
-  const GlobalValueSummaryList &getGlobalValueSummaryList(StringRef ValueName) {
-    return GlobalValueMap[GlobalValue::getGUID(ValueName)];
+  /// Return a ValueInfo for GUID if it exists, otherwise return ValueInfo().
+  ValueInfo getValueInfo(GlobalValue::GUID GUID) const {
+    auto I = GlobalValueMap.find(GUID);
+    return ValueInfo(I == GlobalValueMap.end() ? nullptr : &*I);
   }
 
-  /// Get the list of global value summary objects for a given value name.
-  const const_gvsummary_iterator
-  findGlobalValueSummaryList(StringRef ValueName) const {
-    return GlobalValueMap.find(GlobalValue::getGUID(ValueName));
+  /// Return a ValueInfo for \p GUID.
+  ValueInfo getOrInsertValueInfo(GlobalValue::GUID GUID) {
+    return ValueInfo(getOrInsertValuePtr(GUID));
   }
 
-  /// Get the list of global value summary objects for a given value GUID.
-  const const_gvsummary_iterator
-  findGlobalValueSummaryList(GlobalValue::GUID ValueGUID) const {
-    return GlobalValueMap.find(ValueGUID);
+  /// Return a ValueInfo for \p GV and mark it as belonging to GV.
+  ValueInfo getOrInsertValueInfo(const GlobalValue *GV) {
+    auto VP = getOrInsertValuePtr(GV->getGUID());
+    VP->second.GV = GV;
+    return ValueInfo(VP);
+  }
+
+  /// Return the GUID for \p OriginalId in the OidGuidMap.
+  GlobalValue::GUID getGUIDFromOriginalID(GlobalValue::GUID OriginalID) const {
+    const auto I = OidGuidMap.find(OriginalID);
+    return I == OidGuidMap.end() ? 0 : I->second;
   }
 
   /// Add a global value summary for a value of the given name.
   void addGlobalValueSummary(StringRef ValueName,
                              std::unique_ptr<GlobalValueSummary> Summary) {
-    GlobalValueMap[GlobalValue::getGUID(ValueName)].push_back(
-        std::move(Summary));
+    addGlobalValueSummary(getOrInsertValueInfo(GlobalValue::getGUID(ValueName)),
+                          std::move(Summary));
   }
 
-  /// Add a global value summary for a value of the given GUID.
-  void addGlobalValueSummary(GlobalValue::GUID ValueGUID,
+  /// Add a global value summary for the given ValueInfo.
+  void addGlobalValueSummary(ValueInfo VI,
                              std::unique_ptr<GlobalValueSummary> Summary) {
-    GlobalValueMap[ValueGUID].push_back(std::move(Summary));
+    addOriginalName(VI.getGUID(), Summary->getOriginalName());
+    // Here we have a notionally const VI, but the value it points to is owned
+    // by the non-const *this.
+    const_cast<GlobalValueSummaryMapTy::value_type *>(VI.Ref)
+        ->second.SummaryList.push_back(std::move(Summary));
+  }
+
+  /// Add an original name for the value of the given GUID.
+  void addOriginalName(GlobalValue::GUID ValueGUID,
+                       GlobalValue::GUID OrigGUID) {
+    if (OrigGUID == 0 || ValueGUID == OrigGUID)
+      return;
+    if (OidGuidMap.count(OrigGUID) && OidGuidMap[OrigGUID] != ValueGUID)
+      OidGuidMap[OrigGUID] = 0;
+    else
+      OidGuidMap[OrigGUID] = ValueGUID;
   }
 
   /// Find the summary for global \p GUID in module \p ModuleId, or nullptr if
   /// not found.
   GlobalValueSummary *findSummaryInModule(GlobalValue::GUID ValueGUID,
                                           StringRef ModuleId) const {
-    auto CalleeInfoList = findGlobalValueSummaryList(ValueGUID);
-    if (CalleeInfoList == end()) {
+    auto CalleeInfo = getValueInfo(ValueGUID);
+    if (!CalleeInfo) {
       return nullptr; // This function does not have a summary
     }
     auto Summary =
-        llvm::find_if(CalleeInfoList->second,
+        llvm::find_if(CalleeInfo.getSummaryList(),
                       [&](const std::unique_ptr<GlobalValueSummary> &Summary) {
                         return Summary->modulePath() == ModuleId;
                       });
-    if (Summary == CalleeInfoList->second.end())
+    if (Summary == CalleeInfo.getSummaryList().end())
       return nullptr;
     return Summary->get();
   }
@@ -436,13 +657,6 @@ public:
     return It->second.second;
   }
 
-  /// Add the given per-module index into this module index/summary,
-  /// assigning it the given module ID. Each module merged in should have
-  /// a unique ID, necessary for consistent renaming of promoted
-  /// static (local) variables.
-  void mergeFrom(std::unique_ptr<ModuleSummaryIndex> Other,
-                 uint64_t NextModuleId);
-
   /// Convenience method for creating a promoted global name
   /// for the given value name of a local, and its original module's ID.
   static std::string getGlobalNameForLocal(StringRef Name, ModuleHash ModHash) {
@@ -476,12 +690,24 @@ public:
     return ModulePathStringTable.count(M.getModuleIdentifier());
   }
 
-  /// Remove entries in the GlobalValueMap that have empty summaries due to the
-  /// eager nature of map entry creation during VST parsing. These would
-  /// also be suppressed during combined index generation in mergeFrom(),
-  /// but if there was only one module or this was the first module we might
-  /// not invoke mergeFrom.
-  void removeEmptySummaryEntries();
+  const std::map<std::string, TypeIdSummary> &typeIds() const {
+    return TypeIdMap;
+  }
+
+  /// This accessor should only be used when exporting because it can mutate the
+  /// map.
+  TypeIdSummary &getOrInsertTypeIdSummary(StringRef TypeId) {
+    return TypeIdMap[TypeId];
+  }
+
+  /// This returns either a pointer to the type id summary (if present in the
+  /// summary map) or null (if not present). This may be used when importing.
+  const TypeIdSummary *getTypeIdSummary(StringRef TypeId) const {
+    auto I = TypeIdMap.find(TypeId);
+    if (I == TypeIdMap.end())
+      return nullptr;
+    return &I->second;
+  }
 
   /// Collect for the given module the list of function it defines
   /// (GUID -> Summary).
@@ -494,6 +720,6 @@ public:
       StringMap<GVSummaryMapTy> &ModuleToDefinedGVSummaries) const;
 };
 
-} // End llvm namespace
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_MODULESUMMARYINDEX_H

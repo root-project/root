@@ -72,7 +72,7 @@ namespace {
     Stmt *CurrentBody;
     ParentMap *PropParentMap; // created lazily.
     std::string InFileName;
-    raw_ostream* OutFile;
+    std::unique_ptr<raw_ostream> OutFile;
     std::string Preamble;
     
     TypeDecl *ProtocolTypeDecl;
@@ -239,9 +239,9 @@ namespace {
     
     void HandleTopLevelSingleDecl(Decl *D);
     void HandleDeclInMainFile(Decl *D);
-    RewriteModernObjC(std::string inFile, raw_ostream *OS,
-                DiagnosticsEngine &D, const LangOptions &LOpts,
-                bool silenceMacroWarn, bool LineInfo);
+    RewriteModernObjC(std::string inFile, std::unique_ptr<raw_ostream> OS,
+                      DiagnosticsEngine &D, const LangOptions &LOpts,
+                      bool silenceMacroWarn, bool LineInfo);
 
     ~RewriteModernObjC() override {}
 
@@ -638,12 +638,13 @@ static bool IsHeaderFile(const std::string &Filename) {
   return Ext == "h" || Ext == "hh" || Ext == "H";
 }
 
-RewriteModernObjC::RewriteModernObjC(std::string inFile, raw_ostream* OS,
-                         DiagnosticsEngine &D, const LangOptions &LOpts,
-                         bool silenceMacroWarn,
-                         bool LineInfo)
-      : Diags(D), LangOpts(LOpts), InFileName(inFile), OutFile(OS),
-        SilenceRewriteMacroWarning(silenceMacroWarn), GenerateLineInfo(LineInfo) {
+RewriteModernObjC::RewriteModernObjC(std::string inFile,
+                                     std::unique_ptr<raw_ostream> OS,
+                                     DiagnosticsEngine &D,
+                                     const LangOptions &LOpts,
+                                     bool silenceMacroWarn, bool LineInfo)
+    : Diags(D), LangOpts(LOpts), InFileName(inFile), OutFile(std::move(OS)),
+      SilenceRewriteMacroWarning(silenceMacroWarn), GenerateLineInfo(LineInfo) {
   IsHeader = IsHeaderFile(inFile);
   RewriteFailedDiag = Diags.getCustomDiagID(DiagnosticsEngine::Warning,
                "rewriting sub-expression within a macro (may not be correct)");
@@ -659,10 +660,12 @@ RewriteModernObjC::RewriteModernObjC(std::string inFile, raw_ostream* OS,
 }
 
 std::unique_ptr<ASTConsumer> clang::CreateModernObjCRewriter(
-    const std::string &InFile, raw_ostream *OS, DiagnosticsEngine &Diags,
-    const LangOptions &LOpts, bool SilenceRewriteMacroWarning, bool LineInfo) {
-  return llvm::make_unique<RewriteModernObjC>(
-      InFile, OS, Diags, LOpts, SilenceRewriteMacroWarning, LineInfo);
+    const std::string &InFile, std::unique_ptr<raw_ostream> OS,
+    DiagnosticsEngine &Diags, const LangOptions &LOpts,
+    bool SilenceRewriteMacroWarning, bool LineInfo) {
+  return llvm::make_unique<RewriteModernObjC>(InFile, std::move(OS), Diags,
+                                              LOpts, SilenceRewriteMacroWarning,
+                                              LineInfo);
 }
 
 void RewriteModernObjC::InitializeCommon(ASTContext &context) {
@@ -860,9 +863,9 @@ RewriteModernObjC::getIvarAccessString(ObjCIvarDecl *D) {
         CDecl = CatDecl->getClassInterface();
       std::string RecName = CDecl->getName();
       RecName += "_IMPL";
-      RecordDecl *RD = RecordDecl::Create(*Context, TTK_Struct, TUDecl,
-                                          SourceLocation(), SourceLocation(),
-                                          &Context->Idents.get(RecName.c_str()));
+      RecordDecl *RD =
+          RecordDecl::Create(*Context, TTK_Struct, TUDecl, SourceLocation(),
+                             SourceLocation(), &Context->Idents.get(RecName));
       QualType PtrStructIMPL = Context->getPointerType(Context->getTagDeclType(RD));
       unsigned UnsignedIntSize = 
       static_cast<unsigned>(Context->getTypeSize(Context->UnsignedIntTy));
@@ -4451,7 +4454,7 @@ static void BuildUniqueMethodName(std::string &Name,
   Name += "__" + MD->getSelector().getAsString();
   // Convert colons to underscores.
   std::string::size_type loc = 0;
-  while ((loc = Name.find(":", loc)) != std::string::npos)
+  while ((loc = Name.find(':', loc)) != std::string::npos)
     Name.replace(loc, 1, "_");
 }
 
@@ -5138,7 +5141,7 @@ void RewriteModernObjC::RewriteByRefVar(VarDecl *ND, bool firstDecl,
   if (!hasInit) {
     ByrefType += "};\n";
     unsigned nameSize = Name.size();
-    // for block or function pointer declaration. Name is aleady
+    // for block or function pointer declaration. Name is already
     // part of the declaration.
     if (Ty->isBlockPointerType() || Ty->isFunctionPointerType())
       nameSize = 1;
@@ -5298,11 +5301,9 @@ Stmt *RewriteModernObjC::SynthBlockInitExpr(BlockExpr *Exp,
   // Initialize the block descriptor.
   std::string DescData = "__" + FuncName + "_block_desc_" + BlockNumber + "_DATA";
 
-  VarDecl *NewVD = VarDecl::Create(*Context, TUDecl,
-                                   SourceLocation(), SourceLocation(),
-                                   &Context->Idents.get(DescData.c_str()),
-                                   Context->VoidPtrTy, nullptr,
-                                   SC_Static);
+  VarDecl *NewVD = VarDecl::Create(
+      *Context, TUDecl, SourceLocation(), SourceLocation(),
+      &Context->Idents.get(DescData), Context->VoidPtrTy, nullptr, SC_Static);
   UnaryOperator *DescRefExpr =
     new (Context) UnaryOperator(new (Context) DeclRefExpr(NewVD, false,
                                                           Context->VoidPtrTy,
@@ -6347,8 +6348,7 @@ static void Write_method_list_t_initializer(RewriteModernObjC &RewriteObj,
         Result += "\t{(struct objc_selector *)\"";
       Result += (MD)->getSelector().getAsString(); Result += "\"";
       Result += ", ";
-      std::string MethodTypeString;
-      Context->getObjCEncodingForMethodDecl(MD, MethodTypeString);
+      std::string MethodTypeString = Context->getObjCEncodingForMethodDecl(MD);
       Result += "\""; Result += MethodTypeString; Result += "\"";
       Result += ", ";
       if (!MethodImpl)
@@ -6387,8 +6387,9 @@ static void Write_prop_list_t_initializer(RewriteModernObjC &RewriteObj,
       else
         Result += "\t{\"";
       Result += PropDecl->getName(); Result += "\",";
-      std::string PropertyTypeString, QuotePropertyTypeString;
-      Context->getObjCEncodingForPropertyDecl(PropDecl, Container, PropertyTypeString);
+      std::string PropertyTypeString =
+        Context->getObjCEncodingForPropertyDecl(PropDecl, Container);
+      std::string QuotePropertyTypeString;
       RewriteObj.QuoteDoublequotes(PropertyTypeString, QuotePropertyTypeString);
       Result += "\""; Result += QuotePropertyTypeString; Result += "\"";
       if (i  == e-1)
@@ -6717,8 +6718,9 @@ static void Write__extendedMethodTypes_initializer(RewriteModernObjC &RewriteObj
   Result += "{\n";
   for (unsigned i = 0, e = Methods.size(); i < e; i++) {
     ObjCMethodDecl *MD = Methods[i];
-    std::string MethodTypeString, QuoteMethodTypeString;
-    Context->getObjCEncodingForMethodDecl(MD, MethodTypeString, true);
+    std::string MethodTypeString =
+      Context->getObjCEncodingForMethodDecl(MD, true);
+    std::string QuoteMethodTypeString;
     RewriteObj.QuoteDoublequotes(MethodTypeString, QuoteMethodTypeString);
     Result += "\t\""; Result += QuoteMethodTypeString; Result += "\"";
     if (i == e-1)
@@ -7498,7 +7500,7 @@ Stmt *RewriteModernObjC::RewriteObjCIvarRefExpr(ObjCIvarRefExpr *IV) {
       BinaryOperator *addExpr = 
         new (Context) BinaryOperator(castExpr, DRE, BO_Add, 
                                      Context->getPointerType(Context->CharTy),
-                                     VK_RValue, OK_Ordinary, SourceLocation(), false);
+                                     VK_RValue, OK_Ordinary, SourceLocation(), FPOptions());
       // Don't forget the parens to enforce the proper binding.
       ParenExpr *PE = new (Context) ParenExpr(SourceLocation(),
                                               SourceLocation(),
@@ -7519,9 +7521,9 @@ Stmt *RewriteModernObjC::RewriteObjCIvarRefExpr(ObjCIvarRefExpr *IV) {
             CDecl = CatDecl->getClassInterface();
           std::string RecName = CDecl->getName();
           RecName += "_IMPL";
-          RecordDecl *RD = RecordDecl::Create(*Context, TTK_Struct, TUDecl,
-                                              SourceLocation(), SourceLocation(),
-                                              &Context->Idents.get(RecName.c_str()));
+          RecordDecl *RD = RecordDecl::Create(
+              *Context, TTK_Struct, TUDecl, SourceLocation(), SourceLocation(),
+              &Context->Idents.get(RecName));
           QualType PtrStructIMPL = Context->getPointerType(Context->getTagDeclType(RD));
           unsigned UnsignedIntSize = 
             static_cast<unsigned>(Context->getTypeSize(Context->UnsignedIntTy));

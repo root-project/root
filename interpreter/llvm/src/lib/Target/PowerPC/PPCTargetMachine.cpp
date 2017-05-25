@@ -11,21 +11,33 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "PPCTargetMachine.h"
+#include "MCTargetDesc/PPCMCTargetDesc.h"
 #include "PPC.h"
+#include "PPCSubtarget.h"
 #include "PPCTargetObjectFile.h"
+#include "PPCTargetMachine.h"
 #include "PPCTargetTransformInfo.h"
-#include "llvm/CodeGen/LiveVariables.h"
+#include "llvm/ADT/Optional.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Triple.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
+#include "llvm/IR/Attributes.h"
+#include "llvm/IR/DataLayout.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/LegacyPassManager.h"
-#include "llvm/MC/MCStreamer.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/CodeGen.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
+#include "llvm/Target/TargetLoweringObjectFile.h"
 #include "llvm/Target/TargetOptions.h"
 #include "llvm/Transforms/Scalar.h"
+#include <cassert>
+#include <memory>
+#include <string>
+
 using namespace llvm;
 
 static cl::
@@ -74,12 +86,13 @@ EnableMachineCombinerPass("ppc-machine-combiner",
 
 extern "C" void LLVMInitializePowerPCTarget() {
   // Register the targets
-  RegisterTargetMachine<PPC32TargetMachine> A(ThePPC32Target);
-  RegisterTargetMachine<PPC64TargetMachine> B(ThePPC64Target);
-  RegisterTargetMachine<PPC64TargetMachine> C(ThePPC64LETarget);
+  RegisterTargetMachine<PPC32TargetMachine> A(getThePPC32Target());
+  RegisterTargetMachine<PPC64TargetMachine> B(getThePPC64Target());
+  RegisterTargetMachine<PPC64TargetMachine> C(getThePPC64LETarget());
 
   PassRegistry &PR = *PassRegistry::getPassRegistry();
   initializePPCBoolRetToIntPass(PR);
+  initializePPCExpandISELPass(PR);
 }
 
 /// Return the datalayout string of a subtarget.
@@ -149,9 +162,9 @@ static std::unique_ptr<TargetLoweringObjectFile> createTLOF(const Triple &TT) {
   // If it isn't a Mach-O file then it's going to be a linux ELF
   // object file.
   if (TT.isOSDarwin())
-    return make_unique<TargetLoweringObjectFileMachO>();
+    return llvm::make_unique<TargetLoweringObjectFileMachO>();
 
-  return make_unique<PPC64LinuxTargetObjectFile>();
+  return llvm::make_unique<PPC64LinuxTargetObjectFile>();
 }
 
 static PPCTargetMachine::PPCABI computeTargetABI(const Triple &TT,
@@ -181,6 +194,10 @@ static PPCTargetMachine::PPCABI computeTargetABI(const Triple &TT,
 static Reloc::Model getEffectiveRelocModel(const Triple &TT,
                                            Optional<Reloc::Model> RM) {
   if (!RM.hasValue()) {
+    if (TT.getArch() == Triple::ppc64 || TT.getArch() == Triple::ppc64le) {
+      if (!TT.isOSBinFormatMachO() && !TT.isMacOSX())
+        return Reloc::PIC_;
+    }
     if (TT.isOSDarwin())
       return Reloc::DynamicNoPIC;
     return Reloc::Static;
@@ -201,32 +218,13 @@ PPCTargetMachine::PPCTargetMachine(const Target &T, const Triple &TT,
                         computeFSAdditions(FS, OL, TT), Options,
                         getEffectiveRelocModel(TT, RM), CM, OL),
       TLOF(createTLOF(getTargetTriple())),
-      TargetABI(computeTargetABI(TT, Options)),
-      Subtarget(TargetTriple, CPU, computeFSAdditions(FS, OL, TT), *this) {
-
-  // For the estimates, convergence is quadratic, so we essentially double the
-  // number of digits correct after every iteration. For both FRE and FRSQRTE,
-  // the minimum architected relative accuracy is 2^-5. When hasRecipPrec(),
-  // this is 2^-14. IEEE float has 23 digits and double has 52 digits.
-  unsigned RefinementSteps = Subtarget.hasRecipPrec() ? 1 : 3,
-           RefinementSteps64 = RefinementSteps + 1;
-
-  this->Options.Reciprocals.setDefaults("sqrtf", true, RefinementSteps);
-  this->Options.Reciprocals.setDefaults("vec-sqrtf", true, RefinementSteps);
-  this->Options.Reciprocals.setDefaults("divf", true, RefinementSteps);
-  this->Options.Reciprocals.setDefaults("vec-divf", true, RefinementSteps);
-
-  this->Options.Reciprocals.setDefaults("sqrtd", true, RefinementSteps64);
-  this->Options.Reciprocals.setDefaults("vec-sqrtd", true, RefinementSteps64);
-  this->Options.Reciprocals.setDefaults("divd", true, RefinementSteps64);
-  this->Options.Reciprocals.setDefaults("vec-divd", true, RefinementSteps64);
-
+      TargetABI(computeTargetABI(TT, Options)) {
   initAsmInfo();
 }
 
-PPCTargetMachine::~PPCTargetMachine() {}
+PPCTargetMachine::~PPCTargetMachine() = default;
 
-void PPC32TargetMachine::anchor() { }
+void PPC32TargetMachine::anchor() {}
 
 PPC32TargetMachine::PPC32TargetMachine(const Target &T, const Triple &TT,
                                        StringRef CPU, StringRef FS,
@@ -236,7 +234,7 @@ PPC32TargetMachine::PPC32TargetMachine(const Target &T, const Triple &TT,
                                        CodeGenOpt::Level OL)
     : PPCTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL) {}
 
-void PPC64TargetMachine::anchor() { }
+void PPC64TargetMachine::anchor() {}
 
 PPC64TargetMachine::PPC64TargetMachine(const Target &T, const Triple &TT,
                                        StringRef CPU, StringRef FS,
@@ -268,7 +266,7 @@ PPCTargetMachine::getSubtargetImpl(const Function &F) const {
   // If the soft float attribute is set on the function turn on the soft float
   // subtarget feature.
   if (SoftFloat)
-    FS += FS.empty() ? "+soft-float" : ",+soft-float";
+    FS += FS.empty() ? "-hard-float" : ",-hard-float";
 
   auto &I = SubtargetMap[CPU + FS];
   if (!I) {
@@ -294,6 +292,7 @@ PPCTargetMachine::getSubtargetImpl(const Function &F) const {
 //===----------------------------------------------------------------------===//
 
 namespace {
+
 /// PPC Code Generator Pass Configuration Options.
 class PPCPassConfig : public TargetPassConfig {
 public:
@@ -313,7 +312,8 @@ public:
   void addPreSched2() override;
   void addPreEmitPass() override;
 };
-} // namespace
+
+} // end anonymous namespace
 
 TargetPassConfig *PPCTargetMachine::createPassConfig(PassManagerBase &PM) {
   return new PPCPassConfig(this, PM);
@@ -429,6 +429,8 @@ void PPCPassConfig::addPreSched2() {
 }
 
 void PPCPassConfig::addPreEmitPass() {
+  addPass(createPPCExpandISELPass());
+
   if (getOptLevel() != CodeGenOpt::None)
     addPass(createPPCEarlyReturnPass(), false);
   // Must run branch selection immediately preceding the asm printer.

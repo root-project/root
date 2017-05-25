@@ -29,11 +29,19 @@
 #ifndef LLVM_IR_PATTERNMATCH_H
 #define LLVM_IR_PATTERNMATCH_H
 
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/APInt.h"
 #include "llvm/IR/CallSite.h"
+#include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
+#include <cstdint>
 
 namespace llvm {
 namespace PatternMatch {
@@ -157,9 +165,24 @@ inline match_combine_or<match_zero, match_neg_zero> m_AnyZero() {
   return m_CombineOr(m_Zero(), m_NegZero());
 }
 
+struct match_nan {
+  template <typename ITy> bool match(ITy *V) {
+    if (const auto *C = dyn_cast<ConstantFP>(V)) {
+      const APFloat &APF = C->getValueAPF();
+      return APF.isNaN();
+    }
+    return false;
+  }
+};
+
+/// Match an arbitrary NaN constant. This includes quiet and signalling nans.
+inline match_nan m_NaN() { return match_nan(); }
+
 struct apint_match {
   const APInt *&Res;
+
   apint_match(const APInt *&R) : Res(R) {}
+
   template <typename ITy> bool match(ITy *V) {
     if (auto *CI = dyn_cast<ConstantInt>(V)) {
       Res = &CI->getValue();
@@ -217,7 +240,9 @@ template <typename Predicate> struct cst_pred_ty : public Predicate {
 /// satisfy a specified predicate, and bind them to an APInt.
 template <typename Predicate> struct api_pred_ty : public Predicate {
   const APInt *&Res;
+
   api_pred_ty(const APInt *&R) : Res(R) {}
+
   template <typename ITy> bool match(ITy *V) {
     if (const auto *CI = dyn_cast<ConstantInt>(V))
       if (this->isValue(CI->getValue())) {
@@ -254,15 +279,15 @@ inline cst_pred_ty<is_all_ones> m_AllOnes() {
 }
 inline api_pred_ty<is_all_ones> m_AllOnes(const APInt *&V) { return V; }
 
-struct is_sign_bit {
-  bool isValue(const APInt &C) { return C.isSignBit(); }
+struct is_sign_mask {
+  bool isValue(const APInt &C) { return C.isSignMask(); }
 };
 
 /// \brief Match an integer or vector with only the sign bit(s) set.
-inline cst_pred_ty<is_sign_bit> m_SignBit() {
-  return cst_pred_ty<is_sign_bit>();
+inline cst_pred_ty<is_sign_mask> m_SignMask() {
+  return cst_pred_ty<is_sign_mask>();
 }
-inline api_pred_ty<is_sign_bit> m_SignBit(const APInt *&V) { return V; }
+inline api_pred_ty<is_sign_mask> m_SignMask(const APInt *&V) { return V; }
 
 struct is_power2 {
   bool isValue(const APInt &C) { return C.isPowerOf2(); }
@@ -281,6 +306,7 @@ inline api_pred_ty<is_maxsignedvalue> m_MaxSignedValue(const APInt *&V) { return
 
 template <typename Class> struct bind_ty {
   Class *&VR;
+
   bind_ty(Class *&V) : VR(V) {}
 
   template <typename ITy> bool match(ITy *V) {
@@ -294,10 +320,10 @@ template <typename Class> struct bind_ty {
 
 /// \brief Match a value, capturing it if we match.
 inline bind_ty<Value> m_Value(Value *&V) { return V; }
+inline bind_ty<const Value> m_Value(const Value *&V) { return V; }
 
 /// \brief Match an instruction, capturing it if we match.
 inline bind_ty<Instruction> m_Instruction(Instruction *&I) { return I; }
-
 /// \brief Match a binary operator, capturing it if we match.
 inline bind_ty<BinaryOperator> m_BinOp(BinaryOperator *&I) { return I; }
 
@@ -313,6 +339,7 @@ inline bind_ty<ConstantFP> m_ConstantFP(ConstantFP *&C) { return C; }
 /// \brief Match a specified Value*.
 struct specificval_ty {
   const Value *Val;
+
   specificval_ty(const Value *V) : Val(V) {}
 
   template <typename ITy> bool match(ITy *V) { return V == Val; }
@@ -325,6 +352,7 @@ inline specificval_ty m_Specific(const Value *V) { return V; }
 /// that value.
 struct specific_fpval {
   double Val;
+
   specific_fpval(double V) : Val(V) {}
 
   template <typename ITy> bool match(ITy *V) {
@@ -347,6 +375,7 @@ inline specific_fpval m_FPOne() { return m_SpecificFP(1.0); }
 
 struct bind_const_intval_ty {
   uint64_t &VR;
+
   bind_const_intval_ty(uint64_t &V) : VR(V) {}
 
   template <typename ITy> bool match(ITy *V) {
@@ -363,6 +392,7 @@ struct bind_const_intval_ty {
 // value.
 struct specific_intval {
   uint64_t Val;
+
   specific_intval(uint64_t V) : Val(V) {}
 
   template <typename ITy> bool match(ITy *V) {
@@ -682,7 +712,7 @@ template <typename SubPattern_t> struct Exact_match {
   Exact_match(const SubPattern_t &SP) : SubPattern(SP) {}
 
   template <typename OpTy> bool match(OpTy *V) {
-    if (PossiblyExactOperator *PEO = dyn_cast<PossiblyExactOperator>(V))
+    if (auto *PEO = dyn_cast<PossiblyExactOperator>(V))
       return PEO->isExact() && SubPattern.match(V);
     return false;
   }
@@ -706,7 +736,7 @@ struct CmpClass_match {
       : Predicate(Pred), L(LHS), R(RHS) {}
 
   template <typename OpTy> bool match(OpTy *V) {
-    if (Class *I = dyn_cast<Class>(V))
+    if (auto *I = dyn_cast<Class>(V))
       if (L.match(I->getOperand(0)) && R.match(I->getOperand(1))) {
         Predicate = I->getPredicate();
         return true;
@@ -814,6 +844,13 @@ inline CastClass_match<OpTy, Instruction::ZExt> m_ZExt(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::ZExt>(Op);
 }
 
+template <typename OpTy>
+inline match_combine_or<CastClass_match<OpTy, Instruction::ZExt>,
+                        CastClass_match<OpTy, Instruction::SExt>>
+m_ZExtOrSExt(const OpTy &Op) {
+  return m_CombineOr(m_ZExt(Op), m_SExt(Op));
+}
+
 /// \brief Matches UIToFP.
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::UIToFP> m_UIToFP(const OpTy &Op) {
@@ -824,6 +861,18 @@ inline CastClass_match<OpTy, Instruction::UIToFP> m_UIToFP(const OpTy &Op) {
 template <typename OpTy>
 inline CastClass_match<OpTy, Instruction::SIToFP> m_SIToFP(const OpTy &Op) {
   return CastClass_match<OpTy, Instruction::SIToFP>(Op);
+}
+
+/// \brief Matches FPTrunc
+template <typename OpTy>
+inline CastClass_match<OpTy, Instruction::FPTrunc> m_FPTrunc(const OpTy &Op) {
+  return CastClass_match<OpTy, Instruction::FPTrunc>(Op);
+}
+
+/// \brief Matches FPExt
+template <typename OpTy>
+inline CastClass_match<OpTy, Instruction::FPExt> m_FPExt(const OpTy &Op) {
+  return CastClass_match<OpTy, Instruction::FPExt>(Op);
 }
 
 //===----------------------------------------------------------------------===//
@@ -907,6 +956,7 @@ template <typename LHS> inline fneg_match<LHS> m_FNeg(const LHS &L) {
 
 struct br_match {
   BasicBlock *&Succ;
+
   br_match(BasicBlock *&Succ) : Succ(Succ) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -924,6 +974,7 @@ inline br_match m_UnconditionalBr(BasicBlock *&Succ) { return br_match(Succ); }
 template <typename Cond_t> struct brc_match {
   Cond_t Cond;
   BasicBlock *&T, *&F;
+
   brc_match(const Cond_t &C, BasicBlock *&t, BasicBlock *&f)
       : Cond(C), T(t), F(f) {}
 
@@ -1170,6 +1221,7 @@ m_UnordFMin(const LHS &L, const RHS &R) {
 template <typename Opnd_t> struct Argument_match {
   unsigned OpI;
   Opnd_t Val;
+
   Argument_match(unsigned OpIdx, const Opnd_t &V) : OpI(OpIdx), Val(V) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -1187,6 +1239,7 @@ inline Argument_match<Opnd_t> m_Argument(const Opnd_t &Op) {
 /// \brief Intrinsic matchers.
 struct IntrinsicID_match {
   unsigned ID;
+
   IntrinsicID_match(Intrinsic::ID IntrID) : ID(IntrID) {}
 
   template <typename OpTy> bool match(OpTy *V) {
@@ -1207,21 +1260,23 @@ template <typename T0 = void, typename T1 = void, typename T2 = void,
           typename T9 = void, typename T10 = void>
 struct m_Intrinsic_Ty;
 template <typename T0> struct m_Intrinsic_Ty<T0> {
-  typedef match_combine_and<IntrinsicID_match, Argument_match<T0>> Ty;
+  using Ty = match_combine_and<IntrinsicID_match, Argument_match<T0>>;
 };
 template <typename T0, typename T1> struct m_Intrinsic_Ty<T0, T1> {
-  typedef match_combine_and<typename m_Intrinsic_Ty<T0>::Ty, Argument_match<T1>>
-      Ty;
+  using Ty =
+      match_combine_and<typename m_Intrinsic_Ty<T0>::Ty, Argument_match<T1>>;
 };
 template <typename T0, typename T1, typename T2>
 struct m_Intrinsic_Ty<T0, T1, T2> {
-  typedef match_combine_and<typename m_Intrinsic_Ty<T0, T1>::Ty,
-                            Argument_match<T2>> Ty;
+  using Ty =
+      match_combine_and<typename m_Intrinsic_Ty<T0, T1>::Ty,
+                        Argument_match<T2>>;
 };
 template <typename T0, typename T1, typename T2, typename T3>
 struct m_Intrinsic_Ty<T0, T1, T2, T3> {
-  typedef match_combine_and<typename m_Intrinsic_Ty<T0, T1, T2>::Ty,
-                            Argument_match<T3>> Ty;
+  using Ty =
+      match_combine_and<typename m_Intrinsic_Ty<T0, T1, T2>::Ty,
+                        Argument_match<T3>>;
 };
 
 /// \brief Match intrinsic calls like this:
@@ -1316,6 +1371,14 @@ template <typename Val_t> inline Signum_match<Val_t> m_Signum(const Val_t &V) {
 // Matchers for two-operands operators with the operators in either order
 //
 
+/// \brief Matches a BinaryOperator with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<AnyBinaryOp_match<LHS, RHS>,
+                        AnyBinaryOp_match<RHS, LHS>>
+m_c_BinOp(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_BinOp(L, R), m_BinOp(R, L));
+}
+
 /// \brief Matches an ICmp with a predicate over LHS and RHS in either order.
 /// Does not swap the predicate.
 template<typename LHS, typename RHS>
@@ -1323,6 +1386,22 @@ inline match_combine_or<CmpClass_match<LHS, RHS, ICmpInst, ICmpInst::Predicate>,
                         CmpClass_match<RHS, LHS, ICmpInst, ICmpInst::Predicate>>
 m_c_ICmp(ICmpInst::Predicate &Pred, const LHS &L, const RHS &R) {
   return m_CombineOr(m_ICmp(Pred, L, R), m_ICmp(Pred, R, L));
+}
+
+/// \brief Matches a Add with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<BinaryOp_match<LHS, RHS, Instruction::Add>,
+                        BinaryOp_match<RHS, LHS, Instruction::Add>>
+m_c_Add(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_Add(L, R), m_Add(R, L));
+}
+
+/// \brief Matches a Mul with LHS and RHS in either order.
+template<typename LHS, typename RHS>
+inline match_combine_or<BinaryOp_match<LHS, RHS, Instruction::Mul>,
+                        BinaryOp_match<RHS, LHS, Instruction::Mul>>
+m_c_Mul(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_Mul(L, R), m_Mul(R, L));
 }
 
 /// \brief Matches an And with LHS and RHS in either order.
@@ -1349,7 +1428,36 @@ m_c_Xor(const LHS &L, const RHS &R) {
   return m_CombineOr(m_Xor(L, R), m_Xor(R, L));
 }
 
+/// Matches an SMin with LHS and RHS in either order.
+template <typename LHS, typename RHS>
+inline match_combine_or<MaxMin_match<ICmpInst, LHS, RHS, smin_pred_ty>,
+                        MaxMin_match<ICmpInst, RHS, LHS, smin_pred_ty>>
+m_c_SMin(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_SMin(L, R), m_SMin(R, L));
+}
+/// Matches an SMax with LHS and RHS in either order.
+template <typename LHS, typename RHS>
+inline match_combine_or<MaxMin_match<ICmpInst, LHS, RHS, smax_pred_ty>,
+                        MaxMin_match<ICmpInst, RHS, LHS, smax_pred_ty>>
+m_c_SMax(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_SMax(L, R), m_SMax(R, L));
+}
+/// Matches a UMin with LHS and RHS in either order.
+template <typename LHS, typename RHS>
+inline match_combine_or<MaxMin_match<ICmpInst, LHS, RHS, umin_pred_ty>,
+                        MaxMin_match<ICmpInst, RHS, LHS, umin_pred_ty>>
+m_c_UMin(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_UMin(L, R), m_UMin(R, L));
+}
+/// Matches a UMax with LHS and RHS in either order.
+template <typename LHS, typename RHS>
+inline match_combine_or<MaxMin_match<ICmpInst, LHS, RHS, umax_pred_ty>,
+                        MaxMin_match<ICmpInst, RHS, LHS, umax_pred_ty>>
+m_c_UMax(const LHS &L, const RHS &R) {
+  return m_CombineOr(m_UMax(L, R), m_UMax(R, L));
+}
+
 } // end namespace PatternMatch
 } // end namespace llvm
 
-#endif
+#endif // LLVM_IR_PATTERNMATCH_H

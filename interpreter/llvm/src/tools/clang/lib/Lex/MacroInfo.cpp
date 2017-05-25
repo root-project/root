@@ -29,11 +29,10 @@ MacroInfo::MacroInfo(SourceLocation DefLoc)
     IsUsed(false),
     IsAllowRedefinitionsWithoutWarning(false),
     IsWarnIfUnused(false),
-    FromASTFile(false),
     UsedForHeaderGuard(false) {
 }
 
-unsigned MacroInfo::getDefinitionLengthSlow(SourceManager &SM) const {
+unsigned MacroInfo::getDefinitionLengthSlow(const SourceManager &SM) const {
   assert(!IsDefinitionLengthCached);
   IsDefinitionLengthCached = true;
 
@@ -137,7 +136,6 @@ LLVM_DUMP_METHOD void MacroInfo::dump() const {
   if (IsAllowRedefinitionsWithoutWarning)
     Out << " allow_redefinitions_without_warning";
   if (IsWarnIfUnused) Out << " warn_if_unused";
-  if (FromASTFile) Out << " imported";
   if (UsedForHeaderGuard) Out << " header_guard";
 
   Out << "\n    #define <macro>";
@@ -240,6 +238,6 @@ ModuleMacro *ModuleMacro::create(Preprocessor &PP, Module *OwningModule,
                                  ArrayRef<ModuleMacro *> Overrides) {
   void *Mem = PP.getPreprocessorAllocator().Allocate(
       sizeof(ModuleMacro) + sizeof(ModuleMacro *) * Overrides.size(),
-      llvm::alignOf<ModuleMacro>());
+      alignof(ModuleMacro));
   return new (Mem) ModuleMacro(OwningModule, II, Macro, Overrides);
 }

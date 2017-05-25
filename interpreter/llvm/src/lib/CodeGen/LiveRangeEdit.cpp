@@ -37,6 +37,15 @@ LiveInterval &LiveRangeEdit::createEmptyIntervalFrom(unsigned OldReg) {
     VRM->setIsSplitFromReg(VReg, VRM->getOriginal(OldReg));
   }
   LiveInterval &LI = LIS.createEmptyInterval(VReg);
+  if (Parent && !Parent->isSpillable())
+    LI.markNotSpillable();
+  // Create empty subranges if the OldReg's interval has them. Do not create
+  // the main range here---it will be constructed later after the subranges
+  // have been finalized.
+  LiveInterval &OldLI = LIS.getInterval(OldReg);
+  VNInfo::Allocator &Alloc = LIS.getVNInfoAllocator();
+  for (LiveInterval::SubRange &S : OldLI.subranges())
+    LI.createSubRange(Alloc, S.LaneMask);
   return LI;
 }
 
@@ -45,6 +54,14 @@ unsigned LiveRangeEdit::createFrom(unsigned OldReg) {
   if (VRM) {
     VRM->setIsSplitFromReg(VReg, VRM->getOriginal(OldReg));
   }
+  // FIXME: Getting the interval here actually computes it.
+  // In theory, this may not be what we want, but in practice
+  // the createEmptyIntervalFrom API is used when this is not
+  // the case. Generally speaking we just want to annotate the
+  // LiveInterval when it gets created but we cannot do that at
+  // the moment.
+  if (Parent && !Parent->isSpillable())
+    LIS.getInterval(VReg).markNotSpillable();
   return VReg;
 }
 
@@ -66,6 +83,8 @@ void LiveRangeEdit::scanRemattable(AliasAnalysis *aa) {
     unsigned Original = VRM->getOriginal(getReg());
     LiveInterval &OrigLI = LIS.getInterval(Original);
     VNInfo *OrigVNI = OrigLI.getVNInfoAt(VNI->def);
+    if (!OrigVNI)
+      continue;
     MachineInstr *DefMI = LIS.getInstructionFromIndex(OrigVNI->def);
     if (!DefMI)
       continue;
@@ -94,7 +113,7 @@ bool LiveRangeEdit::allUsesAvailableAt(const MachineInstr *OrigMI,
 
     // We can't remat physreg uses, unless it is a constant.
     if (TargetRegisterInfo::isPhysicalRegister(MO.getReg())) {
-      if (MRI.isConstantPhysReg(MO.getReg(), *OrigMI->getParent()->getParent()))
+      if (MRI.isConstantPhysReg(MO.getReg()))
         continue;
       return false;
     }
@@ -227,14 +246,15 @@ bool LiveRangeEdit::useIsKill(const LiveInterval &LI,
   unsigned SubReg = MO.getSubReg();
   LaneBitmask LaneMask = TRI.getSubRegIndexLaneMask(SubReg);
   for (const LiveInterval::SubRange &S : LI.subranges()) {
-    if ((S.LaneMask & LaneMask) != 0 && S.Query(Idx).isKill())
+    if ((S.LaneMask & LaneMask).any() && S.Query(Idx).isKill())
       return true;
   }
   return false;
 }
 
 /// Find all live intervals that need to shrink, then remove the instruction.
-void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink) {
+void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink,
+                                     AliasAnalysis *AA) {
   assert(MI->allDefsAreDead() && "Def isn't really dead");
   SlotIndex Idx = LIS.getInstructionIndex(*MI).getRegSlot();
 
@@ -262,7 +282,11 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink) {
   bool ReadsPhysRegs = false;
   bool isOrigDef = false;
   unsigned Dest;
-  if (VRM && MI->getOperand(0).isReg()) {
+  // Only optimize rematerialize case when the instruction has one def, since
+  // otherwise we could leave some dead defs in the code.  This case is
+  // extremely rare.
+  if (VRM && MI->getOperand(0).isReg() && MI->getOperand(0).isDef() &&
+      MI->getDesc().getNumDefs() == 1) {
     Dest = MI->getOperand(0).getReg();
     unsigned Original = VRM->getOriginal(Dest);
     LiveInterval &OrigLI = LIS.getInterval(Original);
@@ -327,12 +351,14 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink) {
     }
     DEBUG(dbgs() << "Converted physregs to:\t" << *MI);
   } else {
-    // If the dest of MI is an original reg, don't delete the inst. Replace
-    // the dest with a new reg, keep the inst for remat of other siblings.
-    // The inst is saved in LiveRangeEdit::DeadRemats and will be deleted
-    // after all the allocations of the func are done.
-    if (isOrigDef) {
+    // If the dest of MI is an original reg and MI is reMaterializable,
+    // don't delete the inst. Replace the dest with a new reg, and keep
+    // the inst for remat of other siblings. The inst is saved in
+    // LiveRangeEdit::DeadRemats and will be deleted after all the
+    // allocations of the func are done.
+    if (isOrigDef && DeadRemats && TII.isTriviallyReMaterializable(*MI, AA)) {
       LiveInterval &NewLI = createEmptyIntervalFrom(Dest);
+      NewLI.removeEmptySubRanges();
       VNInfo *VNI = NewLI.getNextValue(Idx, LIS.getVNInfoAllocator());
       NewLI.addSegment(LiveInterval::Segment(Idx, Idx.getDeadSlot(), VNI));
       pop_back();
@@ -361,13 +387,14 @@ void LiveRangeEdit::eliminateDeadDef(MachineInstr *MI, ToShrinkSet &ToShrink) {
 }
 
 void LiveRangeEdit::eliminateDeadDefs(SmallVectorImpl<MachineInstr *> &Dead,
-                                      ArrayRef<unsigned> RegsBeingSpilled) {
+                                      ArrayRef<unsigned> RegsBeingSpilled,
+                                      AliasAnalysis *AA) {
   ToShrinkSet ToShrink;
 
   for (;;) {
     // Erase all dead defs.
     while (!Dead.empty())
-      eliminateDeadDef(Dead.pop_back_val(), ToShrink);
+      eliminateDeadDef(Dead.pop_back_val(), ToShrink, AA);
 
     if (ToShrink.empty())
       break;
