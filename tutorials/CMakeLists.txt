@@ -131,7 +131,7 @@ if(NOT ROOT_imt_FOUND)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
-  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C dataframe/tdf*.py)
+  set(classic_veto multicore/mp104_*.C multicore/mp105_*.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
@@ -346,6 +346,10 @@ if(ROOT_python_FOUND)
              eve/lineset.py         # requires GUI
              )
   list(REMOVE_ITEM pytutorials ${pyveto})
+  if(ROOT_CLASSIC_BUILD)
+    set(classic_veto_py dataframe/tdf*.py)
+    list(REMOVE_ITEM pytutorials ${classic_veto_py})
+  endif()
 
   #---Python tutorials dependencies--------------------------------------
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple-py)
