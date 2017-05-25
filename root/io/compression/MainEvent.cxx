@@ -145,7 +145,7 @@ int main(int argc, char **argv)
    if (message->GetCompressionSettings() != 301) exit(153);
 
    message->SetCompressionSettings(202);
-   message->SetCompressionAlgorithm(4);
+   message->SetCompressionAlgorithm(99);
    if (message->GetCompressionSettings() != 2) exit(154);
 
    message->SetCompressionSettings(202);
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
    message->SetCompressionLevel(-1);
    if (message->GetCompressionSettings() != 0) exit(156);
 
-   message->SetCompressionSettings(402);
+   message->SetCompressionSettings(9902);
    message->SetCompressionLevel(0);
    if (message->GetCompressionSettings() != 0) exit(157);
 
@@ -214,7 +214,7 @@ int main(int argc, char **argv)
    if (socket->GetCompressionSettings() != 301) exit(218);
 
    socket->SetCompressionSettings(202);
-   socket->SetCompressionAlgorithm(4);
+   socket->SetCompressionAlgorithm(99);
    if (socket->GetCompressionSettings() != 2) exit(219);
 
    socket->SetCompressionSettings(202);
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
    socket->SetCompressionLevel(-1);
    if (socket->GetCompressionSettings() != 0) exit(221);
 
-   socket->SetCompressionSettings(402);
+   socket->SetCompressionSettings(9902);
    socket->SetCompressionLevel(0);
    if (socket->GetCompressionSettings() != 0) exit(222);
 
@@ -398,7 +398,7 @@ int main(int argc, char **argv)
       if (hfile->GetCompressionSettings() != 301) exit(18);
 
       hfile->SetCompressionSettings(202);
-      hfile->SetCompressionAlgorithm(4);
+      hfile->SetCompressionAlgorithm(99);
       if (hfile->GetCompressionSettings() != 2) exit(19);
 
       hfile->SetCompressionSettings(202);
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
       hfile->SetCompressionLevel(-1);
       if (hfile->GetCompressionSettings() != 0) exit(21);
 
-      hfile->SetCompressionSettings(402);
+      hfile->SetCompressionSettings(9902);
       hfile->SetCompressionLevel(0);
       if (hfile->GetCompressionSettings() != 0) exit(22);
 
@@ -481,7 +481,7 @@ int main(int argc, char **argv)
       if (testBranch->GetCompressionSettings() != 301) exit(118);
 
       testBranch->SetCompressionSettings(202);
-      testBranch->SetCompressionAlgorithm(4);
+      testBranch->SetCompressionAlgorithm(99);
       if (testBranch->GetCompressionSettings() != 2) exit(119);
 
       testBranch->SetCompressionSettings(202);
@@ -492,7 +492,7 @@ int main(int argc, char **argv)
       testBranch->SetCompressionLevel(-1);
       if (testBranch->GetCompressionSettings() != 0) exit(121);
 
-      testBranch->SetCompressionSettings(402);
+      testBranch->SetCompressionSettings(9902);
       testBranch->SetCompressionLevel(0);
       if (testBranch->GetCompressionSettings() != 0) exit(122);
 
