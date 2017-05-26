@@ -33,6 +33,29 @@ namespace RooStats {
 
    bool gUseOffset = false;
 
+   Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b ) {
+   // Asimov significance
+   // formula [10] and [20] from  https://www.pp.rhul.ac.uk/~cowan/stat/notes/medsigNote.pdf
+      // case we have a sigma_b
+      double sb2 = sigma_b*sigma_b;
+      // formula below has a large error when sigma_b becomes zero
+      // better to use the approximation for sigma_b=0 for very small values
+      double r = sb2/b;
+      if (r > 1.E-12) {
+         double bpsb2 = b + sb2;
+         double b2 = b*b;
+         double spb = s+b; 
+         double za2 = 2.*( (spb)* std::log( ( spb)*(bpsb2)/(b2+ spb*sb2) ) -
+                           (b2/sb2) * std::log(1. + ( sb2 * s)/(b * bpsb2) ) );
+         return sqrt(za2); 
+
+      }
+      // case when the background (b) is known
+      double za2 = 2.*( (s+b) * std::log(1. + s/b) -s );
+      return std::sqrt(za2); 
+   }
+
+
    void UseNLLOffset(bool on) {
       // use offset in NLL calculations
       gUseOffset = on;
