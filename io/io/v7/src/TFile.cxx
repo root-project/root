@@ -97,7 +97,7 @@ public:
   }
 
   void WriteMemoryWithType(std::string_view name, const void* address, TClass* cl) final {
-     fOldFile->WriteObjectAny(address, cl, name.data());
+     fOldFile->WriteObjectAny(address, cl, std::string(name.data(), name.size()).c_str());
   }
 };
 }
@@ -191,7 +191,7 @@ std::string ROOT::Experimental::TFile::SetCacheDir(std::string_view path) {
   std::lock_guard<std::mutex> lock(GetCacheDirMutex());
 
   std::string ret = ::TFile::GetCacheFileDir();
-  ::TFile::SetCacheFileDir(path.data());
+  ::TFile::SetCacheFileDir(std::string(path.data(), path.size()).c_str());
   return ret;
 }
 
