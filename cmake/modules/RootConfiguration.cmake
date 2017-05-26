@@ -531,7 +531,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}" found_stdapply)
+int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
 if(found_stdapply)
   set(hasstdapply define)
 else()
