@@ -122,7 +122,7 @@ TEST(TTreeReaderBasic, ErrorProbing) {
    EXPECT_EQ(TTreeReader::kEntryNoTree, tr.GetEntryStatus());
    EXPECT_EQ(nullptr, tr.GetTree());
 
-   TTreeReaderValue<double> val;
+   TTreeReaderValue<double> val(tr, "branchDoesNotExist");
    EXPECT_FALSE(val.IsValid());
 }
 
