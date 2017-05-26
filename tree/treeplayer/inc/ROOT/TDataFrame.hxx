@@ -28,8 +28,6 @@ The ROOT Data Frame allows to analyse data stored in TTrees with a high level in
 class TDirectory;
 class TTree;
 
-R__LOAD_LIBRARY(libTreePlayer)
-
 namespace ROOT {
 namespace Experimental {
 namespace TDFDetail = ROOT::Detail::TDF;
