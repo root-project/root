@@ -20,6 +20,7 @@
 #include "TError.h"
 #include "TMathBase.h"
 #include "TApplication.h"
+#include <algorithm>
 #include <cmath>
 
 ClassImp(TColor)
