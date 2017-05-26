@@ -299,7 +299,7 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
-   static Bool_t       SetCacheFileDir(const char *cacheDir, Bool_t operateDisconnected = kTRUE,
+   static Bool_t       SetCacheFileDir(std::string_view cacheDir, Bool_t operateDisconnected = kTRUE,
                                        Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();
    static Bool_t       ShrinkCacheFileDir(Long64_t shrinkSize, Long_t cleanupInteval = 0);
