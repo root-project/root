@@ -101,6 +101,8 @@ namespace Internal {
       /// Stringify the template argument.
       static std::string GetElementTypeName(const std::type_info& ti);
 
+      int          fHaveLeaf : 1; // Whether the data is in a leaf
+      int          fHaveStaticClassOffsets : 1; // Whether !fStaticClassOffsets.empty()
       TString      fBranchName; // name of the branch to read data from.
       TString      fLeafName;
       TTreeReader* fTreeReader; // tree reader we belong to
