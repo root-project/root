@@ -181,6 +181,16 @@ TString::TString(TString &&s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy a std::string_view in a TString.
+
+TString::TString(const std::string_view& substr)
+{
+   Ssiz_t len = substr.length();
+   char *data = Init(len, len);
+   memcpy(data, substr.data(), len);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy a TSubString in a TString.
 
 TString::TString(const TSubString& substr)
