@@ -42,13 +42,10 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
                                                  TDictionary* dict /*= 0*/):
    fHaveLeaf(0),
    fHaveStaticClassOffsets(0),
+   fReadStatus(kReadNothingYet),
    fBranchName(branchname),
    fTreeReader(reader),
-   fDict(dict),
-   fProxy(NULL),
-   fLeaf(NULL),
-   fSetupStatus(kSetupNotSetup),
-   fReadStatus(kReadNothingYet)
+   fDict(dict)
 {
    RegisterWithTreeReader();
 }
@@ -59,14 +56,14 @@ ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(TTreeReader* reader /
 ROOT::Internal::TTreeReaderValueBase::TTreeReaderValueBase(const TTreeReaderValueBase& rhs):
    fHaveLeaf(rhs.fHaveLeaf),
    fHaveStaticClassOffsets(rhs.fHaveStaticClassOffsets),
+   fReadStatus(rhs.fReadStatus),
+   fSetupStatus(rhs.fSetupStatus),
    fBranchName(rhs.fBranchName),
    fLeafName(rhs.fLeafName),
    fTreeReader(rhs.fTreeReader),
    fDict(rhs.fDict),
    fProxy(rhs.fProxy),
    fLeaf(rhs.fLeaf),
-   fSetupStatus(rhs.fSetupStatus),
-   fReadStatus(rhs.fReadStatus),
    fStaticClassOffsets(rhs.fStaticClassOffsets)
 {
    RegisterWithTreeReader();
