@@ -40,78 +40,82 @@ In addition the namespace contain a set of utility functions.
 namespace RooStats {
 
 
-  // returns one-sided significance corresponding to a p-value
-  inline Double_t PValueToSignificance(Double_t pvalue){
-     return ::ROOT::Math::normal_quantile_c(pvalue,1);
-  }
+   /// returns one-sided significance corresponding to a p-value
+   inline Double_t PValueToSignificance(Double_t pvalue){
+      return ::ROOT::Math::normal_quantile_c(pvalue,1);
+   }
 
-  // returns p-value corresponding to a 1-sided significance
-  inline Double_t SignificanceToPValue(Double_t Z){
-    return ::ROOT::Math::normal_cdf_c(Z);
-  }
+   /// returns p-value corresponding to a 1-sided significance
+   inline Double_t SignificanceToPValue(Double_t Z){
+      return ::ROOT::Math::normal_cdf_c(Z);
+   }
 
+   /// Compute the Asimov Median significance for a Poisson process
+   /// with s = expected number of signal events, b = expected numner of background events
+   /// and optionally sigma_b = expected uncertainty of backgorund events   
+   Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b = 0.0 ); 
 
-  inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
-    *paramsToChange=*desiredVals ;
-  }
+   inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
+      *paramsToChange=*desiredVals ;
+   }
 
-  inline void RemoveConstantParameters(RooArgSet* set){
-    RooArgSet constSet;
-    RooLinkedListIter it = set->iterator();
-    RooRealVar *myarg;
-    while ((myarg = (RooRealVar *)it.Next())) {
-      if(myarg->isConstant()) constSet.add(*myarg);
-    }
-    set->remove(constSet);
-  }
+   inline void RemoveConstantParameters(RooArgSet* set){
+      RooArgSet constSet;
+      RooLinkedListIter it = set->iterator();
+      RooRealVar *myarg;
+      while ((myarg = (RooRealVar *)it.Next())) {
+         if(myarg->isConstant()) constSet.add(*myarg);
+      }
+      set->remove(constSet);
+   }
 
-  inline void RemoveConstantParameters(RooArgList& set){
-    RooArgSet constSet;
-    RooLinkedListIter it = set.iterator();
-    RooRealVar *myarg;
-    while ((myarg = (RooRealVar *)it.Next())) {
-      if(myarg->isConstant()) constSet.add(*myarg);
-    }
-    set.remove(constSet);
-  }
+   inline void RemoveConstantParameters(RooArgList& set){
+      RooArgSet constSet;
+      RooLinkedListIter it = set.iterator();
+      RooRealVar *myarg;
+      while ((myarg = (RooRealVar *)it.Next())) {
+         if(myarg->isConstant()) constSet.add(*myarg);
+      }
+      set.remove(constSet);
+   }
 
-  inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
-       // utility function to set all variable constant in a collection
-       // (from G. Petrucciani)
-       bool changed = false;
-       RooLinkedListIter iter = coll.iterator();
-       for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
-          RooRealVar *v = dynamic_cast<RooRealVar *>(a);
-          if (v && (v->isConstant() != constant)) {
-             changed = true;
-             v->setConstant(constant);
-          }
-       }
-       return changed;
+   inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
+      // utility function to set all variable constant in a collection
+      // (from G. Petrucciani)
+      bool changed = false;
+      RooLinkedListIter iter = coll.iterator();
+      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
+         RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+         if (v && (v->isConstant() != constant)) {
+            changed = true;
+            v->setConstant(constant);
+         }
+      }
+      return changed;
    }
 
 
-  // assuming all values in set are RooRealVars, randomize their values
-  inline void RandomizeCollection(RooAbsCollection& set,
-                                  Bool_t randomizeConstants = kTRUE)
-  {
-    RooLinkedListIter it = set.iterator();
-    RooRealVar* var;
+   // assuming all values in set are RooRealVars, randomize their values
+   inline void RandomizeCollection(RooAbsCollection& set,
+                                   Bool_t randomizeConstants = kTRUE)
+   {
+      RooLinkedListIter it = set.iterator();
+      RooRealVar* var;
 
-    // repeat loop to avoid calling isConstant for nothing
-    if (randomizeConstants) {
-       while ((var = (RooRealVar*)it.Next()) != NULL)
-         var->randomize();
-    }
-    else {
-       // exclude constants variables
-      while ((var = (RooRealVar*)it.Next()) != NULL)
-      if (!var->isConstant() )
-         var->randomize();
-    }
+      // repeat loop to avoid calling isConstant for nothing
+      if (randomizeConstants) {
+         while ((var = (RooRealVar*)it.Next()) != NULL)
+            var->randomize();
+      }
+      else {
+         // exclude constants variables
+         while ((var = (RooRealVar*)it.Next()) != NULL)
+            if (!var->isConstant() )
+               var->randomize();
+      }
 
 
-  }
+   }
 
    void FactorizePdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints);
 
