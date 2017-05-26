@@ -16,6 +16,7 @@
 #define ROOT7_THistImpl
 
 #include <cctype>
+#include <functional>
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/RTupleApply.hxx"
 
