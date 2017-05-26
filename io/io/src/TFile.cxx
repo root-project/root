@@ -4423,7 +4423,7 @@ void TFile::IncrementFileCounter() { fgFileCounter++; }
 /// Sets the directory where to locally stage/cache remote files.
 /// If the directory is not writable by us return kFALSE.
 
-Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
+Bool_t TFile::SetCacheFileDir(std::string_view cachedir, Bool_t operatedisconnected,
                               Bool_t forcecacheread )
 {
    TString cached = cachedir;
@@ -4434,7 +4434,7 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
       // try to create it
       gSystem->mkdir(cached, kTRUE);
       if (gSystem->AccessPathName(cached, kFileExists)) {
-         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", cachedir);
+         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", TString(cachedir).Data());
          fgCacheFileDir = "";
          return kFALSE;
       }
