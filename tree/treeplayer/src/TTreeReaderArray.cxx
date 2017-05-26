@@ -505,6 +505,7 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
       fLeaf = myLeaf;
       fBranchName = branchName;
       fLeafName = leafName(1, leafName.Length());
+      fHaveLeaf = (fLeafName.Length() > 0);
       fSetupStatus = kSetupMatchLeaf;
    }
    else {
