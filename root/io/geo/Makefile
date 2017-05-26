@@ -44,10 +44,10 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-ifeq ($(findstring gdml2, $(shell root-config --features)),)
+ifeq ($(findstring gdml, $(shell root-config --features)),)
+   execParse.success: ROOTBITS = -nogdml
 #  TEST_TARGETS := $(filter-out execParse,$(TEST_TARGETS))
 endif
-execParse.success: ROOTBITS = -nogdml
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
