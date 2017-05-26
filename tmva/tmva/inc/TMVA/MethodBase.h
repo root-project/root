@@ -298,6 +298,7 @@ namespace TMVA {
       virtual Double_t GetTrainingEfficiency(const TString& );
       virtual std::vector<Float_t> GetMulticlassEfficiency( std::vector<std::vector<Float_t> >& purity );
       virtual std::vector<Float_t> GetMulticlassTrainingEfficiency(std::vector<std::vector<Float_t> >& purity );
+      virtual TMatrixD GetMulticlassConfusionMatrix(Double_t effB, Types::ETreeType type);
       virtual Double_t GetSignificance() const;
       virtual Double_t GetROCIntegral(TH1D *histS, TH1D *histB) const;
       virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
