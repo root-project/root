@@ -97,7 +97,7 @@ public:
   }
 
   void WriteMemoryWithType(std::string_view name, const void* address, TClass* cl) final {
-    fOldFile->WriteObjectAny(address, cl, name.data());
+     fOldFile->WriteObjectAny(address, cl, name.data());
   }
 };
 }
