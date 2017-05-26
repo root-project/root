@@ -77,7 +77,7 @@ RooAbsData::StorageType RooAbsData::defaultStorageType=RooAbsData::Vector ;
 void RooAbsData::setDefaultStorageType(RooAbsData::StorageType s)
 {
    if (RooAbsData::Composite == s) {
-      coutE << "Composite storage is not a valid *default* storage type." << endl;
+      cout << "Composite storage is not a valid *default* storage type." << endl;
    } else {
       defaultStorageType = s;
    }
@@ -256,7 +256,7 @@ void RooAbsData::convertToVectorStore()
       RooVectorDataStore *newStore = new RooVectorDataStore(*(RooTreeDataStore *)_dstore, _vars, GetName());
       delete _dstore;
       _dstore = newStore;
-      storagType = RooAbsData::Vector;
+      storageType = RooAbsData::Vector;
    }
 }
 
