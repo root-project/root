@@ -157,7 +157,7 @@ class TJsonEx3 {
      double     *fDouble;   // [fSize]
    public:
 
-     TJsonEx3()
+     TJsonEx3(int sz = 0)
      {
         fSize = 0;
         fBool = 0;
@@ -167,9 +167,30 @@ class TJsonEx3 {
         fLong = 0;
         fFloat = 0;
         fDouble = 0;
+        if (sz>0) SetValues(sz);
      }
 
-     void SetValues(int sz = 5)
+     TJsonEx3(const TJsonEx3 &src)
+     {
+        Allocate(src.fSize);
+        for (int n=0;n<fSize;n++) {
+           fBool[n] = src.fBool[n];
+           fChar[n] = src.fChar[n];
+           fShort[n] = src.fShort[n];
+           fInt[n] = src.fInt[n];
+           fLong[n] = src.fLong[n];
+           fFloat[n] = src.fFloat[n];
+           fDouble[n] = src.fDouble[n];
+        }
+
+     }
+
+     virtual ~TJsonEx3()
+     {
+        Release();
+     }
+
+     void Allocate(int sz)
      {
         fSize = sz;
         fBool = new bool[fSize];
@@ -179,8 +200,24 @@ class TJsonEx3 {
         fLong = new long[fSize];
         fFloat = new float[fSize];
         fDouble = new double[fSize];
+     }
 
-        for (int n=0;n<fSize;n++) {
+     void Release() 
+     {
+       delete[] fBool; fBool = 0;
+       delete[] fChar; fChar = 0;
+       delete[] fShort; fShort = 0;
+       delete[] fInt; fInt = 0;
+       delete[] fLong; fLong = 0;
+       delete[] fFloat; fFloat = 0;
+       delete[] fDouble; fDouble = 0;
+     }
+
+     void SetValues(int sz = 5)
+     {
+        Allocate(sz);
+
+        for (int n=0;n<sz;n++) {
            fBool[n] = false;
            fChar[n] = 49 + n;
            fShort[n] = n*2;
@@ -190,17 +227,7 @@ class TJsonEx3 {
            fDouble[n] = n*7;
         }
      }
-     
-     virtual ~TJsonEx3()
-     {
-       delete[] fBool;
-       delete[] fChar;
-       delete[] fShort;
-       delete[] fInt;
-       delete[] fLong;
-       delete[] fFloat;
-       delete[] fDouble;
-     }
+
 
      void Print()
      {
@@ -529,7 +556,7 @@ class TJsonEx7 {
 
          fVectEx1.push_back(TJsonEx1());
          fVectEx2.push_back(TJsonEx2());
-         fVectEx3.push_back(TJsonEx3());
+         fVectEx3.push_back(TJsonEx3(5));
 
          fVectEx11.push_back(TJsonEx11());
       }

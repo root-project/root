@@ -11,8 +11,7 @@
 
    TJsonEx1* ex1 = new TJsonEx1;
    TJsonEx2* ex2 = new TJsonEx2;
-   TJsonEx3* ex3 = new TJsonEx3;
-   ex3->SetValues(5);
+   TJsonEx3* ex3 = new TJsonEx3(5);
    TJsonEx11* ex11 = new TJsonEx11;
 
    cout << " ====== basic data types TJsonEx1 ===== " << endl;
