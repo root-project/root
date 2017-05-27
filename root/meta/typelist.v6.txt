@@ -777,8 +777,6 @@ pair<long,TGeoNavigatorArray*>::first_type
 pair<long,TGeoNavigatorArray*>::second_type
 pair<long,void*>::first_type
 pair<long,void*>::second_type
-pair<llvm::StringRef,llvm::StringRef>::first_type
-pair<llvm::StringRef,llvm::StringRef>::second_type
 pair<TDSetElement*,TString>::first_type
 pair<TDSetElement*,TString>::second_type
 Pattern_t
