@@ -159,7 +159,19 @@ class TJsonEx3 {
 
      TJsonEx3()
      {
-        fSize = 5;
+        fSize = 0;
+        fBool = 0;
+        fChar = 0;
+        fShort = 0;
+        fInt = 0;
+        fLong = 0;
+        fFloat = 0;
+        fDouble = 0;
+     }
+
+     void SetValues(int sz = 5)
+     {
+        fSize = sz;
         fBool = new bool[fSize];
         fChar = new char[fSize];
         fShort = new short[fSize];
@@ -177,17 +189,17 @@ class TJsonEx3 {
            fFloat[n] = n*3;
            fDouble[n] = n*7;
         }
-
      }
+     
      virtual ~TJsonEx3()
      {
-       //delete[] fBool;
-       //delete[] fChar;
-       // delete[] fShort;
-       // delete[] fInt;
-       // delete[] fLong;
-       // delete[] fFloat;
-       // delete[] fDouble;
+       delete[] fBool;
+       delete[] fChar;
+       delete[] fShort;
+       delete[] fInt;
+       delete[] fLong;
+       delete[] fFloat;
+       delete[] fDouble;
      }
 
      void Print()
