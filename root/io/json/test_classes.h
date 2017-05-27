@@ -160,13 +160,13 @@ class TJsonEx3 {
      TJsonEx3(int sz = 0)
      {
         fSize = 0;
-        fBool = 0;
-        fChar = 0;
-        fShort = 0;
-        fInt = 0;
-        fLong = 0;
-        fFloat = 0;
-        fDouble = 0;
+        fBool = nullptr;
+        fChar = nullptr;
+        fShort = nullptr;
+        fInt = nullptr;
+        fLong = nullptr;
+        fFloat = nullptr;
+        fDouble = nullptr;
         if (sz>0) SetValues(sz);
      }
 
@@ -204,13 +204,13 @@ class TJsonEx3 {
 
      void Release() 
      {
-       delete[] fBool; fBool = 0;
-       delete[] fChar; fChar = 0;
-       delete[] fShort; fShort = 0;
-       delete[] fInt; fInt = 0;
-       delete[] fLong; fLong = 0;
-       delete[] fFloat; fFloat = 0;
-       delete[] fDouble; fDouble = 0;
+       delete [] fBool; fBool = nullptr;
+       delete [] fChar; fChar = nullptr;
+       delete [] fShort; fShort = nullptr;
+       delete [] fInt; fInt = nullptr;
+       delete [] fLong; fLong = nullptr;
+       delete [] fFloat; fFloat = nullptr;
+       delete [] fDouble; fDouble = nullptr;
      }
 
      void SetValues(int sz = 5)
@@ -258,10 +258,10 @@ class TJsonEx4 : public TJsonEx1 {
       TJsonEx4(bool setvalues = false) : TJsonEx1()
       {
         memset(fStr1, 0, sizeof(fStr1));
-        fStr2 = 0;
+        fStr2 = nullptr;
         fDummy2 = 0;
-        fStr3 = 0;
-        fStr4 = 0;
+        fStr3 = nullptr;
+        fStr4 = nullptr;
         if (setvalues) {
            strcpy(fStr1, "Value of string 1");
            fDummy2 = 1234567;
@@ -309,9 +309,9 @@ class TJsonEx5 {
 
      TJsonEx5(bool setvalues = false)
      {
-        fPtr1 = 0;
-        fPtr2 = 0;
-        fPtr3 = 0;
+        fPtr1 = nullptr;
+        fPtr2 = nullptr;
+        fPtr3 = nullptr;
 
         fSafePtr1 = new TJsonEx1;
         fSafePtr2 = new TJsonEx2;
@@ -399,9 +399,9 @@ class TJsonEx6 {
      TJsonEx6(bool setvalues = false)
      {
         for (int n=0;n<3;n++) {
-           fPtr1[n] = 0;
-           fPtr2[n] = 0;
-           fPtr3[n] = 0;
+           fPtr1[n] = nullptr;
+           fPtr2[n] = nullptr;
+           fPtr3[n] = nullptr;
 
            fSafePtr1[n] = new TJsonEx1();
            fSafePtr2[n] = new TJsonEx2();
@@ -521,13 +521,13 @@ class TJsonEx7 {
 
    TJsonEx7(bool setvalues = false)
    {
-      fStrPtr1 = 0;
-      fStrPtr2 = 0;
+      fStrPtr1 = nullptr;
+      fStrPtr2 = nullptr;
 
-      fVectPtrDouble = 0;
+      fVectPtrDouble = nullptr;
       for (int n=0;n<3;n++) {
-        fStrPtrArr[n] = 0;
-        fVectPtrDoubleArr[n] = 0;
+        fStrPtrArr[n] = nullptr;
+        fVectPtrDoubleArr[n] = nullptr;
       }
 
       if (!setvalues) return;
@@ -540,7 +540,7 @@ class TJsonEx7 {
       fStrArr[2] = "Value of fStrArr[2]";
 
       fStrPtr1 = new string("Value of < >  &lt; &gt; string fStrPtr1");
-      fStrPtr2 = 0; // new string("Value of string fStrPtr2");
+      fStrPtr2 = nullptr; // new string("Value of string fStrPtr2");
 
       fStrPtrArr[0] = new string("value of fStrPtrArr[0]");
       fStrPtrArr[1] = new string("value of fStrPtrArr[1]");
@@ -702,20 +702,20 @@ class TJsonEx9 {
    TJsonEx9()
    {
       fCnt = 0;
-      fStr = 0;
+      fStr = nullptr;
       for (int k=0;k<3;++k) {
-         fStr2[k] = 0;
-         fNm2[k] = 0;
-         fStr6[k] = 0;
-         fNm6[k] = 0;
-         fArr2[k] = 0;
-         fArr6[k] = 0;
+         fStr2[k] = nullptr;
+         fNm2[k] = nullptr;
+         fStr6[k] = nullptr;
+         fNm6[k] = nullptr;
+         fArr2[k] = nullptr;
+         fArr6[k] = nullptr;
       }
       for (int k1=0;k1<2;++k1)
          for (int k2=0;k2<5;++k2) {
-            fStr4[k1][k2] = 0;
-            fNm4[k1][k2] = 0;
-            fArr4[k1][k2] = 0;
+            fStr4[k1][k2] = nullptr;
+            fNm4[k1][k2] = nullptr;
+            fArr4[k1][k2] = nullptr;
          }
 //      fStr3 = 0;
    }
@@ -753,7 +753,7 @@ class TJsonEx9 {
 
          fStr6[k] = new TString*[fCnt];
          for (int n=0;n<fCnt;++n) {
-            fStr6[k][n] = 0;
+            fStr6[k][n] = nullptr;
             if ((k+n) % 3 == 0) continue;
 
             fStr6[k][n] = new TString;
@@ -762,7 +762,7 @@ class TJsonEx9 {
 
          fNm6[k] = new TNamed*[fCnt];
          for (int n=0;n<fCnt;++n) {
-            fNm6[k][n] = 0;
+            fNm6[k][n] = nullptr;
             if ((k+n) % 3 == 0) continue;
 
             fNm6[k][n] = new TNamed;
@@ -772,7 +772,7 @@ class TJsonEx9 {
 
          fArr6[k] = new TArrayI*[fCnt];
          for (int n=0;n<fCnt;++n) {
-            fArr6[k][n] = 0;
+            fArr6[k][n] = nullptr;
             if ((k+n) % 3 == 0) continue;
 
             fArr6[k][n] = new TArrayI(5);
