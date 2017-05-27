@@ -44,7 +44,7 @@ int execConstructor()
       fprintf(stderr,"Could not find Holder() \n");
       return 1;
    }
-   if ( !m->ExtraProperty() & kIsConstructor) {
+   if ( !(m->ExtraProperty() & kIsConstructor)) {
       fprintf(stderr,"mistake Holder() for a non-constructor\n");
       return 1;
    }
@@ -54,7 +54,7 @@ int execConstructor()
       fprintf(stderr,"Could not find Holder(const char*) \n");
       return 1;
    }
-   if ( !m->ExtraProperty() & kIsConstructor) {
+   if ( !(m->ExtraProperty() & kIsConstructor)) {
       fprintf(stderr,"mistake Holder(const char*) for a non-constructor\n");
       return 1;
    }
@@ -64,7 +64,7 @@ int execConstructor()
       fprintf(stderr,"Could not find Holder() \n");
       return 1;
    }
-   if ( !m->ExtraProperty() & kIsConstructor) {
+   if ( !(m->ExtraProperty() & kIsConstructor)) {
       fprintf(stderr,"mistake Holder(int&) for a non-constructor\n");
       return 1;
    }
@@ -74,7 +74,7 @@ int execConstructor()
       fprintf(stderr,"Could not find ~Holder() \n");
       return 1;
    }
-   if ( !m->ExtraProperty() & kIsDestructor) {
+   if ( !(m->ExtraProperty() & kIsDestructor)) {
       fprintf(stderr,"mistake ~Holder() for a non-destructor\n");
       return 1;
    }
@@ -84,7 +84,7 @@ int execConstructor()
       fprintf(stderr,"Could not find operator int() \n");
       return 1;
    }
-   if ( !m->ExtraProperty() & kIsConversion) {
+   if ( !(m->ExtraProperty() & kIsConversion)) {
       fprintf(stderr,"mistake Holder(int&) for a non-conversion\n");
       return 1;
    }
