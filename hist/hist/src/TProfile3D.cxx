@@ -639,7 +639,7 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    Int_t bin,binx,biny,binz;
 
    if (fTmin != fTmax) {
-      if (t <fTmin || z> fTmax || TMath::IsNaN(t) ) return -1;
+      if (t <fTmin || t> fTmax || TMath::IsNaN(t) ) return -1;
    }
 
    Double_t u= w; // (w > 0 ? w : -w);
