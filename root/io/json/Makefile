@@ -87,5 +87,7 @@ STL: STL.log
 StreamerLoop: StreamerLoop.log
 	$(TestDiff)
 
+StreamerLoop.log STL.log Objects.log String.log BasicTypes.log: test_classes_h.$(DllSuf)
+
 RootClasses: RootClasses.log
 	$(TestDiff)
