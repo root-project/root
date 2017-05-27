@@ -111,6 +111,13 @@ private:
 
 };
 
+template<typename AFloat>
+ROOT::TThreadExecutor TCpuMatrix<AFloat>::fPool {};
+
+template<typename AFloat>
+std::vector<AFloat> TCpuMatrix<AFloat>::fOnes {};
+
+
 // Inline Functions.
 //______________________________________________________________________________
 template<typename AFloat>
