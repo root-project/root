@@ -58,9 +58,12 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
 {
    TStreamerBasicType *counter = 0;
 
+   TClass *cl = TClass::GetClass(countClass);
+
    if (directive) {
 
-      if (strcmp(directive->GetName(),countClass)==0) {
+      if (directive->GetClass() == cl) {
+         // The info we have been passed is indeed describing the counter holder, just look there.
 
          TStreamerElement *element = (TStreamerElement *)directive->GetElements()->FindObject(countName);
          if (!element) return 0;
@@ -68,19 +71,22 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
          counter = (TStreamerBasicType*)element;
 
       } else {
-
-         TRealData* rdCounter = (TRealData*) directive->GetClass()->GetListOfRealData()->FindObject(countName);
-         if (!rdCounter) return 0;
-         TDataMember *dmCounter = rdCounter->GetDataMember();
-
-         TClass *cl = dmCounter->GetClass();
+         if (directive->GetClass()->GetListOfRealData()) {
+            TRealData* rdCounter = (TRealData*) directive->GetClass()->GetListOfRealData()->FindObject(countName);
+            if (!rdCounter) return 0;
+            TDataMember *dmCounter = rdCounter->GetDataMember();
+            cl = dmCounter->GetClass();
+         } else {
+            TStreamerElement *element = (TStreamerElement *)directive->GetElements()->FindObject(countName);
+            if (!element) return 0;
+            if (element->IsA() != TStreamerBasicType::Class()) return 0;
+            cl = directive->GetClass();
+         }
          if (cl==0) return 0;
          counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
-
       }
    } else {
 
-      TClass *cl = TClass::GetClass(countClass);
       if (cl==0) return 0;
       counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
    }
