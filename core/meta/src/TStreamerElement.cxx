@@ -54,24 +54,22 @@ extern void *gMmallocDesc;
 /// same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
 /// for 'countClass'.
 
-static TStreamerBasicType *InitCounter(const char *countClass, const char *countName, TObject *directive)
+static TStreamerBasicType *InitCounter(const char *countClass, const char *countName, TVirtualStreamerInfo *directive)
 {
    TStreamerBasicType *counter = 0;
 
-   if (directive && directive->InheritsFrom(TVirtualStreamerInfo::Class())) {
+   if (directive) {
 
       if (strcmp(directive->GetName(),countClass)==0) {
 
-         TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
-         TStreamerElement *element = (TStreamerElement *)info->GetElements()->FindObject(countName);
+         TStreamerElement *element = (TStreamerElement *)directive->GetElements()->FindObject(countName);
          if (!element) return 0;
          if (element->IsA() != TStreamerBasicType::Class()) return 0;
          counter = (TStreamerBasicType*)element;
 
       } else {
 
-         TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)directive;
-         TRealData* rdCounter = (TRealData*) info->GetClass()->GetListOfRealData()->FindObject(countName);
+         TRealData* rdCounter = (TRealData*) directive->GetClass()->GetListOfRealData()->FindObject(countName);
          if (!rdCounter) return 0;
          TDataMember *dmCounter = rdCounter->GetDataMember();
 
@@ -400,7 +398,7 @@ const char *TStreamerElement::GetTypeNameBasic() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Initliaze the element.
 
-void TStreamerElement::Init(TObject *)
+void TStreamerElement::Init(TVirtualStreamerInfo *)
 {
    fClassObject = GetClassPointer();
    if (fClassObject && fClassObject->IsTObject()) {
@@ -665,7 +663,7 @@ Int_t TStreamerBase::GetSize() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the element.
 
-void TStreamerBase::Init(TObject *)
+void TStreamerBase::Init(TVirtualStreamerInfo *)
 {
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
@@ -943,7 +941,7 @@ Int_t TStreamerBasicPointer::GetSize() const
 /// same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
 /// for 'countClass'.
 
-void TStreamerBasicPointer::Init(TObject *directive)
+void TStreamerBasicPointer::Init(TVirtualStreamerInfo *directive)
 {
    fCounter = InitCounter( fCountClass, fCountName, directive );
 }
@@ -1050,7 +1048,7 @@ Int_t TStreamerLoop::GetSize() const
 /// same class a 'countClass' the streamerInfo is used instead of the current StreamerInfo of the TClass
 /// for 'countClass'.
 
-void TStreamerLoop::Init(TObject *directive)
+void TStreamerLoop::Init(TVirtualStreamerInfo *directive)
 {
    fCounter = InitCounter( fCountClass, fCountName, directive );
 }
@@ -1230,7 +1228,7 @@ TStreamerObject::~TStreamerObject()
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the element.
 
-void TStreamerObject::Init(TObject *)
+void TStreamerObject::Init(TVirtualStreamerInfo *)
 {
    fClassObject = GetClassPointer();
    if (fClassObject && fClassObject->IsTObject()) {
@@ -1323,7 +1321,7 @@ TStreamerObjectAny::~TStreamerObjectAny()
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the element.
 
-void TStreamerObjectAny::Init(TObject *)
+void TStreamerObjectAny::Init(TVirtualStreamerInfo *)
 {
    fClassObject = GetClassPointer();
    if (fClassObject && fClassObject->IsTObject()) {
@@ -1420,7 +1418,7 @@ TStreamerObjectPointer::~TStreamerObjectPointer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the element.
 
-void TStreamerObjectPointer::Init(TObject *)
+void TStreamerObjectPointer::Init(TVirtualStreamerInfo *)
 {
    fClassObject = GetClassPointer();
    if (fClassObject && fClassObject->IsTObject()) {
@@ -1524,7 +1522,7 @@ TStreamerObjectAnyPointer::~TStreamerObjectAnyPointer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Setup the element.
 
-void TStreamerObjectAnyPointer::Init(TObject *)
+void TStreamerObjectAnyPointer::Init(TVirtualStreamerInfo *)
 {
    fClassObject = GetClassPointer();
    if (fClassObject && fClassObject->IsTObject()) {
