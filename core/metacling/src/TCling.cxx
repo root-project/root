@@ -1061,7 +1061,7 @@ TCling::TCling(const char *name, const char *title)
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
       // Add -I early so ASTReader can find the headers.
-      std::string interpInclude(TROOT::GetEtcDir());
+      std::string interpInclude(TROOT::GetEtcDir().Data());
       clingArgsStorage.push_back("-I" + interpInclude);
 
       // Add include path to etc/cling. FIXME: This is a short term solution. The
@@ -1070,7 +1070,7 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back("-I" + interpInclude + "/cling");
 
       // Add the root include directory and etc/ to list searched by default.
-      clingArgsStorage.push_back(std::string("-I" + TROOT::GetIncludeDir()));
+      clingArgsStorage.push_back(std::string(("-I" + TROOT::GetIncludeDir()).Data()));
 
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
