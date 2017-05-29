@@ -11,9 +11,7 @@
 #ifndef ROOT_TGSimpleTableInterface
 #define ROOT_TGSimpleTableInterface
 
-#ifndef ROOT_TVirtualTableInterface
 #include "TVirtualTableInterface.h"
-#endif
 
 class TGSimpleTableInterface : public TVirtualTableInterface {
 

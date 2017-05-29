@@ -13,12 +13,8 @@
 #define ROOT_TGenericClassInfo
 
 #include <vector>
-//#ifndef ROOT_TSchemaHelper
 #include "TSchemaHelper.h"
-//#endif
-//#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-//#endif
 
 // Forward declarations
 class TVirtualIsAProxy;

@@ -8,9 +8,7 @@
 #ifndef ROOT_TIndArray
 #define ROOT_TIndArray
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TIndArray

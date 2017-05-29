@@ -22,13 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
-#ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
-#endif
 
 #include <map>
 #include <typeinfo>

@@ -9,18 +9,10 @@
 #ifndef ROOT_TLDAPEntry
 #define ROOT_TLDAPEntry
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_CintLDAP
 #include "CintLDAP.h"
-#endif
 
 
 class TLDAPServer;

@@ -37,15 +37,9 @@
 #include <deque>
 #include <iosfwd>
 
-#ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
-#endif
-#ifndef ROOT_TMVA_GeneticPopulation
 #include "TMVA/GeneticPopulation.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
 namespace TMVA {
      

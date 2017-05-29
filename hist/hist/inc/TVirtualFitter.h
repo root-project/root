@@ -21,12 +21,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMethodCall
 #include "TMethodCall.h"
-#endif
 #include "Foption.h"
 
 

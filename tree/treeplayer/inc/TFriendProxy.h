@@ -12,9 +12,7 @@
 #ifndef ROOT_TFriendProxy
 #define ROOT_TFriendProxy
 
-#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-#endif
 
 class TTree;
 

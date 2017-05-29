@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TXSocket
 #include "TXSocket.h"
-#endif
 
 class TXSocketHandler : public TFileHandler {
 

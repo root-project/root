@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
 
-#ifndef ROOT_TGWin32ProxyBase
 #include "TGWin32ProxyBase.h"
-#endif
 
 
 class TGWin32GLManagerProxy : public TGLManager, public TGWin32ProxyBase

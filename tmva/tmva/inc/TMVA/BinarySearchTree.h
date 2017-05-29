@@ -44,18 +44,10 @@
 #include "time.h"
 #endif
 
-#ifndef ROOT_TMVA_Volume
 #include "TMVA/Volume.h"
-#endif
-#ifndef ROOT_TMVA_BinaryTree
 #include "TMVA/BinaryTree.h"
-#endif
-#ifndef ROOT_TMVA_BinarySearchTreeNode
 #include "TMVA/BinarySearchTreeNode.h"
-#endif
-#ifndef ROOT_TMVA_VariableInfo
 #include "TMVA/VariableInfo.h"
-#endif
 
 class TString;
 class TTree;

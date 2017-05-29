@@ -14,158 +14,295 @@
 #define ROOT_Math_WrappedMultiTF1
 
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
-#ifndef ROOT_TF1
 #include "TF1.h"
-#endif
 
 namespace ROOT {
 
    namespace Math {
 
+      namespace Internal {
+         double DerivPrecision(double eps);
+         TF1 *CopyTF1Ptr(const TF1 *funcToCopy);
+      };
+      /**
+         Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
+         of multi-dimensions to be used in the ROOT::Math numerical algorithm.
+         This wrapper class does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime.
+         The class copy the TF1 pointer only when it owns it.
 
-/**
-   Class to Wrap a ROOT Function class (like TF1)  in a IParamMultiFunction interface
-   of multi-dimensions to be used in the ROOT::Math numerical algorithm
-   This wrapper class does not own the TF1 pointer, so it assumes it exists during the wrapper lifetime.
-   The class copy the TF1 pointer only when it owns it 
+         The class from ROOT version 6.03 does not contain anymore a copy of the parameters. The parameters are
+         stored in the TF1 class.
 
-   The class from ROOT version 6.03 does not contain anymore a copy of the parameters. The parameters are 
-   stored in the TF1 class.    
+         @ingroup CppFunctions
+      */
 
-   @ingroup CppFunctions
-*/
+      //LM note: are there any issues when cloning the class for the parameters that are not copied anymore ??
 
-//LM note: are there any issues when cloning the class for the parameters that are not copied anymore ??      
+      template<class T>
+      class WrappedMultiTF1Templ: virtual public ROOT::Math::IParametricGradFunctionMultiDimTempl<T> {
 
-class WrappedMultiTF1 : public ROOT::Math::IParamMultiGradFunction {
+      public:
 
-public:
+         typedef  ROOT::Math::IParametricGradFunctionMultiDimTempl<T>  BaseParamFunc;
+         typedef  typename ROOT::Math::IParametricFunctionMultiDimTempl<T>::BaseFunc  BaseFunc;
 
-   typedef  ROOT::Math::IParamMultiGradFunction        BaseParamFunc;
-   typedef  ROOT::Math::IParamMultiFunction::BaseFunc  BaseFunc;
+         /**
+            constructor from a function pointer to a TF1
+            If dim = 0 dimension is taken from TF1::GetNdim().
+            IN case of multi-dimensional function created using directly TF1 object the dimension
+            returned by TF1::GetNdim is always 1. The user must then pass the correct value of dim
+         */
+         WrappedMultiTF1Templ(TF1 &f, unsigned int dim = 0);
 
+         /**
+            Destructor (no operations). Function pointer is not owned
+         */
+         ~WrappedMultiTF1Templ()
+         {
+            if (fOwnFunc && fFunc) delete fFunc;
+         }
 
-   /**
-      constructor from a function pointer to a TF1
-      If dim = 0 dimension is taken from TF1::GetNdim().
-      IN case of multi-dimensional function created using directly TF1 object the dimension
-      returned by TF1::GetNdim is always 1. The user must then pass the correct value of dim
-   */
-   WrappedMultiTF1 (TF1 & f, unsigned int dim = 0 );
+         /**
+            Copy constructor
+         */
+         WrappedMultiTF1Templ(const WrappedMultiTF1Templ<T> &rhs);
 
-   /**
-      Destructor (no operations). Function pointer is not owned
-   */
-   virtual ~WrappedMultiTF1 () { if (fOwnFunc && fFunc) delete fFunc; }
+         /**
+            Assignment operator
+         */
+         WrappedMultiTF1Templ &operator = (const WrappedMultiTF1Templ<T> &rhs);
 
-   /**
-      Copy constructor
-   */
-   WrappedMultiTF1(const WrappedMultiTF1 & rhs);
+         /** @name interface inherited from IParamFunction */
 
-   /**
-      Assignment operator
-   */
-   WrappedMultiTF1 & operator = (const WrappedMultiTF1 & rhs);
+         /**
+             Clone the wrapper but not the original function
+         */
+         IMultiGenFunctionTempl<T> *Clone() const
+         {
+            return new WrappedMultiTF1Templ<T>(*this);
+         }
 
+         /**
+              Retrieve the dimension of the function
+          */
+         unsigned int NDim() const
+         {
+            return fDim;
+         }
 
-   /** @name interface inherited from IFunction */
+         /// get the parameter values (return values from TF1)
+         const double *Parameters() const
+         {
+            //return  (fParams.size() > 0) ? &fParams.front() : 0;
+            return  fFunc->GetParameters();
+         }
 
-   /**
-       Clone the wrapper but not the original function
-   */
-   IMultiGenFunction * Clone() const {
-      return new WrappedMultiTF1(*this);
-   }
+         /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
+         void SetParameters(const double *p)
+         {
+            //std::copy(p,p+fParams.size(),fParams.begin());
+            fFunc->SetParameters(p);
+         }
 
-   /// function dimension
-   unsigned int NDim() const {
-      return fDim;
-   }
+         /// return number of parameters
+         unsigned int NPar() const
+         {
+            // return fParams.size();
+            return fFunc->GetNpar();
+         }
 
+         /// return parameter name (from TF1)
+         std::string ParameterName(unsigned int i) const {
+            return std::string(fFunc->GetParName(i));
+         }
+         
+         // evaluate the derivative of the function with respect to the parameters
+         void  ParameterGradient(const double *x, const double *par, double *grad) const;
 
-   /** @name interface inherited from IParamFunction */
+         /// precision value used for calculating the derivative step-size
+         /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
+         static void SetDerivPrecision(double eps);
 
-   /// get the parameter values (return values from TF1)
-   const double * Parameters() const {
-  //return  (fParams.size() > 0) ? &fParams.front() : 0;
-      return  fFunc->GetParameters();
-   }
+         /// get precision value used for calculating the derivative step-size
+         static double GetDerivPrecision();
 
-   /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
-   void SetParameters(const double * p) { 
-      //std::copy(p,p+fParams.size(),fParams.begin());
-      fFunc->SetParameters(p); 
-   } 
+         /// method to retrieve the internal function pointer
+         const TF1 *GetFunction() const
+         {
+            return fFunc;
+         }
 
-   /// return number of parameters
-   unsigned int NPar() const {
-      // return fParams.size();
-      return fFunc->GetNpar(); 
-   }
+         /// method to set a new function pointer and copy it inside.
+         /// By calling this method the class manages now the passed TF1 pointer
+         void SetAndCopyFunction(const TF1 *f = 0);
 
-   /// return parameter name (from TF1)
-   std::string ParameterName(unsigned int i) const {
-      return std::string(fFunc->GetParName(i));
-   }
+      private:
+         /// evaluate function passing coordinates x and vector of parameters
+         T DoEvalPar(const T *x, const double *p) const
+         {
+            return fFunc->EvalPar(x, p);
+         }
 
+         /// evaluate function using the cached parameter values (of TF1)
+         /// re-implement for better efficiency
+         T DoEvalVec(const T *x) const
+         {
+            return fFunc->EvalPar(x, 0);
+         }
 
-   /// evaluate the derivative of the function with respect to the parameters
-   void  ParameterGradient(const double * x, const double * par, double * grad ) const;
+         /// evaluate function using the cached parameter values (of TF1)
+         /// re-implement for better efficiency
+         T DoEval(const T *x) const
+         {
+            // no need to call InitArg for interpreted functions (done in ctor)
 
-   /// precision value used for calculating the derivative step-size
-   /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
-   static void SetDerivPrecision(double eps);
+            //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
+            return fFunc->EvalPar(x, 0);
+         }
 
-   /// get precision value used for calculating the derivative step-size
-   static double GetDerivPrecision();
+         /// evaluate the partial derivative with respect to the parameter
+         double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const;
 
-   /// method to retrieve the internal function pointer
-   const TF1 * GetFunction() const { return fFunc; }
+         bool fLinear;                 // flag for linear functions
+         bool fPolynomial;             // flag for polynomial functions
+         bool fOwnFunc;                 // flag to indicate we own the TF1 function pointer
+         TF1 *fFunc;                    // pointer to ROOT function
+         unsigned int fDim;             // cached value of dimension
+         //std::vector<double> fParams;   // cached vector with parameter values
 
-   /// method to set a new function pointer and copy it inside. 
-   /// By calling this method the class manages now the passed TF1 pointer
-   void SetAndCopyFunction(const TF1 * f = 0);
-   
-   
+      };
 
-private:
+// impelmentations for WrappedMultiTF1Templ<T>
+      template<class T>
+      WrappedMultiTF1Templ<T>::WrappedMultiTF1Templ(TF1 &f, unsigned int dim)  :
+         fLinear(false),
+         fPolynomial(false),
+         fOwnFunc(false),
+         fFunc(&f),
+         fDim(dim)
+         //fParams(f.GetParameters(),f.GetParameters()+f.GetNpar())
+      {
+         // constructor of WrappedMultiTF1Templ<T>
+         // pass a dimension if dimension specified in TF1 does not correspond to real dimension
+         // for example in case of multi-dimensional TF1 objects defined as TF1 (i.e. for functions with dims > 3 )
+         if (fDim == 0) fDim = fFunc->GetNdim();
 
-   /// evaluate function passing coordinates x and vector of parameters
-   double DoEvalPar (const double * x, const double * p ) const {
-      if (fFunc->GetMethodCall() )  fFunc->InitArgs(x,p);  // needed for interpreted functions
-      return fFunc->EvalPar(x,p);
-   }
+         // check that in case function is linear the linear terms are not zero
+         // function is linear when is a TFormula created with "++"
+         // hyperplane are not yet existing in TFormula
+         if (fFunc->IsLinear()) {
+            int ip = 0;
+            fLinear = true;
+            while (fLinear && ip < fFunc->GetNpar())  {
+               fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
+               ip++;
+            }
+         }
+         // distinguish case of polynomial functions and linear functions
+         if (fDim == 1 && fFunc->GetNumber() >= 300 && fFunc->GetNumber() < 310) {
+            fLinear = true;
+            fPolynomial = true;
+         }
+      }
 
-   /// evaluate function using the cached parameter values (of TF1)
-   /// re-implement for better efficiency
-   double DoEval (const double* x) const { 
-      // no need to call InitArg for interpreted functions (done in ctor)
+      template<class T>
+      WrappedMultiTF1Templ<T>::WrappedMultiTF1Templ(const WrappedMultiTF1Templ<T> &rhs) :
+         BaseFunc(),
+         BaseParamFunc(),
+         fLinear(rhs.fLinear),
+         fPolynomial(rhs.fPolynomial),
+         fOwnFunc(rhs.fOwnFunc),
+         fFunc(rhs.fFunc),
+         fDim(rhs.fDim)
+         //fParams(rhs.fParams)
+      {
+         // copy constructor
+         if (fOwnFunc) SetAndCopyFunction(rhs.fFunc);
+      }
 
-      //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
-      return fFunc->EvalPar(x, 0 ); 
-   }
+      template<class T>
+      WrappedMultiTF1Templ<T> &WrappedMultiTF1Templ<T>::operator= (const WrappedMultiTF1Templ<T> &rhs)
+      {
+         // Assignment operator
+         if (this == &rhs) return *this;  // time saving self-test
+         fLinear = rhs.fLinear;
+         fPolynomial = rhs.fPolynomial;
+         fOwnFunc = rhs.fOwnFunc;
+         fDim = rhs.fDim;
+         //fParams = rhs.fParams;
+         return *this;
+      }
 
+      template<class T>
+      void  WrappedMultiTF1Templ<T>::ParameterGradient(const double *x, const double *par, double *grad) const
+      {
+         // evaluate the gradient of the function with respect to the parameters
+         //IMPORTANT NOTE: TF1::GradientPar returns 0 for fixed parameters to avoid computing useless derivatives
+         //  BUT the TLinearFitter wants to have the derivatives also for fixed parameters.
+         //  so in case of fLinear (or fPolynomial) a non-zero value will be returned for fixed parameters
 
-   /// evaluate the partial derivative with respect to the parameter
-   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const;
+         if (!fLinear) {
+            // need to set parameter values
+            fFunc->SetParameters(par);
+            // no need to call InitArgs (it is called in TF1::GradientPar)
+            double prec = this->GetDerivPrecision();
+            fFunc->GradientPar(x, grad, prec);
+         } else { // case of linear functions
+            unsigned int np = NPar();
+            for (unsigned int i = 0; i < np; ++i)
+               grad[i] = DoParameterDerivative(x, par, i);
+         }
+      }
 
+      template<class T>
+      double WrappedMultiTF1Templ<T>::DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const
+      {
+         // evaluate the derivative of the function with respect to parameter ipar
+         // see note above concerning the fixed parameters
+         if (! fLinear) {
+            fFunc->SetParameters(p);
+            double prec = this->GetDerivPrecision();
+            return fFunc->GradientPar(ipar, x, prec);
+         }
+         if (fPolynomial) {
+            // case of polynomial function (no parameter dependency)  (case for dim = 1)
+            assert(fDim == 1);
+            if (ipar == 0) return 1.0;
+            return std::pow(x[0], static_cast<int>(ipar));
+         } else {
+            // case of general linear function (built in TFormula with ++ )
+            const TFormula *df = dynamic_cast<const TFormula *>(fFunc->GetLinearPart(ipar));
+            assert(df != 0);
+            return (const_cast<TFormula *>(df))->EvalPar(x) ;     // derivatives should not depend on parameters since
+            // function  is linear
+         }
+      }
 
-   bool fLinear;                 // flag for linear functions
-   bool fPolynomial;             // flag for polynomial functions
-   bool fOwnFunc;                 // flag to indicate we own the TF1 function pointer
-   TF1 * fFunc;                   // pointer to ROOT function
-   unsigned int fDim;             // cached value of dimension
-   //std::vector<double> fParams;   // cached vector with parameter values
+      template<class T>
+      void WrappedMultiTF1Templ<T>::SetDerivPrecision(double eps)
+      {
+         ::ROOT::Math::Internal::DerivPrecision(eps);
+      }
 
-   static double fgEps;          // epsilon used in derivative calculation h ~ eps |p|
-};
+      template<class T>
+      double WrappedMultiTF1Templ<T>::GetDerivPrecision()
+      {
+         return ::ROOT::Math::Internal::DerivPrecision(-1);
+      }
 
-   } // end namespace Fit
+      template<class T>
+      void WrappedMultiTF1Templ<T>::SetAndCopyFunction(const TF1 *f)
+      {
+         const TF1 *funcToCopy = (f) ? f : fFunc;
+         fFunc = ::ROOT::Math::Internal::CopyTF1Ptr(funcToCopy);
+         fOwnFunc = true;
+      }
+
+      using WrappedMultiTF1 = WrappedMultiTF1Templ<double>;
+
+   } // end namespace Math
 
 } // end namespace ROOT
 

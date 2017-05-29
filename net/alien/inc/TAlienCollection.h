@@ -24,18 +24,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridCollection
 #include "TGridCollection.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TFileStager
 #include "TFileStager.h"
-#endif
 
 
 class TFileCollection;

@@ -67,24 +67,12 @@
 
 #include <limits>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMatrixFBasefwd
 #include "TMatrixFBasefwd.h"
-#endif
-#ifndef ROOT_TMatrixDBasefwd
 #include "TMatrixDBasefwd.h"
-#endif
-#ifndef ROOT_TVectorFfwd
 #include "TVectorFfwd.h"
-#endif
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 template<class Element> class TVectorT;
 template<class Element> class TElementActionT;

@@ -14,13 +14,9 @@
 #ifndef ROOT_Math_TUnuranDiscrDist
 #define ROOT_Math_TUnuranDiscrDist
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 #include <vector>

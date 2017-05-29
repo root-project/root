@@ -5,9 +5,7 @@
 #define ROOT_TPyClassGenerator
 
 // ROOT
-#ifndef ROOT_TClassGenerator
 #include "TClassGenerator.h"
-#endif
 
 
 class TPyClassGenerator : public TClassGenerator {

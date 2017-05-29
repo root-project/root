@@ -31,6 +31,7 @@
 #include "TMultiGraph.h"
 #include "THStack.h"
 #include "TPaveText.h"
+#include "TPaveStats.h"
 #include "TGroupButton.h"
 #include "TBrowser.h"
 #include "TVirtualGL.h"
@@ -180,6 +181,9 @@ TPad::TPad()
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
+   fCollideGrid = 0;
+   fCGnx = 0;
+   fCGny = 0;
 
    fLogx  = 0;
    fLogy  = 0;
@@ -271,11 +275,38 @@ TPad::TPad(const char *name, const char *title, Double_t xlow,
    fCrosshair  = 0;
    fCrosshairPos = 0;
 
+   fVtoAbsPixelk = 0.;
+   fVtoPixelk    = 0.;
+   fVtoPixel     = 0.;
+   fAbsPixeltoXk = 0.;
+   fPixeltoXk    = 0.;
+   fPixeltoX     = 0;
+   fAbsPixeltoYk = 0.;
+   fPixeltoYk    = 0.;
+   fPixeltoY     = 0.;
+   fXlowNDC      = 0;
+   fYlowNDC      = 0;
+   fWNDC         = 1;
+   fHNDC         = 1;
+   fXUpNDC       = 0.;
+   fYUpNDC       = 0.;
+   fAbsXlowNDC   = 0.;
+   fAbsYlowNDC   = 0.;
+   fAbsWNDC      = 0.;
+   fAbsHNDC      = 0.;
+   fUxmin = fUymin = fUxmax = fUymax = 0;
+   fLogx = gStyle->GetOptLogx();
+   fLogy = gStyle->GetOptLogy();
+   fLogz = gStyle->GetOptLogz();
+
    fFixedAspectRatio = kFALSE;
    fAspectRatio      = 0.;
 
    fNumPaletteColor = 0;
    fNextPaletteColor = 0;
+   fCollideGrid = 0;
+   fCGnx = 0;
+   fCGny = 0;
 
    fViewer3D = 0;
 
@@ -337,6 +368,7 @@ TPad::~TPad()
    SafeDelete(fPrimitives);
    SafeDelete(fExecs);
    delete fViewer3D;
+   if (fCollideGrid) delete [] fCollideGrid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,6 +619,12 @@ void TPad::Clear(Option_t *option)
    PaintBorder(GetFillColor(), kTRUE);
    fCrosshairPos = 0;
    fNumPaletteColor = 0;
+   if (fCollideGrid) {
+      delete [] fCollideGrid;
+      fCollideGrid = 0;
+      fCGnx = 0;
+      fCGny = 0;
+   }
    ResetBit(TGraph::kClipFrame);
 }
 
@@ -1367,7 +1405,7 @@ void TPad::DrawClassObject(const TObject *classobj, Option_t *option)
             Int_t ldname = 0;
             while (indx < dim ){
                ldname = strlen(dname);
-               snprintf(&dname[ldname],256,"[%d]",d->GetMaxIndex(indx));
+               snprintf(&dname[ldname],256-ldname,"[%d]",d->GetMaxIndex(indx));
                indx++;
             }
             pt->AddText(x,(y-v1)/dv,dname);
@@ -2855,7 +2893,7 @@ void TPad::HighLight(Color_t color, Bool_t set)
 
    // We do not want to have active(executable) buttons, etc highlighted
    // in this manner, unless we want to edit'em
-   if (GetBorderMode()>0 && GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
+   if (GetMother() && GetMother()->IsEditable() && !InheritsFrom(TButton::Class())) {
       //When doing a DrawClone from the GUI you would do
       //  - select an empty pad -
       //  - right click on object -
@@ -2868,10 +2906,10 @@ void TPad::HighLight(Color_t color, Bool_t set)
       // momentarily such that when DrawClone is called, it is
       // not the right value (for DrawClone). Should be FIXED.
       gROOT->SetSelectedPad(this);
-      if (set)
-         PaintBorder(-color, kFALSE);
-      else
-         PaintBorder(-GetFillColor(), kFALSE);
+      if (GetBorderMode()>0) {
+         if (set) PaintBorder(-color, kFALSE);
+         else     PaintBorder(-GetFillColor(), kFALSE);
+      }
    }
 
    AbsCoordinates(kFALSE);
@@ -2899,7 +2937,7 @@ Int_t TPad::IncrementPaletteColor(Int_t i, TString opt)
    if (opt.Index("pfc")>=0 || opt.Index("plc")>=0 || opt.Index("pmc")>=0) {
        if (i==1) fNumPaletteColor++;
        else      fNumPaletteColor = i;
-       return fNumPaletteColor;
+       return    fNumPaletteColor;
    } else {
       return 0;
    }
@@ -2920,6 +2958,345 @@ Int_t TPad::NextPaletteColor()
    if (fNextPaletteColor > fNumPaletteColor-1) fNextPaletteColor = 0;
    return gStyle->GetColorPalette(i);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Initialise the grid used to find empty space when adding a box (Legend) in a pad
+
+void TPad::FillCollideGrid(TObject *oi)
+{
+   Int_t const cellSize = 10; // Sive of an individual grid cell in pixels.
+
+   if (fCGnx == 0 && fCGny == 0) {
+      fCGnx = gPad->GetWw()/cellSize;
+      fCGny = gPad->GetWh()/cellSize;
+   } else {
+      Int_t CGnx = gPad->GetWw()/cellSize;
+      Int_t CGny = gPad->GetWh()/cellSize;
+      if (fCGnx != CGnx || fCGny != CGny) {
+         fCGnx = CGnx;
+         fCGny = CGny;
+         delete [] fCollideGrid;
+         fCollideGrid = 0;
+      }
+   }
+
+   // Initialise the collide grid
+   if (!fCollideGrid) {
+      fCollideGrid = new Bool_t [fCGnx*fCGny];
+      for (int i = 0; i<fCGnx; i++) {
+         for (int j = 0; j<fCGny; j++) {
+            fCollideGrid[i + j*fCGnx] = kTRUE;
+         }
+      }
+   }
+
+   // Fill the collide grid
+   TList *l = GetListOfPrimitives();
+   Int_t np = l->GetSize();
+   TObject *o;
+
+   for (int i=0; i<np; i++) {
+      o = (TObject *) l->At(i);
+      if (o!=oi) {
+         if (o->InheritsFrom(TFrame::Class())) { FillCollideGridTFrame(o); continue;}
+         if (o->InheritsFrom(TBox::Class()))   { FillCollideGridTBox(o);   continue;}
+         if (o->InheritsFrom(TH1::Class()))    { FillCollideGridTH1(o);    continue;}
+         if (o->InheritsFrom(TGraph::Class())) { FillCollideGridTGraph(o); continue;}
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if a box of size w and h collide some primitives in the pad at
+/// position i,j
+
+Bool_t TPad::Collide(Int_t i, Int_t j, Int_t w, Int_t h)
+{
+   for (int r=i; r<w+i; r++) {
+      for (int c=j; c<h+j; c++) {
+         if (!fCollideGrid[r + c*fCGnx]) return kTRUE;
+      }
+   }
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Place a box in NDC space
+
+Bool_t TPad::PlaceBox(TObject *o, Double_t w, Double_t h, Double_t &xl, Double_t &yb)
+{
+   FillCollideGrid(o);
+
+   Int_t iw = (int)(fCGnx*w);
+   Int_t ih = (int)(fCGny*h);
+
+   Int_t nxmax = fCGnx-iw-1;
+   Int_t nymax = fCGny-ih-1;
+
+   for (Int_t i = 0; i<nxmax; i++) {
+      for (Int_t j = 0; j<=nymax; j++) {
+         if (Collide(i,j,iw,ih)) {
+            continue;
+         } else {
+            xl = (Double_t)(i)/(Double_t)(fCGnx);
+            yb = (Double_t)(j)/(Double_t)(fCGny);
+            return kTRUE;
+         }
+      }
+   }
+   return kFALSE;
+}
+
+#define NotFree(i, j) fCollideGrid[TMath::Max(TMath::Min(i+j*fCGnx,fCGnx*fCGny),0)] = kFALSE;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark as "not free" the cells along a line.
+
+void TPad::LineNotFree(Int_t x1, Int_t x2, Int_t y1, Int_t y2)
+{
+   NotFree(x1, y1);
+   NotFree(x2, y2);
+   Int_t i, j, xt, yt;
+
+   // horizontal lines
+   if (y1==y2) {
+      for (i=x1+1; i<x2; i++) NotFree(i,y1);
+      return;
+   }
+
+   // vertical lines
+   if (x1==x2) {
+      for (i=y1+1; i<y2; i++) NotFree(x1,i);
+      return;
+   }
+
+   // other lines
+   if (TMath::Abs(x2-x1)>TMath::Abs(y2-y1)) {
+      if (x1>x2) {
+         xt = x1; x1 = x2; x2 = xt;
+         yt = y1; y1 = y2; y2 = yt;
+      }
+      for (i=x1+1; i<x2; i++) {
+         j = (Int_t)((Double_t)(y2-y1)*(Double_t)((i-x1)/(Double_t)(x2-x1))+y1);
+         NotFree(i,j);
+         NotFree(i,(j+1));
+      }
+   } else {
+      if (y1>y2) {
+         yt = y1; y1 = y2; y2 = yt;
+         xt = x1; x1 = x2; x2 = xt;
+      }
+      for (j=y1+1; j<y2; j++) {
+         i = (Int_t)((Double_t)(x2-x1)*(Double_t)((j-y1)/(Double_t)(y2-y1))+x1);
+         NotFree(i,j);
+         NotFree((i+1),j);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPad::FillCollideGridTBox(TObject *o)
+{
+   TBox *b = (TBox *)o;
+
+   Double_t xs   = (fX2-fX1)/fCGnx;
+   Double_t ys   = (fY2-fY1)/fCGny;
+
+   Int_t x1 = (Int_t)((b->GetX1()-fX1)/xs);
+   Int_t x2 = (Int_t)((b->GetX2()-fX1)/xs);
+   Int_t y1 = (Int_t)((b->GetY1()-fY1)/ys);
+   Int_t y2 = (Int_t)((b->GetY2()-fY1)/ys);
+   for (int i = x1; i<=x2; i++) {
+      for (int j = y1; j<=y2; j++) NotFree(i, j);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPad::FillCollideGridTFrame(TObject *o)
+{
+   TFrame *f = (TFrame *)o;
+
+   Double_t xs   = (fX2-fX1)/fCGnx;
+   Double_t ys   = (fY2-fY1)/fCGny;
+
+   Int_t x1 = (Int_t)((f->GetX1()-fX1)/xs);
+   Int_t x2 = (Int_t)((f->GetX2()-fX1)/xs);
+   Int_t y1 = (Int_t)((f->GetY1()-fY1)/ys);
+   Int_t y2 = (Int_t)((f->GetY2()-fY1)/ys);
+   Int_t i;
+
+   for (i = x1; i<=x2; i++) {
+      NotFree(i, y1);
+      NotFree(i, (y1-1));
+      NotFree(i, (y1-2));
+   }
+   for (i = y1; i<=y2; i++) {
+      NotFree(x1, i);
+      NotFree((x1-1), i);
+      NotFree((x1-2), i);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPad::FillCollideGridTGraph(TObject *o)
+{
+   TGraph *g = (TGraph *)o;
+
+   Double_t xs   = (fX2-fX1)/fCGnx;
+   Double_t ys   = (fY2-fY1)/fCGny;
+
+   Int_t n = g->GetN();
+   Double_t x1, x2, y1, y2;
+
+   for (Int_t i=1; i<n; i++) {
+      g->GetPoint(i-1,x1,y1);
+      g->GetPoint(i  ,x2,y2);
+      if (fLogx) {
+         if (x1 > 0) x1 = TMath::Log10(x1);
+         else        x1 = fUxmin;
+         if (x2 > 0) x2 = TMath::Log10(x2);
+         else        x2 = fUxmin;
+      }
+      if (fLogy) {
+         if (y1 > 0) y1 = TMath::Log10(y1);
+         else        y1 = fUymin;
+         if (y2 > 0) y2 = TMath::Log10(y2);
+         else        y2 = fUymin;
+      }
+      LineNotFree((int)((x1-fX1)/xs), (int)((x2-fX1)/xs),
+                  (int)((y1-fY1)/ys), (int)((y2-fY1)/ys));
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void TPad::FillCollideGridTH1(TObject *o)
+{
+   TH1 *h = (TH1 *)o;
+
+   TString name = h->GetName();
+   if (name.Index("hframe") >= 0) return;
+
+   Double_t xs   = (fX2-fX1)/fCGnx;
+   Double_t ys   = (fY2-fY1)/fCGny;
+
+   bool haserrors = false;
+   TString drawOption = h->GetDrawOption();
+   drawOption.ToLower();
+   drawOption.ReplaceAll("same","");
+
+   if (drawOption.Index("hist") < 0) {
+      if (drawOption.Index("e") >= 0) haserrors = true;
+   }
+
+   Int_t nx = h->GetNbinsX();
+   Int_t  x1, y1, y2;
+   Int_t i, j;
+   Double_t x1l, y1l, y2l;
+
+   for (i = 1; i<nx; i++) {
+      if (haserrors) {
+         x1l = h->GetBinCenter(i);
+         if (fLogx) {
+            if (x1l > 0) x1l = TMath::Log10(x1l);
+            else         x1l = fUxmin;
+         }
+         x1 = (Int_t)((x1l-fX1)/xs);
+         y1l = h->GetBinContent(i)-h->GetBinErrorLow(i);
+         if (fLogy) {
+            if (y1l > 0) y1l = TMath::Log10(y1l);
+            else         y1l = fUymin;
+         }
+         y1 = (Int_t)((y1l-fY1)/ys);
+         y2l = h->GetBinContent(i)+h->GetBinErrorUp(i);
+         if (fLogy) {
+            if (y2l > 0) y2l = TMath::Log10(y2l);
+            else         y2l = fUymin;
+         }
+         y2 = (Int_t)((y2l-fY1)/ys);
+         for (j=y1; j<=y2; j++) {
+         NotFree(x1, j);
+         }
+      }
+      x1l = h->GetBinLowEdge(i);
+      if (fLogx) {
+         if (x1l > 0) x1l = TMath::Log10(x1l);
+         else         x1l = fUxmin;
+      }
+      x1 = (Int_t)((x1l-fX1)/xs);
+      y1l = h->GetBinContent(i);
+      if (fLogy) {
+         if (y1l > 0) y1l = TMath::Log10(y1l);
+         else         y1l = fUymin;
+      }
+      y1 = (Int_t)((y1l-fY1)/ys);
+      NotFree(x1, y1);
+      x1l = h->GetBinLowEdge(i)+h->GetBinWidth(i);
+      if (fLogx) {
+         if (x1l > 0) x1l = TMath::Log10(x1l);
+         else         x1l = fUxmin;
+      }
+      x1 = (int)((x1l-fX1)/xs);
+      NotFree(x1, y1);
+   }
+
+   // Extra objects in the list of function
+   TPaveStats *ps = (TPaveStats*)h->GetListOfFunctions()->FindObject("stats");
+   if (ps) FillCollideGridTBox(ps);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This method draws the collide grid on top of the canvas. This is used for
+/// debugging only. At some point it will be removed.
+
+void TPad::DrawCollideGrid()
+{
+   auto box = new TBox();
+   box->SetFillColorAlpha(kRed,0.5);
+
+   Double_t xs   = (fX2-fX1)/fCGnx;
+   Double_t ys   = (fY2-fY1)/fCGny;
+
+   Double_t X1L, X2L, Y1L, Y2L;
+   Double_t t = 0.15;
+   Double_t Y1, Y2;
+   Double_t X1 = fX1;
+   Double_t X2 = X1+xs;
+
+   for (int i = 0; i<fCGnx; i++) {
+      Y1 = fY1;
+      Y2 = Y1+ys;
+      for (int j = 0; j<fCGny; j++) {
+         if (gPad->GetLogx()) {
+            X1L = TMath::Power(10,X1);
+            X2L = TMath::Power(10,X2);
+         } else {
+            X1L = X1;
+            X2L = X2;
+         }
+         if (gPad->GetLogy()) {
+            Y1L = TMath::Power(10,Y1);
+            Y2L = TMath::Power(10,Y2);
+         } else {
+            Y1L = Y1;
+            Y2L = Y2;
+         }
+         if (!fCollideGrid[i + j*fCGnx]) {
+            box->SetFillColorAlpha(kBlack,t);
+            box->DrawBox(X1L, Y1L, X2L, Y2L);
+         } else {
+            box->SetFillColorAlpha(kRed,t);
+            box->DrawBox(X1L, Y1L, X2L, Y2L);
+         }
+         Y1 = Y2;
+         Y2 = Y1+ys;
+         if (t==0.15) t = 0.1;
+         else         t = 0.15;
+      }
+      X1 = X2;
+      X2 = X1+xs;
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert x from pad to X.
@@ -4514,10 +4891,12 @@ void TPad::Print(const char *filenam, Option_t *option)
       }
 
       // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      if (gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
@@ -4553,13 +4932,14 @@ void TPad::Print(const char *filenam, Option_t *option)
          }
       }
 
-      // Create a new SVG file
-      gVirtualPS->SetName(psname);
-      gVirtualPS->Open(psname);
-      gVirtualPS->SetBit(kPrintingPS);
-      gVirtualPS->NewPage();
+      // Create a new TeX file
+      if (gVirtualPS) {
+         gVirtualPS->SetName(psname);
+         gVirtualPS->Open(psname);
+         gVirtualPS->SetBit(kPrintingPS);
+         gVirtualPS->NewPage();
+      }
       Paint();
-
       if (noScreen)  GetCanvas()->SetBatch(kFALSE);
 
       if (!gSystem->AccessPathName(psname)) Info("Print", "TeX file %s has been created", psname.Data());

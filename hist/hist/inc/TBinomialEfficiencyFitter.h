@@ -24,13 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
 
 
 

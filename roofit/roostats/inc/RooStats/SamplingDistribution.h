@@ -16,30 +16,14 @@
 #ifndef ROOSTATS_SamplingDistribution
 #define ROOSTATS_SamplingDistribution
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include "Rtypes.h"
 #include "RooDataSet.h"
 
-
 #include <vector>
 
-
 namespace RooStats {
-
-   /**
-
-      \ingroup Roostats
-
-      This class simply holds a sampling distribution of some test statistic.  
-      The distribution can either be an empirical distribution (eg. the samples themselves) or
-      a weighted set of points (eg. for the FFT method).
-      The class supports merging.
-
-   */
-
 
  class SamplingDistribution : public TNamed {
 
@@ -48,7 +32,7 @@ namespace RooStats {
     /// Constructor for SamplingDistribution
     SamplingDistribution(const char *name,const char *title, std::vector<Double_t>& samplingDist, const char * varName = 0);
     SamplingDistribution(const char *name,const char *title,
-			 std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName = 0);
+          std::vector<Double_t>& samplingDist, std::vector<Double_t>& sampleWeights, const char * varName = 0);
 
 
     SamplingDistribution(const char *name,const char *title, const char * varName = 0);
@@ -57,10 +41,10 @@ namespace RooStats {
 
     /// Default constructor for SamplingDistribution
     SamplingDistribution();
-    
+
     /// Destructor of SamplingDistribution
     virtual ~SamplingDistribution();
-    
+
     /// get the inverse of the Cumulative distribution function
     Double_t InverseCDF(Double_t pvalue);
 
@@ -70,25 +54,25 @@ namespace RooStats {
     /// get the inverse of the Cumulative distribution function
     /// together with the inverse based on sampling variation
     Double_t InverseCDF(Double_t pvalue, Double_t sigmaVariaton, Double_t& inverseVariation);
-  
+
     /// merge two sampling distributions
     void Add(const SamplingDistribution* other);
-    
+
     /// size of samples
     Int_t GetSize() const{return fSamplingDist.size();}
 
     /// Get test statistics values
     const std::vector<Double_t> & GetSamplingDistribution() const {return fSamplingDist;}
-    /// Get the sampling weights 
+    /// Get the sampling weights
     const std::vector<Double_t> & GetSampleWeights() const {return fSampleWeights;}
 
     const TString GetVarName() const {return fVarName;}
-    
+
     /// numerical integral in these limits
     Double_t Integral(Double_t low, Double_t high, Bool_t normalize = kTRUE, Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
 
     /// numerical integral in these limits including error estimation
-    Double_t IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize = kTRUE, 
+    Double_t IntegralAndError(Double_t & error, Double_t low, Double_t high, Bool_t normalize = kTRUE,
                               Bool_t lowClosed = kTRUE, Bool_t highClosed = kFALSE) const;
 
     /// calculate CDF as a special case of Integral(...) with lower limit equal to -inf
@@ -102,14 +86,14 @@ namespace RooStats {
 
     TString fVarName;
 
-    mutable std::vector<Double_t> fSumW;   //! Chached vector with sum of the weight used to compute integral 
-    mutable std::vector<Double_t> fSumW2;  //! Chached vector with sum of the weight used to compute integral error 
-    
+    mutable std::vector<Double_t> fSumW;   //! Cached vector with sum of the weight used to compute integral
+    mutable std::vector<Double_t> fSumW2;  //! Cached vector with sum of the weight used to compute integral error
+
   protected:
 
     /// internal function to sort values
     void SortValues() const;
-    
+
     ClassDef(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
   };
 }

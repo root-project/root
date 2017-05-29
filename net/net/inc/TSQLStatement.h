@@ -12,15 +12,9 @@
 #ifndef ROOT_TSQLStatement
 #define ROOT_TSQLStatement
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
 #include<vector>
 
 class TSQLStatement : public TObject {

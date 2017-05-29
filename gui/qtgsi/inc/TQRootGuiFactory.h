@@ -32,9 +32,7 @@
 //@li Creates a specific Canvas Implementation QCanvasImp
 ////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TRootGuiFactory
 #include "TRootGuiFactory.h"
-#endif
 
 class TCanvasImp;
 

@@ -31,6 +31,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TBonjourRegistrar.h"
+#include "TBonjourBrowser.h"
 #include "TSysEvtHandler.h"
 #include "TError.h"
 #include "TSystem.h"

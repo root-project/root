@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TX3DFrame
 #include "TX3DFrame.h"
-#endif
-#ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
-#endif
 
 class TVirtualPad;
 class TGCanvas;

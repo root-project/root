@@ -56,9 +56,7 @@
 //     Gini(Sample) = 2s*b/(s+b)^2                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 
@@ -76,7 +74,7 @@ namespace TMVA {
       virtual ~GiniIndex(){}
 
       // Return the separation index (a measure for "purity" of the sample")
-      virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t GetSeparationIndex( const Double_t s, const Double_t b );
 
    protected:
 

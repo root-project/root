@@ -12,29 +12,17 @@
 #define ROOSTATS_CombinedCalculator
 
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
 
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
 
-#ifndef ROO_ABS_DATA
 #include "RooAbsData.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
 // #ifndef ROO_WORKSPACE
 // #include "RooWorkspace.h"

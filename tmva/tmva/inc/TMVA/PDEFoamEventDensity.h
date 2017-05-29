@@ -32,9 +32,7 @@
 #ifndef ROOT_TMVA_PDEFoamEventDensity
 #define ROOT_TMVA_PDEFoamEventDensity
 
-#ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
-#endif
 
 namespace TMVA
 {

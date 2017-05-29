@@ -19,9 +19,7 @@
 #ifndef GBUTTONFRAME_H
 #define GBUTTONFRAME_H
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGButton;
 

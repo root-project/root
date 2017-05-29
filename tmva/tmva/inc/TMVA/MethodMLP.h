@@ -47,43 +47,19 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
-#ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
-#endif
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_MethodANNBase
 #include "TMVA/MethodANNBase.h"
-#endif
-#ifndef ROOT_TMVA_TNeuron
 #include "TMVA/TNeuron.h"
-#endif
-#ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
-#endif
-#ifndef ROOT_TMVA_ConvergenceTest
 #include "TMVA/ConvergenceTest.h"
-#endif
 
 #define MethodMLP_UseMinuit__
 #undef  MethodMLP_UseMinuit__

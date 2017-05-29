@@ -77,7 +77,7 @@ use `fChain->GetTree()->GetEntry(entry);`
 #include "TSystem.h"
 #include "TTree.h"
 #include "TError.h"
-#include "TSelectorCint.h"
+#include "TSelector.h"
 #include "TClass.h"
 #include "TInterpreter.h"
 
@@ -257,6 +257,44 @@ Bool_t TSelector::IsStandardDraw(const char *selec)
 
    // We are done
    return stdselec;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Imports the content of 'output' in the internal output list. Existing content
+/// in the output list is discarded (unless found also in 'output').
+/// In particular, if 'output' is nullptr or empty, reset the internal list.
+/// On return, the content of 'output' is cleared to avoid double deletion issues.
+/// (The caller is responsible of 'output' as container: its content is transferred
+/// under the selector ownership).
+
+void TSelector::ImportOutput(TList *output) {
+
+   // Reset the list, if required
+   if (!output || output->GetSize() <= 0) {
+      fOutput->Delete();
+      return;
+   }
+
+   TObject *o;
+
+   // Remove from new list objects already existing locally
+   TIter nxexo(fOutput);
+   while ((o = nxexo())) {
+      if (output->FindObject(o)) output->Remove(o);
+   }
+
+   // Transfer remaining objects
+   TIter nxo(output);
+   while ((o = nxo())) {
+      fOutput->Add(o);
+   }
+
+   // Cleanup original list
+   output->SetOwner(kFALSE);
+   output->Clear("nodelete");
+
+   // Done
+   return;
 }
 
 Bool_t TSelector::ProcessCut(Long64_t /*entry*/)

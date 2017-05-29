@@ -75,17 +75,11 @@
 //#pragma interface
 //#endif
 
-#ifndef ROOT_TPythia6Calls
 #include "TPythia6Calls.h"
-#endif
 
-#ifndef ROOT_TGenerator
 #include "TGenerator.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TPythia6 : public TGenerator {
 

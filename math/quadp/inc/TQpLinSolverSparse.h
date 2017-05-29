@@ -44,12 +44,8 @@
 #define ROOT_TQpLinSolverSparse
 
 #include "TQpLinSolverBase.h"
-#ifndef ROOT_TQpProbSparse
 #include "TQpProbSparse.h"
-#endif
-#ifndef ROOT_TQpDataSparse
 #include "TQpDataSparse.h"
-#endif
 
 #include "TDecompSparse.h"
 

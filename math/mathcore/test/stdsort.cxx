@@ -28,6 +28,7 @@ bool showGraphics = false;
 bool verbose = false;
 //std::string plotFile;
 
+namespace {
 template<typename T>
 struct Compare {
 
@@ -39,6 +40,7 @@ struct Compare {
 
    const T * fData;
 };
+}
 
 template <typename T> bool testSort(const int n, double* tTMath, double* tStd)
 {

@@ -28,12 +28,8 @@
 #ifndef ROOT_TMVA_PDEFoamKernelGauss
 #define ROOT_TMVA_PDEFoamKernelGauss
 
-#ifndef ROOT_TMVA_PDEFoam
 #include "TMVA/PDEFoam.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamKernelBase
 #include "TMVA/PDEFoamKernelBase.h"
-#endif
 
 namespace TMVA
 {

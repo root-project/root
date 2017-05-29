@@ -62,7 +62,7 @@ void parallelcoordtrans()
    Double_t s2x = 0., s2y = 0., s2z = 0.;
    Double_t s3x = 0., s3y = 0., s3z = 0.;
 
-   TCanvas *c1 = new TCanvas("parallel coors", "parallel coords", 0, 0, 900, 1000);
+   TCanvas *c1 = new TCanvas("parallel coords", "parallel coords", 0, 0, 900, 1000);
 
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("generate_random", "This macro works only on OS X with --enable-cocoa");

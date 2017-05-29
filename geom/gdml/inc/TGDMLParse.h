@@ -12,17 +12,11 @@
 #ifndef ROOT_TGDMLParse
 #define ROOT_TGDMLParse
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
 
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
 
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
 
 #include "TFormula.h"
 

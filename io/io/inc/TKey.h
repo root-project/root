@@ -12,15 +12,9 @@
 #ifndef ROOT_TKey
 #define ROOT_TKey
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
 
 class TClass;
 class TBrowser;

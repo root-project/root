@@ -112,7 +112,7 @@ namespace ROOT {
       /// objects.
       /// \tparam ARGS Arguments of the constructor of T
       template<class ...ARGS>
-      TThreadedObject(ARGS... args): fObjPointers(fgMaxSlots, nullptr)
+      TThreadedObject(ARGS&&... args): fObjPointers(fgMaxSlots, nullptr)
       {
          fDirectories.reserve(fgMaxSlots);
 

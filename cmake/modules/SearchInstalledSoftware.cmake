@@ -1,7 +1,8 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
-set(repository_tarfiles http://service-spi.web.cern.ch/service-spi/external/tarFiles)
+
+set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
@@ -402,9 +403,12 @@ if(mathmore OR builtin_gsl)
     ExternalProject_Add(
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
-      URL ${repository_tarfiles}/gsl-${gsl_version}.tar.gz
+      URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --enable-shared=no CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
+                        --libdir=<INSTALL_DIR>/lib
+                        --enable-shared=no
+                        CC=${CMAKE_C_COMPILER} CFLAGS=${CMAKE_C_FLAGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
       BUILD_BYPRODUCTS ${GSL_LIBRARIES}
     )
@@ -427,9 +431,6 @@ if(python OR python3)
     execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.version[:3])"
                     OUTPUT_VARIABLE PYTHON_VERSION)
     message(STATUS "Found Python interpreter version ${PYTHON_VERSION}")
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
-                    OUTPUT_VARIABLE PYTHON_PREFIX)
-    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
   endif()
   set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
   find_package(PythonLibs)
@@ -592,7 +593,7 @@ if(ssl OR builtin_openssl)
     set(OPENSSL_LIBRARIES ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libssl.a ${CMAKE_BINARY_DIR}/OPENSSL-prefix/lib/libcrypto.a)
     ExternalProject_Add(
       OPENSSL
-      URL ${repository_tarfiles}/openssl-${openssl_version}.tar.gz
+      URL ${lcgpackages}/openssl-${openssl_version}.tar.gz
       CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
       BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
       INSTALL_COMMAND make install_sw
@@ -768,7 +769,7 @@ if(builtin_fftw3)
   set(FFTW_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libfftw3.a)
   ExternalProject_Add(
     FFTW3
-    URL ${repository_tarfiles}/fftw-${FFTW_VERSION}.tar.gz
+    URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -791,7 +792,7 @@ if(fitsio OR builtin_cfitsio)
     ExternalProject_Add(
       CFITSIO
       # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-      URL ${repository_tarfiles}/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -854,19 +855,20 @@ if(xrootd)
   endif()
 endif()
 if(builtin_xrootd)
-  set(xrootd_version 4.3.0)
-  set(xrootd_versionnum 400030000)
+  set(xrootd_version 4.6.1)
+  set(xrootd_versionnum 400060001)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
   string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")  # Otherwise it produces many warnings
   string(REPLACE "-W " "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings
   string(REPLACE "-Wshadow" "" __cxxflags "${__cxxflags}")          # Otherwise it produces many warnings  
+  string(REPLACE "-Woverloaded-virtual" "" __cxxflags "${__cxxflags}")  # Otherwise it produces many warnings  
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     XROOTD
-    # http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-    URL ${repository_tarfiles}/xrootd-${xrootd_version}.tar.gz
+    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    # URL ${lcgpackages}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -1085,7 +1087,7 @@ if(davix OR builtin_davix)
     ExternalProject_Add(
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
-      URL ${repository_tarfiles}/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL ${lcgpackages}/davix-embedded-${DAVIX_VERSION}.tar.gz
       PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -1122,29 +1124,6 @@ if(davix OR builtin_davix)
         message(STATUS "                 For the time being switching off 'davix' option")
         set(davix OFF CACHE BOOL "" FORCE)
       endif()
-    endif()
-  endif()
-endif()
-
-#---Check for vc and its compatibility-----------------------------------------------
-if(vc)
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
-      message(STATUS "VC requires GCC version >= 4.5; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
-      message(STATUS "VC requires Apple Clang version >= 4.0; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
-      message(STATUS "VC requires Clang version >= 3.1; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
-    endif()
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
-      message(STATUS "VC requires MSVC version >= 2011; switching OFF 'vc' option")
-      set(vc OFF CACHE BOOL "" FORCE)
     endif()
   endif()
 endif()
@@ -1192,12 +1171,12 @@ if(imt)
   endif()
 endif()  
 if(builtin_tbb)
-  set(tbb_version 44_20160413)
+  set(tbb_version 2017_U5)
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     TBB
-    URL ${repository_tarfiles}/tbb${tbb_version}oss_src.tgz
+    URL ${lcgpackages}/tbb${tbb_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ""
     BUILD_COMMAND make CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
@@ -1244,39 +1223,193 @@ if (vecgeom)
   endif()
 endif()
 
-#---Check for Vc---------------------------------------------------------------------
+#---Check for Vc compatibility-----------------------------------------------------------
 if(vc OR builtin_vc)
-  if(NOT builtin_vc)
-    message(STATUS "Looking for Vc")
-    find_package(Vc 1.0 CONFIG QUIET)
-    if(NOT Vc_FOUND)
-      if(fail-on-missing)
-        message(FATAL_ERROR "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
-      else()
-        message(STATUS "Vc not found. Ensure that the installation of Vc is in the CMAKE_PREFIX_PATH")
-        message(STATUS "              Alternatively, you can also enable the option 'builtin_vc' to build the Vc libraries internally")
-        message(STATUS "              For the time being switching OFF 'vc' option")
-        set(vc OFF CACHE BOOL "" FORCE)
-      endif()
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
+      message(STATUS "Vc requires GCC version >= 4.5; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
     endif()
-    set(VC_INCLUDE_DIRS ${Vc_INCLUDE_DIR})    # Missing from VcConfig.cmake
-    set(VC_LIBRARIES ${Vc_LIBRARIES})         # ROOT project name is "VC"; upstream uses "Vc".
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    if ( APPLE AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4)
+      message(STATUS "Vc requires Apple Clang version >= 4.0; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    elseif (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
+      message(STATUS "Vc requires Clang version >= 3.1; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)  # equivalent to MSVC 2010
+      message(STATUS "Vc requires MSVC version >= 2011; switching OFF 'vc' option")
+      set(vc OFF CACHE BOOL "" FORCE)
+      set(builtin_vc OFF CACHE BOOL "" FORCE)
+    endif()
   endif()
+endif()
+
+#---Check for Vc---------------------------------------------------------------------
+if(builtin_vc)
+  unset(Vc_FOUND)
+  unset(Vc_FOUND CACHE)
+  set(vc ON CACHE BOOL "" FORCE)
+elseif(vc)
+  if(fail-on-missing)
+    find_package(Vc 1.3.0 CONFIG QUIET REQUIRED)
+  else()
+    find_package(Vc 1.3.0 CONFIG QUIET)
+    if(NOT Vc_FOUND)
+      message(STATUS "Vc library not found, support for it disabled.")
+      message(STATUS "Please enable the option 'builtin_vc' to build Vc internally.")
+      set(vc OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+if(vc AND NOT Vc_FOUND AND NOT (veccore OR builtin_veccore))
+  set(Vc_VERSION "1.3.0")
+  set(Vc_PROJECT "Vc-${Vc_VERSION}")
+  set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
+  set(Vc_SRC_MD5 "a248e904f0b1a330ad8f37ec50cbad30")
+  set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/VC-prefix/install")
+  set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
+  set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+  set(Vc_LIBRARY "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/${Vc_LIBNAME}")
+
+  ExternalProject_Add(VC
+    URL     ${Vc_SRC_URI}
+    URL_MD5 ${Vc_SRC_MD5}
+    BUILD_IN_SOURCE 0
+    BUILD_BYPRODUCTS ${Vc_LIBRARY}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+  )
+
+  set(VC_TARGET VC)
+  add_library(Vc STATIC IMPORTED)
+  set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+  add_dependencies(Vc VC)
+
+  set(Vc_LIBRARIES Vc)
+  set(Vc_INCLUDE_DIR "${Vc_ROOTDIR}/include")
+  set(Vc_CMAKE_MODULES_DIR "${Vc_ROOTDIR}/${_LIBDIR_DEFAULT}/cmake/Vc")
+
+  find_package_handle_standard_args(Vc
+    FOUND_VAR Vc_FOUND
+    REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
+    VERSION_VAR Vc_VERSION)
+
+  install(DIRECTORY ${Vc_ROOTDIR}/ DESTINATION ".")
+endif()
+
+if(Vc_FOUND)
+  # Missing from VcConfig.cmake
+  set(Vc_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+endif()
+
+#---Check for VecCore--------------------------------------------------------------------
+if(veccore AND NOT builtin_veccore AND builtin_vc)
+  message(WARNING "Vc is not relocatable, so 'builtin_vc' requires 'builtin_veccore' to set up Vc properly.")
+  set(builtin_veccore ON CACHE BOOL "" FORCE)
+endif()
+
+if(builtin_veccore)
+  unset(VecCore_FOUND)
+  unset(VecCore_FOUND CACHE)
+  set(veccore ON CACHE BOOL "" FORCE)
+elseif(veccore)
+  if(vc)
+    set(VecCore_COMPONENTS Vc)
+  endif()
+  if(fail-on-missing)
+    find_package(VecCore 0.4.0 CONFIG QUIET REQUIRED COMPONENTS ${VecCore_COMPONENTS})
+  else()
+    find_package(VecCore 0.4.0 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
+    if(NOT VecCore_FOUND)
+      message(STATUS "VecCore not found, support for it disabled.")
+      message(STATUS "Please enable the option 'builtin_veccore' to build VecCore internally.")
+      set(veccore OFF CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+
+if(veccore AND NOT VecCore_FOUND)
+  set(VecCore_VERSION "0.4.0")
+  set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
+  set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
+  set(VecCore_SRC_MD5 "c719909eaffbcc1d7a7680b25b6e5019")
+  set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/VECCORE-prefix/install")
+  set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
+
   if(builtin_vc)
-    set(vc_version 1.1.0)
-    set(VC_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX})
-    ExternalProject_Add(
-      VC
-      URL ${repository_tarfiles}/Vc-${vc_version}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-      BUILD_BYPRODUCTS ${VC_LIBRARIES}
-    )
-    set(VC_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
-    set(VC_TARGET VC)
-    set(vc ON CACHE BOOL "" FORCE)
+    set(Vc_VERSION "1.3.1") # version built by VecCore
+    set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
+    set(Vc_LIBRARY "${VecCore_ROOTDIR}/lib/${Vc_LIBNAME}")
   endif()
+
+  ExternalProject_Add(VECCORE
+    URL     ${VecCore_SRC_URI}
+    URL_MD5 ${VecCore_SRC_MD5}
+    BUILD_IN_SOURCE 0
+    BUILD_BYPRODUCTS ${Vc_LIBRARY}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+               -DBUILD_TESTING=OFF -DBUILD_VC=${builtin_vc}
+               -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND env DESTDIR=${VecCore_DESTDIR} ${CMAKE_COMMAND} --build . --target install
+  )
+
+  set(VECCORE_TARGET VECCORE)
+
+  if(builtin_vc)
+    add_library(Vc STATIC IMPORTED)
+    set_property(TARGET Vc PROPERTY IMPORTED_LOCATION ${Vc_LIBRARY})
+    add_dependencies(Vc VECCORE)
+
+    set(Vc_LIBRARIES Vc)
+    set(Vc_INCLUDE_DIR ${VecCore_ROOTDIR}/include)
+    set(Vc_INCLUDE_DIRS ${VecCore_ROOTDIR}/include)
+    set(Vc_CMAKE_MODULES_DIR "${VecCore_ROOTDIR}/lib/cmake/Vc")
+
+    find_package_handle_standard_args(Vc
+      FOUND_VAR Vc_FOUND
+      REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
+      VERSION_VAR Vc_VERSION)
+  endif()
+
+  if (vc OR builtin_vc)
+    set(VecCore_Vc_FOUND True)
+    set(VecCore_Vc_DEFINITIONS -DVECCORE_ENABLE_VC)
+    set(VecCore_Vc_INCLUDE_DIR ${Vc_INCLUDE_DIR})
+    set(VecCore_Vc_LIBRARIES ${Vc_LIBRARIES})
+
+    set(VecCore_DEFINITIONS -DVECCORE_ENABLE_VC)
+    set(VecCore_INCLUDE_DIRS ${Vc_INCLUDE_DIR})
+    set(VecCore_LIBRARIES ${Vc_LIBRARIES})
+  endif()
+
+  set(VecCore_INCLUDE_DIRS ${VecCore_INCLUDE_DIRS} ${VecCore_ROOTDIR}/include)
+
+  find_package_handle_standard_args(VecCore
+    FOUND_VAR VecCore_FOUND
+    REQUIRED_VARS VecCore_INCLUDE_DIRS
+    VERSION_VAR VecCore_VERSION)
+
+  install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
 
 #---Check for Vdt--------------------------------------------------------------------
@@ -1300,7 +1433,7 @@ if(vdt OR builtin_vdt)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
-      URL ${repository_tarfiles}/vdt-${vdt_version}.tar.gz
+      URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1333,6 +1466,79 @@ endif()
 if(tmva AND imt)
   message(STATUS "Looking for BLAS for optional parts of TMVA")
   find_package(BLAS)
+endif()
+
+
+#---Download googletest--------------------------------------------------------------
+if (testing)
+  # FIXME: Remove our version of gtest in roottest. We can reuse this one.
+  # Add gtest
+  # http://stackoverflow.com/questions/9689183/cmake-googletest
+
+  set(_byproduct_binary_dir
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
+  set(_byproducts
+    ${_byproduct_binary_dir}/gtest/libgtest.a
+    ${_byproduct_binary_dir}/gtest/libgtest_main.a
+    ${_byproduct_binary_dir}/libgmock.a
+    ${_byproduct_binary_dir}/libgmock_main.a
+    )
+
+  ExternalProject_Add(
+    googletest
+    GIT_REPOSITORY https://github.com/google/googletest.git
+    GIT_TAG release-1.8.0
+    UPDATE_COMMAND ""
+    # TIMEOUT 10
+    # # Force separate output paths for debug and release builds to allow easy
+    # # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
+    # CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
+    #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
+    #            -Dgtest_force_shared_crt=ON
+    CMAKE_ARGS -G ${CMAKE_GENERATOR}
+                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                  -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+                  -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+    # Disable install step
+    INSTALL_COMMAND ""
+    BUILD_BYPRODUCTS ${_byproducts}
+    # Wrap download, configure and build steps in a script to log output
+    LOG_DOWNLOAD ON
+    LOG_CONFIGURE ON
+    LOG_BUILD ON)
+
+  # Specify include dirs for gtest and gmock
+  ExternalProject_Get_Property(googletest source_dir)
+  set(GTEST_INCLUDE_DIR ${source_dir}/googletest/include)
+  set(GMOCK_INCLUDE_DIR ${source_dir}/googlemock/include)
+
+  # Libraries
+  ExternalProject_Get_Property(googletest binary_dir)
+  set(_G_LIBRARY_PATH ${binary_dir}/googlemock/)
+
+  # gtest
+  add_library(gtest IMPORTED STATIC GLOBAL)
+  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest.a)
+  add_dependencies(gtest googletest)
+
+  # gtest_main
+  add_library(gtest_main IMPORTED STATIC GLOBAL)
+  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
+  add_dependencies(gtest_main googletest)
+
+  # gmock
+  add_library(gmock IMPORTED STATIC GLOBAL)
+  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock.a)
+  add_dependencies(gmock googletest)
+
+  # gmock_main
+  add_library(gmock_main IMPORTED STATIC GLOBAL)
+  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
+  add_dependencies(gmock_main googletest)
+
 endif()
 
 #---Report non implemented options---------------------------------------------------

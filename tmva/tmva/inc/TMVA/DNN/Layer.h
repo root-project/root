@@ -335,7 +335,6 @@ TSharedLayer<Architecture_t>::TSharedLayer(const TSharedLayer &layer)
     fBiasGradients(fWidth, 1), fActivationGradients(layer.fBatchSize, fWidth),
     fF(layer.fF)
 {
-   // Nothing to do here.
 }
 
 //______________________________________________________________________________

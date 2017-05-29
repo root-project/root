@@ -9,38 +9,25 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::MarkovChain
+    \ingroup Roostats
 
-//_________________________________________________
+Stores the steps in a Markov Chain of points.  Allows user to access the
+weight and NLL value (if applicable) with which a point was added to the
+MarkovChain.
 
-#ifndef ROOT_Rtypes
+*/
+
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOSTATS_MarkovChain
 #include "RooStats/MarkovChain.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROO_DATA_HIST
 #include "RooDataHist.h"
-#endif
-#ifndef ROOT_THnSparse
 #include "THnSparse.h"
-#endif
 
 using namespace std;
 
@@ -183,8 +170,8 @@ RooDataSet* MarkovChain::GetAsDataSet(RooArgSet* whichVars) const
    return data;
 }
 
-RooDataSet* MarkovChain::GetAsDataSet(const RooCmdArg& arg1, const RooCmdArg& arg2, 
-                                      const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+RooDataSet* MarkovChain::GetAsDataSet(const RooCmdArg& arg1, const RooCmdArg& arg2,
+                                      const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
                                       const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
    RooDataSet* data;
@@ -210,8 +197,8 @@ RooDataHist* MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
    return hist;
 }
 
-RooDataHist* MarkovChain::GetAsDataHist(const RooCmdArg& arg1, const RooCmdArg& arg2, 
-                                        const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5, 
+RooDataHist* MarkovChain::GetAsDataHist(const RooCmdArg& arg1, const RooCmdArg& arg2,
+                                        const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
                                         const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
    RooDataSet* data;
@@ -228,7 +215,7 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    RooArgList axes;
    if (whichVars == NULL)
       axes.add(*fParameters);
-   else 
+   else
       axes.add(*whichVars);
 
    Int_t dim = axes.getSize();

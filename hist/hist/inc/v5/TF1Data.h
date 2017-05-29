@@ -25,18 +25,10 @@
 
 #include "RConfigure.h"
 
-#ifndef ROOT_v5_TFormula
 #include "v5/TFormula.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
 namespace ROOT {
 

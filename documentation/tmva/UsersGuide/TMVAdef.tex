@@ -87,6 +87,15 @@
 &&\\[-0.45cm]}%
 {\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
 
+% table to display activation functions
+\newenvironment{activationtable}%
+{\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%
+\begin{Sbox}\begin{tabular*}{\tmvaboxwidth}{>{\rule[-0.5ex]{.0ex}{3.0ex}\tt\sze}p{7.5cm}>{\sze}p{5.7cm}}
+&&\\[-0.7cm]
+\rm\sze Name & \rm \smszeall Activation Function  \\[0.1cm]\hline
+&&\\[-0.45cm]}%
+{\\[-0.1cm]\end{tabular*}\end{Sbox}\vspace{1ex} \fbox{\TheSbox}}
+
 % special tables for long descriptions
 \newenvironment{optiontableDescr}%
 {\setlength{\tmvaboxwidth}{\textwidth}\addtolength{\tmvaboxwidth}{-2.3\fboxsep}%

@@ -118,30 +118,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Riostream
 #include "Riostream.h"
-#endif
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
-#ifndef ROOT_TGClient
 #include "TGClient.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TCanvas
 #include "TCanvas.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
 #include <time.h>
 

@@ -148,7 +148,6 @@ void TEveArrowEditor::DoVertex()
    fM->fOrigin.Set(v);
    fVector->GetValues(v);
    fM->fVector.Set(v);
+   fM->StampGeom();
    Update();
 }
-
-

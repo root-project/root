@@ -32,13 +32,9 @@
 #define ROOT_Math_RootFinder
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IRootFinderMethod
 #include "Math/IRootFinderMethod.h"
-#endif
 
 
 /**
@@ -221,13 +217,9 @@ namespace ROOT {
 } // namespace ROOT
 
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
-#ifndef ROOT_Math_Functor
 #include "Math/Functor.h"
-#endif
 
 template<class Function, class Derivative>
 bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,

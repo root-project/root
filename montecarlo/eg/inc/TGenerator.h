@@ -134,9 +134,7 @@
 #ifndef ROOT_TGenerator
 #define ROOT_TGenerator
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TBrowser;
 class TParticle;

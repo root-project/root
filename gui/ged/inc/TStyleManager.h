@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGNumberEntry
 #include "TGNumberEntry.h"
-#endif
 
 class TGButtonGroup;
 class TGCheckButton;

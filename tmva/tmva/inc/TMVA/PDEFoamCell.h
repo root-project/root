@@ -31,16 +31,10 @@
 #ifndef ROOT_TMVA_PDEFoamCell
 #define ROOT_TMVA_PDEFoamCell
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TRef
 #include "TRef.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoamVect
 #include "TMVA/PDEFoamVect.h"
-#endif
 
 namespace TMVA {
 

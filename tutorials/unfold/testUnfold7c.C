@@ -1108,13 +1108,8 @@ void CreateHistogramCopies(TH1 *h[3],TUnfoldBinning const *binning) {
 }
 
 void CreateHistogramCopies(TH2 *h[3],TUnfoldBinning const *binningX) {
-  if(binningX) {
-    h[2]=0;
-    h[3]=0;
-  } else {
-    h[2]=0;
-    h[3]=0;
-  }
+   h[1]=0;
+   h[2]=0;
 }
 
 TH2 *AddOverflowXY(TH2 *h,double widthX,double widthY) {

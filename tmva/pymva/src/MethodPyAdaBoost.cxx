@@ -4,11 +4,11 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodPyAdaBoost                                                  *
- * Web    : http://oproject.org                                           *
+ * Class  : MethodPyAdaBoost                                                      *
+ * Web    : http://oproject.org                                                   *
  *                                                                                *
  * Description:                                                                   *
- *      AdaBoost      Classifiear from Scikit learn                               *
+ *      AdaBoost      Classifier from Scikit learn                               *
  *                                                                                *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -17,13 +17,11 @@
  *                                                                                *
  **********************************************************************************/
 
-#include <Python.h>    // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
+#include <Python.h> // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include "TMVA/MethodPyAdaBoost.h"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
-
-#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 #include "TMVA/Config.h"
 #include "TMVA/Configurable.h"
@@ -60,25 +58,25 @@ MethodPyAdaBoost::MethodPyAdaBoost(const TString &jobName,
                                    DataSetInfo &dsi,
                                    const TString &theOption) :
    PyMethodBase(jobName, Types::kPyAdaBoost, methodTitle, dsi, theOption),
-   base_estimator("None"),
-   n_estimators(50),
-   learning_rate(1.0),
-   algorithm("SAMME.R"),
-   random_state("None")
+   fBaseEstimator("None"),
+   fNestimators(50),
+   fLearningRate(1.0),
+   fAlgorithm("SAMME.R"),
+   fRandomState("None")
 {
 }
 
 //_______________________________________________________________________
-MethodPyAdaBoost::MethodPyAdaBoost(DataSetInfo &theData, const TString &theWeightFile)
-   : PyMethodBase(Types::kPyAdaBoost, theData, theWeightFile),
-     base_estimator("None"),
-     n_estimators(50),
-     learning_rate(1.0),
-     algorithm("SAMME.R"),
-     random_state("None")
+MethodPyAdaBoost::MethodPyAdaBoost(DataSetInfo &theData,
+                                   const TString &theWeightFile) :
+   PyMethodBase(Types::kPyAdaBoost, theData, theWeightFile),
+   fBaseEstimator("None"),
+   fNestimators(50),
+   fLearningRate(1.0),
+   fAlgorithm("SAMME.R"),
+   fRandomState("None")
 {
 }
-
 
 //_______________________________________________________________________
 MethodPyAdaBoost::~MethodPyAdaBoost(void)
@@ -86,170 +84,165 @@ MethodPyAdaBoost::~MethodPyAdaBoost(void)
 }
 
 //_______________________________________________________________________
-Bool_t MethodPyAdaBoost::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets)
+Bool_t MethodPyAdaBoost::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
+   if (type == Types::kMulticlass && numberClasses >= 2) return kTRUE;
    return kFALSE;
 }
-
 
 //_______________________________________________________________________
 void MethodPyAdaBoost::DeclareOptions()
 {
    MethodBase::DeclareCompatibilityOptions();
 
-   DeclareOptionRef(base_estimator, "BaseEstimator", "object, optional (default=DecisionTreeClassifier)\
-    The base estimator from which the boosted ensemble is built.\
-    Support for sample weighting is required, as well as proper `classes_`\
-    and `n_classes_` attributes.");
+   DeclareOptionRef(fBaseEstimator, "BaseEstimator", "object, optional (default=DecisionTreeClassifier)\
+      The base estimator from which the boosted ensemble is built.\
+      Support for sample weighting is required, as well as proper `classes_`\
+      and `n_classes_` attributes.");
 
-   DeclareOptionRef(n_estimators, "NEstimators", "integer, optional (default=50)\
-    The maximum number of estimators at which boosting is terminated.\
-    In case of perfect fit, the learning procedure is stopped early.");
+   DeclareOptionRef(fNestimators, "NEstimators", "integer, optional (default=50)\
+      The maximum number of estimators at which boosting is terminated.\
+      In case of perfect fit, the learning procedure is stopped early.");
 
-   DeclareOptionRef(learning_rate, "LearningRate", "float, optional (default=1.)\
-    Learning rate shrinks the contribution of each classifier by\
-    ``learning_rate``. There is a trade-off between ``learning_rate`` and\
-    ``n_estimators``.");
+   DeclareOptionRef(fLearningRate, "LearningRate", "float, optional (default=1.)\
+      Learning rate shrinks the contribution of each classifier by\
+      ``learning_rate``. There is a trade-off between ``learning_rate`` and\
+      ``n_estimators``.");
 
-   DeclareOptionRef(algorithm, "Algorithm", "{'SAMME', 'SAMME.R'}, optional (default='SAMME.R')\
-    If 'SAMME.R' then use the SAMME.R real boosting algorithm.\
-    ``base_estimator`` must support calculation of class probabilities.\
-    If 'SAMME' then use the SAMME discrete boosting algorithm.\
-    The SAMME.R algorithm typically converges faster than SAMME,\
-    achieving a lower test error with fewer boosting iterations.");
+   DeclareOptionRef(fAlgorithm, "Algorithm", "{'SAMME', 'SAMME.R'}, optional (default='SAMME.R')\
+      If 'SAMME.R' then use the SAMME.R real boosting algorithm.\
+      ``base_estimator`` must support calculation of class probabilities.\
+      If 'SAMME' then use the SAMME discrete boosting algorithm.\
+      The SAMME.R algorithm typically converges faster than SAMME,\
+      achieving a lower test error with fewer boosting iterations.");
 
-   DeclareOptionRef(random_state, "RandomState", "int, RandomState instance or None, optional (default=None)\
-    If int, random_state is the seed used by the random number generator;\
-    If RandomState instance, random_state is the random number generator;\
-    If None, the random number generator is the RandomState instance used\
-    by `np.random`.");
+   DeclareOptionRef(fRandomState, "RandomState", "int, RandomState instance or None, optional (default=None)\
+      If int, random_state is the seed used by the random number generator;\
+      If RandomState instance, random_state is the random number generator;\
+      If None, the random number generator is the RandomState instance used\
+      by `np.random`.");
+
+   DeclareOptionRef(fFilenameClassifier, "FilenameClassifier",
+      "Store trained classifier in this file");
 }
 
 //_______________________________________________________________________
+// Check options and load them to local python namespace
 void MethodPyAdaBoost::ProcessOptions()
 {
-   PyObject *pobase_estimator = Eval(base_estimator);
-   if (!pobase_estimator) {
-      Log() << kFATAL << Form(" BaseEstimator = %s... that does not work !! ", base_estimator.Data())
-            << " The options are Object or None."
-            << Endl;
+   pBaseEstimator = Eval(fBaseEstimator);
+   if (!pBaseEstimator) {
+      Log() << kFATAL << Form("BaseEstimator = %s ... that does not work!", fBaseEstimator.Data())
+            << " The options are Object or None." << Endl;
    }
-   Py_DECREF(pobase_estimator);
+   PyDict_SetItemString(fLocalNS, "baseEstimator", pBaseEstimator);
 
-   if (n_estimators <= 0) {
-      Log() << kERROR << " NEstimators <=0... that does not work !! "
-            << " I set it to 10 .. just so that the program does not crash"
-            << Endl;
-      n_estimators = 10;
+   if (fNestimators <= 0) {
+      Log() << kFATAL << "NEstimators <=0 ... that does not work!" << Endl;
    }
-   if (learning_rate <= 0) {
-      Log() << kERROR << " LearningRate <=0... that does not work !! "
-            << " I set it to 1.0 .. just so that the program does not crash"
-            << Endl;
-      learning_rate = 1.0;
-   }
+   pNestimators = Eval(Form("%i", fNestimators));
+   PyDict_SetItemString(fLocalNS, "nEstimators", pNestimators);
 
-   if (algorithm != "SAMME" && algorithm != "SAMME.R") {
-      Log() << kFATAL << Form(" Algorithm = %s... that does not work !! ", algorithm.Data())
-            << " The options are SAMME of SAMME.R."
-            << Endl;
+   if (fLearningRate <= 0) {
+      Log() << kFATAL << "LearningRate <=0 ... that does not work!" << Endl;
    }
-   PyObject *porandom_state = Eval(random_state);
-   if (!porandom_state) {
-      Log() << kFATAL << Form(" RandomState = %s... that does not work !! ", random_state.Data())
+   pLearningRate = Eval(Form("%f", fLearningRate));
+   PyDict_SetItemString(fLocalNS, "learningRate", pLearningRate);
+
+   if (fAlgorithm != "SAMME" && fAlgorithm != "SAMME.R") {
+      Log() << kFATAL << Form("Algorithm = %s ... that does not work!", fAlgorithm.Data())
+            << " The options are SAMME of SAMME.R." << Endl;
+   }
+   pAlgorithm = Eval(Form("'%s'", fAlgorithm.Data()));
+   PyDict_SetItemString(fLocalNS, "algorithm", pAlgorithm);
+
+   pRandomState = Eval(fRandomState);
+   if (!pRandomState) {
+      Log() << kFATAL << Form(" RandomState = %s... that does not work !! ", fRandomState.Data())
             << "If int, random_state is the seed used by the random number generator;"
             << "If RandomState instance, random_state is the random number generator;"
-            << "If None, the random number generator is the RandomState instance used by `np.random`."
-            << Endl;
+            << "If None, the random number generator is the RandomState instance used by `np.random`." << Endl;
    }
-   Py_DECREF(porandom_state);
+   PyDict_SetItemString(fLocalNS, "randomState", pRandomState);
+
+   // If no filename is given, set default
+   if(fFilenameClassifier.IsNull()) {
+      fFilenameClassifier = GetWeightFileDir() + "/PyAdaBoostModel_" + GetName() + ".PyData";
+   }
 }
 
+//_______________________________________________________________________
+void MethodPyAdaBoost::Init()
+{
+   _import_array(); //require to use numpy arrays
+
+   // Check options and load them to local python namespace
+   ProcessOptions();
+
+   // Import module for ada boost classifier
+   PyRunString("import sklearn.ensemble");
+
+   // Get data properties
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
+}
 
 //_______________________________________________________________________
-void  MethodPyAdaBoost::Init()
+void MethodPyAdaBoost::Train()
 {
-   ProcessOptions();
-   _import_array();//require to use numpy arrays
-
-   //Import sklearn
-   // Convert the file name to a Python string.
-   PyObject *pName = PyUnicode_FromString("sklearn.ensemble");
-   // Import the file as a Python module.
-   fModule = PyImport_Import(pName);
-   Py_DECREF(pName);
-
-   if (!fModule) {
-      Log() << kFATAL << "Can't import sklearn.ensemble" << Endl;
-      Log() << Endl;
-   }
-
-
-   //Training data
-   UInt_t fNvars = Data()->GetNVariables();
+   // Load training data (data, classes, weights) to python arrays
    int fNrowsTraining = Data()->GetNTrainingEvents(); //every row is an event, a class type and a weight
-   int *dims = new int[2];
-   dims[0] = fNrowsTraining;
-   dims[1] = fNvars;
-   fTrainData = (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   npy_intp dimsData[2];
+   dimsData[0] = fNrowsTraining;
+   dimsData[1] = fNvars;
+   fTrainData = (PyArrayObject *)PyArray_SimpleNew(2, dimsData, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainData", (PyObject*)fTrainData);
    float *TrainData = (float *)(PyArray_DATA(fTrainData));
 
-
-   fTrainDataClasses = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   npy_intp dimsClasses = (npy_intp) fNrowsTraining;
+   fTrainDataClasses = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainDataClasses", (PyObject*)fTrainDataClasses);
    float *TrainDataClasses = (float *)(PyArray_DATA(fTrainDataClasses));
 
-   fTrainDataWeights = (PyArrayObject *)PyArray_FromDims(1, &fNrowsTraining, NPY_FLOAT);
+   fTrainDataWeights = (PyArrayObject *)PyArray_SimpleNew(1, &dimsClasses, NPY_FLOAT);
+   PyDict_SetItemString(fLocalNS, "trainDataWeights", (PyObject*)fTrainDataWeights);
    float *TrainDataWeights = (float *)(PyArray_DATA(fTrainDataWeights));
 
    for (int i = 0; i < fNrowsTraining; i++) {
+      // Fill training data matrix
       const TMVA::Event *e = Data()->GetTrainingEvent(i);
       for (UInt_t j = 0; j < fNvars; j++) {
          TrainData[j + i * fNvars] = e->GetValue(j);
       }
-      if (e->GetClass() == TMVA::Types::kSignal) TrainDataClasses[i] = TMVA::Types::kSignal;
-      else TrainDataClasses[i] = TMVA::Types::kBackground;
 
+      // Fill target classes
+      TrainDataClasses[i] = e->GetClass();
+
+      // Get event weight
       TrainDataWeights[i] = e->GetWeight();
    }
-}
 
-void MethodPyAdaBoost::Train()
-{
-   PyObject *pobase_estimator = Eval(base_estimator);
-   PyObject *porandom_state = Eval(random_state);
+   // Create classifier object
+   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(base_estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
+      "Failed to setup classifier");
 
-   PyObject *args = Py_BuildValue("(OifsO)", pobase_estimator, n_estimators, learning_rate, algorithm.Data(), porandom_state);
-   PyObject_Print(args, stdout, 0);
-   std::cout << std::endl;
-   PyObject *pDict = PyModule_GetDict(fModule);
-   PyObject *fClassifierClass = PyDict_GetItemString(pDict, "AdaBoostClassifier");
+   // Fit classifier
+   // NOTE: We dump the output to a variable so that the call does not pollute stdout
+   PyRunString("dump = classifier.fit(trainData, trainDataClasses, trainDataWeights)", "Failed to train classifier");
 
-   // Create an instance of the class
-   if (PyCallable_Check(fClassifierClass)) {
-      //instance
-      fClassifier = PyObject_CallObject(fClassifierClass , args);
-      PyObject_Print(fClassifier, stdout, 0);
-
-      Py_DECREF(args);
-   } else {
-      PyErr_Print();
-      Py_DECREF(pDict);
-      Py_DECREF(fClassifierClass);
-      Log() << kFATAL << "Can't call function AdaBoostClassifier" << Endl;
+   // Store classifier
+   fClassifier = PyDict_GetItemString(fLocalNS, "classifier");
+   if(fClassifier == 0) {
+      Log() << kFATAL << "Can't create classifier object from AdaBoostClassifier" << Endl;
       Log() << Endl;
-
    }
 
-   fClassifier = PyObject_CallMethod(fClassifier, (char *)"fit", (char *)"(OOO)", fTrainData, fTrainDataClasses, fTrainDataWeights);
-
-   if (IsModelPersistence())
-   {
-        TString path = GetWeightFileDir() + "/PyAdaBoostModel.PyData";
-        Log() << Endl;
-        Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
-        Log() << Endl;
-        Serialize(path,fClassifier);
+   if (IsModelPersistence()) {
+      Log() << Endl;
+      Log() << gTools().Color("bold") << "Saving state file: " << gTools().Color("reset") << fFilenameClassifier << Endl;
+      Log() << Endl;
+      Serialize(fFilenameClassifier, fClassifier);
    }
 }
 
@@ -259,6 +252,48 @@ void MethodPyAdaBoost::TestClassification()
    MethodBase::TestClassification();
 }
 
+//_______________________________________________________________________
+std::vector<Double_t> MethodPyAdaBoost::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t)
+{
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
+
+   // Determine number of events
+   Long64_t nEvents = Data()->GetNEvents();
+   if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
+   if (firstEvt < 0) firstEvt = 0;
+   nEvents = lastEvt-firstEvt;
+
+   // Get data
+   npy_intp dims[2];
+   dims[0] = nEvents;
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
+
+   for (Int_t ievt=0; ievt<nEvents; ievt++) {
+      Data()->SetCurrentEvent(ievt);
+      const TMVA::Event *e = Data()->GetEvent();
+      for (UInt_t i = 0; i < fNvars; i++) {
+         pValue[ievt * fNvars + i] = e->GetValue(i);
+      }
+   }
+
+   // Get prediction from classifier
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
+   double *proba = (double *)(PyArray_DATA(result));
+
+   // Return signal probabilities
+   if(Long64_t(mvaValues.size()) != nEvents) mvaValues.resize(nEvents);
+   for (int i = 0; i < nEvents; ++i) {
+      mvaValues[i] = proba[fNoutputs*i + TMVA::Types::kSignal];
+   }
+
+   Py_DECREF(pEvent);
+   Py_DECREF(result);
+
+   return mvaValues;
+}
 
 //_______________________________________________________________________
 Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
@@ -266,25 +301,56 @@ Double_t MethodPyAdaBoost::GetMvaValue(Double_t *errLower, Double_t *errUpper)
    // cannot determine error
    NoErrorCalc(errLower, errUpper);
 
-   if (IsModelPersistence()) ReadModelFromFile();
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
 
-   Double_t mvaValue;
+   // Get current event and load to python array
    const TMVA::Event *e = Data()->GetEvent();
-   UInt_t nvars = e->GetNVariables();
-   int dims[2];
+   npy_intp dims[2];
    dims[0] = 1;
-   dims[1] = nvars;
-   PyArrayObject *pEvent= (PyArrayObject *)PyArray_FromDims(2, dims, NPY_FLOAT);
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
    float *pValue = (float *)(PyArray_DATA(pEvent));
+   for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
 
-   for (UInt_t i = 0; i < nvars; i++) pValue[i] = e->GetValue(i);
-   
+   // Get prediction from classifier
    PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
    double *proba = (double *)(PyArray_DATA(result));
-   mvaValue = proba[0]; //getting signal prob
+
+   // Return MVA value
+   Double_t mvaValue;
+   mvaValue = proba[TMVA::Types::kSignal]; // getting signal probability
+
    Py_DECREF(result);
    Py_DECREF(pEvent);
+
    return mvaValue;
+}
+
+//_______________________________________________________________________
+std::vector<Float_t>& MethodPyAdaBoost::GetMulticlassValues()
+{
+   // Load model if not already done
+   if (fClassifier == 0) ReadModelFromFile();
+
+   // Get current event and load to python array
+   const TMVA::Event *e = Data()->GetEvent();
+   npy_intp dims[2];
+   dims[0] = 1;
+   dims[1] = fNvars;
+   PyArrayObject *pEvent= (PyArrayObject *)PyArray_SimpleNew(2, dims, NPY_FLOAT);
+   float *pValue = (float *)(PyArray_DATA(pEvent));
+   for (UInt_t i = 0; i < fNvars; i++) pValue[i] = e->GetValue(i);
+
+   // Get prediction from classifier
+   PyArrayObject *result = (PyArrayObject *)PyObject_CallMethod(fClassifier, const_cast<char *>("predict_proba"), const_cast<char *>("(O)"), pEvent);
+   double *proba = (double *)(PyArray_DATA(result));
+
+   // Return MVA values
+   if(UInt_t(classValues.size()) != fNoutputs) classValues.resize(fNoutputs);
+   for(UInt_t i = 0; i < fNoutputs; i++) classValues[i] = proba[i];
+
+   return classValues;
 }
 
 //_______________________________________________________________________
@@ -294,29 +360,58 @@ void MethodPyAdaBoost::ReadModelFromFile()
       PyInitialize();
    }
 
-   TString path = GetWeightFileDir() + "/PyAdaBoostModel.PyData";
    Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
+   Log() << gTools().Color("bold") << "Loading state file: " << gTools().Color("reset") << fFilenameClassifier << Endl;
    Log() << Endl;
-   UnSerialize(path,&fClassifier);
+
+   // Load classifier from file
+   Int_t err = UnSerialize(fFilenameClassifier, &fClassifier);
+   if(err != 0)
+   {
+       Log() << kFATAL << Form("Failed to load classifier from file (error code: %i): %s", err, fFilenameClassifier.Data()) << Endl;
+   }
+
+   // Book classifier object in python dict
+   PyDict_SetItemString(fLocalNS, "classifier", fClassifier);
+
+   // Load data properties
+   // NOTE: This has to be repeated here for the reader application
+   fNvars = GetNVariables();
+   fNoutputs = DataInfo().GetNClasses();
+}
+
+//_______________________________________________________________________
+const Ranking* MethodPyAdaBoost::CreateRanking()
+{
+   // Get feature importance from classifier as an array with length equal
+   // number of variables, higher value signals a higher importance
+   PyArrayObject* pRanking = (PyArrayObject*) PyObject_GetAttrString(fClassifier, "feature_importances_");
+   // The python object is null if the base estimator does not support
+   // variable ranking. Then, return NULL, which disables ranking.
+   if(pRanking == 0) return NULL;
+
+   // Fill ranking object and return it
+   fRanking = new Ranking(GetName(), "Variable Importance");
+   Double_t* rankingData = (Double_t*) PyArray_DATA(pRanking);
+   for(UInt_t iVar=0; iVar<fNvars; iVar++){
+      fRanking->AddRank(Rank(GetInputLabel(iVar), rankingData[iVar]));
+   }
+
+   Py_DECREF(pRanking);
+
+   return fRanking;
 }
 
 //_______________________________________________________________________
 void MethodPyAdaBoost::GetHelpMessage() const
 {
-   // get help message text
-   //
    // typical length of text line:
    //         "|--------------------------------------------------------------|"
+   Log() << "An AdaBoost classifier is a meta-estimator that begins by fitting" << Endl;
+   Log() << "a classifier on the original dataset and then fits additional copies" << Endl;
+   Log() << "of the classifier on the same dataset but where the weights of incorrectly" << Endl;
+   Log() << "classified instances are adjusted such that subsequent classifiers focus" << Endl;
+   Log() << "more on difficult cases." << Endl;
    Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Short description:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << "Decision Trees and Rule-Based Models " << Endl;
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << Endl;
-   Log() << gTools().Color("bold") << "--- Performance tuning via configuration options:" << gTools().Color("reset") << Endl;
-   Log() << Endl;
-   Log() << "<None>" << Endl;
+   Log() << "Check out the scikit-learn documentation for more information." << Endl;
 }

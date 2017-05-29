@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofServ
 #include "TProofServ.h"
-#endif
 
 class TProofServLiteInterruptHandler;
 

@@ -12,12 +12,8 @@
 #ifndef ROOT_TNeuron
 #define ROOT_TNeuron
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TTreeFormula;
 class TSynapse;

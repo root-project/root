@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TGraphBentErrors : public TGraph {
 

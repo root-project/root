@@ -12,15 +12,9 @@
 #ifndef ROOT_TXMLFile
 #define ROOT_TXMLFile
 
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TXMLSetup
 #include "TXMLSetup.h"
-#endif
 
 
 class TKeyXML;

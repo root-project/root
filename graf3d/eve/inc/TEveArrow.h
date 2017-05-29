@@ -50,19 +50,28 @@ public:
    virtual TObject* GetObject(const TEveException& ) const
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   void SetTubeR(Float_t x) { fTubeR = x; }
-   void SetConeR(Float_t x) { fConeR = x; }
-   void SetConeL(Float_t x) { fConeL = x; }
+   void    StampGeom() { ResetBBox(); AddStamp(kCBTransBBox | kCBObjProps); }
 
    Float_t GetTubeR() const { return fTubeR; }
    Float_t GetConeR() const { return fConeR; }
    Float_t GetConeL() const { return fConeL; }
 
-   TEveVector GetVector() { return fVector; }
-   TEveVector GetOrigin() { return fOrigin; }
+   void SetTubeR(Float_t x) { fTubeR = x; StampGeom(); }
+   void SetConeR(Float_t x) { fConeR = x; StampGeom(); }
+   void SetConeL(Float_t x) { fConeL = x; StampGeom(); }
+
+   TEveVector  GetOrigin() { return fOrigin; }
+   TEveVector& RefOrigin() { return fOrigin; }
+   TEveVector  GetVector() { return fVector; }
+   TEveVector& RefVector() { return fVector; }
+
+   void SetOrigin(const TEveVector& o)             { fOrigin = o;          StampGeom(); }
+   void SetOrigin(Float_t x, Float_t y, Float_t z) { fOrigin.Set(x, y, z); StampGeom(); }
+   void SetVector(const TEveVector& v)             { fVector = v;          StampGeom(); }
+   void SetVector(Float_t x, Float_t y, Float_t z) { fVector.Set(x, y, z); StampGeom(); }
 
    Int_t GetDrawQuality() const  { return fDrawQuality; }
-   void  SetDrawQuality(Int_t q) { fDrawQuality = q; }
+   void  SetDrawQuality(Int_t q) { fDrawQuality = q;    }
 
    virtual void ComputeBBox();
    virtual void Paint(Option_t* option="");

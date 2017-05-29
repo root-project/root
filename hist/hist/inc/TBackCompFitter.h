@@ -10,27 +10,11 @@
 #ifndef ROOT_TBackCompFitter_H_
 #define ROOT_TBackCompFitter_H_
 
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
-
 #include "Fit/BasicFCN.h"
 #include "Fit/FitResult.h"
-
-#ifndef ROOT_Fit_Fitter
 #include "Fit/Fitter.h"
-#endif
-
-#ifndef ROOT_Fit_DataVector
-#include "Fit/DataVector.h"
-#endif
-
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
-
-
-
 #include <vector>
 
 /*
@@ -146,8 +130,8 @@ protected:
 private:
 
    //ROOT::Fit::FitData * fFitData;
-   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit 
-   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object 
+   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit
+   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc;
    ROOT::Math::IParamMultiFunction * fModelFunc;

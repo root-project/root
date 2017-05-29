@@ -15,17 +15,11 @@
 
 #include "Math/IFunctionfwd.h"
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
-#ifndef ROOSTATS_SimpleInterval
 #include "RooStats/SimpleInterval.h"
-#endif
 
 class RooAbsData;
 class RooAbsPdf;

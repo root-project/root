@@ -14,17 +14,11 @@
 #define ROOT_TGX11TTF
 
 
-#ifndef ROOT_TGX11
 #include "TGX11.h"
-#endif
 
-#ifndef ROOT_TTF
 #include "TTF.h"
-#endif
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #ifdef R__HAS_XFT
 class TXftFontHash;

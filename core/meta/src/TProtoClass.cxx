@@ -17,6 +17,7 @@ Persistent version of a TClass.
 
 #include "TBaseClass.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TDataMember.h"
 #include "TEnum.h"
 #include "TInterpreter.h"
@@ -461,12 +462,23 @@ TRealData* TProtoClass::TProtoRealData::CreateRealData(TClass* dmClass,
    if (dm) realMemberName = dm->GetName();
    if (TestFlag(kIsPointer) )
       realMemberName = TString("*")+realMemberName;
-   else {
-      if (dm && dm->GetArrayDim() > 0) {
+   else if (dm){
+      if (dm->GetArrayDim() > 0) {
          // in case of array (like fMatrix[2][2] we need to add max index )
          // this only in case of it os not a pointer
          for (int idim = 0; idim < dm->GetArrayDim(); ++idim)
             realMemberName += TString::Format("[%d]",dm->GetMaxIndex(idim) );
+      } else if (TClassEdit::IsStdArray(dm->GetTypeName())) {
+         std::string typeNameBuf;
+         Int_t ndim = dm->GetArrayDim();
+         std::array<Int_t, 5> maxIndices; // 5 is the maximum supported in TStreamerElement::SetMaxIndex
+         TClassEdit::GetStdArrayProperties(dm->GetTypeName(),
+                                           typeNameBuf,
+                                           maxIndices,
+                                           ndim);
+         for (Int_t idim = 0; idim < ndim; ++idim) {
+            realMemberName += TString::Format("[%d]",maxIndices[idim] );
+         }
       }
    }
 

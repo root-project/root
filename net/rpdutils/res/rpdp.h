@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_VarArgs
 #include "Varargs.h"
-#endif
-#ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
-#endif
-#ifndef ROOT_rpderr
 #include "rpderr.h"
-#endif
 #include <string>
 #ifdef R__GLOBALSTL
 namespace std { using ::string; }
@@ -42,9 +36,7 @@ namespace std { using ::string; }
 //                                                                 //
 /////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_rpddefs
 #include "rpddefs.h"
-#endif
 
 #include "Rtypes.h" //const int  kMAXPATHLEN = kMAXSECBUF;
 
@@ -226,7 +218,7 @@ extern "C" {
 // Globus Utility Function prototypes ...
 namespace ROOT {
 
-void  GlbsToolError(char *, int, int, int);
+void  GlbsToolError(const char *, int, int, int);
 int   GlbsToolCheckCert(char **);
 int   GlbsToolCheckContext(int);
 int   GlbsToolCheckProxy(char **);

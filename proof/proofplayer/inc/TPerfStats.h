@@ -22,21 +22,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TTimeStamp
 #include "TTimeStamp.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TVirtualPerfStats
 #include "TVirtualPerfStats.h"
-#endif
 
 
 class TDSet;

@@ -12,9 +12,7 @@
 #ifndef ROOT_TAttBBox
 #define ROOT_TAttBBox
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttBBox
 {

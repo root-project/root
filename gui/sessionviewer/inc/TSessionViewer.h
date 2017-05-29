@@ -21,33 +21,19 @@
 #ifndef ROOT_TSessionViewer
 #define ROOT_TSessionViewer
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TGTextEntry
 #include "TGTextEntry.h"
-#endif
 
-#ifndef ROOT_TGNumberEntry
 #include "TGNumberEntry.h"
-#endif
 
-#ifndef ROOT_TGTab
 #include "TGTab.h"
-#endif
 
-#ifndef ROOT_TGListView
 #include "TGListView.h"
-#endif
 
-#ifndef ROOT_TTime
 #include "TTime.h"
-#endif
 
 #include <stdio.h>
 #include <time.h>

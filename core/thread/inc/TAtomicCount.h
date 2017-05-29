@@ -54,12 +54,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
 #include "TAtomicCountGcc.h"

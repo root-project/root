@@ -10,18 +10,10 @@
 #ifndef ROOT_Minuit2_BasicMinimumError
 #define ROOT_Minuit2_BasicMinimumError
 
-#ifndef  ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
-#endif
-#ifndef ROOT_Minuit2_MnMatrix
 #include "Minuit2/MnMatrix.h"
-#endif
-#ifndef ROOT_Minuit2_LaSum
 #include "Minuit2/LaSum.h"
-#endif
-#ifndef ROOT_Minuit2_StackAllocator
 #include "Minuit2/StackAllocator.h"
-#endif
 
 namespace ROOT {
 

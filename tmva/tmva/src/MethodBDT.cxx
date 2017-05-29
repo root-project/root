@@ -146,6 +146,7 @@ the selection.
 #include <algorithm>
 #include <fstream>
 #include <math.h>
+#include <unordered_map>
 
 
 using std::vector;
@@ -212,6 +213,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
+   fRegressionLossFunctionBDTG = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,6 +268,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
+   fRegressionLossFunctionBDTG = nullptr;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
    // weight file. Make sure the the variables correspond to the ones used in
@@ -1421,30 +1424,39 @@ Double_t TMVA::MethodBDT::GetGradBoostMVA(const TMVA::Event* e, UInt_t nTrees)
 
 void TMVA::MethodBDT::UpdateTargets(std::vector<const TMVA::Event*>& eventSample, UInt_t cls)
 {
-   if(DoMulticlass()){
+   if (DoMulticlass()) {
       UInt_t nClasses = DataInfo().GetNClasses();
-      for (std::vector<const TMVA::Event*>::iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(cls)+=fForest.back()->CheckEvent(*e,kFALSE);
-         if(cls == nClasses-1){
-            for(UInt_t i=0;i<nClasses;i++){
+      std::vector<Double_t> expCache;
+      if (cls == nClasses - 1) {
+         expCache.resize(nClasses);
+      }
+      for (auto e : eventSample) {
+         fResiduals[e].at(cls) += fForest.back()->CheckEvent(e, kFALSE);
+         if (cls == nClasses - 1) {
+            auto &residualsThisEvent = fResiduals[e];
+            std::transform(residualsThisEvent.begin(),
+                           residualsThisEvent.begin() + nClasses,
+                           expCache.begin(), [](Double_t d) { return exp(d); });
+            for (UInt_t i = 0; i < nClasses; i++) {
                Double_t norm = 0.0;
-               for(UInt_t j=0;j<nClasses;j++){
-                  if(i!=j)
-                     norm+=exp(fResiduals[*e].at(j)-fResiduals[*e].at(i));
+               for (UInt_t j = 0; j < nClasses; j++) {
+                  if (i != j) {
+                     norm += expCache[j] / expCache[i];
+                  }
                }
-               Double_t p_cls = 1.0/(1.0+norm);
-               Double_t res = ((*e)->GetClass()==i)?(1.0-p_cls):(-p_cls);
-               const_cast<TMVA::Event*>(*e)->SetTarget(i,res);
+               Double_t p_cls = 1.0 / (1.0 + norm);
+               Double_t res = (e->GetClass() == i) ? (1.0 - p_cls) : (-p_cls);
+               const_cast<TMVA::Event *>(e)->SetTarget(i, res);
             }
          }
       }
-   }
-   else{
-      for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-         fResiduals[*e].at(0)+=fForest.back()->CheckEvent(*e,kFALSE);
-         Double_t p_sig=1.0/(1.0+exp(-2.0*fResiduals[*e].at(0)));
-         Double_t res = (DataInfo().IsSignal(*e)?1:0)-p_sig;
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,res);
+   } else {
+      for (auto e : eventSample) {
+         auto &residualAt0 = fResiduals[e].at(0);
+         residualAt0 += fForest.back()->CheckEvent(e, kFALSE);
+         Double_t p_sig = 1.0 / (1.0 + exp(-2.0 * residualAt0));
+         Double_t res = (DataInfo().IsSignal(e) ? 1 : 0) - p_sig;
+         const_cast<TMVA::Event *>(e)->SetTarget(0, res);
       }
    }
 }
@@ -1468,24 +1480,26 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
 
 Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls)
 {
-   std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> > leaves;
-   for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
-      Double_t weight = (*e)->GetWeight();
-      TMVA::DecisionTreeNode* node = dt->GetEventNode(*(*e));
-      if ((leaves[node]).empty()){
-         (leaves[node]).push_back((*e)->GetTarget(cls)* weight);
-         (leaves[node]).push_back(fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight);
-      }
-      else {
-         (leaves[node])[0]+=((*e)->GetTarget(cls)* weight);
-         (leaves[node])[1]+=fabs((*e)->GetTarget(cls))*(1.0-fabs((*e)->GetTarget(cls))) * weight* weight;
-      }
-   }
-   for (std::map<TMVA::DecisionTreeNode*,std::vector<Double_t> >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      if ((iLeave->second)[1]<1e-30) (iLeave->second)[1]=1e-30;
+   struct LeafInfo {
+      Double_t sumWeightTarget = 0;
+      Double_t sum2 = 0;
+   };
 
-      (iLeave->first)->SetResponse(fShrinkage/DataInfo().GetNClasses()*(iLeave->second)[0]/((iLeave->second)[1]));
+   std::unordered_map<TMVA::DecisionTreeNode*, LeafInfo> leaves;
+   for (auto e : eventSample) {
+      Double_t weight = e->GetWeight();
+      TMVA::DecisionTreeNode* node = dt->GetEventNode(*e);
+      auto &v = leaves[node];
+      auto target = e->GetTarget(cls);
+      v.sumWeightTarget += target * weight;
+      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight * weight;
+   }
+   for (auto &iLeave : leaves) {
+      constexpr auto minValue = 1e-30;
+      if (iLeave.second.sum2 < minValue) {
+         iLeave.second.sum2 = minValue;
+      }
+      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second.sumWeightTarget/iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown
@@ -1714,7 +1728,6 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
    Double_t err=0, sumGlobalw=0, sumGlobalwfalse=0, sumGlobalwfalse2=0;
 
    std::vector<Double_t> sumw(DataInfo().GetNClasses(),0); //for individually re-scaling  each class
-   std::map<Node*,Int_t> sigEventsInNode; // how many signal events of the training tree
 
    Double_t maxDev=0;
    for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
@@ -1898,7 +1911,6 @@ Double_t TMVA::MethodBDT::AdaCost( vector<const TMVA::Event*>& eventSample, Deci
    Double_t err=0, sumGlobalWeights=0, sumGlobalCost=0;
 
    std::vector<Double_t> sumw(DataInfo().GetNClasses(),0);      //for individually re-scaling  each class
-   std::map<Node*,Int_t> sigEventsInNode; // how many signal events of the training tree
 
    for (vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();e++) {
       Double_t w = (*e)->GetWeight();
@@ -2366,25 +2378,29 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
    if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
 
-   std::vector<double> temp;
-
    UInt_t nClasses = DataInfo().GetNClasses();
-   for(UInt_t iClass=0; iClass<nClasses; iClass++){
-      temp.push_back(0.0);
-      for(UInt_t itree = iClass; itree<fForest.size(); itree+=nClasses){
-         temp[iClass] += fForest[itree]->CheckEvent(e,kFALSE);
-      }
+   std::vector<Double_t> temp(nClasses);
+   auto forestSize = fForest.size();
+   // trees 0, nClasses, 2*nClasses, ... belong to class 0
+   // trees 1, nClasses+1, 2*nClasses+1, ... belong to class 1 and so forth
+   UInt_t classOfTree = 0;
+   for (UInt_t itree = 0; itree < forestSize; ++itree) {
+      temp[classOfTree] += fForest[itree]->CheckEvent(e, kFALSE);
+      if (++classOfTree == nClasses) classOfTree = 0; // cheap modulo
    }
+
+   // we want to calculate sum of exp(temp[j] - temp[i]) for all i,j (i!=j)
+   // first calculate exp(), then replace minus with division.
+   std::transform(temp.begin(), temp.end(), temp.begin(), [](Double_t d){return exp(d);});
 
    for(UInt_t iClass=0; iClass<nClasses; iClass++){
       Double_t norm = 0.0;
       for(UInt_t j=0;j<nClasses;j++){
          if(iClass!=j)
-            norm+=exp(temp[j]-temp[iClass]);
+            norm += temp[j] / temp[iClass];
       }
       (*fMulticlassReturnVal).push_back(1.0/(1.0+norm));
    }
-
 
    return *fMulticlassReturnVal;
 }

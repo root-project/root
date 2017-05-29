@@ -20,14 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTSym
 #include "TMatrixTSym.h"
-#endif
-#ifndef ROOT_TMatrixFSymfwd
 #include "TMatrixFSymfwd.h"
-#endif
-#ifndef ROOT_TMatrixFUtils
 #include "TMatrixFUtils.h"
-#endif
 
 #endif

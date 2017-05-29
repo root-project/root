@@ -26,10 +26,19 @@ void TMVACrossValidation()
    TMVA::Tools::Instance();
 
    // Load data
+   TFile *input(0);
    TString fname = "./tmva_class_example.root";
-   if (gSystem->AccessPathName(fname))
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-   TFile *input = TFile::Open(fname);
+   if (!gSystem->AccessPathName( fname )) {
+      input = TFile::Open( fname ); // check if file in local directory exists
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+   }
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
 
    TTree* signalTree = (TTree*)input->Get("TreeS");
    TTree* background = (TTree*)input->Get("TreeB");

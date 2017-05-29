@@ -34,13 +34,9 @@
 #ifndef ROOT_TGHtml
 #define ROOT_TGHtml
 
-#ifndef ROOT_TGView
 #include "TGView.h"
-#endif
 
-#ifndef ROOT_TGHtmlTokens
 #include "TGHtmlTokens.h"
-#endif
 
 class TGClient;
 class TImage;

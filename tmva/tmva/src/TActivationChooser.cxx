@@ -31,27 +31,13 @@ Class for easily choosing activation functions
 #include <vector>
 #include "TString.h"
 
-#ifndef ROOT_TMVA_TActivation
 #include "TMVA/TActivation.h"
-#endif
-#ifndef ROOT_TMVA_TActivationIdentity
 #include "TMVA/TActivationIdentity.h"
-#endif
-#ifndef ROOT_TMVA_TActivationSigmoid
 #include "TMVA/TActivationSigmoid.h"
-#endif
-#ifndef ROOT_TMVA_TActivationTanh
 #include "TMVA/TActivationTanh.h"
-#endif
-#ifndef ROOT_TMVA_TActivationReLU
 #include "TMVA/TActivationReLU.h"
-#endif
-#ifndef ROOT_TMVA_TActivationRadial
 #include "TMVA/TActivationRadial.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 #include "TMVA/Types.h"
 
 

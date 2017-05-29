@@ -291,7 +291,7 @@ void TGLEventHandler::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       case kButton2Double:
       case kButton3Double:
       {
-         eventSt.fCode = kButton1Double ? kButton1 : kButton2Double ? kButton2 : kButton3;
+         eventSt.fCode = event == kButton1Double ? kButton1 : event == kButton2Double ? kButton2 : kButton3;
          eventSt.fType = kButtonDoubleClick;
          HandleDoubleClick(&eventSt);
       }

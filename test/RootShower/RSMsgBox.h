@@ -16,25 +16,15 @@
 #ifndef ROOTSHOWERMSGBOX_H
 #define ROOTSHOWERMSGBOX_H
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
 
-#ifndef ROOT_TGPicture
 #include "TGPicture.h"
-#endif
 
-#ifndef ROOT_TGIcon
 #include "TGIcon.h"
-#endif
 
-#ifndef ROOT_TGLabel
 #include "TGLabel.h"
-#endif
 
 
 class RootShowerMsgBox : public TGTransientFrame {

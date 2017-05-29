@@ -12,13 +12,9 @@
 #ifndef ROOT_TGraphEdge
 #define ROOT_TGraphEdge
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 struct GVizAgraph_t;
 struct GVizAgedge_t;

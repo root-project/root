@@ -143,8 +143,8 @@ PassManagerBuilder::PassManagerBuilder() {
     VerifyOutput = false;
     MergeFunctions = false;
     PrepareForLTO = false;
-    PGOInstrGen = RunPGOInstrGen;
-    PGOInstrUse = RunPGOInstrUse;
+    PGOInstrGen = RunPGOInstrGen.getValue();
+    PGOInstrUse = RunPGOInstrUse.getValue();
     PrepareForThinLTO = false;
     PerformThinLTO = false;
 }

@@ -21,17 +21,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_FIT_FitResult
 #include "Fit/FitResult.h"
-#endif
 
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
 
 class TFitResult:public TNamed, public ROOT::Fit::FitResult {
 

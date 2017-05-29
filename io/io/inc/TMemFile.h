@@ -12,9 +12,7 @@
 #ifndef ROOT_TMemFile
 #define ROOT_TMemFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 class TMemFile : public TFile {
 

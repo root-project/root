@@ -12,13 +12,9 @@
 #ifndef ROOT_TXMLDocument
 #define ROOT_TXMLDocument
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 struct _xmlDoc;

@@ -273,6 +273,9 @@ object if suitable.
 
 ClassImp(TVirtualViewer3D)
 
+// pin the vtable here.
+TVirtualViewer3D::~TVirtualViewer3D() {}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a Viewer 3D of specified type.
 

@@ -34,22 +34,12 @@
 // C/C++
 #include <iostream>
 
-#ifndef ROOT_TDecompSVD
 #include "TDecompSVD.h"
-#endif
-#ifndef ROOT_TMatrixF
 #include "TMatrixF.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
 /////////////////////////////////////////////////////////////////////////////////
 /// constructor

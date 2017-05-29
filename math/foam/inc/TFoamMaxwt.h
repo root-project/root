@@ -10,9 +10,7 @@
 //                                                              //
 //////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TH1D;
 

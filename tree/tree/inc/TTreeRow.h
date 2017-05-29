@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 class TTreeRow : public TSQLRow {
 

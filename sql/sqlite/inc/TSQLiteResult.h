@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLiteResult
 #define ROOT_TSQLiteResult
 
-#ifndef ROOT_TSQLResult
 #include "TSQLResult.h"
-#endif
 
 #if !defined(__CINT__)
 #include <sqlite3.h>

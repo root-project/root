@@ -36,9 +36,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSpline
 #include "TSpline.h"
-#endif
 
 namespace TMVA {
 

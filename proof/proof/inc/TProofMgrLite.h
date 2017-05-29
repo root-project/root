@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofMgr
 #include "TProofMgr.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
 class TProofMgrLite : public TProofMgr {
 

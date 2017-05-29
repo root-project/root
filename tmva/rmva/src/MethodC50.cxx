@@ -112,7 +112,7 @@ MethodC50::~MethodC50(void)
 }
 
 //_______________________________________________________________________
-Bool_t MethodC50::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets)
+Bool_t MethodC50::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
@@ -336,6 +336,6 @@ void TMVA::MethodC50::ReadModelFromFile()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodC50::MakeClass(const TString &theClassFileName) const
+void TMVA::MethodC50::MakeClass(const TString &/*theClassFileName*/) const
 {
 }

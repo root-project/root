@@ -36,5 +36,5 @@ void thstackpalettecolor()
    hs->Add(h3st);
 
    // draw the stack
-   hs->Draw("PFC");
+   hs->Draw("pfc nostack");
 }

@@ -28,6 +28,7 @@ namespace llvm {
 namespace clang {
   class CodeGenerator;
   class CompilerInstance;
+  class DiagnosticConsumer;
   class Decl;
   class FileID;
   class Parser;
@@ -87,6 +88,10 @@ namespace cling {
     ///\brief Pool of reusable block-allocated transactions.
     ///
     std::unique_ptr<TransactionPool> m_TransactionPool;
+
+    ///\brief DiagnosticConsumer instance
+    ///
+    std::unique_ptr<clang::DiagnosticConsumer> m_DiagConsumer;
 
   public:
     enum EParseResult {
@@ -223,13 +228,6 @@ namespace cling {
     ///\param[in] input - The incremental input that needs to be parsed.
     ///
     EParseResult ParseInternal(llvm::StringRef input);
-
-    ///\brief Return true if this decl (which comes from an AST file) should
-    /// not be sent to CodeGen. The module is assumed to describe the contents
-    /// of a library; symbols inside the library must thus not be reemitted /
-    /// duplicated by CodeGen.
-    ///
-    bool shouldIgnore(const clang::Decl* D) const;
 
   };
 } // end namespace cling

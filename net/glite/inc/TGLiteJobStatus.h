@@ -24,13 +24,9 @@ gLite implementation of TGridJobStatus*//*
 #ifndef ROOT_TGLiteJobStatus
 #define ROOT_TGLiteJobStatus
 
-#ifndef ROOT_TGridJobStatus
 #include "TGridJobStatus.h"
-#endif
 
-#ifndef ROOT_TGridJob
 #include "TGridJob.h"
-#endif
 
 class TGLiteJobStatus : public TGridJobStatus
 {

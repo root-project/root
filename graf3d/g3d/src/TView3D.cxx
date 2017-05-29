@@ -674,7 +674,7 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       y      = gPad->PixeltoY(py);
       system = GetSystem();
       framewasdrawn = 0;
-      if (system == kCARTESIAN || system == kPOLAR || IsPerspective()) {
+      if (system == kCARTESIAN || system == kPOLAR || system == 11 || IsPerspective()) {
          longitude1 = 180*(x-xmin)/xrange;
          latitude1  =  90*(y-ymin)/yrange;
       } else {
@@ -699,7 +699,7 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       framewasdrawn = 1;
       x = gPad->PixeltoX(px);
       y = gPad->PixeltoY(py);
-      if (system == kCARTESIAN || system == kPOLAR || IsPerspective()) {
+      if (system == kCARTESIAN || system == kPOLAR || system == 11 || IsPerspective()) {
          longitude2 = 180*(x-xmin)/xrange;
          latitude2  =  90*(y-ymin)/yrange;
       } else {
@@ -974,7 +974,7 @@ Int_t TView3D::GetDistancetoAxis(Int_t axis, Int_t px, Int_t py, Double_t &ratio
    Double_t y     = py;
    ratio = 0;
 
-   if (fSystem != 1) return 9998; // only implemented for Cartesian coordinates
+   if (fSystem != kCARTESIAN) return 9998; // only implemented for Cartesian coordinates
    if (axis == 1) {
       x1 = gPad->XtoAbsPixel(fX1[0]);
       y1 = gPad->YtoAbsPixel(fX1[1]);

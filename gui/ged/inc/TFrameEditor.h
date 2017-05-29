@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TGRadioButton;
 class TGLineWidthComboBox;

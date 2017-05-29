@@ -15,48 +15,15 @@
 #ifndef ROOSTATS_MCMCIntervalPlot
 #define ROOSTATS_MCMCIntervalPlot
 
-#ifndef ROO_PRINTABLE
 #include "RooPrintable.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
-#ifndef ROO_KEYS_PDF
 #include "RooNDKeysPdf.h"
-#endif
-#ifndef ROO_PRODUCT
 #include "RooProduct.h"
-#endif
 
 namespace RooStats {
-
-   /**
-
-
-      \ingroup Roostats
-
-      This class provides simple and straightforward utilities to plot a MCMCInterval
-      object.  Basic use only requires a few lines once you have an MCMCInterval*:
-
-      ````
-      MCMCIntervalPlot plot(*interval);
-      plot.Draw();
-      ````
-
-      The standard Draw() function will currently draw the confidence interval
-      range with bars if 1-D and a contour if 2-D.  The MCMC posterior will also be
-      plotted for the 1-D case.
-
-*/
 
    class MCMCIntervalPlot : public TNamed, public RooPrintable {
 

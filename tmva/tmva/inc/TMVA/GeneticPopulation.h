@@ -36,15 +36,9 @@
 #include <string>
 #include <vector>
 
-#ifndef ROOT_TMVA_GeneticGenes
 #include "TMVA/GeneticGenes.h"
-#endif
-#ifndef ROOT_TMVA_Interval
 #include "TMVA/Interval.h"
-#endif
-#ifndef ROOT_TMVA_GeneticRange
 #include "TMVA/GeneticRange.h"
-#endif
 
 class TH1F;
 

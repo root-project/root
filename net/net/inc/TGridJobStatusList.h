@@ -20,13 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TGridJob
 #include "TGridJob.h"
-#endif
 
 
 class TGridJob;

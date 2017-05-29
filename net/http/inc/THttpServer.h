@@ -1,24 +1,24 @@
 // $Id$
 // Author: Sergey Linev   21/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_THttpServer
 #define ROOT_THttpServer
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_THttpCallArg
 #include "THttpCallArg.h"
-#endif
 
 #include <mutex>
 
@@ -26,37 +26,34 @@ class THttpEngine;
 class THttpTimer;
 class TRootSniffer;
 
-
 class THttpServer : public TNamed {
 
 protected:
+   TList fEngines;         ///<! engines which runs http server
+   THttpTimer *fTimer;     ///<! timer used to access main thread
+   TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
 
-   TList        fEngines;     //! engines which runs http server
-   THttpTimer  *fTimer;       //! timer used to access main thread
-   TRootSniffer *fSniffer;    //! sniffer provides access to ROOT objects hierarchy
+   Long_t fMainThrdId; ///<! id of the main ROOT process
 
-   Long_t       fMainThrdId;  //! id of the main ROOT process
+   TString fJSROOTSYS; ///<! location of local JSROOT files
+   TString fTopName;   ///<! name of top folder, default - "ROOT"
+   TString fJSROOT;    ///<! location of external JSROOT files
+   TList fLocations;   ///<! list of local directories, which could be accessed via server
 
-   TString      fJSROOTSYS;   //! location of local JSROOT files
-   TString      fTopName;     //! name of top folder, default - "ROOT"
-   TString      fJSROOT;      //! location of external JSROOT files
-   TList        fLocations;   //! list of local directories, which could be accessed via server
+   TString fDefaultPage;     ///<! file name for default page name
+   TString fDefaultPageCont; ///<! content of the file content
+   TString fDrawPage;        ///<! file name for drawing of single element
+   TString fDrawPageCont;    ///<! content of draw page
 
-   TString      fDefaultPage; //! file name for default page name
-   TString      fDefaultPageCont; //! content of the file content
-   TString      fDrawPage;    //! file name for drawing of single element
-   TString      fDrawPageCont; //! content of draw page
+   std::mutex fMutex; ///<! mutex to protect list with arguments
+   TList fCallArgs;   ///<! submitted arguments
 
-   std::mutex   fMutex;       //! mutex to protect list with arguments
-   TList        fCallArgs;    //! submitted arguments
-
-   // Here any request can be processed
+   /** Function called for every processed request */
    virtual void ProcessRequest(THttpCallArg *arg);
 
    static Bool_t VerifyFilePath(const char *fname);
 
 public:
-
    THttpServer(const char *engine = "civetweb:8080");
    virtual ~THttpServer();
 
@@ -64,12 +61,8 @@ public:
 
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 
-   TRootSniffer *GetSniffer() const
-   {
-      // returns pointer on objects sniffer
-
-      return fSniffer;
-   }
+   /** returns pointer on objects sniffer */
+   TRootSniffer *GetSniffer() const { return fSniffer; }
 
    void SetSniffer(TRootSniffer *sniff);
 
@@ -77,17 +70,11 @@ public:
 
    void SetReadOnly(Bool_t readonly);
 
-   void SetTopName(const char *top)
-   {
-      // set name of top item in objects hierarchy
-      fTopName = top;
-   }
+   /** set name of top item in objects hierarchy */
+   void SetTopName(const char *top) { fTopName = top; }
 
-   const char *GetTopName() const
-   {
-      // returns name of top item in objects hierarchy
-      return fTopName.Data();
-   }
+   /** returns name of top item in objects hierarchy */
+   const char *GetTopName() const { return fTopName.Data(); }
 
    void SetJSROOT(const char *location);
 
@@ -100,10 +87,13 @@ public:
    void SetTimer(Long_t milliSec = 100, Bool_t mode = kTRUE);
 
    /** Check if file is requested, thread safe */
-   Bool_t  IsFileRequested(const char *uri, TString &res) const;
+   Bool_t IsFileRequested(const char *uri, TString &res) const;
 
    /** Execute HTTP request */
    Bool_t ExecuteHttp(THttpCallArg *arg);
+
+   /** Submit HTTP request */
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE);
 
    /** Process submitted requests, must be called from main thread */
    void ProcessRequests();
@@ -115,7 +105,7 @@ public:
    Bool_t Unregister(TObject *obj);
 
    /** Restrict access to specified object */
-   void Restrict(const char *path, const char* options);
+   void Restrict(const char *path, const char *options);
 
    Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
 

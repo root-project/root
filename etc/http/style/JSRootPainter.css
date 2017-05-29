@@ -52,6 +52,12 @@
    display: block;
 }
 
+.jsroot .h_button {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
+
 .jsroot .h_item {
     cursor: pointer;
 }
@@ -212,6 +218,13 @@
     background-image: url("data:image/gif;base64, iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAADAFBMVEX////M27mQs2tilDA9eQA7egBbkhVTjAxJgwWBqVdGgQBrnySdxViu0WrE4oaYv2PC35NtoCqxvaSevX5FgAB7qje73nDK6neu109vpyVupCGo2kJ9xwBQhBtilC9pnx7G63PM6olgnAB/vQBDigCVv0yb1CaDzAB8uBJwmkNnnBnB52ui2Ca94WZopAE/hgCtz2ue2CmDywCByACKujtdjyqdvHpdlhLV9YdkowCFxwCw1lFXmAJvpC5jng1coABlpwBprAB8sitAfABDfgKx31Gr3TuCsi5sqABtqgBUkxTV85zL7I213mef0j+OxyKk00k/ewCp3TCSyhCw0mRRjQC23HmU0h55wQB5vQB4uQB1tgCIwBeJxgCBvQDC3ndCjACYx1204Fx6wwB7vQB1tABzsQBBfQBpkzdtpQB9tQA/iQCMu1SMukNUlQBYmQBsqAd4rh11rwZyrQBvqgBDfwCqvZVWkQBUnACp0Hq/43K733C+4X+w12eZyT2IvSN5sgpZkwBxmUSDqFlbnACJzQy742p/wwB2ugBysgBwrwBvqwBwqQBhmgBCfwDV2NN8pk1foACO1QBZmABRkABpqwB3uQB0sgB0rgBnogBUjgC7w7NymkFdnQBUhxmis41okjdCfgBGgQWHpWPMzMzb3NtumD5NhQzT09Pv8O/a2trOz87l5eXc3NzPz88AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABtHAA4HXQAAEgAAB9CTigAAABCfCQ4HTxy6Kw4HXRy+8xy+8wAAMwAAAAAAAAAAAAAAAAAAAAAAAgAAAgAABgYAAG7AAAAACgAAAgAAAgYAAEAAAAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4Hnw4HnwAAFRpRiYmO2V0aWRtSSY7ZWdsZVNpdGNBO251amRGO3R0bCYmO3J3ZWlvVCY7c2xuaVc7d28ABCwBG8q3AAAAAXRSTlMAQObYZgAAAAlwSFlzAAALEgAACxIB0t1+/AAAAOtJREFUeNpjYIACRiZmFlY2dg4ol5OLm4eXj19AUAjMFRYRFROXkJSSlpEF8+XkFRSVlFVU1dQ1NMF8LW0dXT19A0MjYxNTIN/M3MLSytrG1s7ewdHJGSjg4urm7uHp5e3j6+cfABIIDAoOCVUJC4+IjIqOAQk4x8bFJyQmJadEpaalpQMFMjKzsnNy8/ILCouKS0qBAmXlFZVV1TW1dfUNJY1NQIHmlta29o7ozq7unt6+fgaGCRMnTZ4ydVrU9BkzZ5XOBiqYM3HuvPkL0tPTFy5avATkzqXLlq9YuWoJEKxeA/Ho2nUMyAAA9OtDOfv2TiUAAAAASUVORK5CYII=");
 }
 
+.jsroot .img_leaf_method {
+    display: inline-block;
+    height: 16px;
+    width: 16px;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAKlBMVEUAAAAAgADzExMAgIAAAADAwMCAgADxGRnuFxLnHhHuIyPKJQ/rLi7////aW8ZOAAAAAXRSTlMAQObYZgAAAAFiS0dEDfa0YfUAAAAHdElNRQfgCxIPFR/msbP7AAAAaUlEQVQI12NggANBBiYFMMNQxAjCYA4UUoZIBRpBGMyiQorGIIaxWRCEwSYo3igiCNJlaLkwGSwkJn1QGMhgNDQ0TDU2dACqERYTDksGG5SkmGoApBnFhBRTBUAiaYJpDIJgs10cGBgdACxbDamu76Z5AAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE3LTAxLTE3VDA5OjMwOjM1KzAxOjAwyGHxKQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xOFQxNToyMTozMSswMTowMJgvuUkAAAAASUVORK5CYII=');
+}
+
 .jsroot .img_globe {
     display: inline-block;
     height: 19px;
@@ -335,14 +348,15 @@
   tooltip style for 3d drawings
   --------------------------------------------------*/
 
-.jsroot .tt3d_border {
+.jsroot_tt3d_main {
+    opacity: 1;
+    filter: alpha(opacity=1);
+    position: absolute;
     display: block;
-    height: 5px;
-    margin-left: 5px;
     overflow: hidden;
+    z-index: 101;
 }
-
-.jsroot .tt3d_cont {
+.jsroot_tt3d_cont {
     display: block;
     padding: 2px 12px 3px 7px;
     margin-left: 5px;
@@ -390,26 +404,31 @@
 
 .jsroot_ctxmenu {
     position: absolute;
-    min-width: 64px;
+    min-width: 48px;
     height: auto;
-    padding: 4px;
     margin: 0;
     margin-left: 0px;
     margin-top: 0px;
     border: 1px solid #999;
     background: #F8F8F8;
     box-shadow: 2px 2px 2px #AAA;
-    z-index: 11;
+    z-index: 101;
     overflow: visible;
-    font-size: 11px;
-    line-height: 16px;
+    line-height: 14px;
+}
+
+.jsroot_ctxmenu li {
+    font-size: 12px;
+    padding: 1px;
+    white-space: nowrap;
 }
 
 .jsroot .fast_command {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     margin-left: 3px;
     margin-top: 3px;
+    padding: 0px;
 }
 
 .jsroot .fast_command img {
@@ -465,7 +484,7 @@
     min-width: 100px;
     height: auto;
     overflow: visible;
-    z-index: 11;
+    z-index: 101;
     border: 1px solid #999;
     background: #F8F8F8;
     left: 10px;
@@ -571,4 +590,145 @@
 
 .jsroot .svg_toolbar_btn:hover {
     opacity: 1.0;
+}
+
+.jsroot_noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+/* stylesheet for enlarged canvas */
+#jsroot_enlarge_div {
+     position: absolute;
+     margin: 0px;
+     border: 0px;
+     padding: 0px;
+     left: 1px;
+     right: 1px;
+     top: 1px;
+     bottom: 1px;
+     background: white;
+     opacity: 0.95;
+     z-index: 100;
+     overflow: hidden;
+}
+
+/* stylesheet for browser */
+
+.jsroot_browser {
+	pointer-events: none;
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	right:0;
+   margin: 0;
+   border: 0;
+   overflow: hidden;
+}
+
+.jsroot_browser_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   font-size: 12px;
+   font-family: Verdana;
+   pointer-events: all;
+}
+
+.jsroot_browser_btns {
+   pointer-events: all;
+	opacity: 0;
+	display:flex;
+	flex-direction: column;
+}
+
+.jsroot_browser_btns:hover {
+   opacity: 0.3;
+}
+
+.jsroot_browser_hierarchy {
+	overflow:auto;
+	flex:1;
+	margin-top:5px;
+}
+
+.jsroot_status_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   font-size: 12px;
+   font-family: Verdana;
+   pointer-events: all;
+}
+
+.jsroot_browser_area p { 
+   margin-top: 5px; 
+   margin-bottom: 5px;
+   white-space: nowrap;
+}
+
+.jsroot_browser_title {
+   font-family: Verdana;
+   font-size: 20px;
+}
+
+.jsroot_float_browser {
+	border: solid 3px white;
+}
+
+.jsroot_draw_area {
+   background-color: #E6E6FA;
+   overflow: hidden;
+   margin: 0;
+   border: 0;
+}
+
+/* separator style, used for browser and new grid layout 
+*/
+
+
+.jsroot_separator {
+   pointer-events: all;
+   border: 0;
+   margin: 0;
+   padding: 0;
+}
+
+.jsroot_vline:after {
+    content:"";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    border-left: 1px dotted #ff0000;
+}
+
+.jsroot_hline:after {
+    content:"";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    border-top: 1px dotted #ff0000;
+}
+
+.jsroot_h_separator {
+	cursor: ns-resize;
+   background-color: azure;
+} 
+
+.jsroot_v_separator {
+	cursor: ew-resize;
+   background-color: azure;
+}
+
+.jsroot_status_label {
+   margin: 3px;
+   margin-left: 5px;
+   font-size: 14px;
+   vertical-align: middle;
+   white-space: nowrap;
 }

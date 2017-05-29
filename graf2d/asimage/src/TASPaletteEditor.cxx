@@ -40,7 +40,6 @@ It is called by a pull down menu item of TASImage.
 #include "Windows4root.h"
 #endif
 
-extern "C" {
 #ifndef WIN32
 #   include <afterbase.h>
 #else
@@ -48,8 +47,8 @@ extern "C" {
 #   include <win32/afterbase.h>
 #endif
 #   include <afterimage.h>
+extern "C" {
 #   include <bmp.h>
-
 }
 
 

@@ -26,8 +26,14 @@ etc/allDict.h
 xcuserdata
 project.xcworkspace
 
+# MacOS metadata
+.DS_Store
+
 # Visual Code
 .vscode/*
+
+# CLion
+.idea/*
 
 # Vim
 *.swp
@@ -69,7 +75,7 @@ project.xcworkspace
 /config/Makefile.comp
 
 # /core/base/src/
-core/base/src/RGitCommit.h
+/core/base/src/RGitCommit.h
 
 # /core/lzma/src/
 /core/lzma/src/xz-5.2.1
@@ -89,6 +95,9 @@ core/base/src/RGitCommit.h
 
 # /core/pcre/src/
 /core/pcre/src/pcre-8.37
+
+# /core/rootcling_stage1/src/
+/core/rootcling_stage1/src/rootcling_stage1
 
 # /documentation/primer/
 /documentation/primer/ROOTPrimer.tex

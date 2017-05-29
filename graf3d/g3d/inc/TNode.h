@@ -21,22 +21,12 @@
 #ifndef ROOT_TNode
 #define ROOT_TNode
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
-#ifndef ROOT_TRotMatrix
 #include "TRotMatrix.h"
-#endif
 
 class TBrowser;
 

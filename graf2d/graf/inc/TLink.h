@@ -13,9 +13,7 @@
 #define ROOT_TLink
 
 
-#ifndef ROOT_TText
 #include "TText.h"
-#endif
 
 class TLink : public TText {
 

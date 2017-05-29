@@ -12,15 +12,9 @@
 #ifndef ROOT_TMCParticle
 #define ROOT_TMCParticle
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TPrimary
 #include "TPrimary.h"
-#endif
 
 
 class TMCParticle : public TObject, public TAttLine {

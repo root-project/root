@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoParaboloid
 #define ROOT_TGeoParaboloid
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 class TGeoParaboloid : public TGeoBBox
 {

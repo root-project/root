@@ -13,13 +13,9 @@
 #define ROOT_R_TRFunctionImport
 
 
-#ifndef ROOT_R_RExports
-#include<RExports.h>
-#endif
+#include <RExports.h>
 
-#ifndef ROOT_R_TRObject
-#include<TRObject.h>
-#endif
+#include <TRObject.h>
 
 #ifndef Rcpp_hpp
 #include <Rcpp.h>

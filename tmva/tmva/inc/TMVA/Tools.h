@@ -45,35 +45,23 @@
 #include <atomic>
 #endif
 
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
 
-#ifndef ROOT_TMatrixDSymfwd
 #include "TMatrixDSymfwd.h"
-#endif
 
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
 
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
-#ifndef ROOT_TVectorDfwd
 #include "TVectorDfwd.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
-#ifndef ROOT_TMVA_VariableTransformBase
 #include "TMVA/VariableTransformBase.h"
-#endif
 
 #include "TString.h"
+
+#include "TMVA/MsgLogger.h"
 
 class TList;
 class TTree;
@@ -262,6 +250,10 @@ namespace TMVA {
       template<typename T>
          inline void ReadAttr    ( void* node, const char* , T& value );
       void        ReadAttr    ( void* node, const char* attrname, TString& value );
+      void ReadAttr(void *node, const char *, float &value);
+      void ReadAttr(void *node, const char *, int &value);
+      void ReadAttr(void *node, const char *, short &value);
+
       template<typename T>
          void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
       void        AddAttr     ( void* node, const char* attrname, const char* value );
@@ -297,9 +289,14 @@ namespace TMVA {
 
 template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrname, T& value )
 {
-   TString val;
-   ReadAttr( node, attrname, val );
-   std::stringstream s(val.Data());
+   // read attribute from xml
+   const char *val = xmlengine().GetAttr(node, attrname);
+   if (val == 0) {
+      const char *nodename = xmlengine().GetNodeName(node);
+      Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
+            << Endl;
+   }
+   std::stringstream s(val);
    // coverity[tainted_data_argument]
    s >> value;
 }

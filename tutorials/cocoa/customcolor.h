@@ -5,15 +5,9 @@
 
 #include <algorithm>
 
-#ifndef ROOT_TError //'ROOT-style' inclusion guards.
 #include "TError.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
 namespace ROOT {
 namespace CocoaTutorials {

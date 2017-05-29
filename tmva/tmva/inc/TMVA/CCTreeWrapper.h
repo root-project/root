@@ -24,21 +24,11 @@
 #ifndef ROOT_TMVA_CCTreeWrapper
 #define ROOT_TMVA_CCTreeWrapper
 
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
 
 
 namespace TMVA {
@@ -123,14 +113,13 @@ namespace TMVA {
          // test event if it decends the tree at this node to the left 
          inline virtual Bool_t GoesLeft ( const Event& e ) const { return (GetDTNode() != NULL ? 
                                                                            GetDTNode()->GoesLeft(e) : false); }
+         // initialize a node from a data record
+         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
+         virtual void ReadContent(std::stringstream& s);
+         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       
       private:
 
-         // initialize a node from a data record
-         virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE);
-         virtual Bool_t ReadDataRecord( std::istream& in, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
-         virtual void ReadContent(std::stringstream& s);
-         
          Int_t fNLeafDaughters; //! number of terminal descendants
          Double_t fNodeResubstitutionEstimate; //! R(t) = misclassification rate for node t
          Double_t fResubstitutionEstimate; //! R(T_t) = sum[t' in ~T_t]{ R(t) }

@@ -25,12 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TPolyLine3D
 #include "TPolyLine3D.h"
-#endif
-#ifndef ROOT_TRotMatrix
 #include "TRotMatrix.h"
-#endif
 
 enum EHelixRangeType {
    kHelixT, kHelixX, kHelixY, kHelixZ, kLabX, kLabY, kLabZ, kUnchanged

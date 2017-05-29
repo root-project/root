@@ -19,14 +19,11 @@
 #ifndef ROOT_Math_GenVector_Polar3D
 #define ROOT_Math_GenVector_Polar3D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
+#include <cmath>
 
 namespace ROOT {
 
@@ -113,12 +110,12 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho()   const { return fR*std::sin(fTheta); }
-   Scalar X()     const { return Rho()*std::cos(fPhi);}
-   Scalar Y()     const { return Rho()*std::sin(fPhi);}
-   Scalar Z()     const { return fR*std::cos(fTheta); }
+   Scalar Rho() const { return fR * sin(fTheta); }
+   Scalar X() const { return Rho() * cos(fPhi); }
+   Scalar Y() const { return Rho() * sin(fPhi); }
+   Scalar Z() const { return fR * cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
-   Scalar Perp2() const { return Rho()*Rho(); }
+   Scalar Perp2() const { return pow(Rho(), 2); }
 
    // pseudorapidity
    Scalar Eta() const
@@ -160,9 +157,7 @@ public :
 private:
    inline static Scalar pi()  { return M_PI; }
    inline void Restrict() {
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
-      return;
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 
 public:
@@ -212,8 +207,8 @@ public:
 
    // The following make this coordinate system look enough like a CLHEP
    // vector that an assignment member template can work with either
-   T x() const { return X();}
-   T y() const { return Y();}
+   T x() const { return X(); }
+   T y() const { return Y(); }
    T z() const { return Z(); }
 
    // ============= Specializations for improved speed ==================
@@ -250,17 +245,11 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
-#endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
-#ifndef ROOT_Math_GenVector_CylindricalEta3D
 #include "Math/GenVector/CylindricalEta3D.h"
-#endif
 #endif
 
 

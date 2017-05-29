@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGObject
 #include "TGObject.h"
-#endif
 
 class TGClient;
 class TGFontPool;

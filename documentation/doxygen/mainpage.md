@@ -3,7 +3,7 @@
 ### Introduction
 Welcome to %ROOT
 
-This documentation describes the software classes and functions that makes up the %ROOT softare system as well as their application programming interface (API).
+This documentation describes the software classes and functions that makes up the %ROOT software system as well as their application programming interface (API).
 This is not an introduction of %ROOT, for this please refer to  the [%ROOT User Guides and Manuals](http://root.cern.ch/root-user-guides-and-manuals).
 This documentation is generated directly from the source code using [Doxygen](http://doxygen.org) and in principle is kept up to date.
 The version of %ROOT corresponding to this documentation is indicated at the page heading.

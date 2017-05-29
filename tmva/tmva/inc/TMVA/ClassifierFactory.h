@@ -44,9 +44,7 @@
 #include <vector>
 
 // Local
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 namespace TMVA {

@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH2
 #include "TH2.h"
-#endif
-#ifndef ROOT_TProfile
 #include "TProfile.h"
-#endif
 
 class TProfile2D : public TH2D {
 
@@ -145,6 +141,7 @@ public:
    virtual void      SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2(Bool_t flag = kTRUE);
+   Double_t GetNumberOfBins() { return fBinEntries.GetSize(); }
 
    ClassDef(TProfile2D,7)  //Profile2D histogram class
 };

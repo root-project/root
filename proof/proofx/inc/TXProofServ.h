@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofServ
 #include "TProofServ.h"
-#endif
-#ifndef ROOT_TXHandler
 #include "TXHandler.h"
-#endif
 
 class TXProofServInterruptHandler;
 class TXSocketHandler;

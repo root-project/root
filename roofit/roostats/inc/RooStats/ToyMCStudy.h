@@ -11,12 +11,7 @@
 #ifndef ROOSTATS_ToyMCStudy
 #define ROOSTATS_ToyMCStudy
 
-
-
-
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include "RooAbsStudy.h"
 
@@ -32,20 +27,7 @@
 
 #include <vector>
 
-
-
 namespace RooStats {
-
-/**
-
-ToyMCStudy is an implementation of RooAbsStudy for toy Monte Carlo sampling.
-This class is automatically used by ToyMCSampler when given a ProofConfig.
-This is also its intended use case.
-
-\ingroup Roostats
-
-*/
-
 
 class ToyMCStudy: public RooAbsStudy {
 
@@ -61,7 +43,7 @@ class ToyMCStudy: public RooAbsStudy {
          storeDetailedOutput(kTRUE);
       }
 
-	   RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }     
+      RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }
 
       virtual ~ToyMCStudy() {}
 
@@ -75,34 +57,34 @@ class ToyMCStudy: public RooAbsStudy {
       void SetToyMCSampler(ToyMCSampler& t) { fToyMCSampler = &t; }
       void SetParamPoint(const RooArgSet& paramPoint) { fParamPoint.add(paramPoint); }
 
-      void SetRandomSeed(unsigned int seed) { fRandomSeed = seed; } 
+      void SetRandomSeed(unsigned int seed) { fRandomSeed = seed; }
 
    protected:
 
-      unsigned int fRandomSeed; 
+      unsigned int fRandomSeed;
       ToyMCSampler *fToyMCSampler;
       RooArgSet fParamPoint;
 
    protected:
    ClassDef(ToyMCStudy,2); // toy MC study for parallel processing
-   
+
 };
 
 
 class ToyMCPayload : public TNamed {
-   
+
    public:
-      
+
       ToyMCPayload() {
          // proof constructor, do not use
-	 fDataSet = NULL;
+    fDataSet = NULL;
       }
 
       ToyMCPayload(RooDataSet* sd)
       {
          fDataSet = sd;
       }
-      
+
       virtual ~ToyMCPayload() {
       }
 
@@ -111,10 +93,10 @@ class ToyMCPayload : public TNamed {
       {
          return fDataSet;
       }
-   
+
    private:
       RooDataSet* fDataSet;
-   
+
    protected:
    ClassDef(ToyMCPayload,1);
 };

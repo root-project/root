@@ -37,14 +37,30 @@ include(MacroEnsureVersion)
 
 #---Enable CCache ------------------------------------------------------------------------------
 if(ccache)
+   set(CMAKE_IGNORE_PATH_TMP ${CMAKE_IGNORE_PATH})
+   unset(CMAKE_IGNORE_PATH)
+
    find_program(ccache_cmd NAMES ccache ccache-swig)
    mark_as_advanced(ccache_cmd ${ccache_cmd})
+
+   set(CMAKE_IGNORE_PATH ${CMAKE_IGNORE_PATH_TMP})
+
    if(ccache_cmd)
       message(STATUS "Using ccache for building")
       set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
    else()
       message(STATUS "Could NOT find ccache")
    endif()
+endif()
+
+#---Enable test coverage -----------------------------------------------------------------------
+if(coverage)
+  set(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
+  set(GCC_COVERAGE_LINK_FLAGS    "-fprofile-arcs")
+  set(CMAKE_CXX_FLAGS            "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
+  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
@@ -95,6 +111,7 @@ endforeach()
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR}/test
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
@@ -119,9 +136,85 @@ foreach(tutorial_file ${tutorial_files})
 endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
 
+add_subdirectory (interpreter)
+
+#---CXX MODULES-----------------------------------------------------------------------------------
+if(cxxmodules)
+  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
+  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
+  # Check that we can build code with modules enabled, and that repeatedly
+  # including <cassert> still manages to respect NDEBUG properly.
+  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
+                             #include <cassert>
+                             #define NDEBUG
+                             #include <cassert>
+                             int main() { assert(this code is not compiled); }"
+                             CXX_SUPPORTS_MODULES)
+  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+  if(NOT CXX_SUPPORTS_MODULES)
+    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
+  endif()
+
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
+
+  # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
+  if (APPLE)
+    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+    # trickery to override the contents of system's OpenGL.
+    # On OSX #include TGLIncludes.h will trigger the creation of the system
+    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+    # the translation units which it needs to 'rewrite'. The translation units
+    # which need glew support are in graf3d. However, depending on the modulemap
+    # organization we could request it implicitly (eg. one big module for ROOT).
+    # In these cases we need to 'prepend' this include path to the compiler in order
+    # for glew.h to it its trick.
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
+  endif()
+
+  add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+  add_custom_command(
+                    OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                    DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+                    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                    COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+  )
+
+  add_dependencies(move_artifacts copymodulemap)
+
+  # Provide our own modulemap for implementations other than libcxx.
+  if (NOT libcxx)
+    # Write a empty overlay file to the output directory that CMake can run its compiler tests.
+    # We will create the actual overlay later in the configuration.
+    file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
+    set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
+
+    # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
+    get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+    string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
+    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
+
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+  endif()
+
+  # These vars are useful when we want to compile things without cxxmodules.
+  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
+  if (NOT APPLE)
+    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags." FORCE)
+  endif()
+  set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
+
+
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
+endif(cxxmodules)
+
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
-add_subdirectory (interpreter)
 add_subdirectory (core)
 add_subdirectory (build)
 add_subdirectory (math)
@@ -150,6 +243,16 @@ endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
+
+#---CXX MODULES-----------------------------------------------------------------------------------
+# Take all the modulemap contents we collected from the packages and append them to our modulemap.
+# We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
+# add_subdirectory calls above.
+if(cxxmodules)
+  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+endif(cxxmodules)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
@@ -189,24 +292,6 @@ set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
 add_dependencies(onepcm ${__allTargets})
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-#---CXX MODULES-----------------------------------------------------------------------------------
-if(cxxmodules)
-  add_custom_target(copymodulemap
-                    DEPENDS build/unix/module.modulemap
-                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap ${CMAKE_BINARY_DIR}/include/module.modulemap
-                    )
-  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-  if (NOT APPLE)
-    set(__echo_args "-e")
-  endif()
-  add_custom_command(TARGET copymodulemap POST_BUILD
-                     COMMAND echo ${__echo_args} ${__modulemap_extra_content} >> ${CMAKE_BINARY_DIR}/include/module.modulemap
-                     VERBATIM
-                    )
-  add_dependencies(move_artifacts copymodulemap)
-endif(cxxmodules)
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
@@ -293,6 +378,10 @@ if(testing)
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
+  endif()
+  if(clingtest)
+    message("-- cling test suite enabled: llvm / clang symbols in libCling will be exported!")
+    set(CLING_INCLUDE_TESTS ON)
   endif()
 endif()
 

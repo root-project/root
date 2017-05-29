@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLQuadric
 #define ROOT_TGLQuadric
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

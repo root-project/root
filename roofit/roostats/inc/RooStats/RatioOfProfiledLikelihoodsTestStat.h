@@ -12,63 +12,16 @@
 #define ROOSTATS_RatioOfProfiledLikelihoodsTestStat
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
-#ifndef ROOSTATS_ProfileLikelihoodTestStat
 #include "RooStats/ProfileLikelihoodTestStat.h"
-#endif
-
-
 
 
 namespace RooStats {
-
-   /**
-
-TestStatistic that returns the ratio of profiled likelihoods.
-
-By default the calculation is:
-
-\f[
-        \log{    \frac{ \lambda(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
-                      { \lambda(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
-\f]
-
-where \f$ \lambda \f$ is the profile likelihood ratio, so the
-MLE for the null and alternate are subtracted off.
-
-If ``SetSubtractMLE(false)`` then it calculates:
-
-\f[
-        \log{    \frac{ L(\mu_{alt}  , {conditional \: MLE \: for \: alt  \: nuisance}) }
-                      { L(\mu_{null} , {conditional \: MLE \: for \: null \: nuisance}) } }
-\f]
-
-where \f$ L \f$ is the Likelihood function.
-
-The values of the parameters of interest for the alternative
-hypothesis are taken at the time of the construction.
-If empty, it treats all free parameters as nuisance parameters.
-
-The value of the parameters of interest for the null hypotheses
-are given at each call of Evaluate.
-
-This test statistic is often called the Tevatron test statistic, because it has been used by the Tevatron experiments.
-
- \ingroup Roostats
-
-*/
-
 
 class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
 
@@ -86,7 +39,7 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
    }
 
   RatioOfProfiledLikelihoodsTestStat(RooAbsPdf& nullPdf, RooAbsPdf& altPdf,
-				     const RooArgSet* altPOI=0) :
+                 const RooArgSet* altPOI=0) :
     fNullProfile(nullPdf),
     fAltProfile(altPdf),
     fSubtractMLE(true),
@@ -95,10 +48,10 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
       {
          //  Calculates the ratio of profiled likelihoods.
 
-	if(altPOI)
-	  fAltPOI = (RooArgSet*) altPOI->snapshot();
-	else
-	  fAltPOI = new RooArgSet(); // empty set
+   if(altPOI)
+     fAltPOI = (RooArgSet*) altPOI->snapshot();
+   else
+     fAltPOI = new RooArgSet(); // empty set
 
       }
 
@@ -156,13 +109,11 @@ class RatioOfProfiledLikelihoodsTestStat: public TestStatistic {
     }
 
      virtual const RooArgSet* GetDetailedOutput(void) const {
-	     // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
-	     // The returned RooArgSet contains the following for the alternative and null hypotheses:
-	     // <ul>
-	     // <li> the minimum nll, fitstatus and convergence quality for each fit </li>
-	     // <li> for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
-	     // </ul>
-	     return fDetailedOutput;
+        // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
+        // The returned RooArgSet contains the following for the alternative and null hypotheses:
+        //  - the minimum nll, fitstatus and convergence quality for each fit
+        //  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored
+        return fDetailedOutput;
      }
 
 

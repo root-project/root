@@ -43,19 +43,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_TMatrixDfwd
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#endif
-#ifndef ROOT_TMVA_TVectorD
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#endif
 
 namespace TMVA {
 

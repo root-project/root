@@ -430,6 +430,7 @@ void stressIOPlugins4()
 
    if (gCurProtoName == "xroot" || gCurProtoName == "root") {
       trywildcard = kTRUE;
+      tryqueryInAdd = kTRUE;
       tryziparchive = kTRUE;
    }
 

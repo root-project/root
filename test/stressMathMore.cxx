@@ -149,8 +149,9 @@ public:
                 double x1 = -INF,
                 double x2 = INF ) :
       fPdf(&pdf), fCdf(&cdf), fQuant(&quant),
+      xmin(0.), xmax(0.),
       xlow(x1), xup(x2),
-      fHasLowRange(false), fHasUpRange(false)
+      fHasLowRange(false), fHasUpRange(false), fStartRoot(0.)
    {
       fScaleIg = 10; //scale for integral test
       fScaleDer = 1;  //scale for der test
@@ -440,6 +441,7 @@ int testGammaFunction(int n = 100) {
    dist.SetNTest(n);
    dist.SetTestRange(0.,10.);
    dist.SetScaleDer(10); // few tests fail here
+   dist.SetScaleInv(10000); // few tests fail here
    // vary shape of gamma parameter
    for (int i =1; i <= 5; ++i) {
       double k = std::pow(2.,double(i-1));
@@ -481,7 +483,6 @@ int testGammaFunction(int n = 100) {
       iret |= ret;
 
       PrintTest("\t test inverse with Brent method");
-      dist.SetNTest(10);
       ret = dist.TestInverse1(RootFinder::kBRENT);
       PrintStatus(ret);
       iret |= ret;

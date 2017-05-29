@@ -12,13 +12,9 @@
 #ifndef ROOT_TSQLObjectData
 #define ROOT_TSQLObjectData
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TObjArray;
 class TList;

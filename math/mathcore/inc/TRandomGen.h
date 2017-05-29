@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TRandom
 #include "TRandom.h"
-#endif
 
 template<class Engine>
 class TRandomGen : public TRandom {

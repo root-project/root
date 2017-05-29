@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 class TDSet;
 class TDSetElement;

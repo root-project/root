@@ -12,13 +12,9 @@
 #ifndef ROOT_TBranchBrowsable
 #define ROOT_TBranchBrowsable
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 #include <list>
 

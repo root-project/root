@@ -14,12 +14,8 @@
 
 #include <vector>
 
-#ifndef ROOT_TGLIsoMesh
 #include "TGLIsoMesh.h"
-#endif
-#ifndef ROOT_TKDEFGT
 #include "TKDEFGT.h"
-#endif
 
 //KDE adapter is a "data source" adapter for
 //Marching cubes alhorithm. It produces scalar

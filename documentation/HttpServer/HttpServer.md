@@ -8,16 +8,13 @@ The idea of THttpServer is to provide remote http access to running ROOT applica
 
 ## Starting the HTTP server
 
-To start the http server, at any time, create an instance of the [THttpServer](https://root.cern.ch/root/html/THttpServer.html) class like:
+To start the http server, at any time, create an instance of the [THttpServer](https://root.cern/root/html/THttpServer.html) class like:
 
     serv = new THttpServer("http:8080");
 
-This will start a [civetweb](https://github.com/bel2125/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
+This will start a [civetweb](https://github.com/civetweb/civetweb)-based http server on the port 8080. Then one should be able to open the address "http://localhost:8080" in any modern browser (Firefox, Chrome, Opera, Safari, IE11) and browse objects created in application. By default, the server can access files, canvases, and histograms via the gROOT pointer. All those objects can be displayed with JSROOT graphics.
 
-There is a [snapshot (frozen copy)](https://root.cern.ch/js/latest/httpserver.C/) of such server, running in [tutorials/http/httpserver.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpserver.C) macro from ROOT tutorial.
-
-<iframe width="800" height="500" src="https://root.cern.ch/js/latest/httpserver.C/?layout=simple&item=Canvases/c1">
-</iframe>
+There is a [server snapshot](https://root.cern/js/latest/httpserver.C/?layout=simple&item=Canvases/c1) of running macro [tutorials/http/httpserver.C](https://github.com/root-project/root/blob/master/tutorials/http/httpserver.C) from ROOT tutorials.
 
 One could specify several options when creating http server. They could be add as additional URL parameters to the constructor arguments like:
 
@@ -65,16 +62,16 @@ One just register command like:
     serv->RegisterCommand("/DoSomething","SomeFunction()");
 
 Element with name `DoSomething` will appear in the web browser and can be clicked.
-It will result in `gROOT->ProcessLineSync("SomeFunction()")` call. 
+It will result in `gROOT->ProcessLineSync("SomeFunction()")` call.
 
-One could configure argument(s) for the command. 
-For that one should use `%arg1`, `%arg2` and so on identifiers. Like:   
+One could configure argument(s) for the command.
+For that one should use `%arg1`, `%arg2` and so on identifiers. Like:
 
     serv->RegisterCommand("/DoSomething","SomeFunction(%arg1%,%arg2%)");
 
-User will be requested to enter arguments values, when command element clicked in the browser. 
-Example of the command which executes arbitrary string in appliction via ProcessLine looks like:
-  
+User will be requested to enter arguments values, when command element clicked in the browser.
+Example of the command which executes arbitrary string in application via ProcessLine looks like:
+
     serv->RegisterCommand("/Process","%arg1%");
 
 When registering command, one could specify icon name which will be displayed with the command.
@@ -86,7 +83,7 @@ string to the icon name to let browser show command as extra button. In last cas
 
     serv->Hide("/DoSomething");
 
-One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-mirror/root/blob/master/tutorials/http/httpcontrol.C) macro.
+One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
 
 
 
@@ -96,7 +93,7 @@ By default, the http server is open for anonymous access. One could restrict the
 
     [shell] htdigest -c .htdigest domain_name user_name
 
-It is recommended not to use special symbols in domain or user names. Several users can be add to the ".htdigetst" file. When starting the server, the following arguments should be specified:
+It is recommended not to use special symbols in domain or user names. Several users can be add to the ".htdigest" file. When starting the server, the following arguments should be specified:
 
     root [0] new THttpServer("http:8080?auth_file=.htdigest&auth_domain=domain_name");
 
@@ -122,8 +119,8 @@ By default server runs in readonly mode and do not allow methods execution via '
 One could provide several options for the same item, separating them with '&' sign:
 
     root [10]  serv->Restrict("/Folder/histo1",  "allow_method=GetTitle&hide=guest");
- 
-Complete list of supported options could be found in [TRootSniffer:Restrict()](https://root.cern.ch/root/html/TRootSniffer.html#TRootSniffer:Restrict) method documentation.
+
+Complete list of supported options could be found in [TRootSniffer:Restrict()](https://root.cern/root/html/TRootSniffer.html#TRootSniffer:Restrict) method documentation.
 
 
 ## Using FastCGI interface
@@ -145,7 +142,7 @@ One could specify a debug parameter to be able to adjust the FastCGI configurati
 
 All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
-### Configure fastcgi with Apcahe2
+### Configure fastcgi with Apache2
 
 First of all, one should compile and install [mod_fastcgi](http://www.fastcgi.com) module.
 Then *mod_fastcgi* should be specified in httpd.conf to load it when Apache server is started.
@@ -198,7 +195,7 @@ Example of authorization configuration for FastCGI connection:
                        "realm" => "root",
                        "require" => "valid-user"
                     ) )
- 
+
 
 ## Integration with existing applications
 
@@ -214,7 +211,7 @@ The first method is to configure an asynchronous timer for the server, like for 
 
     serv->SetTimer(100, kFALSE);
 
-Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used without any modifications. But there is no control when access to the application data is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete. Therefore such method is not recommended. 
+Then, the timer will be activated even without any gSystem->ProcessEvents() method call. The main advantage of such method is that the application code can be used without any modifications. But there is no control when access to the application data is performed. It could happen just in-between of **`TH1::Fill()`** calls and an histogram object may be incomplete. Therefore such method is not recommended.
 
 
 ### Regular calls of THttpServer::ProcessRequests() method
@@ -279,23 +276,27 @@ If the access to the server is restricted with htdigest, it is recommended to us
 
 ### Objects data access in JSON format
 
-Request `root.json` implemented with [TBufferJSON](https://root.cern.ch/root/html/TBufferJSON.html) class. TBufferJSON generates such object representation, which could be directly used in [JSROOT](https://root.cern.ch/js/) for drawing. `root.json` request returns either complete object or just object member like:
+Request `root.json` implemented with [TBufferJSON](https://root.cern/root/html/TBufferJSON.html) class. TBufferJSON generates such object representation, which could be directly used in [JSROOT](https://root.cern/js/) for drawing. `root.json` request returns either complete object or just object member like:
 
     [shell] wget http://localhost:8080/Objects/subfolder/obj/fTitle/root.json
 
 The result will be: "title".
 
 For the `root.json` request one could specify the 'compact' parameter, which allow to reduce the number of spaces and new lines without data lost. This parameter can have values from '0' (no compression) till '3' (no spaces and new lines at all).
+In addition, one can use simple compression algorithm for big arrays. If compact='10', zero values in the begin and at the end
+of the array will be excluded. If compact='20', similar values or large zero gaps in-between will be compressed. Such array
+compression support in JSROOT from version 4.8.2.
 
-Usage of `root.json` request is about as efficient as binary `root.bin` request. Comparison of different request methods with TH1 object shown in the table:
+Usage of `root.json` request is about as efficient as binary `root.bin` request. Comparison of different request methods with TH2 histogram from hsimple.C shown in the table:
 
 | Request                 |    Size    |
 | :---------------------- | :--------- |
-| root.bin                | 1658 bytes |
-| root.bin.gz             |  782 bytes |
-| root.json               | 7555 bytes |
-| root.json?compact=3     | 5381 bytes |
-| root.json.gz?compact=3  | 1207 bytes |
+| root.bin                | 7672 bytes |
+| root.bin.gz             | 1582 bytes |
+| root.json               | 8570 bytes |
+| root.json?compact=3     | 6004 bytes |
+| root.json?compact=23    | 5216 bytes |
+| root.json.gz?compact=23 | 1855 bytes |
 
 One should remember that JSON representation always includes names of the data fields which are not present in the binary representation. Even then the size difference is negligible.
 
@@ -304,7 +305,7 @@ One should remember that JSON representation always includes names of the data f
 
 ### Generating images out of objects
 
-For the ROOT classes which are implementing Draw method (like [TH1](https://root.cern.ch/root/html/TH1.html) or [TGraph](https://root.cern.ch/root/html/TGraph.html))
+For the ROOT classes which are implementing Draw method (like [TH1](https://root.cern/root/html/TH1.html) or [TGraph](https://root.cern/root/html/TGraph.html))
 one could produce images with requests: `root.png`, `root.gif`, `root.jpeg`. For example:
 
     wget "http://localhost:8080/Files/hsimple.root/hpx/root.png?w=500&h=500&opt=lego1" -O lego1.png
@@ -328,14 +329,14 @@ Or one could disable read-only mode with the call:
 
 Or one could allow access to the folder, object or specific object methods with:
 
-    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account 
-    serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users 
-    serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method 
-    
+    serv->Restrict("/Histograms", "allow=admin"); // allow full access for user with 'admin' account
+    serv->Restrict("/Histograms/hist1", "allow=all"); // allow full access for all users
+    serv->Restrict("/Histograms/hist1", "allow_method=Rebin"); // allow only Rebin method
+
 'exe.json' accepts following parameters:
 
    - `method` - name of method to execute
-   - `prototype` - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern.ch/root/html/TClass.html#TClass:GetMethodWithPrototype) for details)
+   - `prototype` - method prototype (see [TClass::GetMethodWithPrototype](https://root.cern/root/html/TClass.html#TClass:GetMethodWithPrototype) for details)
    - `compact` - compact parameter, used to compress return value
    - `_ret_object_` - name of the object which should be returned as result of method execution (used together with remote TTree::Draw call)
 
@@ -352,10 +353,10 @@ One also used `exe.bin` method - in this case results of method execution will b
     [shell] wget 'http://localhost:8080/Objects/subfolder/obj/exe.json?method=Clone&_destroy_result_' -O clone.json
 
 If method required object as argument, it could be posted in binary or XML format as POST request. If binary form is used, one should specify following parameters:
- 
+
     [shell] wget 'http://localhost:8080/hist/exe.json?method=Add&h1=_post_object_&_post_class_=TH1I&c1=10' --post-file=h.bin -O res.json
 
-Here is important to specify post object class, which is not stored in the binary buffer. When used XML form (produced with [TBufferXML::ConvertToXML](https://root.cern.ch/root/html/TBufferXML.html#TBufferXML:ConvertToXML)) method, only string with XML code could be specified:
+Here is important to specify post object class, which is not stored in the binary buffer. When used XML form (produced with [TBufferXML::ConvertToXML](https://root.cern/root/html/TBufferXML.html#TBufferXML:ConvertToXML)) method, only string with XML code could be specified:
 
     [shell] wget 'http://localhost:8080/hist/exe.json?method=Add&h1=_post_object_xml_&c1=10' --post-file=h.xml -O res.json
 
@@ -374,19 +375,19 @@ It can be invoked with `cmd.json` request like:
 
 If command fails, `false` will be returned, otherwise result of gROOT->ProcessLineSync() execution.
 
-If command definition include arguments: 
+If command definition include arguments:
 
     serv->RegisterCommand("/ResetCounter", "DoReset(%arg1%,%arg2%)");
-    
+
 One could specify them in the URL string:
-    
+
     [shell] wget http://localhost:8080/ResetCounter/cmd.json?arg1=7&arg2=12 -O result.txt
 
 
 
 ### Performing multiple requests at once
 
-To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requestsed simultaneosely. For this purposes `multi.bin` or `multi.json` requests could be used.
+To minimize traffic between sever and client, one could submit several requests at once. This is especially useful when big number of small objects should be requested simultaneously. For this purposes `multi.bin` or `multi.json` requests could be used.
 Both require string as POST data which format as:
 
     subfolder/item1/root.json\n
@@ -404,5 +405,19 @@ For `multi.bin` any kind of requests can be used. It returns binary buffer with 
     [size2 (little endian), 4 bytes] + [request2 result, size2 bytes]
     [size3 (little endian), 4 bytes] + [request3 result, size3 bytes]
 
-While POST data in request used to transfer list of multiple reqeusts, it is not possible to submit
+While POST data in request used to transfer list of multiple requests, it is not possible to submit
 such kind of requests, which themselvs require data from POST block.
+
+To use `multi.json` request from the JavaScript, one should create special 'POST' HTTP request and properly parse it. JSROOT provides special method to do this:
+
+     var xhr = JSROOT.NewHttpRequest("your_server/multi.json?number=3", "multi", function(res) {
+        if (!res) return;
+        for (var n=0;n<res.length;++n) {
+           console.log('Requested element ', res[n]._typename);
+           // JSROOT.draw('drawid', res[n], 'hist');
+        }
+     });
+     xhr.send("Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
+
+Here argument "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
+

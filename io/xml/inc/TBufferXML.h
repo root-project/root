@@ -12,21 +12,11 @@
 #ifndef ROOT_TBufferXML
 #define ROOT_TBufferXML
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
-#ifndef ROOT_TXMLSetup
 #include "TXMLSetup.h"
-#endif
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <string>
 

@@ -34,9 +34,7 @@
 #define ROOT_Math_ParamFunction
 
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
 #include <vector>
 

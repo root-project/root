@@ -19,9 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // Basic GUI types
 typedef ULong_t            Handle_t;     //Generic resource handle

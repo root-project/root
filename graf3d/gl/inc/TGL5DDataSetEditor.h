@@ -12,15 +12,9 @@
 #ifndef ROOT_TGL5DDataSetEditor
 #define ROOT_TGL5DDataSetEditor
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 class TGNumberEntryField;
 class TGDoubleHSlider;

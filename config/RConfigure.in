@@ -25,8 +25,10 @@
 #@hasxft@ R__HAS_XFT    /**/
 #@hascocoa@ R__HAS_COCOA    /**/
 #@hasvc@ R__HAS_VC    /**/
+#@hasveccore@ R__HAS_VECCORE    /**/
 #@usec++11@ R__USE_CXX11    /**/
 #@usec++14@ R__USE_CXX14    /**/
+#@usec++17@ R__USE_CXX17    /**/
 #@uselibc++@ R__USE_LIBCXX    /**/
 #@hasstdstringview@ R__HAS_STD_STRING_VIEW   /**/
 #@hasstdexpstringview@ R__HAS_STD_EXPERIMENTAL_STRING_VIEW   /**/

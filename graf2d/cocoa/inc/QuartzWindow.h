@@ -14,18 +14,10 @@
 
 #include <Cocoa/Cocoa.h>
 
-#ifndef ROOT_CocoaGuiTypes
 #include "CocoaGuiTypes.h"
-#endif
-#ifndef ROOT_X11Drawable
 #include "X11Drawable.h"
-#endif
-#ifndef ROOT_X11Events
 #include "X11Events.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 ////////////////////////////////////////////////
 //                                            //

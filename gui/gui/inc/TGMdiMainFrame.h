@@ -41,15 +41,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGMenu
 #include "TGMenu.h"
-#endif
-#ifndef ROOT_TGFont
 #include "TGFont.h"
-#endif
 
 
 // MDI resizing modes

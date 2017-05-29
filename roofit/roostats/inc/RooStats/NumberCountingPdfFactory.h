@@ -12,9 +12,7 @@
 #ifndef RooStats_NumberCountingPdfFactory
 #define RooStats_NumberCountingPdfFactory
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class RooWorkspace; 
 class RooRealVar; 

@@ -27,13 +27,9 @@
 
 #include <vector>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TColor
 #include "TColor.h"
-#endif
 
 
 class TColorGradient : public TColor {

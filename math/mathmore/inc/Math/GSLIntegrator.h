@@ -32,24 +32,16 @@
 #define ROOT_Math_GSLIntegrator
 
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
-#ifndef ROOT_Math_IntegrationTypes
 #include "Math/IntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 
 
-#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
-#endif
 
 #include <vector>
 

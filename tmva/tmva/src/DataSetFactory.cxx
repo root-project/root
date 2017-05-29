@@ -57,33 +57,15 @@ Class that contains all the data information
 #include "TMath.h"
 #include "TROOT.h"
 
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_VariableIdentityTransform
 #include "TMVA/VariableIdentityTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariableDecorrTransform
 #include "TMVA/VariableDecorrTransform.h"
-#endif
-#ifndef ROOT_TMVA_VariablePCATransform
 #include "TMVA/VariablePCATransform.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataInputHandler
 #include "TMVA/DataInputHandler.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
@@ -200,7 +182,8 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    ds->SetEventCollection(newEventVector, Types::kTraining);
    ds->SetCurrentType( Types::kTraining );
    ds->SetCurrentEvent( 0 );
-
+   
+   delete newEventVector;
    return ds;
 }
 
@@ -717,6 +700,13 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
    // Bool_t haveArrayVariable = kFALSE;
    Bool_t *varIsArray = new Bool_t[nvars];
 
+   // If there are NaNs in the tree:
+   // => warn if used variables/cuts/weights contain nan (no problem if event is cut out)
+   // => fatal if cut value is nan or (event not cut out and nans somewhere)
+   // Count & collect all these warnings/errors and output them at the end.
+   std::map<TString, int> nanInfWarnings;
+   std::map<TString, int> nanInfErrors;
+
    // if we work with chains we need to remember the current tree if
    // the chain jumps to a new tree we have to reset the formulas
    for (UInt_t cl=0; cl<nclasses; cl++) {
@@ -798,24 +788,33 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
             // now we read the information
             for (Int_t idata = 0;  idata<sizeOfArrays; idata++) {
-               Bool_t containsNaN = kFALSE;
+               Bool_t contains_NaN_or_inf = kFALSE;
+
+               auto checkNanInf = [&](std::map<TString, int> &msgMap, Float_t value, const char *what, const char *formulaTitle) {
+                  if (TMath::IsNaN(value)) {
+                     contains_NaN_or_inf = kTRUE;
+                     ++msgMap[TString::Format("Dataset[%s] : %s expression resolves to indeterminate value (NaN): %s", dsi.GetName(), what, formulaTitle)];
+                  } else if (!TMath::Finite(value)) {
+                     contains_NaN_or_inf = kTRUE;
+                     ++msgMap[TString::Format("Dataset[%s] : %s expression resolves to infinite value (+inf or -inf): %s", dsi.GetName(), what, formulaTitle)];
+                  }
+               };
 
                TTreeFormula* formula = 0;
 
                // the cut expression
-               Float_t cutVal = 1;
+               Double_t cutVal = 1.;
                formula = fCutFormulas[cl];
                if (formula) {
                   Int_t ndata = formula->GetNdata();
                   cutVal = (ndata==1 ?
                             formula->EvalInstance(0) :
                             formula->EvalInstance(idata));
-                  if (TMath::IsNaN(cutVal)) {
-                     containsNaN = kTRUE;
-                     Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Cut expression resolves to infinite value (NaN): "
-                           << formula->GetTitle() << Endl;
-                  }
+                  checkNanInf(nanInfErrors, cutVal, "Cut", formula->GetTitle());
                }
+
+               // if event is cut out, add to warnings, else add to errors.
+               auto &nanMessages = cutVal < 0.5 ? nanInfWarnings : nanInfErrors;
 
                // the input variable
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
@@ -824,11 +823,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   vars[ivar] = (ndata == 1 ?
                                 formula->EvalInstance(0) :
                                 formula->EvalInstance(idata));
-                  if (TMath::IsNaN(vars[ivar])) {
-                     containsNaN = kTRUE;
-                     Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Input expression resolves to infinite value (NaN): "
-                           << formula->GetTitle() << Endl;
-                  }
+                  checkNanInf(nanMessages, vars[ivar], "Input", formula->GetTitle());
                }
 
                // the targets
@@ -838,11 +833,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   tgts[itrgt] = (ndata == 1 ?
                                  formula->EvalInstance(0) :
                                  formula->EvalInstance(idata));
-                  if (TMath::IsNaN(tgts[itrgt])) {
-                     containsNaN = kTRUE;
-                     Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Target expression resolves to infinite value (NaN): "
-                           << formula->GetTitle() << Endl;
-                  }
+                  checkNanInf(nanMessages, tgts[itrgt], "Target", formula->GetTitle());
                }
 
                // the spectators
@@ -852,11 +843,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   vis[itVis] = (ndata == 1 ?
                                 formula->EvalInstance(0) :
                                 formula->EvalInstance(idata));
-                  if (TMath::IsNaN(vis[itVis])) {
-                     containsNaN = kTRUE;
-                     Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Spectator expression resolves to infinite value (NaN): "
-                           << formula->GetTitle() << Endl;
-                  }
+                  checkNanInf(nanMessages, vis[itVis], "Spectator", formula->GetTitle());
                }
 
 
@@ -868,11 +855,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   weight *= (ndata == 1 ?
                              formula->EvalInstance() :
                              formula->EvalInstance(idata));
-                  if (TMath::IsNaN(weight)) {
-                     containsNaN = kTRUE;
-                     Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Weight expression resolves to infinite value (NaN): "
-                           << formula->GetTitle() << Endl;
-                  }
+                  checkNanInf(nanMessages, weight, "Weight", formula->GetTitle());
                }
 
                // Count the events before rejection due to cut or NaN
@@ -891,8 +874,8 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
 
                // now read the event-values (variables and regression targets)
 
-               if (containsNaN) {
-                  Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "Event " << evtIdx;
+               if (contains_NaN_or_inf) {
+                  Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< "NaN or +-inf in Event " << evtIdx << Endl;
                   if (sizeOfArrays>1) Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName())<< " rejected" << Endl;
                   continue;
                }
@@ -908,6 +891,27 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
          }
          currentInfo.GetTree()->ResetBranchAddresses();
       }
+   }
+
+   if (!nanInfWarnings.empty()) {
+      Log() << kWARNING << "Found events with NaN and/or +-inf values" << Endl;
+      for (const auto &warning : nanInfWarnings) {
+         auto &log = Log() << kWARNING << warning.first;
+         if (warning.second > 1) log << " (" << warning.second << " times)";
+         log << Endl;
+      }
+      Log() << kWARNING << "These NaN and/or +-infs were all removed by the specified cut, continuing." << Endl;
+      Log() << Endl;
+   }
+
+   if (!nanInfErrors.empty()) {
+      Log() << kWARNING << "Found events with NaN and/or +-inf values (not removed by cut)" << Endl;
+      for (const auto &error : nanInfErrors) {
+         auto &log = Log() << kWARNING << error.first;
+         if (error.second > 1) log << " (" << error.second << " times)";
+         log << Endl;
+      }
+      Log() << kFATAL << "How am I supposed to train a NaN or +-inf?!" << Endl;
    }
 
    // for output format, get the maximum class name length
@@ -1395,7 +1399,8 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
       Log() << kERROR << "Dataset " << std::string(dsi.GetName()) << " does not have any testing events, guess that will cause problems later..but for now, I continue " << Endl;
    }
 
-
+   delete trainingEventVector;
+   delete testingEventVector;
    return ds;
 
 }

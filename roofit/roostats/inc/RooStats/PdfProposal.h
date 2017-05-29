@@ -12,75 +12,20 @@
 #ifndef ROOSTATS_PdfProposal
 #define ROOSTATS_PdfProposal
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
 
 #include <map>
 
 
 namespace RooStats {
-
-/**
-
-
-   \ingroup Roostats
-
-PdfProposal is a concrete implementation of the ProposalFunction interface.
-It proposes points across the parameter space in the distribution of the
-given PDF.
-
-To make Propose(xPrime, x) dependent on x, configure with
-PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
-
-~~~{.cpp}
-// our parameter
-RooRealVar p("p", "p", 5, 0, 10);
-
-// create mean and sigma for gaussian proposal function
-RooRealVar meanP("meanP", "meanP", 0, 10);
-RooRealVar sigma("sigma", "sigma", 1, 0, 5);
-RooGaussian pGaussian("pGaussian", "pGaussian", p, meanP, sigma);
-
-// configure proposal function
-PdfProposal pdfProposal(pGaussian);
-pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
-                                  // the proposal function will be updated to
-                                  // the value of p in x.  this will center the
-                                  // proposal function about x's p when
-                                  // proposing for xPrime
-
-// To improve performance, PdfProposal has the ability to cache a specified
-// number of proposals. If you don't call this function, the default cache size
-// is 1, which can be slow.
-pdfProposal.SetCacheSize(desiredCacheSize);
-~~~
-
-PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
-for future versions.
-
-*/
-
 
    class PdfProposal : public ProposalFunction {
 

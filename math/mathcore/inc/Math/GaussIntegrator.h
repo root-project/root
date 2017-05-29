@@ -16,13 +16,9 @@
 #ifndef ROOT_Math_GaussIntegrator
 #define ROOT_Math_GaussIntegrator
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 
 namespace ROOT {

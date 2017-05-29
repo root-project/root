@@ -12,13 +12,9 @@
 #ifndef ROOT_TODBCRow
 #define ROOT_TODBCRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 #ifdef __CLING__
 typedef void * SQLHSTMT;

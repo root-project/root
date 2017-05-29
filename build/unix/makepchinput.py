@@ -437,6 +437,8 @@ def removeUnwantedHeaders(allHeadersContent):
    """ remove unwanted headers, e.g. the ones used for dictionaries but not desirable in the pch
    """
    unwantedHeaders = ['ROOT/TDataFrame.hxx']
+   deprecatedHeaders = ['TSelectorCint.h']
+   unwantedHeaders.extend(deprecatedHeaders)
    for unwantedHeader in unwantedHeaders:
       allHeadersContent = allHeadersContent.replace('#include "%s"' %unwantedHeader,"")
    return allHeadersContent

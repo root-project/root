@@ -17,25 +17,15 @@
 #ifndef ROOT_Math_GenVector_PositionVector3D
 #define ROOT_Math_GenVector_PositionVector3D  1
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3Dfwd
 #include "Math/GenVector/DisplacementVector3Dfwd.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
-#endif
 
 
 #include <cassert>
@@ -237,8 +227,10 @@ namespace ROOT {
        */
       template <class IT>
       void GetCoordinates( IT begin ) const {
-         Scalar a,b,c = 0;
-         GetCoordinates (a,b,c);
+         Scalar a = Scalar(0);
+         Scalar b = Scalar(0);
+         Scalar c = Scalar(0);
+         GetCoordinates(a, b, c);
          *begin++ = a;
          *begin++ = b;
          *begin   = c;
@@ -585,36 +577,48 @@ namespace ROOT {
 
     // ------------- I/O to/from streams -------------
 
-    template< class char_t, class traits_t, class T, class U >
-      inline
-      std::basic_ostream<char_t,traits_t> &
-      operator << ( std::basic_ostream<char_t,traits_t> & os
-                  , PositionVector3D<T,U> const & v
-                  )
+    template <
+       class char_t, class traits_t, class T, class U,
+       typename std::enable_if<std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value>::type * = nullptr>
+    std::basic_ostream<char_t, traits_t> &operator<<(std::basic_ostream<char_t, traits_t> &os,
+                                                     PositionVector3D<T, U> const &v)
     {
-      if( !os )  return os;
+       if (os) {
 
-      typename T::Scalar a, b, c;
-      v.GetCoordinates(a, b, c);
+          typename T::Scalar a = 0;
+          typename T::Scalar b = 0;
+          typename T::Scalar c = 0;
+          v.GetCoordinates(a, b, c);
 
-      if( detail::get_manip( os, detail::bitforbit ) )  {
-        detail::set_manip( os, detail::bitforbit, '\00' );
-        typedef GenVector_detail::BitReproducible BR;
-        BR::Output(os, a);
-        BR::Output(os, b);
-        BR::Output(os, c);
+          if (detail::get_manip(os, detail::bitforbit)) {
+             detail::set_manip(os, detail::bitforbit, '\00');
+             typedef GenVector_detail::BitReproducible BR;
+             BR::Output(os, a);
+             BR::Output(os, b);
+             BR::Output(os, c);
+          } else {
+             os << detail::get_manip(os, detail::open) << a << detail::get_manip(os, detail::sep) << b
+                << detail::get_manip(os, detail::sep) << c << detail::get_manip(os, detail::close);
+          }
       }
-      else  {
-        os << detail::get_manip( os, detail::open  ) << a
-           << detail::get_manip( os, detail::sep   ) << b
-           << detail::get_manip( os, detail::sep   ) << c
-           << detail::get_manip( os, detail::close );
-      }
-
       return os;
-
     }  // op<< <>()
 
+    template <
+       class char_t, class traits_t, class T, class U,
+       typename std::enable_if<!std::is_arithmetic<typename PositionVector3D<T, U>::Scalar>::value>::type * = nullptr>
+    std::basic_ostream<char_t, traits_t> &operator<<(std::basic_ostream<char_t, traits_t> &os,
+                                                     PositionVector3D<T, U> const &v)
+    {
+       if (os) {
+          os << "{ ";
+          for (std::size_t i = 0; i < PositionVector3D<T, U>::Scalar::Size; ++i) {
+             os << "(" << v.x()[i] << "," << v.y()[i] << "," << v.z()[i] << ") ";
+          }
+          os << "}";
+       }
+       return os;
+    } // op<< <>()
 
     template< class char_t, class traits_t, class T, class U >
       inline

@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSelector
 #include <TSelector.h>
-#endif
-#ifndef ROOT_TString
 #include <TString.h>
-#endif
 
 class TList;
 class TPBHandleDSType;

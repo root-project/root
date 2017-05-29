@@ -20,6 +20,7 @@
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "TClass.h"
+#include "Math/IntegratorOptions.h"
 
 ClassImp(TF2)
 
@@ -625,7 +626,7 @@ Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    b[1] = by;
    Double_t relerr  = 0;
    Int_t n = 2;
-   Int_t maxpts = 20*fNpx*fNpy;
+   UInt_t maxpts = TMath::Max( UInt_t( 20*fNpx*fNpy), ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls());
    Int_t nfnevl,ifail;
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel,relerr,nfnevl,ifail);
    if (ifail > 0) {

@@ -13,18 +13,10 @@
 #define ROOT_TMarker
 
 
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TPoint;
 

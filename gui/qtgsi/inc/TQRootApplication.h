@@ -28,9 +28,7 @@
 #include "qtimer.h"
 #endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TTimer;
 class QApplication;

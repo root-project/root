@@ -144,7 +144,6 @@ Begin_Macro(source)
    TGaxis *axis8 = new TGaxis(6.5,0.8,6.499,-0.8,0,90,50510,"-");
    axis8->SetName("axis8");
    axis8->Draw();
-   return c1;
 }
 End_Macro
 
@@ -183,10 +182,7 @@ Begin_Macro(source)
 {
    TCanvas *c2 = new TCanvas("c2","c2",10,10,700,500);
 
-   gStyle->SetOptStat(0);
-
-   TH2F *h2 = new TH2F("h","Axes",100,0,10,100,-2,2);
-   h2->Draw();
+   gPad->DrawFrame(0.,-2.,10.,2);
 
    TF1 *f1=new TF1("f1","-x",-10,10);
    TGaxis *A1 = new TGaxis(0,2,10,2,"f1",510,"-");
@@ -206,9 +202,8 @@ Begin_Macro(source)
    A3->SetTitle("logarithmic axis");
    A3->SetLabelSize(0.03);
    A3->SetTitleSize(0.03);
-   A3->SetTitleOffset(1.2);
+   A3->SetTitleOffset(0.); // Axis title automatically placed
    A3->Draw();
-   return c2;
 }
 End_Macro
 
@@ -1082,6 +1077,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       return;
    }
 
+// Title offset. If 0 it is automatically computed
+   Double_t toffset  = GetTitleOffset();
+   Bool_t   autotoff = kFALSE;
+   if (toffset==0 && x1 == x0) autotoff = kTRUE;
+
 // Return wmin, wmax and the number of primary divisions
    if (optionX) {
       ndiv = n1a;
@@ -1092,8 +1092,8 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
    TLatex *textaxis = new TLatex();
    SetLineStyle(1); // axis line style
-   textaxis->SetTextColor(GetTextColor());
-   textaxis->SetTextFont(GetTextFont());
+   Int_t TitleColor = GetTextColor();
+   Int_t TitleFont  = GetTextFont();
 
    if (!gPad->IsBatch()) {
       gVirtualX->GetCharacterUp(chupxvsav, chupyvsav);
@@ -1126,10 +1126,11 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    }
 
    if (x0 == x1) {
-      phi  = 0.5*kPI;
+      if (y1>=y0) phi  = 0.5*kPI;
+      else        phi  = 1.5*kPI;
       phil = phi;
    } else {
-            phi = TMath::ATan2((y1-y0),(x1-x0));
+      phi = TMath::ATan2((y1-y0),(x1-x0));
       Int_t px0 = gPad->UtoPixel(x0);
       Int_t py0 = gPad->VtoPixel(y0);
       Int_t px1 = gPad->UtoPixel(x1);
@@ -1196,54 +1197,6 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       PaintLineNDC(xpl1, ypl1, xpl2, ypl2);
    }
 
-// Draw axis title if it exists
-   if (!drawGridOnly && strlen(GetTitle())) {
-      textaxis->SetTextSize (GetTitleSize());
-      charheight = GetTitleSize();
-      if ((GetTextFont() % 10) > 2) {
-         charheight = charheight/gPad->GetWh();
-      }
-      Double_t toffset = GetTitleOffset();
-//////if (toffset < 0.1) toffset = 1; // Negative offset should be allowed
-      if (x1 == x0) ylabel = xlside*1.6*charheight*toffset;
-      else          ylabel = xlside*1.3*charheight*toffset;
-      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
-      Double_t axispos;
-      if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
-      else                       axispos = axis_length;
-      if (TestBit(TAxis::kRotateTitle)) {
-         if (x1 >= x0) {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(12);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
-         } else {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-         else                                 textaxis->SetTextAlign(32);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
-         }
-         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                              phil=(kPI+phil)*180/kPI,
-                              GetTitleSize(),
-                              GetTitle());
-      } else {
-         if (x1 >= x0) {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-            else                              textaxis->SetTextAlign(32);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
-         } else {
-            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
-         else                                 textaxis->SetTextAlign(12);
-            Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
-         }
-         textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
-                              gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
-                              phil*180/kPI,
-                              GetTitleSize(),
-                              GetTitle());
-      }
-   }
-
 // No bining
 
    if (ndiv == 0)goto L210;
@@ -1306,6 +1259,12 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (xmin == gPad->GetUxmax()) {
                   textaxis->SetTextAlign(12);
                   s = 3;
+               }
+               if (autotoff) {
+                  UInt_t w,h;
+                  textaxis->SetText(0.,0., fAxis->GetBinLabel(i));
+                  textaxis->GetBoundingBox(w,h);
+                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
                }
                textaxis->PaintLatex(xmin + s*fAxis->GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin()),
                                     fAxis->GetBinCenter(i),
@@ -1624,7 +1583,9 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                   }
                   else break;
                }
-
+// if1 and if2 are the two digits defining the format used to produce the
+// labels. The format used will be %[if1].[if2]f .
+// if1 and if2 are positive (small) integers.
                if2 = na;
                if1 = TMath::Max(nf+na,maxDigits)+1;
 L110:
@@ -1640,7 +1601,11 @@ L110:
                if (if1 > 14) if1=14;
                if (if2 > 14) if2=14;
                if (if2>0) snprintf(coded,8,"%%%d.%df",if1,if2);
-               else       snprintf(coded,8,"%%%d.%df",if1+1,1);
+               else {
+                  if (if1 < -100) if1 = -100; // Silence a warning with gcc
+                  snprintf(coded,8,"%%%d.%df",if1+1,1);
+               }
+
             }
 
 // We draw labels
@@ -1781,22 +1746,26 @@ L110:
                      if (fNModLabs) ChangeLabelAttributes(k+1, nlabels, textaxis, chtemp);
                      typolabel = chtemp;
                      if (!optionTime) typolabel.ReplaceAll("-", "#minus");
+                     if (autotoff) {
+                        UInt_t w,h;
+                        textaxis->SetText(0.,0., typolabel.Data());
+                        textaxis->GetBoundingBox(w,h);
+                        toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
+                     }
                      textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                            gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                            textaxis->GetTextAngle(),
                            textaxis->GetTextSize(),
                            typolabel.Data());
                      if (fNModLabs) ResetLabelAttributes(textaxis);
-                  }
-                  else  {
+                  } else  {
                      if (optionText == 1) textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
                                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
                                                    0,
                                                    textaxis->GetTextSize(),
                                                    fAxis->GetBinLabel(k+fAxis->GetFirst()));
                   }
-               }
-               else {
+               } else {
 
 // Text alignment is down
                   if (!optionText)     lnlen = last-first+1;
@@ -1886,6 +1855,8 @@ L110:
       decade      = ih1-2;
       labelnumber = ih1;
       if ( xmnlog > 0 && (xmnlog-Double_t(ih1) > 0) ) labelnumber++;
+      Int_t changelablogid  = 0;
+      Int_t changelablognum = 0;
       for (j=1; j<=nbinin; j++) {
 
 // Plot decade
@@ -1962,25 +1933,35 @@ L110:
             if (n1a == 0)goto L210;
             kmod = nbinin/n1a;
             if (kmod == 0) kmod=1000000;
-            if ((nbinin <= n1a) || (j == 1) || (j == nbinin) || ((nbinin > n1a)
-            && (j%kmod == 0))) {
+            if ((nbinin <= n1a) || (j == 1) || (j == nbinin) || ((nbinin > n1a) && (j%kmod == 0))) {
                if (labelnumber == 0) {
-                  textaxis->PaintTextNDC(xx,yy,"1");
+                  snprintf(chtemp,256, "1");
                } else if (labelnumber == 1) {
-                  textaxis->PaintTextNDC(xx,yy,"10");
+                  snprintf(chtemp,256, "10");
                } else {
                   if (noExponent) {
-                     textaxis->PaintTextNDC(xx,yy,&label[first]);
+                     chtemp = &label[first];
                   } else {
-                        snprintf(chtemp,256, "10^{%d}", labelnumber);
-                        typolabel = chtemp;
-                        typolabel.ReplaceAll("-", "#minus");
-                        textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
-                                             gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
-                                             0, textaxis->GetTextSize(), typolabel.Data());
-
+                     snprintf(chtemp,256, "10^{%d}", labelnumber);
                   }
                }
+               if (fNModLabs) {
+                  if (changelablogid  == 0) changelablognum = nbinin-j;
+                  changelablogid++;
+                  ChangeLabelAttributes(changelablogid, changelablognum, textaxis, chtemp);
+               }
+               typolabel = chtemp;
+               typolabel.ReplaceAll("-", "#minus");
+               if (autotoff) {
+                  UInt_t w,h;
+                  textaxis->SetText(0.,0., typolabel.Data());
+                  textaxis->GetBoundingBox(w,h);
+                  toffset = TMath::Max(toffset,(double)w/((double)gPad->GetWw()*gPad->GetWNDC()));
+               }
+               textaxis->PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
+                                    gPad->GetY1() + yy*(gPad->GetY2() - gPad->GetY1()),
+                                    0, textaxis->GetTextSize(), typolabel.Data());
+               if (fNModLabs) ResetLabelAttributes(textaxis);
             }
             labelnumber++;
          }
@@ -2096,6 +2077,54 @@ L200:
       Int_t dummy = 0; if (dummy) { }
    }  //endif (optionLog && ndiv)
 
+// Draw axis title if it exists
+   if (!drawGridOnly && strlen(GetTitle())) {
+      textaxis->SetTextSize (GetTitleSize());
+      charheight = GetTitleSize();
+      if ((GetTextFont() % 10) > 2) {
+         charheight = charheight/gPad->GetWh();
+      }
+      if (x1 == x0) {
+         if (autotoff) {
+            if (toffset) ylabel = 1.6*toffset;
+            else         ylabel = xlside*1.6*charheight;
+         } else {
+            ylabel = xlside*1.6*charheight*toffset;
+         }
+      } else {
+        ylabel = xlside*1.3*charheight*toffset;
+      }
+      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
+      Double_t axispos;
+      if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
+      else                              axispos = axis_length;
+      if (TestBit(TAxis::kRotateTitle)) {
+         if (x1 >= x0) {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(12);
+         } else {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(32);
+         }
+         phil+=kPI;
+      } else {
+         if (x1 >= x0) {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(32);
+         } else {
+            if (TestBit(TAxis::kCenterTitle)) textaxis->SetTextAlign(22);
+            else                              textaxis->SetTextAlign(12);
+         }
+      }
+      Rotate(axispos,ylabel,cosphi,sinphi,x0,y0,xpl1,ypl1);
+      textaxis->SetTextColor(TitleColor);
+      textaxis->SetTextFont(TitleFont);
+      textaxis->PaintLatex(gPad->GetX1() + xpl1*(gPad->GetX2() - gPad->GetX1()),
+                           gPad->GetY1() + ypl1*(gPad->GetY2() - gPad->GetY1()),
+                           phil*180/kPI,
+                           GetTitleSize(),
+                           GetTitle());
+   }
 
 L210:
    if (optionGrid) delete linegrid;
@@ -2262,15 +2291,16 @@ void TGaxis::SetFunction(const char *funcname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
-/// fine tuning of the labels. All the attributes can be changed and even the
+/// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
 ///
-/// \param[in] labNum           Number of the label to be changed, negative numbers start from the end
-/// \param[in] labAngle         New angle value
-/// \param[in] labSize          New size (0 erase the label)
-/// \param[in] labAlign         New alignment value
-/// \param[in] labColor         New label color
-/// \param[in] labText          New label text
+/// \param[in] labNum    Number of the label to be changed, negative numbers start from the end
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
 ///
 /// If an attribute should not be changed just give the value
 /// "-1".The following macro gives an example:
@@ -2325,6 +2355,12 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the label attributes of label number i. If needed.
+///
+/// \param[in] i        Current label number to be changed if needed
+/// \param[in] nlabels  Totals number of labels on for this axis (useful when i is counted from the end)
+/// \param[in] t        Original TLatex string holding the label to be changed
+/// \param[in] c        Text string to be drawn
+
 static Double_t SavedTextAngle;
 static Double_t SavedTextSize;
 static Int_t    SavedTextAlign;

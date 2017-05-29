@@ -11,9 +11,7 @@
 #ifndef ROOT_Math_IntegratorOptions
 #define ROOT_Math_IntegratorOptions
 
-#ifndef ROOT_Math_AllIntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
 #include <string>
 #include <iostream>

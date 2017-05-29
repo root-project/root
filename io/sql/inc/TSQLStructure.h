@@ -12,17 +12,11 @@
 #ifndef ROOT_TSQLStructure
 #define ROOT_TSQLStructure
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttAxis
 #include "TAttAxis.h"
-#endif
 
 #ifdef Bool
 #undef Bool

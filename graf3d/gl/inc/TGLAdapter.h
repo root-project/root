@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLAdapter
 #define ROOT_TGLAdapter
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
 
 class TGLAdapter : public TGLPaintDevice {
 private:

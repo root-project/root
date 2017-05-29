@@ -9,8 +9,6 @@
 
 
 using namespace ROOT::R;
-ClassImp(TRDataFrame)
-
 
 //______________________________________________________________________________
 TRDataFrame::TRDataFrame(): TObject()

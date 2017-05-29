@@ -14,9 +14,7 @@
 
 #include <cassert>
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoExtension : public TObject
 {

@@ -16,9 +16,7 @@
 #ifndef ROOSTATS_HybridResult
 #define ROOSTATS_HybridResult
 
-#ifndef ROOSTATS_HypoTestResult
 #include "RooStats/HypoTestResult.h"
-#endif
 
 namespace RooStats {
 

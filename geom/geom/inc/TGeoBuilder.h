@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoBuilder
 #define ROOT_TGeoBuilder
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TGeoMaterial;
 class TGeoMatrix;

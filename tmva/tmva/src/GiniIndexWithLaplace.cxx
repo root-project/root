@@ -79,7 +79,7 @@ ClassImp(TMVA::GiniIndexWithLaplace)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t TMVA::GiniIndexWithLaplace::GetSeparationIndex( const Double_t &s, const Double_t &b )
+Double_t TMVA::GiniIndexWithLaplace::GetSeparationIndex( const Double_t s, const Double_t b )
 {
    if (s+b <= 0)      return 0;
    if (s<=0 || b <=0) return 0;

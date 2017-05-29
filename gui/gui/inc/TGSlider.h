@@ -39,12 +39,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
 
 
 //--- sizes for vert. and horz. sliders

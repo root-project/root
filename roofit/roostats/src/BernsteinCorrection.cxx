@@ -44,9 +44,7 @@ generating the toys (either via a histogram or via an independent model that is 
 */
 
 
-#ifndef RooStats_BernsteinCorrection
 #include "RooStats/BernsteinCorrection.h"
-#endif
 
 #include "RooGlobalFunc.h"
 #include "RooDataSet.h"

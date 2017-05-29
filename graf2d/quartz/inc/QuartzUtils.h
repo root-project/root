@@ -14,9 +14,7 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#ifndef ROOT_CocoaUtils
 #include "CocoaUtils.h"
-#endif
 
 namespace ROOT {
 namespace Quartz {

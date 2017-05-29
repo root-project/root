@@ -12,15 +12,9 @@
 #ifndef ROOT_TGraphPolar
 #define ROOT_TGraphPolar
 
-#ifndef ROOT_TGraphErrors
 #include "TGraphErrors.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 #include "TGraphPolargram.h"
 

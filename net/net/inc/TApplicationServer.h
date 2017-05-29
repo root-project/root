@@ -21,18 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
 
 class TList;
 class TMessage;

@@ -68,15 +68,14 @@ following example:
 
 Begin_Macro(source)
 {
-   c0 = new TCanvas("c1","multigraph L3",200,10,700,500);
-   c0->SetFrameFillColor(30);
+   auto c0 = new TCanvas("c1","multigraph L3",200,10,700,500);
 
-   TMultiGraph *mg = new TMultiGraph();
+   auto mg = new TMultiGraph();
 
-   TGraph *gr1 = new TGraph(); gr1->SetLineColor(kBlue);
-   TGraph *gr2 = new TGraph(); gr2->SetLineColor(kRed);
-   TGraph *gr3 = new TGraph(); gr3->SetLineColor(kGreen);
-   TGraph *gr4 = new TGraph(); gr4->SetLineColor(kOrange);
+   auto gr1 = new TGraph(); gr1->SetLineColor(kBlue);
+   auto gr2 = new TGraph(); gr2->SetLineColor(kRed);
+   auto gr3 = new TGraph(); gr3->SetLineColor(kGreen);
+   auto gr4 = new TGraph(); gr4->SetLineColor(kOrange);
 
    Double_t dx = 6.28/100;
    Double_t x  = -3.14;
@@ -95,7 +94,6 @@ Begin_Macro(source)
    mg->Add(gr1); gr1->SetTitle("2*Sin(x)")  ; gr1->SetLineWidth(3);
 
    mg->Draw("a fb l3d");
-   return c0;
 }
 End_Macro
 
@@ -116,7 +114,7 @@ The following example shows how to fit a TMultiGraph.
 
 Begin_Macro(source)
 {
-   TCanvas *c1 = new TCanvas("c1","c1",600,400);
+   auto c1 = new TCanvas("c1","c1",600,400);
 
    Double_t px1[2] = {2.,4.};
    Double_t dx1[2] = {0.1,0.1};
@@ -130,22 +128,21 @@ Begin_Macro(source)
 
    gStyle->SetOptFit(0001);
 
-   TGraphErrors *g1 = new TGraphErrors(2,px1,py1,dx1,dy1);
+   auto g1 = new TGraphErrors(2,px1,py1,dx1,dy1);
    g1->SetMarkerStyle(21);
    g1->SetMarkerColor(2);
 
-   TGraphErrors *g2 = new TGraphErrors(2,px2,py2,dx2,dy2);
+   auto g2 = new TGraphErrors(2,px2,py2,dx2,dy2);
    g2->SetMarkerStyle(22);
    g2->SetMarkerColor(3);
 
-   TMultiGraph *g = new TMultiGraph();
+   auto g = new TMultiGraph();
    g->Add(g1);
    g->Add(g2);
 
    g->Draw("AP");
 
    g->Fit("pol1","FQ");
-   return c1;
 }
 End_Macro
 
@@ -154,7 +151,7 @@ The axis titles can be modified the following way:
 
 ~~~ {.cpp}
    [...]
-   TMultiGraph *mg = new TMultiGraph;
+   auto mg = new TMultiGraph;
    mg->SetTitle("title;xaxis title; yaxis title");
    mg->Add(g1);
    mg->Add(g2);
@@ -176,12 +173,12 @@ Note the two differents ways to change limits on X and Y axis.
 
 Begin_Macro(source)
 {
-   TCanvas *c2 = new TCanvas("c2","c2",600,400);
+   auto c2 = new TCanvas("c2","c2",600,400);
 
    TGraph *g[3];
    Double_t x[10] = {0,1,2,3,4,5,6,7,8,9};
    Double_t y[10] = {1,2,3,4,5,5,4,3,2,1};
-   TMultiGraph *mg = new TMultiGraph();
+   auto mg = new TMultiGraph();
    for (int i=0; i<3; i++) {
       g[i] = new TGraph(10, x, y);
       g[i]->SetMarkerStyle(20);
@@ -198,8 +195,6 @@ Begin_Macro(source)
    mg->GetXaxis()->SetLimits(1.5,7.5);
    mg->SetMinimum(0.);
    mg->SetMaximum(10.);
-
-   return c2;
 }
 End_Macro
 
@@ -209,9 +204,9 @@ multigraph. The following example demonstrate this.
 
 Begin_Macro(source)
 {
-   TCanvas *c3 = new TCanvas("c3","c3",600, 400);
+   auto c3 = new TCanvas("c3","c3",600, 400);
 
-   TMultiGraph * mg = new TMultiGraph("mg","mg");
+   auto mg = new TMultiGraph("mg","mg");
 
    const Int_t size = 10;
 
@@ -227,7 +222,7 @@ Begin_Macro(source)
       py3[i] = size - 0.6 * i;
    }
 
-   TGraph * gr1 = new TGraph( size, px, py1 );
+   auto gr1 = new TGraph( size, px, py1 );
    gr1->SetName("gr1");
    gr1->SetTitle("graph 1");
    gr1->SetMarkerStyle(21);
@@ -236,7 +231,7 @@ Begin_Macro(source)
    gr1->SetLineWidth(4);
    gr1->SetFillStyle(0);
 
-   TGraph * gr2 = new TGraph( size, px, py2 );
+   auto gr2 = new TGraph( size, px, py2 );
    gr2->SetName("gr2");
    gr2->SetTitle("graph 2");
    gr2->SetMarkerStyle(22);
@@ -246,7 +241,7 @@ Begin_Macro(source)
    gr2->SetLineWidth(4);
    gr2->SetFillStyle(0);
 
-   TGraph * gr3 = new TGraph( size, px, py3 );
+   auto gr3 = new TGraph( size, px, py3 );
    gr3->SetName("gr3");
    gr3->SetTitle("graph 3");
    gr3->SetMarkerStyle(23);
@@ -260,9 +255,14 @@ Begin_Macro(source)
    gr3->Draw("ALP");
    mg->Draw("LP");
    c3->BuildLegend();
-
-   return c3;
 }
+End_Macro
+
+Automatic coloring according to the current palette is available as shown in the
+following example:
+
+Begin_Macro(source)
+../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
 */
 
@@ -1095,8 +1095,17 @@ void TMultiGraph::Paint(Option_t *choptin)
       char *timeformat = 0;
 
       if (fHistogram) {
-         //cleanup in case of a previous unzoom
-         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum()) {
+         //cleanup in case of a previous unzoom and in case one of the TGraph has changed
+         TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+         TGraph* gAti;
+         Int_t ngraphs = fGraphs->GetSize();
+         Bool_t reset_hist = kFALSE;
+         for (Int_t i=0;i<ngraphs;i++) {
+            gAti = (TGraph*)(fGraphs->At(i));
+            if(gAti->TestBit(TGraph::kResetHisto)) {reset_hist = kTRUE; break;}
+            lnk = (TObjOptLink*)lnk->Next();
+         }
+         if (fHistogram->GetMinimum() >= fHistogram->GetMaximum() || reset_hist) {
             nch = strlen(fHistogram->GetXaxis()->GetTitle());
             firstx = fHistogram->GetXaxis()->GetFirst();
             lastx  = fHistogram->GetXaxis()->GetLast();
@@ -1334,8 +1343,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    }
 
    Int_t ndiv = fGraphs->GetSize();
-   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv),
-                                      10, rwxmin, rwxmax);
+   TH2F* frame = new TH2F("frame","", ndiv, 0., (Double_t)(ndiv), 1, rwxmin, rwxmax);
 
    TAxis *Xaxis = frame->GetXaxis();
    Xaxis->SetNdivisions(-ndiv);
@@ -1347,6 +1355,7 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 
    frame->SetStats(kFALSE);
    frame->SetMinimum(rwymin);
+   for (i = 1; i<=ndiv; i++) frame->SetBinContent(i,1,rwymin);
    frame->SetMaximum(rwymax);
 
    l = (char*)strstr(option,"A");
@@ -1471,4 +1480,12 @@ void TMultiGraph::SetMinimum(Double_t minimum)
 {
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get iterator over internal graphs list.
+TIter TMultiGraph::begin() const
+{
+  return TIter(fGraphs);
 }

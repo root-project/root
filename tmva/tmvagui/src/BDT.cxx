@@ -217,6 +217,8 @@ TMVA::DecisionTree* TMVA::StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
       std::ifstream fin( fWfile );
       if (!fin.good( )) { // file not found --> Error
          cout << "*** ERROR: Weight file: " << fWfile << " does not exist" << endl;
+         delete d;
+         d = nullptr;
          return 0;
       }
       
@@ -225,6 +227,8 @@ TMVA::DecisionTree* TMVA::StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
       if (itree >= fNtrees) {
          cout << "*** ERROR: requested decision tree: " << itree 
               << ", but number of trained trees only: " << fNtrees << endl;
+         delete d;
+         d = nullptr;
          return 0;
       }
       
@@ -258,6 +262,8 @@ TMVA::DecisionTree* TMVA::StatDialogBDT::ReadTree( TString* &vars, Int_t itree )
       if (itree >= fNtrees) {
          cout << "*** ERROR: requested decision tree: " << itree 
               << ", but number of trained trees only: " << fNtrees << endl;
+         delete d;
+         d = nullptr;
          return 0;
       }
       Int_t nVars;

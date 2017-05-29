@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGListView
 #include "TGListView.h"
-#endif
-#ifndef ROOT_TDNDManager
 #include "TGDNDManager.h"
-#endif
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
 #include <stdlib.h>
 
 //----- file sort mode

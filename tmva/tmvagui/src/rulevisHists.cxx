@@ -10,7 +10,7 @@
 // input: - Input file (result from TMVA),
 //        - normal/decorrelated/PCA
 //        - use of TMVA plotting TStyle
-void TMVA::rulevisHists( TString fin, TMVAGlob::TypeOfPlot type , bool useTMVAStyle )
+void TMVA::rulevisHists(TString fin, TMVAGlob::TypeOfPlot type, bool useTMVAStyle)
 {
    // set style and remove existing canvas'
    TMVAGlob::Initialize( useTMVAStyle );
@@ -174,6 +174,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
          if (bgd == NULL) {
             cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
             //exit(1);
+            delete [] c;
             return;
          }
 
@@ -262,4 +263,5 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
       TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
       TMVAGlob::imgconv( c[countCanvas], fname );
    }
+   delete[] c;
 }

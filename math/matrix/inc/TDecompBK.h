@@ -19,15 +19,9 @@
 ///////////////////////////////////////////////////////////////////////////
 
 #include "Rtypes.h"
-#ifndef ROOT_TDecompBase
 #include "TDecompBase.h"
-#endif
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
 
 class TDecompBK : public TDecompBase
 {

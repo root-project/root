@@ -18,13 +18,9 @@
 #ifndef ROOT_Math_GenVector_PxPyPzE4D
 #define ROOT_Math_GenVector_PxPyPzE4D  1
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 
 
 #include <cmath>
@@ -139,7 +135,7 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { return std::sqrt(P2()); }
+   Scalar P() const { return sqrt(P2()); }
    Scalar R() const { return P(); }
 
    /**
@@ -151,14 +147,15 @@ public :
    /**
       invariant mass
    */
-   Scalar M() const    {
-      Scalar mm = M2();
+   Scalar M() const
+   {
+      const Scalar mm = M2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::M() - Tachyonic:\n"
                    "    P^2 > E^2 so the mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
    Scalar Mag() const    { return M(); }
@@ -172,7 +169,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt()   const { return std::sqrt(Perp2());}
+   Scalar Pt() const { return sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -185,13 +182,13 @@ public :
       transverse mass
    */
    Scalar Mt() const {
-      Scalar mm = Mt2();
+      const Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
 
@@ -208,23 +205,19 @@ public :
       transverse energy
    */
    Scalar Et() const {
-      Scalar etet = Et2();
-      return fT < 0.0 ? -std::sqrt(etet) : std::sqrt(etet);
+      const Scalar etet = Et2();
+      return fT < 0.0 ? -sqrt(etet) : sqrt(etet);
    }
 
    /**
       azimuthal angle
    */
-   Scalar Phi() const  {
-      return (fX == 0.0 && fY == 0.0) ? 0 : std::atan2(fY,fX);
-   }
+   Scalar Phi() const { return (fX == 0.0 && fY == 0.0) ? 0 : atan2(fY, fX); }
 
    /**
       polar angle
    */
-   Scalar Theta() const {
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(),fZ);
-   }
+   Scalar Theta() const { return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ); }
 
    /**
        pseudorapidity
@@ -358,12 +351,8 @@ private:
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_PtEtaPhiE4D
 #include "Math/GenVector/PtEtaPhiE4D.h"
-#endif
-#ifndef ROOT_Math_GenVector_PtEtaPhiM4D
 #include "Math/GenVector/PtEtaPhiM4D.h"
-#endif
 
 namespace ROOT {
 

@@ -12,12 +12,8 @@
 #ifndef ROOT_TColor
 #define ROOT_TColor
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
 
 
 class TColor : public TNamed {
@@ -96,6 +92,8 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
    static void    SaveColor(std::ostream &out, Int_t ci);
+   static void    SetColorThreshold(Float_t t);
+   static void    InvertPalette();
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
    static void    SetPalette(Int_t ncolors, Int_t *colors,Float_t alpha=1.);

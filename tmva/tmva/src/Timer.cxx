@@ -60,6 +60,7 @@ Remark: in batch mode, the progress bar is quite ugly; you may
 #include "TStopwatch.h"
 
 #include <iomanip>
+#include <unistd.h>
 
 const TString TMVA::Timer::fgClassName = "Timer";
 const Int_t   TMVA::Timer::fgNbins     = 16;
@@ -70,13 +71,8 @@ ClassImp(TMVA::Timer)
 /// constructor
 
 TMVA::Timer::Timer( const char* prefix, Bool_t colourfulOutput )
-: fNcounts        ( 0 ),
-   fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
-   fColourfulOutput( colourfulOutput ),
-   fProgressBarStringLength (0),
-   fLogger         ( new MsgLogger( fPrefix.Data() ) )
+   : Timer(0, prefix, colourfulOutput)
 {
-   Reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -89,9 +85,12 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
    : fNcounts        ( ncounts ),
      fPrefix         ( strcmp(prefix,"")==0?Timer::fgClassName:TString(prefix) ),
      fColourfulOutput( colourfulOutput ),
+     fPreviousProgress(-1),
+     fOutputToFile(!isatty(STDERR_FILENO)),
      fProgressBarStringLength (0),
      fLogger         ( new MsgLogger( fPrefix.Data() ) )
 {
+   fColourfulOutput = fColourfulOutput && !fOutputToFile;
    Reset();
 }
 
@@ -116,6 +115,8 @@ void TMVA::Timer::Init( Int_t ncounts )
 void TMVA::Timer::Reset( void )
 {
    TStopwatch::Start( kTRUE );
+   fPreviousProgress = -1;
+   fPreviousTimeEstimate.Clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -195,6 +196,21 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
    if (icounts < 0         ) icounts = 0;
    Int_t ic = Int_t(Float_t(icounts)/Float_t(fNcounts)*fgNbins);
 
+   auto timeLeft = this->GetLeftTime( icounts );
+
+   // do not redraw progress bar when neither time not ticks are different
+   if (ic == fPreviousProgress && timeLeft == fPreviousTimeEstimate && icounts != fNcounts-1) return;
+   // check if we are redirected to a file
+   if (fOutputToFile) {
+       if (ic != fPreviousProgress) {
+           std::clog << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%, time left: " << timeLeft << std::endl;
+           fPreviousProgress = ic;
+       }
+       return;
+   }
+   fPreviousProgress = ic;
+   fPreviousTimeEstimate = timeLeft;
+
    std::clog << fLogger->GetPrintedSource();
    if (fColourfulOutput) std::clog << gTools().Color("white_on_green") << gTools().Color("dyellow") << "[" << gTools().Color("reset");
    else                  std::clog << "[";
@@ -215,12 +231,12 @@ void TMVA::Timer::DrawProgressBar( Int_t icounts, const TString& comment  )
       std::clog << "(" << gTools().Color("red") << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" << gTools().Color("reset")
                 << ", "
                 << "time left: "
-                << this->GetLeftTime( icounts ) << gTools().Color("reset") << ") ";
+                << timeLeft << gTools().Color("reset") << ") ";
    }
    else {
       std::clog << "] " ;
-      std::clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%"
-                << ", " << "time left: " << this->GetLeftTime( icounts ) << ") ";
+      std::clog << "(" << Int_t((100*(icounts+1))/Float_t(fNcounts)) << "%" 
+                << ", " << "time left: " << timeLeft << ") ";
    }
    if (comment != "") {
       std::clog << "[" << comment << "]  ";

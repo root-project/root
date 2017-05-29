@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TQueryResult
 #include "TQueryResult.h"
-#endif
 
 class TDSet;
 

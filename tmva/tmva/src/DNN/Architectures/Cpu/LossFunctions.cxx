@@ -38,9 +38,12 @@ AFloat TCpu<AFloat>::MeanSquaredError(const TCpuMatrix<AFloat> &Y,
       return 0;
    };
 
-   auto reduction = [](AFloat sum1, AFloat sum2)
+   //auto reduction = [](AFloat sum1, AFloat sum2)
+   auto reduction = [](const std::vector<AFloat> & v )
+
    {
-      return sum1 + sum2;
+      //return sum1 + sum2;
+      return std::accumulate(v.begin(),v.end(),AFloat{});
    };
 
    Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
@@ -87,10 +90,15 @@ AFloat TCpu<AFloat>::CrossEntropy(const TCpuMatrix<AFloat> &Y,
       return 0;
    };
 
-   auto reduction = [](AFloat sum1, AFloat sum2)
+   // auto reduction = [](AFloat sum1, AFloat sum2)
+   // {
+   //    return sum1 + sum2;
+   // };
+   auto reduction = [](const std::vector<AFloat> & v )
    {
-      return sum1 + sum2;
+      return std::accumulate(v.begin(),v.end(),AFloat{});
    };
+
 
    Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNElements()));
    return norm * Y.GetThreadExecutor().Reduce(temp, reduction);
@@ -145,9 +153,13 @@ AFloat TCpu<AFloat>::SoftmaxCrossEntropy(
       return 0;
    };
 
-   auto reduction = [](AFloat sum1, AFloat sum2)
+   // auto reduction = [](AFloat sum1, AFloat sum2)
+   // {
+   //     return sum1 + sum2;
+   // };
+   auto reduction = [](const std::vector<AFloat> & v )
    {
-      return sum1 + sum2;
+      return std::accumulate(v.begin(),v.end(),AFloat{});
    };
 
    Y.GetThreadExecutor().Map(f, ROOT::TSeqI(Y.GetNrows()));

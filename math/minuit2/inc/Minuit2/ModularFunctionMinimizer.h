@@ -11,13 +11,9 @@
 #define ROOT_Minuit2_ModularFunctionMinimizer
 
 
-#ifndef ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
-#endif
 
-#ifndef ROOT_Minuit2_FunctionMinimizer
 #include "Minuit2/FunctionMinimizer.h"
-#endif
 
 #include <vector>
 

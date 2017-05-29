@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoBranchArray
 #define ROOT_TGeoBranchArray
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
 
 class TGeoNavigator;
 class TGeoNode;

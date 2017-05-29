@@ -34,10 +34,14 @@ AFloat TCpu<AFloat>::L1Regularization(const TCpuMatrix<AFloat> &Weights)
       return 0;
    };
 
-   auto reduction = [](AFloat sum1, AFloat sum2)
+   auto reduction = [](const std::vector<AFloat> & v )
    {
-      return sum1 + sum2;
+      return std::accumulate(v.begin(),v.end(),AFloat{});
    };
+   // auto reduction = [](AFloat sum1, AFloat sum2)
+   // {
+   //    return sum1 + sum2;
+   // };
 
    Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
    return Weights.GetThreadExecutor().Reduce(temp, reduction);
@@ -76,10 +80,14 @@ AFloat TCpu<AFloat>::L2Regularization(const TCpuMatrix<AFloat> &Weights)
       return 0;
    };
 
-   auto reduction = [](AFloat sum1, AFloat sum2)
+   auto reduction = [](const std::vector<AFloat> & v )
    {
-      return sum1 + sum2;
+      return std::accumulate(v.begin(),v.end(),AFloat{});
    };
+   // auto reduction = [](AFloat sum1, AFloat sum2)
+   // {
+   //    return sum1 + sum2;
+   // };
 
    Weights.GetThreadExecutor().Map(f, ROOT::TSeqI(Weights.GetNElements()));
    return Weights.GetThreadExecutor().Reduce(temp, reduction);

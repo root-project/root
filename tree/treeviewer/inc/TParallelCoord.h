@@ -12,12 +12,8 @@
 #ifndef ROOT_TParallelCoord
 #define ROOT_TParallelCoord
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TTree;
 class TPaveText;

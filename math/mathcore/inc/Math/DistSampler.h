@@ -13,13 +13,9 @@
 #ifndef ROOT_Math_DistSampler
 #define ROOT_Math_DistSampler
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 #include <vector>
 #include <cassert>

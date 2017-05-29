@@ -12,13 +12,9 @@
 #ifndef ROOT_TGFileBrowser
 #define ROOT_TGFileBrowser
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TBrowserImp
 #include "TBrowserImp.h"
-#endif
 
 #include <list>
 #include <map>

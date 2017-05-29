@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TArray
 #include "TArray.h"
-#endif
 
 
 class TArrayL : public TArray {

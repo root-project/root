@@ -11,13 +11,9 @@
 #ifndef ROOSTATS_ConfInterval
 #define ROOSTATS_ConfInterval
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
 namespace RooStats {
 

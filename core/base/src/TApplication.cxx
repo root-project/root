@@ -476,8 +476,18 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          if (arg) *arg = '\0';
          char *dir = gSystem->ExpandPathName(argv[i]);
          TUrl udir(dir, kTRUE);
+         // remove options and anchor to check the path
+         TString sfx = udir.GetFileAndOptions();
+         TString fln = udir.GetFile();
+         sfx.Replace(sfx.Index(fln), fln.Length(), "");
+         TString path = udir.GetFile();
+         if (strcmp(udir.GetProtocol(), "file")) {
+            path = udir.GetUrl();
+            path.Replace(path.Index(sfx), sfx.Length(), "");
+         }
+         // 'path' is the full URL without suffices (options and/or anchor)
          if (arg) *arg = '(';
-         if (!gSystem->GetPathInfo(dir, &id, &size, &flags, &modtime)) {
+         if (!arg && !gSystem->GetPathInfo(path.Data(), &id, &size, &flags, &modtime)) {
             if ((flags & 2)) {
                // if directory set it in fWorkDir
                if (pwd == "") {
@@ -491,7 +501,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             } else if (size > 0) {
                // if file add to list of files to be processed
                if (!fFiles) fFiles = new TObjArray;
-               fFiles->Add(new TObjString(argv[i]));
+               fFiles->Add(new TObjString(path.Data()));
                argv[i] = null;
             } else {
                Warning("GetOptions", "file %s has size 0, skipping", dir);
@@ -1019,12 +1029,16 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
       ::Error("TApplication::ExecuteFile", "macro %s not found in path %s", fname.Data(),
               TROOT::GetMacroPath());
       delete [] exnam;
+      if (error)
+         *error = (Int_t)TInterpreter::kRecoverable;
       return 0;
    }
 
    ::std::ifstream macro(exnam, std::ios::in);
    if (!macro.good()) {
       ::Error("TApplication::ExecuteFile", "%s no such file", exnam);
+      if (error)
+         *error = (Int_t)TInterpreter::kRecoverable;
       delete [] exnam;
       return 0;
    }

@@ -43,23 +43,13 @@
 #ifndef ROOT_TQpDataDens
 #define ROOT_TQpDataDens
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
-#ifndef ROOT_TQpDataBase
 #include "TQpDataBase.h"
-#endif
 
-#ifndef ROOT_TQpVar
 #include "TQpVar.h"
-#endif
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

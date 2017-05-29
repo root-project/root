@@ -184,6 +184,7 @@ Bool_t TFormulaTests::SetVars()
          successful = false;
       }
    }
+   delete[] vars;
    return successful;
 }
 
@@ -500,7 +501,7 @@ bool TFormulaTests::Parser() {
 
 int main(int argc, char **argv)
 {
-   printf("strting .....\n");
+   printf("starting .....\n");
 
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();

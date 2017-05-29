@@ -39,9 +39,7 @@
 
 #include <vector>
 
-#ifndef ROOT_TMVA_Results
 #include "TMVA/Results.h"
-#endif
 
 namespace TMVA {
 

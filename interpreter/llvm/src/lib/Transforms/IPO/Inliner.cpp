@@ -525,7 +525,7 @@ bool Inliner::inlineCalls(CallGraphSCC &SCC) {
       
       // If we inlined or deleted the last possible call site to the function,
       // delete the function body now.
-      if (false && Callee && Callee->use_empty() && Callee->hasLocalLinkage() &&
+      if (Callee && Callee->use_empty() && Callee->hasLocalLinkage() &&
           // TODO: Can remove if in SCC now.
           !SCCFunctions.count(Callee) &&
           

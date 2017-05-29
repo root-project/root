@@ -12,13 +12,9 @@
 #define ROOSTATS_NeymanConstruction
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
 #include "RooStats/TestStatSampler.h"
 #include "RooStats/ModelConfig.h"
@@ -30,30 +26,11 @@
 #include "RooArgSet.h"
 #include "TList.h"
 
-class RooAbsData; 
+class RooAbsData;
 
 namespace RooStats {
 
-   class ConfInterval; 
-
-
-/**
-
-   \ingroup Roostats
-
-NeymanConstruction is a concrete implementation of the NeymanConstruction interface that, as the name suggests, performs a NeymanConstruction. It produces a RooStats::PointSetInterval, which is a concrete implementation of the ConfInterval interface.
-
-The Neyman Construction is not a uniquely defined statistical technique, it requires that one specify an ordering rule or ordering principle, which is usually incoded by choosing a specific test statistic and limits of integration (corresponding to upper/lower/central limits). As a result, this class must be configured with the corresponding information before it can produce an interval. Common configurations, such as the Feldman-Cousins approach, can be enforced by other light weight classes.
-
-The Neyman Construction considers every point in the parameter space independently, no assumptions are made that the interval is connected or of a particular shape. As a result, the PointSetInterval class is used to represent the result. The user indicate which points in the parameter space to perform the constrution by providing a PointSetInterval instance with the desired points.
-
-This class is fairly light weight, because the choice of parameter points to be considered is factorized and so is the creation of the sampling distribution of the test statistic (which is done by a concrete class implementing the DistributionCreator interface). As a result, this class basically just drives the construction by:
-
-*   using a DistributionCreator to create the SamplingDistribution of a user-defined test statistic for each parameter point of interest,
-*   defining the acceptance region in the data by finding the thresholds on the test statistic such that the integral of the sampling distribution is of the appropriate size and consistent with the limits of integration (eg. upper/lower/central limits),
-*   and finally updating the PointSetInterval based on whether the value of the test statistic evaluated on the data are in the acceptance region.
-
-*/
+   class ConfInterval;
 
    class NeymanConstruction : public IntervalCalculator{
 
@@ -63,7 +40,7 @@ This class is fairly light weight, because the choice of parameter points to be 
      NeymanConstruction(RooAbsData& data, ModelConfig& model);
 
      virtual ~NeymanConstruction();
-    
+
       /// Main interface to get a ConfInterval (will be a PointSetInterval)
      virtual PointSetInterval* GetInterval() const;
 
@@ -71,13 +48,13 @@ This class is fairly light weight, because the choice of parameter points to be 
       /// Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)
       void SetTestStatSampler(TestStatSampler& sampler) {fTestStatSampler = &sampler;}
       /// fLeftSideTailFraction*fSize defines lower edge of acceptance region.
-      /// Unified limits use 0, central limits use 0.5, 
+      /// Unified limits use 0, central limits use 0.5,
       /// for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
-      void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;} 
+      void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;}
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
-	fPointsToTest = &pointsToTest;
+   fPointsToTest = &pointsToTest;
         fConfBelt = new ConfidenceBelt("ConfBelt",pointsToTest);
       }
       /// This class can make regularly spaced scans based on range stored in RooRealVars.
@@ -91,18 +68,18 @@ This class is fairly light weight, because the choice of parameter points to be 
       virtual Double_t Size() const {return fSize;}
 
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}  
+      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
 
       /// Set ModelConfig
       virtual void SetModel(const ModelConfig &model) {fModel = model;}
 
-      /// Set the DataSet 
+      /// Set the DataSet
       virtual void SetData(RooAbsData& data) { fData = data; }
 
       /// Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf& /*pdf*/) { 
+      virtual void SetPdf(RooAbsPdf& /*pdf*/) {
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
-      }  
+      }
 
       /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) {
@@ -122,16 +99,16 @@ This class is fairly light weight, because the choice of parameter points to be 
       /// get confidence belt
       ConfidenceBelt* GetConfidenceBelt() {return fConfBelt;}
 
-      /// adaptive sampling algorithm to speed up interval caculation
+      /// adaptive sampling algorithm to speed up interval calculation
       void UseAdaptiveSampling(bool flag=true){fAdaptiveSampling=flag;}
 
       /// give user ability to ask for more toys
       void AdditionalNToysFactor(double fact){fAdditionalNToysFactor = fact;}
 
-      /// save teh confidence belt to a file
+      /// save the confidence belt to a file
       void SaveBeltToFile(bool flag=true){
-	fSaveBeltToFile = flag;
-	if(flag) fCreateBelt = true;
+   fSaveBeltToFile = flag;
+   if(flag) fCreateBelt = true;
       }
       /// should create confidence belt
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
@@ -140,11 +117,11 @@ This class is fairly light weight, because the choice of parameter points to be 
       /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
       TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
-      
+
    private:
 
       Double_t fSize; /// size of the test (eg. specified rate of Type I error)
-      RooAbsData& fData; /// data set 
+      RooAbsData& fData; /// data set
       ModelConfig &fModel;
       /*
       RooAbsPdf * fPdf; // common PDF

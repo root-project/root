@@ -426,13 +426,6 @@ Bool_t ROOT::Detail::TBranchProxy::Setup()
    }
    if (fClass==TClonesArray::Class()) fIsClone = true;
    if (fWhere!=0) {
-      if (fCollection) {
-         if (IsaPointer()) {
-            fCollection->PushProxy( *(void**)fWhere );
-         } else {
-            fCollection->PushProxy( fWhere );
-         }
-      }
       fLastTree = fDirector->GetTree();
       fCurrentTreeNumber = fLastTree->GetTreeNumber();
       fInitialized = true;

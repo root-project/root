@@ -12,9 +12,7 @@
 #ifndef ROOT_TPgSQLServer
 #define ROOT_TPgSQLServer
 
-#ifndef ROOT_TSQLServer
 #include "TSQLServer.h"
-#endif
 
 #include <map>
 #include <string>

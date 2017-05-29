@@ -31,9 +31,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class TRedirectOutputGuard {
 

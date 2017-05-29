@@ -89,7 +89,7 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       size_t size = str.size();
       size_t cur;
       // Parse leading numeric factor
-      const double coeff = stod(str, &cur);
+      const double coeff = stod(std::string(str.data(), str.size()), &cur);
 
       // Skip any intermediate white space
       while (cur<size && isspace(str[cur])) ++cur;

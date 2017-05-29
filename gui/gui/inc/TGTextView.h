@@ -25,12 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGView
 #include "TGView.h"
-#endif
-#ifndef ROOT_TGText
 #include "TGText.h"
-#endif
 
 class TViewTimer;
 

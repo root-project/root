@@ -14,9 +14,7 @@
 #ifndef ROOT_TGLPolyMarker
 #define ROOT_TGLPolyMarker
 
-#ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
-#endif
 
 #include <vector>
 

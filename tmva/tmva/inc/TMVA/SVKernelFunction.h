@@ -28,9 +28,7 @@
 #ifndef ROOT_TMVA_SVKernelFunction
 #define ROOT_TMVA_SVKernelFunction
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 namespace TMVA {
 

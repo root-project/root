@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH3
 #include "TH3.h"
-#endif
-#ifndef ROOT_TProfile
 #include "TProfile.h"
-#endif
 
 class TProfile3D : public TH3D {
 

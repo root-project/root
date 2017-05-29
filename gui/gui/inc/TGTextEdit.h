@@ -23,9 +23,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGTextView
 #include "TGTextView.h"
-#endif
 
 class TGPopupMenu;
 class TGSearchType;

@@ -9,9 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 R__EXTERN const char gHelpAbout[];
 R__EXTERN const char gHelpBrowser[];

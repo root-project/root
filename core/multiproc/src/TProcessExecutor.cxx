@@ -15,12 +15,13 @@
 
 //////////////////////////////////////////////////////////////////////////
 ///
-/// \class TProcessExecutor
+/// \class ROOT::TProcessExecutor
 /// \brief This class provides a simple interface to execute the same task
 /// multiple times in parallel, possibly with different arguments every
 /// time. This mimics the behaviour of python's pool.Map method.
 ///
-/// ###TProcessExecutor::Map
+/// ###ROOT::TProcessExecutor::Map
+/// This class inherits its interfaces from ROOT::TExecutor\n.
 /// The two possible usages of the Map method are:\n
 /// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
 /// * Map(F func, T& args): func is executed on each element of the collection of arguments args
@@ -30,9 +31,9 @@
 /// or set via SetNWorkers. It defaults to the number of cores.\n
 /// A collection containing the result of each execution is returned.\n
 /// **Note:** the user is responsible for the deletion of any object that might
-/// be created upon execution of func, returned objects included: TProcessExecutor never
+/// be created upon execution of func, returned objects included: ROOT::TProcessExecutor never
 /// deletes what it returns, it simply forgets it.\n
-/// **Note:** that the usage of TProcessExecutor::Map is indicated only when the task to be
+/// **Note:** that the usage of ROOT::TProcessExecutor::Map is indicated only when the task to be
 /// executed takes more than a few seconds, otherwise the overhead introduced
 /// by Map will outrun the benefits of parallel execution on most machines.
 ///
@@ -44,12 +45,9 @@
 /// \endparblock
 /// \param args
 /// \parblock
-/// a standard container (vector, list, deque), an initializer list
-/// or a pointer to a TCollection (TList*, TObjArray*, ...).
+/// a standard vector, a ROOT::TSeq of integer type or an initializer list for the second signature.
+/// An integer only for the first.
 /// \endparblock
-/// **Note:** the version of TProcessExecutor::Map that takes a TCollection* as argument incurs
-/// in the overhead of copying data from the TCollection to an STL container. Only
-/// use it when absolutely necessary.\n
 /// **Note:** in cases where the function to be executed takes more than
 /// zero/one argument but all are fixed except zero/one, the function can be wrapped
 /// in a lambda or via std::bind to give it the right signature.\n
@@ -58,19 +56,18 @@
 /// might generate the same sequence of pseudo-random numbers.
 ///
 /// #### Return value:
-/// If T derives from TCollection Map returns a TObjArray, otherwise it
-/// returns an std::vector. In both cases, the elements in the container
+/// An std::vector. The elements in the container
 /// will be the objects returned by func.
 ///
 ///
 /// #### Examples:
 ///
 /// ~~~{.cpp}
-/// root[] TProcessExecutor pool; auto hists = pool.Map(CreateHisto, 10);
-/// root[] TProcessExecutor pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
+/// root[] ROOT::TProcessExecutor pool; auto hists = pool.Map(CreateHisto, 10);
+/// root[] ROOT::TProcessExecutor pool(2); auto squares = pool.Map([](int a) { return a*a; }, {1,2,3});
 /// ~~~
 ///
-/// ###TProcessExecutor::MapReduce
+/// ###ROOT::TProcessExecutor::MapReduce
 /// This set of methods behaves exactly like Map, but takes an additional
 /// function as a third argument. This function is applied to the set of
 /// objects returned by the corresponding Map execution to "squash" them
@@ -78,8 +75,8 @@
 ///
 /// ####Examples:
 /// ~~~{.cpp}
-/// root[] TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
-/// root[] TProcessExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
+/// root[] ROOT::TProcessExecutor pool; auto ten = pool.MapReduce([]() { return 1; }, 10, [](std::vector<int> v) { return std::accumulate(v.begin(), v.end(), 0); })
+/// root[] ROOT::TProcessExecutor pool; auto hist = pool.MapReduce(CreateAndFillHists, 10, PoolUtils::ReduceObjects);
 /// ~~~
 ///
 //////////////////////////////////////////////////////////////////////////
@@ -129,9 +126,9 @@ void TProcessExecutor::ReplyToIdle(TSocket *s)
 {
    if (fNProcessed < fNToProcess) {
       //we are executing a "greedy worker" task
-      if (fTaskType == ETask::kMapWithArg)
+      if (fTaskType == ETask::kMapRedWithArg)
          MPSend(s, MPCode::kExecFuncWithArg, fNProcessed);
-      else if (fTaskType == ETask::kMap)
+      else if (fTaskType == ETask::kMapRed)
          MPSend(s, MPCode::kExecFunc);
       ++fNProcessed;
    } else

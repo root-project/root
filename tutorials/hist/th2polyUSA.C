@@ -1,15 +1,17 @@
 /// \file
 /// \ingroup tutorial_hist
+/// \notebook -js
 /// This tutorial illustrates how to create an histogram with polygonal
-/// bins (TH2Poly), fill it and draw it using GL. The initial data are stored
-/// in TMultiGraphs. They represent the USA.
+/// bins (TH2Poly), fill it and draw it using the `col` option. The initial data
+/// are stored in TMultiGraphs. They represent the USA map. Such histograms can
+/// be rendered in 3D using the option `legogl`.
 ///
 /// The initial data have been downloaded from: http://www.maproom.psu.edu/dcw/
 /// This database was developed in 1991/1992 and national boundaries reflect
 /// political reality as of that time.
 ///
 /// \macro_code
-/// \macro_image(nobatch)
+/// \macro_image
 ///
 /// \author Olivier Couet
 
@@ -40,7 +42,6 @@ void th2polyUSA()
    24782302, 2784572,   621760,  7882590, 6664195,  1819777, 5654774,   544270
    };
 
-   gStyle->SetCanvasPreferGL(true);
    TCanvas *usa = new TCanvas("USA", "USA");
    usa->ToggleEventStatus();
    Double_t lon1 = -130;
@@ -49,8 +50,8 @@ void th2polyUSA()
    Double_t lat2 = 50;
    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
-   TFile *f;
-   f = TFile::Open("http://root.cern.ch/files/usa.root");
+   TFile::SetCacheFileDir(".");
+   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
@@ -73,5 +74,5 @@ void th2polyUSA()
    for (i=0; i<nx; i++) p->Fill(states[i], pop[i]);
 
    gStyle->SetOptStat(11);
-   p->Draw("legogl");
+   p->Draw("colz textn");
 }

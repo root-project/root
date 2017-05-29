@@ -16,16 +16,12 @@
 #ifndef ROOT_Math_GenVector_Cylindrical3D
 #define ROOT_Math_GenVector_Cylindrical3D  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
 #include <limits>
-
+#include <cmath>
 
 namespace ROOT {
 
@@ -110,11 +106,10 @@ public :
    {rho=fRho; zz=fZ; phi=fPhi;}
 
 private:
-   inline static Scalar pi() { return M_PI; }
-   inline void Restrict() {
-      if ( fPhi <= -pi() || fPhi > pi() )
-         fPhi = fPhi - std::floor( fPhi/(2*pi()) +.5 ) * 2*pi();
-      return;
+   inline static Scalar pi() { return Scalar(M_PI); }
+   inline void          Restrict()
+   {
+      if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 public:
 
@@ -124,13 +119,13 @@ public:
    Scalar Z()     const { return fZ;   }
    Scalar Phi()   const { return fPhi; }
 
-   Scalar X()     const { return fRho*std::cos(fPhi); }
-   Scalar Y()     const { return fRho*std::sin(fPhi); }
+   Scalar X() const { return fRho * cos(fPhi); }
+   Scalar Y() const { return fRho * sin(fPhi); }
 
    Scalar Mag2()  const { return fRho*fRho + fZ*fZ;   }
-   Scalar R()     const { return std::sqrt( Mag2());  }
+   Scalar R() const { return sqrt(Mag2()); }
    Scalar Perp2() const { return fRho*fRho;           }
-   Scalar Theta() const { return (fRho==0 && fZ==0 ) ? 0 : atan2(fRho,fZ); }
+   Scalar Theta() const { return (fRho == Scalar(0) && fZ == Scalar(0)) ? Scalar(0) : atan2(fRho, fZ); }
 
    // pseudorapidity - use same implementation as in Cartesian3D
    Scalar Eta() const {
@@ -253,20 +248,12 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_Cartesian3D
 #include "Math/GenVector/Cartesian3D.h"
-#endif
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
-#ifndef ROOT_Math_GenVector_CylindricalEta3D
 #include "Math/GenVector/CylindricalEta3D.h"
-#endif
-#ifndef ROOT_Math_GenVector_Polar3D
 #include "Math/GenVector/Polar3D.h"
-#endif
 #endif
 
 namespace ROOT {

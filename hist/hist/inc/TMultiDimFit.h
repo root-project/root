@@ -4,21 +4,11 @@
 #ifndef ROOT_TMultiDimFit
 #define ROOT_TMultiDimFit
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TVirtualFitter
 #include "TVirtualFitter.h"
-#endif
 
 class TBrowser;
 

@@ -788,8 +788,19 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          rname[dot] = '.';
       }
    }
-   rname += mname;
+
    Long_t offset = Long_t(((Long_t) add) - ((Long_t) fRealDataObject));
+
+   if (TClassEdit::IsStdArray(dm->GetTypeName())){ // We tackle the std array case
+      TString rdName;
+      TRealData::GetName(rdName,dm);
+      rname += rdName;
+      TRealData* rd = new TRealData(rname.Data(), offset, dm);
+      fRealDataClass->GetListOfRealData()->Add(rd);
+      return;
+   }
+
+   rname += mname;
 
    if (dm->IsaPointer()) {
       // Data member is a pointer.
@@ -963,7 +974,7 @@ void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
          bwname = name;
          int l = strcspn(bwname.Data(),"[ ");
          if (l<bwname.Length() && bwname[l]=='[') {
-            char cbuf[12]; snprintf(cbuf,12,"[%02d]",i);
+            char cbuf[13]; snprintf(cbuf,13,"[%02d]",i);
             ts.Replace(0,999,bwname,l);
             ts += cbuf;
             bwname = (const char*)ts;

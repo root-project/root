@@ -32,20 +32,12 @@
 #define ROOT_Math_GSL_RootFinderDeriv
 
 
-#ifndef ROOT_Math_GSLFunctionAdapter
 #include "Math/GSLFunctionAdapter.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_IRootFinderMethod
 #include "Math/IRootFinderMethod.h"
-#endif
 
 #include <iostream>
 

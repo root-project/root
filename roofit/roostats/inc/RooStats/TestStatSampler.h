@@ -12,13 +12,11 @@
 #define ROOSTATS_TestStatSampler
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-class RooAbsArg; 
-class RooAbsData; 
-class RooArgSet; 
+class RooAbsArg;
+class RooAbsData;
+class RooArgSet;
 class RooAbsPdf;
 
 
@@ -26,34 +24,35 @@ class RooAbsPdf;
 
 namespace RooStats {
 
-   class SamplingDistribution; 
+   class SamplingDistribution;
    class TestStatistic;
 
-   /**
-      TestStatSampler is an interface class for a tools which produce RooStats SamplingDistributions.  
-      Tools that implement this interface are expected to be used for coverage studies, the Neyman Construction, etc.
-   
-      \ingroup Roostats
-   */
+/** \class RooStats::TestStatSampler
+    \ingroup Roostats
 
+TestStatSampler is an interface class for a tools which produce RooStats
+SamplingDistributions. Tools that implement this interface are expected to be
+used for coverage studies, the Neyman Construction, etc.
+
+*/
 
    class TestStatSampler {
 
    public:
      //     TestStatSampler();
      virtual ~TestStatSampler() {}
-    
+
       // Main interface to get a ConfInterval, pure virtual
-      virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest) = 0; 
+      virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest) = 0;
 
       // Main interface to evaluate the test statistic on a dataset
       virtual Double_t EvaluateTestStatistic(RooAbsData& data, RooArgSet& paramsOfInterest) = 0;
 
       // Get the TestStatistic
-      virtual TestStatistic* GetTestStatistic()  const = 0;  
-    
+      virtual TestStatistic* GetTestStatistic()  const = 0;
+
       // Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const = 0;  
+      virtual Double_t ConfidenceLevel()  const = 0;
 
       // Common Initialization
       virtual void Initialize(RooAbsArg& testStatistic, RooArgSet& paramsOfInterest, RooArgSet& nuisanceParameters) = 0;
@@ -65,7 +64,7 @@ namespace RooStats {
 
       // specify the values of parameters used when evaluating test statistic
       virtual void SetParametersForTestStat(const RooArgSet& /*nullpoi*/) = 0;
-      
+
       // REMOVE THIS
       // specify the parameters of interest in the interval
       //      virtual void SetParameters(const RooArgSet&) = 0;
@@ -84,7 +83,7 @@ namespace RooStats {
 
       // Set the TestStatistic (want the argument to be a function of the data & parameter points
       virtual void SetTestStatistic(TestStatistic* testStatistic) = 0;
-      
+
       // Set the name of the sampling distribution used for plotting
       virtual void SetSamplingDistName(const char* name) = 0;
 

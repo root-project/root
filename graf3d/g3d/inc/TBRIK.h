@@ -21,9 +21,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
 
 class TBRIK : public TShape {
 

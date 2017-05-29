@@ -13,15 +13,9 @@
 #define ROOT_TPaveText
 
 
-#ifndef ROOT_TPave
 #include "TPave.h"
-#endif
-#ifndef ROOT_TText
 #include "TText.h"
-#endif
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
 
 
 class TPaveText : public TPave, public TAttText {

@@ -19,9 +19,7 @@
 
  */
 
-#ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
-#endif
 
 #include <cstddef>
 #include <utility>

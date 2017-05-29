@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBrowserImp
 #include "TBrowserImp.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGMenuBar;
 class TGPopupMenu;

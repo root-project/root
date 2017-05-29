@@ -371,14 +371,14 @@ namespace Internal {
 
    static GetROOTFun_t gGetROOT = &GetROOT1;
 
-   static Func_t GetSymInLibThread(const char *funcname)
+   static Func_t GetSymInLibImt(const char *funcname)
    {
-      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libThread");
+      const static bool loadSuccess = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")? false : 0 <= gSystem->Load("libImt");
       if (loadSuccess) {
          if (auto sym = gSystem->DynFindSymbol(nullptr, funcname)) {
             return sym;
          } else {
-            Error("GetSymInLibThread", "Cannot get symbol %s.", funcname);
+            Error("GetSymInLibImt", "Cannot get symbol %s.", funcname);
          }
       }
       return nullptr;
@@ -395,7 +395,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -409,7 +409,7 @@ namespace Internal {
    void DisableParBranchProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParBranchProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParBranchProcessing");
       if (sym)
          sym();
 #else
@@ -422,7 +422,7 @@ namespace Internal {
    Bool_t IsParBranchProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParBranchProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -444,7 +444,7 @@ namespace Internal {
 #ifdef R__USE_IMT
       if (!IsImplicitMTEnabled())
          EnableImplicitMT();
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -458,7 +458,7 @@ namespace Internal {
    void DisableParTreeProcessing()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableParTreeProcessing");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableParTreeProcessing");
       if (sym)
          sym();
 #else
@@ -471,7 +471,7 @@ namespace Internal {
    Bool_t IsParTreeProcessingEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsParTreeProcessingEnabled");
       if (sym)
          return sym();
       else
@@ -497,29 +497,36 @@ namespace Internal {
    /// Enables the global mutex to make ROOT thread safe/aware.
    void EnableThreadSafety()
    {
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TThread_Initialize");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TThread_Initialize");
       if (sym)
          sym();
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Globally enables the implicit multi-threading in ROOT, activating the
-   /// parallel execution of those methods in ROOT that provide an internal
-   /// parallelisation.
-   /// The 'numthreads' parameter allows to control the number of threads to
-   /// be used by the implicit multi-threading. However, this parameter is just
-   /// a hint for ROOT, which will try to satisfy the request if the execution
-   /// scenario allows it. For example, if ROOT is configured to use an external
-   /// scheduler, setting a value for 'numthreads' might not have any effect.
    /// @param[in] numthreads Number of threads to use. If not specified or
    ///                       set to zero, the number of threads is automatically
    ///                       decided by the implementation. Any other value is
    ///                       used as a hint.
+   ///
+   /// ROOT must be built with the compilation flag `imt=ON` for this feature to be available.
+   /// The following objects and methods automatically take advantage of
+   /// multi-threading if a call to `EnableImplicitMT` has been made before usage:
+   ///
+   ///  - TDataFrame internally runs the event-loop by parallelizing over clusters of entries
+   ///  - TTree::GetEntry reads multiple branches in parallel
+   ///  - TTree::FlushBaskets writes multiple baskets to disk in parallel
+   ///
+   /// EnableImplicitMT calls in turn EnableThreadSafety.
+   /// The 'numthreads' parameter allows to control the number of threads to
+   /// be used by the implicit multi-threading. However, this parameter is just
+   /// a hint for ROOT: it will try to satisfy the request if the execution
+   /// scenario allows it. For example, if ROOT is configured to use an external
+   /// scheduler, setting a value for 'numthreads' might not have any effect.
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
       EnableThreadSafety();
-      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibThread("ROOT_TImplicitMT_EnableImplicitMT");
+      static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
 #else
@@ -528,11 +535,11 @@ namespace Internal {
    }
 
    ////////////////////////////////////////////////////////////////////////////////
-   /// Disables the implicit multi-threading in ROOT.
+   /// Disables the implicit multi-threading in ROOT (see EnableImplicitMT).
    void DisableImplicitMT()
    {
 #ifdef R__USE_IMT
-      static void (*sym)() = (void(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_DisableImplicitMT");
+      static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableImplicitMT");
       if (sym)
          sym();
 #else
@@ -545,7 +552,7 @@ namespace Internal {
    Bool_t IsImplicitMTEnabled()
    {
 #ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_IsImplicitMTEnabled");
+      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsImplicitMTEnabled");
       if (sym)
          return sym();
       else
@@ -560,7 +567,7 @@ namespace Internal {
    UInt_t GetImplicitMTPoolSize()
    {
 #ifdef R__USE_IMT
-      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibThread("ROOT_TImplicitMT_GetImplicitMTPoolSize");
+      static UInt_t (*sym)() = (UInt_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_GetImplicitMTPoolSize");
       if (sym)
          return sym();
       else
@@ -1187,12 +1194,15 @@ TObject *TROOT::FindObject(const char *name) const
    temp   = fMappedFiles->FindObject(name); if (temp) return temp;
    {
       R__LOCKGUARD2(gROOTMutex);
-      temp   = fFunctions->FindObject(name);   if (temp) return temp;
+      temp   = fFunctions->FindObject(name);if (temp) return temp;
    }
    temp   = fGeometries->FindObject(name);  if (temp) return temp;
    temp   = fCanvases->FindObject(name);    if (temp) return temp;
    temp   = fStyles->FindObject(name);      if (temp) return temp;
-   temp   = fSpecials->FindObject(name);    if (temp) return temp;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      temp = fSpecials->FindObject(name);   if (temp) return temp;
+   }
    TIter next(fGeometries);
    TObject *obj;
    while ((obj=next())) {
@@ -1907,6 +1917,15 @@ void TROOT::InitInterpreter()
          Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
                "This will cause problems; please hide them or dlopen() them "
                "after the call to TROOT::InitInterpreter()!");
+      }
+
+      char *libRIO = gSystem->DynamicPathName("libRIO");
+      void *libRIOHandle = dlopen(libRIO, RTLD_NOW|RTLD_GLOBAL);
+      delete [] libRIO;
+      if (!libRIOHandle) {
+         TString err = dlerror();
+         fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
+         exit(1);
       }
 
       char *libcling = gSystem->DynamicPathName("libCling");

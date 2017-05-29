@@ -16,21 +16,13 @@
 #ifndef ROOT_Math_GenVector_PositionVector2D
 #define ROOT_Math_GenVector_PositionVector2D  1
 
-#ifndef ROOT_Math_GenVector_DisplacementVector2Dfwd
 #include "Math/GenVector/DisplacementVector2D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
-#endif
 
 
 namespace ROOT {

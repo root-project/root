@@ -12,8 +12,9 @@ from threading import Thread
 from time import sleep as timeSleep
 from resource import setrlimit, RLIMIT_STACK, RLIM_INFINITY
 from sys import platform
+from os import path
 
-_lib = CDLL("libJupyROOT.so")
+_lib = CDLL(path.join(path.dirname(path.dirname(__file__)), 'libJupyROOT.so'))
 
 class IOHandler(object):
     r'''Class used to capture output from C/C++ libraries.

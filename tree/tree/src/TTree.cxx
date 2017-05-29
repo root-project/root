@@ -392,6 +392,9 @@ End_Macro
 #include "TSchemaRuleSet.h"
 #include "TFileMergeInfo.h"
 #include "ROOT/StringConv.hxx"
+#include "TVirtualMutex.h"
+
+#include "TBranchIMTHelper.h"
 
 #include <chrono>
 #include <cstddef>
@@ -401,10 +404,10 @@ End_Macro
 #include <string>
 #include <stdio.h>
 #include <limits.h>
+#include <algorithm>
 
 #ifdef R__USE_IMT
-#include "tbb/task.h"
-#include "tbb/task_group.h"
+#include "ROOT/TThreadExecutor.hxx"
 #include <thread>
 #include <string>
 #include <sstream>
@@ -878,7 +881,10 @@ TTree::~TTree()
    }
    if (fClones) {
       // Clone trees should no longer be removed from fClones when they are deleted.
-      gROOT->GetListOfCleanups()->Remove(fClones);
+     {
+        R__LOCKGUARD2(gROOTMutex);
+        gROOT->GetListOfCleanups()->Remove(fClones);
+     }
       // Note: fClones does not own its content.
       delete fClones;
       fClones = 0;
@@ -1102,7 +1108,10 @@ void TTree::AddClone(TTree* clone)
       fClones->SetOwner(false);
       // So that the clones are automatically removed from the list when
       // they are deleted.
-      gROOT->GetListOfCleanups()->Add(fClones);
+      {
+         R__LOCKGUARD2(gROOTMutex);
+         gROOT->GetListOfCleanups()->Add(fClones);
+      }
    }
    if (!fClones->FindObject(clone)) {
       fClones->Add(clone);
@@ -4384,13 +4393,23 @@ Int_t TTree::Fill()
    if (fBranchRef) {
       fBranchRef->Clear();
    }
+
+   ROOT::Internal::TBranchIMTHelper imtHelper;
+   #ifdef R__USE_IMT
+   if (fIMTEnabled) {
+      fIMTFlush = true;
+      fIMTZipBytes.store(0);
+      fIMTTotBytes.store(0);
+   }
+   #endif
+
    for (Int_t i = 0; i < nb; ++i) {
       // Loop over all branches, filling and accumulating bytes written and error counts.
       TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
       if (branch->TestBit(kDoNotProcess)) {
          continue;
       }
-      Int_t nwrite = branch->Fill();
+      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
       if (nwrite < 0)  {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
@@ -4410,6 +4429,17 @@ Int_t TTree::Fill()
          nbytes += nwrite;
       }
    }
+   #ifdef R__USE_IMT
+   if (fIMTFlush) {
+      imtHelper.Wait();
+      fIMTFlush = false;
+      const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
+      const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
+      nbytes += imtHelper.GetNbytes();
+      nerror += imtHelper.GetNerrors();
+   }
+   #endif
+
    if (fBranchRef) {
       fBranchRef->Fill();
    }
@@ -4805,8 +4835,8 @@ struct BoolRAIIToggle {
 /// Write to disk all the basket that have not yet been individually written.
 ///
 /// If ROOT has IMT-mode enabled, this will launch multiple TBB tasks in parallel
-/// to do this operation; one per basket compression.  If the caller utilizes
-/// TBB also, care must be taken to prevent deadlocks.
+/// via TThreadExecutor to do this operation; one per basket compression.  If the
+///  caller utilizes TBB also, care must be taken to prevent deadlocks.
 ///
 /// For example, let's say the caller holds mutex A and calls FlushBaskets; while
 /// TBB is waiting for the ROOT compression tasks to complete, it may decide to
@@ -4839,8 +4869,8 @@ Int_t TTree::FlushBaskets() const
    Int_t nb = lb->GetEntriesFast();
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeSortedBranches(); }
+   if (fIMTEnabled) {
+      if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
       fIMTZipBytes.store(0);
@@ -4848,34 +4878,33 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-      tbb::task_group g;
+         
+      auto mapFunction  = [&]() {
+        // The branch to process is obtained when the task starts to run.
+        // This way, since branches are sorted, we make sure that branches
+        // leading to big tasks are processed first. If we assigned the
+        // branch at task creation time, the scheduler would not necessarily
+        // respect our sorting.
+        Int_t j = pos.fetch_add(1);
 
-      for (Int_t i = 0; i < nb; i++) {
-         g.run([&]() {
-            // The branch to process is obtained when the task starts to run.
-            // This way, since branches are sorted, we make sure that branches
-            // leading to big tasks are processed first. If we assigned the
-            // branch at task creation time, the scheduler would not necessarily
-            // respect our sorting.
-            Int_t j = pos.fetch_add(1);
+        auto branch = fSortedBranches[j].second;
+        if (R__unlikely(!branch)) { return; }
 
-            auto branch = fSortedBranches[j].second;
-            if (R__unlikely(!branch)) { return; }
+        if (R__unlikely(gDebug > 0)) {
+            std::stringstream ss;
+            ss << std::this_thread::get_id();
+            Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
+            Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+        }
 
-            if (R__unlikely(gDebug > 0)) {
-               std::stringstream ss;
-               ss << std::this_thread::get_id();
-               Info("FlushBaskets", "[IMT] Thread %s", ss.str().c_str());
-               Info("FlushBaskets", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
-            }
+        Int_t nbtask = branch->FlushBaskets();
 
-            Int_t nbtask = branch->FlushBaskets();
+        if (nbtask < 0) { nerrpar++; }
+        else            { nbpar += nbtask; }
+      };
 
-            if (nbtask < 0) { nerrpar++; }
-            else            { nbpar += nbtask; }
-         });
-      }
-      g.wait();
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nb);
 
       fIMTFlush = false;
       const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
@@ -5318,7 +5347,15 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) InitializeSortedBranches();
+      if (fSortedBranches.empty()) InitializeBranchLists(true);
+
+      // Count branches are processed first and sequentially
+      for (auto branch : fSeqBranches) {
+         nb = branch->GetEntry(entry, getall);
+         if (nb < 0) break;
+         nbytes += nb;
+      }
+      if (nb < 0) return nb;
 
       // Enable this IMT use case (activate its locks)
       ROOT::Internal::TParBranchProcessingRAII pbpRAII;
@@ -5326,10 +5363,8 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
       Int_t errnb = 0;
       std::atomic<Int_t> pos(0);
       std::atomic<Int_t> nbpar(0);
-      tbb::task_group g;
 
-      for (i = 0; i < nbranches; i++) {
-         g.run([&]() {
+      auto mapFunction = [&]() {
             // The branch to process is obtained when the task starts to run.
             // This way, since branches are sorted, we make sure that branches
             // leading to big tasks are processed first. If we assigned the
@@ -5358,16 +5393,17 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 
             if (nbtask < 0) errnb = nbtask;
             else            nbpar += nbtask;
-         });
-      }
-      g.wait();
+         };
+
+      ROOT::TThreadExecutor pool;
+      pool.Foreach(mapFunction, nbranches - fSeqBranches.size());
 
       if (errnb < 0) {
          nb = errnb;
       }
       else {
          // Save the number of bytes read by the tasks
-         nbytes = nbpar;
+         nbytes += nbpar;
 
          // Re-sort branches if necessary
          if (++fNEntriesSinceSorting == kNEntriesResort) {
@@ -5406,26 +5442,61 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    return nbytes;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Initializes the vector of top-level branches and sorts it by branch size.
 
-void TTree::InitializeSortedBranches()
+////////////////////////////////////////////////////////////////////////////////
+/// Divides the top-level branches into two vectors: (i) branches to be
+/// processed sequentially and (ii) branches to be processed in parallel.
+/// Even if IMT is on, some branches might need to be processed first and in a
+/// sequential fashion: in the parallelization of GetEntry, those are the
+/// branches that store the size of another branch for every entry
+/// (e.g. the size of an array branch). If such branches were processed
+/// in parallel with the rest, there could be two threads invoking
+/// TBranch::GetEntry on one of them at the same time, since a branch that
+/// depends on a size (or count) branch will also invoke GetEntry on the latter.
+/// \param[in] checkLeafCount True if we need to check whether some branches are
+///                           count leaves.
+
+void TTree::InitializeBranchLists(bool checkLeafCount)
 {
    Int_t nbranches = fBranches.GetEntriesFast();
+
+   // The branches to be processed sequentially are those that are the leaf count of another branch
+   if (checkLeafCount) {
+      for (Int_t i = 0; i < nbranches; i++)  {
+         TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
+         auto leafCount = ((TLeaf*)branch->GetListOfLeaves()->At(0))->GetLeafCount();
+         if (leafCount) {
+            auto countBranch = leafCount->GetBranch();
+            if (std::find(fSeqBranches.begin(), fSeqBranches.end(), countBranch) == fSeqBranches.end()) {
+               fSeqBranches.push_back(countBranch);
+            }
+         }
+      }
+   }
+
+   // The special branch fBranchRef also needs to be processed sequentially
+   if (fBranchRef) {
+      fSeqBranches.push_back(fBranchRef);
+   }
+
+   // Any branch that is not a leaf count can be safely processed in parallel when reading
    for (Int_t i = 0; i < nbranches; i++)  {
       Long64_t bbytes = 0;
       TBranch* branch = (TBranch*)fBranches.UncheckedAt(i);
-      if (branch) bbytes = branch->GetTotBytes("*");
-      fSortedBranches.emplace_back(bbytes, branch);
+      if (std::find(fSeqBranches.begin(), fSeqBranches.end(), branch) == fSeqBranches.end()) {
+         bbytes = branch->GetTotBytes("*");
+         fSortedBranches.emplace_back(bbytes, branch);
+      }
    }
 
+   // Initially sort parallel branches by size
    std::sort(fSortedBranches.begin(),
              fSortedBranches.end(),
              [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
                 return a.first > b.first;
              });
 
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first = 0LL;
    }
 }
@@ -5435,8 +5506,7 @@ void TTree::InitializeSortedBranches()
 
 void TTree::SortBranchesByTime()
 {
-   Int_t nbranches = fBranches.GetEntriesFast();
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first *= kNEntriesResortInv;
    }
 
@@ -5446,7 +5516,7 @@ void TTree::SortBranchesByTime()
                 return a.first > b.first;
              });
 
-   for (Int_t i = 0; i < nbranches; i++)  {
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
       fSortedBranches[i].first = 0LL;
    }
 }
@@ -6666,9 +6736,7 @@ void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *opti
          if (bsize > bmax) bsize = bmax;
          UInt_t newBsize = UInt_t(bsize);
          if (pass) { // only on the second pass so that it doesn't interfere with scaling
-            if (branch->GetBasket(0) != 0) {
-               newBsize = newBsize + (branch->GetBasket(0)->GetNevBuf() * sizeof(Int_t) * 2); // make room for meta data
-            }
+            newBsize = newBsize + (branch->GetEntries() * sizeof(Int_t) * 2); // make room for meta data
             // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
             // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
             // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,

@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGTextEdit
 #include "TGTextEdit.h"
-#endif
 
 class TGToolBar;
 class TTimer;

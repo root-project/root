@@ -56,7 +56,7 @@ TMVA::Config::Config() :
    fUseColoredConsole    ( kTRUE  ),
    fSilent               ( kFALSE ),
    fWriteOptionsReference( kFALSE ),
-   fDrawProgressBar      ( kTRUE ),
+   fDrawProgressBar      ( kFALSE ),
    fLogger               ( new MsgLogger("Config") )
 {
    // plotting

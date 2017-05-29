@@ -1,5 +1,5 @@
 // @(#)root/tmva/pymva $Id$
-// Authors: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer 2015
+// Authors: Omar Zapata, Lorenzo Moneta, Sergei Gleyzer 2015, Stefan Wunsch 2017
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,7 +19,7 @@
 //                                                                            //
 // PyMethodBase                                                               //
 //                                                                            //
-// Virtual base class for all TMVA method based on Python/scikit-learn        //
+// Virtual base class for all TMVA method based on Python                     //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,7 +51,6 @@ typedef tagPyArrayObject PyArrayObject;
 #else
 struct PyArrayObject;
 #endif
-
 
 namespace TMVA {
 
@@ -91,7 +90,7 @@ namespace TMVA {
 
       PyObject *Eval(TString code); // required to parse booking options from string to pyobjects
       static void Serialize(TString file,PyObject *classifier);
-      static void UnSerialize(TString file,PyObject** obj);
+      static Int_t UnSerialize(TString file,PyObject** obj);
 
       virtual void     Train() = 0;
       // options treatment
@@ -114,7 +113,7 @@ namespace TMVA {
       virtual void ReadModelFromFile() = 0;
 
       // signal/background classification response for all current set of data
-      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false) = 0;
 
    protected:
       PyObject *fModule; // Module to load
@@ -146,8 +145,7 @@ namespace TMVA {
       ClassDef(PyMethodBase, 0) // Virtual base class for all TMVA method
 
    };
+
 } // namespace TMVA
 
 #endif
-
-

@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
-#endif
-#ifndef ROOT_TProcessID
 #include "TProcessID.h"
-#endif
 
 #include <iterator>
 

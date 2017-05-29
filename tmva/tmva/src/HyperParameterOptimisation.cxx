@@ -16,6 +16,7 @@
 #include "TSystem.h"
 
 #include <iostream>
+#include <memory>
 #include <vector>
 
 /*! \class TMVA::HyperParameterOptimisationResult
@@ -28,13 +29,13 @@
 
 */
 
-TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult():fROCCurves(new TMultiGraph())
+TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult()
+   : fROCAVG(0.0), fROCCurves(std::make_shared<TMultiGraph>())
 {
 }
 
 TMVA::HyperParameterOptimisationResult::~HyperParameterOptimisationResult()
 {
-    fROCCurves=nullptr;
 }
 
 TMultiGraph *TMVA::HyperParameterOptimisationResult::GetROCCurves(Bool_t /* fLegend */)

@@ -37,12 +37,13 @@ TREEPLAYERDEP := $(TREEPLAYERO:.o=.d) $(TREEPLAYERDO:.o=.d)
 
 TREEPLAYERLIB := $(LPATH)/libTreePlayer.$(SOEXT)
 TREEPLAYERMAP := $(TREEPLAYERLIB:.$(SOEXT)=.rootmap)
+TREEPLAYER2MAP := $(TREEPLAYERLIB:libTreePlayer.$(SOEXT)=libDataFrame.rootmap.rootmap)
 
 # used in the main Makefile
-TREEPLAYERH_REL := $(patsubst $(MODDIRI)/%,include/%,$(TREEPLAYERH) $(TREEPLAYER2H))
-ALLHDRS       += $(TREEPLAYERH_REL) $(MODDIRI)/TBranchProxyTemplate.h
+TREEPLAYERH_REL := $(MODDIRI)/TBranchProxyTemplate.h $(TREEPLAYERH)
+ALLHDRS       += $(patsubst $(MODDIRI)/%,include/%,$(TREEPLAYERH_REL) $(TREEPLAYER2H))
 ALLLIBS       += $(TREEPLAYERLIB)
-ALLMAPS       += $(TREEPLAYERMAP)
+ALLMAPS       += $(TREEPLAYERMAP) $(TREEPLAYER2MAP)
 ifeq ($(CXXMODULES),yes)
   CXXMODULES_HEADERS := $(patsubst include/%,header \"%\"\\n,$(TREEPLAYERH_REL))
   CXXMODULES_MODULEMAP_CONTENTS += module Tree_$(MODNAME) { \\n
@@ -83,7 +84,7 @@ $(TREEPLAYERDS): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TRE
 $(TREEPLAYER2DS): $(TREEPLAYER2H) $(TREEPLAYER2L) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREEPLAYER) -multiDict -writeEmptyRootPCM $(TREEPLAYER2H) $(TREEPLAYER2L)
+		$(ROOTCLINGSTAGE2) -f $@  -s lib/libTreePlayer.$(SOEXT) -rml libTreePlayer.$(SOEXT) -rmf lib/libDataFrame.rootmap -multiDict -writeEmptyRootPCM $(TREEPLAYER2H) $(TREEPLAYER2L)
 
 
 $(TREEPLAYERMAP): $(TREEPLAYERH) $(TREEPLAYERL) $(ROOTCLINGEXE) $(call pcmdep,TREEPLAYER)

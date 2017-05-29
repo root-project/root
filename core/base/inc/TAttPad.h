@@ -13,9 +13,7 @@
 #define ROOT_TAttPad
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TAttPad {

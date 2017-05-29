@@ -12,9 +12,7 @@
 #ifndef ROOT_TODBCStatement
 #define ROOT_TODBCStatement
 
-#ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
-#endif
 
 
 #ifdef __CLING__

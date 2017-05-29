@@ -30,9 +30,7 @@ using namespace TClassEdit;
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/AST/DeclTemplate.h"
 
-#ifndef ROOT_Varargs
 #include "Varargs.h"
-#endif
 
 //
 // ROOT::Internal::RStl is the rootcint STL handling class.

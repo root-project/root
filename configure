@@ -12,10 +12,12 @@
 #
 ######################################################################
 
-echo "****************************************************************************************************************"
-echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
-echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
-echo "****************************************************************************************************************"
+echo "******************************************************************************"
+echo "* The classic configure/make method of building ROOT is now DEPRECATED in    *"
+echo "* favor of the CMake one.                                                    *"
+echo "* Refer to README/INSTALL file for updated instructions or visit the page    *"
+echo "* https://root.cern.ch/building-root                                         *"
+echo "******************************************************************************"
 
 #
 ### echo %%% Some global variables
@@ -67,6 +69,7 @@ options="                    \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
    enable_cxx14              \
+   enable_cxx17              \
    enable_cxxmodules         \
    enable_libcxx             \
    enable_castor             \
@@ -164,6 +167,7 @@ for c in $options ; do eval ${c}_explicit="" ; done
 
 enable_cxx11=yes
 enable_cxx14=no
+enable_cxx17=no
 enable_cxxmodules=no
 enable_libcxx=no
 enable_cocoa=
@@ -1730,6 +1734,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-lzma       Build included liblzma, or use system liblzma
   libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
   cxx14              Build using C++14 compatible mode, requires gcc > 4.9.x or clang
+  cxx17              Build using C++14 compatible mode, requires gcc > 7.1.x or clang > 3.9
   cxxmodules         Build using clang's cxxmodules feature, requires clang > 3.8
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
@@ -2733,6 +2738,39 @@ if test "x$enable_cxx14" = "xyes"; then
         fi
         result "yes"
         cxxversion=cxx14
+    fi
+fi
+
+######################################################################
+#
+### echo %%% C++17 - compile using c++17 compatible option
+#
+# needs gcc > 7.1.x or clang 3.9
+usecxx17="undef"
+if test "x$enable_cxx17" = "xyes"; then
+    message "Checking whether c++17 mode is supported"
+    check_cxxopt -std=c++1z
+    if test $cxxopt_result -eq 0 ; then
+        enable_cxx17="no"
+        result "no"
+        result "`basename $0`: c++17 mode is requested but the current compiler does not support it."
+        exit 1
+    else
+        usecxx11="define"
+        usecxx14="define"
+        usecxx17="define"
+        enable_cxx11="no"
+        enable_cxx14="no"
+        # on OS X libcxx is required for C++11 support with clang
+        # so turn the option on when using clang
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
+        if test "x$platform" = "xmacosx" && echo $altcxx | grep 'icc' > /dev/null 2>&1; then
+            enable_libcxx="yes"
+        fi
+        result "yes"
+        cxxversion=cxx17
     fi
 fi
 
@@ -7126,6 +7164,12 @@ fi
 
 ######################################################################
 #
+### echo %%% vecCore Library - Contributed library
+#
+hasveccore="undef"
+
+######################################################################
+#
 ### echo %%% GDML Library - Contributed library
 #
 message "Checking whether to build libGdml"
@@ -8025,6 +8069,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@c++14@|$enable_cxx14|"               \
+    -e "s|@c++17@|$enable_cxx17|"               \
     -e "s|@cxxmodules@|$enable_cxxmodules|"     \
     -e "s|@libc++@|$enable_libcxx|"             \
     -e "s|@werror@|$enable_werror|"             \
@@ -8082,8 +8127,10 @@ sed \
     -e "s|@hasxft@|$hasxft|"               \
     -e "s|@hascocoa@|$hascocoa|"           \
     -e "s|@hasvc@|$hasvc|"                 \
+    -e "s|@hasveccore@|$hasveccore|"       \
     -e "s|@usec++11@|$usecxx11|"           \
     -e "s|@usec++14@|$usecxx14|"           \
+    -e "s|@usec++17@|$usecxx17|"           \
     -e "s|@usecxxmodules@|$usecxxmodules|" \
     -e "s|@uselibc++@|$uselibcxx|"         \
     -e "s|@hasstdstringview@|$hasstdstringview|"       \
@@ -8487,9 +8534,11 @@ if [ "x$run_maintainer_clean" = "xyes" ]; then
    $0 `cat config.status 2>/dev/null`
 fi
 
-echo "****************************************************************************************************************"
-echo "*  The classic configure/make method of building ROOT is now DEPRECATED in favor of the CMake one.             *"
-echo "*  Refer to README/INSTALL file for updated instructions or visit the page https://root.cern.ch/building-root  *"
-echo "****************************************************************************************************************"
+echo "******************************************************************************"
+echo "* The classic configure/make method of building ROOT is now DEPRECATED in    *"
+echo "* favor of the CMake one.                                                    *"
+echo "* Refer to README/INSTALL file for updated instructions or visit the page    *"
+echo "* https://root.cern.ch/building-root                                         *"
+echo "******************************************************************************"
 
 exit 0

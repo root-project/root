@@ -13,12 +13,8 @@
 #define ROOT_TLorentzRotation
 
 
-#ifndef ROOT_TRotation
 #include "TRotation.h"
-#endif
-#ifndef ROOT_TLorentzVector
 #include "TLorentzVector.h"
-#endif
 
 
 class TLorentzRotation : public TObject {

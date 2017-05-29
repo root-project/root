@@ -38,9 +38,7 @@ weighting all cell values with a gauss function.
 #include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/Types.h"
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 #include "Rtypes.h"
 

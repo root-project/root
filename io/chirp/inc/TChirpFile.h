@@ -12,13 +12,9 @@
 #ifndef ROOT_TChirpFile
 #define ROOT_TChirpFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 class TChirpFile:public TFile {
 private:

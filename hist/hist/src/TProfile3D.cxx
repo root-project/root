@@ -55,8 +55,8 @@ ClassImp(TProfile3D)
  Example of a profile3D histogram
 ~~~~{.cpp}
 {
-    TCanvas *c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
-    hprof3d  = new TProfile3D("hprof3d","Profile of pt versus px, py and pz",40,-4,4,40,-4,4,40,0,20);
+    auto c1 = new TCanvas("c1","Profile histogram example",200,10,700,500);
+    auto hprof3d  = new TProfile3D("hprof3d","Profile of pt versus px, py and pz",40,-4,4,40,-4,4,40,0,20);
     Double_t px, py, pz, pt;
     TRandom3 r(0);
     for ( Int_t i=0; i<25000; i++) {

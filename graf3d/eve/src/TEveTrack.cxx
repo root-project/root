@@ -13,6 +13,7 @@
 #include "TEveTrackPropagator.h"
 #include "TEvePointSet.h"
 
+#include "TParticle.h"
 #include "TPolyLine3D.h"
 #include "TMarker.h"
 #include "TPolyMarker3D.h"
@@ -23,6 +24,7 @@
 #include "TEveManager.h"
 #include "TEveBrowser.h"
 #include "TEveTrackProjected.h"
+#include "TEveVSD.h"
 
 #include "Riostream.h"
 

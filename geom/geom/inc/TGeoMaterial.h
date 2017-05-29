@@ -12,17 +12,11 @@
 #ifndef ROOT_TGeoMaterial
 #define ROOT_TGeoMaterial
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TGeoElement
 #include "TGeoElement.h"
-#endif
 
 
 // forward declarations

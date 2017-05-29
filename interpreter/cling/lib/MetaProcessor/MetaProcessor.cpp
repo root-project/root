@@ -135,22 +135,18 @@ namespace cling {
     }
 
     // Restore stdstream from backup and close the backup
-    void close(int oldfd, int newfd) {
+    void close(int &oldfd, int newfd) {
       assert((newfd == STDOUT_FILENO || newfd == STDERR_FILENO) && "Not std FD");
       assert(oldfd == m_Bak[newfd == STDERR_FILENO] && "Not backup FD");
       if (oldfd != kInvalidFD) {
         dup2(oldfd, newfd, "RedirectOutput::close");
         ::close(oldfd);
+        oldfd = kInvalidFD;
       }
     }
 
-    void reset(int oldfd, int newfd, FILE *F) {
-      fflush(F);
-      dup2(oldfd, newfd, "RedirectOutput::reset");
-    }
-
     int restore(int FD, FILE *F, MetaProcessor::RedirectionScope Flag,
-                int bakFD) {
+                int &bakFD) {
       // If no backup, we have never redirected the file, so nothing to restore
       if (bakFD != kInvalidFD) {
         // Find the last redirect for the scope, and restore redirection to it
@@ -165,9 +161,10 @@ namespace cling {
         }
 
         // No redirection for this scope, restore to backup
-        reset(bakFD, FD, F);
+        fflush(F);
+        close(bakFD, FD);
       }
-      return bakFD;
+      return kInvalidFD;
     }
 
   public:
@@ -187,6 +184,12 @@ namespace cling {
       // State 2, was tty to begin with, then redirected to stderr and back.
       if (m_TTY == 2)
         ::freopen("CON", "w", stdout);
+#else
+      // If redirection took place without writing anything to the terminal
+      // beforehand (--nologo) then the dup2 relinking stdout will have caused
+      // it to be re-opened without line buffering.
+      if (m_TTY)
+        ::setvbuf(stdout, NULL, _IOLBF, BUFSIZ);
 #endif
     }
 
@@ -254,10 +257,12 @@ namespace cling {
         return;
 
       if (toBackup) {
-        if (m_Bak[0] != kInvalidFD)
-          reset(m_Bak[0], STDOUT_FILENO, stdout);
+        if (m_Bak[0] != kInvalidFD) {
+          fflush(stdout);
+          dup2(m_Bak[0], STDOUT_FILENO, "RedirectOutput::resetStdOut");
+        }
       } else if (m_CurStdOut != kInvalidFD)
-        dup2(m_CurStdOut, STDOUT_FILENO, "RedirectOutput::reset");
+        dup2(m_CurStdOut, STDOUT_FILENO, "RedirectOutput::resetStdOut");
     }
 
     bool empty() const {
@@ -288,7 +293,8 @@ namespace cling {
 
   int MetaProcessor::process(const char* input_text,
                              Interpreter::CompilationResult& compRes,
-                             Value* result) {
+                             Value* result,
+                             bool disableValuePrinting /* = false */) {
     if (result)
       *result = Value();
     compRes = Interpreter::kSuccess;
@@ -332,7 +338,8 @@ namespace cling {
     // if (m_Options.RawInput)
     //   compResLocal = m_Interp.declare(input);
     // else
-    compRes = m_Interp.process(input, result);
+    compRes = m_Interp.process(input, result, /*Transaction*/ nullptr,
+                               disableValuePrinting);
 
     return 0;
   }
@@ -454,12 +461,10 @@ namespace cling {
       } // find '}'
     } // ignore outermost block
 
-#ifndef NDEBUG
     m_CurrentlyExecutingFile = filename;
     bool topmost = !m_TopExecutingFile.data();
     if (topmost)
       m_TopExecutingFile = m_CurrentlyExecutingFile;
-#endif
 
     content.insert(0, "#line 2 \"" + filename.str() + "\" \n");
     // We don't want to value print the results of a unnamed macro.
@@ -484,11 +489,9 @@ namespace cling {
     } else
       ret = m_Interp.process(content, result);
 
-#ifndef NDEBUG
     m_CurrentlyExecutingFile = llvm::StringRef();
     if (topmost)
       m_TopExecutingFile = llvm::StringRef();
-#endif
     return ret;
   }
 

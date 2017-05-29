@@ -12,9 +12,7 @@
 // saves total memory allocation needed for the system of cells.                  //
 ////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TRef
 #include "TRef.h"
-#endif
 
 class TFoamVect;
 

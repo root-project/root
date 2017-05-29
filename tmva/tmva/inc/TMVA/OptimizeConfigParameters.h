@@ -25,36 +25,20 @@
 #define ROOT_TMVA_OptimizeConfigParameters
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
 
 
-#ifndef ROOT_TMVA_Interval
 #include "TMVA/Interval.h"
-#endif
 
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
 
-#ifndef ROOT_TMVA_IFitterTarget
-#ifndef ROOT_IFitterTarget
 #include "IFitterTarget.h"
-#endif
-#endif
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
 
 namespace TMVA {
 

@@ -34,9 +34,7 @@ MA  02110-1301  USA
 #ifndef   _RSAAUX_H
 #define   _RSAAUX_H
 
-#ifndef   _RSADEF_H
 #include "rsadef.h"
-#endif
 
 extern rsa_NUMBER a_one,a_two;
 

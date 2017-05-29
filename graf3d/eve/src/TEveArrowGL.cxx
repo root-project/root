@@ -78,7 +78,7 @@ void TEveArrowGL::DirectDraw(TGLRnrCtx& /*rnrCtx*/) const
 
    // Arrow cone
    r = size*fM->fConeR;
-   glTranslated(0.0, 0.0, size -h );
+   glTranslated(0.0, 0.0, size - h);
    gluDisk(quad.Get(), 0.0, r, fM->fDrawQuality, 1);
    gluQuadricOrientation(quad.Get(), (GLenum)GLU_OUTSIDE);
    gluCylinder(quad.Get(), r, 0., h , fM->fDrawQuality, 1);

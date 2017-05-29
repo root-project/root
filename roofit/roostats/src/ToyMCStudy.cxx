@@ -8,22 +8,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::ToyMCStudy
+     \ingroup Roostats
+
+ToyMCStudy is an implementation of RooAbsStudy for toy Monte Carlo sampling.
+This class is automatically used by ToyMCSampler when given a ProofConfig.
+This is also its intended use case.
+*/
+
 #include "RooStats/ToyMCStudy.h"
 
 #include "RooStats/ToyMCSampler.h"
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include "RooRandom.h"
 #include "TRandom2.h"
 #include "TMath.h"
 
 #include "TEnv.h"
-
-
 
 ClassImp(RooStats::ToyMCStudy);
 
@@ -34,7 +38,8 @@ using namespace std;
 
 namespace RooStats {
 
-// _____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t ToyMCStudy::initialize(void) {
    coutP(Generation) << "initialize" << endl;
 
@@ -47,28 +52,29 @@ Bool_t ToyMCStudy::initialize(void) {
 
 
    TString  worknumber = gEnv->GetValue("ProofServ.Ordinal","undef");
-   int iworker = -1; 
-   if (worknumber != "undef") { 
-      iworker = int( worknumber.Atof()*10 + 0.1); 
+   int iworker = -1;
+   if (worknumber != "undef") {
+      iworker = int( worknumber.Atof()*10 + 0.1);
 
-      // generate a seed using 
+      // generate a seed using
       std::cout << "Current global seed is " << fRandomSeed << std::endl;
       TRandom2 r(fRandomSeed );
       // get a seed using the iworker-value
-      unsigned int seed = r.Integer(TMath::Limits<unsigned int>::Max() ); 
-      for (int i = 0; i< iworker; ++i) 
+      unsigned int seed = r.Integer(TMath::Limits<unsigned int>::Max() );
+      for (int i = 0; i< iworker; ++i)
          seed = r.Integer(TMath::Limits<unsigned int>::Max() );
 
-      // initialize worker using seed from ToyMCSampler 
+      // initialize worker using seed from ToyMCSampler
       RooRandom::randomGenerator()->SetSeed(seed);
    }
 
    coutI(InputArguments) << "Worker " << iworker << " seed is: " << RooRandom::randomGenerator()->GetSeed() << endl;
-  
+
    return kFALSE;
 }
 
-// _____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t ToyMCStudy::execute(void) {
 
    coutP(Generation) << "ToyMCStudy::execute - run with seed " <<   RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) << std::endl;
@@ -79,7 +85,8 @@ Bool_t ToyMCStudy::execute(void) {
    return kFALSE;
 }
 
-// _____________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+
 Bool_t ToyMCStudy::finalize(void) {
    coutP(Generation) << "ToyMCStudy::finalize" << endl;
 
@@ -89,6 +96,7 @@ Bool_t ToyMCStudy::finalize(void) {
    return kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 RooDataSet* ToyMCStudy::merge() {
 
@@ -108,7 +116,7 @@ RooDataSet* ToyMCStudy::merge() {
          coutW(Generation) << "Merging Results problem: not correct type" << endl;
          continue;
       }
-      
+
       if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions());
 
       else samplingOutput->append( *oneWorker->GetSamplingDistributions() );

@@ -18,13 +18,9 @@
 #ifndef ROOT_Math_GenVector_PxPyPzM4D
 #define ROOT_Math_GenVector_PxPyPzM4D  1
 
-#ifndef ROOT_Math_GenVector_eta
 #include "Math/GenVector/eta.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVector_exception
 #include "Math/GenVector/GenVector_exception.h"
-#endif
 
 
 #include <cmath>
@@ -158,7 +154,7 @@ public :
    /**
       Energy
     */
-   Scalar E()  const { return std::sqrt(E2() ); }
+   Scalar E() const { return sqrt(E2()); }
 
    Scalar T() const { return E();}
 
@@ -170,7 +166,7 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { return std::sqrt(P2()); }
+   Scalar P() const { return sqrt(P2()); }
    Scalar R() const { return P(); }
 
    /**
@@ -202,7 +198,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt()   const { return std::sqrt(Perp2());}
+   Scalar Pt() const { return sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -215,13 +211,13 @@ public :
       transverse mass
    */
    Scalar Mt() const {
-      Scalar mm = Mt2();
+      const Scalar mm = Mt2();
       if (mm >= 0) {
-         return std::sqrt(mm);
+         return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzM4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
-         return -std::sqrt(-mm);
+         return -sqrt(-mm);
       }
    }
 
@@ -238,23 +234,19 @@ public :
       transverse energy
    */
    Scalar Et() const {
-      Scalar etet = Et2();
-      return std::sqrt(etet);
+      const Scalar etet = Et2();
+      return sqrt(etet);
    }
 
    /**
       azimuthal angle
    */
-   Scalar Phi() const  {
-      return (fX == 0.0 && fY == 0.0) ? 0.0 : std::atan2(fY,fX);
-   }
+   Scalar Phi() const { return (fX == 0.0 && fY == 0.0) ? 0.0 : atan2(fY, fX); }
 
    /**
       polar angle
    */
-   Scalar Theta() const {
-      return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : std::atan2(Pt(),fZ);
-   }
+   Scalar Theta() const { return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ); }
 
    /**
        pseudorapidity
@@ -387,12 +379,8 @@ private:
 
 // move implementations here to avoid circle dependencies
 
-#ifndef ROOT_Math_GenVector_PxPyPzE4D
 #include "Math/GenVector/PxPyPzE4D.h"
-#endif
-#ifndef ROOT_Math_GenVector_PtEtaPhiM4D
 #include "Math/GenVector/PtEtaPhiM4D.h"
-#endif
 
 namespace ROOT {
 

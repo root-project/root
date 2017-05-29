@@ -20,21 +20,11 @@
 *************************************************************************/
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
-#ifndef ROOT_TArrayD
 #include "TArrayD.h"
-#endif
 
 class TAxis;
 class TH1;

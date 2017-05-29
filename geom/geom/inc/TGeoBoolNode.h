@@ -12,9 +12,9 @@
 #ifndef ROOT_TGeoBoolNode
 #define ROOT_TGeoBoolNode
 
-#ifndef ROOT_TObject
+#include <mutex>
+
 #include "TObject.h"
-#endif
 
 // forward declarations
 class TGeoShape;
@@ -53,6 +53,7 @@ protected:
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Navigation data per thread
    mutable Int_t                      fThreadSize; //! Size for the navigation data array
+   mutable std::mutex                 fMutex;      //! Mutex for thread data access
 // methods
    Bool_t            MakeBranch(const char *expr, Bool_t left);
 public:

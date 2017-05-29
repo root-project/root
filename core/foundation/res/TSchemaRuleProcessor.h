@@ -15,9 +15,7 @@
 #include <iostream>
 #include "RtypesCore.h"
 
-#ifndef R__TSCHEMATYPE_H
 #include "TSchemaType.h"
-#endif
 
 namespace ROOT {
 namespace Internal {

@@ -21,9 +21,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TView
 #include "TView.h"
-#endif
 
 class TSeqCollection;
 class TVirtualPad;

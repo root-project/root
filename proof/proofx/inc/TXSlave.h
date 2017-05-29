@@ -22,12 +22,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSlave
 #include "TSlave.h"
-#endif
-#ifndef ROOT_TXHandler
 #include "TXHandler.h"
-#endif
 
 class TObjString;
 class TSocket;

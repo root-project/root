@@ -166,10 +166,6 @@ D: updates in PDG codes and eventgenerator interface classes
 D: TSpline classes
 D: Support for gcc option -weffc++
 
-N: Evgeni Chernyaev
-E: Evgeni.Chernyaev@cern.ch
-D: Paint3DAlgorithms used by the LEGO and SURF options
-
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
@@ -326,6 +322,10 @@ E: Gerardo.Ganis@cern.ch
 D: all matters related to client/server authentication
 D: PROOF developments
 
+N: Paul Gessinger
+E: hello@paulgessinger.com
+D: TRatioPlot class
+
 N: Davide Gerbaudo
 E: davide.gerbaudo@gmail.com
 D: VIOLIN drawing option for 2D histograms.
@@ -358,6 +358,10 @@ D: author of the multiproc module
 N: Thorsten Glebe
 E: T.Glebe@mpi-hd.mpg.de
 D: Original author of the Smatrix package
+
+N: Sergei Gleyzer
+E: Sergei.Gleyzer@cern.ch
+D: TMVA
 
 N: Piotr Golonka
 E: Piotr.Golonka@cern.ch
@@ -402,6 +406,10 @@ N: Robert Hatcher
 E: rhatcher@fnal.gov
 D: class TXTRU and tutorials xtruDraw.C and xtruSamples.C
 D: class TTimeStamp
+
+N: John Harvey
+E: john.harvey@cern.ch
+D: Several Coverity bug fixes
 
 N: Bill Heintzelman
 E: billh@hep.upenn.edu
@@ -633,6 +641,10 @@ N: Tgiran Mkrtchyan
 E: tigran.mkrtchyan@desy.de
 D: class TDCacheFile, interface to DESY's dCache system
 D: libRDAVIX, the davix client code
+
+N: Pau Miquel Mir
+E: paumm2006@yahoo.es
+D: Conversion of ROOT tutorials to Jupyter notebooks
 
 N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
@@ -892,9 +904,17 @@ N: Matevz Tadel
 E: Matevz.Tadel@cern.ch
 D: Several contributions to the 3-d graphics and GL interface
 
+N: Evgueni Tcherniaev
+E: Evgueni.Tcherniaev@cern.ch
+D: Paint3DAlgorithms used by the LEGO and SURF options
+
 N: Jan Therhaag
 E: therhaag@users.sourceforge.net
 D: author of the TMVA package
+
+N: Jeromy Tompkins
+E: Tompkins@nscl.msu.edu
+D: COL2 drawing option
 
 N: Tim Tran
 E: timtran@jlab.org
@@ -903,6 +923,10 @@ D: Full implementation of all projections in THistPainter::ShowProjection3
 N: Long Tran-Thanh
 E: ttl1208@gmail.com
 D: PROOF contributions
+
+N: Georg Troska
+E: georg.troska@tu-dortmund.de
+D: Enhancement of the CANDLE drawing option
 
 N: Alexandre V. Vaniachine
 E: AVVaniachine@lbl.gov
@@ -959,24 +983,3 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
-
-N: Sergei Gleyzer
-E: Sergei.Gleyzer@cern.ch
-D: TMVA
-
-N: Jeromy Tompkins
-E: Tompkins@nscl.msu.edu
-D: COL2 drawing option
-
-N: Georg Troska
-E: georg.troska@tu-dortmund.de
-D: Enhancement of the CANDLE drawing option
-
-N: Paul Gessinger
-E: hello@paulgessinger.com
-D: TRatioPlot class
-
-N: Pau Miquel Mir
-E: paumm2006@yahoo.es
-D: Conversion of ROOT tutorials to Jupyter notebooks
-

@@ -35,16 +35,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
-#ifndef ROOT_TMVA_Option
 #include "TMVA/Option.h"
-#endif
 
 namespace TMVA {
 

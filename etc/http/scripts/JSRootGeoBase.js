@@ -2534,37 +2534,46 @@
    /** @memberOf JSROOT.GEO */
    JSROOT.GEO.createMatrix = function(matrix) {
 
-      if (matrix === null) return null;
+      if (!matrix) return null;
 
-      var translation_matrix = null, rotation_matrix = null;
+      var translation = null, rotation = null, scale = null;
 
-      if (matrix._typename == 'TGeoTranslation') {
-         translation_matrix = matrix.fTranslation;
-      }
-      else if (matrix._typename == 'TGeoRotation') {
-         rotation_matrix = matrix.fRotationMatrix;
-      }
-      else if (matrix._typename == 'TGeoCombiTrans') {
-         translation_matrix = matrix.fTranslation;
-         if (matrix.fRotation !== null)
-            rotation_matrix = matrix.fRotation.fRotationMatrix;
-      }
-      else if (matrix._typename !== 'TGeoIdentity') {
-      //   console.log('unsupported matrix ' + matrix._typename);
+      switch (matrix._typename) {
+         case 'TGeoTranslation': translation = matrix.fTranslation; break;
+         case 'TGeoRotation': rotation = matrix.fRotationMatrix; break;
+         case 'TGeoScale': scale = matrix.fScale; break;
+         case 'TGeoGenTrans':
+            scale = matrix.fScale; // no break, translation and rotation follows
+         case 'TGeoCombiTrans':
+            translation = matrix.fTranslation;
+            if (matrix.fRotation) rotation = matrix.fRotation.fRotationMatrix;
+            break;
+         case 'TGeoHMatrix':
+            translation = matrix.fTranslation;
+            rotation = matrix.fRotationMatrix;
+            scale = matrix.fScale;
+            break;
+         case 'TGeoIdentity':
+            break;
+         default:
+            console.warn('unsupported matrix ' + matrix._typename);
       }
 
-      if ((translation_matrix === null) && (rotation_matrix === null)) return null;
+      if (!translation && !rotation && !scale) return null;
 
       var res = new THREE.Matrix4();
 
-      if (rotation_matrix !== null)
-         res.set(rotation_matrix[0], rotation_matrix[1], rotation_matrix[2],   0,
-                 rotation_matrix[3], rotation_matrix[4], rotation_matrix[5],   0,
-                 rotation_matrix[6], rotation_matrix[7], rotation_matrix[8],   0,
-                                  0,                  0,                  0,   1);
+      if (rotation)
+         res.set(rotation[0], rotation[1], rotation[2],  0,
+                 rotation[3], rotation[4], rotation[5],  0,
+                 rotation[6], rotation[7], rotation[8],  0,
+                           0,           0,           0,  1);
 
-      if (translation_matrix !== null)
-         res.setPosition(new THREE.Vector3(translation_matrix[0], translation_matrix[1], translation_matrix[2]));
+      if (translation)
+         res.setPosition(new THREE.Vector3(translation[0], translation[1], translation[2]));
+
+      if (scale)
+         res.scale(new THREE.Vector3(scale[0], scale[1], scale[2]));
 
       return res;
    }
@@ -2614,7 +2623,7 @@
 
               matrix = new THREE.Matrix4();
 
-              switch (node.fFinder._typename.charAt(node.fFinder._typename.length - 1)) {
+              switch (node.fFinder._typename.charAt[node.fFinder._typename.length-1]) {
                  case 'X': matrix.setPosition(new THREE.Vector3(_shift, 0, 0)); break;
                  case 'Y': matrix.setPosition(new THREE.Vector3(0, _shift, 0)); break;
                  case 'Z': matrix.setPosition(new THREE.Vector3(0, 0, _shift)); break;
@@ -2901,9 +2910,10 @@
    JSROOT.GEO.ClonedNodes = function(obj, clones) {
       this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
       this.name_prefix = ""; // name prefix used for nodes names
+      this.maxdepth = 1; // maximal hierarchy depth, required for transparancy
 
       if (obj) {
-         if (obj._geoh) this.toplevel = false;
+         if (obj.$geoh) this.toplevel = false;
          this.CreateClones(obj);
       } else
       if (clones) this.nodes = clones;
@@ -2920,7 +2930,7 @@
       }
       return null;
    }
-   
+
    JSROOT.GEO.ClonedNodes.prototype.Cleanup = function(drawnodes, drawshapes) {
       // function to cleanup as much as possible structures
       // drawnodes and drawshapes are arrays created during building of geometry
@@ -2931,23 +2941,23 @@
             drawnodes[n] = undefined;
          }
       }
-   
+
       if (drawshapes) {
          for (var n=0;n<drawshapes.length;++n) {
             delete drawshapes[n].geom;
             drawshapes[n] = undefined;
          }
       }
-      
+
       if (this.nodes)
          for (var n=0;n<this.nodes.length;++n)
             delete this.nodes[n].chlds;
-      
+
       delete this.nodes;
       delete this.origin;
-      
+
       delete this.sortmap;
-      
+
    }
 
    JSROOT.GEO.ClonedNodes.prototype.CreateClones = function(obj, sublevel, kind) {
@@ -2961,6 +2971,7 @@
 
        obj._refid = this.origin.length;
        this.origin.push(obj);
+       if (sublevel>this.maxdepth) this.maxdepth = sublevel; 
 
        var chlds = null;
        if (kind===0)
@@ -3016,9 +3027,9 @@
              clone.fDY = shape.fDY;
              clone.fDZ = shape.fDZ;
              clone.vol = shape.fDX*shape.fDY*shape.fDZ;
-             if (shape._nfaces === undefined)
-                shape._nfaces = JSROOT.GEO.createGeometry(shape, -1);
-             clone.nfaces = shape._nfaces;
+             if (shape.$nfaces === undefined)
+                shape.$nfaces = JSROOT.GEO.createGeometry(shape, -1);
+             clone.nfaces = shape.$nfaces;
              if (clone.nfaces <= 0) clone.vol = 0;
 
              // if (clone.nfaces < -10) console.log('Problem  with node ' + obj.fName + ':' + obj.fMother.fName);

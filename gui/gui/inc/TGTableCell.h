@@ -11,9 +11,7 @@
 #ifndef ROOT_TGTableCell
 #define ROOT_TGTableCell
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGTable;
 class TGString;

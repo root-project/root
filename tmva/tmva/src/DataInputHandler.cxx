@@ -42,9 +42,7 @@ Class that contains all the data information.
 #include "TROOT.h"
 #include "TTree.h"
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
 
 #include <vector>
 #include <iostream>

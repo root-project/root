@@ -12,9 +12,7 @@
 #ifndef ROOT_TBuffer3D
 #define ROOT_TBuffer3D
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TBuffer3D : public TObject
 {

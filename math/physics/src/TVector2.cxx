@@ -18,7 +18,6 @@ the description of different vectors in 2D.
 
 #include "TROOT.h"
 #include "TVector2.h"
-#include "TClass.h"
 #include "TMath.h"
 
 Double_t const  kPI        = TMath::Pi();

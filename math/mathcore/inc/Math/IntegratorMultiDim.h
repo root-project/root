@@ -15,27 +15,17 @@
 #define ROOT_Math_IntegratorMultiDim
 
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
-#ifndef ROOT_Math_IntegrationTypes
 #include "Math/AllIntegrationTypes.h"
-#endif
 
-#ifndef ROOT_Math_IntegratorOptions
 #include "Math/IntegratorOptions.h"
-#endif
 
-#ifndef ROOT_Math_VirtualIntegrator
 #include "Math/VirtualIntegrator.h"
-#endif
 
 #ifndef __CINT__
 
-#ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"
-#endif
 
 #endif
 

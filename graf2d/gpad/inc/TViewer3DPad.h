@@ -13,9 +13,7 @@
 #define ROOT_TViewer3DPad
 
 
-#ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
-#endif
 
 class TVirtualPad;
 

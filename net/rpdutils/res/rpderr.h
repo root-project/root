@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_NetErrors
 #include "NetErrors.h"
-#endif
 
 typedef void (*ErrorHandler_t)(int level, const char *msg, int size);
 

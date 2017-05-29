@@ -25,16 +25,20 @@ elseif(APPLE)
   set(ld_library_path DYLD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so)
+  set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    set(libsuffix .so)
+  else()
+    set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
+  endif()
   set(localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   set(runtimedir ${CMAKE_INSTALL_LIBDIR})
 else()
   set(ld_library_path LD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so)
+  set(libprefix ${CMAKE_SHARED_LIBRARY_PREFIX})
+  set(libsuffix ${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(localruntimedir ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
   set(runtimedir ${CMAKE_INSTALL_LIBDIR})
 endif()
@@ -220,38 +224,62 @@ endmacro()
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1;MULTIDICT;NOINSTALL" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
 
+  # Check if OPTIONS start with a dash.
+  if (ARG_OPTIONS)
+    foreach(ARG_O ${ARG_OPTIONS})
+      if (NOT ARG_O MATCHES "^-*")
+        message(FATAL_ERROR "Wrong rootcling option: ${ARG_OPTIONS}")
+      endif()
+    endforeach()
+  endif(ARG_OPTIONS)
+
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
     set(libprefix "")
   endif()
 
-  #---Get the list of header files-------------------------
-  set(headerfiles)
-  foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files inc/${fp})
-    if(files)
-      foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
-        endif()
-      endforeach()
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-      set(headerfiles ${headerfiles} ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
-    else()
-      set(headerfiles ${headerfiles} ${fp})
-    endif()
-  endforeach()
-  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  rheaderfiles "${headerfiles}")
-  # Replace the non-standard folder layout of Core.
-  if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
-    # FIXME: Glob these folder.
-    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
-    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  rheaderfiles "${rheaderfiles}")
-  endif()
-
   #---Get the list of include directories------------------
   get_directory_property(incdirs INCLUDE_DIRECTORIES)
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+    set(localinclude ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  endif()
+  #---Get the list of header files-------------------------
+  set(headerfiles)
+  set(_list_of_header_dependencies)
+  foreach(fp ${ARG_UNPARSED_ARGUMENTS})
+    if(${fp} MATCHES "[*?]") # Is this header a globbing expression?
+      file(GLOB files inc/${fp} ${fp})
+      foreach(f ${files})
+        if(NOT f MATCHES LinkDef) # skip LinkDefs from globbing result
+          list(APPEND headerfiles ${f})
+          list(APPEND _list_of_header_dependencies ${f})
+        endif()
+      endforeach()
+    elseif(CMAKE_PROJECT_NAME STREQUAL ROOT AND 
+           EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${fp}) # only for ROOT project
+      list(APPEND headerfiles ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+      list(APPEND _list_of_header_dependencies ${CMAKE_CURRENT_SOURCE_DIR}/${fp})
+    elseif(IS_ABSOLUTE ${fp})
+      list(APPEND headerfiles ${fp})
+      list(APPEND _list_of_header_dependencies ${fp})
+    else()
+      find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs})
+      list(APPEND headerfiles ${fp})
+      if(headerFile)
+        list(APPEND _list_of_header_dependencies ${headerFile})
+      endif()
+      unset(headerFile CACHE)
+    endif()
+  endforeach()
+  string(REPLACE "${CMAKE_CURRENT_SOURCE_DIR}/inc/" ""  headerfiles "${headerfiles}") 
+  # Replace the non-standard folder layout of Core.
+  if (ARG_STAGE1 AND ARG_MODULE STREQUAL "Core")
+    # FIXME: Glob these folders.
+    set(core_folders "base|clib|clingutils|cont|dictgen|doc|foundation|lzma|macosx|meta|metacling|multiproc|newdelete|pcre|rint|rootcling_stage1|textinput|thread|unix|winnt|zip")
+    string(REGEX REPLACE "${CMAKE_SOURCE_DIR}/core/(${core_folders})/inc/" ""  headerfiles "${headerfiles}")
+  endif()
+
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_SOURCE_DIR}/interpreter/cling/include # This is for the RuntimeUniverse
@@ -350,12 +378,17 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(excludepathsargs ${excludepathsargs} -excludePath ${excludepath})
   endforeach()
 
+  #---build the implicit dependencies arguments
+  foreach(_dep ${_linkdef} ${_list_of_header_dependencies})
+    list(APPEND _implicitdeps CXX ${_dep})
+  endforeach()
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${excludepathsargs} ${rootmapargs}
-                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
-                     IMPLICIT_DEPENDS CXX ${_linkdef} ${headerfiles}
-                     DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
+                                        ${ARG_OPTIONS} ${definitions} ${includedirs} ${headerfiles} ${_linkdef}
+                     IMPLICIT_DEPENDS ${_implicitdeps}
+                     DEPENDS ${_list_of_header_dependencies} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
 
   #---roottest compability
@@ -376,10 +409,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endif()
   endif()
   if(cxxmodules)
-    # We build libSmatrix and libGenVector for 32 and 64 bits. Both contain the
-    # same header files, ignore the 32 bit version and make the module unique.
-    if(NOT ${dictionary} MATCHES .*32 )
-      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${rheaderfiles}")
+    # FIXME: Support mulptiple dictionaries. In some cases (libSMatrix and
+    # libGenVector) we have to have two or more dictionaries (eg. for math,
+    # we need the two for double vs Double32_t template specializations).
+    # In some other cases, eg. libTreePlayer.so we add in a separate dictionary
+    # files which for some reason (temporarily?) cannot be put in the PCH. Eg.
+    # all rest of the first dict is in the PCH but this file is not and it
+    # cannot be present in the original dictionary.
+    if(NOT ARG_MULTIDICT)
+      ROOT_CXXMODULES_APPEND_TO_MODULEMAP("${library_name}" "${headerfiles}")
     endif()
   endif(cxxmodules)
 endfunction()
@@ -420,19 +458,24 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
 
   set(excluded_headers "RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
                         Rtypes.h RtypesCore.h TClassEdit.h
+                        TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h TGenericClassInfo.h
                         TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
                         RootMetaSelection.h libcpp_string_view.h
-                        RWrap_libcpp_string_view.h TAtomicCountGcc.h
-                        TException.h ThreadLocalStorage.h ROOT/TThreadExecutor.hxx
+                        RWrap_libcpp_string_view.h
+                        TException.h ThreadLocalStorage.h 
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
                         snprintf.h strlcpy.h")
-  set(modulemap_entry "module \"${library}\" { \\n")
+
+   # Deprecated header files.
+  set (excluded_headers "${excluded_headers} TSelectorCint.h")
+
+  set(modulemap_entry "module \"${library}\" {")
   # For modules GCocoa and GQuartz we need objc context.
   if (${library} MATCHES "(libGCocoa|libGQuartz)\..*")
-    set (modulemap_entry "${modulemap_entry} \\n  requires objc \\n")
+    set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
   else()
-    set (modulemap_entry "${modulemap_entry} \\n  requires cplusplus \\n")
+    set (modulemap_entry "${modulemap_entry}\n  requires cplusplus\n")
   endif()
   if (library_headers)
     set(found_headers ${library_headers})
@@ -441,14 +484,14 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     #message (STATUS "header: ${header}")
     set(textual_header "")
     if (${header} MATCHES ".*\.icc$")
-      set(textual_header " textual")
+      set(textual_header "textual ")
     endif()
     if (NOT ${excluded_headers} MATCHES ${header})
-      set(modulemap_entry "${modulemap_entry} module \"${header}\" { ${textual_header} header \"${header}\" export * }\\n")
+      set(modulemap_entry "${modulemap_entry}  module \"${header}\" { ${textual_header}header \"${header}\" export * }\n")
     endif()
   endforeach()
-  #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\\n")
-  set(modulemap_entry "${modulemap_entry}  export *\\n }\\n")
+  #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\n")
+  set(modulemap_entry "${modulemap_entry}  export *\n}\n\n")
   set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
 endfunction()
 
@@ -466,7 +509,7 @@ function(ROOT_LINKER_LIBRARY library)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  include_directories(${CMAKE_BINARY_DIR}/include)                # This is a copy and certainly should last one
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   set(library_name ${library})
   if(TARGET ${library})
     message("Target ${library} already exists. Renaming target name to ${library}_new")
@@ -572,7 +615,7 @@ endfunction()
 function(ROOT_OBJECT_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "BUILTINS"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
   if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
      add_dependencies(${library} ${CMAKE_MATCH_2})
@@ -629,7 +672,7 @@ endfunction()
 function(ROOT_MODULE_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
-  include_directories(${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} SHARED ${lib_srcs})
   add_dependencies(${library} move_headers)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
@@ -737,7 +780,8 @@ function(ROOT_INSTALL_HEADERS)
     ROOT_GLOB_FILES(include_files
       RECURSE
       RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/${d}
-      FILTER ${filter} ${d}/*)
+      FILTER ${filter} 
+      ${d}/*.h ${d}/*.hxx ${d}/*.icc )
     foreach (include_file ${include_files})
       set (src ${CMAKE_CURRENT_SOURCE_DIR}/${d}/${include_file})
       set (dst ${CMAKE_BINARY_DIR}/include/${include_file})
@@ -777,7 +821,7 @@ function(ROOT_EXECUTABLE executable)
   if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
     set(_all EXCLUDE_FROM_ALL)
   endif()
-  include_directories(${CMAKE_BINARY_DIR}/include)
+  include_directories(BEFORE ${CMAKE_BINARY_DIR}/include)
   add_executable( ${executable} ${_all} ${exe_srcs})
   target_link_libraries(${executable} ${ARG_LIBRARIES} )
   if(WIN32 AND ${executable} MATCHES .exe)
@@ -1050,6 +1094,65 @@ function(ROOT_ADD_TEST test)
   endif()
 
 endfunction()
+
+#----------------------------------------------------------------------------
+# ROOT_PATH_TO_STRING( <variable> path PATH_SEPARATOR_REPLACEMENT replacement )
+#
+# Mangle the path to a string.
+#----------------------------------------------------------------------------
+function(ROOT_PATH_TO_STRING resultvar path)
+  # FIXME: Copied and modified from ROOTTEST_TARGETNAME_FROM_FILE. We should find a common place for that code.
+  # FIXME: ROOTTEST_TARGETNAME_FROM_FILE could be replaced by just a call to string(MAKE_C_IDENTIFIER)...
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "PATH_SEPARATOR_REPLACEMENT" ${ARGN})
+
+  set(sep_replacement "")
+  if (ARG_PATH_SEPARATOR_REPLACEMENT)
+    set(sep_replacement ${ARG_PATH_SEPARATOR_REPLACEMENT})
+  endif()
+
+  get_filename_component(realfp ${path} ABSOLUTE)
+  get_filename_component(filename_we ${path} NAME_WE)
+
+  string(REPLACE "${CMAKE_SOURCE_DIR}" "" relativepath ${realfp})
+  string(REPLACE "${path}" "" relativepath ${relativepath})
+
+  string(MAKE_C_IDENTIFIER ${relativepath}${filename_we} mangledname)
+  string(REPLACE "_" "${sep_replacement}" mangledname ${mangledname})
+
+  set(${resultvar} "${mangledname}" PARENT_SCOPE)
+endfunction(ROOT_PATH_TO_STRING)
+
+#----------------------------------------------------------------------------
+# ROOT_ADD_UNITTEST_DIR(<libraries ...>)
+#----------------------------------------------------------------------------
+function(ROOT_ADD_UNITTEST_DIR)
+  ROOT_GLOB_FILES(test_files ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
+  # Get the component from the path. Eg. core to form coreTests test suite name.
+  ROOT_PATH_TO_STRING(test_name ${CMAKE_CURRENT_SOURCE_DIR}/)
+  ROOT_ADD_GTEST(${test_name}Unit ${test_files} LIBRARIES ${ARGN})
+endfunction()
+
+#----------------------------------------------------------------------------
+# function ROOT_ADD_GTEST(<testsuite> source1 source2... LIBRARIES)
+#
+function(ROOT_ADD_GTEST test_suite)
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
+  include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
+
+  set(source_files ${ARG_UNPARSED_ARGUMENTS})
+  # Note we cannot use ROOT_EXECUTABLE without user-specified set of LIBRARIES to link with.
+  # The test suites should choose this in their specific CMakeLists.txt file.
+  # FIXME: For better coherence we could restrict the libraries the test suite could link
+  # against. For example, tests in Core should link only against libCore. This could be tricky
+  # to implement because some ROOT components create more than one library.
+  ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
+  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+
+  ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
+  ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite} WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR})
+endfunction()
+
 
 #----------------------------------------------------------------------------
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )

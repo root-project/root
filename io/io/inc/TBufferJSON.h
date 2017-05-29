@@ -12,15 +12,9 @@
 #ifndef ROOT_TBufferJSON
 #define ROOT_TBufferJSON
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include <map>
 
@@ -367,7 +361,7 @@ public:
    }
    virtual   UShort_t    WriteProcessID(TProcessID * /*pid*/)
    {
-      Error("WriteProcessID", "useless");
+      // Error("WriteProcessID", "useless");
       return 0;
    }
 
@@ -427,15 +421,14 @@ protected:
    TJSONStackObj   *Stack(Int_t depth = 0);
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
-   void             WorkWithElement(TStreamerElement *elem, Int_t comp_type);
-
+   void             WorkWithElement(TStreamerElement *elem, Int_t);
 
    void             JsonDisablePostprocessing();
    Int_t            JsonSpecialClass(const TClass *cl) const;
 
    void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
 
-   void             PerformPostProcessing(TJSONStackObj *stack, const TStreamerElement *elem = 0);
+   void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = 0);
 
    void              JsonWriteBasic(Char_t value);
    void              JsonWriteBasic(Short_t value);
@@ -465,7 +458,6 @@ protected:
    std::map<const void *, unsigned>  fJsonrMap;   //!  map of recorded objects, used in JsonR to restore references
    unsigned                  fJsonrCnt;     //!  counter for all objects and arrays
    TObjArray                 fStack;        //!  stack of streamer infos
-   Bool_t                    fExpectedChain; //!   flag to resolve situation when several elements of same basic type stored as FastArray
    Int_t                     fCompact;       //!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString                   fSemicolon;     //!  depending from compression level, " : " or ":"
    TString                   fArraySepar;    //!  depending from compression level, ", " or ","

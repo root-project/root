@@ -22,24 +22,14 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
 #ifndef ROOT_rsafun
 //#include "rsafun.h"
 #endif
-#ifndef ROOT_AuthConst
 #include "AuthConst.h"
-#endif
 #ifdef R__SSL
 // SSL specific headers for blowfish encryption
 #include <openssl/blowfish.h>

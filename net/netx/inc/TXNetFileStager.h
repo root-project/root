@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFileStager
 #include "TFileStager.h"
-#endif
 
 class TCollection;
 class TXNetSystem;

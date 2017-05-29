@@ -41,13 +41,13 @@ TRotMatrix::TRotMatrix()
 TRotMatrix::TRotMatrix(const char *name, const char *title, Double_t *matrix)
            :TNamed(name,title)
 {
-   if (!matrix) { Error("ctor","No rotation is supplied"); return; }
-
    fNumber = 0;
    fPhi    = 0;
    fPsi    = 0;
    fTheta  = 0;
    fType   = 0;
+
+   if (!matrix) { Error("ctor","No rotation is supplied"); return; }
 
    SetMatrix(matrix);
    if (!gGeometry) gGeometry = new TGeometry();

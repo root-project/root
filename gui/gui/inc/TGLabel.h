@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGDimension
 #include "TGDimension.h"
-#endif
-#ifndef ROOT_TGString
 #include "TGString.h"
-#endif
 
 class TColor;
 class TGTextLayout;

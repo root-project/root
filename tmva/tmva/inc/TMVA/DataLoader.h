@@ -32,19 +32,11 @@
 #include <string>
 #include <vector>
 #include <map>
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
 
-#ifndef ROOT_TMVA_Factory
 #include "TMVA/Factory.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
 
 class TFile;
 class TTree;
@@ -221,8 +213,8 @@ namespace TMVA {
       std::vector<std::vector<TMVA::Event*>>          fTestSigEvents;
       std::vector<std::vector<TMVA::Event*>>          fTestBkgEvents;
 
-      Int_t                                     fATreeType;          // type of event (=classIndex)
-      Float_t                                   fATreeWeight;        // weight of the event
+      Int_t                                     fATreeType = 0;          // type of event (=classIndex)
+      Float_t                                   fATreeWeight = 0.0;        // weight of the event
       std::vector<Float_t>                      fATreeEvent;         // event variables
       
       Types::EAnalysisType                      fAnalysisType;    // the training type

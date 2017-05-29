@@ -1,6 +1,6 @@
 // @(#)root/roostats:$Id: MinNLLTestStat.h 43035 2012-02-16 16:48:57Z sven $
 // Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke
-// Additional Contributions: Giovanni Petrucciani 
+// Additional Contributions: Giovanni Petrucciani
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -15,9 +15,7 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <vector>
 
@@ -42,24 +40,25 @@
 
 namespace RooStats {
 
-   /**
+/** \class MinNLLTestStat
+   \ingroup Roostats
 
-      MinNLLTestStat is an implementation of the TestStatistic interface that calculates the minimum value of the negative log likelihood
-      function and returns it as a test statistic.
-      Internaly it operates by delegating to a MinNLLTestStat object.
+MinNLLTestStat is an implementation of the TestStatistic interface that
+calculates the minimum value of the negative log likelihood
+function and returns it as a test statistic.
+Internally it operates by delegating to a MinNLLTestStat object.
 
-      \ingroup Roostats
-   */
+*/
 
   class MinNLLTestStat : public TestStatistic{
 
    public:
      MinNLLTestStat() {
         // Proof constructor. Do not use.
-	fProflts = 0;
+   fProflts = 0;
      }
      MinNLLTestStat(RooAbsPdf& pdf) {
-	fProflts = new ProfileLikelihoodTestStat(pdf);
+   fProflts = new ProfileLikelihoodTestStat(pdf);
      }
 
      MinNLLTestStat(const MinNLLTestStat& rhs) : TestStatistic(rhs), fProflts(0) {
@@ -77,7 +76,7 @@ namespace RooStats {
      }
 
      virtual ~MinNLLTestStat() {
-	delete fProflts;
+   delete fProflts;
      }
 
      void SetOneSided(Bool_t flag=true) {fProflts->SetOneSided(flag);}
@@ -88,7 +87,7 @@ namespace RooStats {
      void SetTolerance(double tol){ fProflts->SetTolerance(tol); }
      void SetPrintLevel(Int_t printlevel){ fProflts->SetPrintLevel(printlevel); }
      void SetLOffset(Bool_t flag=kTRUE) { fProflts->SetLOffset(flag) ; }
-    
+
      // Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
        return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
@@ -97,15 +96,14 @@ namespace RooStats {
      virtual void EnableDetailedOutput( bool e=true ) { fProflts->EnableDetailedOutput(e); }
 
      virtual const RooArgSet* GetDetailedOutput(void) const {
-	     // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
-	     // The returned RooArgSet contains the following:
-	     // <ul>
-	     // <li> the minimum nll, fitstatus and convergence quality for each fit </li> 
-	     // <li> for all non-constant parameters their value, error and pull </li>
-	     // </ul>
-	     return fProflts->GetDetailedOutput();
+        // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
+        // The returned RooArgSet contains the following:
+        //
+        //  - the minimum nll, fitstatus and convergence quality for each fit </li>
+        //  - for all non-constant parameters their value, error and pull </li>
+        return fProflts->GetDetailedOutput();
      }
-    
+
      virtual void SetVarName(const char* name) { fProflts->SetVarName(name); }
 
      virtual const TString GetVarName() const { return fProflts->GetVarName(); }

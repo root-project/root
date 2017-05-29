@@ -12,14 +12,10 @@
 #define ROOSTATS_HypoTestInverter
 
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
 
-#ifndef  ROOSTATS_HypoTestInverterResult
 #include "RooStats/HypoTestInverterResult.h"
-#endif
 
 class RooRealVar;
 class TGraphErrors;

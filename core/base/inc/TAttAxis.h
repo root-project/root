@@ -12,9 +12,7 @@
 #ifndef ROOT_TAttAxis
 #define ROOT_TAttAxis
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 class TAttAxis {

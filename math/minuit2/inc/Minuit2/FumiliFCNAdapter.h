@@ -10,17 +10,11 @@
 #ifndef ROOT_Minuit2_FumiliFCNAdapter
 #define ROOT_Minuit2_FumiliFCNAdapter
 
-#ifndef ROOT_Minuit2_FumiliFCNBase
 #include "Minuit2/FumiliFCNBase.h"
-#endif
 
-#ifndef ROOT_Math_FitMethodFunction
 #include "Math/FitMethodFunction.h"
-#endif
 
-#ifndef ROOT_Minuit2_MnPrint
 #include "Minuit2/MnPrint.h"
-#endif
 
 // #ifndef ROOT_Math_Util
 // #include "Math/Util.h"

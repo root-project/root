@@ -14,17 +14,11 @@
 #define ROOT_Fit_FitConfig
 
 
-#ifndef ROOT_Fit_ParameterSettings
 #include "Fit/ParameterSettings.h"
-#endif
 
-#ifndef ROOT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
 #include "Math/IParamFunctionfwd.h"
-#endif
 
 
 #include <vector>
@@ -100,10 +94,19 @@ public:
    unsigned int NPar() const { return fSettings.size(); }
 
    /**
+      return a vector of stored parameter values (i.e initial fit parameters)
+    */
+   std::vector<double> ParamsValues() const;
+
+
+   /**
       set the parameter settings from a model function.
       Create always new parameter setting list from a given model function
    */
    void CreateParamsSettings(const ROOT::Math::IParamMultiFunction & func);
+#ifdef R__HAS_VECCORE
+   void CreateParamsSettings(const ROOT::Math::IParamMultiFunctionTempl<ROOT::Double_v> & func);
+#endif
 
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.

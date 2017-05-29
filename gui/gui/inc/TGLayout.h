@@ -20,15 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TGDimension
 #include "TGDimension.h"
-#endif
-#ifndef ROOT_TRefCnt
 #include "TRefCnt.h"
-#endif
 
 //---- layout hints
 

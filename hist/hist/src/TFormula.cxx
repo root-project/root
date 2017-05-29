@@ -205,6 +205,29 @@ Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
    // }
    return false;
 }
+////////////////////////////////////////////////////////////////////////////
+// check is given position is in a parameter name i.e. within "[ ]"
+////
+Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
+
+   Bool_t foundOpenParenthesis = false;
+   if (pos == 0 || pos == formula.Length()-1) return false; 
+   for (int i = pos-1; i >=0; i--) {
+      if (formula[i] == ']' ) return false;
+      if (formula[i] == '[' ) {
+         foundOpenParenthesis = true;
+         break;
+      }
+   }
+   if (!foundOpenParenthesis ) return false; 
+
+   // search after the position
+   for (int i = pos+1; i < formula.Length(); i++) {
+      if (formula[i] == ']' ) return true;
+   }
+   return false; 
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 bool TFormulaParamOrder::operator() (const TString& a, const TString& b) const {
@@ -338,7 +361,9 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
     fClingInitialized = false;
    fNpar = 0;
    fMethod = 0;
+   fNumber = 0;
    fLambdaPtr = nullptr;
+   fFuncPtr = nullptr;
 
 
    fNdim = ndim;
@@ -385,6 +410,7 @@ TFormula::TFormula(const TFormula &formula) :
    fNumber = formula.GetNumber();
    fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
    fLambdaPtr = nullptr;
+   fFuncPtr = nullptr;
 
    // case of function based on a C++  expression (lambda's) which is ready to be compiled
    if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {
@@ -802,7 +828,7 @@ void TFormula::FillDefaults()
 void TFormula::HandlePolN(TString &formula)
 {
    Int_t polPos = formula.Index("pol");
-   while(polPos != kNPOS)
+   while(polPos != kNPOS  && !IsAParameterName(formula,polPos) )
    {
 
       Bool_t defaultVariable = false;
@@ -968,7 +994,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 
 
       //std::cout << formula << " ---- " << funName << "  " << funPos << std::endl;
-      while(funPos != kNPOS)
+      while(funPos != kNPOS && !IsAParameterName(formula,funPos))
       {
 
          // should also check that function is not something else (e.g. exponential - parse the expo)
@@ -1173,7 +1199,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
 void TFormula::HandleExponentiation(TString &formula)
 {
    Int_t caretPos = formula.Last('^');
-   while(caretPos != kNPOS)
+   while(caretPos != kNPOS  && !IsAParameterName(formula,caretPos) )
    {
 
       TString right,left;
@@ -1272,12 +1298,12 @@ void TFormula::HandleLinear(TString &formula)
    // Handle Linear functions identified with "@" operator
    Int_t linPos = formula.Index("@");
    if (linPos == kNPOS ) return;  // function is not linear
-   Int_t NofLinParts = formula.CountChar((int)'@');
-   assert(NofLinParts > 0);
-   fLinearParts.reserve(NofLinParts + 1);
+   Int_t nofLinParts = formula.CountChar((int)'@');
+   assert(nofLinParts > 0);
+   fLinearParts.reserve(nofLinParts + 1);
    Int_t Nlinear = 0;
    bool first = true;
-   while(linPos != kNPOS)
+   while(linPos != kNPOS && !IsAParameterName(formula,linPos))
    {
       SetBit(kLinear,1);
       // analyze left part only the first time
@@ -1402,25 +1428,24 @@ void TFormula::ExtractFunctors(TString &formula)
          }
          i++;
          //rename parameter name XX to pXX
-	 //std::cout << "examine parameters " << param << std::endl;
-	 int paramIndex = -1; 
-         if (param.IsDigit() ) {
-	   paramIndex = param.Atoi();
-	   param.Insert(0,'p');  // needed for the replacement
-	   if (paramIndex >= fNpar || fParams.find(param) == fParams.end() ) {
-	     // add all parameters up to given index found
-	     for (int idx = 0; idx <= paramIndex; ++idx) {
-	       TString pname = TString::Format("p%d",idx);
-	       if (fParams.find(pname) == fParams.end())
-		 DoAddParameter(pname,0,false);
-	     }
-	   }
-	 }
-	 else { 
-	   // handle whitespace characters in parname
-	   param.ReplaceAll("\\s"," ");
-	   DoAddParameter(param,0,false);
-	 }
+         //std::cout << "examine parameters " << param << std::endl;
+         int paramIndex = -1;
+         if (param.IsDigit()) {
+            paramIndex = param.Atoi();
+            param.Insert(0, 'p');  // needed for the replacement
+            if (paramIndex >= fNpar || fParams.find(param) == fParams.end()) {
+               // add all parameters up to given index found
+               for (int idx = 0; idx <= paramIndex; ++idx) {
+                  TString pname = TString::Format("p%d", idx);
+                  if (fParams.find(pname) == fParams.end())
+                     DoAddParameter(pname, 0, false);
+               }
+            }
+         } else {
+            // handle whitespace characters in parname
+            param.ReplaceAll("\\s", " ");
+            DoAddParameter(param, 0, false);
+         }
          TString replacement = TString::Format("{[%s]}",param.Data());
          formula.Replace(tmp,i - tmp, replacement,replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));

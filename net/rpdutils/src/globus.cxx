@@ -40,9 +40,10 @@ namespace ROOT {
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle error ...
 
-void GlbsToolError(char *msg, int maj, int min, int tok)
+void GlbsToolError(const char *m, int maj, int min, int tok)
 {
    char *e = 0;
+   char *msg = (char *)m;
 
    if (globus_gss_assist_display_status_str(&e, msg, maj, min, tok) || !e) {
       ErrorInfo("Error: %s: error messaged not resolved"

@@ -13,21 +13,13 @@
 #ifndef ROOT_Math_Minimizer
 #define ROOT_Math_Minimizer
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
-#ifndef ROOT_Math_MinimizerOptions
 #include "Math/MinimizerOptions.h"
-#endif
 
-#ifndef ROOT_Math_Util
 #include "Math/Util.h"
-#endif
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 
 

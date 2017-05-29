@@ -137,6 +137,7 @@ clang/LLVM technology.
 #ifdef __APPLE__
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
+#include <mach-o/loader.h>
 #endif // __APPLE__
 
 #ifdef R__UNIX
@@ -269,23 +270,21 @@ static int DeclFileLine() { return __LINE__; }
 #define __ROOTCLING__ 1
 #undef ClassDef
 #define ClassDef(name,id) \
-_ClassDef_(name,id,virtual,) \
+_ClassDefOutline_(name,id,virtual,) \
 static int DeclFileLine() { return __LINE__; }
 #undef ClassDefNV
 #define ClassDefNV(name, id)\
-_ClassDef_(name,id,,)\
+_ClassDefOutline_(name,id,,)\
 static int DeclFileLine() { return __LINE__; }
 #undef ClassDefOverride
 #define ClassDefOverride(name, id)\
-_ClassDef_(name,id,,override)\
+_ClassDefOutline_(name,id,,override)\
 static int DeclFileLine() { return __LINE__; }
 )ICF";
 
 // The macros below use ::Error, so let's ensure it is included
   static const std::string gClassDefInterpMacro = R"ICF(
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #define _ClassDefInterp_(name,id,virtual_keyword, overrd) \
 private: \
@@ -1062,7 +1061,7 @@ TCling::TCling(const char *name, const char *title)
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
 
       // Add -I early so ASTReader can find the headers.
-      std::string interpInclude(TROOT::GetEtcDir());
+      std::string interpInclude(TROOT::GetEtcDir().Data());
       clingArgsStorage.push_back("-I" + interpInclude);
 
       // Add include path to etc/cling. FIXME: This is a short term solution. The
@@ -1071,7 +1070,7 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back("-I" + interpInclude + "/cling");
 
       // Add the root include directory and etc/ to list searched by default.
-      clingArgsStorage.push_back(std::string("-I" + TROOT::GetIncludeDir()));
+      clingArgsStorage.push_back(std::string(("-I" + TROOT::GetIncludeDir()).Data()));
 
       // Add the current path to the include path
       // TCling::AddIncludePath(".");
@@ -1732,6 +1731,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
        && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
+       && strcmp(modulename,"libImt")!=0
        && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
        && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libforward_listDict")!=0
        && strcmp(modulename,"libvectorDict")!=0
@@ -2120,6 +2120,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    static const TClassRef clRefString("std::string");
    if (clRefString == cl) {
       // We stream std::string without going through members..
+      return;
+   }
+
+   if (TClassEdit::IsStdArray(cl->GetName())) {
+      // We treat std arrays as C arrays
       return;
    }
 
@@ -2689,11 +2694,15 @@ void TCling::UpdateListOfLoadedSharedLibraries()
 #elif defined(R__MACOSX)
    // fPrevLoadedDynLibInfo stores the *next* image index to look at
    uint32_t imageIndex = (uint32_t) (size_t) fPrevLoadedDynLibInfo;
-   const char* imageName = 0;
-   while ((imageName = _dyld_get_image_name(imageIndex))) {
-      // Skip binary
-      if (imageIndex > 0)
-         RegisterLoadedSharedLibrary(imageName);
+
+   while (const mach_header* mh = _dyld_get_image_header(imageIndex)) {
+      // Skip non-dylibs
+      if (mh->filetype == MH_DYLIB) {
+         if (const char* imageName = _dyld_get_image_name(imageIndex)) {
+            RegisterLoadedSharedLibrary(imageName);
+         }
+      }
+
       ++imageIndex;
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
@@ -4460,7 +4469,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
-   func.Init(minfo);
+   func.Init(*minfo);
    func.SetArgs(listpar);
    // Now calculate the 'this' pointer offset for the method
    // when starting from the class described by cl.
@@ -6031,8 +6040,7 @@ void TCling::LibraryUnloaded(const void* dyLibHandle, const char* canonicalName)
 
 const char* TCling::GetSharedLibs()
 {
-   if (!fPrevLoadedDynLibInfo && fSharedLibs.IsNull())
-      UpdateListOfLoadedSharedLibraries();
+   UpdateListOfLoadedSharedLibraries();
    return fSharedLibs;
 }
 

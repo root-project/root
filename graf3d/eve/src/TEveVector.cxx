@@ -85,9 +85,11 @@ template<typename TT> TEveVectorT<TT> TEveVectorT<TT>::Orthogonal() const
 
 template<typename TT> void TEveVectorT<TT>::OrthoNormBase(TEveVectorT<TT>& a, TEveVectorT<TT>& b) const
 {
-   a = Orthogonal();
-   TMath::Cross(this->Arr(), a.Arr(), b.Arr());
+   TEveVectorT<TT> v(*this);
+   v.Normalize();
+   a = v.Orthogonal();
    a.Normalize();
+   b = v.Cross(a);
    b.Normalize();
 }
 

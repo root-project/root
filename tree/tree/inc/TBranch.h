@@ -23,22 +23,15 @@
 //     the list of TLeaves (branch description)                         //
 //////////////////////////////////////////////////////////////////////////
 
+#include <memory>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TDataType
 #include "TDataType.h"
-#endif
 
 class TTree;
 class TBasket;
@@ -55,10 +48,18 @@ class TTreeCloner;
    const Int_t kBranchAny    = BIT(17); // branch is an object*
    const Int_t kMapObject    = kBranchObject | kBranchAny;
 
+namespace ROOT {
+  namespace Internal {
+    class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
+  }
+}
+
 class TBranch : public TNamed , public TAttFill {
 
 protected:
    friend class TTreeCloner;
+   friend class TTree;
+
    // TBranch status bits
    enum EStatusBits {
       kAutoDelete = BIT(15),
@@ -117,14 +118,15 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
-   Int_t    WriteBasket(TBasket* basket, Int_t where);
+   Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
 private:
    Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
-   TBranch(const TBranch&);             // not implemented
-   TBranch& operator=(const TBranch&);  // not implemented
+   Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
+   TBranch(const TBranch&) = delete;             // not implemented
+   TBranch& operator=(const TBranch&) = delete;  // not implemented
 
 public:
    TBranch();
@@ -138,7 +140,8 @@ public:
    virtual void      DeleteBaskets(Option_t* option="");
    virtual void      DropBaskets(Option_t *option = "");
            void      ExpandBasketArrays();
-   virtual Int_t     Fill();
+           Int_t     Fill() { return FillImpl(nullptr); }
+   virtual Int_t     FillImpl(ROOT::Internal::TBranchIMTHelper *);
    virtual TBranch  *FindBranch(const char *name);
    virtual TLeaf    *FindLeaf(const char *name);
            Int_t     FlushBaskets();

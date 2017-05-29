@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSocket
 #include "TSocket.h"
-#endif
 
 typedef struct ssl_st     SSL;
 typedef struct ssl_ctx_st SSL_CTX;

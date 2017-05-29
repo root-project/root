@@ -12,21 +12,13 @@
 #ifndef ROOT_TGeoNode
 #define ROOT_TGeoNode
 
-#ifndef ROOT_TGeoAtt
 #include "TGeoAtt.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
 
-#ifndef ROOT_TGeoPatternFinder
 #include "TGeoPatternFinder.h"
-#endif
 
 // forward declarations
 class TString;

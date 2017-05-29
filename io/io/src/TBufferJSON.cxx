@@ -94,6 +94,7 @@ class TArrayIndexProducer {
       TArrayI fIndicies;
       TArrayI fMaxIndex;
       TString fRes;
+      Bool_t fIsArray;
 
    public:
       TArrayIndexProducer(TStreamerElement* elem, Int_t arraylen, const char* separ) :
@@ -102,13 +103,15 @@ class TArrayIndexProducer {
          fSepar(separ),
          fIndicies(),
          fMaxIndex(),
-         fRes()
+         fRes(),
+         fIsArray(kFALSE)
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
+         Bool_t usearraylen = (arraylen > 1);
 
          if (usearrayindx && (arraylen > 0)) {
             if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
-                (elem->GetType() == TStreamerInfo::kStreamLoop)) usearrayindx = kFALSE;
+                (elem->GetType() == TStreamerInfo::kStreamLoop)) { usearrayindx = kFALSE; usearraylen = kTRUE; }
             else
                if (arraylen != elem->GetArrayLength()) {
                   printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
@@ -120,11 +123,13 @@ class TArrayIndexProducer {
             fMaxIndex.Set(elem->GetArrayDim());
             for(int dim=0;dim<elem->GetArrayDim();dim++)
                fMaxIndex[dim] = elem->GetMaxIndex(dim);
+            fIsArray = fTotalLen>1;
          } else
-         if (arraylen > 1) {
+         if (usearraylen) {
             fTotalLen = arraylen;
             fMaxIndex.Set(1);
             fMaxIndex[0] = arraylen;
+            fIsArray = kTRUE;
          }
 
          if (fMaxIndex.GetSize() > 0) {
@@ -139,7 +144,8 @@ class TArrayIndexProducer {
          fSepar(separ),
          fIndicies(),
          fMaxIndex(),
-         fRes()
+         fRes(),
+         fIsArray(kFALSE)
       {
          Int_t ndim = member->GetArrayDim();
          if (extradim > 0) ndim++;
@@ -159,6 +165,7 @@ class TArrayIndexProducer {
                fTotalLen *= extradim;
             }
          }
+         fIsArray = fTotalLen>1;
       }
 
       Int_t ReduceDimension()
@@ -171,13 +178,14 @@ class TArrayIndexProducer {
          fMaxIndex.Set(ndim);
          fIndicies.Set(ndim);
          fTotalLen = fTotalLen/len;
+         fIsArray = fTotalLen>1;
          return len;
       }
 
 
       Bool_t IsArray() const
       {
-         return (fTotalLen>1);
+         return fIsArray;
       }
 
       Bool_t IsDone() const
@@ -238,7 +246,6 @@ class TJSONStackObj : public TObject {
 public:
    TStreamerInfo    *fInfo;           //!
    TStreamerElement *fElem;           //! element in streamer info
-   Int_t             fElemNumber;     //! number of streamer element in streamer info
    Bool_t            fIsStreamerInfo; //!
    Bool_t            fIsElemOwner;    //!
    Bool_t            fIsPostProcessed;//! indicate that value is written
@@ -252,7 +259,6 @@ public:
       TObject(),
       fInfo(0),
       fElem(0),
-      fElemNumber(0),
       fIsStreamerInfo(kFALSE),
       fIsElemOwner(kFALSE),
       fIsPostProcessed(kFALSE),
@@ -299,7 +305,6 @@ TBufferJSON::TBufferJSON() :
    fJsonrMap(),
    fJsonrCnt(0),
    fStack(),
-   fExpectedChain(kFALSE),
    fCompact(0),
    fSemicolon(" : "),
    fArraySepar(", "),
@@ -1130,6 +1135,9 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
       }
    }
 
+   // reuse post-processing code for TObject or TRef
+   PerformPostProcessing(stack, cl);
+
    if ((special_kind == 0) &&
          ((stack->fValues.GetLast() >= 0) || (fValue.Length() > 0))) {
       if (gDebug > 0)
@@ -1262,8 +1270,6 @@ void TBufferJSON::IncrementLevel(TVirtualStreamerInfo *info)
 
 void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 {
-   fExpectedChain = kFALSE;
-
    if (sinfo != 0) cl = sinfo->GetClass();
 
    if (cl == 0) return;
@@ -1273,8 +1279,8 @@ void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
    TJSONStackObj *stack = Stack();
 
    if ((stack != 0) && stack->IsStreamerElement() && !stack->fIsObjStarted &&
-         ((stack->fElem->GetType() == TStreamerInfo::kObject) ||
-          (stack->fElem->GetType() == TStreamerInfo::kAny))) {
+        ((stack->fElem->GetType() == TStreamerInfo::kObject) ||
+         (stack->fElem->GetType() == TStreamerInfo::kAny))) {
 
       stack->fIsObjStarted = kTRUE;
 
@@ -1300,8 +1306,6 @@ void  TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 
 void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
 {
-   fExpectedChain = kFALSE;
-
    if (gDebug > 2)
       Info("DecrementLevel", "Class: %s",
            (info ? info->GetClass()->GetName() : "custom"));
@@ -1346,10 +1350,8 @@ void TBufferJSON::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
 /// that class member will be streamed
 /// Name of element used in JSON
 
-void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
+void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 {
-   fExpectedChain = kFALSE;
-
    TJSONStackObj *stack = Stack();
    if (stack == 0) {
       Error("WorkWithElement", "stack is empty");
@@ -1392,19 +1394,10 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       return;
    }
 
-   Bool_t isBasicType = (elem->GetType() > 0) && (elem->GetType() < 20);
-
-   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-
-   if (fExpectedChain && (gDebug > 3))
-      Info("WorkWithElement", "    Expects chain for elem %s number %d",
-           elem->GetName(), number);
-
    TClass *base_class = elem->IsBase() ? elem->GetClassPointer() : 0;
 
    stack = PushStack(0);
    stack->fElem = (TStreamerElement *) elem;
-   stack->fElemNumber = number;
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
@@ -1564,16 +1557,13 @@ void TBufferJSON::ClassMember(const char *name, const char *typeName,
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is converts TObject and TString structures to more compact representation
 
-void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
-                                        const TStreamerElement *elem)
+void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl)
 {
-   if ((elem == 0) && stack->fIsPostProcessed) return;
-   if (elem == 0) elem = stack->fElem;
-   if (elem == 0) return;
+   if (stack->fIsPostProcessed) return;
 
-   if (gDebug > 3)
-      Info("PerformPostProcessing", "Element %s type %s",
-           elem->GetName(), elem->GetTypeName());
+   const TStreamerElement *elem = stack->fElem;
+
+   if (!elem && !obj_cl) return;
 
    stack->fIsPostProcessed = kTRUE;
 
@@ -1583,13 +1573,20 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
       return;
    }
 
-   const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
-   Bool_t isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
-   Bool_t isTString = elem->GetType() == TStreamerInfo::kTString;
-   Bool_t isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
-   Bool_t isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
+   Bool_t isTObject(kFALSE), isTRef(kFALSE), isTString(kFALSE), isSTLstring(kFALSE), isOffsetPArray(kFALSE), isTArray(kFALSE);
 
-   Bool_t isTArray = (strncmp("TArray", typname, 6) == 0);
+   if (obj_cl) {
+      if (obj_cl == TObject::Class()) isTObject = kTRUE;
+      else if (obj_cl == TRef::Class()) isTRef = kTRUE;
+      else return;
+   } else {
+      const char *typname = elem->IsBase() ? elem->GetName() : elem->GetTypeName();
+      isTObject = (elem->GetType() == TStreamerInfo::kTObject) || (strcmp("TObject", typname) == 0);
+      isTString = elem->GetType() == TStreamerInfo::kTString;
+      isSTLstring = elem->GetType() == TStreamerInfo::kSTLstring;
+      isOffsetPArray = (elem->GetType() > TStreamerInfo::kOffsetP) && (elem->GetType() < TStreamerInfo::kOffsetP + 20);
+      isTArray = (strncmp("TArray", typname, 6) == 0);
+   }
 
    if (isTString || isSTLstring) {
       // just remove all kind of string length information
@@ -1607,15 +1604,22 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
                  (strcmp(stack->fValues.Last()->GetName(), "1") == 0)) {
          stack->fValues.Delete();
       } else {
-         Error("PerformPostProcessing", "Wrong values for kOffsetP type %s name %s",
-               typname, (elem ? elem->GetName() : "---"));
+         Error("PerformPostProcessing", "Wrong values for kOffsetP element %s",
+                 (elem ? elem->GetName() : "---"));
          stack->fValues.Delete();
          fValue = "[]";
       }
-   } else if (isTObject) {
-      if (stack->fValues.GetLast() != 0) {
+   } else if (isTObject || isTRef) {
+      // complex workaround for TObject/TRef streamer
+      // would be nice if other solution can be found
+      // Here is not supported TRef on TRef (double reference)
+
+      Int_t cnt = stack->fValues.GetLast()+1;
+      if (fValue.Length() > 0) cnt++;
+
+      if (cnt<2 || cnt>3) {
          if (gDebug > 0)
-            Error("PerformPostProcessing", "When storing TObject, number of items %d not equal to 2", stack->fValues.GetLast());
+            Error("PerformPostProcessing", "When storing TObject/TRef, strange number of items %d", cnt);
          AppendOutput(",", "\"dummy\"");
          AppendOutput(fSemicolon.Data());
       } else {
@@ -1624,15 +1628,24 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack,
          AppendOutput(stack->fValues.At(0)->GetName());
          AppendOutput(",", "\"fBits\"");
          AppendOutput(fSemicolon.Data());
+         AppendOutput((stack->fValues.GetLast()>0) ? stack->fValues.At(1)->GetName() : fValue.Data());
+         if (cnt==3) {
+            AppendOutput(",", "\"fPID\"");
+            AppendOutput(fSemicolon.Data());
+            AppendOutput((stack->fValues.GetLast()>1) ? stack->fValues.At(2)->GetName() : fValue.Data());
+         }
+
+         stack->fValues.Delete();
+         fValue.Clear();
+         return;
       }
 
-      stack->fValues.Delete();
    } else if (isTArray) {
       // for TArray one deletes complete stack
       stack->fValues.Delete();
    }
 
-   if (elem->IsBase() && (fValue.Length() == 0)) {
+   if (elem && elem->IsBase() && (fValue.Length() == 0)) {
       // here base class data already completely stored
       return;
    }
@@ -2484,48 +2497,27 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n,
       TJSONPushValue();                                                      \
       if (n <= 0) { /*fJsonrCnt++;*/ fValue.Append("[]"); return; }          \
       TStreamerElement* elem = Stack(0)->fElem;                              \
-      if ((elem != 0) && (elem->GetType()>TStreamerInfo::kOffsetL) &&        \
-            (elem->GetType() < TStreamerInfo::kOffsetP) &&                   \
-            (elem->GetArrayLength() != n)) fExpectedChain = kTRUE;           \
-      if (fExpectedChain) {                                                  \
-         TStreamerInfo* info = Stack(1)->fInfo;                              \
-         Int_t startnumber = Stack(0)->fElemNumber;                          \
-         fExpectedChain = kFALSE;                                            \
-         Int_t index(0);                                                     \
-         while (index<n) {                                                   \
-            elem = (TStreamerElement*)info->GetElements()->At(startnumber++);\
-            if (index>0) JsonStartElement(elem);                             \
-            if (elem->GetType()<TStreamerInfo::kOffsetL) {                   \
-               JsonWriteBasic(vname[index]);                                 \
-               index++;                                                      \
-            } else {                                                         \
-               method((vname+index), elem->GetArrayLength(),typname);        \
-               index+=elem->GetArrayLength();                                \
+      if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
+         TArrayI indexes(elem->GetArrayDim() - 1);                           \
+         indexes.Reset(0);                                                   \
+         Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
+         while (cnt >= 0) {                                                  \
+            if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
+               fValue.Append("]");                                           \
+               indexes[cnt--] = 0;                                           \
+               if (cnt >= 0) indexes[cnt]++;                                 \
+               continue;                                                     \
             }                                                                \
-            PerformPostProcessing(Stack(0), elem);                           \
+            fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
+            if (++cnt == indexes.GetSize()) {                                \
+               method((vname+shift), len, typname);                          \
+               indexes[--cnt]++;                                             \
+               shift+=len;                                                   \
+            }                                                                \
          }                                                                   \
-      } else                                                                 \
-         if ((elem!=0) && (elem->GetArrayDim()>1) && (elem->GetArrayLength()==n)) { \
-            TArrayI indexes(elem->GetArrayDim() - 1);                           \
-            indexes.Reset(0);                                                   \
-            Int_t cnt = 0, shift = 0, len = elem->GetMaxIndex(indexes.GetSize()); \
-            while (cnt >= 0) {                                                  \
-               if (indexes[cnt] >= elem->GetMaxIndex(cnt)) {                    \
-                  fValue.Append("]");                                           \
-                  indexes[cnt--] = 0;                                           \
-                  if (cnt >= 0) indexes[cnt]++;                                 \
-                  continue;                                                     \
-               }                                                                \
-               fValue.Append(indexes[cnt] == 0 ? "[" : fArraySepar.Data());     \
-               if (++cnt == indexes.GetSize()) {                                \
-                  method((vname+shift), len, typname);                          \
-                  indexes[--cnt]++;                                             \
-                  shift+=len;                                                   \
-               }                                                                \
-            }                                                                   \
-         } else {                                                               \
-            method(vname, n, typname);                                          \
-         }                                                                      \
+      } else {                                                               \
+         method(vname, n, typname);                                          \
+      }                                                                      \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2675,31 +2667,38 @@ void  TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n,
       return;
    }
 
-   char *obj = (char *)start;
-   if (!n) n = 1;
-   int size = cl->Size();
-
-   TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
-
-   if (indexes.IsArray()) {
+   if (n<0) {
+      // special handling of empty StreamLoop
+      AppendOutput("null");
       JsonDisablePostprocessing();
-      AppendOutput(indexes.GetBegin());
-   }
+   } else {
 
-   for (Int_t j = 0; j < n; j++, obj += size) {
+      char *obj = (char *)start;
+      if (!n) n = 1;
+      int size = cl->Size();
 
-      if (j>0) AppendOutput(indexes.NextSeparator());
+      TArrayIndexProducer indexes(Stack(0)->fElem, n, fArraySepar.Data());
 
-      JsonWriteObject(obj, cl, kFALSE);
-
-      if (indexes.IsArray() && (fValue.Length() > 0)) {
-         AppendOutput(fValue.Data());
-         fValue.Clear();
+      if (indexes.IsArray()) {
+         JsonDisablePostprocessing();
+         AppendOutput(indexes.GetBegin());
       }
-   }
 
-   if (indexes.IsArray())
-      AppendOutput(indexes.GetEnd());
+      for (Int_t j = 0; j < n; j++, obj += size) {
+
+         if (j>0) AppendOutput(indexes.NextSeparator());
+
+         JsonWriteObject(obj, cl, kFALSE);
+
+         if (indexes.IsArray() && (fValue.Length() > 0)) {
+            AppendOutput(fValue.Data());
+            fValue.Clear();
+         }
+      }
+
+      if (indexes.IsArray())
+         AppendOutput(indexes.GetEnd());
+   }
 
    if (Stack(0)->fIndx)
       AppendOutput(Stack(0)->fIndx->NextSeparator());
@@ -3613,7 +3612,7 @@ Int_t TBufferJSON::WriteClassBuffer(const TClass *cl, void *pointer)
 
    //NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
-   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char *)pointer);
+   ApplySequence(*(sinfo->GetWriteTextActions()), (char *)pointer);
 
    //write the byte count at the start of the buffer
    // SetByteCount(R__c, kTRUE);

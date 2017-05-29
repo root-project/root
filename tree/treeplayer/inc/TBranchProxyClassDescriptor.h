@@ -12,12 +12,8 @@
 #ifndef ROOT_TBranchProxyClassDescriptor
 #define ROOT_TBranchProxyClassDescriptor
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TTree;
 class TVirtualStreamerInfo;

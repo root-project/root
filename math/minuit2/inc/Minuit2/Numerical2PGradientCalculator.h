@@ -10,13 +10,9 @@
 #ifndef ROOT_Minuit2_Numerical2PGradientCalculator
 #define ROOT_Minuit2_Numerical2PGradientCalculator
 
-#ifndef ROOT_Minuit2_MnConfig
 #include "Minuit2/MnConfig.h"
-#endif
 
-#ifndef ROOT_Minuit2_GradientCalculator
 #include "Minuit2/GradientCalculator.h"
-#endif
 
 #include <vector>
 

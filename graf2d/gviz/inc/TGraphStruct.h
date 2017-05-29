@@ -12,18 +12,10 @@
 #ifndef ROOT_TGraphStruct
 #define ROOT_TGraphStruct
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TGraphEdge
 #include "TGraphEdge.h"
-#endif
-#ifndef ROOT_TGraphNode
 #include "TGraphNode.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 struct GVizAgraph_t;
 struct GVC_s;

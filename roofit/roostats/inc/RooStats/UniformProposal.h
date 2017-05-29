@@ -12,40 +12,16 @@
 #ifndef ROOSTATS_UniformProposal
 #define ROOSTATS_UniformProposal
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
 
 namespace RooStats {
-
-   /**
-      \ingroup Roostats
-      
-      UniformProposal is a concrete implementation of the ProposalFunction interface
-      for use with a Markov Chain Monte Carlo algorithm.  This proposal function is
-      a uniformly random distribution over the parameter space.  The proposal
-      ignores the current point when it proposes a new point.  The proposal
-      function is symmetric, though it may not cause a MetropolisHastings run to
-      converge as quickly as other proposal functions.
-
-   */
 
    class UniformProposal : public ProposalFunction {
 
@@ -56,7 +32,7 @@ namespace RooStats {
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x);
 
       /// Determine whether or not the proposal density is symmetric for
-      /// points x1 and x2 - that is, whether the probabilty of reaching x2
+      /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
       virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2);
 

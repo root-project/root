@@ -566,7 +566,10 @@ int testTransform3D() {
   iret |= compare( r.Theta(), err2.Theta(),"transf rot theta",1 );
   iret |= compare( r.Psi(), err2.Psi(),"transf rot psi",1 );
 
-  iret |= compare( v == vvv2, 1,"eq transf g vec",1 );
+//iret |= compare( v == vvv2, 1,"eq transf g vec",1 );
+  iret |= compare( v.X(), vvv2.X(),"eq transf g vec",4 );
+  iret |= compare( v.Y(), vvv2.Y(),"eq transf g vec",1 );
+  iret |= compare( v.Z(), vvv2.Z(),"eq transf g vec",1 );
 
   // create from other rotations
   RotationZYX rzyx(r);
@@ -668,6 +671,40 @@ int testTransform3D() {
   iret |= compare( (lr==lr2),true,"Get/SetLRotMatrix");
 #endif
 
+  {
+     // testing ApplyInverse on Point
+     XYZPoint point(1., -2., 3.);
+     Transform3D tr(EulerAngles(10, -10, 10), XYZVector(10, -10, 0));
+
+     // test that applying transformation + Inverse is identity
+     auto r0 = tr.ApplyInverse(tr(point));
+     auto r0_2 = tr.Inverse()(tr(point));
+
+     iret |= compare(r0.X(), point.X(), "ApplyInverse/PointX", 100);
+     iret |= compare(r0_2.X(), point.X(), "ApplyInverse/PointX", 100);
+     iret |= compare(r0.Y(), point.Y(), "ApplyInverse/PointY", 10);
+     iret |= compare(r0_2.Y(), point.Y(), "ApplyInverse/PointY", 10);
+     iret |= compare(r0.Z(), point.Z(), "ApplyInverse/PointZ", 10);
+     iret |= compare(r0_2.Z(), point.Z(), "ApplyInverse/PointZ", 10);
+
+     // compare ApplyInverse with Inverse()
+     auto r1 = tr.ApplyInverse(point);
+     auto r2 = tr.Inverse()(point);
+     iret |= compare(r1.X(), r2.X(), "ApplyInverse/Point", 10);
+     iret |= compare(r1.Y(), r2.Y(), "ApplyInverse/Point", 10);
+     iret |= compare(r1.Z(), r2.Z(), "ApplyInverse/Point", 10);
+  }
+
+  {
+     // testing ApplyInverse on Vector
+     XYZVector vector(1, -2., 3);
+     Transform3D tr(EulerAngles(10, -10, 10), XYZVector(10, -10, 0));
+     auto r1 = tr.ApplyInverse(vector);
+     auto r2 = tr.Inverse()(vector);
+     iret |= compare(r1.X(), r2.X(), "ApplyInverse/Vector", 10);
+     iret |= compare(r1.Y(), r2.Y(), "ApplyInverse/Vector", 10);
+     iret |= compare(r1.Z(), r2.Z(), "ApplyInverse/Vector", 10);
+  }
 
   if (iret == 0) std::cout << "OK\n";
   else std::cout << "\t\t\tFAILED\n";

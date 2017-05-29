@@ -12,9 +12,7 @@
 #ifndef ROOT_TVirtualPadPainter
 #define ROOT_TVirtualPadPainter
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TVirtualPad;
 

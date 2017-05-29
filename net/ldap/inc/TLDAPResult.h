@@ -9,12 +9,8 @@
 #ifndef ROOT_TLDAPResult
 #define ROOT_TLDAPResult
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_CintLDAP
 #include "CintLDAP.h"
-#endif
 
 
 class TLDAPServer;

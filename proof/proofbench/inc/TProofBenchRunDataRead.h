@@ -24,13 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TProofBenchRun
 #include "TProofBenchRun.h"
-#endif
 
 class TProof;
 class TCanvas;

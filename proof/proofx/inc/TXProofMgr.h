@@ -24,15 +24,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofMgr
 #include "TProofMgr.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
-#ifndef ROOT_TXHandler
 #include "TXHandler.h"
-#endif
 
 //
 // XPROOF client version: increase whenever a non backward compatible

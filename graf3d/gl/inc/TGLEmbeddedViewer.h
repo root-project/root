@@ -12,13 +12,9 @@
 #ifndef ROOT_TGLEmbeddedViewer
 #define ROOT_TGLEmbeddedViewer
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TGLViewer
 #include "TGLViewer.h"
-#endif
 
 class TGLRenderArea;
 class TGLEventHandler;

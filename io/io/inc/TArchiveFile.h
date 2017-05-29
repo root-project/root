@@ -12,15 +12,9 @@
 #ifndef ROOT_TArchiveFile
 #define ROOT_TArchiveFile
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
 
 class TFile;
 class TArchiveMember;

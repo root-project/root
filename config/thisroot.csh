@@ -58,65 +58,65 @@ if ($?thisroot) then
 setenv ROOTSYS "`(cd ${thisroot}/..;pwd)`"
 
 if ($?old_rootsys) then
-   setenv PATH `echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
-                                 -e "s;:$old_rootsys/bin;;g"   \
-                                 -e "s;$old_rootsys/bin:;;g"   \
-                                 -e "s;$old_rootsys/bin;;g"`
+   setenv PATH `set DOLLAR='$'; echo $PATH | sed -e "s;:$old_rootsys/bin:;:;g" \
+                                 -e "s;:$old_rootsys/bin${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/bin:;;g"   \
+                                 -e "s;^$old_rootsys/bin${DOLLAR};;g"`
    if ($?LD_LIBRARY_PATH) then
-      setenv LD_LIBRARY_PATH `echo $LD_LIBRARY_PATH | \
+      setenv LD_LIBRARY_PATH `set DOLLAR='$'; echo $LD_LIBRARY_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
    if ($?DYLD_LIBRARY_PATH) then
-      setenv DYLD_LIBRARY_PATH `echo $DYLD_LIBRARY_PATH | \
+      setenv DYLD_LIBRARY_PATH `set DOLLAR='$'; echo $DYLD_LIBRARY_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
    if ($?SHLIB_PATH) then
-      setenv SHLIB_PATH `echo $SHLIB_PATH | \
+      setenv SHLIB_PATH `set DOLLAR='$'; echo $SHLIB_PATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
    if ($?LIBPATH) then
-      setenv LIBPATH `echo $LIBPATH | \
+      setenv LIBPATH `set DOLLAR='$'; echo $LIBPATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
    if ($?PYTHONPATH) then
-      setenv PYTHONPATH `echo $PYTHONPATH | \
+      setenv PYTHONPATH `set DOLLAR='$'; echo $PYTHONPATH | \
                              sed -e "s;:$old_rootsys/lib:;:;g" \
-                                 -e "s;:$old_rootsys/lib;;g"   \
-                                 -e "s;$old_rootsys/lib:;;g"   \
-                                 -e "s;$old_rootsys/lib;;g"`
+                                 -e "s;:$old_rootsys/lib${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib:;;g"   \
+                                 -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
    if ($?MANPATH) then
-      setenv MANPATH `echo $MANPATH | \
+      setenv MANPATH `set DOLLAR='$'; echo $MANPATH | \
                              sed -e "s;:$old_rootsys/man:;:;g" \
-                                 -e "s;:$old_rootsys/man;;g"   \
-                                 -e "s;$old_rootsys/man:;;g"   \
-                                 -e "s;$old_rootsys/man;;g"`
+                                 -e "s;:$old_rootsys/man${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/man:;;g"   \
+                                 -e "s;^$old_rootsys/man${DOLLAR};;g"`
    endif
    if ($?CMAKE_PREFIX_PATH) then
-      setenv CMAKE_PREFIX_PATH `echo $CMAKE_PREFIX_PATH | \
+      setenv CMAKE_PREFIX_PATH `set DOLLAR='$'; echo $CMAKE_PREFIX_PATH | \
                              sed -e "s;:${old_rootsys}:;:;g" \
-                                 -e "s;:${old_rootsys};;g"   \
-                                 -e "s;${old_rootsys}:;;g"   \
-                                 -e "s;${old_rootsys};;g"`
+                                 -e "s;:${old_rootsys}${DOLLAR};;g"   \
+                                 -e "s;^${old_rootsys}:;;g"   \
+                                 -e "s;^${old_rootsys}${DOLLAR};;g"`
    endif
    if ($?JUPYTER_PATH) then
-      setenv JUPYTER_PATH `echo $JUPYTER_PATH | \
+      setenv JUPYTER_PATH `set DOLLAR='$'; echo $JUPYTER_PATH | \
                              sed -e "s;:$old_rootsys/etc/notebook:;:;g" \
-                                 -e "s;:$old_rootsys/etc/notebook;;g"   \
-                                 -e "s;$old_rootsys/etc/notebook:;;g"   \
-                                 -e "s;$old_rootsys/etc/notebook;;g"`
+                                 -e "s;:$old_rootsys/etc/notebook${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook:;;g"   \
+                                 -e "s;^$old_rootsys/etc/notebook${DOLLAR};;g"`
    endif
 
 endif

@@ -86,5 +86,6 @@ void mlpRegression() {
    TGraph2D* g2Extrapolate=new TGraph2D("ANN extrapolation",
                                         "ANN extrapolation, ANN output - truth",
                                         225, vx, vy, delta);
+
    g2Extrapolate->Draw("TRI2");
 }

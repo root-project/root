@@ -14,13 +14,9 @@
 
 #include <memory>
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
  
 class TGCheckButton;
 class TGNumberEntry;

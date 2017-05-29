@@ -12,9 +12,7 @@
 #ifndef ROOT_TAttCanvas
 #define ROOT_TAttCanvas
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttCanvas {
 private:

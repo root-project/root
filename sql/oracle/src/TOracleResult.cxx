@@ -78,6 +78,7 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
    fFieldInfo   = 0;
    fResultType  = 0;
    fUpdateCount = 0;
+   fFieldCount  = 0;
 
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");

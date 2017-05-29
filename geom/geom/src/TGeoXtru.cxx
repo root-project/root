@@ -56,7 +56,6 @@ within x3d produces incorrect end-faces
 
 #include "Riostream.h"
 #include "TVirtualPad.h"
-#include "TThread.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TClass.h"
@@ -93,35 +92,6 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
 {
    if (!fThreadSize) ((TGeoXtru*)this)->CreateThreadData(1);
    Int_t tid = TGeoManager::ThreadId();
-/*
-   TThread::Lock();
-   if (tid >= fThreadSize) {
-      Error("GetThreadData", "Thread id=%d bigger than maximum declared thread number %d. \nUse TGeoManager::SetMaxThreads properly !!!",
-             tid, fThreadSize);
-   }
-   if (tid >= fThreadSize)
-   {
-      fThreadData.resize(tid + 1);
-      fThreadSize = tid + 1;
-   }
-   if (fThreadData[tid] == 0)
-   {
-      fThreadData[tid] = new ThreadData_t;
-      ThreadData_t &td = *fThreadData[tid];
-
-      td.fXc = new Double_t [fNvert];
-      td.fYc = new Double_t [fNvert];
-      memcpy(td.fXc, fX, fNvert*sizeof(Double_t));
-      memcpy(td.fYc, fY, fNvert*sizeof(Double_t));
-      td.fPoly = new TGeoPolygon(fNvert);
-      td.fPoly->SetXY(td.fXc, td.fYc); // initialize with current coordinates
-      td.fPoly->FinishPolygon();
-      if (tid == 0 && td.fPoly->IsIllegalCheck()) {
-         Error("DefinePolygon", "Shape %s of type XTRU has an illegal polygon.", GetName());
-      }
-   }
-   TThread::UnLock();
-*/
    return *fThreadData[tid];
 }
 
@@ -129,6 +99,7 @@ TGeoXtru::ThreadData_t& TGeoXtru::GetThreadData() const
 
 void TGeoXtru::ClearThreadData() const
 {
+   std::lock_guard<std::mutex> guard(fMutex);
    std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
    while (i != fThreadData.end())
    {
@@ -144,7 +115,7 @@ void TGeoXtru::ClearThreadData() const
 
 void TGeoXtru::CreateThreadData(Int_t nthreads)
 {
-   TThread::Lock();
+   std::lock_guard<std::mutex> guard(fMutex);
    fThreadData.resize(nthreads);
    fThreadSize = nthreads;
    for (Int_t tid=0; tid<nthreads; tid++) {
@@ -163,7 +134,6 @@ void TGeoXtru::CreateThreadData(Int_t nthreads)
          }
       }
    }
-   TThread::UnLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -39,12 +39,8 @@
 #if __cplusplus > 199711L
 #include <atomic>
 #endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 namespace TMVA {
 

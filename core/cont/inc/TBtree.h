@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <iterator>
 

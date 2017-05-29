@@ -9,6 +9,9 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/Paths.h"
+#ifdef LLVM_ON_WIN32
+#include "cling/Utils/Platform.h"
+#endif
 #include "ClingUtils.h"
 
 #include "DynamicLookup.h"
@@ -89,14 +92,9 @@ namespace cling {
 
   Interpreter::PushTransactionRAII::PushTransactionRAII(const Interpreter* i)
     : m_Interpreter(i) {
-    CompilationOptions CO;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 0;
+    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = 0;
-    CO.CodeGeneration = 1;
-    CO.CodeGenerationForModule = 0;
 
     m_Transaction = m_Interpreter->m_IncrParser->beginTransaction(CO);
   }
@@ -154,7 +152,6 @@ namespace cling {
     return m_IncrParser->getLastMemoryBufferEndLoc().getLocWithOffset(1);
   }
 
-
   bool Interpreter::isInSyntaxOnlyMode() const {
     return getCI()->getFrontendOpts().ProgramAction
       == clang::frontend::ParseSyntaxOnly;
@@ -190,7 +187,8 @@ namespace cling {
     m_Opts(argc, argv),
     m_UniqueCounter(parentInterp ? parentInterp->m_UniqueCounter + 1 : 0),
     m_PrintDebug(false), m_DynamicLookupDeclared(false),
-    m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
+    m_DynamicLookupEnabled(false), m_RawInputEnabled(false),
+    m_OptLevel(parentInterp ? parentInterp->m_OptLevel : -1) {
 
     if (handleSimpleOptions(m_Opts))
       return;
@@ -200,6 +198,10 @@ namespace cling {
     m_IncrParser.reset(new IncrementalParser(this, llvmdir));
     if (!m_IncrParser->isValid(false))
       return;
+
+    // Initialize the opt level to what CodeGenOpts says.
+    if (m_OptLevel == -1)
+      m_OptLevel = getCI()->getCodeGenOpts().OptimizationLevel;
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
@@ -235,7 +237,7 @@ namespace cling {
     }
 
     llvm::SmallVector<llvm::StringRef, 6> Syms;
-    Initialize(noRuntime, isInSyntaxOnlyMode(), Syms);
+    Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode(), Syms);
 
     // Commit the transactions, now that gCling is set up. It is needed for
     // static initialization in these transactions through local_cxa_atexit().
@@ -314,13 +316,17 @@ namespace cling {
   }
 
   Interpreter::~Interpreter() {
-    if (m_Executor)
-      m_Executor->shuttingDown();
+    // Do this first so m_StoredStates will be ignored if Interpreter::unload
+    // is called later on.
     for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
       delete m_StoredStates[i];
+    m_StoredStates.clear();
+
+    if (m_Executor)
+      m_Executor->shuttingDown();
 
     if (CompilerInstance* CI = getCIOrNull())
-      getCI()->getDiagnostics().getClient()->EndSourceFile();
+      CI->getDiagnostics().getClient()->EndSourceFile();
 
     // LookupHelper's ~Parser needs the PP from IncrParser's CI, so do this
     // first:
@@ -365,9 +371,11 @@ namespace cling {
 #if defined(__GLIBCXX__) && !defined(__APPLE__)
       const char* LinkageCxx = "extern \"C++\"";
       const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
+      const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
 #else
       const char* LinkageCxx = Linkage;
       const char* Attr = "";
+      const char* cxa_atexit_is_noexcept = "";
 #endif
 
       // While __dso_handle is still overriden in the JIT below,
@@ -387,7 +395,8 @@ namespace cling {
       Strm << "#define __dso_handle ((void*)" << thisP << ")\n";
 
       // Use __cxa_atexit to intercept all of the following routines
-      Strm << Linkage << " int __cxa_atexit(void (*f)(void*), void*, void*);\n";
+      Strm << Linkage << " int __cxa_atexit(void (*f)(void*), void*, void*) "
+           << cxa_atexit_is_noexcept << ";\n";
 
       // C atexit, std::atexit
       Strm << Linkage << " int atexit(void(*f)()) " << Attr << " { return "
@@ -428,6 +437,12 @@ namespace cling {
                             utils::FunctionToVoidPtr(&local_cxa_atexit), true);
       // __dso_handle is inserted for the link phase, as macro is useless then
       m_Executor->addSymbol("__dso_handle", this, true);
+
+#ifdef LLVM_ON_WIN32
+      // Windows C++ SEH handler
+      m_Executor->addSymbol("_CxxThrowException",
+          utils::FunctionToVoidPtr(&platform::ClingRaiseSEHException), true);
+#endif
     }
 
     if (m_Opts.Verbose())
@@ -495,23 +510,19 @@ namespace cling {
     m_StoredStates.push_back(state);
   }
 
-  void Interpreter::compareInterpreterState(const std::string& name) const {
-    short foundAtPos = -1;
-    for (short i = 0, e = m_StoredStates.size(); i != e; ++i) {
-      if (m_StoredStates[i]->getName() == name) {
-        foundAtPos = i;
-        break;
-      }
-    }
-    if (foundAtPos < 0) {
-      cling::errs() << "The store point name " << name << " does not exist."
-      "Unbalanced store / compare\n";
+  void Interpreter::compareInterpreterState(const std::string &Name) const {
+    const auto Itr = std::find_if(
+        m_StoredStates.begin(), m_StoredStates.end(),
+        [&Name](const ClangInternalState *S) { return S->getName() == Name; });
+    if (Itr == m_StoredStates.end()) {
+      cling::errs() << "The store point name " << Name
+                    << " does not exist."
+                       "Unbalanced store / compare\n";
       return;
     }
-
     // This may induce deserialization
     PushTransactionRAII RAII(this);
-    m_StoredStates[foundAtPos]->compare(name, m_Opts.Verbose());
+    (*Itr)->compare(Name, m_Opts.Verbose());
   }
 
   void Interpreter::printIncludedFiles(llvm::raw_ostream& Out) const {
@@ -537,35 +548,74 @@ namespace cling {
     return getCI()->getSema();
   }
 
+  DiagnosticsEngine& Interpreter::getDiagnostics() const {
+    return getCI()->getDiagnostics();
+  }
+
+  CompilationOptions Interpreter::makeDefaultCompilationOpts() const {
+    CompilationOptions CO;
+    CO.DeclarationExtraction = 0;
+    CO.ValuePrinting = CompilationOptions::VPDisabled;
+    CO.CodeGeneration = m_IncrParser->hasCodeGenerator();
+    CO.DynamicScoping = isDynamicLookupEnabled();
+    CO.Debug = isPrintingDebug();
+    CO.IgnorePromptDiags = !isRawInputEnabled();
+    CO.CheckPointerValidity = !isRawInputEnabled();
+    CO.OptLevel = getDefaultOptLevel();
+    return CO;
+  }
+
+  const MacroInfo* Interpreter::getMacro(llvm::StringRef Macro) const {
+    const clang::Preprocessor& PP = getCI()->getPreprocessor();
+    if (const IdentifierInfo* II = PP.getIdentifierInfo(Macro)) {
+      if (const DefMacroDirective* MD = llvm::dyn_cast_or_null
+          <DefMacroDirective>(PP.getLocalMacroDirective(II))) {
+          return MD->getMacroInfo();
+      }
+    }
+    return nullptr;
+  }
+
+  std::string Interpreter::getMacroValue(llvm::StringRef Macro,
+                                         const char* Trim) const {
+    std::string Value;
+    if (const MacroInfo* MI = getMacro(Macro)) {
+      for (const clang::Token& Tok : MI->tokens()) {
+        llvm::SmallString<64> Buffer;
+        Macro = getCI()->getPreprocessor().getSpelling(Tok, Buffer);
+        if (!Value.empty())
+          Value += " ";
+        Value += Trim ? Macro.trim(Trim).str() : Macro.str();
+      }
+    }
+    return Value;
+  }
+  
   ///\brief Maybe transform the input line to implement cint command line
   /// semantics (declarations are global) and compile to produce a module.
   ///
   Interpreter::CompilationResult
   Interpreter::process(const std::string& input, Value* V /* = 0 */,
-                       Transaction** T /* = 0 */) {
+                       Transaction** T /* = 0 */,
+                       bool disableValuePrinting /* = false*/) {
     std::string wrapReadySource = input;
     size_t wrapPoint = std::string::npos;
     if (!isRawInputEnabled())
       wrapPoint = utils::getWrapPoint(wrapReadySource, getCI()->getLangOpts());
 
     if (isRawInputEnabled() || wrapPoint == std::string::npos) {
-      CompilationOptions CO;
+      CompilationOptions CO = makeDefaultCompilationOpts();
       CO.DeclarationExtraction = 0;
       CO.ValuePrinting = 0;
       CO.ResultEvaluation = 0;
-      CO.DynamicScoping = isDynamicLookupEnabled();
-      CO.Debug = isPrintingDebug();
-      CO.IgnorePromptDiags = !isRawInputEnabled();
-      CO.CheckPointerValidity = !isRawInputEnabled();
       return DeclareInternal(input, CO, T);
     }
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 1;
-    CO.ValuePrinting = CompilationOptions::VPAuto;
+    CO.ValuePrinting = disableValuePrinting ? CompilationOptions::VPDisabled
+      : CompilationOptions::VPAuto;
     CO.ResultEvaluation = (bool)V;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     // CO.IgnorePromptDiags = 1; done by EvaluateInternal().
     CO.CheckPointerValidity = 1;
     if (EvaluateInternal(wrapReadySource, CO, V, T, wrapPoint)
@@ -578,13 +628,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::parse(const std::string& input, Transaction** T /*=0*/) const {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.CodeGeneration = 0;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
 
     return DeclareInternal(input, CO, T);
   }
@@ -636,20 +684,17 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::parseForModule(const std::string& input) {
-    CompilationOptions CO;
-    CO.CodeGeneration = 1;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.CodeGenerationForModule = 1;
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
 
     // When doing parseForModule avoid warning about the user code
     // being loaded ... we probably might as well extend this to
     // ALL warnings ... but this will suffice for now (working
     // around a real bug in QT :().
-    DiagnosticsEngine& Diag = getCI()->getDiagnostics();
+    DiagnosticsEngine& Diag = getDiagnostics();
     Diag.setSeverity(clang::diag::warn_field_is_uninit,
                      clang::diag::Severity::Ignored, SourceLocation());
     CompilationResult Result = DeclareInternal(input, CO);
@@ -662,12 +707,10 @@ namespace cling {
   Interpreter::CompilationResult
   Interpreter::CodeCompleteInternal(const std::string& input, unsigned offset) {
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 0;
 
     std::string wrapped = input;
@@ -687,12 +730,10 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::declare(const std::string& input, Transaction** T/*=0 */) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 0;
 
     return DeclareInternal(input, CO, T);
@@ -704,7 +745,7 @@ namespace cling {
     // ExprStmt can be evaluated and etc. Such enforcement cannot happen in the
     // worker, because it is used from various places, where there is no such
     // rule
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 1;
@@ -768,7 +809,7 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::echo(const std::string& input, Value* V /* = 0 */) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = CompilationOptions::VPEnabled;
     CO.ResultEvaluation = (bool)V;
@@ -778,12 +819,11 @@ namespace cling {
 
   Interpreter::CompilationResult
   Interpreter::execute(const std::string& input) {
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = isPrintingDebug();
     return EvaluateInternal(input, CO);
   }
 
@@ -802,14 +842,46 @@ namespace cling {
     return Interpreter::kFailure;
   }
 
+  static void makeUniqueName(llvm::raw_ostream &Strm, unsigned long long ID) {
+    Strm << utils::Synthesize::UniquePrefix << ID;
+  }
+
+  static std::string makeUniqueWrapper(unsigned long long ID) {
+    cling::ostrstream Strm;
+    Strm << "void ";
+    makeUniqueName(Strm, ID);
+    Strm << "(void* vpClingValue) {\n ";
+    return Strm.str();
+  }
+
+  void Interpreter::createUniqueName(std::string &Out) {
+    llvm::raw_string_ostream Strm(Out);
+    makeUniqueName(Strm, m_UniqueCounter++);
+  }
+
+  bool Interpreter::isUniqueName(llvm::StringRef name) {
+    return name.startswith(utils::Synthesize::UniquePrefix);
+  }
+
+  clang::SourceLocation Interpreter::getSourceLocation(bool skipWrapper) const {
+    const Transaction* T = getLatestTransaction();
+    if (!T)
+      return SourceLocation();
+
+    const SourceManager &SM = getCI()->getSourceManager();
+    if (skipWrapper) {
+      return T->getSourceStart(SM).getLocWithOffset(
+          makeUniqueWrapper(m_UniqueCounter).size());
+    }
+    return T->getSourceStart(SM);
+  }
+
   const std::string& Interpreter::WrapInput(const std::string& Input,
                                             std::string& Output,
                                             size_t& WrapPoint) const {
     // If wrapPoint is > length of input, nothing is wrapped!
     if (WrapPoint < Input.size()) {
-      std::string Header("void ");
-      Header.append(createUniqueWrapper());
-      Header.append("(void* vpClingValue) {\n ");
+      const std::string Header = makeUniqueWrapper(m_UniqueCounter++);
 
       // Suppport Input and Output begin the same string
       std::string Wrapper = Input.substr(WrapPoint);
@@ -827,7 +899,7 @@ namespace cling {
 
   Interpreter::ExecutionResult
   Interpreter::RunFunction(const FunctionDecl* FD, Value* res /*=0*/) {
-    if (getCI()->getDiagnostics().hasErrorOccurred())
+    if (getDiagnostics().hasErrorOccurred())
       return kExeCompilationError;
 
     if (isInSyntaxOnlyMode()) {
@@ -927,7 +999,7 @@ namespace cling {
     return 0;
     }
     */
-    DiagnosticsEngine& Diag = getCI()->getDiagnostics();
+    DiagnosticsEngine& Diag = getDiagnostics();
     Diag.setSeverity(clang::diag::ext_nested_name_member_ref_lookup_ambiguous,
                      clang::diag::Severity::Ignored, SourceLocation());
 
@@ -1013,25 +1085,6 @@ namespace cling {
     addr = compileFunction(funcname.str(), code.str(), false /*ifUniq*/,
                            false /*withAccessControl*/);
     return addr;
-  }
-
-  void Interpreter::createUniqueName(std::string& out) {
-    llvm::raw_string_ostream(out)
-      << utils::Synthesize::UniquePrefix << m_UniqueCounter++;
-  }
-
-  bool Interpreter::isUniqueName(llvm::StringRef name) {
-    return name.startswith(utils::Synthesize::UniquePrefix);
-  }
-
-  llvm::StringRef Interpreter::createUniqueWrapper() const {
-    smallstream Stream;
-    Stream << utils::Synthesize::UniquePrefix << m_UniqueCounter++;
-    return (getCI()->getASTContext().Idents.getOwn(Stream.str())).getName();
-  }
-
-  bool Interpreter::isUniqueWrapper(llvm::StringRef name) {
-    return name.startswith(utils::Synthesize::UniquePrefix);
   }
 
   Interpreter::CompilationResult
@@ -1143,13 +1196,15 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  Interpreter::loadFile(const std::string& filename,
-                        bool allowSharedLib /*=true*/,
-                        Transaction** T /*= 0*/) {
+  Interpreter::loadLibrary(const std::string& filename, bool lookup) {
     DynamicLibraryManager* DLM = getDynamicLibraryManager();
-    std::string canonicalLib = DLM->lookupLibrary(filename);
-    if (allowSharedLib && !canonicalLib.empty()) {
-      switch (DLM->loadLibrary(canonicalLib, /*permanent*/false, /*resolved*/true)) {
+    std::string canonicalLib;
+    if (lookup)
+      canonicalLib = DLM->lookupLibrary(filename);
+
+    const std::string &library = lookup ? canonicalLib : filename;
+    if (!library.empty()) {
+      switch (DLM->loadLibrary(library, /*permanent*/false, /*resolved*/true)) {
       case DynamicLibraryManager::kLoadLibSuccess: // Intentional fall through
       case DynamicLibraryManager::kLoadLibAlreadyLoaded:
         return kSuccess;
@@ -1161,29 +1216,53 @@ namespace cling {
         return kFailure;
       }
     }
+    return kMoreInputExpected;
+  }
 
+  Interpreter::CompilationResult
+  Interpreter::loadHeader(const std::string& filename,
+                          Transaction** T /*= 0*/) {
     std::string code;
     code += "#include \"" + filename + "\"";
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
-    CO.DynamicScoping = isDynamicLookupEnabled();
-    CO.Debug = isPrintingDebug();
     CO.CheckPointerValidity = 1;
     CompilationResult res = DeclareInternal(code, CO, T);
     return res;
   }
 
   void Interpreter::unload(Transaction& T) {
+    // Clear any stored states that reference the llvm::Module.
+    // Do it first in case
+    llvm::Module* const Module = T.getModule();
+    if (Module && !m_StoredStates.empty()) {
+      const auto Predicate = [&Module](const ClangInternalState *S) {
+        return S->getModule() == Module;
+      };
+      auto Itr =
+          std::find_if(m_StoredStates.begin(), m_StoredStates.end(), Predicate);
+      while (Itr != m_StoredStates.end()) {
+        if (m_Opts.Verbose()) {
+          cling::errs() << "Unloading Transaction forced state '"
+                        << (*Itr)->getName() << "' to be destroyed\n";
+        }
+        m_StoredStates.erase(Itr);
+
+        Itr = std::find_if(m_StoredStates.begin(), m_StoredStates.end(),
+                           Predicate);
+      }
+    }
+
     if (InterpreterCallbacks* callbacks = getCallbacks())
       callbacks->TransactionUnloaded(T);
     if (m_Executor) { // we also might be in fsyntax-only mode.
       m_Executor->runAndRemoveStaticDestructors(&T);
       if (!T.getExecutor()) {
         // this transaction might be queued in the executor
-        m_Executor->unloadFromJIT(T.getModule(),
+        m_Executor->unloadFromJIT(Module,
                                   Transaction::ExeUnloadHandle({(void*)(size_t)-1}));
       }
     }
@@ -1214,17 +1293,32 @@ namespace cling {
   }
 
   void Interpreter::unload(unsigned numberOfTransactions) {
-    while(true) {
+    const Transaction *First = m_IncrParser->getFirstTransaction();
+    if (!First) {
+      cling::errs() << "cling: No transactions to unload!";
+      return;
+    }
+    for (unsigned i = 0; i < numberOfTransactions; ++i) {
       cling::Transaction* T = m_IncrParser->getLastTransaction();
-      if (!T) {
-        cling::errs() << "cling: invalid last transaction; unload failed!\n";
+      if (T == First) {
+        cling::errs() << "cling: Can't unload first transaction!  Unloaded "
+                      << i << " of " << numberOfTransactions << "\n";
         return;
       }
       unload(*T);
-      if (!--numberOfTransactions)
-        break;
     }
+  }
 
+  Interpreter::CompilationResult
+  Interpreter::loadFile(const std::string& filename,
+                        bool allowSharedLib /*=true*/,
+                        Transaction** T /*= 0*/) {
+    if (allowSharedLib) {
+      CompilationResult result = loadLibrary(filename, true);
+      if (result!=kMoreInputExpected)
+        return result;
+    }
+    return loadHeader(filename, T);
   }
 
   static void runAndRemoveStaticDestructorsImpl(IncrementalExecutor &executor,
@@ -1308,6 +1402,11 @@ namespace cling {
     return m_IncrParser->getCurrentTransaction();
   }
 
+  const Transaction* Interpreter::getLatestTransaction() const {
+    if (const Transaction* T = m_IncrParser->getCurrentTransaction())
+      return T;
+    return m_IncrParser->getLastTransaction();
+  }
 
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
     if (!m_DynamicLookupDeclared && value) {
@@ -1328,9 +1427,13 @@ namespace cling {
     assert(!isInSyntaxOnlyMode() && "Running on what?");
     assert(T.getState() == Transaction::kCommitted && "Must be committed");
 
+    llvm::Module* const M = T.getModule();
+    if (!M)
+      return Interpreter::kExeNoModule;
+
     IncrementalExecutor::ExecutionResult ExeRes
        = IncrementalExecutor::kExeSuccess;
-    if (!isPracticallyEmptyModule(T.getModule())) {
+    if (!isPracticallyEmptyModule(M)) {
       T.setExeUnloadHandle(m_Executor.get(), m_Executor->emitToJIT());
 
       // Forward to IncrementalExecutor; should not be called by
@@ -1349,8 +1452,8 @@ namespace cling {
     return m_Executor->addSymbol(symbolName, symbolAddress);
   }
 
-  void Interpreter::addModule(llvm::Module* module) {
-     m_Executor->addModule(module);
+  void Interpreter::addModule(llvm::Module* module, int OptLevel) {
+    m_Executor->addModule(module, OptLevel);
   }
 
 
@@ -1371,15 +1474,7 @@ namespace cling {
   }
 
   void Interpreter::AddAtExitFunc(void (*Func) (void*), void* Arg) {
-    const Transaction* T = getCurrentTransaction();
-    // Should this be ROOT only?
-    if (!T) {
-      // IncrementalParser::commitTransaction will call
-      // Interpreter::executeTransaction if transaction has no parent.
-      T = getLastTransaction();
-    }
-    assert(T && "No Transaction for Interpreter::AddAtExitFunc");
-    m_Executor->AddAtExitFunc(Func, Arg, T->getModule());
+    m_Executor->AddAtExitFunc(Func, Arg, getLatestTransaction()->getModule());
   }
 
   void Interpreter::GenerateAutoloadingMap(llvm::StringRef inFile,
@@ -1402,12 +1497,11 @@ namespace cling {
                                     fwdGenPP.getTargetInfo().getTriple());
 
 
-    CompilationOptions CO;
+    CompilationOptions CO = makeDefaultCompilationOpts();
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 0;
     CO.DynamicScoping = 0;
-    CO.Debug = isPrintingDebug();
 
 
     std::string includeFile = std::string("#include \"") + inFile.str() + "\"";

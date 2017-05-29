@@ -13,13 +13,9 @@
 #ifndef ROOT_TMinuitMinimizer
 #define ROOT_TMinuitMinimizer
 
-#ifndef ROOT_Math_Minimizer
 #include "Math/Minimizer.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TMinuit;
 

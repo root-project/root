@@ -20,29 +20,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_Turl
 #include "TUrl.h"
-#endif
 
-#ifndef ROOT_TUUID
 #include "TUUID.h"
-#endif
 
-#ifndef ROOT_TMD5
 #include "TMD5.h"
-#endif
 
-#ifndef ROOT_TObjString
 #include "TObjString.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TFileInfoMeta;
 

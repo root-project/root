@@ -27,15 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TSelectorDraw
 #include "TSelectorDraw.h"
-#endif
-#ifndef ROOT_TVirtualTreePlayer
 #include "TVirtualTreePlayer.h"
-#endif
 
 
 class TVirtualIndex;

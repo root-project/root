@@ -30,9 +30,7 @@
 #ifdef WIN32
 #undef GetCurrentTime
 #endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 // forward declaration
 class TBuffer;

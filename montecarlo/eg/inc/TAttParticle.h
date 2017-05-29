@@ -22,12 +22,8 @@
 #ifndef ROOT_TAttParticle
 #define ROOT_TAttParticle
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 class THashList;
 

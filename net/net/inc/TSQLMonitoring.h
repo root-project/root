@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualMonitoring
 #include "TVirtualMonitoring.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 class TSQLServer;

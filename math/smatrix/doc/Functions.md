@@ -1,7 +1,3 @@
-// Matrix and Vector Functions doc
-
-/**
-
 \page MatVecFunctions Matrix and Vector Operators and Functions
 
 
@@ -9,38 +5,44 @@
 
 The ROOT::Math::SVector and ROOT::Math::SMatrix classes defines the following operators described below. The _m1,m2,m3_ are vectors or matrices of the same type (and size) and _a_ is a scalar value:
 
-<pre>m1 == m2           _// returns whether m1 is equal to m2 (element by element comparison)_ 
-m1 != m2           _// returns whether m1 is NOT equal to m2 (element by element comparison)_ 
-m1 < m2            _// returns whether m1 is less than m2 (element wise comparison)_
-m1 > m2            _// returns whether m1 is greater than m2 (element wise comparison)_
-_// in the following m1 and m3 can be general and m2 symmetric, but not vice-versa_
-m1 += m2           _// add m2 to m1_
-m1 -= m2           _// subtract m2 to m1_ 
-m3 = m1 + m2       _// addition_ 
-m1 - m2            _// subtraction_
+~~~ {.cpp}
+m1 == m2           // returns whether m1 is equal to m2 (element by element comparison)
+m1 != m2           // returns whether m1 is NOT equal to m2 (element by element comparison)
+m1 < m2            // returns whether m1 is less than m2 (element wise comparison)
+m1 > m2            // returns whether m1 is greater than m2 (element wise comparison)
+// in the following m1 and m3 can be general and m2 symmetric, but not vice-versa
+m1 += m2           // add m2 to m1
+m1 -= m2           // subtract m2 to m1
+m3 = m1 + m2       // addition
+m1 - m2            // subtraction
 
-_// Multiplication and division via a scalar value a_
+// Multiplication and division via a scalar value a
 m3 = a*m1; m3 = m1*a; m3 = m1/a;
-</pre>
+~~~
+
 
 ### Vector-Vector multiplication
 
-The _operator *_ defines an element by element multiplication between vectors. For the standard vector-vector multiplication, \f$ a = v^T v \f$, (dot product) one must use the ROOT::Math::Dot function. In addition, the Cross (only for vector sizes of 3), ROOT::Math::Cross, and the Tensor product, ROOT::Math::TensorProd, are defined.  
+The _operator *_ defines an element by element multiplication between vectors. For the standard vector-vector multiplication, \f$ a = v^T v \f$, (dot product) one must use the ROOT::Math::Dot function. In addition, the Cross (only for vector sizes of 3), ROOT::Math::Cross, and the Tensor product, ROOT::Math::TensorProd, are defined.
 
 ### Matrix - Vector multiplication
 
 The _operator *_ defines the matrix-vector multiplication, \f$ y_i = \sum_{j} M_{ij} x_j\f$:
 
-<pre>_// M is a  N1xN2 matrix, x is a N2 size vector, y is a N1 size vector_
+~~~ {.cpp}
+// M is a  N1xN2 matrix, x is a N2 size vector, y is a N1 size vector
 y = M * x
-</pre>
+~~~
 
-It compiles only if the matrix and the vectors have the right sizes.   
+
+It compiles only if the matrix and the vectors have the right sizes.
 **Matrix - Matrix multiplication** The _operator *_ defines the matrix-matrix multiplication, \f$ C_{ij} = \sum_{k} A_{ik} B_{kj}\f$:
 
-<pre>_// A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix_
+~~~ {.cpp}
+// A is a N1xN2 matrix, B is a N2xN3 matrix and C is a N1xN3 matrix
 C = A * B
-</pre>
+~~~
+
 
 The operation compiles only if the matrices have the right size. In the case that A and B are symmetric matrices, C is a general one, since their product is not guaranteed to be symmetric.
 
@@ -53,7 +55,7 @@ The most used matrix functions are:
 *   **ROOT::Math::Similarity**( U, M) : returns the matrix resulting from the product \f$ U M U^T \f$. If M is symmetric, the returned resulting matrix is also symmetric
 *   **ROOT::Math::SimilarityT**( U, M) : returns the matrix resulting from the product \f$ U^T M U \f$. If M is symmetric, the returned resulting matrix is also symmetric
 
-See \ref MatrixFunctions for the documentation of all existing matrix functions in the package.   
+See \ref MatrixFunctions for the documentation of all existing matrix functions in the package.
 The major Vector functions are:
 
 *   **ROOT::Math::Dot**( v1, v2) : returns the scalar value resulting from the vector dot product
@@ -67,12 +69,11 @@ See \ref VectFunction for the list and documentation of all of them.
 
 One can print (or write in an output stream) Vectors (and also Matrices) using the Print method or the << operator, like:
 
-<pre>v.Print(std::cout);
+~~~ {.cpp}
+v.Print(std::cout);
 std::cout << v << std::endl;
-</pre>
+~~~
+
 
 In the ROOT distribution, the CINT dictionary is generated for SMatrix and SVector for double types and sizes up to 5\. This allows the storage of them in a ROOT file.
 
-*/
-
-*/

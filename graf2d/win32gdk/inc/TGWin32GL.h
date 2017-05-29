@@ -13,12 +13,8 @@
 #define ROOT_TGWin32GL
 
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
-#ifndef ROOT_TVirtualViewer3D
 #include "TVirtualViewer3D.h"
-#endif
 
 
 class TGWin32GLManager : public TGLManager {

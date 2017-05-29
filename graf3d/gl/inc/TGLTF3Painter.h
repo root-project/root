@@ -15,15 +15,9 @@
 #include <vector>
 #include <list>
 
-#ifndef ROOT_TGLPlotPainter
 #include "TGLPlotPainter.h"
-#endif
-#ifndef ROOT_TGLIsoMesh
 #include "TGLIsoMesh.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 class TGLPlotCamera;
 class TF3;

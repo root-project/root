@@ -22,12 +22,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTreeReaderValue
 #include "TTreeReaderValue.h"
-#endif
-#ifndef ROOT_TTreeReaderUtils
 #include "TTreeReaderUtils.h"
-#endif
 
 namespace ROOT {
 namespace Internal {
@@ -119,6 +115,8 @@ public:
          R__ASSERT(fArray && "invalid iterator!");
          return fArray->At(fIndex);
       }
+
+      operator const T*() const { return &fArray->At(fIndex); }
    };
 
    typedef Iterator_t iterator;

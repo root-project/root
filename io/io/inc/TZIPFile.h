@@ -12,9 +12,7 @@
 #ifndef ROOT_TZIPFile
 #define ROOT_TZIPFile
 
-#ifndef ROOT_TArchiveFile
 #include "TArchiveFile.h"
-#endif
 
 class TZIPMember;
 

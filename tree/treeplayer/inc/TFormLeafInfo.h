@@ -12,13 +12,9 @@
 #ifndef ROOT_TFormLeafInfo
 #define ROOT_TFormLeafInfo
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TLeafElement
 #include "TLeafElement.h"
-#endif
 
 #include "TArrayI.h"
 #include "TDataType.h"

@@ -17,25 +17,15 @@
 #ifndef ROOT_Math_GenVector_DisplacementVector2D
 #define ROOT_Math_GenVector_DisplacementVector2D  1
 
-#ifndef ROOT_Math_GenVector_Cartesian2D
 #include "Math/GenVector/Cartesian2D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_PositionVector2Dfwd
 #include "Math/GenVector/PositionVector2Dfwd.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_GenVectorIO
 #include "Math/GenVector/GenVectorIO.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_BitReproducible
 #include "Math/GenVector/BitReproducible.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_CoordinateSystemTags
 #include "Math/GenVector/CoordinateSystemTags.h"
-#endif
 
 //#include "Math/GenVector/Expression2D.h"
 

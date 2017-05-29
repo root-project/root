@@ -11,31 +11,12 @@
 #ifndef RooStats_PointSetInterval
 #define RooStats_PointSetInterval
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_TREE_DATA
 #include "RooAbsData.h"
-#endif
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
 
 namespace RooStats {
-
-   /**
-
-   \ingroup Roostats
-
-   PointSetInterval is a concrete implementation of the ConfInterval interface.  
-   It implements simple general purpose interval of arbitrary dimensions and shape.
-   It does not assume the interval is connected.
-   It uses either a RooDataSet (eg. a list of parameter points in the interval) or
-   a RooDataHist (eg. a Histogram-like object for small regions of the parameter space) to
-   store the interval.  
-
-*/
 
  class PointSetInterval : public ConfInterval {
 
@@ -49,7 +30,7 @@ namespace RooStats {
 
     /// destructor
     virtual ~PointSetInterval();
-        
+
 
     /// check if parameter is in the interval
     virtual Bool_t IsInInterval(const RooArgSet&) const;
@@ -59,11 +40,11 @@ namespace RooStats {
 
     /// return the confidence level for the interval
     virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
- 
-    /// Method to return lower limit on a given parameter 
+
+    /// Method to return lower limit on a given parameter
     ///  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
     ///      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
-    
+
     /// return a cloned list with the parameter of interest
     virtual RooArgSet* GetParameters() const;
 
@@ -73,13 +54,13 @@ namespace RooStats {
     /// return a cloned list with the parameter of interest
     Bool_t CheckParameters(const RooArgSet&) const ;
 
-    /// return lower limit on a given parameter 
+    /// return lower limit on a given parameter
     Double_t LowerLimit(RooRealVar& param) ;
 
-    /// return upper limit on a given parameter 
+    /// return upper limit on a given parameter
     Double_t UpperLimit(RooRealVar& param) ;
 
-    
+
   protected:
 
     ClassDef(PointSetInterval,1)  /// Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
@@ -90,7 +71,7 @@ namespace RooStats {
     Double_t fConfidenceLevel; /// confidence level
     RooAbsData* fParameterPointsInInterval; /// either a histogram (RooDataHist) or a tree (RooDataSet)
 
-      
+
   };
 }
 

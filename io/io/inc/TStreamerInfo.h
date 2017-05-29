@@ -14,13 +14,9 @@
 
 #include <atomic>
 
-#ifndef ROOT_TVirtualStreamerInfo
 #include "TVirtualStreamerInfo.h"
-#endif
 
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
 
 #include "TVirtualCollectionProxy.h"
 
@@ -116,6 +112,7 @@ private:
    TStreamerInfoActions::TActionSequence *fWriteObjectWise;       ///<! List of write action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fWriteMemberWise;       ///<! List of write action resulting from the compilation for use in member wise streaming.
    TStreamerInfoActions::TActionSequence *fWriteMemberWiseVecPtr; ///<! List of write action resulting from the compilation for use in member wise streaming.
+   TStreamerInfoActions::TActionSequence *fWriteText;             ///<! List of write action resulting for text output like JSON or XML.
 
    static std::atomic<Int_t>             fgCount;     ///<Number of TStreamerInfo instances
 
@@ -132,6 +129,7 @@ private:
    TStreamerInfo& operator=(const TStreamerInfo&); // TStreamerInfo are copiable.  Not Implemented.
    void AddReadAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
    void AddWriteAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
+   void AddWriteTextAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
    void AddReadMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t index, TCompInfo *compinfo);
    void AddWriteMemberWiseVecPtrAction(TStreamerInfoActions::TActionSequence *writeSequence, Int_t index, TCompInfo *compinfo);
 
@@ -220,6 +218,7 @@ public:
    TStreamerInfoActions::TActionSequence *GetReadObjectWiseActions() { return fReadObjectWise; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions(Bool_t forCollection) { return forCollection ? fWriteMemberWiseVecPtr : fWriteMemberWise; }
    TStreamerInfoActions::TActionSequence *GetWriteObjectWiseActions() { return fWriteObjectWise; }
+   TStreamerInfoActions::TActionSequence *GetWriteTextActions() { return fWriteText; }
    Int_t               GetNdata()   const {return fNdata;}
    Int_t               GetNelement() const { return fElements->GetEntries(); }
    Int_t               GetNumber()  const {return fNumber;}

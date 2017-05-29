@@ -16,6 +16,45 @@
 #include "TList.h"
 #include <vector>
 
+//////////////////////////////////////////////////////////////////////////
+///
+/// \class ROOT::TExecutor
+/// \brief This class defines an interface to execute the same task
+/// multiple times in parallel, possibly with different arguments every
+/// time. The classes implementing it mimic the behaviour of python's pool.Map method. 
+///
+/// ###ROOT::TExecutor::Map
+/// The two possible usages of the Map method are:\n
+/// * Map(F func, unsigned nTimes): func is executed nTimes with no arguments
+/// * Map(F func, T& args): func is executed on each element of the collection of arguments args
+///
+/// For either signature, func is executed as many times as needed by a pool of
+/// nThreads threads; It defaults to the number of cores.\n
+/// A collection containing the result of each execution is returned.\n
+/// **Note:** the user is responsible for the deletion of any object that might
+/// be created upon execution of func, returned objects included: ROOT::TExecutor never
+/// deletes what it returns, it simply forgets it.\n
+///
+/// \param func
+/// \parblock
+/// a lambda expression, an std::function, a loaded macro, a
+/// functor class or a function that takes zero arguments (for the first signature)
+/// or one (for the second signature).
+/// \endparblock
+/// \param args
+/// \parblock
+/// a standard vector, a ROOT::TSeq of integer type or an initializer list for the second signature.
+/// An integer only for the first.\n
+/// \endparblock
+///
+/// **Note:** in cases where the function to be executed takes more than
+/// zero/one argument but all are fixed except zero/one, the function can be wrapped
+/// in a lambda or via std::bind to give it the right signature.\n
+///
+/// #### Return value:
+/// An std::vector. The elements in the container
+/// will be the objects returned by func.
+
 namespace ROOT {
 
 template<class subc>
@@ -32,31 +71,27 @@ public:
    // //and a compile-time check that the argument list implements a front() method (all STL sequence containers have it)
    template<class F, class Cond = noReferenceCond<F>>
    auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   // /// \cond doxygen should ignore these methods
    template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
    auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+   /// \cond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>;
+   /// \endcond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
-   // // // / \endcond
 
    // // MapReduce
    // // the late return types also check at compile-time whether redfunc is compatible with func,
    // // other than checking that func is compatible with the type of arguments.
    // // a static_assert check in TExecutor<subc>::Reduce is used to check that redfunc is compatible with the type returned by func
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
    template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
    auto MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type;
-   // /// \cond doxygen should ignore these methods
+   /// \cond
    template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
    auto MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
+   /// \endcond
    template<class F, class T, class Cond = noReferenceCond<F, T>>
    T* MapReduce(F func, std::vector<T*> &args);
-   // /// \endcond
 
    template<class T> T* Reduce(const std::vector<T*> &mergeObjs);
 
@@ -78,22 +113,20 @@ auto TExecutor<subc>::Map(F func, unsigned nTimes) -> std::vector<typename std::
    return Derived().Map(func, nTimes);
 }
 
-// //////////////////////////////////////////////////////////////////////////
-// /// Execute func in parallel distributing the elements of the args collection between the workers.
-// /// See class description for the valid types of collections and containers that can be used.
-// /// A vector containing each execution's result is returned. The user is responsible of deleting
-// /// objects that might be created upon the execution of func, returned objects included.
-// /// **Note:** the collection of arguments is modified by Map and should be considered empty or otherwise
-// /// invalidated after Map's execution (std::move might be applied to it).
-
-// tell doxygen to ignore this (\endcond closes the statement)
-/// \cond
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of a
+/// sequence as argument. Divides and groups the executions in nChunks with partial reduction;
+/// A vector containg partial reductions' results is returned.
 template<class subc> template<class F, class INTEGER, class Cond>
 auto TExecutor<subc>::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
 {
   return Derived().Map(func, args);
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of the std::initializer_list
+/// as argument. Divides and groups the executions in nChunks with partial reduction;
+/// A vector containg partial reductions' results is returned.
 template<class subc> template<class F, class T, class Cond>
 auto TExecutor<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<typename std::result_of<F(T)>::type>
 {
@@ -102,25 +135,16 @@ auto TExecutor<subc>::Map(F func, std::initializer_list<T> args) -> std::vector<
    return reslist;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of an
+/// std::vector as argument.
+/// A vector containg executions' results is returned.
 // actual implementation of the Map method. all other calls with arguments eventually
 // call this one
-
 template<class subc> template<class F, class T, class Cond>
 auto TExecutor<subc>::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
 {
    return Derived().Map(func, args);
-}
-
-// //////////////////////////////////////////////////////////////////////////
-// /// This method behaves just like Map, but an additional redfunc function
-// /// must be provided. redfunc is applied to the vector Map would return and
-// /// must return the same type as func. In practice, redfunc can be used to
-// /// "squash" the vector returned by Map into a single object by merging,
-// /// adding, mixing the elements of the vector.
-template<class subc> template<class F, class R, class Cond>
-auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
-{
-   return Derived().Reduce(Map(func, nTimes), redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,24 +153,19 @@ auto TExecutor<subc>::MapReduce(F func, unsigned nTimes, R redfunc) -> typename 
 /// must return the same type as func. In practice, redfunc can be used to
 /// "squash" the vector returned by Map into a single object by merging,
 /// adding, mixing the elements of the vector.
-
-/// \cond doxygen should ignore these methods
 template<class subc> template<class F, class INTEGER, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc) -> typename std::result_of<F(INTEGER)>::type
 {
-  return Derived().Reduce(Map(func, args), redfunc);
+  std::vector<INTEGER> vargs(args.size());
+  std::copy(args.begin(), args.end(), vargs.begin());
+  return Derived().MapReduce(func, vargs, redfunc);
 }
 
 template<class subc> template<class F, class T, class R, class Cond>
 auto TExecutor<subc>::MapReduce(F func, std::initializer_list<T> args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   return Derived().Reduce(Map(func, args), redfunc);
-}
-
-template<class subc> template<class F, class T, class R, class Cond>
-auto TExecutor<subc>::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
-{
-   return Derived().Reduce(Map(func, args), redfunc);
+   std::vector<T> vargs(std::move(args));
+   return Derived().MapReduce(func, vargs, redfunc);
 }
 
 template<class subc> template<class F, class T, class Cond>
@@ -155,8 +174,8 @@ T* TExecutor<subc>::MapReduce(F func, std::vector<T*> &args)
    return Derived().Reduce(Map(func, args));
 }
 
-/// \endcond
-
+//////////////////////////////////////////////////////////////////////////
+/// "Reduce" an std::vector into a single object by using the object's Merge
 //Reduction for objects with the Merge() method
 template<class subc> template<class T>
 T* TExecutor<subc>::Reduce(const std::vector<T*> &mergeObjs)

@@ -166,11 +166,13 @@ void TMVARegression( TString myMethodList = "" )
    // load the signal and background event samples from ROOT trees
    TFile *input(0);
    TString fname = "./tmva_reg_example.root";
-   if (!gSystem->AccessPathName( fname ))
+   if (!gSystem->AccessPathName( fname )) {
       input = TFile::Open( fname ); // check if file in local directory exists
-   else
-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
-
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_reg_example.root", "CACHEREAD"); // if not: download from ROOT server
+   }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
       exit(1);

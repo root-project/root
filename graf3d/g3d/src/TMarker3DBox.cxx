@@ -458,11 +458,7 @@ void TMarker3DBox::Streamer(TBuffer &R__b)
       TObject::Streamer(R__b);
       TAttLine::Streamer(R__b);
       TAttFill::Streamer(R__b);
-      if (R__b.GetVersionOwner() > 22300) {
-         TAtt3D::Streamer(R__b);
-      } else {
-         TAtt3D::Streamer(R__b);
-      }
+      TAtt3D::Streamer(R__b);
       R__b >> fX;
       R__b >> fY;
       R__b >> fZ;

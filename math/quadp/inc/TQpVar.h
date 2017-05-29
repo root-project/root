@@ -43,16 +43,10 @@
 #ifndef ROOT_TQpVar
 #define ROOT_TQpVar
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
 
 ///////////////////////////////////////////////////////////////////////////
 //                                                                       //

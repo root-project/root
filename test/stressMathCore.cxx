@@ -1117,8 +1117,15 @@ int testVector(int ngen, bool testio=false) {
 
    s1 = a.testOperations(v1);  a.print(VecType<V1>::name()+" operations");
    scale = Dim*20;
-   if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 10; // for problem with RhoEtaPhi
-   if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") scale *= 10;
+   if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
+   if (Dim==4 && VecType<V2>::name() == "PtEtaPhiMVector") {
+#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
+      scale *= 65;
+#else
+      scale *= 10;
+#endif
+   }
+
 #if defined (R__LINUX) && !defined(R__B64)
    // problem of precision on linux 32
    if (Dim ==4) scale = 1000000000;
@@ -1260,7 +1267,12 @@ int testSVector(int ngen, bool testio=false) {
    double scale = 0.1 / std::numeric_limits<double>::epsilon();
    fsize = a.testWrite(v1,typeName);  iret |= a.check(name+" write",fsize,estSize,scale);
    ir = a.testRead(v1);   iret |= a.check(name+" read",ir,0);
-   s1 = a.testAdditionSV(v1);       iret |= a.check(name+" after read",s1,sref1);
+   s1 = a.testAdditionSV(v1);
+#if(defined __FAST_MATH__  && defined __clang__)
+   iret |= a.check(name+" after read",s1,sref1, 10);
+#else
+   iret |= a.check(name+" after read",s1,sref1);
+#endif
 
 
    return iret;

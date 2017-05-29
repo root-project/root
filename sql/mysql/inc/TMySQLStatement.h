@@ -12,9 +12,7 @@
 #ifndef ROOT_TMySQLStatement
 #define ROOT_TMySQLStatement
 
-#ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
-#endif
 
 
 #include <mysql.h>

@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoCompositeShape
 #define ROOT_TGeoCompositeShape
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

@@ -552,15 +552,26 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    assert(TU && "Must not be null.");
 
    // DynamicLookup only happens inside wrapper functions:
-   clang::DeclContext* WrapperDC = S->getEntity();
    clang::FunctionDecl* Wrapper = nullptr;
-   while (true) {
-      if (!WrapperDC || WrapperDC == TU)
+   Scope* Cursor = S;
+   do {
+      DeclContext* DCCursor = Cursor->getEntity();
+      if (DCCursor == TU)
          return false;
-      Wrapper = dyn_cast<FunctionDecl>(WrapperDC);
-      if (Wrapper && utils::Analyze::IsWrapper(Wrapper))
-          break;
-      WrapperDC = WrapperDC->getParent();
+      Wrapper = dyn_cast_or_null<FunctionDecl>(DCCursor);
+      if (Wrapper) {
+         if (utils::Analyze::IsWrapper(Wrapper)) {
+            break;
+         } else {
+            // Can't have a function inside the wrapper:
+            return false;
+         }
+      }
+   } while ((Cursor = Cursor->getParent()));
+
+   if (!Wrapper) {
+      // The parent of S wasn't the TU?!
+      return false;
    }
 
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,

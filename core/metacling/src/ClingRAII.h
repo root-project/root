@@ -20,6 +20,29 @@ namespace ROOT {
     ////////////////////////////////////////////////////////////////////////////////
     /// RAII used to store Parser, Sema, Preprocessor state for recursive parsing.
     struct ParsingStateRAII {
+       struct SemaExprCleanupsRAII {
+          decltype(clang::Sema::Cleanup) fCleanup;
+          decltype(clang::Sema::ExprCleanupObjects) fExprCleanupObjects;
+          decltype(clang::Sema::MaybeODRUseExprs) fMaybeODRUseExprs;
+          decltype(clang::Sema::FunctionScopes) fFunctionScopes;
+          clang::Sema& fSema;
+          void Swapem() {
+             std::swap(fCleanup, fSema.Cleanup);
+             std::swap(fExprCleanupObjects, fSema.ExprCleanupObjects);
+             std::swap(fMaybeODRUseExprs, fSema.MaybeODRUseExprs);
+             std::swap(fFunctionScopes, fSema.FunctionScopes);
+          }
+          SemaExprCleanupsRAII(clang::Sema& S): fSema(S) {
+             fFunctionScopes.push_back(new clang::sema::FunctionScopeInfo(S.Diags));
+             Swapem();
+          };
+          ~SemaExprCleanupsRAII() {
+             Swapem();
+             assert(fFunctionScopes.size() == 1 && "Expected only my FunctionScopeInfo.");
+             delete fFunctionScopes.back();
+          }
+       };
+
        struct SemaParsingInitForAutoVarsRAII {
           using PIFAV_t = decltype(clang::Sema::ParsingInitForAutoVars);
           PIFAV_t& fSemaPIFAV;
@@ -39,6 +62,8 @@ namespace ROOT {
        // Buffer the delayed infos when doing recursive parsing.
        clang::Sema::DelayedInfoRAII fSemaInfoRAII;
 
+       SemaExprCleanupsRAII fSemaExprCleanupsRAII;
+
        // We can't PushDeclContext, because we go up and the routine that pops
        // the DeclContext assumes that we drill down always.
        // We have to be on the global context. At that point we are in a
@@ -51,7 +76,7 @@ namespace ROOT {
           fCleanupRAII(sema.getPreprocessor()),
           fSavedCurToken(parser),
           fParserRAII(parser, false /*skipToEOF*/),
-          fSemaInfoRAII(sema),
+          fSemaInfoRAII(sema), fSemaExprCleanupsRAII(sema),
           fPushedDCAndS(sema, sema.getASTContext().getTranslationUnitDecl(),
                         sema.TUScope),
           fSemaParsingInitForAutoVarsRAII(sema.ParsingInitForAutoVars)

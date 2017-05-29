@@ -164,9 +164,9 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
       TAxis* reqaxis = (TAxis*)(*axes)[d];
       hax[d]->SetTitle(reqaxis->GetTitle());
       if (!keepTargetAxis && reqaxis->TestBit(TAxis::kAxisRange)) {
-         Int_t binFirst = reqaxis->GetFirst();
-         if (binFirst == 0) binFirst = 1;
-         Int_t binLast = reqaxis->GetLast();
+         // axis cannot extend to underflow/overlflows (fix ROOT-8781)
+         Int_t binFirst = std::max(reqaxis->GetFirst(),1);
+         Int_t binLast = std::min(reqaxis->GetLast(), reqaxis->GetNbins() );
          Int_t nBins = binLast - binFirst + 1;
          if (reqaxis->GetXbins()->GetSize()) {
             // non-uniform bins:
@@ -446,8 +446,8 @@ Bool_t THnBase::IsInRange(Int_t *coord) const
 /// *this is) or if (ndim < 4 and !wantNDim) a TH1/2/3 histogram,
 /// keeping only axes in dim (specifying ndim dimensions).
 /// If "option" contains "E" errors will be calculated.
-///                      "A" ranges of the taget axes will be ignored.
-///                      "O" original axis range of the taget axes will be
+///                      "A" ranges of the target axes will be ignored.
+///                      "O" original axis range of the target axes will be
 ///                          kept, but only bins inside the selected range
 ///                          will be filled.
 

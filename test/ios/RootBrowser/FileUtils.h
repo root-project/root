@@ -14,12 +14,8 @@
 #include <string>
 #include <set>
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TDirectoryFile;
 

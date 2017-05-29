@@ -14,6 +14,9 @@
 
 #ifndef ROOT7_THistUtils_h
 #define ROOT7_THistUtils_h
+
+#include <array>
+
 namespace ROOT {
 namespace Experimental {
 namespace Hist {

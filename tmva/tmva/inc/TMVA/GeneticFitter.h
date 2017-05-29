@@ -33,9 +33,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_FitterBase
 #include "TMVA/FitterBase.h"
-#endif
 
 namespace TMVA {
 

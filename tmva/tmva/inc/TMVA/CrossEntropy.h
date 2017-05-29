@@ -36,9 +36,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 
@@ -56,7 +54,7 @@ namespace TMVA {
       virtual ~CrossEntropy(){}
 
       // return the separation Index  -p log (p) - (1-p)log(1-p);     p=purity = s/(s+b) 
-      virtual Double_t GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t GetSeparationIndex( const Double_t s, const Double_t b );
     
    protected:
     

@@ -3803,7 +3803,6 @@ TObject *TProofPlayerRemote::HandleHistogram(TObject *obj, Bool_t &merged)
          }
       }
    }
-   PDB(kOutput,1) Info("HandleHistogram", "leaving");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4408,7 +4407,7 @@ Bool_t TProofPlayerSlave::HandleTimer(TTimer *)
    m << fb;
 
    // send message to client;
-   gProofServ->GetSocket()->Send(m);
+   if (gProofServ) gProofServ->GetSocket()->Send(m);
 
    delete fb;
 

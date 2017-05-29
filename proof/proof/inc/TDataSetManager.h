@@ -22,18 +22,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
-#ifndef ROOT_TUri
 #include "TUri.h"
-#endif
 
 
 class TFileCollection;

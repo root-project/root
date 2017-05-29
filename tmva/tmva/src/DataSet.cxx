@@ -37,30 +37,14 @@ Class that contains all the data information
 #include <stdexcept>
 #include <algorithm>
 
-#ifndef ROOT_TMVA_DataSetInfo
 #include "TMVA/DataSetInfo.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
-#ifndef ROOT_TMVA_ResultsRegression
 #include "TMVA/ResultsRegression.h"
-#endif
-#ifndef ROOT_TMVA_ResultsClassification
 #include "TMVA/ResultsClassification.h"
-#endif
-#ifndef ROOT_TMVA_ResultsMulticlass
 #include "TMVA/ResultsMulticlass.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
 
 #include "TMVA/Types.h"
 #include "TMVA/Results.h"
@@ -622,7 +606,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    UInt_t cls;
    Float_t weight;
    //   TObjString *className = new TObjString();
-   char *className = new char[40];
+   char className[40];
 
 
    //Float_t metVals[fResults.at(t).size()][Int_t(fdsi->GetNTargets()+1)];
@@ -633,7 +617,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create branches for event-variables
    tree->Branch( "classID", &cls, "classID/I" );
-   tree->Branch( "className",(void*)className, "className/C" );
+   tree->Branch( "className", className, "className/C" );
 
    // create all branches for the variables
    Int_t n = 0;
@@ -715,11 +699,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
       // write the classnumber and the classname
       cls = ev->GetClass();
       weight = ev->GetWeight();
-      TString tmp = fdsi->GetClassInfo( cls )->GetName();
-      for (Int_t itmp = 0; itmp < tmp.Sizeof(); itmp++) {
-         className[itmp] = tmp(itmp);
-         className[itmp+1] = 0;
-      }
+      strlcpy(className, fdsi->GetClassInfo( cls )->GetName(), sizeof(className));
 
       // write the variables, targets and spectator variables
       for (UInt_t ivar = 0; ivar < ev->GetNVariables();   ivar++) varVals[ivar] = ev->GetValue( ivar );
@@ -771,8 +751,6 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
    for(UInt_t i=0; i<fResults.at(t).size(); i++ )
       delete[] metVals[i];
    delete[] metVals;
-
-   delete[] className;
 
    return tree;
 }

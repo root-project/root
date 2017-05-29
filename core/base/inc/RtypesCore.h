@@ -20,9 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
 
 #include <stddef.h>
 
@@ -88,12 +86,6 @@ typedef float          Size_t;      //Attribute size (float)
 
 #ifndef NULL
 #define NULL 0
-#endif
-
-#ifndef R__NULLPTR
-#ifndef nullptr
-#define nullptr 0
-#endif
 #endif
 
 const Bool_t kTRUE  = true;

@@ -20,22 +20,16 @@
 #define ROOT_Math_SpecFunc
 
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 
 
-#ifndef ROOT_Math_SpecFuncMathCore
 #include "Math/SpecFuncMathCore.h"
-#endif
 
 #ifdef R__HAS_MATHMORE
 // in case Mathmore exists include their GSL based special functions
 
-#ifndef ROOT_Math_SpecFuncMathMore
 #include "Math/SpecFuncMathMore.h"
-#endif
 
 #endif
 

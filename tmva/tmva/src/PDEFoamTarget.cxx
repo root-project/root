@@ -45,9 +45,7 @@ phase space point during the foam build-up.
 #include "TMVA/PDEFoamKernelBase.h"
 #include "TMVA/Types.h"
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 #include "Rtypes.h"
 

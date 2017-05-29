@@ -25,21 +25,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNetSystem
 #include "TNetFile.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
 class XrdClientAdmin;
 class TCollection;

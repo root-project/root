@@ -29,18 +29,10 @@
 
 #include <algorithm>
 
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_RuleEnsemble
 #include "TMVA/RuleEnsemble.h"
-#endif
-#ifndef ROOT_TMVA_RuleFitParams
 #include "TMVA/RuleFitParams.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 namespace TMVA {
 

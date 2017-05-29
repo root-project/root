@@ -1,10 +1,22 @@
-// @(#)root/tmva $Id$
-// Author:
-
-/*! \class TMVA::VarTransformHandler
-\ingroup TMVA
-Extension of the Interval to "logarithmic" intervals
-*/
+/**********************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : VarTransformHandler                                                   *
+ * Web    : http://tmva.sourceforge.net                                           *
+ *                                                                                *
+ * Description:                                                                   *
+ *       Implementation of unsupervised variable transformation methods           *
+ *                                                                                *
+ * Authors (alphabetical):                                                        *
+ *       Abhinav Moudgil <abhinav.moudgil@research.iiit.ac.in> - IIIT-H, India    *
+ *                                                                                *
+ * Copyright (c) 2005:                                                            *
+ *       CERN, Switzerland                                                        *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
 
 #include "TMVA/VarTransformHandler.h"
 

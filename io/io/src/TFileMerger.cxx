@@ -39,6 +39,7 @@ to be merged, like the standalone hadd program.
 #include "TClassRef.h"
 #include "TROOT.h"
 #include "TMemFile.h"
+#include "TVirtualMutex.h"
 
 #ifdef WIN32
 // For _getmaxstdio
@@ -99,6 +100,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
    fExcessFiles = new TList;
    fExcessFiles->SetOwner(kTRUE);
 
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -107,7 +109,10 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 
 TFileMerger::~TFileMerger()
 {
-   gROOT->GetListOfCleanups()->Remove(this);
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Remove(this);
+   }
    SafeDelete(fFileList);
    SafeDelete(fMergeList);
    SafeDelete(fOutputFile);
@@ -219,7 +224,7 @@ Bool_t TFileMerger::AddAdoptFile(TFile *source, Bool_t cpProgress)
 
 Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
 {
-   if (source == 0) {
+   if (source == 0 || source->IsZombie()) {
       return kFALSE;
    }
 
@@ -240,14 +245,13 @@ Bool_t TFileMerger::AddFile(TFile *source, Bool_t own, Bool_t cpProgress)
          return kFALSE;
       }
       newfile = TFile::Open(localcopy, "READ");
+      // Zombie files should also be skipped
+      if (newfile && newfile->IsZombie()) {
+         delete newfile;
+         newfile = 0;
+      }
    } else {
       newfile = source;
-   }
-
-   // Zombie files should also be skipped 
-   if (newfile && newfile->IsZombie()) {
-      delete newfile;
-      newfile = 0;
    }
 
    if (!newfile) {
@@ -819,7 +823,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
       if (file->TestBit(kCanDelete)) file->Close();
 
       // Remove the temporary file
-      if (fLocal) {
+      if (fLocal && !file->InheritsFrom(TMemFile::Class())) {
          TUrl u(file->GetPath(), kTRUE);
          if (gSystem->Unlink(u.GetFile()) != 0)
             Warning("PartialMerge", "problems removing temporary local file '%s'", u.GetFile());
@@ -844,7 +848,7 @@ Bool_t TFileMerger::PartialMerge(Int_t in_type)
          // close the files
          if (file->TestBit(kCanDelete)) file->Close();
          // remove the temporary files
-         if(fLocal) {
+         if(fLocal && !file->InheritsFrom(TMemFile::Class())) {
             TString p(file->GetPath());
             // coverity[unchecked_value] Index is return a value with range or NPos to select the whole name.
             p = p(0, p.Index(':',0));

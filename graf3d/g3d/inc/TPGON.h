@@ -25,9 +25,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TPCON
 #include "TPCON.h"
-#endif
 
 class TPGON : public TPCON {
 protected:

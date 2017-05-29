@@ -19,9 +19,7 @@
 #include <vector>
 #include <iostream>
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 // these  should be maybe forward declared
 // by moving implementations in source file

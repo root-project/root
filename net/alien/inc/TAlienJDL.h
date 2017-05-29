@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridJDL
 #include "TGridJDL.h"
-#endif
 
 
 class TAlienJDL : public TGridJDL {

@@ -18,9 +18,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
 #include "Rtypes.h"
 

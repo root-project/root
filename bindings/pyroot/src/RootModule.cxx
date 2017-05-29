@@ -105,6 +105,11 @@ static PyNumberMethods nullptr_as_number = {
 #if PY_VERSION_HEX >= 0x02050000
    , 0                                // nb_index
 #endif
+#if PY_VERSION_HEX >= 0x03050000
+   , 0                                // nb_matrix_multiply
+   , 0                                // nb_inplace_matrix_multiply
+#endif
+
    };
 
 static PyTypeObject PyNullPtr_t_Type = {

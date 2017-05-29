@@ -30,9 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 
 class TGraphSmooth: public TNamed {

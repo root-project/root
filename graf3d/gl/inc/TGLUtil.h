@@ -12,12 +12,8 @@
 #ifndef ROOT_TGLUtil
 #define ROOT_TGLUtil
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <vector>
 #include <cmath>

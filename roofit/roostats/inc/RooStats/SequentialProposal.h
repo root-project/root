@@ -11,28 +11,12 @@
 #ifndef RooStats_SequentialProposal
 #define RooStats_SequentialProposal
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
 namespace RooStats {
 
-/**
-
-   Class implementing a proposal function that samples the parameter space
-   by moving only in one coordinate (choosen randomly) at each step
-
-   \ingroup Roostats
-
- */
-
-   
 class SequentialProposal : public ProposalFunction {
 
    public:
@@ -43,7 +27,7 @@ class SequentialProposal : public ProposalFunction {
       virtual void Propose(RooArgSet& xPrime, RooArgSet& x);
 
       /// Determine whether or not the proposal density is symmetric for
-      /// points x1 and x2 - that is, whether the probabilty of reaching x2
+      /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
       virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) ;
 
@@ -60,6 +44,6 @@ class SequentialProposal : public ProposalFunction {
       double fDivisor;
 };
 
-} 
+}
 
 #endif

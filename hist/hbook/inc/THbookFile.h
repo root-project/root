@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 
 class TTreeFormula;

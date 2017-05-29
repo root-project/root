@@ -4823,6 +4823,10 @@ void TH1::LabelsDeflate(Option_t *ax)
       if (ibin > nbins) nbins = ibin;
    }
    if (nbins < 1) nbins = 1;
+
+   // Do nothing in case it was the last bin
+   if (nbins==axis->GetNbins()) return;
+
    TH1 *hold = (TH1*)IsA()->New();
    R__ASSERT(hold);
    hold->SetDirectory(0);
@@ -6547,11 +6551,13 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    histName = gInterpreter-> MapCppName(histName);
    const char *hname = histName.Data();
    if (!strlen(hname)) hname = "unnamed";
+   TString savedName = GetName();
+   this->SetName(hname);
    TString t(GetTitle());
    t.ReplaceAll("\\","\\\\");
    t.ReplaceAll("\"","\\\"");
    out << hname << " = new " << ClassName() << "(" << quote
-       << GetName() << quote << "," << quote<< t.Data() << quote
+       << hname << quote << "," << quote<< t.Data() << quote
        << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", "<<sxaxis;
@@ -6596,6 +6602,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 
    TH1::SavePrimitiveHelp(out, hname, option);
+   this->SetName(savedName.Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7371,20 +7378,19 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    // Check consistency in number of channels
    if (ncx1 != ncx2) {
-      Error("KolmogorovTest","Number of channels is different, %d and %d\n",ncx1,ncx2);
+      Error("KolmogorovTest","Histograms have different number of bins, %d and %d\n",ncx1,ncx2);
       return 0;
    }
 
    // empty the buffer. Probably we could add as an unbinned test
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
-   // Check consistency in channel edges
-   Double_t difprec = 1e-5;
-   Double_t diff1 = TMath::Abs(axis1->GetXmin() - axis2->GetXmin());
-   Double_t diff2 = TMath::Abs(axis1->GetXmax() - axis2->GetXmax());
-   if (diff1 > difprec || diff2 > difprec) {
-      Error("KolmogorovTest","histograms with different binning");
-      return 0;
+   // Check consistency in bin edges
+   for(Int_t i = 1; i <= axis1->GetNbins() + 1; ++i) {
+      if(!TMath::AreEqualRel(axis1->GetBinLowEdge(i), axis2->GetBinLowEdge(i), 1.E-15)) {
+         Error("KolmogorovTest","Histograms are not consistent: they have different bin edges");
+         return 0;
+      }
    }
 
    Bool_t afunc1 = kFALSE;

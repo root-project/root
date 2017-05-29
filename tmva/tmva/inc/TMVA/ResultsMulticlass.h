@@ -41,22 +41,12 @@
 
 #include <vector>
 
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TH2F
 #include "TH2F.h"
-#endif
 
-#ifndef ROOT_TMVA_Results
 #include "TMVA/Results.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_IFitterTarget
 #include "IFitterTarget.h"
-#endif
 
 namespace TMVA {
 
@@ -86,6 +76,7 @@ namespace TMVA {
       std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
       std::vector<Float_t>& GetAchievablePur(){return fAchievablePur;}
       // histogramming
+      void CreateMulticlassPerformanceHistos(TString prefix);
       void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);
 
       Double_t EstimatorFunction( std::vector<Double_t> & );
@@ -100,6 +91,12 @@ namespace TMVA {
       std::vector<Float_t> fAchievableEff;
       std::vector<Float_t> fAchievablePur;
       std::vector<std::vector<Double_t> > fBestCuts;
+
+      // Temporary storage used during GetBestMultiClassCuts
+      std::vector<Float_t> fClassSumWeights;
+      std::vector<Float_t> fEventWeights;
+      std::vector<UInt_t>  fEventClasses;
+
    protected:
        
        ClassDef(ResultsMulticlass,2);

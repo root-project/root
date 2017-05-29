@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoShape
 #define ROOT_TGeoShape
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 // forward declarations
 class TGeoBoolCombinator;

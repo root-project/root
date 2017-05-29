@@ -45,7 +45,7 @@ see note about: "Should I use TRolke, TFeldmanCousins, TLimit?"
 Copyright Liverpool University 2001       bevan@slac.stanford.edu
 */
 
-#include "Riostream.h"
+#include <iostream>
 #include "TMath.h"
 #include "TFeldmanCousins.h"
 

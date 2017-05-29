@@ -14,20 +14,18 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-class RooArgSet; 
-class RooAbsData; 
+class RooArgSet;
+class RooAbsData;
 
 namespace RooStats {
 
-/**
+/** \class RooStats::TestStatistic
+    \ingroup Roostats
+
    TestStatistic is an interface class to provide a facility for construction test statistics
    distributions to the NeymanConstruction class. All the actual samplers inherit from this class.
-
-   \ingroup Roostats
 */
 
 class TestStatistic {

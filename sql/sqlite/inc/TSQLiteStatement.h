@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLiteStatement
 #define ROOT_TSQLiteStatement
 
-#ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
-#endif
 
 #include <sqlite3.h>
 

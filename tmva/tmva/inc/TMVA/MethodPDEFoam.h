@@ -41,58 +41,26 @@
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoam
 #include "TMVA/PDEFoam.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoamDecisionTree
 #include "TMVA/PDEFoamDecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamEvent
 #include "TMVA/PDEFoamEvent.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamDiscriminant
 #include "TMVA/PDEFoamDiscriminant.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamTarget
 #include "TMVA/PDEFoamTarget.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamMultiTarget
 #include "TMVA/PDEFoamMultiTarget.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoamDensityBase
 #include "TMVA/PDEFoamDensityBase.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamTargetDensity
 #include "TMVA/PDEFoamTargetDensity.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamEventDensity
 #include "TMVA/PDEFoamEventDensity.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamDiscriminantDensity
 #include "TMVA/PDEFoamDiscriminantDensity.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamDecisionTreeDensity
 #include "TMVA/PDEFoamDecisionTreeDensity.h"
-#endif
 
-#ifndef ROOT_TMVA_PDEFoamKernelBase
 #include "TMVA/PDEFoamKernelBase.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamKernelTrivial
 #include "TMVA/PDEFoamKernelTrivial.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamKernelLinN
 #include "TMVA/PDEFoamKernelLinN.h"
-#endif
-#ifndef ROOT_TMVA_PDEFoamKernelGauss
 #include "TMVA/PDEFoamKernelGauss.h"
-#endif
 
 namespace TMVA {
 

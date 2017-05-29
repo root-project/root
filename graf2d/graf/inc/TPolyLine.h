@@ -13,18 +13,10 @@
 #define ROOT_TPolyLine
 
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 class TCollection;
 

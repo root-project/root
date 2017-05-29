@@ -19,12 +19,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGuiBuilder
 #include "TGuiBuilder.h"
-#endif
 
 enum EGuiBuilderMenuIds {
    kGUIBLD_FILE_NEW,

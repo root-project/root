@@ -23,18 +23,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TVirtualPadEditor
 #include "TVirtualPadEditor.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TCanvas;
 class TGCanvas;
@@ -107,7 +99,7 @@ public:
    virtual void   SetCanvas(TCanvas *c);
    virtual void   SetGlobal(Bool_t global);
    virtual void   GlobalSetModel(TVirtualPad *, TObject *, Int_t);
-   virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event);
+   virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
    virtual void   Show();
    virtual void   RecursiveRemove(TObject* obj);
 

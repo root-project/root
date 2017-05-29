@@ -34,9 +34,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 namespace TMVA {
 

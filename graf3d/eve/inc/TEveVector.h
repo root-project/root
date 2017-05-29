@@ -13,6 +13,7 @@
 #define ROOT_TEveVector
 
 #include "TMath.h"
+#include <cstddef>
 
 class TVector3;
 
@@ -36,14 +37,20 @@ public:
 
    void Dump() const;
 
-   operator const TT*() const { return &fX; }
-   operator       TT*()       { return &fX; }
+   const TT* Arr() const {
+      static_assert(offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2*sizeof(TT),
+                    "Subsequent nembers cannot be accessed as array!");
+      return &fX; }
+   TT* Arr()             {
+      static_assert(offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2*sizeof(TT),
+                    "Subsequent nembers cannot be accessed as array!");
+      return &fX; }
 
-   TT  operator [] (Int_t idx) const { return (&fX)[idx]; }
-   TT& operator [] (Int_t idx)       { return (&fX)[idx]; }
+   operator const TT*() const { return Arr(); }
+   operator       TT*()       { return Arr(); }
 
-   const TT* Arr() const { return &fX; }
-   TT* Arr()             { return &fX; }
+   TT  operator [] (Int_t idx) const { return Arr()[idx]; }
+   TT& operator [] (Int_t idx)       { return Arr()[idx]; }
 
    TEveVectorT& operator*=(TT s)                 { fX *= s;    fY *= s;    fZ *= s;    return *this; }
    TEveVectorT& operator+=(const TEveVectorT& v) { fX += v.fX; fY += v.fY; fZ += v.fZ; return *this; }

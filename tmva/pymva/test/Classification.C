@@ -27,23 +27,26 @@ void Classification()
    TMVA::Factory *factory = new TMVA::Factory("TMVAClassification", outputFile,
          "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
 
-
    factory->AddVariable("myvar1 := var1+var2", 'F');
    factory->AddVariable("myvar2 := var1-var2", "Expression 2", "", 'F');
    factory->AddVariable("var3",                "Variable 3", "units", 'F');
    factory->AddVariable("var4",                "Variable 4", "units", 'F');
-
-
    factory->AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
    factory->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
 
-
+   TFile *input(0);
    TString fname = "./tmva_class_example.root";
-
-   if (gSystem->AccessPathName(fname))    // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
-
-   TFile *input = TFile::Open(fname);
+   if (!gSystem->AccessPathName( fname )) {
+      input = TFile::Open( fname ); // check if file in local directory exists
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+   }
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
+   }
 
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 

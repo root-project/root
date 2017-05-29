@@ -38,17 +38,11 @@
 #include <map>
 
 // Local
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_ModulekNN
 #include "TMVA/ModulekNN.h"
-#endif
 
 // SVD and linear discriminant code
-#ifndef ROOT_TMVA_LDA
 #include "TMVA/LDA.h"
-#endif
 
 namespace TMVA
 {

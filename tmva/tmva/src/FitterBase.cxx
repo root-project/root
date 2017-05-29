@@ -33,12 +33,8 @@ Base class for TMVA fitters. Also defines generalised fitting interface
 */
 
 #include "TMVA/FitterBase.h"
-#ifndef ROOT_TMVA_Interval
 #include "TMVA/Interval.h"
-#endif
-#ifndef ROOT_TMVA_IFitterTarget
 #include "TMVA/IFitterTarget.h"
-#endif
 
 #include "TMVA/Configurable.h"
 #include "TMVA/MsgLogger.h"

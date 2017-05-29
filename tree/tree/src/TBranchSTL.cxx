@@ -162,7 +162,7 @@ void TBranchSTL::Browse( TBrowser *b )
 ////////////////////////////////////////////////////////////////////////////////
 /// Cleanup after revious fill.
 
-Int_t TBranchSTL::Fill()
+Int_t TBranchSTL::FillImpl(ROOT::Internal::TBranchIMTHelper *imtHelper)
 {
    BranchMap_t::iterator brIter;
    for( brIter = fBranchMap.begin(); brIter != fBranchMap.end(); ++brIter )
@@ -185,7 +185,7 @@ Int_t TBranchSTL::Fill()
          ///////////////////////////////////////////////////////////////////////
 
          fInd.SetNumItems( 0 );
-         bytes = TBranch::Fill();
+         bytes = TBranch::FillImpl(imtHelper);
 
          if( bytes < 0 ) {
             Error( "Fill", "The IO error while writing the indices!");
@@ -199,7 +199,7 @@ Int_t TBranchSTL::Fill()
 
          for( Int_t i = 0; i < fBranches.GetEntriesFast(); ++i ) {
             TBranch *br = (TBranch *)fBranches.UncheckedAt(i);
-            bytes = br->Fill();
+            bytes = br->FillImpl(imtHelper);
             if( bytes < 0 ) {
                Error( "Fill", "The IO error while writing the branch %s!", br->GetName() );
                return -1;
@@ -328,7 +328,7 @@ Int_t TBranchSTL::Fill()
    // Store the indices
    /////////////////////////////////////////////////////////////////////////////
 
-   bytes = TBranch::Fill();
+   bytes = TBranch::FillImpl(nullptr);
    if( bytes < 0 ) {
       Error( "Fill", "The IO error while writing the indices!");
       return -1;

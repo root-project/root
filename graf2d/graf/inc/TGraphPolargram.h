@@ -12,15 +12,9 @@
 #ifndef ROOT_TGraphPolargram
 #define ROOT_TGraphPolargram
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 
 class TGraphPolargram: public TNamed, public TAttText, public TAttLine {

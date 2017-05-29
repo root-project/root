@@ -8,24 +8,12 @@
 
 #ifndef ROOT_TPieSlice
 #define ROOT_TPieSlice
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include <TString.h>
-#endif
-#ifndef ROOT_TAttText
 #include <TAttText.h>
-#endif
-#ifndef ROOT_TAttFill
 #include <TAttFill.h>
-#endif
-#ifndef ROOT_TAttLine
 #include <TAttLine.h>
-#endif
-#ifndef ROOT_TPie
 #include <TPie.h>
-#endif
 
 class TPieSlice : public TNamed, public TAttFill, public TAttLine {
 

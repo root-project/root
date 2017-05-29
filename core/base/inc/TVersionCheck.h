@@ -27,9 +27,7 @@
 #endif
 #endif // R__CXXMODULES
 
-#ifndef ROOT_RVersion
 #include "RVersion.h"
-#endif
 
 class TVersionCheck {
 public:

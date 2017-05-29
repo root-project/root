@@ -17,14 +17,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixT
 #include "TMatrixT.h"
-#endif
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#ifndef ROOT_TMatrixDUtils
 #include "TMatrixDUtils.h"
-#endif
 
 #endif

@@ -14,13 +14,9 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROO_NLL_VAR
 #include "RooNLLVar.h"
-#endif
 
 #include "RooFitResult.h"
 #include "RooStats/TestStatistic.h"
@@ -34,11 +30,11 @@
 
 namespace RooStats {
 
-   /**
-      MaxLikelihoodEstimateTestStat: TestStatistic that returns maximum likelihood estimate of a specified parameter.
-      \ingroup Roostats
-   */
-
+/** \class MaxLikelihoodEstimateTestStat
+    \ingroup Roostats
+MaxLikelihoodEstimateTestStat: TestStatistic that returns maximum likelihood
+estimate of a specified parameter.
+*/
 
 class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
@@ -52,9 +48,9 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
      ///      fPdf = pdf;
      ///      fParameter = parameter;
 
-	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
-	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+   fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
    }
    //__________________________________
@@ -64,16 +60,16 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
       // constructor
       //      fPdf = pdf;
       //      fParameter = parameter;
-	fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-	fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
-	fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
+   fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
+   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
 
    }
 
   //______________________________
   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) {
-      
-    
+
+
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
     RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -107,22 +103,22 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
      RooMinimizer minim(*nll);
      minim.setStrategy(fStrategy);
-     //LM: RooMinimizer.setPrintLevel has +1 offset - so subtruct  here -1
+     //LM: RooMinimizer.setPrintLevel has +1 offset - so subtract  here -1
      minim.setPrintLevel(fPrintLevel-1);
      int status = -1;
-     //	minim.optimizeConst(true);
+     //   minim.optimizeConst(true);
      for (int tries = 0, maxtries = 4; tries <= maxtries; ++tries) {
-	  //	 status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
+     //    status = minim.minimize(fMinimizer, ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo().c_str());
         status = minim.minimize(fMinimizer, "Minimize");
-        if (status == 0) {  
+        if (status == 0) {
            break;
         } else {
            if (tries > 1) {
-	      printf("    ----> Doing a re-scan first\n");
-	      minim.minimize(fMinimizer,"Scan");
-	    }
+         printf("    ----> Doing a re-scan first\n");
+         minim.minimize(fMinimizer,"Scan");
+       }
            if (tries > 2) {
-	      printf("    ----> trying with strategy = 1\n");
+         printf("    ----> trying with strategy = 1\n");
               minim.setStrategy(1);
            }
         }
@@ -133,23 +129,23 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
      RooMsgService::instance().setGlobalKillBelow(msglevel);
      delete nll;
 
-     if (status != 0) return -1; 
+     if (status != 0) return -1;
      return fParameter->getVal();
 
 
   }
-  
-  virtual const TString GetVarName() const { 
+
+  virtual const TString GetVarName() const {
     TString varName = Form("Maximum Likelihood Estimate of %s",fParameter->GetName());
     return varName;
   }
 
-      
+
   virtual void PValueIsRightTail(bool isright) {  fUpperLimit = isright; }
   virtual bool PValueIsRightTail(void) const { return fUpperLimit; }
 
    // set the conditional observables which will be used when creating the NLL
-   // so the pdf's will not be normalized on the conditional observables when computing the NLL 
+   // so the pdf's will not be normalized on the conditional observables when computing the NLL
    virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
 

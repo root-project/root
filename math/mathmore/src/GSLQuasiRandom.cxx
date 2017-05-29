@@ -30,6 +30,7 @@
 
 // need to be included later
 #include <time.h>
+#include <vector>
 #include <stdlib.h>
 #include <cassert>
 

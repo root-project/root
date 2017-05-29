@@ -12,9 +12,7 @@
 #ifndef ROOT_TEntryListArray
 #define ROOT_TEntryListArray
 
-#ifndef ROOT_TEntryList
 #include "TEntryList.h"
-#endif
 
 class TTree;
 class TDirectory;
@@ -101,9 +99,7 @@ public:
 #ifndef ROOT_TEntryListArray
 #define ROOT_TEntryListArray
 
-#ifndef ROOT_TEntryList
 #include "TEntryList.h"
-#endif
 
 class TTree;
 class TDirectory;

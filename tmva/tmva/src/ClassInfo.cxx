@@ -36,12 +36,8 @@ Class that contains all the information of a class.
 
 #include <vector>
 
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
-#ifndef ROOT_TMatrix
 #include "TMatrixD.h"
-#endif
 
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Types.h"

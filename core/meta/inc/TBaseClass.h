@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
 class TBrowser;
 class TClass;

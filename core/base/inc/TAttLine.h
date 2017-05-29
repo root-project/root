@@ -13,9 +13,7 @@
 #define ROOT_TAttLine
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TAttLine {
 

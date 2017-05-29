@@ -267,9 +267,7 @@ extern Bool_t ConnectCINT(TQObject *sender, const char *signal,
 // This include makes it possible to have a single connection
 // from all objects of the same class but is only needed in
 // the dictionary.
-#ifndef ROOT_TQClass
 #include "TQClass.h"
-#endif
 #endif
 
 

@@ -14,6 +14,6 @@ set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
 
 # Handle the QUIETLY and REQUIRED arguments and set DAVIX_FOUND to TRUE if all listed variables are TRUE
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(DAVIX DEFAULT_MSG DAVIX_INCLUDE_DIRS DAVIX_LIBRARIES)
+find_package_handle_standard_args(DAVIX DEFAULT_MSG DAVIX_INCLUDE_DIR DAVIX_LIBRARY)
 
-mark_as_advanced(DAVIX_FOUND DAVIX_INCLUDE_DIRS DAVIX_LIBRARIES)
+mark_as_advanced(DAVIX_FOUND DAVIX_INCLUDE_DIR DAVIX_LIBRARY)

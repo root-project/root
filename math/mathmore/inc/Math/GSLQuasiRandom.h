@@ -32,7 +32,6 @@
 #define ROOT_Math_GSLQuasiRandom
 
 #include <string>
-#include <vector>
 
 namespace ROOT {
 namespace Math {

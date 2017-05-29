@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLText
 #define ROOT_TGLText
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 class FTFont;
 

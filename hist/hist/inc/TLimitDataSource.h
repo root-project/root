@@ -4,9 +4,7 @@
 #ifndef ROOT_TLimitDataSource
 #define ROOT_TLimitDataSource
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 #include "TVectorDfwd.h"
 

@@ -22,9 +22,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTUBS
 #include "TTUBS.h"
-#endif
 
 class TCONS : public TTUBS {
 

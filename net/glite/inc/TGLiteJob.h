@@ -24,9 +24,7 @@ gLite implementation of TGridJob*//*
 #ifndef ROOT_TGLiteJob
 #define ROOT_TGLiteJob
 
-#ifndef ROOT_TGridJob
 #include "TGridJob.h"
-#endif
 
 class TGLiteJob : public TGridJob
 {

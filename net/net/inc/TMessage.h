@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
-#ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
-#endif
-#ifndef ROOT_TBits
 #include "TBits.h"
-#endif
 
 class TList;
 class TVirtualStreamerInfo;

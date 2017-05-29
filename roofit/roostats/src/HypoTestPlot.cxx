@@ -8,6 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::HypoTestPlot
+    \ingroup Roostats
+
+This class provides the plots for the result of a study performed with any of the
+HypoTestCalculatorGeneric (e.g. HybridCalculator or FrequentistCalculator)  class.
+
+   */
+
 #include "RooStats/HypoTestPlot.h"
 #include "RooStats/HypoTestResult.h"
 #include "RooStats/SamplingDistribution.h"
@@ -18,6 +26,8 @@ ClassImp(RooStats::HypoTestPlot)
 
 using namespace RooStats;
 using namespace std;
+
+////////////////////////////////////////////////////////////////////////////////
 
 HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Option_t* opt) :
    SamplingDistPlot(bins),
@@ -31,6 +41,8 @@ HypoTestPlot::HypoTestPlot(HypoTestResult& result, Int_t bins, Double_t min, Dou
 {
    ApplyResult(result, opt);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestPlot::ApplyResult(HypoTestResult& result, Option_t* opt) {
    fLegend = new TLegend(0.55,0.95-0.3*0.66,0.95,0.95);
@@ -59,6 +71,8 @@ void HypoTestPlot::ApplyResult(HypoTestResult& result, Option_t* opt) {
 
    ApplyDefaultStyle();
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestPlot::ApplyDefaultStyle(void) {
    if(!fHypoTestResult) return;

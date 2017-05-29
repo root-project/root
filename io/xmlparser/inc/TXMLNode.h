@@ -12,13 +12,9 @@
 #ifndef ROOT_TXMLNode
 #define ROOT_TXMLNode
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TList;
 struct _xmlNode;

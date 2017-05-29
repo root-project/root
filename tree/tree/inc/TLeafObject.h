@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TLeaf
 #include "TLeaf.h"
-#endif
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
 class TClass;
 class TMethodCall;

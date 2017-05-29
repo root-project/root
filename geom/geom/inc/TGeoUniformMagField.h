@@ -11,9 +11,7 @@
 #ifndef ROOT_TGeoUniformMagField
 #define ROOT_TGeoUniformMagField
 
-#ifndef ROOT_TVirtualMagField
 #include "TVirtualMagField.h"
-#endif
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //

@@ -12,9 +12,7 @@
 #ifndef ROOT_TOracleRow
 #define ROOT_TOracleRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 #if !defined(__CINT__)
 #include <occi.h>

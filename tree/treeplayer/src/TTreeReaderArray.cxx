@@ -25,6 +25,8 @@
 #include "TGenCollectionProxy.h"
 #include "TRegexp.h"
 
+#include <memory>
+
 // pin vtable
 ROOT::Internal::TVirtualCollectionReader::~TVirtualCollectionReader() {}
 
@@ -73,13 +75,6 @@ namespace {
          if (!proxy->GetWhere()) {
             Error("TSTLReader::GetCP()", "Logic error, proxy object not set in TBranchProxy.");
             return 0;
-         }
-         if (proxy->IsaPointer()) {
-            if (proxy->GetWhere() && *(void**)proxy->GetWhere()){
-               ((TGenCollectionProxy*)proxy->GetCollection())->PopProxy();
-               ((TGenCollectionProxy*)proxy->GetCollection())->PushProxy(*(void**)proxy->GetWhere());
-            }
-            else return 0;
          }
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
@@ -190,34 +185,46 @@ namespace {
       }
    };
 
-   class TArrayParameterSizeReader : public TObjectArrayReader {
+   template <class BASE>
+   class TUIntOrIntReader: public BASE {
    private:
       // The index can be of type int or unsigned int.
-      TTreeReaderValue<Int_t>  fIndexReader;
+      std::unique_ptr<TTreeReaderValueBase> fSizeReader;
       bool fIsUnsigned = false;
 
+   protected:
       template <class T>
-      TTreeReaderValue<T>& GetIndexReader() {
-         return reinterpret_cast<TTreeReaderValue<T>&>(fIndexReader);
+      TTreeReaderValue<T>& GetSizeReader() {
+         return *static_cast<TTreeReaderValue<T>*>(fSizeReader.get());
       }
+
    public:
-      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName)
-         {
-            if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(branchName)) {
-               fIsUnsigned = sizeLeaf->IsUnsigned();
-               if (fIsUnsigned) {
-                  GetIndexReader<UInt_t>() = TTreeReaderValue<UInt_t>(*treeReader, branchName);
-               } else {
-                  GetIndexReader<Int_t>() = TTreeReaderValue<Int_t>(*treeReader, branchName);
-               }
+      template <class... ARGS>
+      TUIntOrIntReader(TTreeReader *treeReader, const char *leafName,
+                       ARGS&&... args):
+         BASE(std::forward<ARGS>(args)...)
+      {
+         if (TLeaf* sizeLeaf = treeReader->GetTree()->FindLeaf(leafName)) {
+            fIsUnsigned = sizeLeaf->IsUnsigned();
+            if (fIsUnsigned) {
+               fSizeReader.reset(new TTreeReaderValue<UInt_t>(*treeReader, leafName));
+            } else {
+               fSizeReader.reset(new TTreeReaderValue<Int_t>(*treeReader, leafName));
             }
          }
-
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) {
-         if (fIsUnsigned)
-            return *GetIndexReader<UInt_t>();
-         return *GetIndexReader<Int_t>();
       }
+
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override {
+         if (fIsUnsigned)
+            return *GetSizeReader<UInt_t>();
+         return *GetSizeReader<Int_t>();
+      }
+   };
+
+   class TArrayParameterSizeReader: public TUIntOrIntReader<TObjectArrayReader> {
+   public:
+      TArrayParameterSizeReader(TTreeReader *treeReader, const char *branchName):
+         TUIntOrIntReader<TObjectArrayReader>(treeReader, branchName) {}
    };
 
    // Reader interface for fixed size arrays
@@ -300,16 +307,15 @@ namespace {
       }
    };
 
-   class TLeafParameterSizeReader : public TLeafReader {
-   private:
-      TTreeReaderValue<Int_t> fSizeReader;
+   class TLeafParameterSizeReader: public TUIntOrIntReader<TLeafReader> {
    public:
-      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName, TTreeReaderValueBase *valueReaderArg) :
-         TLeafReader(valueReaderArg), fSizeReader(*treeReader, leafName) {}
+      TLeafParameterSizeReader(TTreeReader *treeReader, const char *leafName,
+                               TTreeReaderValueBase *valueReaderArg) :
+         TUIntOrIntReader<TLeafReader>(treeReader, leafName, valueReaderArg) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          ProxyRead();
-         return *fSizeReader;
+         return TUIntOrIntReader<TLeafReader>::GetSize(proxy);
       }
    };
 }
@@ -501,6 +507,7 @@ bool ROOT::Internal::TTreeReaderArrayBase::GetBranchAndLeaf(TBranch* &branch, TL
       fLeaf = myLeaf;
       fBranchName = branchName;
       fLeafName = leafName(1, leafName.Length());
+      fHaveLeaf = (fLeafName.Length() > 0);
       fSetupStatus = kSetupMatchLeaf;
    }
    else {

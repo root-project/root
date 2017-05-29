@@ -32,7 +32,6 @@ class TBranchSTL: public TBranch {
       virtual ~TBranchSTL();
       virtual void           Browse( TBrowser *b );
       virtual Bool_t         IsFolder() const;
-      virtual Int_t          Fill();
       virtual const char    *GetClassName() const { return fClassName.Data(); }
       virtual Int_t          GetExpectedType(TClass *&clptr,EDataType &type);
       virtual Int_t          GetEntry( Long64_t entry = 0, Int_t getall = 0 );
@@ -46,6 +45,7 @@ class TBranchSTL: public TBranch {
 
    void ReadLeavesImpl( TBuffer& b );
    void FillLeavesImpl( TBuffer& b );
+   virtual Int_t          FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
 #ifndef __CINT__
       struct ElementBranchHelper_t

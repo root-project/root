@@ -12,12 +12,8 @@
 #define ROOT_ProcFileElements
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TSortedList
 #include "TSortedList.h"
-#endif
 
 class ProcFileElements : public TObject {
 

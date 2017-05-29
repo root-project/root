@@ -32,10 +32,6 @@
 
 #include "gsl/gsl_errno.h"
 
-#include "TError.h"
-#include "TSystem.h"
-
-
 namespace ROOT {
    namespace Math {
 

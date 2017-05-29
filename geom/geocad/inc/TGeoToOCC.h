@@ -21,12 +21,8 @@
 #undef Printf
 
 //Root
-#ifndef ROOT_TGeoXtru
 #include "TGeoXtru.h"
-#endif
-#ifndef ROOT_TGeoCompositeShape
 #include "TGeoCompositeShape.h"
-#endif
 
 #include <fstream>
 

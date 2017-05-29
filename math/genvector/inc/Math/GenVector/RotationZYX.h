@@ -18,30 +18,18 @@
 #ifndef ROOT_Math_GenVector_RotationZYX
 #define ROOT_Math_GenVector_RotationZYX  1
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_Rotation3D
 #include "Math/GenVector/Rotation3D.h"
-#endif
 
 
-#ifndef ROOT_Math_GenVector_DisplacementVector3D
 #include "Math/GenVector/DisplacementVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_PositionVector3D
 #include "Math/GenVector/PositionVector3D.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_LorentzVector
 #include "Math/GenVector/LorentzVector.h"
-#endif
 
-#ifndef ROOT_Math_GenVector_3DConversions
 #include "Math/GenVector/3DConversions.h"
-#endif
 
 
 #include <algorithm>

@@ -12,9 +12,7 @@
 #ifndef ROOT_R_TRFunctionExport
 #define ROOT_R_TRFunctionExport
 
-#ifndef ROOT_R_TRInternalFunction
-#include<TRInternalFunction.h>
-#endif
+#include <TRInternalFunction.h>
 
 
 namespace ROOT {
@@ -150,14 +148,14 @@ namespace ROOT {
          Default TRFunctionExport constructor
          */
          TRFunctionExport();
-	 
+
          /**
          Default TRFunctionExport destructor
          */
          ~TRFunctionExport()
-	 {
-	   if(f) delete f;
-	 }
+         {
+            if (f) delete f;
+         }
          /**
          TRFunctionExport copy constructor
          \param fun other TRFunctionExport

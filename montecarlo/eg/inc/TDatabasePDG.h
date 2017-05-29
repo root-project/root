@@ -12,12 +12,8 @@
 #ifndef ROOT_TDatabasePDG
 #define ROOT_TDatabasePDG
 
-#ifndef ROOT_TParticlePDG
 #include "TParticlePDG.h"
-#endif
-#ifndef ROOT_TParticleClassPDG
 #include "TParticleClassPDG.h"
-#endif
 
 class THashList;
 class TExMap;

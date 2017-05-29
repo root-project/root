@@ -29,9 +29,7 @@ store the interval.
 
 */
 
-#ifndef RooStats_ConfidenceBelt
 #include "RooStats/ConfidenceBelt.h"
-#endif
 
 #include "RooDataSet.h"
 #include "RooDataHist.h"

@@ -24,45 +24,19 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofMgr
 #include "TProofMgr.h"
-#endif
-#ifndef ROOT_TProofDebug
 #include "TProofDebug.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TMacro
 #include "TMacro.h"
-#endif
-#ifndef ROOT_MessageTypes
 #include "MessageTypes.h"
-#endif
-#ifndef ROOT_TMD5
 #include "TMD5.h"
-#endif
-#ifndef ROOT_TRegexp
 #include "TRegexp.h"
-#endif
-#ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TUrl
 #include "TUrl.h"
-#endif
-#ifndef ROOT_TProofOutputList
 #include "TProofOutputList.h"
-#endif
-#ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
-#endif
-#ifndef ROOT_TVirtualMutex
 #include "TVirtualMutex.h"
-#endif
-#ifndef ROOT_TPackMgr
 #include "TPackMgr.h"
-#endif
 
 #include <map>
 #include <mutex>

@@ -115,7 +115,7 @@ MethodRSVM::~MethodRSVM(void)
 }
 
 //_______________________________________________________________________
-Bool_t MethodRSVM::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets)
+Bool_t MethodRSVM::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;

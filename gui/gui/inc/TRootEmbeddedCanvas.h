@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
 
 
 class TCanvas;
