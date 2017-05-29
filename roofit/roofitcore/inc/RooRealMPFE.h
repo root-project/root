@@ -34,8 +34,8 @@ namespace RooFit { class BidirMMapPipe; }
 class RooRealMPFE : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline=kFALSE, Int_t inSetNum=0,
-              Int_t inNumSets=0) ;
+  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Int_t inSetNum, Int_t inNumSets,
+              Bool_t calcInline=kFALSE) ;
   RooRealMPFE(const RooRealMPFE& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealMPFE(*this,newname); }
   virtual ~RooRealMPFE();
@@ -118,11 +118,10 @@ private:
 
   void _initTiming();
 
-  // _setNum and _numSets only used for diagnostic info, no need to persist
   Int_t       _setNum ;           //! Partition number of this instance in parallel calculation mode
   Int_t       _numSets ;          //! Total number of partitions in parallel calculation mode
 
-  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
+  ClassDef(RooRealMPFE,3) // Multi-process front-end for parallel calculation of a real valued function
 };
 
 std::ostream& operator<<(std::ostream& out, const RooRealMPFE::Message value);

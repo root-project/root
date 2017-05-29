@@ -100,8 +100,8 @@ ClassImp(RooRealMPFE)
 /// asynchronously in a separate process. If calcInline is true the value of 'arg'
 /// is calculate synchronously in the current process.
 
-RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline, Int_t inSetNum,
-                         Int_t inNumSets) :
+RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Int_t inSetNum, Int_t inNumSets,
+                         Bool_t calcInline) :
   RooAbsReal(name,title),
   _state(Initialize),
   _arg("arg","arg",this,arg),

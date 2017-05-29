@@ -100,7 +100,7 @@ void RooTestStatMPDriver::init() const
     // Rename object to encode process number in object name - no cloning of nll is needed - since fork effectively clones
     nll->SetName(Form("%s_NLL%d",GetName(),i));
     nll->SetTitle(Form("%s_NLL%d",GetTitle(),i));    
-    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*nll,false);
+    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*nll, i, _nCPU, false);
 
     // Initialize MP frontend - fork server process etc
     _mpfeArray[i]->initialize();
