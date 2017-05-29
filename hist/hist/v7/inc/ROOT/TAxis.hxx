@@ -58,9 +58,7 @@ protected:
   ///\}
 
   /// Default construct a TAxisBase (for use by derived classes for I/O)
-  TAxisBase() : fCanGrow(false)
-  {
-  }
+  TAxisBase() = default;
 
   /// Given rawbin (<0 for underflow, >= GetNBinsNoOver() for overflow), determine the
   /// actual bin number taking into account how over/underflow should be
@@ -256,7 +254,7 @@ public:
 private:
   unsigned int fNBins; ///< Number of bins including under- and overflow.
   std::string fTitle; ///< Title of this axis, used for graphics / text.
-  const bool fCanGrow; ///< Whether this axis can grow (and thus has no overflow bins).
+  const bool fCanGrow = false; ///< Whether this axis can grow (and thus has no overflow bins).
 };
 
 ///\name TAxisBase::const_iterator comparison operators
