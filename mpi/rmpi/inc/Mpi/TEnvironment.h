@@ -15,24 +15,38 @@ namespace ROOT {
 
       //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
       class TErrorHandler;
+      class TMpiSignalHandler;
       class TEnvironment: public TObject {
          friend class TCommunicator;
+         friend class TMpiSignalHandler;
+         friend class TErrorHandler;
       private:
-         TString fStdOut;
-         TString fStdErr;
-         Bool_t  fSyncOutput;
-         Int_t   fStdOutPipe[2];
-         Int_t   fStdErrPipe[2];
-         Int_t   fSavedStdErr;
-         Int_t   fSavedStdOut;
+         static TString fStdOut;
+         static TString fStdErr;
+         static Bool_t  fSyncOutput;
+         static Int_t   fStdOutPipe[2];
+         static Int_t   fStdErrPipe[2];
+         static Int_t   fSavedStdErr;
+         static Int_t   fSavedStdOut;
+
          static TErrorHandler fErrorHandler;
          static Int_t fCompressionAlgorithm;
          static Int_t fCompressionLevel;
+
+         static FILE *fOutput;
+         
+         TMpiSignalHandler *fInterruptSignal;
+         TMpiSignalHandler *fTerminationSignal;
+         TMpiSignalHandler *fSigSegmentationViolationSignal;
       protected:
-         void InitCapture();
-         void EndCapture();
-         void Flush();
-         void ClearBuffers();
+         void InitSignalHandlers();
+         static void InitCapture();
+         static void EndCapture();
+         static void Flush();
+         static void ClearBuffers();
+         static TString GetStdOut();
+         static TString GetStdErr();
+         static Bool_t IsSyncOutput();
          static Int_t GetCompressionAlgorithm();
          static Int_t GetCompressionLevel();
       public:
@@ -43,10 +57,6 @@ namespace ROOT {
          TEnvironment(Int_t argc, Char_t **argv, Int_t level = ROOT::Mpi::THREAD_SINGLE);
          ~TEnvironment();
 
-         /**
-         Method to synchronize stdout/stderr output.
-              */
-         void SyncOutput(Bool_t status = kTRUE);
 
          /**
          Method to finalize the environment.
@@ -54,6 +64,14 @@ namespace ROOT {
          void Finalize();
 
          // static public functions TODO
+         /**
+         Method to synchronize stdout/stderr output.
+         \param status enable/disable output synchronization
+         \param output FILE pointer to merge stdout and stderr
+         by default is merged in stdout but if NULL stdout will be printed asynchronous respect to stderr
+              */
+         static void SyncOutput(Bool_t status = kTRUE, FILE *output = stdout);
+
          /**
          Method to check if the communication system is finalized.
               */

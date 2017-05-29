@@ -148,6 +148,28 @@ namespace ROOT {
       const MPI_Datatype DATATYPE_NULL = MPI_DATATYPE_NULL;
       TIntraCommunicator COMM_WORLD = TIntraCommunicator(MPI_COMM_WORLD);
       TIntraCommunicator COMM_SELF = TIntraCommunicator(MPI_COMM_SELF);
+
+      Bool_t TMpiSignalHandler::Notify()
+      {
+         if (!fEnv.IsFinalized()) {
+            Info("Notify", "Processing signal ... %d in rank %d", fSignal, COMM_WORLD.GetRank());
+            if (fEnv.IsSyncOutput()) {
+               fEnv.EndCapture();
+               fEnv.Flush();
+            }
+            //Finalize the mpi's environment
+            MPI_Finalize();
+         } else {
+            Info("Notify", "Processing signal ... %d ", fSignal);
+            if (fEnv.IsSyncOutput()) {
+               fEnv.EndCapture();
+               fEnv.Flush();
+            }
+         }
+         return kTRUE;
+      }
+
+
    }
 
 }

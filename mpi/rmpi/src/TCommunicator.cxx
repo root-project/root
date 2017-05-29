@@ -79,6 +79,7 @@ Int_t TCommunicator::GetMainProcess() const
 */
 void TCommunicator::Abort(Int_t error, Bool_t silent) const
 {
+
    if (!silent) {
       TString msg;
       if (TErrorHandler::IsVerbose()) {
@@ -93,6 +94,10 @@ void TCommunicator::Abort(Int_t error, Bool_t silent) const
       msg += "\n--------------------------------------------------------------------------\n";
 
       std::cerr << "ROOT MPI Abort" << msg.Data();
+   }
+   if (TEnvironment::IsSyncOutput()) {
+      TEnvironment::EndCapture();
+      TEnvironment::Flush();
    }
    ROOT_MPI_CHECK_CALL(MPI_Abort, (fComm, error), this);
 }

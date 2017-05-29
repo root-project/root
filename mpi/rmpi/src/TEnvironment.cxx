@@ -1,6 +1,7 @@
 #include<Mpi/TEnvironment.h>
 #include<Mpi/TIntraCommunicator.h>
 #include<Mpi/TErrorHandler.h>
+#include<iostream>
 using namespace ROOT::Mpi;
 
 TErrorHandler TEnvironment::fErrorHandler = TErrorHandler();
@@ -9,6 +10,15 @@ TErrorHandler TEnvironment::fErrorHandler = TErrorHandler();
 Int_t TEnvironment::fCompressionAlgorithm = 0;
 Int_t TEnvironment::fCompressionLevel = 0;
 
+TString TEnvironment::fStdOut = "";
+TString TEnvironment::fStdErr = "";
+Bool_t  TEnvironment::fSyncOutput = kFALSE;
+Int_t   TEnvironment::fStdOutPipe[2] = {-1, -1};
+Int_t   TEnvironment::fStdErrPipe[2] = {-1, -1};
+Int_t   TEnvironment::fSavedStdErr = -1;
+Int_t   TEnvironment::fSavedStdOut = -1;
+
+FILE *TEnvironment::fOutput = NULL;
 
 //TODO: enable thread level and thread-safe for ROOT
 
@@ -21,7 +31,7 @@ THREAD_SERIALIZED: The process may be multi-threaded, and multiple threads may m
 THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
 \param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
 */
-TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE)
+TEnvironment::TEnvironment(Int_t level)
 {
    Int_t provided;
    MPI_Init_thread(NULL, NULL, level, &provided);
@@ -31,6 +41,7 @@ TEnvironment::TEnvironment(Int_t level): fSyncOutput(kFALSE)
       MPI_Comm_compare((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result);
       if (result == IDENT) COMM_WORLD.SetCommName("ROOT::Mpi::COMM_WORLD");
       ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
+      InitSignalHandlers();
    } else {
       //TODO: added error handling here
    }
@@ -47,7 +58,7 @@ THREAD_MULTIPLE: Multiple threads may call MPI, with no restrictions.
 \param argv list of command line arguments
 \param level is an integer with the thread type, default value THREAD_SINGLE is equivalent to call the raw function MPI_Init
 */
-TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(kFALSE)
+TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level)
 {
    Int_t provided;
    MPI_Init_thread(&argc, &argv, level, &provided);
@@ -55,9 +66,22 @@ TEnvironment::TEnvironment(Int_t argc, Char_t **argv, Int_t level): fSyncOutput(
       Int_t result;
       ROOT_MPI_CHECK_CALL(MPI_Comm_compare, ((MPI_Comm)COMM_WORLD, MPI_COMM_WORLD, &result), &COMM_WORLD);
       ROOT_MPI_CHECK_CALL(MPI_Comm_set_errhandler, (MPI_COMM_WORLD, (MPI_Errhandler)fErrorHandler), &COMM_WORLD);
+      InitSignalHandlers();
    } else {
       //TODO: added error handling here
    }
+}
+
+//______________________________________________________________________________
+void TEnvironment::InitSignalHandlers()
+{
+   fInterruptSignal = new TMpiSignalHandler(kSigInterrupt, *this);
+   fTerminationSignal = new TMpiSignalHandler(kSigTermination, *this);
+   fSigSegmentationViolationSignal = new TMpiSignalHandler(kSigSegmentationViolation, *this);
+   gSystem->AddSignalHandler(fInterruptSignal);
+   gSystem->AddSignalHandler(fTerminationSignal);
+   gSystem->AddSignalHandler(fSigSegmentationViolationSignal);
+
 }
 
 //______________________________________________________________________________
@@ -101,6 +125,11 @@ void TEnvironment::InitCapture()
       dup2(fStdErrPipe[1], STDERR_FILENO);   /* redirect stderr to the pipe */
       close(fStdErrPipe[1]);
    }
+   auto rank = -1;
+   if (!IsFinalized()) {
+      rank = COMM_WORLD.GetRank();
+   }
+   fStdOut += Form("-------  Rank %d OutPut  -------\n", rank);
 }
 
 //______________________________________________________________________________
@@ -111,12 +140,15 @@ void TEnvironment::EndCapture()
       Char_t ch;
       while (true) { /* read from pipe into buffer */
          fflush(stdout);
+         std::cout.flush();
          buf_readed = read(fStdOutPipe[0], &ch, 1);
          if (buf_readed == 1) fStdOut += ch;
          else break;
       }
 
       while (true) { /* read from pipe into buffer */
+         fflush(stderr);
+         std::cerr.flush();
          buf_readed = read(fStdErrPipe[0], &ch, 1);
          if (buf_readed == 1) fStdErr += ch;
          else break;
@@ -128,18 +160,53 @@ void TEnvironment::EndCapture()
 }
 
 //______________________________________________________________________________
+TString TEnvironment::GetStdOut()
+{
+   return fStdOut;
+}
+//______________________________________________________________________________
+TString TEnvironment::GetStdErr()
+{
+   return fStdErr;
+}
+//______________________________________________________________________________
+Bool_t TEnvironment::IsSyncOutput()
+{
+   return fSyncOutput;
+}
+
+//______________________________________________________________________________
 void TEnvironment::Flush()
 {
    if (fSyncOutput) {
-      write(fSavedStdOut, fStdOut.Data(), fStdOut.Length());
-      write(fSavedStdErr, fStdErr.Data(), fStdErr.Length());
-      fsync(fStdOutPipe[0]);
-      fsync(fStdErrPipe[0]);
+
+      if (fOutput) {
+         TString Output = fStdOut + fStdErr;
+         if (fOutput == stdout) {
+            write(fSavedStdOut, Output.Data(), Output.Length());
+            fsync(fStdOutPipe[0]);
+         }
+         if (fOutput == stderr) {
+            write(fSavedStdErr, Output.Data(), Output.Length());
+            fsync(fStdErrPipe[0]);
+         }
+      } else {
+         write(fSavedStdOut, fStdOut.Data(), fStdOut.Length());
+         write(fSavedStdErr, fStdErr.Data(), fStdErr.Length());
+         fsync(fStdOutPipe[0]);
+         fsync(fStdErrPipe[0]);
+      }
    } else {
-      fprintf(stdout, "%s", fStdOut.Data());
-      fprintf(stderr, "%s", fStdErr.Data());
-      fflush(stdout);
-      fflush(stderr);
+      if (fOutput) {
+         TString Output = fStdOut + fStdErr;
+         fprintf(fOutput, "%s", Output.Data());
+         fflush(fOutput);
+      } else {
+         fprintf(stdout, "%s", fStdOut.Data());
+         fprintf(stderr, "%s", fStdErr.Data());
+         fflush(stdout);
+         fflush(stderr);
+      }
    }
    ClearBuffers();
 }
@@ -152,10 +219,24 @@ void TEnvironment::ClearBuffers()
 }
 
 //______________________________________________________________________________
-void TEnvironment::SyncOutput(Bool_t status)
+void TEnvironment::SyncOutput(Bool_t status, FILE *output)
 {
-   fSyncOutput = status;
-   InitCapture();
+   if (!fSyncOutput) {
+
+      if (status) {
+         fOutput = output;
+         fSyncOutput = status;
+         InitCapture();
+      }
+   } else {
+      if (!status) {
+         EndCapture();
+         Flush();
+         fOutput = output;
+         fSyncOutput = status;
+      }
+
+   }
 }
 
 //______________________________________________________________________________
@@ -178,15 +259,11 @@ Bool_t TEnvironment::IsInitialized()
 //______________________________________________________________________________
 void TEnvironment::Finalize()
 {
-   auto rank = -1;
    if (!IsFinalized()) {
-      rank = COMM_WORLD.GetRank();
-      //Finalize the mpi's environment
       MPI_Finalize();
    }
    if (fSyncOutput) {
       EndCapture();
-      printf("-------  Rank %d OutPut  -------\n", rank);
       Flush();
    }
 }

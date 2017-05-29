@@ -67,7 +67,7 @@ static const Int_t SEEK_END = rmpi_stdio_seek_end;
 namespace ROOT {
    namespace Mpi {
 
-      // returns  error codes
+// returns  error codes
       R__EXTERN const Int_t SUCCESS;
       R__EXTERN const Int_t ERR_BUFFER;
       R__EXTERN const Int_t ERR_COUNT;
@@ -124,11 +124,11 @@ namespace ROOT {
       R__EXTERN const Int_t ERR_WIN;
       R__EXTERN const Int_t ERR_LASTCODE;
 
-      // topologies
+// topologies
       R__EXTERN const Int_t GRAPH;
       R__EXTERN const Int_t CART;
 
-      // maximum sizes for strings
+// maximum sizes for strings
       R__EXTERN const Int_t MAX_PROCESSOR_NAME;
       R__EXTERN const Int_t MAX_ERROR_STRING;
       R__EXTERN const Int_t MAX_INFO_KEY;
@@ -137,7 +137,7 @@ namespace ROOT {
       R__EXTERN const Int_t MAX_OBJECT_NAME;
       R__EXTERN const Int_t MAX_IO_BUFFER; //used for sync output in TEnvironment
 
-      // environmental inquiry keys
+// environmental inquiry keys
       R__EXTERN const Int_t TAG_UB;
       R__EXTERN const Int_t HOST;
       R__EXTERN const Int_t IO;
@@ -149,7 +149,7 @@ namespace ROOT {
       R__EXTERN const Int_t WIN_SIZE;
       R__EXTERN const Int_t WIN_DISP_UNIT;
 
-      // assorted constants
+// assorted constants
       R__EXTERN const void  *BOTTOM;
       R__EXTERN const void *IN_PLACE;
       R__EXTERN const Int_t PROC_NULL;
@@ -166,7 +166,7 @@ namespace ROOT {
       R__EXTERN const Int_t DISTRIBUTE_NONE;
       R__EXTERN const Int_t DISTRIBUTE_DFLT_DARG;
 
-      // MPI-2 IO
+// MPI-2 IO
       R__EXTERN const Int_t MODE_CREATE;
       R__EXTERN const Int_t MODE_RDONLY;
       R__EXTERN const Int_t MODE_WRONLY;
@@ -182,34 +182,37 @@ namespace ROOT {
       R__EXTERN const Int_t SEEK_END;
       R__EXTERN const Int_t MAX_DATAREP_STRING;
 
-      // thread constants
+// thread constants
       R__EXTERN const Int_t THREAD_SINGLE;
       R__EXTERN const Int_t THREAD_FUNNELED;
       R__EXTERN const Int_t THREAD_SERIALIZED;
       R__EXTERN const Int_t THREAD_MULTIPLE;
 
-      // results of communicator and group comparisons
+// results of communicator and group comparisons
       R__EXTERN const Int_t IDENT;
       R__EXTERN const Int_t CONGRUENT;
       R__EXTERN const Int_t SIMILAR;
       R__EXTERN const Int_t UNEQUAL;
 
+      class TEnvironment;
       class TGroup;
       class TInfo;
       class TNullCommunicator;
       class TIntraCommunicator;
-      // null handles
+
+
+// null handles
       R__EXTERN const TGroup         GROUP_NULL;
       R__EXTERN const TInfo          INFO_NULL;
       R__EXTERN const MPI_Datatype   DATATYPE_NULL;
       R__EXTERN const TNullCommunicator  COMM_NULL;
-      // empty group
+// empty group
       R__EXTERN const TGroup         GROUP_EMPTY;
 
       R__EXTERN TIntraCommunicator   COMM_WORLD;
       R__EXTERN TIntraCommunicator   COMM_SELF;
 
-      //Functions
+//Functions
 
 
       template<class T> MPI_Datatype GetDataType()
@@ -233,6 +236,17 @@ namespace ROOT {
          Warning("GetDataType", "Unknown raw datatype <%s>, returning null datatype", ROOT_MPI_TYPE_NAME(T));
          return DATATYPE_NULL;
       }
+// MPI Interrupt signal handler
+      class TMpiSignalHandler : public TSignalHandler {
+      private:
+         TEnvironment &fEnv;
+         TMpiSignalHandler(const TMpiSignalHandler &); // Not implemented
+         TMpiSignalHandler &operator=(const TMpiSignalHandler &); // Not implemented
+      public:
+         TMpiSignalHandler(ESignals signal, TEnvironment &env)
+            : TSignalHandler(signal, kTRUE), fEnv(env) { }
+         Bool_t Notify();
+      };
    }
 }
 
