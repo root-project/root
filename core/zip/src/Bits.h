@@ -16,7 +16,7 @@
 #include "Compression.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
-#include "ZipLZ4.h"
+//#include "ZipLZ4.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -595,7 +595,7 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
      R__zipLZMA(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   } else if (compressionAlgorithm == kLZ4) {
-     R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
+     // R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
   }
 

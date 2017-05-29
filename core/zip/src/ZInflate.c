@@ -20,7 +20,7 @@ static const int qflag = 0;
 #include "zlib.h"
 #include "RConfigure.h"
 #include "ZipLZMA.h"
-#include "ZipLZ4.h"
+ // #include "ZipLZ4.h"
 
 /* inflate.c -- put in the public domain by Mark Adler
    version c14o, 23 August 1994 */
@@ -1239,7 +1239,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
      R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
      return;
   } else if (is_valid_header_lz4(src)) {
-     R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+     // R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
      return;
   }
 
