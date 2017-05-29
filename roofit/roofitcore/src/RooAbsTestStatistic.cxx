@@ -246,7 +246,6 @@ RooAbsTestStatistic::~RooAbsTestStatistic()
 
 Double_t RooAbsTestStatistic::evaluate() const
 {
-  RooJsonListFile timing_outfile;
   RooWallTimer timer;
 
     // One-time Initialization
@@ -256,9 +255,9 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   if (SimMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json");
+      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
       std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      timing_outfile.set_member_names(names, names + 4);
+      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     // Evaluate array of owned GOF objects
@@ -292,24 +291,24 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 2) {
       timer.stop();
       // set ppid to -1, to signify that this is not a slave process
-      timing_outfile << timer.timing_s() << getpid() << -1 << "SimMaster";
+      RooTrace::timing_outfile << timer.timing_s() << getpid() << -1 << "SimMaster";
     }
 
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json");
+      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
       std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      timing_outfile.set_member_names(names, names + 4);
+      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     std::vector<double> timings;
     if (RooTrace::timing_flag == 3) {
       timings.reserve(_nCPU);
-      timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json");
+      RooTrace::timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json");
       std::string names[3] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid"};
-      timing_outfile.set_member_names(names, names + 3);
+      RooTrace::timing_outfile.set_member_names(names, names + 3);
     }
 
     // Start calculations in parallel
@@ -335,7 +334,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 3) {
       for (Int_t i = 0; i < _nCPU; ++i) {
-        timing_outfile << timings[i] << i << getpid();
+        RooTrace::timing_outfile << timings[i] << i << getpid();
       }
     }
 
@@ -345,7 +344,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 2) {
       timer.stop();
       // set ppid to -1, to signify that this is not a slave process
-      timing_outfile << timer.timing_s() << getpid() << -1 << "MPMaster";
+      RooTrace::timing_outfile << timer.timing_s() << getpid() << -1 << "MPMaster";
     }
 
     if (RooTrace::time_numInts() == kTRUE) {
@@ -356,9 +355,9 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   } else {
     if (RooTrace::timing_flag == 2) {
-      timing_outfile.open("timing_RATS_evaluate_full.json");
+      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
       std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      timing_outfile.set_member_names(names, names + 4);
+      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
 
@@ -412,7 +411,7 @@ Double_t RooAbsTestStatistic::evaluate() const
         // set ppid to -1, to signify that this is not a slave process
         ppid = -1;
       }
-      timing_outfile << timer.timing_s() << getpid() << ppid << "other";
+      RooTrace::timing_outfile << timer.timing_s() << getpid() << ppid << "other";
     }
 
     return ret ;
@@ -561,7 +560,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
     gof->SetTitle(Form("%s_GOF%d",GetTitle(),i));
 
     ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
-    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,false);
+    _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof,false, i, _nCPU);
     //_mpfeArray[i]->setVerbose(kTRUE,kTRUE);
     _mpfeArray[i]->initialize();
     if (i > 0) {

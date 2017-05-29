@@ -5,6 +5,7 @@
 #include <ctime>
 #include <string>
 #include <fstream>
+#include <vector>
 #include "Rtypes.h"
 
 class RooTimer {
@@ -14,6 +15,8 @@ public:
   double timing_s();
   void set_timing_s(double timing_s);
   void store_timing_in_RooTrace(const std::string &name);
+  
+  static std::vector<RooJsonListFile> timing_outfiles;
 
 private:
   double _timing_s;

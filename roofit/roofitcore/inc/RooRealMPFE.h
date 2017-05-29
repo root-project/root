@@ -34,7 +34,8 @@ namespace RooFit { class BidirMMapPipe; }
 class RooRealMPFE : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline=kFALSE) ;
+  RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline=kFALSE, Int_t inSetNum=0,
+              Int_t inNumSets=0) ;
   RooRealMPFE(const RooRealMPFE& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooRealMPFE(*this,newname); }
   virtual ~RooRealMPFE();
@@ -104,6 +105,7 @@ public:
 
   void setCpuAffinity(int cpu);
   pid_t getPIDFromServer() const;
+  void setMPSet(Int_t inSetNum, Int_t inNumSets);
 
 private:
   RooArgSet* _components = 0;
@@ -113,6 +115,12 @@ private:
 
   void setTimingNumInts(Bool_t flag = kTRUE);
   std::map<std::string, double> collectTimingsFromServer(Bool_t clear_timings = kTRUE) const;
+
+  void _initTiming();
+
+  // _setNum and _numSets only used for diagnostic info, no need to persist
+  Int_t       _setNum ;           //! Partition number of this instance in parallel calculation mode
+  Int_t       _numSets ;          //! Total number of partitions in parallel calculation mode
 
   ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
