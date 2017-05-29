@@ -21,15 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGObject
 #include "TGObject.h"
-#endif
-#ifndef ROOT_TGClient
 #include "TGClient.h"
-#endif
-#ifndef ROOT_TVirtualX
 #include "TVirtualX.h"
-#endif
 
 class TGClient;
 class TGIdleHandler;

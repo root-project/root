@@ -42,7 +42,7 @@ namespace {
       if (lowname.find("under") != std::string::npos)
          ret.fModifiers |= Color::kModUnderline;
 
-      size_t poshash = lowname.find('#');
+      size_t poshash = lowname.find('%');
       size_t lenrgb = 0;
       if (poshash != std::string::npos) {
          int endrgb = poshash + 1;
@@ -62,6 +62,9 @@ namespace {
             }
             rgb[i] *= 16; // only upper 4 bits are set.
          }
+         ret.fR = rgb[0];
+         ret.fG = rgb[1];
+         ret.fB = rgb[2];
          return ret;
       } else if (lenrgb == 6) {
          for (int i = 0; i < 6; ++i) {
@@ -88,19 +91,16 @@ namespace {
             "blue", "magenta", "cyan", "white", 0
          };
          static const unsigned char colorrgb[][3] = {
-            {0,0,0}, {127,0,0}, {0,127,0}, {127,127,0},
-            {0,0,127}, {127,0,127}, {0,127,127}, {127,127,127},
+            {0,0,0}, {255,48,48}, {48,255,48}, {255,255,48},
+            {48,48,255}, {255,48,255}, {48,255,255}, {255,255,255},
             {0}
          };
 
          for (int i = 0; colornames[i]; ++i) {
             if (lowname.find(colornames[i]) != std::string::npos) {
-               int boldify = 0;
-               if (ret.fModifiers & Color::kModBold)
-                  boldify = 64;
-               ret.fR = colorrgb[i][0] + boldify;
-               ret.fG = colorrgb[i][1] + boldify;
-               ret.fB = colorrgb[i][2] + boldify;
+               ret.fR = colorrgb[i][0];
+               ret.fG = colorrgb[i][1];
+               ret.fB = colorrgb[i][2];
                return ret;
             }
          }
@@ -165,8 +165,8 @@ void ROOT::TextInputColorizer::SetColors(const char* colorType,
                                          const char* colorBadBracket,
                                          const char* colorPrompt) {
    // Set the colors of the different items as either
-   // #RGB
-   // #RRGGBB or
+   // %RGB
+   // %RRGGBB or
    // color name, optionally prepended by "underline" or "bold"
 
    fColors[kColorType] = ColorFromName(colorType);

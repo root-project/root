@@ -39,9 +39,7 @@
 ***************************************************************************/
 // for platform specific configurations
 
-#ifndef ROOT_Math_MnConfig
 #include "Math/MConfig.h"
-#endif
 
 #include <iosfwd>
 
@@ -83,12 +81,8 @@
 */
 
 
-#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-#endif
-#ifndef ROOT_Math_MatrixRepresentationsStatic
 #include "Math/MatrixRepresentationsStatic.h"
-#endif
 
 
 namespace ROOT {
@@ -737,13 +731,9 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
 
 #ifndef __CINT__
 
-#ifndef ROOT_Math_SMatrix_icc
 #include "Math/SMatrix.icc"
-#endif
 
-#ifndef ROOT_Math_MatrixFunctions
 #include "Math/MatrixFunctions.h"
-#endif
 
 #endif //__CINT__
 

@@ -13,9 +13,7 @@
 #define ROOT_TClassDocOutput
 
 #include "Rtypes.h"
-#ifndef ROOT_TDocOutput
 #include "TDocOutput.h"
-#endif
 
 class TDocParser;
 class TDocMethodWrapper;

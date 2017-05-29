@@ -13,6 +13,7 @@
 #ifndef ROOT_Math_IFunctionfwd
 #define ROOT_Math_IFunctionfwd
 
+#include "Math_vectypes.hxx"
 
 namespace ROOT {
 
@@ -20,9 +21,14 @@ namespace ROOT {
 
       class IBaseFunctionOneDim;
       class IGradientFunctionOneDim;
-      class IBaseFunctionMultiDim;
+      template<class T>
+      class IBaseFunctionMultiDimTempl;
       class IGradientFunctionMultiDim;
 
+      template<class T>
+      using IMultiGenFunctionTempl = IBaseFunctionMultiDimTempl<T>;
+      using IBaseFunctionMultiDim = IBaseFunctionMultiDimTempl<double>;
+      using IMultiGenFunction = IMultiGenFunctionTempl<double>;
 
       typedef IBaseFunctionOneDim        IGenFunction;
       typedef IBaseFunctionMultiDim      IMultiGenFunction;

@@ -27,13 +27,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDictionary
 #include "TDictionary.h"
-#endif
 
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 class TClass;
 class TFunction;

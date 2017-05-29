@@ -40,9 +40,11 @@ Class which takes the results of a multiclass classification
 #include "TMVA/GeneticFitter.h"
 #include "TMVA/MsgLogger.h"
 #include "TMVA/Results.h"
+#include "TMVA/ROCCurve.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
+#include "TGraph.h"
 #include "TH1F.h"
 
 #include <limits>
@@ -85,36 +87,42 @@ Double_t TMVA::ResultsMulticlass::EstimatorFunction( std::vector<Double_t> & cut
 
    DataSet* ds = GetDataSet();
    ds->SetCurrentType( GetTreeType() );
-   Float_t truePositive = 0;
-   Float_t falsePositive = 0;
-   Float_t sumWeights = 0;
 
-   for (Int_t ievt=0; ievt<ds->GetNEvents(); ievt++) {
-      const Event* ev = ds->GetEvent(ievt);
-      Float_t w = ev->GetWeight();
-      if(ev->GetClass()==fClassToOptimize)
-         sumWeights += w;
-      bool passed = true;
-      for(UInt_t icls = 0; icls<cutvalues.size(); ++icls){
-         if(cutvalues.at(icls)<0. ? -fMultiClassValues[ievt][icls]<cutvalues.at(icls) : fMultiClassValues[ievt][icls]<=cutvalues.at(icls)){
-            passed = false;
+   // Cache optimisation, count true and false positives with memory access
+   // instead of code branch.
+   Float_t positives[2] = {0, 0};
+
+   for (Int_t ievt = 0; ievt < ds->GetNEvents(); ievt++) {
+      UInt_t  evClass = fEventClasses[ievt];
+      Float_t w       = fEventWeights[ievt];
+
+      Bool_t break_outer_loop = false;
+      for (UInt_t icls = 0; icls < cutvalues.size(); ++icls) {
+         auto value    = fMultiClassValues[ievt][icls];
+         auto cutvalue = cutvalues.at(icls);
+         if (cutvalue < 0. ? (-value < cutvalue) : (+value <= cutvalue)) {
+            break_outer_loop = true;
             break;
          }
       }
-      if(!passed)
+
+      if (break_outer_loop) {
          continue;
-      if(ev->GetClass()==fClassToOptimize)
-         truePositive += w;
-      else
-         falsePositive += w;
+      }
+
+      Bool_t isEvCurrClass = (evClass == fClassToOptimize);
+      positives[isEvCurrClass] += w;
    }
 
-   Float_t eff = truePositive/sumWeights;
-   Float_t pur = truePositive/(truePositive+falsePositive);
+   const Float_t truePositive  = positives[1];
+   const Float_t falsePositive = positives[0];
+
+   Float_t eff         = truePositive / fClassSumWeights[fClassToOptimize];
+   Float_t pur         = truePositive / (truePositive + falsePositive);
    Float_t effTimesPur = eff*pur;
 
    Float_t toMinimize = std::numeric_limits<float>::max();
-   if( effTimesPur > 0 )
+   if (effTimesPur > std::numeric_limits<float>::min())
       toMinimize = 1./(effTimesPur); // we want to minimize 1/efficiency*purity
 
    fAchievableEff.at(fClassToOptimize) = eff;
@@ -136,6 +144,22 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    fClassToOptimize = targetClass;
    std::vector<Interval*> ranges(dsi->GetNClasses(), new Interval(-1,1));
 
+   fClassSumWeights.clear();
+   fEventWeights.clear();
+   fEventClasses.clear();
+
+   for (UInt_t icls = 0; icls < dsi->GetNClasses(); ++icls) {
+      fClassSumWeights.push_back(0);
+   }
+
+   DataSet *ds = GetDataSet();
+   for (Int_t ievt = 0; ievt < ds->GetNEvents(); ievt++) {
+      const Event *ev = ds->GetEvent(ievt);
+      fClassSumWeights[ev->GetClass()] += ev->GetWeight();
+      fEventWeights.push_back(ev->GetWeight());
+      fEventClasses.push_back(ev->GetClass());
+   }
+
    const TString name( "MulticlassGA" );
    const TString opts( "PopSize=100:Steps=30" );
    GeneticFitter mg( *this, name, ranges, opts);
@@ -152,6 +176,65 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    }
 
    return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create performance graphs for this classifier a multiclass setting.
+/// Requires that the method has already been evaluated (that a resultset
+/// already exists.)
+///
+/// Currently uses the new way of calculating ROC Curves. If anything looks
+/// fishy, please contact the ROOT TMVA team.
+///
+
+void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
+{
+   DataSet *ds = GetDataSet();
+   ds->SetCurrentType(GetTreeType());
+   const DataSetInfo *dsi = GetDataSetInfo();
+
+   UInt_t numClasses = dsi->GetNClasses();
+
+   std::vector<std::vector<Float_t>> *rawMvaRes = GetValueVector();
+
+   for (size_t iClass = 0; iClass < numClasses; ++iClass) {
+      // Format data
+      // TODO: Replace with calls to GetMvaValuesPerClass
+      std::vector<Float_t> mvaRes;
+      std::vector<Bool_t> mvaResTypes;
+      std::vector<Float_t> mvaResWeights;
+
+      // Vector transpose due to values being stored as
+      //    [ [0, 1, 2], [0, 1, 2], ... ]
+      // in ResultsMulticlass::GetValueVector.
+      mvaRes.reserve(rawMvaRes->size());
+      for (auto item : *rawMvaRes) {
+         mvaRes.push_back(item[iClass]);
+      }
+
+      auto eventCollection = ds->GetEventCollection();
+      mvaResTypes.reserve(eventCollection.size());
+      mvaResWeights.reserve(eventCollection.size());
+      for (auto ev : eventCollection) {
+         mvaResTypes.push_back(ev->GetClass() == iClass);
+         mvaResWeights.push_back(ev->GetWeight());
+      }
+
+      // Get ROC Curve
+      ROCCurve *roc = new ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
+      TGraph *rocGraph = new TGraph(*(roc->GetROCCurve()));
+      delete roc;
+
+      // Style ROC Curve
+      TString className = dsi->GetClassInfo(iClass)->GetName();
+      TString name = Form("%s_rejBvsS_%s", prefix.Data(), className.Data());
+      TString title = Form("%s_%s", prefix.Data(), className.Data());
+      rocGraph->SetName(name);
+      rocGraph->SetTitle(title);
+
+      // Store ROC Curve
+      Store(rocGraph);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

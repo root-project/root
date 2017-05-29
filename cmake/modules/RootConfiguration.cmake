@@ -467,6 +467,11 @@ if(vc)
 else()
   set(hasvc undef)
 endif()
+if(veccore)
+  set(hasveccore define)
+else()
+  set(hasveccore undef)
+endif()
 if(cxx11)
   set(cxxversion cxx11)
   set(usec++11 define)
@@ -478,6 +483,12 @@ if(cxx14)
   set(usec++14 define)
 else()
   set(usec++14 undef)
+endif()
+if(cxx17)
+  set(cxxversion cxx17)
+  set(usec++17 define)
+else()
+  set(usec++17 undef)
 endif()
 if(libcxx)
   set(uselibc++ define)
@@ -493,7 +504,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-  int main() { std::string_view().to_string(); return 0;}" found_stdstringview)
+  int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
 if(found_stdstringview)
   set(hasstdstringview define)
 else()
@@ -612,7 +623,7 @@ set(ROOT_BINARY_DIR ${CMAKE_BINARY_DIR}/bin)
 set(ROOT_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
-export(TARGETS ${exported_targets} FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
+export(TARGETS ${exported_targets} NAMESPACE ROOT:: FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/ROOTConfig.cmake @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
@@ -659,9 +670,9 @@ endif()
 #---compiledata.h--------------------------------------------------------------------------------------------
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
-  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/include/compiledata.h NEWLINE_STYLE UNIX)
 else()
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}"
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh ${CMAKE_BINARY_DIR}/include/compiledata.h "${CXX}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}"
         "${LibSuffix}" "${SYSLIBS}"

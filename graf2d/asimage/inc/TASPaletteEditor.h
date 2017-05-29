@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TAttImage
 #include "TAttImage.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TLine
 #include "TLine.h"
-#endif
 
 
 class TVirtualPad;

@@ -13,9 +13,7 @@
 #ifndef ROOT_Math_WrappedParamFunction
 #define ROOT_Math_WrappedParamFunction
 
-#ifndef ROOT_Math_IParamFunction
 #include "Math/IParamFunction.h"
-#endif
 
 //#include <iostream>
 //#include <iterator>

@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSocket
 #include "TSocket.h"
-#endif
 #include <string>
 
 class TSeqCollection;

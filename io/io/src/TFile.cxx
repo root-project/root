@@ -3902,6 +3902,8 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// file for reading through the file cache. The file will be downloaded to
 /// the cache and opened from there. If the download fails, it will be opened remotely.
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
+///
+/// *The caller is responsible for deleting the pointer.*
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)
@@ -4423,7 +4425,7 @@ void TFile::IncrementFileCounter() { fgFileCounter++; }
 /// Sets the directory where to locally stage/cache remote files.
 /// If the directory is not writable by us return kFALSE.
 
-Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
+Bool_t TFile::SetCacheFileDir(std::string_view cachedir, Bool_t operatedisconnected,
                               Bool_t forcecacheread )
 {
    TString cached = cachedir;
@@ -4434,7 +4436,7 @@ Bool_t TFile::SetCacheFileDir(const char *cachedir, Bool_t operatedisconnected,
       // try to create it
       gSystem->mkdir(cached, kTRUE);
       if (gSystem->AccessPathName(cached, kFileExists)) {
-         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", cachedir);
+         ::Error("TFile::SetCacheFileDir", "no sufficient permissions on cache directory %s or cannot create it", TString(cachedir).Data());
          fgCacheFileDir = "";
          return kFALSE;
       }

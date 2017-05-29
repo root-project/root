@@ -1,12 +1,12 @@
-<a target="_blank" href="https://travis-ci.org/root-mirror/cling">
-  ![Travis status](https://travis-ci.org/root-mirror/cling.svg?branch=master)
-</a>
-<a target="_blank" href="https://ci.appveyor.com/project/vgvassilev/cling-j0wdg">
-  ![Appveyor status](https://ci.appveyor.com/api/projects/status/github/vgvassilev/cling?svg=true&branch=master)
-</a>
+[![Travis status](https://travis-ci.org/root-project/cling.svg?branch=master)](https://travis-ci.org/root-project/cling)
+<!-- a target="_blank" href="https://ci.appveyor.com/project/root-project/cling-j0wdg">
+  ![Appveyor status](https://ci.appveyor.com/api/projects/status/github/root-project/cling?svg=true&branch=master)
+</a -->
 
 Cling - The Interactive C++ Interpreter
 =========================================
+
+The main repository is at [https://github.com/root-project/cling](https://github.com/root-project/cling)
 
 
 Overview
@@ -18,7 +18,7 @@ concept, in order to leverage rapid application development. Implemented as a
 small extension to LLVM and Clang, the interpreter reuses their strengths such
 as the praised concise and expressive compiler diagnostics.
 
-See also [cling's web page.](https://cdn.rawgit.com/root-mirror/cling/master/www/index.html)
+See also [cling's web page.](https://cdn.rawgit.com/root-project/cling/master/www/index.html)
 
 Please note that some of the resources are rather old and most of the stated
 limitations are outdated.
@@ -53,7 +53,7 @@ If you have Cling's source cloned locally, you can find the tool in
 manually, or by using `wget`:
 
 ```sh
-wget https://raw.githubusercontent.com/root-mirror/cling/master/tools/packaging/cpt.py
+wget https://raw.githubusercontent.com/root-project/cling/master/tools/packaging/cpt.py
 chmod +x cpt.py
 ./cpt.py --check-requirements && ./cpt.py --create-dev-env Debug --with-workdir=./cling-build/
 ```
@@ -63,17 +63,17 @@ Full documentation of CPT can be found in [tools/packaging](tools/packaging).
 Usage
 -----
 ```c++
-./cling '#include <stdio.h>' 'printf("Hello World!\n")'`
+./cling '#include <stdio.h>' 'printf("Hello World!\n")'
 ```
 
 To get started run:
 ```bash
-./cling --help`
+./cling --help
 ```
 or type
 ```
 ./cling
-[cling]$ .help`
+[cling]$ .help
 ```
 
 

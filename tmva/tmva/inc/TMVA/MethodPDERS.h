@@ -47,17 +47,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
-#endif
-#ifndef ROOT_TMVA_TVector
-#ifndef ROOT_TVector
 #include "TVector.h"
-#endif
-#endif
 
 namespace TMVA {
 

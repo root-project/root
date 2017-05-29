@@ -19,9 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TASImagePlugin
 #include "TASImagePlugin.h"
-#endif
 
 
 class TASPluginGS : public TASImagePlugin {

@@ -9,8 +9,10 @@
 
 #include "ExternalInterpreterSource.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Utils/Diagnostics.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTDiagnostic.h"
 #include "clang/AST/ASTImporter.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Lex/Preprocessor.h"
@@ -104,24 +106,13 @@ namespace cling {
          && declToImport->isTemplateDecl()) || dyn_cast<UsingDecl>(declToImport)
          || dyn_cast<UsingShadowDecl>(declToImport)) {
 #ifndef NDEBUG
-      // DiagnosticsTrap isn't working here!
-      DiagnosticsEngine& Diags = m_Importer->getFromContext().getDiagnostics();
-      const bool OwnClient = Diags.ownsClient();
-      std::unique_ptr<DiagnosticConsumer> Prev = Diags.takeClient();
-      DiagnosticConsumer Trap;
-      Diags.setClient(&Trap, false);
+      utils::DiagnosticsStore DS(
+        m_Importer->getFromContext().getDiagnostics(), false, false, true);
 
-      assert((!Trap.getNumErrors() && m_Importer->Import(declToImport)==nullptr
-             && Trap.getNumErrors() != 0) && "Import using worked!");
-      assert(Trap.getNumErrors() == 1 && "Import caused multiple errors");
-
-      Diags.setClient(Prev.get(), OwnClient);
-      Prev.release();
-#if LLVM_VERSION_MAJOR >= 4
-      // In LLVM 4 the test above still works, but the errors generated are
-      // still propogated...So just reset the Diags.
-      Diags.Reset(true);
-#endif
+      assert((m_Importer->Import(declToImport)==nullptr) && "Import worked!");
+      assert(!DS.empty() &&
+             DS[0].getID() == clang::diag::err_unsupported_ast_node &&
+             "Import may be supported");
 #endif
       return;
     }

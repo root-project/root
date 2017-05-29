@@ -13,13 +13,8 @@
 #ifndef ROOT_Fit_UnBinData
 #define ROOT_Fit_UnBinData
 
-#ifndef ROOT_Fit_DataVector
-#include "Fit/DataVector.h"
-#endif
-
-#ifndef ROOT_Math_Error
+#include "Fit/FitData.h"
 #include "Math/Error.h"
-#endif
 
 
 
@@ -48,306 +43,259 @@ class UnBinData : public FitData {
 
 public :
 
-   /**
-      constructor from dimension of point  and max number of points (to pre-allocate vector)
-    */
+  /**
+    constructor from dimension of point  and max number of points (to pre-allocate vector)
+  */
 
-   explicit UnBinData(unsigned int maxpoints = 0, unsigned int dim = 1, bool isWeighted = false );
+  explicit UnBinData( unsigned int maxpoints = 0, unsigned int dim = 1,
+    bool isWeighted = false ) :
+    FitData( maxpoints, isWeighted ? dim + 1 : dim ),
+    fWeighted(isWeighted)
+  {
+    assert( dim >= 1 );
+    assert( !fWeighted || dim >= 2 );
+  }
 
 
-   /**
-      constructor from range and default option
-    */
-   explicit UnBinData (const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1, bool isWeighted = false);
+  /**
+    constructor from range and default option
+  */
+  explicit UnBinData ( const DataRange & range, unsigned int maxpoints = 0,
+    unsigned int dim = 1, bool isWeighted = false ) :
+    FitData( range, maxpoints, isWeighted ? dim + 1 : dim ),
+    fWeighted(isWeighted)
+  {
+    assert( dim >= 1 );
+    assert( !fWeighted || dim >= 2 );
+  }
 
-   /**
-      constructor from options and range
-    */
-   UnBinData (const DataOptions & opt, const DataRange & range,  unsigned int maxpoints = 0, unsigned int dim = 1,  bool isWeighted = false );
+  /**
+    constructor from options and range
+  */
+  UnBinData (const DataOptions & opt, const DataRange & range,
+    unsigned int maxpoints = 0, unsigned int dim = 1, bool isWeighted = false ) :
+    FitData( opt, range, maxpoints, isWeighted ? dim + 1 : dim ),
+    fWeighted(isWeighted)
+  {
+    assert( dim >= 1 );
+    assert( !fWeighted || dim >= 2 );
+  }
 
-   /**
-      constructor for 1D external data (data are not copied inside)
-    */
-   UnBinData(unsigned int n, const double * dataX );
+  /**
+    constructor for 1D external data (data are not copied inside)
+  */
+  UnBinData(unsigned int n, const double * dataX ) :
+    FitData( n, dataX ),
+    fWeighted( false )
+  {
+  }
 
-   /**
-      constructor for 2D external data (data are not copied inside)
-      or 1D data with a weight (if isWeighted = true)
-    */
-   UnBinData(unsigned int n, const double * dataX, const double * dataY, bool isWeighted = false );
+  /**
+    constructor for 2D external data (data are not copied inside)
+    or 1D data with a weight (if isWeighted = true)
+  */
+  UnBinData(unsigned int n, const double * dataX, const double * dataY,
+    bool isWeighted = false ) :
+    FitData( n, dataX, dataY ),
+    fWeighted( isWeighted )
+  {
+  }
 
-   /**
-      constructor for 3D external data (data are not copied inside)
-      or 2D data with a weight (if isWeighted = true)
-    */
-   UnBinData(unsigned int n, const double * dataX, const double * dataY, const double * dataZ, bool isWeighted = false );
+  /**
+    constructor for 3D external data (data are not copied inside)
+    or 2D data with a weight (if isWeighted = true)
+  */
+  UnBinData(unsigned int n, const double * dataX, const double * dataY,
+    const double * dataZ, bool isWeighted = false ) :
+    FitData( n, dataX, dataY, dataZ ),
+    fWeighted( isWeighted )
+  {
+  }
 
-   /**
-      constructor for multi-dim external data (data are not copied inside)
-      Uses as argument an iterator of a list (or vector) containing the const double * of the data
-      An example could be the std::vector<const double *>::begin
-      In case of weighted data, the external data must have a dim+1 lists of data
-      The apssed dim refers just to the coordinate size
-    */
-   template<class Iterator>
-   UnBinData(unsigned int n, unsigned int dim, Iterator dataItr, bool isWeighted = false ) :
-      FitData( ),
-      fDim(dim),
-      fPointSize( (isWeighted) ? dim +1 : dim),
-      fNPoints(n),
-      fDataVector(0)
-   {
-      fDataWrapper = new DataWrapper(fPointSize, dataItr);
-   }
+  /**
+    constructor for multi-dim external data (data are not copied inside)
+    Uses as argument an iterator of a list (or vector) containing the const double * of the data
+    An example could be the std::vector<const double *>::begin
+    In case of weighted data, the external data must have a dim+1 lists of data
+    The apssed dim refers just to the coordinate size
+  */
+  template<class Iterator>
+  UnBinData(unsigned int n, unsigned int dim, Iterator dataItr,
+    bool isWeighted = false ) :
+    FitData( n, isWeighted ? dim + 1 : dim, dataItr ),
+    fWeighted( isWeighted )
+  {
+    assert( dim >= 1 );
+    assert( !fWeighted || dim >= 2 );
+  }
 
-   /**
-      constructor for 1D data and a range (data are copied inside according to the given range)
-    */
-   UnBinData(unsigned int maxpoints, const double * dataX, const DataRange & range);
+  /**
+    constructor for 1D data and a range (data are copied inside according to the given range)
+  */
+  UnBinData(unsigned int maxpoints, const double * dataX, const DataRange & range) :
+    FitData( range, maxpoints, dataX ),
+    fWeighted( false )
+  {
+  }
 
-   /**
-      constructor for 2D data and a range (data are copied inside according to the given range)
-      or 1 1D data set + weight. If is weighted  dataY is the pointer to the list of the weights
-    */
-   UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY, const DataRange & range, bool isWeighted = false);
 
-   /**
-      constructor for 3D data and a range (data are copied inside according to the given range)
-      or a 2D data set + weights. If is weighted  dataZ is the pointer to the list of the weights
-    */
-   UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY, const double * dataZ, const DataRange & range, bool isWeighted = false);
+  /**
+    constructor for 2D data and a range (data are copied inside according to the given range)
+    or 1 1D data set + weight. If is weighted  dataY is the pointer to the list of the weights
+  */
+  UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY,
+    const DataRange & range, bool isWeighted = false) :
+    FitData( range, maxpoints, dataX, dataY ),
+    fWeighted( isWeighted )
+  {
+  }
 
-   /**
-      constructor for multi-dim external data and a range (data are copied inside according to the range)
-      Uses as argument an iterator of a list (or vector) containing the const double * of the data
-      An example could be the std::vector<const double *>::begin
-    */
-   template<class Iterator>
-   UnBinData(unsigned int maxpoints, unsigned int dim, Iterator dataItr, const DataRange & range, bool isWeighted = false ) :
-      FitData( ),
-      fDim(dim),
-      fPointSize( (isWeighted) ? dim +1 : dim),
-      fNPoints(0),
-      fDataVector(0),
-      fDataWrapper(0)
-   {
-      unsigned int n = fPointSize*maxpoints;
-      if ( n > MaxSize() ) {
-         MATH_ERROR_MSGVAL("UnBinData","Invalid data size n - no allocation done", n );
-      }
-      else if (n > 0) {
-         fDataVector = new DataVector(n);
+  /**
+    constructor for 3D data and a range (data are copied inside according to the given range)
+    or a 2D data set + weights. If is weighted  dataZ is the pointer to the list of the weights
+  */
+  UnBinData(unsigned int maxpoints, const double * dataX, const double * dataY,
+    const double * dataZ, const DataRange & range, bool isWeighted = false) :
+    FitData( range, maxpoints, dataX, dataY, dataZ ),
+    fWeighted( isWeighted )
+  {
+  }
 
-         // use data wrapper to get the data
-         ROOT::Fit::DataWrapper wdata(fPointSize, dataItr);
-         for (unsigned int i = 0; i < maxpoints; ++i) {
-            bool isInside = true;
-            for (unsigned int icoord = 0; icoord < dim; ++icoord)
-               isInside &= range.IsInside( wdata.Coords(i)[icoord], icoord );
-            // treat here the weight as an extra coordinate
-            if ( isInside ) Add(wdata.Coords(i));
-         }
-         if (fNPoints < maxpoints) (fDataVector->Data()).resize(fPointSize*fNPoints);
-      }
-   }
-
+  /**
+    constructor for multi-dim external data and a range (data are copied inside according to the range)
+    Uses as argument an iterator of a list (or vector) containing the const double * of the data
+    An example could be the std::vector<const double *>::begin
+  */
+  template<class Iterator>
+  UnBinData( unsigned int maxpoints, unsigned int dim, Iterator dataItr, const DataRange & range, bool isWeighted = false ) :
+    FitData( range, maxpoints, dim, dataItr ),
+    fWeighted( isWeighted )
+  {
+  }
 
 private:
-   /// copy constructor (private)
-   UnBinData(const UnBinData &) : FitData() {}
-   /// assignment operator  (private)
-   UnBinData & operator= (const UnBinData &) { return *this; }
+  /// copy constructor (private)
+  UnBinData(const UnBinData &) : FitData() { assert(false); }
+  /// assignment operator  (private)
+  UnBinData & operator= (const UnBinData &) { assert(false); return *this; }
 
 public:
+  /**
+    destructor, delete pointer to internal data or external data wrapper
+  */
+  virtual ~UnBinData() {
+  }
 
-#ifdef LATER
-   /**
-      Create from a compatible UnBinData set
-    */
-
-   UnBinData (const UnBinData & data , const DataOptions & opt, const DataRange & range) :
-      DataVector(opt,range, data.DataSize() ),
-      fDim(data.fDim),
-      fPointSize(data.fPointSize),
-      fNPoints(data.fNPoints)
-   {
-//       for (Iterator itr = begin; itr != end; ++itr)
-//          if (itr->IsInRange(range) )
-//             Add(*itr);
-   }
-#endif
-
-   /**
-      destructor, delete pointer to internal data or external data wrapper
-    */
-   virtual ~UnBinData() {
-      if (fDataVector) delete fDataVector;
-      if (fDataWrapper) delete fDataWrapper;
-   }
-
-   /**
-      preallocate a data set given size and dimension of the coordinates
-      if a vector already exists with correct dimension (point size) extend the existing one
-      to a total size of maxpoints (equivalent to a Resize)
-    */
-   void Initialize(unsigned int maxpoints, unsigned int dim = 1, bool isWeighted = false);
+  /**
+    preallocate a data set given size and dimension of the coordinates
+    if a vector already exists with correct dimension (point size) extend the existing one
+    to a total size of maxpoints (equivalent to a Resize)
+  */
+  //void Initialize(unsigned int maxpoints, unsigned int dim = 1, bool isWeighted = false);
 
 
-   /**
-      add one dim coordinate data (unweighted)
-   */
-   void Add(double x) {
-      int index = fNPoints*PointSize();
-      assert(fDataVector != 0);
-      assert(PointSize() == 1);
-      assert (index + PointSize() <= DataSize() );
+  /**
+    add one dim coordinate data (unweighted)
+  */
+  void Add(double x)
+  {
+    assert( !fWeighted );
 
-      (fDataVector->Data())[ index ] = x;
-
-      fNPoints++;
-   }
+    FitData::Add( x );
+  }
 
 
-   /**
-      add 2-dim coordinate data
-      can also be used to add 1-dim data with a weight
-   */
-   void Add(double x, double y) {
-      int index = fNPoints*PointSize();
-      assert(fDataVector != 0);
-      assert(PointSize() == 2);
-      assert (index + PointSize() <= DataSize() );
+  /**
+    add 2-dim coordinate data
+    can also be used to add 1-dim data with a weight
+  */
+  void Add(double x, double y)
+  {
+    assert( fDim == 2 );
+    double dataTmp[] = { x, y };
 
-      (fDataVector->Data())[ index ] = x;
-      (fDataVector->Data())[ index+1 ] = y;
+    FitData::Add( dataTmp );
+  }
 
-      fNPoints++;
-   }
+  /**
+    add 3-dim coordinate data
+    can also be used to add 2-dim data with a weight
+  */
+  void Add(double x, double y, double z)
+  {
+    assert( fDim == 3 );
+    double dataTmp[] = { x, y, z };
 
-   /**
-      add 3-dim coordinate data
-      can also be used to add 2-dim data with a weight
-   */
-   void Add(double x, double y, double z) {
-      int index = fNPoints*PointSize();
-      assert(fDataVector != 0);
-      assert(PointSize() == 3);
-      assert (index + PointSize() <= DataSize() );
+    FitData::Add( dataTmp );
+  }
 
-      (fDataVector->Data())[ index ] = x;
-      (fDataVector->Data())[ index+1 ] = y;
-      (fDataVector->Data())[ index+2 ] = z;
+  /**
+    add multi-dim coordinate data
+  */
+  void Add( const double* x )
+  {
+    FitData::Add( x );
+  }
 
-      fNPoints++;
-   }
+  /**
+    add multi-dim coordinate data + weight
+  */
+  void Add(const double *x, double w)
+  {
+    assert( fWeighted );
 
-   /**
-      add multi-dim coordinate data
-   */
-   void Add(const double *x) {
-      int index = fNPoints*fPointSize;
+    std::vector<double> tmpVec(fDim);
+    std::copy( x, x + fDim - 1, tmpVec.begin() );
+    tmpVec[fDim-1] = w;
 
-      assert(fDataVector != 0);
-      assert (index + PointSize() <= DataSize() );
+    FitData::Add( &tmpVec.front() );
+  }
 
-      double * itr = &( (fDataVector->Data()) [ index ]);
+  /**
+    return weight
+  */
+  double Weight( unsigned int ipoint ) const
+  {
+    assert( ipoint < fNPoints );
 
-      for (unsigned int i = 0; i < fDim; ++i)
-         *itr++ = x[i];
+    if ( !fWeighted ) return 1.0;
+    return *GetCoordComponent(ipoint, fDim-1);
+  }
 
-      fNPoints++;
-   }
+  const double * WeightsPtr( unsigned int ipoint ) const
+  {
+    assert( ipoint < fNPoints );
 
-   /**
-      add multi-dim coordinate data + weight
-   */
-   void Add(const double *x, double w) {
-      int index = fNPoints*fPointSize;
-
-      assert(fDataVector != 0);
-      assert (index + PointSize() <= DataSize() );
-
-      double * itr = &( (fDataVector->Data()) [ index ]);
-
-      for (unsigned int i = 0; i < fDim; ++i)
-         *itr++ = x[i];
-      *itr = w;
-
-      fNPoints++;
-   }
-
-   /**
-      return pointer to coordinate data
-    */
-   const double * Coords(unsigned int ipoint) const {
-      if (fDataVector)
-         return &( (fDataVector->Data()) [ ipoint*fPointSize ] );
-      else
-         return fDataWrapper->Coords(ipoint);
-   }
-
-   bool IsWeighted() const {
-      return (fPointSize == fDim+1);
-   }
-
-   double Weight(unsigned int ipoint) const {
-      if (fPointSize == fDim) return 1;
-      if (fDataVector )
-         return  (fDataVector->Data()) [ ipoint*fPointSize + 1 ] ;
-      else
-         return 0; // weights are not supported for wrapper data sets
-   }
+    if ( !fWeighted ){
+       MATH_ERROR_MSG("UnBinData::WeightsPtr","The function is unweighted!");
+       return nullptr;
+    }
+    return GetCoordComponent(ipoint, fDim-1);
+  }
 
 
-   /**
-      resize the vector to the given npoints
-    */
-   void Resize (unsigned int npoints);
+  /**
+    return coordinate data dimension
+  */
+  unsigned int NDim() const
+  { return fWeighted ? fDim -1 : fDim; }
 
+  bool IsWeighted() const
+  {
+    return fWeighted;
+  }
 
-   /**
-      return number of contained points
-    */
-   unsigned int NPoints() const { return fNPoints; }
+  void Append( unsigned int newPoints, unsigned int dim = 1, bool isWeighted = false )
+  {
+    assert( !fWrapped );
 
-   /**
-      return number of contained points
-    */
-   unsigned int Size() const { return fNPoints; }
+    fWeighted = isWeighted;
 
-   /**
-      return coordinate data dimension
-    */
-   unsigned int NDim() const { return fDim; }
-
-   /**
-      return  point size. For unweighted data is equivalent to coordinate dimension,
-      for weighted data is NDim()+1
-    */
-   unsigned int PointSize() const {
-      return fPointSize;
-   }
-
-   /**
-      return size of internal data vector (is 0 for external data)
-    */
-   unsigned int DataSize() const {
-      return (fDataVector) ? fDataVector->Size() : 0;
-   }
-
-
-protected:
-
-   void SetNPoints(unsigned int n) { fNPoints = n; }
+    FitData::Append( newPoints, dim );
+  }
 
 private:
-
-   unsigned int fDim;         // coordinate data dimension
-   unsigned int fPointSize;    // poit size dimension (coordinate + weight)
-   unsigned int fNPoints;     // numer of fit points
-
-   DataVector * fDataVector;     // pointer to internal data vector (null for external data)
-   DataWrapper * fDataWrapper;   // pointer to structure wrapping external data (null when data are copied in)
+  bool fWeighted;
 
 };
 

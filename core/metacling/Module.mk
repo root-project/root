@@ -34,17 +34,20 @@ METACLINGDEP   := $(METACLINGO:.o=.d)
 # include all dependency files
 INCLUDEFILES += $(METACLINGDEP)
 
+ifeq ($(PLATFORM),macosx)
+LIBCLINGLDFLAGS := -Wl,-bind_at_load -Wl,-undefined -Wl,dynamic_lookup
+else
+LIBCLINGLDFLAGS := -Wl,--unresolved-symbols=ignore-in-object-files
+endif
+
 
 ##### libCling #####
 
 CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
 CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
 
-IOLIB_EARLY = $(LPATH)/libRIO.$(SOEXT)
-
-$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
-                $(ORDER_) $(MAINLIBS) $(TCLINGLIBDEPM) $(IOLIB_EARLY)
-		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
+$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO)
+		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(LIBCLINGLDFLAGS)" \
 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
 		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
 		    $(CLINGLIBEXTRA) $(TCLINGLIBEXTRA)" \

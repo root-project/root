@@ -32,19 +32,11 @@
 #ifndef ROOT_TMVA_PDEFoamDensityBase
 #define ROOT_TMVA_PDEFoamDensityBase
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TMVA_BinarySearchTree
 #include "TMVA/BinarySearchTree.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
 namespace TMVA
 {

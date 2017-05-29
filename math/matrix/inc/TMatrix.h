@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixF
 #include "TMatrixF.h"
-#endif
 typedef TMatrixT<Float_t> TMatrix;
 
 #endif

@@ -14,7 +14,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+
+/** \class RooStats::ProfileInspector
+    \ingroup Roostats
+
+Utility class to plot conditional MLE of nuisance parameters vs. Parameters of Interest
+
+*/
 
 
 #include "RooStats/ProfileInspector.h"
@@ -26,7 +32,6 @@
 #include "RooCurve.h"
 #include "TAxis.h"
 
-/// ClassImp for building the THtml documentation of the class 
 ClassImp(RooStats::ProfileInspector);
 
 using namespace RooStats;
@@ -46,20 +51,21 @@ ProfileInspector::~ProfileInspector()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
+/// This tool makes a plot of the conditional maximum likelihood estimate of the nuisance parameter
+///   vs the parameter of interest
+///
+/// This enables you to discover if any of the nuisance parameters are behaving strangely
+/// curve is the optional parameters, when used you can specify the points previously scanned
+/// in the process of plotOn or createHistogram.
+/// To do this, you can do the following after the plot has been made:
+/// ~~~ {.cpp}
+/// profile, RooRealVar * poi, RooCurve * curve ){
+///RooCurve * curve = 0;
+/// ~~~
 
 TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::ModelConfig * config)
 {
-   //
-    // < This tool makes a plot of the conditional maximum likelihood estimate of the nuisance parameter 
-    //   vs the parameter of interest >
-    //
-    // This enables you to discover if any of the nuisance parameters are behaving strangely
-    // curve is the optional parameters, when used you can specify the points previously scanned
-    // in the process of plotOn or createHistogram. 
-    // To do this, you can do the following after the plot has been made:
-
-  // profile, RooRealVar * poi, RooCurve * curve ){
-  //RooCurve * curve = 0;
 
   const RooArgSet* poi_set = config->GetParametersOfInterest();
   const RooArgSet* nuis_params=config->GetNuisanceParameters();
@@ -90,7 +96,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   RooAbsReal* nll = pdf->createNLL(data);
   RooAbsReal* profile = nll->createProfile(*poi);
-  
+
   TList * list = new TList;
   Int_t curve_N=100;
   Double_t* curve_x=0;
@@ -106,23 +112,23 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
      curve_x[i]=min+step*i;
   }
 //   }
-  
+
   map<string, std::vector<Double_t> > name_val;
   for(int i=0; i<curve_N; i++){
     poi->setVal(curve_x[i]);
     profile->getVal();
-    
+
     TIterator* nuis_params_itr=nuis_params->createIterator();
     TObject* nuis_params_obj;
     while((nuis_params_obj=nuis_params_itr->Next())){
-       RooRealVar* nuis_param = dynamic_cast<RooRealVar*>(nuis_params_obj); 
-       if(nuis_param) { 
+       RooRealVar* nuis_param = dynamic_cast<RooRealVar*>(nuis_params_obj);
+       if(nuis_param) {
           string name = nuis_param->GetName();
           if(nuis_params->getSize()==0) continue;
           if(nuis_param && (! nuis_param->isConstant())){
              if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<Double_t>(curve_N);
              name_val[name][i]=nuis_param->getVal();
-             
+
              if(i==curve_N-1){
                 TGraph* g = new TGraph(curve_N, curve_x, &(name_val[name].front()));
                 g->SetName((name+"_"+string(poi->GetName())+"_profile").c_str());
@@ -137,7 +143,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
   }
 
   delete [] curve_x;
-  
+
 
   delete nll;
   delete profile;

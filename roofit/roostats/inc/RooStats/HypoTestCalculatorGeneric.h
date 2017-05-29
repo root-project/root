@@ -16,29 +16,17 @@
 #include "Rtypes.h" // necessary for TNamed
 #endif
 
-#ifndef ROOSTATS_HypoTestCalculator
 #include "RooStats/HypoTestCalculator.h"
-#endif
 
-#ifndef ROOSTATS_ModelConfig
 #include "RooStats/ModelConfig.h"
-#endif
 
-#ifndef ROOSTATS_TestStatistic
 #include "RooStats/TestStatistic.h"
-#endif
 
-#ifndef ROOSTATS_TestStatSampler
 #include "RooStats/TestStatSampler.h"
-#endif
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
-#ifndef ROOSTATS_HypoTestResult
 #include "RooStats/HypoTestResult.h"
-#endif
 
 
 namespace RooStats {

@@ -18,11 +18,6 @@
 namespace TMVA {
 namespace DNN  {
 
-template<typename AReal>
-ROOT::TThreadExecutor TCpuMatrix<AReal>::fPool{};
-template<typename AReal>
-std::vector<AReal> TCpuMatrix<AReal>::fOnes{};
-
 //____________________________________________________________________________
 template<typename AReal>
 TCpuMatrix<AReal>::TCpuMatrix(size_t nRows, size_t nCols)

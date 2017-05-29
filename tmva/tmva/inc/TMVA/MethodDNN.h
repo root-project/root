@@ -39,24 +39,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
-#ifndef ROOT_TRandom3
 #include "TRandom3.h"
-#endif
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef TMVA_NEURAL_NET
 #include "TMVA/NeuralNet.h"
-#endif
 
 #include "TMVA/Tools.h"
 
@@ -72,19 +60,16 @@
 #include "TMVA/DNN/Architectures/Cuda.h"
 #endif
 
-using namespace TMVA::DNN;
-
 namespace TMVA {
 
 class MethodDNN : public MethodBase
 {
-    using Architecture_t = TReference<Double_t>;
-    using Net_t          = TNet<Architecture_t>;
-    using Matrix_t       = typename Architecture_t::Matrix_t;
+   using Architecture_t = DNN::TReference<Double_t>;
+   using Net_t          = DNN::TNet<Architecture_t>;
+   using Matrix_t       = typename Architecture_t::Matrix_t;
 
 private:
-
-   using LayoutVector_t   = std::vector<std::pair<int, EActivationFunction>>;
+   using LayoutVector_t   = std::vector<std::pair<int, DNN::EActivationFunction>>;
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
 
    struct TTrainingSettings
@@ -92,7 +77,7 @@ private:
        size_t                batchSize;
        size_t                testInterval;
        size_t                convergenceSteps;
-       ERegularization       regularization;
+       DNN::ERegularization  regularization;
        Double_t              learningRate;
        Double_t              momentum;
        Double_t              weightDecay;
@@ -107,9 +92,9 @@ private:
    // general helper functions
    void     Init();
 
-   Net_t             fNet;
-   EInitialization   fWeightInitialization;
-   EOutputFunction   fOutputFunction;
+   Net_t                fNet;
+   DNN::EInitialization fWeightInitialization;
+   DNN::EOutputFunction fOutputFunction;
 
    TString                        fLayoutString;
    TString                        fErrorStrategy;

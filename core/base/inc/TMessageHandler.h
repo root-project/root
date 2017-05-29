@@ -28,12 +28,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
 class TMessageHandler : public TNamed, public TQObject {
 

@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSelector
 #include <TSelector.h>
-#endif
 
 class TH1F;
 class TH2F;

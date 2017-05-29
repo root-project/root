@@ -22,9 +22,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBRIK
 #include "TBRIK.h"
-#endif
 
 class TGTRA : public TBRIK {
 

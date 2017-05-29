@@ -21,9 +21,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBRIK
 #include "TShape.h"
-#endif
 
 // const Int_t kDiv = 30;               //default number of z segments for semi-sphere
 

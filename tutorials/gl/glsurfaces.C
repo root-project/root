@@ -23,7 +23,7 @@ void glsurfaces()
    TCanvas *c1 = new TCanvas("glc1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);
    gStyle->SetFrameFillColor(42);
-   title = new TPaveText(0.2, 0.96, 0.8, 0.995);
+   auto title = new TPaveText(0.2, 0.96, 0.8, 0.995);
    title->SetFillColor(33);
    title->AddText("Examples of Surface options");
    title->Draw();

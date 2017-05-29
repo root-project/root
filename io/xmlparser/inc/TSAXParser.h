@@ -12,9 +12,7 @@
 #ifndef ROOT_TSAXParser
 #define ROOT_TSAXParser
 
-#ifndef ROOT_TXMLParser
 #include "TXMLParser.h"
-#endif
 
 
 class TList;

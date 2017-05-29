@@ -13,9 +13,7 @@
 #ifndef ROOT_TQtMarker
 #define ROOT_TQtMarker
 
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 #ifndef __CINT__
 #include <QPolygon>

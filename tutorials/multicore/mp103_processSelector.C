@@ -11,7 +11,8 @@
 
 #include "TString.h"
 #include "TROOT.h"
-#include "TTree.h"
+#include "TChain.h"
+#include "TFileCollection.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "ROOT/TTreeProcessorMP.hxx"
@@ -57,11 +58,13 @@ int mp103_processSelector(){
   sel->GetOutputList()->Delete();
 
   // Prepare datasets: vector of files, TFileCollection
+  TChain ch;
   TFileCollection fc;
   std::vector<std::string> files;
   for (int i = 0; i < 4; i++) {
      files.push_back(fh1[i]);
      fc.Add(new TFileInfo(fh1[i]));
+     ch.Add(fh1[i]);
   }
 
   //TTreeProcessorMP::Process with vector of files and tree name
@@ -71,6 +74,10 @@ int mp103_processSelector(){
 
   //TTreeProcessorMP::Process with TFileCollection, no tree name
   out = pool.Process(fc, *sel);
+  sel->GetOutputList()->Delete();
+
+  // TTreeProcessorMP::Process with TChain, no tree name
+  out = pool.Process(ch, *sel);
   sel->GetOutputList()->Delete();
 
   return 0;

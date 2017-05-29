@@ -53,15 +53,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGDoubleSlider
 #include "TGDoubleSlider.h"
-#endif
 
 class TGTripleVSlider : public TGDoubleVSlider {
 

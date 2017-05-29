@@ -32,9 +32,7 @@ extern "C" {
 #include <vector>
 #include <array>
 
-#ifndef ROOT_ESTLType
 #include "ESTLType.h"
-#endif
 
 #ifdef R__OLDHPACC
 namespace std {

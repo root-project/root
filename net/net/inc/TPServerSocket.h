@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TServerSocket
 #include "TServerSocket.h"
-#endif
 
 class TPSocket;
 

@@ -20,9 +20,7 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef ROOT_TMVA_BDTEventWrapper
 #include "TMVA/BDTEventWrapper.h"
-#endif
 
 /*! \class TMVA::BDTEventWrapper
 \ingroup TMVA

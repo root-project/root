@@ -13,9 +13,7 @@
 
 
 // ROOT
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TDNDData;
 class TEveDigitSet;

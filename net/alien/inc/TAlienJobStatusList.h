@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridJobStatusList
 #include "TGridJobStatusList.h"
-#endif
 
 class TAlienJob;
 

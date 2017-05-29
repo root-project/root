@@ -22,13 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_Math_Delaunay2D
 #include "Math/Delaunay2D.h"
-#endif
 
 class TGraph2D;
 class TView;

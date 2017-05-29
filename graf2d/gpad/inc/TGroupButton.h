@@ -13,9 +13,7 @@
 #define ROOT_TGroupButton
 
 
-#ifndef ROOT_TButton
 #include "TButton.h"
-#endif
 
 class TGroupButton : public TButton {
 

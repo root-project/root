@@ -13,9 +13,7 @@
 #ifndef ROOT_TPointSet3DGL
 #define ROOT_TPointSet3DGL
 
-#ifndef ROOT_TGLObject
 #include "TGLObject.h"
-#endif
 
 class TGLRnrCtx;
 

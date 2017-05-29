@@ -44,9 +44,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSQLServer
 #include "TSQLServer.h"
-#endif
 
 #include <mysql.h>
 

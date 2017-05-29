@@ -41,12 +41,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGMenu
 #include "TGMenu.h"
-#endif
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 
 class TGMdiMainFrame;

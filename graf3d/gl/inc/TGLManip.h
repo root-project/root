@@ -12,18 +12,10 @@
 #ifndef ROOT_TGLManip
 #define ROOT_TGLManip
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 class TGLPhysicalShape;
 class TGLVertex3;

@@ -233,7 +233,7 @@ const char *rootClingHelp =
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/Path.h"
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "TModuleGenerator.h"
 #include "TClassEdit.h"
 #include "TClingUtils.h"
@@ -971,6 +971,9 @@ bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
    // We do want to call both CheckInputOperator all the times.
    bool has_input_error = CheckInputOperator("operator>>", proto, fullname, cl, interp);
    has_input_error = CheckInputOperator("operator<<", proto, fullname, cl, interp) || has_input_error;
+
+   delete [] proto;
+
    return has_input_error;
 }
 
@@ -3074,8 +3077,8 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TROOT.h\"\n"
                << "#include \"TBuffer.h\"\n"
                << "#include \"TMemberInspector.h\"\n"
-               << "#include \"TInterpreter.h\"" << std::endl
-               << "#include \"TVirtualMutex.h\"" << std::endl
+               << "#include \"TInterpreter.h\"\n"
+               << "#include \"TVirtualMutex.h\"\n"
                << "#include \"TError.h\"\n\n"
                << "#ifndef G__ROOT\n"
                << "#define G__ROOT\n"
@@ -3263,10 +3266,14 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 void CheckForMinusW(const char *arg,
                     std::list<std::string> &diagnosticPragmas)
 {
-   const std::string pattern("-Wno-");
+   static const std::string pattern("-Wno-");
 
    std::string localArg(arg);
    if (localArg.find(pattern) != 0) return;
+   if (localArg == "-Wno-noexcept-type") {
+      // GCC7 warning not supported by clang 3.9
+      return;
+   }
 
    ROOT::TMetaUtils::ReplaceAll(localArg, pattern, "#pragma clang diagnostic ignored \"-W");
    localArg += "\"";
@@ -3661,14 +3668,24 @@ bool IsCorrectClingArgument(const std::string& argument)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+bool NeedsSelection(const char* name)
+{
+   static const std::vector<std::string> namePrfxes {
+      "array<",
+      "unique_ptr<"};
+   auto pos = find_if(namePrfxes.begin(),
+                      namePrfxes.end(),
+                      [&](const std::string& str){return ROOT::TMetaUtils::BeginsWith(name,str);});
+   return namePrfxes.end() == pos;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool IsSupportedClassName(const char* name)
 {
    static const std::vector<std::string> uclNamePrfxes {
-      "array<",
       "chrono:",
       "ratio<",
-      "unique_ptr<",
       "shared_ptr<"};
    static const std::set<std::string> unsupportedClassesNormNames{
       "regex",
@@ -3694,6 +3711,11 @@ int CheckForUnsupportedClasses(const RScanner::ClassColl_t &annotatedRcds)
                << "currently the support for its I/O is not yet available. Note that "
                << clName << ", even if not selected, will be available for "
                << "interpreted code.\n";
+         nerrors++;
+      }
+      if (!NeedsSelection(clName)){
+         std::cerr << "Error: It is not necessary to explicitly select class "
+                   << clName << ". I/O is supported for it transparently.\n";
          nerrors++;
       }
    }
@@ -4113,6 +4135,7 @@ int RootClingMain(int argc,
       clingArgs.push_back("-D__ROOTCLING__");
    }
    clingArgs.push_back("-fsyntax-only");
+   clingArgs.push_back("-fPIC");
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-main-file-name");
    clingArgs.push_back("-Xclang");

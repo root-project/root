@@ -12,13 +12,11 @@
 #ifndef ROOT_TGeoPatternFinder
 #define ROOT_TGeoPatternFinder
 
-#ifndef ROOT_TObject
-#include "TObject.h"
-#endif
+#include <mutex>
 
-#ifndef ROOT_TGeoVolume
+#include "TObject.h"
+
 #include "TGeoVolume.h"
-#endif
 
 
 class TGeoMatrix;
@@ -63,7 +61,8 @@ protected :
 
    mutable std::vector<ThreadData_t*> fThreadData; //! Vector of thread private transient data
    mutable Int_t                      fThreadSize; //! Size of the thread vector
-
+   mutable std::mutex                 fMutex;      //! Mutex for thread data
+   
 protected:
    TGeoPatternFinder(const TGeoPatternFinder&);
    TGeoPatternFinder& operator=(const TGeoPatternFinder&);

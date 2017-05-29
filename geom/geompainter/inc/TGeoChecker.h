@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoChecker
 #define ROOT_TGeoChecker
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 // forward declarations
 class TTree;

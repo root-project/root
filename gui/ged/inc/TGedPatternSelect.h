@@ -40,12 +40,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGButton
 #include "TGButton.h"
-#endif
-#ifndef ROOT_TGToolTip
 #include "TGToolTip.h"
-#endif
 
 
 class TGedPopup : public TGCompositeFrame {
@@ -74,7 +70,7 @@ protected:
    Style_t         fPattern;
    static TGGC    *fgGC;
    TGToolTip      *fTip;         // tool tip associated with a button
-   char            fTipText[5];
+   char            fTipText[7];
 
    virtual void    DoRedraw();
 

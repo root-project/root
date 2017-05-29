@@ -37,9 +37,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 
@@ -58,10 +56,10 @@ namespace TMVA {
 
       // Return the gain in separation of the original sample is split in two sub-samples
       // (N * Index_parent) - (N_left * Index_left) - (N_right * Index_right)
-      virtual Double_t GetSeparationGain( const Double_t& nSelS, const Double_t& nSelB,
-                                          const Double_t& nTotS, const Double_t& nTotB );
+      virtual Double_t GetSeparationGain( const Double_t nSelS, const Double_t nSelB,
+                                          const Double_t nTotS, const Double_t nTotB );
       // return the Index (S/sqrt(S+B))
-      virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t  GetSeparationIndex( const Double_t s, const Double_t b );
 
    protected:
 

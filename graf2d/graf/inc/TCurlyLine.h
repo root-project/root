@@ -12,15 +12,9 @@
 #define ROOT_TCurlyLine
 
 
-#ifndef ROOT_TPolyLine
 #include "TPolyLine.h"
-#endif
-#ifndef ROOT_TAttBBox2D
 #include "TAttBBox2D.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TPoint;
 

@@ -2,9 +2,11 @@
 /// \ingroup tutorial_cocoa
 /// A demo to show transparency with TMultiGraph
 /// (and a really interesting curve/equation). Point compression in TPadPainter.
-/// You can see all three flowers ONLY with Cococa (transparency).
+/// You can see all three flowers ONLY with Cocoa (transparency).
 ///
-/// The equation by Paul Burke: http://paulbourke.net/geometry//// \macro_code
+/// The equation by Paul Burke: http://paulbourke.net/geometry/
+///
+/// \macro_code
 ///
 /// \author Timur Pocheptsov
 

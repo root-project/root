@@ -23,15 +23,9 @@
 //                                                                           //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualMCDecayer
 #include "TVirtualMCDecayer.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
 
 
 class TPythia6Decayer : public TVirtualMCDecayer {

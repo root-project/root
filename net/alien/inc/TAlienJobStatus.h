@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGridJobStatus
 #include "TGridJobStatus.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TAlienJob;
 class TAlienMasterJob;

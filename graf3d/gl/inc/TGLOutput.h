@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLOutput
 #define ROOT_TGLOutput
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TGLViewer;
 

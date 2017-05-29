@@ -82,7 +82,7 @@ void FillUnBinData(ROOT::Fit::UnBinData &d, TTree * tree ) {
    // large tree
    unsigned int n = tree->GetEntries();
    std::cout << "number of unbin data is " << n << " of dim " << N << std::endl;
-   d.Initialize(n,N);
+   d.Append(n,N);
 
    double vx[N];
    for (int j = 0; j <N; ++j) {
@@ -376,7 +376,5 @@ int main() {
    ROOT::Math::WrappedParamFunction<> gausn(&GausNorm<N>::F,2*N,iniPar,iniPar+2*N);
    FitUsingNewFitter<TMINUIT>(&tree,gausn);
    //}
-
-
 
 }

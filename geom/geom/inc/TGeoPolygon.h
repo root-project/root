@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoPolygon
 #define ROOT_TGeoPolygon
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TGeoPolygon : public TObject
 {

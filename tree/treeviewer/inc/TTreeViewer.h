@@ -18,13 +18,9 @@
 //                                                //
 ////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
 class TTreeViewer;
 class TTVLVContainer;

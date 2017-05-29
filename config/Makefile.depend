@@ -2,7 +2,6 @@
 #
 # Makefile containing library dependencies
 
-TCLINGLIBDEPM          = $(IOLIB)
 IOLIBDEPM              = $(THREADLIB)
 NETLIBDEPM             = $(IOLIB) $(MATHCORELIB)
 MATRIXLIBDEPM          = $(MATHCORELIB)
@@ -30,7 +29,7 @@ MINUIT2LIBDEPM         = $(GRAFLIB) $(HISTLIB) $(MATRIXLIB) $(MATHCORELIB)
 FUMILILIBDEPM          = $(GRAFLIB) $(HISTLIB) $(MATHCORELIB)
 TREELIBDEPM            = $(NETLIB) $(IOLIB) $(THREADLIB)
 TREEPLAYERLIBDEPM      = $(TREELIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) $(GPADLIB) \
-                         $(IOLIB) $(MATHCORELIB) $(MULTIPROCLIB)
+                         $(NETLIB) $(IOLIB) $(MATHCORELIB) $(MULTIPROCLIB)
 TREEVIEWERLIBDEPM      = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(GUILIB) \
                          $(TREEPLAYERLIB) $(GEDLIB) $(IOLIB) $(MATHCORELIB)
 PROOFLIBDEPM           = $(NETLIB) $(TREELIB) $(THREADLIB) $(IOLIB) \
@@ -61,6 +60,7 @@ TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
                          $(GPADLIB) $(TREEPLAYERLIB) $(MATHCORELIB)
 SPECTRUMLIBDEPM        = $(HISTLIB) $(MATRIXLIB)
+UNFOLDLIBDEPM          = $(HISTLIB) $(MATRIXLIB) $(XMLPARSERLIB)
 TMVALIBDEPM            = $(IOLIB) $(HISTLIB) $(MATRIXLIB) $(TREELIB) \
                          $(GRAFLIB) $(GPADLIB) $(TREEPLAYERLIB) $(MLPLIB) \
                          $(MINUITLIB) $(MATHCORELIB) $(XMLLIB)
@@ -149,7 +149,6 @@ HTTPLIBDEPM            = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
 
 ifeq ($(EXPLICITLINK),yes)
 
-TCLINGLIBDEP           = $(TLCLINGDEPM)
 IOLIBDEP               = $(IOLIBDEPM)
 NETLIBDEP              = $(NETLIBDEPM)
 MATRIXLIBDEP           = $(MATRIXLIBDEPM)
@@ -194,6 +193,7 @@ PYTHIA8LIBDEP          = $(PYTHIA8LIBDEPM)
 TABLELIBDEP            = $(TABLELIBDEPM)
 MLPLIBDEP              = $(MLPLIBDEPM)
 SPECTRUMLIBDEP         = $(SPECTRUMLIBDEPM)
+UNFOLDLIBDEP           = $(UNFOLDLIBDEPM)
 TMVALIBDEP             = $(TMVALIBDEPM)
 TMVAGUILIBDEP          = $(TMVAGUILIBDEPM)
 GENETICLIBDEP          = $(GENETICLIBDEPM)
@@ -256,7 +256,6 @@ HTTPLIBDEP             = $(HTTPLIBDEPM)
 
 ifeq ($(PLATFORM),win32)
 
-TCLINGLIBEXTRA          = lib/libRIO.lib
 IOLIBEXTRA              = lib/libThread.lib
 NETLIBEXTRA             = lib/libRIO.lib lib/libMathCore.lib
 MATRIXLIBEXTRA          = lib/libMathCore.lib
@@ -287,9 +286,10 @@ MINUIT2LIBEXTRA         = lib/libGraf.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libMathCore.lib
 MATHMORELIBEXTRA        = lib/libMathCore.lib
 FUMILILIBEXTRA          = lib/libGraf.lib lib/libHist.lib lib/libMathCore.lib
+HADDLIBEXTRA            = lib/libMultiProc.lib
 TREELIBEXTRA            = lib/libNet.lib lib/libRIO.lib lib/libThread.lib
 TREEPLAYERLIBEXTRA      = lib/libTree.lib lib/libGraf3d.lib lib/libGpad.lib \
-                          lib/libGraf.lib lib/libHist.lib lib/libRIO.lib \
+                          lib/libGraf.lib lib/libHist.lib lib/libNet.lib lib/libRIO.lib \
                           lib/libMathCore.lib lib/libMultiProc.lib
 TREEVIEWERLIBEXTRA      = lib/libTree.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libHist.lib lib/libGui.lib lib/libTreePlayer.lib \
@@ -331,6 +331,7 @@ MLPLIBEXTRA             = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib lib/libMathCore.lib
 SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
+UNFOLDLIBEXTRA          = lib/libHist.lib lib/libMatrix.lib lib/libXMLParser.lib
 TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
                           lib/libTreePlayer.lib  lib/libMLP.lib \
@@ -444,7 +445,6 @@ endif
 
 else
 
-TCLINGLIBEXTRA          = -Llib -lRIO 
 IOLIBEXTRA              = -Llib -lThread
 NETLIBEXTRA             = -Llib -lRIO -lMathCore
 MATRIXLIBEXTRA          = -Llib -lMathCore
@@ -463,6 +463,7 @@ MINUITLIBEXTRA          = -Llib -lGraf -lHist -lMatrix -lMathCore
 MINUIT2LIBEXTRA         = -Llib -lGraf -lHist -lMatrix -lMathCore
 FUMILILIBEXTRA          = -Llib -lGraf -lHist -lMathCore
 MATHMORELIBEXTRA        = -Llib -lMathCore
+HADDLIBEXTRA            = -Llib -lMultiProc
 TREELIBEXTRA            = -Llib -lNet -lRIO -lThread
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO \
                           -lMathCore -lMultiProc
@@ -507,6 +508,7 @@ ASIMAGEGSLIBEXTRA       = -Llib -lGraf -lASImage
 MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
+UNFOLDLIBEXTRA          = -Llib -lHist -lMatrix -lXMLParser
 TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO
 TMVAGUILIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \

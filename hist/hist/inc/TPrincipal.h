@@ -12,18 +12,10 @@
 #ifndef ROOT_TPrincipal
 #define ROOT_TPrincipal
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMatrixD
 #include "TMatrixD.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TPrincipal : public TNamed {
 

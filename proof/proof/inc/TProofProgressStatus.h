@@ -12,9 +12,7 @@
 #ifndef ROOT_TProofProgressStatus
 #define ROOT_TProofProgressStatus
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

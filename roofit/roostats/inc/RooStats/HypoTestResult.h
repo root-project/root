@@ -14,59 +14,13 @@
 #ifndef ROOSTATS_HypoTestResult
 #define ROOSTATS_HypoTestResult
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOSTATS_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
-#ifndef ROOSTATS_SamplingDistribution
 #include "RooStats/SamplingDistribution.h"
-#endif
 
 namespace RooStats {
-
-
-/**
-
-   \ingroup Roostats
-
-   HypoTestResult is a base class for results from hypothesis tests.
-   Any tool inheriting from HypoTestCalculator can return a HypoTestResult.
-   As such, it stores a p-value for the null-hypothesis (eg. background-only)
-   and an alternate hypothesis (eg. signal+background).
-   The p-values can also be transformed into confidence levels
-   (\f$CL_{b}\f$, \f$CL_{s+b}\f$) in a trivial way.
-   The ratio of the \f$CL_{s+b}\f$ to \f$CL_{b}\f$ is often called
-   \f$CL_{s}\f$, and is considered useful, though it is not a probability.
-   Finally, the p-value of the null can be transformed into a number of
-   equivalent Gaussian sigma using the Significance method.
-
-   The p-value of the null for a given test statistic is rigorously defined and
-   this is the starting point for the following conventions.
-
-### Conventions used in this class
-
-The p-value for the null and alternate are on the **same side** of the
-observed value of the test statistic. This is the more standard
-convention and avoids confusion when doing inverted tests.
-
-For exclusion, we also want the formula \f$CL_{s} = CL_{s+b} / CL_{b}\f$
-to hold which therefore defines our conventions for \f$CL_{s+b}\f$ and
-\f$CL_{b}\f$. \f$CL_{s}\f$ was specifically invented for exclusion
-and therefore all quantities need be related through the assignments
-as they are for exclusion: \f$CL_{s+b} = p_{s+b}\f$; \f$CL_{b} = p_{b}\f$. This
-is derived by considering the scenarios of a powerful and not powerful
-inverted test, where for the not so powerful test, \f$CL_{s}\f$ must be
-close to one.
-
-For results of Hypothesis tests,
-\f$CL_{s}\f$ has no similar direct interpretation as for exclusion and can
-be larger than one.
-
-*/
 
    class HypoTestResult : public TNamed {
 

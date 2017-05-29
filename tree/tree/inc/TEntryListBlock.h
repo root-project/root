@@ -38,9 +38,7 @@
 #ifndef ROOT_TEntryListBlock
 #define ROOT_TEntryListBlock
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TEntryListBlock:public TObject
 {

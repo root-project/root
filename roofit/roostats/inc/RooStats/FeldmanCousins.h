@@ -12,13 +12,9 @@
 #define ROOSTATS_FeldmanCousins
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
 
 #include "RooStats/ToyMCSampler.h"
 #include "RooStats/ConfidenceBelt.h"

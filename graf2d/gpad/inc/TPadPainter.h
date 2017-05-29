@@ -12,9 +12,7 @@
 #ifndef ROOT_TPadPainter
 #define ROOT_TPadPainter
 
-#ifndef ROOT_TVirtualPadPainter
 #include "TVirtualPadPainter.h"
-#endif
 
 /*
 TVirtualPadPainter is an attempt to abstract

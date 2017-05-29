@@ -15,9 +15,7 @@
 #define ROOT_Math_TUnuranBaseDist
 
 //needed by the ClassDef
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 
 //______________________________________________________________________

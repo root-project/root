@@ -25,12 +25,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
 
 // This class makes it possible to have a single connection from
 // all objects of the same class

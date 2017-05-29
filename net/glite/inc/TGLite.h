@@ -33,9 +33,7 @@ defines interface to gLite GRID services. *//*
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGrid
 #include "TGrid.h"
-#endif
 
 class TGLite: public TGrid
 {

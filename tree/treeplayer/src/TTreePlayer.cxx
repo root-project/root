@@ -76,10 +76,11 @@ extra libraries (Histogram, display, etc).
 #include "TVirtualMonitoring.h"
 #include "TTreeCache.h"
 #include "TStyle.h"
+#include "TVirtualMutex.h"
 
 #include "HFitInterface.h"
 #include "Foption.h"
-#include "Fit/DataVector.h"
+#include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Math/MinimizerOptions.h"
 
@@ -112,7 +113,10 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("varexp",""));
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
-   gROOT->GetListOfCleanups()->Add(this);
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
    TClass::GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
    TClass::GetClass("TRefArray")->AdoptReferenceProxy(new TRefArrayProxy());
 }
@@ -127,6 +131,7 @@ TTreePlayer::~TTreePlayer()
    DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -437,13 +442,9 @@ Long64_t TTreePlayer::DrawSelect(const char *varexp0, const char *selection, Opt
       if (sumh != 0) fHistogram->Scale(1./sumh);
    }
 
-   //if (!nrows && draw && drawflag && !opt.Contains("same")) {
-   //   if (gPad) gPad->Clear();
-   //   return 0;
-   //}
    if (drawflag) {
       if (gPad) {
-         if (!opt.Contains("same")) {
+         if (!opt.Contains("same") && !opt.Contains("goff")) {
             gPad->DrawFrame(-1.,-1.,1.,1.);
             TText *text_empty = new TText(0.,0.,"Empty");
             text_empty->SetTextAlign(22);
@@ -875,7 +876,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
          blen[lenb-1] = 0;
          len = leaflen[l];
          if (len <= 0) len = 1;
-         fprintf(fp,"   const Int_t kMax%s = %d;\n",blen,len);
+         fprintf(fp,"   static constexpr Int_t kMax%s = %d;\n",blen,len);
       }
    }
    delete [] leaflen;

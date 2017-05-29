@@ -23,7 +23,6 @@ Note that Momentum, Energy units are Gev/C, GeV
 #include "TGenPhaseSpace.h"
 #include "TRandom.h"
 #include "TMath.h"
-#include <stdlib.h>
 
 const Int_t kMAXP = 18;
 

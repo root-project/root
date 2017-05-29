@@ -21,18 +21,10 @@
 #ifndef ROOT_TPrimary
 #define ROOT_TPrimary
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
-#ifndef ROOT_X3DBuffer
 #include "X3DBuffer.h"
-#endif
 
 class TAttParticle;
 

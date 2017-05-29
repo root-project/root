@@ -47,21 +47,11 @@
 //#include "Math/Dsinv_array.h"
 //#include "Math/Dsfact.h"
 
-#ifndef ROOT_Math_Dfact
 #include "Math/Dfact.h"
-#endif
-#ifndef ROOT_Math_Dinv
 #include "Math/Dinv.h"
-#endif
-#ifndef ROOT_Math_Functions
 #include "Math/Functions.h"
-#endif
-#ifndef ROOT_Math_HelperOps
 #include "Math/HelperOps.h"
-#endif
-#ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
-#endif
 
 
 

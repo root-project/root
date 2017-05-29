@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 
 #if !defined(__CINT__)

@@ -30,9 +30,7 @@
 
 #include <cmath>
 
-#ifndef ROOT_Math_MatrixRepresentationsStatic
 #include "Math/MatrixRepresentationsStatic.h"
-#endif
 
 namespace ROOT {
 

@@ -4,9 +4,7 @@
 #ifndef ROOT_TRuby
 #define ROOT_TRuby
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TRuby {
 

@@ -24,12 +24,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTBase
 #include "TMatrixTBase.h"
-#endif
-#ifndef ROOT_TMatrixTUtils
 #include "TMatrixTUtils.h"
-#endif
 
 template<class Element>class TMatrixT;
 template<class Element>class TMatrixTSymLazy;

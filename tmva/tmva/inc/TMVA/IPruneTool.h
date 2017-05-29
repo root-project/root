@@ -25,13 +25,9 @@
 #include <iosfwd>
 #include <vector>
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
 
 namespace TMVA {
 

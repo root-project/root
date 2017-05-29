@@ -1,9 +1,7 @@
 #ifndef ROOT_Math_BrentMethods
 #define ROOT_Math_BrentMethods
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 namespace ROOT {

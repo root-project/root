@@ -12,62 +12,21 @@
 #ifndef ROOSTATS_MCMCCalculator
 #define ROOSTATS_MCMCCalculator
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
-#ifndef ROO_ABS_DATA
 #include "RooAbsData.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_ARG_LIST
 #include "RooArgList.h"
-#endif
-#ifndef ROOSTATS_ProposalFunction
 #include "RooStats/ProposalFunction.h"
-#endif
-#ifndef ROOSTATS_IntervalCalculator
 #include "RooStats/IntervalCalculator.h"
-#endif
-#ifndef RooStats_MCMCInterval
 #include "RooStats/MCMCInterval.h"
-#endif
 
 
 namespace RooStats {
 
    class ModelConfig;
-
-   
-/**
-   Bayesian Calculator estimating an interval or a credible region using the Markov-Chain Monte Carlo method to 
-   integrate the likelihood function with the prior to obtain the posterior function. 
-   
-   By using the Markov-Chain Monte Carlo methods this calculator can work with model which require the integration of a large number of parameters.
-
-   MCMCCalculator is a concrete implementation of IntervalCalculator.  It uses a
-   MetropolisHastings object to construct a Markov Chain of data points in the
-   parameter space.  From this Markov Chain, this class can generate a
-   MCMCInterval as per user specification.
-   
-   The interface allows one to pass the model, data, and parameters via a
-   workspace and then specify them with names.
-
-   After configuring the calculator, one only needs to ask GetInterval(), which
-   will return an ConfInterval (MCMCInterval in this case).
-
-   \ingroup Roostats
- */
-
-
 
    class MCMCCalculator : public IntervalCalculator, public TNamed {
 
@@ -92,7 +51,7 @@ namespace RooStats {
       /// Get the Confidence level for the test
       virtual Double_t ConfidenceLevel() const {return 1.-fSize;}
 
-      virtual void SetModel(const ModelConfig & model); 
+      virtual void SetModel(const ModelConfig & model);
 
       /// Set the DataSet if not already there
       virtual void SetData(RooAbsData& data) { fData = &data; }
@@ -106,15 +65,15 @@ namespace RooStats {
       /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
 
-      /// specify the parameters to store in the Markov chain 
-      /// By default all the parameters are stored 
+      /// specify the parameters to store in the Markov chain
+      /// By default all the parameters are stored
       virtual void SetChainParameters(const RooArgSet & set) { fChainParams.removeAll(); fChainParams.add(set); }
 
       /// specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& set) {fNuisParams.removeAll(); fNuisParams.add(set);}
 
       /// set the conditional observables which will be used when creating the NLL
-      /// so the pdf's will not be normalized on the conditional observables when computing the NLL 
+      /// so the pdf's will not be normalized on the conditional observables when computing the NLL
       virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)

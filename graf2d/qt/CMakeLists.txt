@@ -5,7 +5,7 @@
 
 include(${QT_USE_FILE})
 
-set(headers TGQt.h TQtTimer.h TQtApplication.h TQtBrush.h
+set(headers TGQt.h TQtApplication.h TQtBrush.h
             TQMimeTypes.h TQtClientFilter.h TQtClientWidget.h TQtWidget.h
             TQtMarker.h TQtTimer.h TQtRootSlot.h TQtPadFont.h)
 

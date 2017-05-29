@@ -12,9 +12,7 @@
 #ifndef ROOT_TAttImage
 #define ROOT_TAttImage
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TAttImage;
 

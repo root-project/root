@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDirectory
 #include "TDirectory.h"
-#endif
 
 class TList;
 class TBrowser;

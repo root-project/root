@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
-#endif
 
 #if !defined(__CLING__)
 #include <GL/glx.h>

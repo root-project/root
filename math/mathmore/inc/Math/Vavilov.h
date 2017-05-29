@@ -38,7 +38,6 @@
  */
 
 
-#include <iostream>
 
 namespace ROOT {
 namespace Math {

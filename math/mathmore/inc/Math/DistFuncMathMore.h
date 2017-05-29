@@ -25,9 +25,7 @@
 #ifndef ROOT_Math_DistFuncMathMore
 #define ROOT_Math_DistFuncMathMore
 
-#ifndef ROOT_Math_PdfFuncMathMore
 #include "Math/PdfFuncMathMore.h"
-#endif
 
 
 // #ifndef ROOT_Math_ProbFuncMathMore
@@ -35,9 +33,7 @@
 // #endif
 
 // quantile functions from mathmore
-#ifndef ROOT_Math_QuantFuncMathMore
 #include "Math/QuantFuncMathMore.h"
-#endif
 
 
 

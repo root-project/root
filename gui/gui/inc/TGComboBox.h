@@ -33,9 +33,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGListBox
 #include "TGListBox.h"
-#endif
 
 class TGScrollBarElement;
 class TGTextEntry;

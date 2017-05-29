@@ -37,7 +37,6 @@
 #include "Math/SpecFuncMathCore.h"
 #include "Math/SpecFuncMathMore.h"
 
-#include <cassert>
 #include <iostream>
 #include <cmath>
 #include <limits>

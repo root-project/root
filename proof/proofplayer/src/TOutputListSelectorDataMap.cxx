@@ -27,7 +27,6 @@ output list.
 #include "TMemberInspector.h"
 #include "TProofDebug.h"
 #include "TSelector.h"
-#include "TSelectorCint.h"
 
 #include <cstddef>
 
@@ -228,20 +227,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    fMap->SetOwner();
 
    TCollectDataMembers cdm(*this);
-   TClass* cl = sel->IsA();
-   if (cl && cl->InheritsFrom(TSelectorCint::Class())) {
-      // we don't want to set TSelectorCint's data members, but
-      // the data members that it represents!
-      TSelectorCint* selCINT = dynamic_cast<TSelectorCint*>(sel);
-      if (selCINT) {
-         cl = selCINT->GetInterpretedClass();
-         sel = selCINT->GetInterpretedSelector();
-      } else {
-         cl = 0;
-         Error("Init", "failed to get TSelectorCint interpreted class!");
-      }
-   }
-   if (!cl || (cl && !cl->CallShowMembers(sel, cdm))) {
+   if (!sel->IsA()->CallShowMembers(sel, cdm)) {
       // failed to map
       PDB(kOutput,1) Warning("Init","Failed to determine mapping!");
       return kFALSE;
@@ -286,30 +272,11 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
    TList* output = sel->GetOutputList();
    if (!output || output->IsEmpty()) return kTRUE;
 
-   Bool_t res = kFALSE;
    // Set fSelector's data members
    TSetSelDataMembers ssdm(*this, fMap, output);
-   TClass* cl = sel->IsA();
-   if (cl) {
-      if (cl->InheritsFrom(TSelectorCint::Class())) {
-         // we don't want to set TSelectorCint's data members, but
-         // the data members that it represents!
-         TSelectorCint* selCINT = dynamic_cast<TSelectorCint*>(sel);
-         if (selCINT) {
-            cl = selCINT->GetInterpretedClass();
-            sel = selCINT->GetInterpretedSelector();
-         } else {
-            cl = 0;
-            Error("Init", "failed to get TSelectorCint interpreted class!");
-            return kFALSE;
-         }
-      }
-      res = cl->CallShowMembers(sel, ssdm);
-      PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
-                        (res ? "success" : "failure"), ssdm.GetNumSet());
-   } else {
-      PDB(kOutput,1) Warning("SetDataMembers","Failed to determine selector TClass!");
-   }
+   Bool_t res = sel->IsA()->CallShowMembers(sel, ssdm);
+   PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
+                       (res ? "success" : "failure"), ssdm.GetNumSet());
    return res;
 }
 

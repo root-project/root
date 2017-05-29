@@ -8,8 +8,10 @@
 
 #ifdef __ROOTCLING__
 
-#pragma link C++ class ROOT::Detail::TDataFrameImpl-;
-#pragma link C++ class ROOT::Experimental::TDataFrameInterface<ROOT::Detail::TDataFrameImpl>-;
-#pragma link C++ typedef ROOT::Experimental::TDataFrame;
+// All these are there for the autoloading
+#pragma link C++ class ROOT::Experimental::TDataFrame-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>-;
+#pragma link C++ class ROOT::Detail::TLoopManager-;
 
 #endif

@@ -12,13 +12,9 @@
 #ifndef ROOT_TGeoTrack
 #define ROOT_TGeoTrack
 
-#ifndef ROOT_TVirtualGeoTrack
 #include "TVirtualGeoTrack.h"
-#endif
 
-#ifndef ROOT_TPolyLine3D
 #include "TPolyLine3D.h"
-#endif
 
 class TPolyMarker3D;
 

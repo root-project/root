@@ -85,15 +85,9 @@
 
 #include <iosfwd>
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_MethodCFMlpANN_Utils
 #include "TMVA/MethodCFMlpANN_Utils.h"
-#endif
-#ifndef ROOT_TMatrixF
 #include "TMatrixF.h"
-#endif
 
 namespace TMVA {
 

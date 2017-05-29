@@ -9,7 +9,9 @@ set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-if(cxx14)
+if(cxx17)
+  set(LLVM_ENABLE_CXX1Z ON CACHE BOOL "" FORCE)
+elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
@@ -33,36 +35,6 @@ endif()
 
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
-#---Protect against warnings clang/gcc would fire----------------------------------------------------
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-comment)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-misleading-indentation)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-missing-field-initializers)
-if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-conditional-uninitialized)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-private-field)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-local-typedef)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-parentheses-equality)
-  ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-parentheses-equality)
-endif()
-if(APPLE)
-  ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-deprecated-declarations)
-endif()
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-overloaded-virtual)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-maybe-uninitialized)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-parameter)
-ROOT_ADD_C_FLAG(INTERP_ADDITIONAL_C_FLAGS -Wno-unused-parameter)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-variable)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-but-set-variable)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-unused-function)
-ROOT_ADD_CXX_FLAG(INTERP_ADDITIONAL_CXX_FLAGS -Wno-range-loop-analysis)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INTERP_ADDITIONAL_CXX_FLAGS}")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${INTERP_ADDITIONAL_C_FLAGS}")
-
-#---Do not transform warnings in errors-------------------------------------------------------------
-string(REPLACE "-Werror " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-string(REPLACE "-Wshadow " "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
 if(NOT CLING_INCLUDE_TESTS)
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
@@ -80,13 +52,17 @@ if(cxxmodules)
   endif(libcxx)
 endif(cxxmodules)
 
+if(gcctoolchain)
+  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS --gcc-toolchain=${gcctoolchain})
+endif()
+
 #---Build type--------------------------------------------------------------------------------------
 if(NOT DEFINED LLVM_BUILD_TYPE)
   set(LLVM_BUILD_TYPE Release CACHE STRING "Build type for LLVM (used to set CMAKE_BUILD_TYPE)")
 endif()
 if( CMAKE_BUILD_TYPE STREQUAL "Debug" AND NOT LLVM_BUILD_TYPE STREQUAL "Debug")
-  message(WARNING "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
-                  " Use the variable LLVM_BUILD_TYPE to control it.")
+  message(STATUS "Selected a 'Debug' build (CMAKE_BUILD_TYPE), be aware that the embedded LLVM will still be built as 'Release'."
+                 " Use the variable LLVM_BUILD_TYPE to control it.")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(LLVM_ENABLE_ASSERTIONS "YES")
@@ -104,8 +80,10 @@ set(LLVM_NOCLING "YES")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
-set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
 set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
+if(NOT CLING_INCLUDE_TESTS)
+  set(CLANG_ENABLE_COMPILER OFF CACHE BOOL "")
+endif()
 
 #---Remove the inherited include_directories()
 set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")

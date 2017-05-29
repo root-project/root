@@ -14,15 +14,9 @@
 #define ROOT_TFormula
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
- #ifndef ROOT_TBits
-#include "TBits.h"
-#endif
-#ifndef ROOT_TObjArray
+ #include "TBits.h"
 #include "TObjArray.h"
-#endif
 #include "TMethodCall.h"
 #include "TInterpreter.h"
 #include <vector>
@@ -131,6 +125,7 @@ protected:
    static Bool_t IsFunctionNameChar(const char c);
    static Bool_t IsScientificNotation(const TString & formula, int ipos);
    static Bool_t IsHexadecimal(const TString & formula, int ipos);
+   static Bool_t IsAParameterName(const TString & formula, int ipos);
    void   ExtractFunctors(TString &formula);
    void   PreProcessFormula(TString &formula);
    void   ProcessFormula(TString &formula);

@@ -11,112 +11,72 @@
 #ifndef RooStats_LikelihoodInterval
 #define RooStats_LikelihoodInterval
 
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
 
-#ifndef ROO_ABS_REAL
 #include "RooAbsReal.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 #include <map>
 #include <memory>
 
-namespace ROOT { 
-   namespace Math { 
-      class Minimizer; 
+namespace ROOT {
+   namespace Math {
+      class Minimizer;
    }
 }
 
 namespace RooStats {
 
-
-/**
-
-   \ingroup Roostats
-
-   LikelihoodInterval is a concrete implementation of the RooStats::ConfInterval interface.  
-   It implements a connected N-dimensional intervals based on the contour of a likelihood ratio.
-   The boundary of the inteval is equivalent to a MINUIT/MINOS contour about the maximum likelihood estimator
-
-   The interval does not need to be an ellipse (eg. it is not the HESSE error matrix).
-   The level used to make the contour is the same as that used in MINOS, eg. it uses Wilks' theorem, 
-   which states that under certain regularity conditions the function -2* log (profile likelihood ratio) is asymptotically distributed as a chi^2 with N-dof, where 
-   N is the number of parameters of interest.  
-
-   
-   Note, a boundary on the parameter space (eg. s>= 0) or a degeneracy (eg. mass of signal if Nsig = 0) can lead to violations of the conditions necessary for Wilks'
-   theorem to be true.
-
-   Also note, one can use any RooAbsReal as the function that will be used in the contour; however, the level of the contour
-   is based on Wilks' theorem as stated above.
-
-
-#### References 
-
-*  1. F. James., Minuit.Long writeup D506, CERN, 1998.
-
-  
-*/
-
-
    class LikelihoodInterval : public ConfInterval {
 
    public:
 
-      /// default constructor 
+      /// default constructor
       explicit LikelihoodInterval(const char* name = 0);
 
-      //// construct the interval from a Profile Likelihood object, parameter of interest and optionally a snapshot of 
-      //// POI with their best fit values 
+      //// construct the interval from a Profile Likelihood object, parameter of interest and optionally a snapshot of
+      //// POI with their best fit values
       LikelihoodInterval(const char* name, RooAbsReal*, const RooArgSet*,  RooArgSet * = 0);
 
       /// destructor
       virtual ~LikelihoodInterval();
-      
+
       /// check if given point is in the interval
       virtual Bool_t IsInInterval(const RooArgSet&) const;
 
-      /// set the confidence level for the interval (e.g 0.682 for a 1-sigma interval) 
+      /// set the confidence level for the interval (e.g 0.682 for a 1-sigma interval)
       virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl; ResetLimits(); }
 
       /// return confidence level
       virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
- 
+
       /// return a cloned list of parameters of interest.  User manages the return object
       virtual  RooArgSet* GetParameters() const;
 
-      /// check if parameters are correct (i.e. they are the POI of this interval) 
+      /// check if parameters are correct (i.e. they are the POI of this interval)
       Bool_t CheckParameters(const RooArgSet&) const ;
 
 
-      /// return the lower bound of the interval on a given parameter 
+      /// return the lower bound of the interval on a given parameter
       Double_t LowerLimit(const RooRealVar& param) { bool ok; return LowerLimit(param,ok); }
       Double_t LowerLimit(const RooRealVar& param, bool & status) ;
 
-      /// return the upper bound of the interval on a given parameter 
+      /// return the upper bound of the interval on a given parameter
       Double_t UpperLimit(const RooRealVar& param) { bool ok; return UpperLimit(param,ok); }
       Double_t UpperLimit(const RooRealVar& param, bool & status) ;
 
       /// find both lower and upper interval boundaries for a given parameter
-      /// retun false if the bounds have not been found
+      /// return false if the bounds have not been found
       Bool_t FindLimits(const RooRealVar & param, double & lower, double &upper);
 
-      /**
-         return the 2D-contour points for the given subset of parameters
-         by default make the contour using 30 points. The User has to preallocate the x and y array which will return 
-         the set of x and y points defining the contour. 
-         The return value of the funciton specify the number of contour point found.
-         In case of error a zero is returned
-      */
+      /// return the 2D-contour points for the given subset of parameters
+      /// by default make the contour using 30 points. The User has to preallocate the x and y array which will return
+      /// the set of x and y points defining the contour.
+      /// The return value of the function specify the number of contour point found.
+      /// In case of error a zero is returned
       Int_t GetContourPoints(const RooRealVar & paramX, const RooRealVar & paramY, Double_t * x, Double_t *y, Int_t npoints = 30);
 
       /// return the profile log-likelihood ratio function
@@ -125,10 +85,10 @@ namespace RooStats {
       /// return a pointer to a snapshot with best fit parameter of interest
       const RooArgSet * GetBestFitParameters() const { return fBestFitParams; }
 
-   protected: 
+   protected:
 
       /// reset the cached limit values
-      void ResetLimits(); 
+      void ResetLimits();
 
       /// internal function to create the minimizer for finding the contours
       bool CreateMinimizer();
@@ -143,10 +103,10 @@ namespace RooStats {
       std::map<std::string, double> fUpperLimits; /// map with cached upper bound values
       std::shared_ptr<ROOT::Math::Minimizer > fMinimizer; //! transient pointer to minimizer class used to find limits and contour
       std::shared_ptr<RooFunctor>           fFunctor;   //! transient pointer to functor class used by the minimizer
-      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; //! transient pointer to the minimization function 
+      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; //! transient pointer to the minimization function
 
       ClassDef(LikelihoodInterval,1)  /// Concrete implementation of a ConfInterval based on a likelihood ratio
-      
+
    };
 }
 

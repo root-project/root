@@ -35,9 +35,7 @@ typedef Q3VBox QVBox;
 # endif
 #endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TMethod;
 class TCanvas;

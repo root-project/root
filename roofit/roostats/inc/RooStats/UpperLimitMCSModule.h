@@ -15,20 +15,14 @@
 #include "RooAbsMCStudyModule.h"
 #include <string>
 
-class RooArgSet; 
-class RooDataSet; 
-class RooRealVar; 
-class RooAbsPdf; 
+class RooArgSet;
+class RooDataSet;
+class RooRealVar;
+class RooAbsPdf;
 
 namespace RooStats {
 
-   class ProfileLikelihoodCalculator; 
-
-/**
-
- This class allow to compute in the ToyMcStudy framework the ProfileLikelihood upper limit for each toy-MC sample generated
-
-*/
+   class ProfileLikelihoodCalculator;
 
 class UpperLimitMCSModule : public RooAbsMCStudyModule {
 public:
@@ -38,14 +32,14 @@ public:
    UpperLimitMCSModule(const UpperLimitMCSModule& other) ;
    virtual ~UpperLimitMCSModule() ;
 
-   Bool_t initializeInstance() ; 
+   Bool_t initializeInstance() ;
 
-   Bool_t initializeRun(Int_t /*numSamples*/) ; 
+   Bool_t initializeRun(Int_t /*numSamples*/) ;
    RooDataSet* finalizeRun() ;
 
    //Bool_t processAfterFit(Int_t /*sampleNum*/)  ;
    Bool_t processBetweenGenAndFit(Int_t /*sampleNum*/) ;
-	
+
 private:
 
    std::string _parName ;  // Name of Nsignal parameter
@@ -57,7 +51,7 @@ private:
    Double_t _cl;
    RooAbsPdf* _model;
 
-   ClassDef(UpperLimitMCSModule,0) // MCStudy module to calculate upperlimit of a given poi
+   ClassDef(UpperLimitMCSModule,0) // MCStudy module to calculate upper limit of a given poi
 };
 
 }

@@ -6,33 +6,19 @@
 #define ROOT_TMVA_VariableImportance
 
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
-#ifndef ROOT_TMVA_Factory
-#include<TMVA/Factory.h>
-#endif
+#include <TMVA/Factory.h>
 
-#ifndef ROOT_TMVA_DataLoader
-#include<TMVA/DataLoader.h>
-#endif
+#include <TMVA/DataLoader.h>
 
-#ifndef ROOT_TMVA_OptionMap
-#include<TMVA/OptionMap.h>
-#endif
+#include <TMVA/OptionMap.h>
 
-#ifndef ROOT_TMVA_Envelope
-#include<TMVA/Envelope.h>
-#endif
+#include <TMVA/Envelope.h>
 
 namespace TMVA {
 
@@ -42,7 +28,7 @@ namespace TMVA {
    private:
        OptionMap              fImportanceValues;
        std::shared_ptr<TH1F>  fImportanceHist;
-       VIType                 fType;
+       VIType                 fType {kShort};
    public:
        VariableImportanceResult();
        VariableImportanceResult(const VariableImportanceResult &);
@@ -58,9 +44,9 @@ namespace TMVA {
 
    class VariableImportance : public Envelope {
    private:
-       UInt_t                    fNumFolds;
+       UInt_t                    fNumFolds = 0;
        VariableImportanceResult  fResults;
-       VIType                    fType;
+       VIType                    fType {kShort};
    public:
        explicit VariableImportance(DataLoader *loader);
        ~VariableImportance();

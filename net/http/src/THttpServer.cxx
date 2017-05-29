@@ -1,6 +1,14 @@
 // $Id$
 // Author: Sergey Linev   21/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "THttpServer.h"
 
 #include "TThread.h"
@@ -8,6 +16,7 @@
 #include "TSystem.h"
 #include "TImage.h"
 #include "TROOT.h"
+#include "TUrl.h"
 #include "TClass.h"
 #include "TCanvas.h"
 #include "TFolder.h"
@@ -24,7 +33,6 @@
 #include <string.h>
 #include <fstream>
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpTimer                                                           //
@@ -34,16 +42,13 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class THttpTimer : public TTimer {
 public:
+   THttpServer *fServer; //!
 
-   THttpServer *fServer;  //!
-
-   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) :
-      TTimer(milliSec, mode), fServer(serv)
+   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) : TTimer(milliSec, mode), fServer(serv)
    {
       // construtor
    }
@@ -57,6 +62,88 @@ public:
       // used to process http requests in main ROOT thread
 
       if (fServer) fServer->ProcessRequests();
+   }
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TLongPollEngine : public THttpWSEngine {
+protected:
+   THttpCallArg *fPoll; ///< polling request, which can be used for the next sending
+   TString fBuf;        ///< single entry to keep data which is not yet send to the client
+
+public:
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
+
+   virtual ~TLongPollEngine() {}
+
+   virtual UInt_t GetId() const
+   {
+      const void *ptr = (const void *)this;
+      return TString::Hash((void *)&ptr, sizeof(void *));
+   }
+
+   virtual void ClearHandle()
+   {
+      if (fPoll) {
+         fPoll->Set404();
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+   }
+
+   virtual void Send(const void * /*buf*/, int /*len*/)
+   {
+      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
+   }
+
+   virtual void SendCharStar(const char *buf)
+   {
+      if (fPoll) {
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent(buf);
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      } else if (fBuf.Length() == 0) {
+         fBuf = buf;
+      } else {
+         Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
+      }
+   }
+
+   virtual Bool_t PreviewData(THttpCallArg *arg)
+   {
+      // function called in the user code before processing correspondent websocket data
+      // returns kTRUE when user should ignore such http request - it is for internal use
+
+      // this is normal request, deliver and process it as any other
+      if (!strstr(arg->GetQuery(), "&dummy")) return kFALSE;
+
+      if (arg == fPoll) {
+         Error("PreviewData", "NEVER SHOULD HAPPEN");
+         exit(12);
+      }
+
+      if (fPoll) {
+         Info("PreviewData", "Get dummy request when previous not completed");
+         // if there are pending request, reply it immediately
+         fPoll->SetContentType("text/plain");
+         fPoll->SetContent("<<nope>>"); // normally should never happen
+         fPoll->NotifyCondition();
+         fPoll = 0;
+      }
+
+      if (fBuf.Length() > 0) {
+         arg->SetContentType("text/plain");
+         arg->SetContent(fBuf.Data());
+         fBuf = "";
+      } else {
+         arg->SetPostponed();
+         fPoll = arg;
+      }
+
+      // if arguments has "&dummy" string, user should not process it
+      return kTRUE;
    }
 };
 
@@ -105,43 +192,29 @@ public:
 
 ClassImp(THttpServer)
 
-////////////////////////////////////////////////////////////////////////////////
-/// constructor
+   ////////////////////////////////////////////////////////////////////////////////
+   /// constructor
+   ///
+   /// As argument, one specifies engine kind which should be
+   /// created like "http:8080". One could specify several engines
+   /// at once, separating them with ; like "http:8080;fastcgi:9000"
+   /// One also can configure readonly flag for sniffer like
+   /// "http:8080;readonly" or "http:8080;readwrite"
+   ///
+   /// Also searches for JavaScript ROOT sources, which are used in web clients
+   /// Typically JSROOT sources located in $ROOTSYS/etc/http directory,
+   /// but one could set JSROOTSYS variable to specify alternative location
 
-THttpServer::THttpServer(const char *engine) :
-   TNamed("http", "ROOT http server"),
-   fEngines(),
-   fTimer(0),
-   fSniffer(0),
-   fMainThrdId(0),
-   fJSROOTSYS(),
-   fTopName("ROOT"),
-   fJSROOT(),
-   fLocations(),
-   fDefaultPage(),
-   fDefaultPageCont(),
-   fDrawPage(),
-   fDrawPageCont(),
-   fCallArgs()
+   THttpServer::THttpServer(const char *engine)
+   : TNamed("http", "ROOT http server"), fEngines(), fTimer(0), fSniffer(0), fMainThrdId(0), fJSROOTSYS(),
+     fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(), fDrawPage(), fDrawPageCont(),
+     fCallArgs()
 {
-   // As argument, one specifies engine kind which should be
-   // created like "http:8080". One could specify several engines
-   // at once, separating them with ; like "http:8080;fastcgi:9000"
-   // One also can configure readonly flag for sniffer like
-   // "http:8080;readonly" or "http:8080;readwrite"
-   //
-   // Also searches for JavaScript ROOT sources, which are used in web clients
-   // Typically JSROOT sources located in $ROOTSYS/etc/http directory,
-   // but one could set JSROOTSYS variable to specify alternative location
-
    fLocations.SetOwner(kTRUE);
-
-   // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
-   if (dabcsys != 0)
-      fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
+   if (dabcsys != 0) fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
 #endif
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
@@ -150,7 +223,8 @@ THttpServer::THttpServer(const char *engine) :
    if (fJSROOTSYS.Length() == 0) {
       TString jsdir = TString::Format("%s/http", TROOT::GetEtcDir().Data());
       if (gSystem->ExpandPathName(jsdir)) {
-         Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location", jsdir.Data());
+         Warning("THttpServer", "problems resolving '%s', use JSROOTSYS to specify $ROOTSYS/etc/http location",
+                 jsdir.Data());
          fJSROOTSYS = ".";
       } else {
          fJSROOTSYS = jsdir;
@@ -237,9 +311,9 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
-   if ((prefix==0) || (*prefix==0)) return;
+   if ((prefix == 0) || (*prefix == 0)) return;
 
-   TNamed *obj = dynamic_cast<TNamed*> (fLocations.FindObject(prefix));
+   TNamed *obj = dynamic_cast<TNamed *>(fLocations.FindObject(prefix));
    if (obj != 0) {
       obj->SetTitle(path);
    } else {
@@ -256,7 +330,7 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 /// reduce load on THttpServer instance, also startup time can be improved
 /// When empty string specified (default), local copy of JSROOT is used (distributed with ROOT)
 
-void THttpServer::SetJSROOT(const char* location)
+void THttpServer::SetJSROOT(const char *location)
 {
    fJSROOT = location ? location : "";
 }
@@ -267,9 +341,9 @@ void THttpServer::SetJSROOT(const char* location)
 /// By default, $ROOTSYS/etc/http/files/online.htm page is used
 /// When empty filename is specified, default page will be used
 
-void THttpServer::SetDefaultPage(const char* filename)
+void THttpServer::SetDefaultPage(const char *filename)
 {
-   if ((filename!=0) && (*filename!=0))
+   if ((filename != 0) && (*filename != 0))
       fDefaultPage = filename;
    else
       fDefaultPage = fJSROOTSYS + "/files/online.htm";
@@ -284,9 +358,9 @@ void THttpServer::SetDefaultPage(const char* filename)
 /// By default, $ROOTSYS/etc/http/files/draw.htm page is used
 /// When empty filename is specified, default page will be used
 
-void THttpServer::SetDrawPage(const char* filename)
+void THttpServer::SetDrawPage(const char *filename)
 {
-   if ((filename!=0) && (*filename!=0))
+   if ((filename != 0) && (*filename != 0))
       fDrawPage = filename;
    else
       fDrawPage = fJSROOTSYS + "/files/draw.htm";
@@ -298,7 +372,7 @@ void THttpServer::SetDrawPage(const char* filename)
 ////////////////////////////////////////////////////////////////////////////////
 /// factory method to create different http engines
 /// At the moment two engine kinds are supported:
-///  civetweb (default) and fastcgi
+///   civetweb (default) and fastcgi
 /// Examples:
 ///   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
 ///   "fastcgi:9000" - creates fastcgi server with port 9000
@@ -326,7 +400,7 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    TClass *engine_class = gROOT->LoadClass(clname.Data());
    if (engine_class == 0) return kFALSE;
 
-   THttpEngine *eng = (THttpEngine *) engine_class->New();
+   THttpEngine *eng = (THttpEngine *)engine_class->New();
    if (eng == 0) return kFALSE;
 
    eng->SetServer(this);
@@ -388,14 +462,14 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
       }
 
       // ignore current directory
-      if ((next == fname + 1) && (*fname == '.'))  {
+      if ((next == fname + 1) && (*fname == '.')) {
          fname += 2;
          continue;
       }
 
       // ignore slash at the front
       if (next == fname) {
-         fname ++;
+         fname++;
          continue;
       }
 
@@ -421,13 +495,13 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TIter iter(&fLocations);
    TObject *obj(0);
-   while ((obj=iter()) != 0) {
+   while ((obj = iter()) != 0) {
       Ssiz_t pos = fname.Index(obj->GetName());
       if (pos == kNPOS) continue;
       fname.Remove(0, pos + (strlen(obj->GetName()) - 1));
       if (!VerifyFilePath(fname.Data())) return kFALSE;
       res = obj->GetTitle();
-      if ((fname[0]=='/') && (res[res.Length()-1]=='/')) res.Resize(res.Length()-1);
+      if ((fname[0] == '/') && (res[res.Length() - 1] == '/')) res.Resize(res.Length() - 1);
       res.Append(fname);
       return kTRUE;
    }
@@ -442,7 +516,7 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
 Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
-   if ((fMainThrdId!=0) && (fMainThrdId == TThread::SelfId())) {
+   if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
 
       ProcessRequest(arg);
@@ -460,6 +534,29 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Submit http request, specified in THttpCallArg structure
+/// Contrary to ExecuteHttp, it will not block calling thread.
+/// User should reimplement THttpCallArg::HttpReplied() method
+/// to react when HTTP request is executed.
+/// Method can be called from any thread
+/// Actual execution will be done in main ROOT thread, where analysis code is running.
+/// When called from main thread and can_run_immediately==kTRUE, will be
+/// executed immediately. Returns kTRUE when was executed.
+
+Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
+{
+   if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
+      ProcessRequest(arg);
+      return kTRUE;
+   }
+
+   // add call arg to the list
+   std::unique_lock<std::mutex> lk(fMutex);
+   fCallArgs.Add(arg);
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process requests, submitted for execution
 /// Regularly invoked by THttpTimer, when somewhere in the code
 /// gSystem->ProcessEvents() is called.
@@ -467,7 +564,7 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 
 void THttpServer::ProcessRequests()
 {
-   if (fMainThrdId==0) fMainThrdId = TThread::SelfId();
+   if (fMainThrdId == 0) fMainThrdId = TThread::SelfId();
 
    if (fMainThrdId != TThread::SelfId()) {
       Error("ProcessRequests", "Should be called only from main ROOT thread");
@@ -480,7 +577,7 @@ void THttpServer::ProcessRequests()
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
-         arg = (THttpCallArg *) fCallArgs.First();
+         arg = (THttpCallArg *)fCallArgs.First();
          fCallArgs.RemoveFirst();
       }
       lk.unlock();
@@ -496,14 +593,14 @@ void THttpServer::ProcessRequests()
          fSniffer->SetCurrentCallArg(0);
       }
 
-      arg->fCond.notify_one();
+      // workaround for longpoll handle, it sometime notifies condition before server
+      if (!arg->fNotifyFlag) arg->NotifyCondition();
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
    TIter iter(&fEngines);
    THttpEngine *engine = 0;
-   while ((engine = (THttpEngine *)iter()) != 0)
-      engine->Process();
+   while ((engine = (THttpEngine *)iter()) != 0) engine->Process();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -531,7 +628,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
             TString repl = TString("=\"") + fJSROOT;
-            if (!repl.EndsWith("/")) repl+="/";
+            if (!repl.EndsWith("/")) repl += "/";
             arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
@@ -547,7 +644,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
             arg->fContent.ReplaceAll(hjsontag, h_json);
 
-            arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+            arg->AddHeader("Cache-Control",
+                           "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
             if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          }
          arg->SetContentType("text/html");
@@ -574,7 +672,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
             TString repl = TString("=\"") + fJSROOT;
-            if (!repl.EndsWith("/")) repl+="/";
+            if (!repl.EndsWith("/")) repl += "/";
             arg->fContent.ReplaceAll("=\"jsrootsys/", repl);
          }
 
@@ -596,10 +694,16 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                arg->fContent.ReplaceAll(rootjsontag, str);
             }
          }
-         arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+         arg->AddHeader("Cache-Control",
+                        "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
          if (arg->fQuery.Index("nozip") == kNPOS) arg->SetZipping(2);
          arg->SetContentType("text/html");
       }
+      return;
+   }
+
+   if ((arg->fFileName == "favicon.ico") && arg->fPathName.IsNull()) {
+      arg->SetFile(fJSROOTSYS + "/img/RootIcon.ico");
       return;
    }
 
@@ -616,10 +720,10 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       iszip = kTRUE;
    }
 
-   void* bindata(0);
+   void *bindata(0);
    Long_t bindatalen(0);
 
-   if ((filename == "h.xml") || (filename == "get.xml"))  {
+   if ((filename == "h.xml") || (filename == "get.xml")) {
 
       Bool_t compact = arg->fQuery.Index("compact") != kNPOS;
 
@@ -639,55 +743,46 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       if (!compact) arg->fContent.Append("\n");
 
       arg->SetXml();
-   } else
-
-   if (filename == "h.json")  {
+   } else if (filename == "h.json") {
       TRootSnifferStoreJson store(arg->fContent, arg->fQuery.Index("compact") != kNPOS);
       const char *topname = fTopName.Data();
       if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
       fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
       arg->SetJson();
-   } else
-
-   if (filename == "root.websocket") {
+   } else if (filename == "root.websocket") {
       // handling of web socket
 
-      TCanvas* canv = dynamic_cast<TCanvas*> (fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
       if (canv == 0) {
          // for the moment only TCanvas is used for web sockets
          arg->Set404();
-      } else
-      if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
-
+      } else if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
          if (canv->GetPrimitive("websocket")) {
             // websocket already exists, ignore all other requests
             arg->Set404();
          }
-      } else
-      if (strcmp(arg->GetMethod(),"WS_READY")==0) {
-         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
+      } else if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
+         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
 
-         if (gDebug>0) Info("ProcessRequest","Set WebSocket handle %p", wshandle);
+         if (gDebug > 0) Info("ProcessRequest", "Set WebSocket handle %p", wshandle);
 
          if (wshandle) wshandle->AssignCanvas(canv);
 
          // connection is established
-      } else
-      if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
+      } else if (strcmp(arg->GetMethod(), "WS_DATA") == 0) {
          // process received data
 
-         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
          if (wshandle) wshandle->ProcessData(arg);
 
-      } else
-      if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
+      } else if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
          // connection is closed, one can remove handle
 
-         THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (canv->GetPrimitive("websocket"));
+         THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(canv->GetPrimitive("websocket"));
 
          if (wshandle) {
-            if (gDebug>0) Info("ProcessRequest","Clear WebSocket handle");
+            if (gDebug > 0) Info("ProcessRequest", "Clear WebSocket handle");
             wshandle->ClearHandle();
             wshandle->AssignCanvas(0);
             delete wshandle;
@@ -697,10 +792,62 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       }
 
       return;
+   } else if (filename == "root.longpoll") {
+      // ROOT emulation of websocket with polling requests
+      TCanvas *canv = dynamic_cast<TCanvas *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-   } else
+      if (!canv || !canv->GetCanvasImp()) {
+         // for the moment only TCanvas is used for web sockets
+         arg->Set404();
+      } else if (arg->fQuery == "connect") {
+         // try to emulate websocket connect
+         // if accepted, reply with connection id, which must be used in the following communications
+         arg->SetMethod("WS_CONNECT");
 
-   if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen, arg->fContent)) {
+         if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+            arg->SetMethod("WS_READY");
+
+            TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+
+            arg->SetWSId(handle->GetId());
+            arg->SetWSHandle(handle);
+
+            if (true /*canv->GetCanvasImp()->ProcessWSRequest(arg)*/) {
+               arg->SetContent(TString::Format("%u", arg->GetWSId()));
+               arg->SetContentType("text/plain");
+            }
+         }
+         if (!arg->IsContentType("text/plain")) arg->Set404();
+      } else {
+         TUrl url;
+         url.SetOptions(arg->fQuery);
+         url.ParseOptions();
+         Int_t connid = url.GetIntValueFromOptions("connection");
+         arg->SetWSId((UInt_t)connid);
+         if (url.HasOption("close")) {
+            arg->SetMethod("WS_CLOSE");
+            arg->SetContent("OK");
+            arg->SetContentType("text/plain");
+         } else {
+            arg->SetMethod("WS_DATA");
+            const char *post = url.GetValueFromOptions("post");
+            if (post) {
+               // posted data transferred as URL parameter
+               // done due to limitation of webengine in qt
+               Int_t len = strlen(post);
+               void *buf = malloc(len / 2 + 1);
+               char *sbuf = (char *)buf;
+               for (int n = 0; n < len; n += 2) sbuf[n / 2] = TString::BaseConvert(TString(post + n, 2), 16, 10).Atoi();
+               sbuf[len / 2] = 0; // just in case of zero-terminated string
+               arg->SetPostData(buf, len / 2);
+            }
+         }
+         if (false /*!canv->GetCanvasImp()->ProcessWSRequest(arg)*/) arg->Set404();
+      }
+      return;
+
+   } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
+                                arg->fContent)) {
       if (bindata != 0) arg->SetBinData(bindata, bindatalen);
 
       // define content type base on extension
@@ -718,11 +865,12 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       // only for binary data master version is important
       // it allows to detect if streamer info was modified
       const char *parname = fSniffer->IsStreamerInfoItem(arg->fPathName.Data()) ? "BVersion" : "MVersion";
-      arg->AddHeader(parname, Form("%u", (unsigned) fSniffer->GetStreamerInfoHash()));
+      arg->AddHeader(parname, Form("%u", (unsigned)fSniffer->GetStreamerInfoHash()));
    }
 
    // try to avoid caching on the browser
-   arg->AddHeader("Cache-Control", "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
+   arg->AddHeader("Cache-Control",
+                  "private, no-cache, no-store, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -750,7 +898,7 @@ Bool_t THttpServer::Unregister(TObject *obj)
 ///
 /// See TRootSniffer::Restrict() for more details
 
-void THttpServer::Restrict(const char *path, const char* options)
+void THttpServer::Restrict(const char *path, const char *options)
 {
    fSniffer->Restrict(path, options);
 }
@@ -793,7 +941,7 @@ Bool_t THttpServer::RegisterCommand(const char *cmdname, const char *method, con
 
 Bool_t THttpServer::Hide(const char *foldername, Bool_t hide)
 {
-   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *) 0);
+   return SetItemField(foldername, "_hidden", hide ? "true" : (const char *)0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -837,57 +985,55 @@ const char *THttpServer::GetMimeType(const char *path)
       const char *extension;
       int ext_len;
       const char *mime_type;
-   } builtin_mime_types[] = {
-      {".xml", 4, "text/xml"},
-      {".json", 5, "application/json"},
-      {".bin", 4, "application/x-binary"},
-      {".gif", 4, "image/gif"},
-      {".jpg", 4, "image/jpeg"},
-      {".png", 4, "image/png"},
-      {".html", 5, "text/html"},
-      {".htm", 4, "text/html"},
-      {".shtm", 5, "text/html"},
-      {".shtml", 6, "text/html"},
-      {".css", 4, "text/css"},
-      {".js",  3, "application/x-javascript"},
-      {".ico", 4, "image/x-icon"},
-      {".jpeg", 5, "image/jpeg"},
-      {".svg", 4, "image/svg+xml"},
-      {".txt", 4, "text/plain"},
-      {".torrent", 8, "application/x-bittorrent"},
-      {".wav", 4, "audio/x-wav"},
-      {".mp3", 4, "audio/x-mp3"},
-      {".mid", 4, "audio/mid"},
-      {".m3u", 4, "audio/x-mpegurl"},
-      {".ogg", 4, "application/ogg"},
-      {".ram", 4, "audio/x-pn-realaudio"},
-      {".xslt", 5, "application/xml"},
-      {".xsl", 4, "application/xml"},
-      {".ra",  3, "audio/x-pn-realaudio"},
-      {".doc", 4, "application/msword"},
-      {".exe", 4, "application/octet-stream"},
-      {".zip", 4, "application/x-zip-compressed"},
-      {".xls", 4, "application/excel"},
-      {".tgz", 4, "application/x-tar-gz"},
-      {".tar", 4, "application/x-tar"},
-      {".gz",  3, "application/x-gunzip"},
-      {".arj", 4, "application/x-arj-compressed"},
-      {".rar", 4, "application/x-arj-compressed"},
-      {".rtf", 4, "application/rtf"},
-      {".pdf", 4, "application/pdf"},
-      {".swf", 4, "application/x-shockwave-flash"},
-      {".mpg", 4, "video/mpeg"},
-      {".webm", 5, "video/webm"},
-      {".mpeg", 5, "video/mpeg"},
-      {".mov", 4, "video/quicktime"},
-      {".mp4", 4, "video/mp4"},
-      {".m4v", 4, "video/x-m4v"},
-      {".asf", 4, "video/x-ms-asf"},
-      {".avi", 4, "video/x-msvideo"},
-      {".bmp", 4, "image/bmp"},
-      {".ttf", 4, "application/x-font-ttf"},
-      {NULL,  0, NULL}
-   };
+   } builtin_mime_types[] = {{".xml", 4, "text/xml"},
+                             {".json", 5, "application/json"},
+                             {".bin", 4, "application/x-binary"},
+                             {".gif", 4, "image/gif"},
+                             {".jpg", 4, "image/jpeg"},
+                             {".png", 4, "image/png"},
+                             {".html", 5, "text/html"},
+                             {".htm", 4, "text/html"},
+                             {".shtm", 5, "text/html"},
+                             {".shtml", 6, "text/html"},
+                             {".css", 4, "text/css"},
+                             {".js", 3, "application/x-javascript"},
+                             {".ico", 4, "image/x-icon"},
+                             {".jpeg", 5, "image/jpeg"},
+                             {".svg", 4, "image/svg+xml"},
+                             {".txt", 4, "text/plain"},
+                             {".torrent", 8, "application/x-bittorrent"},
+                             {".wav", 4, "audio/x-wav"},
+                             {".mp3", 4, "audio/x-mp3"},
+                             {".mid", 4, "audio/mid"},
+                             {".m3u", 4, "audio/x-mpegurl"},
+                             {".ogg", 4, "application/ogg"},
+                             {".ram", 4, "audio/x-pn-realaudio"},
+                             {".xslt", 5, "application/xml"},
+                             {".xsl", 4, "application/xml"},
+                             {".ra", 3, "audio/x-pn-realaudio"},
+                             {".doc", 4, "application/msword"},
+                             {".exe", 4, "application/octet-stream"},
+                             {".zip", 4, "application/x-zip-compressed"},
+                             {".xls", 4, "application/excel"},
+                             {".tgz", 4, "application/x-tar-gz"},
+                             {".tar", 4, "application/x-tar"},
+                             {".gz", 3, "application/x-gunzip"},
+                             {".arj", 4, "application/x-arj-compressed"},
+                             {".rar", 4, "application/x-arj-compressed"},
+                             {".rtf", 4, "application/rtf"},
+                             {".pdf", 4, "application/pdf"},
+                             {".swf", 4, "application/x-shockwave-flash"},
+                             {".mpg", 4, "video/mpeg"},
+                             {".webm", 5, "video/webm"},
+                             {".mpeg", 5, "video/mpeg"},
+                             {".mov", 4, "video/quicktime"},
+                             {".mp4", 4, "video/mp4"},
+                             {".m4v", 4, "video/x-m4v"},
+                             {".asf", 4, "video/x-ms-asf"},
+                             {".avi", 4, "video/x-msvideo"},
+                             {".bmp", 4, "image/bmp"},
+                             {".ttf", 4, "application/x-font-ttf"},
+                             {NULL, 0, NULL}};
 
    int path_len = strlen(path);
 
@@ -916,7 +1062,7 @@ char *THttpServer::ReadFileContent(const char *filename, Int_t &len)
    len = is.tellg();
    is.seekg(0, is.beg);
 
-   char *buf = (char *) malloc(len);
+   char *buf = (char *)malloc(len);
    is.read(buf, len);
    if (!is) {
       free(buf);

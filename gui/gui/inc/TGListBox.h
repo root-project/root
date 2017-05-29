@@ -32,18 +32,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGScrollBar
 #include "TGScrollBar.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class TGListBox;
 

@@ -322,13 +322,18 @@ TTreeViewer::TTreeViewer(const char* treeName) :
    fTree = 0;
    if (!gClient) return;
    char command[128];
-   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine("#ifndef GTV_DEFINED\n\
+                       TTreeViewer *gTV = 0;\n\
+                       TTree *tv__tree = 0;\n\
+                       TList *tv__tree_list = 0;\n\
+                       TFile *tv__tree_file = 0;\n\
+                       #define GTV_DEFINED\n\
+                       #endif");
+   snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
-   gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
-   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
+   gROOT->ProcessLine("tv__tree_list = new TList;");
    fFilename = "";
-   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
    SetTreeName(treeName);
@@ -347,14 +352,19 @@ TTreeViewer::TTreeViewer(const TTree *tree) :
 
    fTree = 0;
    char command[128];
-   snprintf(command,128, "TTreeViewer *gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
+   gROOT->ProcessLine("#ifndef GTV_DEFINED\n\
+                       TTreeViewer *gTV = 0;\n\
+                       TTree *tv__tree = 0;\n\
+                       TList *tv__tree_list = 0;\n\
+                       TFile *tv__tree_file = 0;\n\
+                       #define GTV_DEFINED\n\
+                       #endif");
+   snprintf(command,128, "gTV = (TTreeViewer*)0x%lx", (ULong_t)this);
    gROOT->ProcessLine(command);
    if (!tree) return;
-   gROOT->ProcessLine("TTree *tv__tree = 0;");
    fTreeList = new TList;
-   gROOT->ProcessLine("TList *tv__tree_list = new TList;");
+   gROOT->ProcessLine("tv__tree_list = new TList;");
    fFilename = "";
-   gROOT->ProcessLine("TFile *tv__tree_file = 0;");
    gInterpreter->SaveContext();
    BuildInterface();
    TDirectory *dirsav = gDirectory;
@@ -2448,10 +2458,14 @@ void TTreeViewer::MapTree(TTree *tree, TGListTreeItem *parent, Bool_t listIt)
 void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem *parent, Bool_t listIt)
 {
    if (!branch) return;
-   TString   name;
-   if (prefix && strlen(prefix) >0) name = Form("%s.%s",prefix,branch->GetName());
-   else                             name = branch->GetName();
-   Int_t     ind;
+   TString name;
+   if (prefix && strlen(prefix) > 0) {
+      name = prefix;
+      if (!name.EndsWith(".")) name += ".";
+      name += branch->GetName();
+   }
+   else name = branch->GetName();
+   Int_t ind;
    TGListTreeItem *branchItem = 0;
    ULong_t *itemType;
    // map this branch
@@ -2488,7 +2502,8 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
                for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
-                  leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
+                  if (!leafName.EndsWith(".")) leafName.Append(".");
+                  leafName.Append(EmptyBrackets(leaf->GetName()));
                   itemType = new ULong_t(kLTLeafType);
                   pic = gClient->GetPicture("leaf_t.xpm");
                   spic = gClient->GetPicture("leaf_t.xpm");
@@ -2555,7 +2570,8 @@ void TTreeViewer::MapBranch(TBranch *branch, const char *prefix, TGListTreeItem 
                for (Int_t lf=0; lf<leaves->GetEntries(); lf++) {
                   leaf = (TLeaf *)leaves->At(lf);
                   leafName = name;
-                  leafName.Append(".").Append(EmptyBrackets(leaf->GetName()));
+                  if (!leafName.EndsWith(".")) leafName.Append(".");
+                  leafName.Append(EmptyBrackets(leaf->GetName()));
                   textEntry = new TGString(leafName.Data());
                   pic = gClient->GetPicture("leaf_t.xpm");
                   spic = gClient->GetPicture("leaf_t.xpm");

@@ -104,7 +104,7 @@ auto testActivationFunctionDerivatives()
       {
          evaluateDerivative<Architecture>(X, af, Y);
       };
-      error = testDerivatives<Architecture>(f, df, 5e-3);
+      error = testDerivatives<Architecture>(f, df, 1.0e-04);
 
       std::cout << "Testing " << static_cast<int>(af) << ": ";
       std::cout << "Maximum Relative Error = " << error << std::endl;

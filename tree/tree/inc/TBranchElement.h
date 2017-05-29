@@ -21,21 +21,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TBranch
 #include "TBranch.h"
-#endif
 
-#ifndef ROOT_TClassRef
 #include "TClassRef.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <vector>
 
@@ -182,7 +174,6 @@ public:
    virtual                  ~TBranchElement();
 
    virtual void             Browse(TBrowser* b);
-   virtual Int_t            Fill();
    virtual TBranch         *FindBranch(const char *name);
    virtual TLeaf           *FindLeaf(const char *name);
    virtual char            *GetAddress() const;
@@ -250,6 +241,9 @@ public:
       kClonesMemberNode = 31,
       kSTLMemberNode = 41
    };
+
+private:
+   virtual Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *);
 
    ClassDef(TBranchElement,10)  // Branch in case of an object
 };

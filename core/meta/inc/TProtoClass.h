@@ -13,9 +13,7 @@
 #ifndef ROOT_TProtoClass
 #define ROOT_TProtoClass
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TClass;
 class TList;

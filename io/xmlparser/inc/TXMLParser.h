@@ -12,17 +12,11 @@
 #ifndef ROOT_TXMLParser
 #define ROOT_TXMLParser
 
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 struct   _xmlParserCtxt;
 

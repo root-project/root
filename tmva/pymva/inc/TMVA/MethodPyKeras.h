@@ -72,19 +72,19 @@ namespace TMVA {
     private:
 
       TString fFilenameModel; // Filename of the previously exported Keras model
-      UInt_t fBatchSize; // Training batch size
-      UInt_t fNumEpochs; // Number of training epochs
+      UInt_t fBatchSize {0}; // Training batch size
+      UInt_t fNumEpochs {0}; // Number of training epochs
       Int_t fVerbose; // Keras verbosity during training
       Bool_t fContinueTraining; // Load weights from previous training
       Bool_t fSaveBestOnly; // Store only weights with smallest validation loss
       Int_t fTriesEarlyStopping; // Stop training if validation loss is not decreasing for several epochs
       TString fLearningRateSchedule; // Set new learning rate at specific epochs
 
-      bool fModelIsSetup; // flag whether model is loaded, neede for getMvaValue during evaluation
-      float* fVals; // variables array used for GetMvaValue
+      bool fModelIsSetup = false; // flag whether model is loaded, neede for getMvaValue during evaluation
+      float* fVals = nullptr; // variables array used for GetMvaValue
       std::vector<float> fOutput; // probability or regression output array used for GetMvaValue
-      UInt_t fNVars; // number of variables
-      UInt_t fNOutputs; // number of outputs (classes or targets)
+      UInt_t fNVars {0}; // number of variables
+      UInt_t fNOutputs {0}; // number of outputs (classes or targets)
       TString fFilenameTrainedModel; // output filename for trained model
 
       void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables loads the model

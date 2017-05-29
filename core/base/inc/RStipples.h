@@ -11,9 +11,7 @@
 #ifndef ROOT_Stipples
 #define ROOT_Stipples
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

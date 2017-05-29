@@ -19,9 +19,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 enum EDragType { kDragNone, kDragMove, kDragCopy,
                  kDragLink, kDragLasso, kDragResize };

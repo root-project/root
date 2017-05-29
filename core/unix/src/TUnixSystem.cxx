@@ -499,8 +499,8 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 
    TString lib = _dyld_get_image_name(i++);
 
-   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.so";
-   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.dylib";
+   TRegexp sovers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.so";
+   TRegexp dyvers = "libCore\\.[0-9]+\\.*[0-9]*\\.*[0-9]*\\.dylib";
 
 #ifdef ROOTPREFIX
    if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
@@ -605,7 +605,6 @@ Bool_t TUnixSystem::Init()
    UnixSignal(kSigSegmentationViolation, SigHandler);
    UnixSignal(kSigIllegalInstruction,    SigHandler);
    UnixSignal(kSigSystem,                SigHandler);
-   UnixSignal(kSigPipe,                  SigHandler);
    UnixSignal(kSigAlarm,                 SigHandler);
    UnixSignal(kSigUrgent,                SigHandler);
    UnixSignal(kSigFloatingException,     SigHandler);
@@ -673,7 +672,7 @@ void TUnixSystem::SetDisplay()
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           utmp_entry->ut_host);
                } else {
-                  char disp[64];
+                  char disp[260];
                   snprintf(disp, sizeof(disp), "%s:0.0", utmp_entry->ut_host);
                   Setenv("DISPLAY", disp);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
@@ -3010,89 +3009,64 @@ void TUnixSystem::ResetTimer(TTimer *ti)
 
 TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 {
-   UInt_t addr;    // good for 4 byte addresses
-   Bool_t isinaddr = kFALSE;         
-#ifdef HASNOT_INETATON
-   isinaddr = (addr = (UInt_t)inet_addr(hostname)) != INADDR_NONE) ? kTRUE : kFALSE;
-#else
-   struct in_addr ad;
-   isinaddr = inet_aton(hostname, &ad);
-   if (isinaddr) memcpy(&addr, &ad.s_addr, sizeof(ad.s_addr));
+   TInetAddress ia;
+   struct addrinfo hints;
+   struct addrinfo *result, *rp;
+   memset(&hints, 0, sizeof(struct addrinfo));
+   hints.ai_family = AF_INET;       // only IPv4
+   hints.ai_socktype = 0;           // any socket type
+   hints.ai_protocol = 0;           // any protocol
+   hints.ai_flags = AI_CANONNAME;   // get canonical name
+#ifdef R__MACOSX
+   // Anything ending on ".local" causes a 5 second delay in getaddrinfo().
+   // See e.g. https://apple.stackexchange.com/questions/175320/why-is-my-hostname-resolution-taking-so-long
+   // Only reasonable solution: remove the "domain" part if it's ".local".
+   size_t lenHostname = strlen(hostname);
+   std::string hostnameWithoutLocal{hostname};
+   if (lenHostname > 6 && !strcmp(hostname + lenHostname - 6, ".local")) {
+      hostnameWithoutLocal.erase(lenHostname - 6);
+      hostname = hostnameWithoutLocal.c_str();
+   }
 #endif
 
-   std::string host(hostname);
-   if (isinaddr) {
-      struct sockaddr_in sin;
-      sin.sin_family = AF_INET;
-      sin.sin_port = 0;
-      memcpy(&sin.sin_addr.s_addr, &addr, sizeof(sin.sin_addr.s_addr));
-      memset(&sin.sin_zero[0], 0, sizeof(sin.sin_zero));
-      struct sockaddr *sa = (struct sockaddr *) &sin;    /* input */
-
-      char hbuf[NI_MAXHOST];
-
-      int rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD);
-      if (rc != 0 ) {
-         if (rc == EAI_NONAME) {
-            if (gDebug > 0)
-               Error("GetHostByName", "unknown host '%s'", hostname);
-            return TInetAddress("UnNamedHost", 0, -1);
-         } else {
-            Error("GetHostByName", "getnameinfo failed for '%s': '%s'", hostname, gai_strerror(rc));
-            return TInetAddress();
-         }
-      }
-      host = hbuf;
-   }
-
-   // Hints structure
-   struct addrinfo hints;
-   memset(&hints, 0, sizeof(struct addrinfo));
-   hints.ai_family = AF_INET;        // Ask IPv4
-   hints.ai_socktype = 0;            // Any socket type
-   hints.ai_flags = AI_CANONNAME;    // Get canonical name
-   hints.ai_protocol = 0;            // Any protocol
-   hints.ai_canonname = nullptr;
-   hints.ai_addr = nullptr;
-   hints.ai_next = nullptr;
-
-   struct addrinfo *res;
-   int rc = getaddrinfo(host.c_str(), nullptr, &hints, &res);
+   // obsolete gethostbyname() replaced by getaddrinfo()
+   int rc = getaddrinfo(hostname, nullptr, &hints, &result);
    if (rc != 0) {
       if (rc == EAI_NONAME) {
-         if (gDebug > 0)
-            Error("GetHostByName", "unknown host '%s'", host.c_str());
-         return TInetAddress("UnNamedHost", 0, -1);
+         if (gDebug > 0) Error("GetHostByName", "unknown host '%s'", hostname);
+         ia.fHostname = "UnNamedHost";
       } else {
-         Error("GetHostByName", "getaddrinfo failed for '%s': '%s'", host.c_str(), gai_strerror(rc));
-         return TInetAddress();
+         Error("GetHostByName", "getaddrinfo failed for '%s': %s", hostname, gai_strerror(rc));
+         ia.fHostname = "UnknownHost";
       }
+      return ia;
    }
-   if (res[0].ai_canonname) host = res[0].ai_canonname;
-   // Prepare output
-   TInetAddress a(host.c_str(),
-                  ntohl(((sockaddr_in *)(res[0].ai_addr))->sin_addr.s_addr),
-                  res[0].ai_family);
-   struct addrinfo *rp = res[0].ai_next;
-   for (; rp != NULL; rp = rp->ai_next) {
-      UInt_t arp = ntohl(((sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr);
-      std::vector<UInt_t> addrs = a.GetAddresses();
-      Bool_t newad = kTRUE;
-      for (UInt_t sad : addrs) {
-         if (sad == arp) {
-            newad = kFALSE;
-            break;
-         }
-      }
-      if (newad) {
-         a.AddAddress(ntohl(((sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr));
-         if (rp->ai_canonname) a.AddAlias(rp->ai_canonname);
-      }
+
+   std::string hostcanon(result->ai_canonname ? result->ai_canonname : hostname);
+   ia.fHostname = hostcanon.data();
+   ia.fFamily = result->ai_family;
+   ia.fAddresses[0] = ntohl(((struct sockaddr_in *)(result->ai_addr))->sin_addr.s_addr);
+   // with getaddrinfo() no way to get list of aliases for a hostname
+   if (hostcanon.compare(hostname) != 0) ia.AddAlias(hostname);
+
+   // check on numeric hostname
+   char tmp[sizeof(struct in_addr)];
+   if (inet_pton(AF_INET, hostcanon.data(), tmp) == 1) {
+      char hbuf[NI_MAXHOST];
+      if (getnameinfo(result->ai_addr, result->ai_addrlen, hbuf, sizeof(hbuf), nullptr, 0, 0) == 0)
+         ia.fHostname = hbuf;
    }
-   // Release memory
-   freeaddrinfo(res);
-   // Done
-   return a;
+
+   // check other addresses (if exist)
+   rp = result->ai_next;
+   for (; rp != nullptr; rp = rp->ai_next) {
+      UInt_t arp = ntohl(((struct sockaddr_in *)(rp->ai_addr))->sin_addr.s_addr);
+      if ( !(std::find(ia.fAddresses.begin(), ia.fAddresses.end(), arp) != ia.fAddresses.end()) )
+         ia.AddAddress(arp);
+   }
+
+   freeaddrinfo(result);
+   return ia;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3100,7 +3074,7 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 
 TInetAddress TUnixSystem::GetSockName(int sock)
 {
-   struct sockaddr_in addr;
+   struct sockaddr addr;
 #if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
 #elif defined(USE_SOCKLEN_T)
@@ -3109,27 +3083,26 @@ TInetAddress TUnixSystem::GetSockName(int sock)
    int len = sizeof(addr);
 #endif
 
-   if (getsockname(sock, (struct sockaddr *)&addr, &len) == -1) {
-      SysError("GetSockName", "getsockname");
-      return TInetAddress();
+   TInetAddress ia;
+   if (getsockname(sock, &addr, &len) == -1) {
+      SysError("GetSockName", "getsockname failed");
+      return ia;
    }
 
-   struct sockaddr *sa = (struct sockaddr *) &addr;    /* input */
+   if (addr.sa_family != AF_INET) return ia; // only IPv4
+   ia.fFamily = addr.sa_family;
+   struct sockaddr_in *addrin = (struct sockaddr_in *)&addr;
+   ia.fPort = ntohs(addrin->sin_port);
+   ia.fAddresses[0] = ntohl(addrin->sin_addr.s_addr);
+
    char hbuf[NI_MAXHOST];
-   int rc = 0;
-   if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
-                         nullptr, 0, 0)) == 0) {
-      TInetAddress a = GetHostByName(hbuf);
-      if (a.IsValid()) {
-         a.fFamily = addr.sin_family;
-         a.fPort = ntohs(addr.sin_port);
-         return a;
-      }
-   }
-   // Failure: return minimal information
-   UInt_t iaddr;
-   memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-   return TInetAddress("????", ntohl(iaddr), AF_INET, ntohs(addr.sin_port));
+   if (getnameinfo(&addr, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, 0) != 0) {
+      Error("GetSockName", "getnameinfo failed");
+      ia.fHostname = "????";
+   } else
+      ia.fHostname = hbuf;
+
+   return ia;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3137,7 +3110,7 @@ TInetAddress TUnixSystem::GetSockName(int sock)
 
 TInetAddress TUnixSystem::GetPeerName(int sock)
 {
-   struct sockaddr_in addr;
+   struct sockaddr addr;
 #if defined(USE_SIZE_T)
    size_t len = sizeof(addr);
 #elif defined(USE_SOCKLEN_T)
@@ -3146,27 +3119,26 @@ TInetAddress TUnixSystem::GetPeerName(int sock)
    int len = sizeof(addr);
 #endif
 
-   if (getpeername(sock, (struct sockaddr *)&addr, &len) == -1) {
-      SysError("GetPeerName", "getpeername");
-      return TInetAddress();
+   TInetAddress ia;
+   if (getpeername(sock, &addr, &len) == -1) {
+      SysError("GetPeerName", "getpeername failed");
+      return ia;
    }
 
-   int rc = 0;
-   struct sockaddr *sa = (struct sockaddr *) &addr;    /* input */
+   if (addr.sa_family != AF_INET) return ia; // only IPv4
+   ia.fFamily = addr.sa_family;
+   struct sockaddr_in *addrin = (struct sockaddr_in *)&addr;
+   ia.fPort = ntohs(addrin->sin_port);
+   ia.fAddresses[0] = ntohl(addrin->sin_addr.s_addr);
+
    char hbuf[NI_MAXHOST];
-   if ((rc = getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf),
-                         nullptr, 0, 0)) == 0) {
-      TInetAddress a = GetHostByName(hbuf);
-      if (a.IsValid()) {
-         a.fFamily = addr.sin_family;
-         a.fPort = ntohs(addr.sin_port);
-         return a;
-      }
-   }
-   // Failure: return minimal information
-   UInt_t iaddr;
-   memcpy(&iaddr, &addr.sin_addr, sizeof(addr.sin_addr));
-   return TInetAddress("????", ntohl(iaddr), AF_INET, ntohs(addr.sin_port));
+   if (getnameinfo(&addr, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, 0) != 0) {
+      Error("GetPeerName", "getnameinfo failed");
+      ia.fHostname = "????";
+   } else
+      ia.fHostname = hbuf;
+
+   return ia;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

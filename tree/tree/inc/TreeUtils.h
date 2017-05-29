@@ -24,9 +24,7 @@
 
 #include <iosfwd>
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 namespace ROOT {
 namespace TreeUtils {

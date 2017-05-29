@@ -285,6 +285,15 @@ double expint(double x) {
 }
 
 
+// Generalization of expint(x)
+//
+double expint_n(int n, double x) {
+
+   return gsl_sf_expint_En(n, x);
+
+}
+
+
 
 // [5.2.1.16] Hermite polynomials
 // (26.x.10)

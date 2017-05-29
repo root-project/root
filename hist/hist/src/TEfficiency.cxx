@@ -1483,11 +1483,6 @@ Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
             return false;
          }
 
-      if(!TMath::AreEqualRel(ax1->GetXmax(), ax2->GetXmax(), 1.E-15)) {
-         gROOT->Info("TEfficiency::CheckBinning","Histograms are not consistent: they have different axis max value");
-         return false;
-      }
-
 
    }
 
@@ -2338,7 +2333,7 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 ///   all functions in the list are deleted
 /// - for more fitting options see TBinomialEfficiencyFitter::Fit
 
-Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
+TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 {
    TString option = opt;
    option.ToLower();
@@ -2352,7 +2347,7 @@ Int_t TEfficiency::Fit(TF1* f1,Option_t* opt)
 
    TBinomialEfficiencyFitter Fitter(fPassedHistogram,fTotalHistogram);
 
-   Int_t result = Fitter.Fit(f1,option.Data());
+   TFitResultPtr result = Fitter.Fit(f1,option.Data());
 
    //create copy which is appended to the list
    TF1* pFunc = new TF1(*f1);

@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGrid
 #include "TGrid.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
 
 class GapiUI;
 class TGridJob;

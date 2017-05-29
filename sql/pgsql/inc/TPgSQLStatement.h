@@ -12,9 +12,7 @@
 #ifndef ROOT_TPgSQLStatement
 #define ROOT_TPgSQLStatement
 
-#ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
-#endif
 
 #include <libpq-fe.h>
 #include <pg_config.h> // to get PG_VERSION_NUM

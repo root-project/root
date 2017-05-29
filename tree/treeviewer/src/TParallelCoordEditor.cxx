@@ -673,8 +673,10 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
       color->SetAlpha(1);
       color = gROOT->GetColor(TColor::GetColor(a));
-      color->SetAlpha((Float_t)fAlphaField->GetNumber());
-      fParallel->SetLineColor(color->GetNumber());
+      if (color) {
+         color->SetAlpha((Float_t)fAlphaField->GetNumber());
+         fParallel->SetLineColor(color->GetNumber());
+      }
    }
    Update();
 }

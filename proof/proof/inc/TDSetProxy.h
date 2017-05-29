@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDSet
 #include "TDSet.h"
-#endif
 
 class TProofServ;
 

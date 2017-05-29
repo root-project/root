@@ -34,15 +34,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TQObject
 #include "TQObject.h"
-#endif
-#ifndef ROOT_TBonjourRecord
 #include "TBonjourRecord.h"
-#endif
 
 #if !defined(__CINT__)
 #include <dns_sd.h>

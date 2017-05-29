@@ -23,12 +23,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TContextMenuImp
 #include "TContextMenuImp.h"
-#endif
-#ifndef ROOT_TGMenu
 #include "TGMenu.h"
-#endif
 
 class TRootDialog;
 

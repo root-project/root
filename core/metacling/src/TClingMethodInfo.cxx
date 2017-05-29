@@ -298,56 +298,77 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
    FunctionDecl *templatedDecl = FTDecl->getTemplatedDecl();
    Decl *declCtxDecl = dyn_cast<Decl>(FTDecl->getDeclContext());
 
-   llvm::SmallVector<QualType, 8> paramTypes;
-   bool skip = false; // whether we should not look this up.
-   const ClassTemplateSpecializationDecl *ctxInstance
-      = dyn_cast<ClassTemplateSpecializationDecl>(declCtxDecl);
+   // We have a function template
+   //     template <class X = int, int i = 7> void func(int a0, X a1[i], X::type a2[i])
+   // which has defaults for all its template parameters `X` and `i`. To
+   // instantiate it we have to do a lookup, which in turn needs the function
+   // argument types, e.g. `int[12]`.
+   // If the function argument type is dependent (a1 and a2) we need to
+   // substitute the types first, using the template arguments derived from the
+   // template parameters' defaults.
+   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs(templateParms->size());
+   for (int iParam = 0, nParams = templateParms->size(); iParam < nParams; ++iParam) {
+      const NamedDecl* templateParm = templateParms->getParam(iParam);
+      if (templateParm->isTemplateParameterPack()) {
+         // shouldn't end up here
+         assert(0 && "unexpected template parameter pack");
+         return;
+      } if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
+         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument());
+      } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
+         defaultTemplateArgs[iParam] = TemplateArgument(NTTP->getDefaultArgument());
+      } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
+         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument().getArgument());
+      } else {
+         // shouldn't end up here
+         assert(0 && "unexpected template parameter kind");
+         return;
+      }
+   }
 
+   // Now substitute the dependent function parameter types given defaultTemplateArgs.
+   llvm::SmallVector<QualType, 8> paramTypes;
    // Provide an instantiation context that suppresses errors:
    // DeducedTemplateArgumentSubstitution! (ROOT-8422)
    SmallVector<DeducedTemplateArgument, 4> DeducedArgs;
-   ArrayRef< TemplateArgument > TemplateArgs;
    sema::TemplateDeductionInfo Info{SourceLocation()};
 
    Sema::InstantiatingTemplate Inst(S, Info.getLocation(), FTDecl,
-                                    TemplateArgs,
+                                    defaultTemplateArgs,
                                     Sema::ActiveTemplateInstantiation::DeducedTemplateArgumentSubstitution,
                                     Info);
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
+   TemplateArgumentList templArgList(TemplateArgumentList::OnStack, defaultTemplateArgs);
+   MultiLevelTemplateArgumentList MLTAL{templArgList};
    for (const clang::ParmVarDecl *param: templatedDecl->parameters()) {
       QualType paramType = param->getOriginalType();
 
       // If the function type is dependent, try to resolve it through the class's
       // template arguments. If that fails, skip this function.
-      if (ctxInstance && paramType->isDependentType()) {
+      if (paramType->isDependentType()) {
          /*if (HasUnexpandedParameterPack(paramType, S)) {
             // We are not going to expand the pack here...
             skip = true;
             break;
          }*/
 
-         MultiLevelTemplateArgumentList MLTAL(
-            ctxInstance->getTemplateInstantiationArgs());
          paramType = S.SubstType(paramType, MLTAL, SourceLocation(),
                                  templatedDecl->getDeclName());
 
          if (paramType.isNull() || paramType->isDependentType()) {
             // Even after resolving the types through the surrounding template
             // this argument type is still dependent: do not look it up.
-            skip = true;
-            break;
+            return;
          }
       }
       paramTypes.push_back(paramType);
    }
 
-   if (!skip) {
-      LH.findFunctionProto(declCtxDecl, FTDecl->getNameAsString(),
-                           paramTypes, LH.NoDiagnostics,
-                           templatedDecl->getType().isConstQualified());
-   }
+   LH.findFunctionProto(declCtxDecl, FTDecl->getNameAsString(),
+                        paramTypes, LH.NoDiagnostics,
+                        templatedDecl->getType().isConstQualified());
 }
 
 int TClingMethodInfo::InternalNext()

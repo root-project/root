@@ -12,9 +12,9 @@ UNFOLDDIR  := $(MODDIR)
 UNFOLDDIRS := $(UNFOLDDIR)/src
 UNFOLDDIRI := $(UNFOLDDIR)/inc
 
-##### libSpectrum #####
+##### libUnfold #####
 UNFOLDL    := $(MODDIRI)/LinkDef.h
-UNFOLDDS   := $(call stripsrc,$(MODDIRS)/G__Spectrum.cxx)
+UNFOLDDS   := $(call stripsrc,$(MODDIRS)/G__Unfold.cxx)
 UNFOLDDO   := $(UNFOLDDS:.cxx=.o)
 UNFOLDDH   := $(UNFOLDDS:.cxx=.h)
 
@@ -24,7 +24,7 @@ UNFOLDO    := $(call stripsrc,$(UNFOLDS:.cxx=.o))
 
 UNFOLDDEP  := $(UNFOLDO:.o=.d) $(UNFOLDDO:.o=.d)
 
-UNFOLDLIB  := $(LPATH)/libSpectrum.$(SOEXT)
+UNFOLDLIB  := $(LPATH)/libUnfold.$(SOEXT)
 UNFOLDMAP  := $(UNFOLDLIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
@@ -44,7 +44,7 @@ include/%.h:    $(UNFOLDDIRI)/%.h
 $(UNFOLDLIB): $(UNFOLDO) $(UNFOLDDO) $(ORDER_) $(MAINLIBS) \
                 $(UNFOLDLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
-		   "$(SOFLAGS)" libSpectrum.$(SOEXT) $@ \
+		   "$(SOFLAGS)" libUnfold.$(SOEXT) $@ \
 		   "$(UNFOLDO) $(UNFOLDDO)" \
 		   "$(UNFOLDLIBEXTRA)"
 

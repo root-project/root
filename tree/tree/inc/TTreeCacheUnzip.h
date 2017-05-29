@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTreeCache
 #include "TTreeCache.h"
-#endif
 
 #include <queue>
 

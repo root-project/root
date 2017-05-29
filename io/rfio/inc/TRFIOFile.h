@@ -12,12 +12,8 @@
 #ifndef ROOT_TRFIOFile
 #define ROOT_TRFIOFile
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
 
 
 class TRFIOFile : public TFile {

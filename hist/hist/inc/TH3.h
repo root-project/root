@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TH1
 #include "TH1.h"
-#endif
 
-#ifndef ROOT_TAtt3D
 #include "TAtt3D.h"
-#endif
 
 class TH2D;
 class TProfile2D;

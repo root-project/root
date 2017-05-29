@@ -30,9 +30,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedPatternSelect
 #include "TGedPatternSelect.h"
-#endif
 
 class TGToolTip;
 class TGPicture;

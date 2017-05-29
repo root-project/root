@@ -9,31 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
+/** \class RooStats::UniformProposal
+    \ingroup Roostats
 
+UniformProposal is a concrete implementation of the ProposalFunction interface
+for use with a Markov Chain Monte Carlo algorithm.  This proposal function is
+a uniformly random distribution over the parameter space.  The proposal
+ignores the current point when it proposes a new point.  The proposal
+function is symmetric, though it may not cause a MetropolisHastings run to
+converge as quickly as other proposal functions.
 
-#ifndef ROOT_Rtypes
+*/
+
 #include "Rtypes.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROOSTATS_UniformProposal
 #include "RooStats/UniformProposal.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
 
 using namespace std;
 
@@ -42,7 +37,9 @@ ClassImp(RooStats::UniformProposal);
 using namespace RooFit;
 using namespace RooStats;
 
-// Populate xPrime with a new proposed point
+////////////////////////////////////////////////////////////////////////////////
+/// Populate xPrime with a new proposed point
+
 void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
 {
    // kbelasco: remember xPrime and x have not been checked for containing
@@ -50,16 +47,20 @@ void UniformProposal::Propose(RooArgSet& xPrime, RooArgSet& /* x */)
    RooStats::RandomizeCollection(xPrime);
 }
 
-// Determine whether or not the proposal density is symmetric for
-// points x1 and x2 - that is, whether the probabilty of reaching x2
-// from x1 is equal to the probability of reaching x1 from x2
+////////////////////////////////////////////////////////////////////////////////
+/// Determine whether or not the proposal density is symmetric for
+/// points x1 and x2 - that is, whether the probability of reaching x2
+/// from x1 is equal to the probability of reaching x1 from x2
+
 Bool_t UniformProposal::IsSymmetric(RooArgSet& /* x1 */ , RooArgSet& /* x2 */)
 {
    return true;
 }
 
-// Return the probability of proposing the point x1 given the starting
-// point x2
+////////////////////////////////////////////////////////////////////////////////
+/// Return the probability of proposing the point x1 given the starting
+/// point x2
+
 Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
                                               RooArgSet& x2)
 {

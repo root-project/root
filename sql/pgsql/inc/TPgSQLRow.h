@@ -12,9 +12,7 @@
 #ifndef ROOT_TPgSQLRow
 #define ROOT_TPgSQLRow
 
-#ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
-#endif
 
 #if !defined(__CINT__)
 #include <libpq-fe.h>

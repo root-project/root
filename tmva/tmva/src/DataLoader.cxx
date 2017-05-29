@@ -176,11 +176,13 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
       Double_t threshold = 0.0;
       if (!trOptions.IsFloat()){
          Log() << kFATAL << " VT transformation must be passed a floating threshold value" << Endl;
+         delete handler;
          return this;
       }
       else
          threshold =  trOptions.Atof();
       TMVA::DataLoader *transformedLoader = handler->VarianceThreshold(threshold);
+      delete handler;
       return transformedLoader;
    }
    else {
@@ -685,7 +687,7 @@ void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
       if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
       else if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
       else{
-         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
       }
    }
 
@@ -796,7 +798,8 @@ void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt
    // Assign the vectors of the events to rebuild the dataset
    DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
    DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
-
+   delete tempTest;
+   delete tempTrain;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

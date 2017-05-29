@@ -2638,7 +2638,7 @@ Int_t TProofLite::PollForNewWorkers()
                      fActiveSlaves->Add(wrk);             // Is this required? Check!
                      fAllMonitor->Add(wrk->GetSocket());
                      // Record also in the list for termination
-                     if (addedWorkers) addedWorkers->Add(wrk);
+                     addedWorkers->Add(wrk);
                      // Notify startup operations
                      NotifyStartUp("Setting up added worker servers", ++nWrksDone, nWrksTot);
                   } else {

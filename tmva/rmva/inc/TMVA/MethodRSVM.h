@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_RMethodBase
 #include "TMVA/RMethodBase.h"
-#endif
 
 namespace TMVA {
 
@@ -68,8 +66,8 @@ namespace TMVA {
 
       using MethodBase::ReadWeightsFromStream;
       // the actual "weights"
-      virtual void AddWeightsXMLTo(void *parent) const {}        // = 0;
-      virtual void ReadWeightsFromXML(void *wghtnode) {}    // = 0;
+      virtual void AddWeightsXMLTo(void * /*parent*/) const {}  // = 0;
+      virtual void ReadWeightsFromXML(void * /*wghtnode*/) {} // = 0;
       virtual void ReadWeightsFromStream(std::istream &) {} //= 0;       // backward compatibility
       void ReadModelFromFile();
 

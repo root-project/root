@@ -12,9 +12,7 @@
 #ifndef ROOT_Getline
 #define ROOT_Getline
 
-#ifndef ROOT_DllImport
 #include "DllImport.h"
-#endif
 
 #ifndef __CINT__
 #ifdef __cplusplus

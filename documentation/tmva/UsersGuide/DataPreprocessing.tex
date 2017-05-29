@@ -13,6 +13,8 @@ weight files of the MVA method. The preprocessing methods normalisation and prin
 decomposition are available for input and target variables, gaussianization, uniformization and decorrelation 
 discussed below can only be used for input variables. 
 
+Apart from five variable transformation methods mentioned above, an unsupervised variable selection method Variance Threshold is also implemented in TMVA. It follows a completely different processing pipeline. It is discussed in detail in section \ref{sec:varianceThreshold}. 
+
 \subsection{Transforming input variables}
 \label{sec:variableTransform}
 
@@ -308,6 +310,35 @@ D(_V0_,var2)");
   labeled \code{var2} are subject to a decorrelation transformation.
 }
 \end{codeexample}
+
+\subsection{Variable selection based on variance}
+\label{sec:varianceThreshold}
+In high energy physics and machine learning problems, we often encounter datasets which have large number of input variables. However to extract maximum information from the data, we need to select the relevant input variables for the multivariate classification and regression methods implemented in TMVA. Variance Threshold is a simple unsupervised variable selection method which automates this process.
+It computes weighted variance $\sigma^2_{j}$ for each variable $j = 1,\dots,{\Nvar}$ and ignores the ones whose variance lie below a specific threshold. Weighted variance for each variable is defined as follows:
+\beq
+\label{eq:variancecalculation}
+\sigma^2_{j} = \frac{\sum_{i=1}^N w_i (x_j(i) - \mu_{j})^2}{\sum_{i=1}^N w_i}
+\eeq
+
+where $N$ is the total number of events in a dataset, ${\bf x}(i)=(x_1(i),\dots,x_{\Nvar}(i))$ denotes each event $i$ and $w_i$ is the weight of each event. Weighted mean $\mu_{j}$ is defined as: 
+
+\beq
+\label{eq:meanecalculation}
+\mu_j = \frac{\sum_{i=1}^N w_i x_{j}(i)}{\sum_{i=1}^N w_i}
+\eeq
+Unlike above five variable transformation method, this Variance Threshold method is implemented in DataLoader class. After loading dataset in the DataLoader object, we can apply this method. It returns a new DataLoader with the selected variables which have variance strictly greater than the threshold value passed by user. Default value of threshold is zero i.e. remove the variables which have same value in all the events. 
+
+\begin{codeexample}
+\begin{tmvacode}
+// Threshold value of variance = 2.95
+TMVA::DataLoader* transformed_loader1 = loader->VarTransform("VT(2.95)");
+// No threshold value passed in below example, hence default value = 0
+TMVA::DataLoader* transformed_loader2 = loader->VarTransform("VT");
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize \code{VT} stands for Variance Threshold. Parameter passed to \code{VarTransform} method is just a single string. String strictly follows either of the above two formats for Variance Threshold otherwise method would raise an error. 
+}
+\end{codeexample}
+
 
 \subsection{Binary search trees\index{Binary search trees}} 
 \label{sec:binaryTrees}

@@ -11,9 +11,7 @@
 #ifndef ROOT_TCurlyArc
 #define ROOT_TCurlyArc
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 class TPoint;
 

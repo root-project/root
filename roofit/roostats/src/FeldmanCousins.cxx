@@ -10,17 +10,11 @@
  *************************************************************************/
 
 
-#ifndef RooStats_FeldmanCousins
 #include "RooStats/FeldmanCousins.h"
-#endif
 
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
 
-#ifndef RooStats_PointSetInterval
 #include "RooStats/PointSetInterval.h"
-#endif
 
 #include "RooStats/ModelConfig.h"
 

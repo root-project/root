@@ -377,6 +377,7 @@ void TSelectorDraw::Begin(TTree *tree)
             abrt.Form("An object of type '%s' has the same name as the requested histo (%s)", oldObject->IsA()->GetName(), hname);
             Abort(abrt);
             return;
+            delete[] varexp;
          }
          if (fOldHistogram && !hnameplus) fOldHistogram->Reset();  // reset unless adding is wanted
 
@@ -398,6 +399,7 @@ void TSelectorDraw::Begin(TTree *tree)
                abrt.Form("An object of type '%s' has the same name as the requested event list (%s)",
                          oldObject->IsA()->GetName(), hname);
                Abort(abrt);
+               delete[] varexp;
                return;
             }
             if (!enlist) {
@@ -447,7 +449,7 @@ void TSelectorDraw::Begin(TTree *tree)
                      // We have been asked to reset the input list!!
                      // Let's set it aside for now ...
                      Abort("Input and output lists are the same!");
-                     delete [] varexp;
+                     delete[] varexp;
                      return;
                   }
                   evlist->Reset();
@@ -477,17 +479,17 @@ void TSelectorDraw::Begin(TTree *tree)
    if (!CompileVariables(varexp, realSelection.GetTitle())) {
       abrt.Form("Variable compilation failed: {%s,%s}", varexp, realSelection.GetTitle());
       Abort(abrt);
-      delete [] varexp;
+      delete[] varexp;
       return;
    }
    if (fDimension > 4 && !(optpara || optcandle || opt5d || opt.Contains("goff"))) {
       Abort("Too many variables. Use the option \"para\", \"gl5d\" or \"candle\" to display more than 4 variables.");
-      delete [] varexp;
+      delete[] varexp;
       return;
    }
    if (fDimension < 2 && (optpara || optcandle)) {
       Abort("The options \"para\" and \"candle\" require at least 2 variables.");
-      delete [] varexp;
+      delete[] varexp;
       return;
    }
 
@@ -530,6 +532,7 @@ void TSelectorDraw::Begin(TTree *tree)
       gROOT->MakeDefCanvas();
       if (!gPad) {
          Abort("Creation of default canvas failed");
+         delete[] varexp;
          return;
       }
    }
@@ -566,7 +569,12 @@ void TSelectorDraw::Begin(TTree *tree)
          hist    = fOldHistogram;
          fNbins[0] = hist->GetXaxis()->GetNbins();
       } else {
-         hist = new TH1F(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         TString precision = gEnv->GetValue("Hist.Precision.1D", "float");
+         if (precision.Contains("float")) {
+            hist = new TH1F(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         } else {
+            hist = new TH1D(hname, htitle.Data(), fNbins[0], fVmin[0], fVmax[0]);
+         }
          hist->SetLineColor(fTree->GetLineColor());
          hist->SetLineWidth(fTree->GetLineWidth());
          hist->SetLineStyle(fTree->GetLineStyle());
@@ -668,11 +676,16 @@ void TSelectorDraw::Begin(TTree *tree)
          fObject = hp;
 
       } else {
-         TH2F *h2;
+         TH2 *h2;
          if (fOldHistogram) {
             h2 = (TH2F*)fOldHistogram;
          } else {
-            h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            TString precision = gEnv->GetValue("Hist.Precision.2D", "float");
+            if (precision.Contains("float")) {
+               h2 = new TH2F(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            } else {
+               h2 = new TH2D(hname, htitle.Data(), fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            }
             h2->SetLineColor(fTree->GetLineColor());
             h2->SetLineWidth(fTree->GetLineWidth());
             h2->SetLineStyle(fTree->GetLineStyle());
@@ -834,11 +847,16 @@ void TSelectorDraw::Begin(TTree *tree)
          fObject = h2;
          fAction = 33;
       } else {
-         TH3F *h3;
+         TH3 *h3;
          if (fOldHistogram) {
             h3 = (TH3F*)fOldHistogram;
          } else {
-            h3 = new TH3F(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            TString precision = gEnv->GetValue("Hist.Precision.3D", "float");
+            if (precision.Contains("float")) {
+               h3 = new TH3F(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            } else {
+               h3 = new TH3D(hname, htitle.Data(), fNbins[2], fVmin[2], fVmax[2], fNbins[1], fVmin[1], fVmax[1], fNbins[0], fVmin[0], fVmax[0]);
+            }
             h3->SetLineColor(fTree->GetLineColor());
             h3->SetLineWidth(fTree->GetLineWidth());
             h3->SetLineStyle(fTree->GetLineStyle());
@@ -889,8 +907,8 @@ void TSelectorDraw::Begin(TTree *tree)
       else if (opt5d) fAction = 8;
       else            fAction = 6;
    }
-   if (varexp) delete [] varexp;
-   if (hnamealloc) delete [] hnamealloc;
+   if (varexp) delete[] varexp;
+   if (hnamealloc) delete[] hnamealloc;
    for (i = 0; i < fValSize; ++i)
       fVarMultiple[i] = kFALSE;
    fSelectMultiple = kFALSE;

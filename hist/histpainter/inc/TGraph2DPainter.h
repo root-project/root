@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Object
 #include "TObject.h"
-#endif
 
 class TGraph2D;
 class TGraphDelaunay;

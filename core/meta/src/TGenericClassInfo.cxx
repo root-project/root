@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -25,6 +26,19 @@
 
 namespace ROOT {
 namespace Internal {
+   std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
+      constexpr static const char tag[] = "TypeNameExtraction<";
+      const char* start = strstr(derived_funcname, tag);
+      if (!start)
+         return "";
+      start += sizeof(tag) - 1;
+      const char* end = strstr(start, ">::Get(");
+      if (!end)
+         return "";
+      std::string ret;
+      TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
+      return ret;
+   }
 
    const TInitBehavior *DefineBehavior(void * /*parent_type*/,
                                        void * /*actual_type*/)
@@ -35,6 +49,33 @@ namespace Internal {
 
       static TDefaultInitBehavior theDefault;
       return &theDefault;
+   }
+
+   void TCDGIILIBase::SetInstance(::ROOT::TGenericClassInfo& R__instance,
+                                  NewFunc_t New, NewArrFunc_t NewArray,
+                                  DelFunc_t Delete, DelArrFunc_t DeleteArray,
+                                  DesFunc_t Destruct) {
+         R__LOCKGUARD2(gROOTMutex);
+         R__instance.SetNew(New);
+         R__instance.SetNewArray(NewArray);
+         R__instance.SetDelete(Delete);
+         R__instance.SetDeleteArray(DeleteArray);
+         R__instance.SetDestructor(Destruct);
+   }
+
+   void TCDGIILIBase::SetName(const std::string& name,
+                              std::string& nameMember) {
+      R__LOCKGUARD2(gInterpreterMutex);
+      if (nameMember.empty()) {
+         TClassEdit::GetNormalizedName(nameMember, name);
+      }
+   }
+
+   void TCDGIILIBase::SetfgIsA(atomic_TClass_ptr& isA, TClass*(*dictfun)()) {
+      if (!isA.load()) {
+         R__LOCKGUARD2(gInterpreterMutex);
+         dictfun();
+      }
    }
 } // Internal
 

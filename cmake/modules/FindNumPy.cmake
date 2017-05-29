@@ -82,7 +82,8 @@ if("${_VER_CHECK}" STREQUAL "")
     return()
 endif()
 
-find_path(NUMPY_INCLUDE_DIR numpy/numpyconfig.h PATHS ${_numpy_include_path})
+# we already know where it should be so don't search default paths as well.
+find_path(NUMPY_INCLUDE_DIR numpy/numpyconfig.h PATHS ${_numpy_include_path} NO_DEFAULT_PATH)
 if(NUMPY_INCLUDE_DIR)
   set(NUMPY_INCLUDE_DIRS ${NUMPY_INCLUDE_DIR})
 endif()

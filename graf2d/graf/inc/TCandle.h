@@ -12,18 +12,10 @@
 #ifndef ROOT_TCandle
 #define ROOT_TCandle
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_TAttMarket
 #include "TAttMarker.h"
-#endif
 
 #include "TH1D.h"
 #include "TMath.h"
@@ -33,7 +25,7 @@ const Int_t kNMAXPOINTS = 2010;  // Max outliers per candle
 class TCandle : public TAttLine, public TAttFill, public TAttMarker {
 public:
    //Candle Option
-   enum CandleOption {
+   enum CandleOption: long {
       kNoOption           = 0,
       kBox                = 1,
       kMedianLine         = 10,
@@ -51,7 +43,7 @@ public:
       kHistoRight         = 2000000,
       kHistoViolin        = 3000000,
       kHistoZeroIndicator = 10000000,
-      kHorizontal         = 1000000000 // if this bit is not set it is vertical
+      kHorizontal         = 1000000000 ///< If this bit is not set it is vertical
    };
 
 protected:

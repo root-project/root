@@ -24,16 +24,10 @@
 
 #include <Cocoa/Cocoa.h>
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 class TColorGradient;
 

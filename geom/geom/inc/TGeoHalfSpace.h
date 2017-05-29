@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoHalfSpace
 #define ROOT_TGeoHalfSpace
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 class TGeoHalfSpace : public TGeoBBox
 {

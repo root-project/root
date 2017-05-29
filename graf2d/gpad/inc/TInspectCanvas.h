@@ -13,12 +13,8 @@
 #define ROOT_TInspectCanvas
 
 
-#ifndef ROOT_TCanvas
 #include "TCanvas.h"
-#endif
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
 class TButton;
 

@@ -31,21 +31,11 @@
 #endif
 #endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TInetAddress
 #include "TInetAddress.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
 #include "ThreadLocalStorage.h"
-#endif
 
 class TSeqCollection;
 class TFdSet;

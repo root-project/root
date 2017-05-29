@@ -166,9 +166,7 @@ private:
 } // namespace Math
 } // namespace ROOT
 
-#ifndef ROOT_Math_GSLQuasiRandom
 #include "Math/GSLQuasiRandom.h"
-#endif
 
 
 

@@ -39,13 +39,9 @@
 
 #include <iosfwd>
 #include <vector>
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TMVA_Node
 #include "TMVA/Node.h"
-#endif
 
 namespace TMVA {
 
@@ -104,11 +100,12 @@ namespace TMVA {
       virtual void AddAttributesToNode(void* node) const;
       virtual void AddContentToNode(std::stringstream& s) const;
 
-   private: 
       // Read the data block
-      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual Bool_t ReadDataRecord( std::istream& is, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
+      virtual void ReadAttributes(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
       virtual void ReadContent(std::stringstream& s);
+
+   private: 
       std::vector<Float_t> fEventV;
       std::vector<Float_t> fTargets;
 

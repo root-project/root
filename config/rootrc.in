@@ -167,6 +167,11 @@ Hist.Binning.3D.z:           20
 Hist.Binning.3D.Profx:      100
 Hist.Binning.3D.Profy:      100
 
+# Default histogram precision for TTree::Draw(). It can be 'float"or "double"
+Hist.Precision.1D:           float
+Hist.Precision.2D:           float
+Hist.Precision.3D:           float
+
 # Default statistics parameters names.
 Hist.Stats.Entries:          Entries
 Hist.Stats.Mean:             Mean
@@ -298,7 +303,7 @@ Rint.Logoff:             rootlogoff.C
 ### Prompt colors
 # Whether to use default colors for light-on-dark (i.e. reverse) color scheme:
 #Rint.ReverseColor:        no
-# Prompt colors: #rgb or #rrggbb or color names:
+# Prompt colors: %rgb or %rrggbb or color names:
 #  "black", "red", "green", "yellow", "blue", "magenta", "cyan", "white"
 #  "default" will keep the current terminal color.
 # can be combined with string containing "under" and "bold".

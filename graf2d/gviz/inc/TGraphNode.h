@@ -12,21 +12,13 @@
 #ifndef ROOT_TGraphNode
 #define ROOT_TGraphNode
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
 
 struct GVizAgraph_t;
 struct GVizAgnode_t;

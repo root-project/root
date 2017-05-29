@@ -11,15 +11,9 @@
 #ifndef ROOT_TGTable
 #define ROOT_TGTable
 
-#ifndef ROOT_TGCanvas
 #include "TGCanvas.h"
-#endif
-#ifndef ROOT_TGWidget
 #include "TGWidget.h"
-#endif
-#ifndef ROOT_TGTableHeader
 #include "TGTableHeader.h"
-#endif
 
 class TGWindow;
 class TGString;

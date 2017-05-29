@@ -115,11 +115,7 @@ if test "$echo_libs" = "yes" ; then
         	libs="-lAfterBase $libs"
  	fi
  	libs="-lAfterImage $libs" 
-	if test "@libdir@" != "/usr/lib" ; then
-  		echo -L@libdir@ $libs
- 	else
-  		echo $libs
- 	fi
+        echo $libs
  else
         echo $libs
  fi

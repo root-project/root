@@ -4,9 +4,7 @@
 #ifndef ROOT_TGCommandPlugin
 #define ROOT_TGCommandPlugin
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGLabel;
 class TGComboBox;

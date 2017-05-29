@@ -24,15 +24,9 @@
 #include <set>
 #include <map>
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TBaseClass;
 class TClass;

@@ -93,7 +93,7 @@ MethodRXGB::~MethodRXGB(void)
 }
 
 //_______________________________________________________________________
-Bool_t MethodRXGB::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets)
+Bool_t MethodRXGB::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/)
 {
    if (type == Types::kClassification && numberClasses == 2) return kTRUE;
    return kFALSE;
@@ -278,6 +278,6 @@ void TMVA::MethodRXGB::ReadModelFromFile()
 }
 
 //_______________________________________________________________________
-void TMVA::MethodRXGB::MakeClass(const TString &theClassFileName) const
+void TMVA::MethodRXGB::MakeClass(const TString &/*theClassFileName*/) const
 {
 }

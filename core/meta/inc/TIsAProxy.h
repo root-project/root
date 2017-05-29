@@ -12,13 +12,10 @@
 #ifndef ROOT_TIsAProxy
 #define ROOT_TIsAProxy
 
-#ifndef ROOT_TVirtualIsAProxy
 #include "TVirtualIsAProxy.h"
-#endif
-#ifndef ROOT_Rtypes
-#include "Rtypes.h"
-#endif
+#include "RtypesCore.h"
 #include <atomic>
+#include <typeinfo>
 
 class TClass;
 

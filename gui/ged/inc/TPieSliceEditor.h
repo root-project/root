@@ -19,9 +19,7 @@
 
 #ifndef ROOT_TPieSliceEditor
 #define ROOT_TPieSliceEditor
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TPieSlice;
 class TGTextEntry;

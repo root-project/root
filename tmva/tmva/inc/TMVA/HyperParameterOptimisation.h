@@ -6,44 +6,22 @@
 #define ROOT_TMVA_HyperParameterOptimisation
 
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMultiGraph
 #include "TMultiGraph.h"
-#endif
 
-#ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
-#endif
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_Results
-#include<TMVA/Results.h>
-#endif
+#include <TMVA/Results.h>
 
-#ifndef ROOT_TMVA_Factory
-#include<TMVA/Factory.h>
-#endif
+#include <TMVA/Factory.h>
 
-#ifndef ROOT_TMVA_DataLoader
-#include<TMVA/DataLoader.h>
-#endif
+#include <TMVA/DataLoader.h>
 
-#ifndef ROOT_TMVA_Envelope
-#include<TMVA/Envelope.h>
-#endif
+#include <TMVA/Envelope.h>
 
 namespace TMVA {
 
@@ -51,20 +29,19 @@ namespace TMVA {
    {
      friend class HyperParameterOptimisation;
    private:
-       std::vector<Float_t> fROCs;
-       Float_t              fROCAVG;
-       std::shared_ptr<TMultiGraph>    fROCCurves;
-
-       std::vector<Double_t> fSigs;
-       std::vector<Double_t> fSeps;
-       std::vector<Double_t> fEff01s;
-       std::vector<Double_t> fEff10s;
-       std::vector<Double_t> fEff30s;
-       std::vector<Double_t> fEffAreas;
-       std::vector<Double_t> fTrainEff01s;
-       std::vector<Double_t> fTrainEff10s;
-       std::vector<Double_t> fTrainEff30s;
-       TString               fMethodName;
+      Float_t fROCAVG;
+      std::vector<Float_t> fROCs;
+      std::vector<Double_t> fSigs;
+      std::vector<Double_t> fSeps;
+      std::vector<Double_t> fEff01s;
+      std::vector<Double_t> fEff10s;
+      std::vector<Double_t> fEff30s;
+      std::vector<Double_t> fEffAreas;
+      std::vector<Double_t> fTrainEff01s;
+      std::vector<Double_t> fTrainEff10s;
+      std::vector<Double_t> fTrainEff30s;
+      std::shared_ptr<TMultiGraph> fROCCurves;
+      TString fMethodName;
 
    public:
        HyperParameterOptimisationResult();

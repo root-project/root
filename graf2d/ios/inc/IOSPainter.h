@@ -26,18 +26,10 @@
 #include <CoreGraphics/CoreGraphics.h>
 
 
-#ifndef ROOT_TVirtualPadPainter
 #include "TVirtualPadPainter.h"
-#endif
-#ifndef ROOT_TextOperations
 #include "IOSTextOperations.h"
-#endif
-#ifndef ROOT_GraphicUtils
 #include "IOSGraphicUtils.h"
-#endif
-#ifndef ROOT_TPoint
 #include "TPoint.h"
-#endif
 
 namespace ROOT {
 namespace iOS {

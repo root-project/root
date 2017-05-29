@@ -340,6 +340,9 @@ void Warning(const char *location, const char *va_(fmt), ...)
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in case of a fatal error. It will abort the program.
 
+// Fatal() *might* not abort the program (if gAbortLevel > kFatal) - but for all
+// reasonable settings it *will* abort. So let's be reasonable wrt Coverity:
+// coverity[+kill]
 void Fatal(const char *location, const char *va_(fmt), ...)
 {
    va_list ap;

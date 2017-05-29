@@ -22,9 +22,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TProcessID
 #include "TProcessID.h"
-#endif
 
 class THashList;
 class TBits;

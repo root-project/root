@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 enum EKeySym {
    kKey_Escape              = 0x1000,          // misc keys

@@ -42,15 +42,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSysEvtHandler
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TTime
 #include "TTime.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 
 

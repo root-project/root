@@ -1,9 +1,6 @@
 // @(#)root/gl:$Id$
 // Author:  Timur Pocheptsov, Jun 2007
 
-#include <utility>
-#include <list>
-
 /*************************************************************************
  * Copyright (C) 1995-2004, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -15,16 +12,14 @@
 #ifndef ROOT_TGLContext
 #define ROOT_TGLContext
 
+#include <list>
 #include <memory>
+#include <utility>
 
 class TGLContextIdentity;
 
-#ifndef ROOT_TGLFormat
 #include "TGLFormat.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TGLContextPrivate;
 class TGLPaintDevice;

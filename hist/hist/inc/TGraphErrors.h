@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TGraphErrors : public TGraph {
 

@@ -13,9 +13,7 @@
 
 
 // ROOT
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
 
 
 namespace PyROOT {

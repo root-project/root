@@ -48,13 +48,9 @@
 #endif
 
 // ROOT include(s)
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
 // Local include(s):
 

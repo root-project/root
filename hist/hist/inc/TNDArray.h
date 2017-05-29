@@ -12,12 +12,8 @@
 #ifndef ROOT_TNDArray
 #define ROOT_TNDArray
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
 
 // Jan 1, 1995, 00:00:00 in sec from EPOCH (Jan 1, 1970)
 const TDatime kROOTTZERO = 788914800;

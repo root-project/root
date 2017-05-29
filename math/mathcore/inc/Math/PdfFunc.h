@@ -19,14 +19,10 @@
 #define ROOT_Math_PdfFunc
 
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 // all cdf are in mathcore now
-#ifndef ROOT_Math_PdfFuncMathCore
 #include "Math/PdfFuncMathCore.h"
-#endif
 
 // // include distributions from MathMore when is there
 // #ifdef R__HAS_MATHMORE

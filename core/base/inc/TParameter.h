@@ -21,29 +21,17 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_Riostream
 #include "Riostream.h"
-#endif
 
-#ifndef ROOT_TClass
 #include "TClass.h"
-#endif
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TCollection
 #include "TCollection.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
 template <class AParamType>
 class TParameter : public TObject {

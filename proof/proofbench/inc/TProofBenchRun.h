@@ -20,12 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TProofBenchTypes
 #include "TProofBenchTypes.h"
-#endif
 
 class TProof;
 

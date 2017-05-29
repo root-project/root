@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLTableInfo
 #define ROOT_TSQLTableInfo
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TList;
 class TSQLColumnInfo;

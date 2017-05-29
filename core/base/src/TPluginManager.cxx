@@ -280,6 +280,11 @@ Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
 
    if (fCanCall == 0) {
       // Not initialized yet.
+      // SetupCallEnv is likely to require/take the interpreter lock.
+      // Grab it now to avoid dead-lock.  In particular TPluginHandler::ExecPluginImpl
+      // takes the gInterpreterMutex and *then* call (indirectly) code that
+      // take the gPluginManagerMutex.
+      R__LOCKGUARD2(gInterpreterMutex);
       R__LOCKGUARD2(gPluginManagerMutex);
 
       // Now check if another thread did not already do the work.

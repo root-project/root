@@ -40,18 +40,10 @@
    a vector, like in the matrix-vector product or a scalar like in the Similarity vector-matrix product.
 */
 
-#ifndef ROOT_Math_BinaryOpPolicy
 #include "Math/BinaryOpPolicy.h"
-#endif
-#ifndef ROOT_Math_Expression
 #include "Math/Expression.h"
-#endif
-#ifndef ROOT_Math_HelperOps
 #include "Math/HelperOps.h"
-#endif
-#ifndef ROOT_Math_CholeskyDecomp
 #include "Math/CholeskyDecomp.h"
-#endif
 
 namespace ROOT {
 

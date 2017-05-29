@@ -110,7 +110,7 @@ public:
          MPSend(s, MPCode::kFuncResult, fReducedResult);
       } else {
          reply += ": unknown code received: " + std::to_string(code);
-         MPSend(s, MPCode::kError, reply.data());
+         MPSend(s, MPCode::kError, reply.c_str());
       }
    }
 
@@ -153,7 +153,7 @@ public:
          MPSend(s, MPCode::kFuncResult, fReducedResult);
       } else {
          reply += ": unknown code received: " + std::to_string(code);
-         MPSend(s, MPCode::kError, reply.data());
+         MPSend(s, MPCode::kError, reply.c_str());
       }
    }
 
@@ -180,7 +180,7 @@ public:
          MPSend(s, MPCode::kFuncResult, fFunc(fArgs[n]));
       } else {
          reply += ": unknown code received: " + std::to_string(code);
-         MPSend(s, MPCode::kError, reply.data());
+         MPSend(s, MPCode::kError, reply.c_str());
       }
    }
 

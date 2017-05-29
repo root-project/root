@@ -50,21 +50,11 @@
 // subtree, defined to be the subtree with the best quality index for the validation sample.              //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
-#ifndef ROOT_TMVA_GiniIndex
 #include "TMVA/GiniIndex.h"
-#endif
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_IPruneTool
 #include "TMVA/IPruneTool.h"
-#endif
 
 namespace TMVA {
 

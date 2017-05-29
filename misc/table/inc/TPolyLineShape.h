@@ -12,12 +12,8 @@
 #ifndef ROOT_TPolyLineShape
 #define ROOT_TPolyLineShape
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
-#ifndef ROOT_TAttMarker
 #include "TAttMarker.h"
-#endif
 
 class TPoints3DABC;
 class TVirtualPad;

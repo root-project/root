@@ -23,9 +23,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTUBE
 #include "TTUBE.h"
-#endif
 
 class TCONE : public TTUBE {
 

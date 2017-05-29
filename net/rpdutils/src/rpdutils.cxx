@@ -3933,7 +3933,7 @@ int RpdGlobusAuth(const char *sstr)
    int GlbTokenStatus = 0;
    char *GlbClientName;
    FILE *FILE_SockFd;
-   char *gridmap_default = "/etc/grid-security/grid-mapfile";
+   const char *gridmap_default = "/etc/grid-security/grid-mapfile";
    EMessageTypes kind;
    int lSubj, offset = -1;
    char *user = 0;

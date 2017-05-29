@@ -26,6 +26,7 @@
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Utils/Diagnostics.h"
 #include "cling/Utils/Output.h"
 
 #include "clang/AST/ASTContext.h"
@@ -56,22 +57,9 @@ using namespace clang;
 
 namespace {
 
-  static const Token* getMacroToken(const Preprocessor& PP, const char* Macro) {
-    if (const IdentifierInfo* II = PP.getIdentifierInfo(Macro)) {
-      if (const DefMacroDirective* MD = llvm::dyn_cast_or_null
-          <DefMacroDirective>(PP.getLocalMacroDirective(II))) {
-        if (const clang::MacroInfo* MI = MD->getMacroInfo()) {
-          if (MI->getNumTokens() == 1)
-            return MI->tokens_begin();
-        }
-      }
-    }
-    return nullptr;
-  }
-
   ///\brief Check the compile-time C++ ABI version vs the run-time ABI version,
   /// a mismatch could cause havoc. Reports if ABI versions differ.
-  static bool CheckABICompatibility(clang::CompilerInstance* CI) {
+  static bool CheckABICompatibility(cling::Interpreter& Interp) {
 #if defined(__GLIBCXX__)
     #define CLING_CXXABI_VERS       std::to_string(__GLIBCXX__)
     const char* CLING_CXXABI_NAME = "__GLIBCXX__";
@@ -85,18 +73,9 @@ namespace {
     #error "Unknown platform for ABI check";
 #endif
 
-    llvm::StringRef CurABI;
-    const clang::Preprocessor& PP = CI->getPreprocessor();
-    const clang::Token* Tok = getMacroToken(PP, CLING_CXXABI_NAME);
-    if (Tok && Tok->isLiteral()) {
-      // Tok::getLiteralData can fail even if Tok::isLiteral is true!
-      SmallString<64> Buffer;
-      CurABI = PP.getSpelling(*Tok, Buffer);
-      // Strip any quotation marks.
-      CurABI = CurABI.trim("\"");
-      if (CurABI.equals(CLING_CXXABI_VERS))
-        return true;
-    }
+    const std::string CurABI = Interp.getMacroValue(CLING_CXXABI_NAME);
+    if (CurABI == CLING_CXXABI_VERS)
+      return true;
 
     cling::errs() <<
       "Warning in cling::IncrementalParser::CheckABICompatibility():\n"
@@ -108,38 +87,36 @@ namespace {
     return false;
   }
 
-  class FilteringDiagConsumer: public ForwardingDiagnosticConsumer {
-    std::unique_ptr<DiagnosticConsumer> fOwnedTarget;
-    std::stack<bool> fIgnorePromptDiags;
+  class FilteringDiagConsumer : public cling::utils::DiagnosticsOverride {
+    std::stack<bool> m_IgnorePromptDiags;
 
     void SyncDiagCountWithTarget() {
-      NumWarnings = fOwnedTarget->getNumWarnings();
-      NumErrors = fOwnedTarget->getNumErrors();
+      NumWarnings = m_PrevClient.getNumWarnings();
+      NumErrors = m_PrevClient.getNumErrors();
     }
-
-  public:
-    FilteringDiagConsumer(std::unique_ptr<DiagnosticConsumer>&& Target):
-      ForwardingDiagnosticConsumer(*Target),
-      fOwnedTarget(std::move(Target)) {}
 
     void BeginSourceFile(const LangOptions &LangOpts,
                          const Preprocessor *PP=nullptr) override {
-      fOwnedTarget->BeginSourceFile(LangOpts, PP);
+      m_PrevClient.BeginSourceFile(LangOpts, PP);
     }
 
     void EndSourceFile() override {
-      fOwnedTarget->EndSourceFile();
+      m_PrevClient.EndSourceFile();
       SyncDiagCountWithTarget();
     }
-
+  
     void finish() override {
-      fOwnedTarget->finish();
+      m_PrevClient.finish();
       SyncDiagCountWithTarget();
     }
 
     void clear() override {
-      fOwnedTarget->clear();
+      m_PrevClient.clear();
       SyncDiagCountWithTarget();
+    }
+
+    bool IncludeInDiagnosticCounts() const override {
+      return m_PrevClient.IncludeInDiagnosticCounts();
     }
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
@@ -156,24 +133,33 @@ namespace {
           // An error that we need to suppress.
           auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
           assert(Diags->hasErrorOccurred() && "Expected ErrorOccurred");
-          if (fOwnedTarget->getNumErrors() == 0) { // first error
+          if (m_PrevClient.getNumErrors() == 0) { // first error
             Diags->Reset(true /*soft - only counts, not mappings*/);
           } // else we had other errors, too.
           return; // ignore!
         }
       }
-      ForwardingDiagnosticConsumer::HandleDiagnostic(DiagLevel, Info);
+      m_PrevClient.HandleDiagnostic(DiagLevel, Info);
       SyncDiagCountWithTarget();
     }
 
-    void push(bool ignoreDiags) { fIgnorePromptDiags.push(ignoreDiags); }
-    void pop() {
-      assert(!fIgnorePromptDiags.empty() && "Unignoring non-ignored prompt diags!");
-      fIgnorePromptDiags.pop();
-    }
     bool Ignoring() const {
-      return !fIgnorePromptDiags.empty() && fIgnorePromptDiags.top();
+      return !m_IgnorePromptDiags.empty() && m_IgnorePromptDiags.top();
     }
+
+  public:
+    FilteringDiagConsumer(DiagnosticsEngine& Diags, bool Own) :
+      DiagnosticsOverride(Diags, Own) {
+    }
+
+    struct RAAI {
+      FilteringDiagConsumer& m_Client;
+      RAAI(DiagnosticConsumer& F, bool Ignore) :
+       m_Client(static_cast<FilteringDiagConsumer&>(F)) {
+        m_Client.m_IgnorePromptDiags.push(Ignore);
+      }
+      ~RAAI() { m_Client.m_IgnorePromptDiags.pop(); }
+    };
   };
 } // unnamed namespace
 
@@ -208,9 +194,7 @@ namespace cling {
       m_Consumer->setContext(this, 0);
     }
 
-    DiagnosticConsumer* DC
-      = new FilteringDiagConsumer(Diag.takeClient());
-    Diag.setClient(DC, true /*own*/);
+    m_DiagConsumer.reset(new FilteringDiagConsumer(Diag, false));
 
     initializeVirtualFile();
   }
@@ -222,11 +206,7 @@ namespace cling {
     if (hasCodeGenerator())
       getCodeGenerator()->Initialize(getCI()->getASTContext());
 
-    CompilationOptions CO;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = CompilationOptions::VPDisabled;
-    CO.CodeGeneration = hasCodeGenerator();
-
+    CompilationOptions CO = m_Interpreter->makeDefaultCompilationOpts();
     Transaction* CurT = beginTransaction(CO);
     Preprocessor& PP = m_CI->getPreprocessor();
     DiagnosticsEngine& Diags = m_CI->getSema().getDiagnostics();
@@ -269,15 +249,16 @@ namespace cling {
     // for ParseInternal()'s call EnterSourceFile() to make sense.
     while (!m_Parser->ParseTopLevelDecl()) {}
 
-    // If I belong to the parent Interpreter, only then do
-    // the #include <new>
-    if (!isChildInterpreter && m_CI->getLangOpts().CPlusPlus) {
+    // If I belong to the parent Interpreter, am using C++, and -noruntime
+    // wasn't given on command line, then #include <new> and check ABI
+    if (!isChildInterpreter && m_CI->getLangOpts().CPlusPlus &&
+        !m_Interpreter->getOptions().NoRuntime) {
       // <new> is needed by the ValuePrinter so it's a good thing to include it.
       // We need to include it to determine the version number of the standard
       // library implementation.
       ParseInternal("#include <new>");
       // That's really C++ ABI compatibility. C has other problems ;-)
-      CheckABICompatibility(m_CI.get());
+      CheckABICompatibility(*m_Interpreter);
     }
 
     // DO NOT commit the transactions here: static initialization in these
@@ -359,16 +340,18 @@ namespace cling {
 
     T->setState(Transaction::kCompleted);
 
-    DiagnosticsEngine& Diags = getCI()->getSema().getDiagnostics();
+    DiagnosticsEngine& Diag = getCI()->getSema().getDiagnostics();
 
     //TODO: Make the enum orable.
     EParseResult ParseResult = kSuccess;
 
-    if (Diags.hasErrorOccurred() || Diags.hasFatalErrorOccurred()
-        || T->getIssuedDiags() == Transaction::kErrors) {
+    assert((Diag.hasFatalErrorOccurred() ? Diag.hasErrorOccurred() : true)
+            && "Diag.hasFatalErrorOccurred without Diag.hasErrorOccurred !");
+
+    if (Diag.hasErrorOccurred() || T->getIssuedDiags() == Transaction::kErrors) {
       T->setIssuedDiags(Transaction::kErrors);
       ParseResult = kFailed;
-    } else if (Diags.getNumWarnings() > 0) {
+    } else if (Diag.getNumWarnings() > 0) {
       T->setIssuedDiags(Transaction::kWarnings);
       ParseResult = kSuccessWithWarnings;
     }
@@ -478,7 +461,7 @@ namespace cling {
     {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
-      Transaction* nestedT = beginTransaction(CompilationOptions());
+      Transaction* nestedT = beginTransaction(T->getCompilationOpts());
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
       ParseResultTransaction nestedPRT = endTransaction(nestedT);
@@ -499,10 +482,12 @@ namespace cling {
       if (!T->getParent()) {
         if (m_Interpreter->executeTransaction(*T)
             >= Interpreter::kExeFirstError) {
-          // Roll back on error in initializers
-          //assert(0 && "Error on inits.");
+          // Roll back on error in initializers.
+          // T maybe pointing to freed memory after this call:
+          // Interpreter::unload
+          //   IncrementalParser::deregisterTransaction
+          //     TransactionPool::releaseTransaction
           m_Interpreter->unload(*T);
-          T->setState(Transaction::kRolledBackWithErrors);
           return;
         }
       }
@@ -564,7 +549,7 @@ namespace cling {
       std::unique_ptr<llvm::Module> M(getCodeGenerator()->ReleaseModule());
 
       if (M) {
-        m_Interpreter->addModule(M.get());
+        m_Interpreter->addModule(M.get(), T->getCompilationOpts().OptLevel);
         T->setModule(std::move(M));
       }
 
@@ -742,16 +727,9 @@ namespace cling {
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
 
-    FilteringDiagConsumer* PromptDiagClient
-      = static_cast<FilteringDiagConsumer*>(Diags.getClient());
+    FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
-    struct PromptDiagClientRAII_t {
-      FilteringDiagConsumer* fClient;
-      ~PromptDiagClientRAII_t() { fClient->pop(); }
-    } PromptDiagClientRAII{PromptDiagClient};
-
-    PromptDiagClient->push(CO.IgnorePromptDiags);
-
+    DiagnosticErrorTrap Trap(Diags);
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
 
     Parser::DeclGroupPtrTy ADecl;
@@ -759,11 +737,14 @@ namespace cling {
       // If we got a null return and something *was* parsed, ignore it.  This
       // is due to a top-level semicolon, an action override, or a parse error
       // skipping something.
-      if (Diags.hasErrorOccurred() || Diags.hasFatalErrorOccurred())
+      if (Trap.hasErrorOccurred())
         m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
       if (ADecl)
         m_Consumer->HandleTopLevelDecl(ADecl.get());
     };
+    // If never entered the while block, there's a chance an error occured
+    if (Trap.hasErrorOccurred())
+      m_Consumer->getTransaction()->setIssuedDiags(Transaction::kErrors);
 
     if (CO.CodeCompletionOffset != -1) {
       assert((int)SM.getFileOffset(PP.getCodeCompletionLoc())
@@ -823,7 +804,7 @@ namespace cling {
     std::vector<ASTTPtr_t> ASTTransformers;
     ASTTransformers.emplace_back(new AutoSynthesizer(TheSema));
     ASTTransformers.emplace_back(new EvaluateTSynthesizer(TheSema));
-    if (hasCodeGenerator()) {
+    if (hasCodeGenerator() && !m_Interpreter->getOptions().NoRuntime) {
        // Don't protect against crashes if we cannot run anything.
        // cling might also be in a PCH-generation mode; don't inject our Sema pointer
        // into the PCH.
@@ -832,9 +813,12 @@ namespace cling {
 
     typedef std::unique_ptr<WrapperTransformer> WTPtr_t;
     std::vector<WTPtr_t> WrapperTransformers;
-    WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema));
+    if (!m_Interpreter->getOptions().NoRuntime)
+      WrapperTransformers.emplace_back(new ValuePrinterSynthesizer(TheSema));
     WrapperTransformers.emplace_back(new DeclExtractor(TheSema));
-    WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema, isChildInterpreter));
+    if (!m_Interpreter->getOptions().NoRuntime)
+      WrapperTransformers.emplace_back(new ValueExtractionSynthesizer(TheSema,
+                                                           isChildInterpreter));
     WrapperTransformers.emplace_back(new CheckEmptyTransactionTransformer(TheSema));
 
     m_Consumer->SetTransformers(std::move(ASTTransformers),

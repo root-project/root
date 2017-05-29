@@ -23,13 +23,9 @@
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TContextMenuImp
 #include "TContextMenuImp.h"
-#endif
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TMethod;
 class TFunction;

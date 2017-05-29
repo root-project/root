@@ -2,6 +2,7 @@
 #include "Math/Functor.h"
 #include "Math/Error.h"
 #include <iostream>
+#include <iomanip>
 
 
 #ifdef HAVE_ROOTLIBS
@@ -75,6 +76,7 @@ int testIntegration() {
   double value = ig.Integral( 0, 3);
   // or ig.Integral(*f, 0, 10); if new function
 
+  std::streamsize ss = std::cout.precision();
   std::cout.precision(20);
 
   std::cout << "Adaptive singular integration:" << std::endl;
@@ -146,7 +148,7 @@ int testIntegration() {
   status &= fabs(ig.Result() - (2.-2*sqrt(0.5))) > ERRORLIMIT;
   if (status) MATH_ERROR_MSG("testGSLIntegration","Adaptive integration with singular points 2 failed on 1./sqrt(x)");
 
-
+  std::cout.precision(ss);
   return status;
 }
 

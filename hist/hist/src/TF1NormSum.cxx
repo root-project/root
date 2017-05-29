@@ -177,7 +177,7 @@ TF1NormSum::TF1NormSum(TF1* function1, TF1* function2, TF1* function3, Double_t 
    }
    if (function3) { 
       fnew3 = (TF1*) function3->IsA()->New();
-      function3->Copy(*fnew2); 
+      function3->Copy(*fnew3); 
    }
    if (!fnew1 || !fnew2  || !fnew3 )
       Fatal("TF1NormSum","Invalid input functions - Abort");

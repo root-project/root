@@ -11,13 +11,9 @@
 #ifndef ROOSTATS_HybridCalculator
 #define ROOSTATS_HybridCalculator
 
-#ifndef ROOSTATS_HypoTestCalculatorGeneric
 #include "RooStats/HypoTestCalculatorGeneric.h"
-#endif
 
-#ifndef ROOSTATS_ToyMCSampler
 #include "RooStats/ToyMCSampler.h"
-#endif
 
 
 

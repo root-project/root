@@ -137,8 +137,12 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
    Double_t c=0;
 
    Double_t *matr = GetCovarianceMatrix();
-   if (!matr)
+   if (!matr){
+      delete [] grad;
+      delete [] sum_vector;
       return;
+   }
+  
    Double_t t = TMath::StudentQuantile(0.5 + cl/2, f->GetNDF());
    Double_t chidf = TMath::Sqrt(f->GetChisquare()/f->GetNDF());
    Int_t igrad, ifree=0;

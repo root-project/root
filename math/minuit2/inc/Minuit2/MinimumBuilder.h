@@ -10,9 +10,7 @@
 #ifndef ROOT_Minuit2_MinimumBuilder
 #define ROOT_Minuit2_MinimumBuilder
 
-#ifndef ROOT_Minuit2_MnTraceObject
 #include "Minuit2/MnTraceObject.h"
-#endif
 
 namespace ROOT {
 

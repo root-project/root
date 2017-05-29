@@ -24,7 +24,7 @@
 #include "LinkDef_Func.h"
 #include "LinkDef_RootFinding.h"
 
-#pragma link C++ struct ROOT::Math::MathMoreLibrary;
+#pragma link C++ class ROOT::Math::MathMoreLib+;
 
 #pragma link C++ class ROOT::Math::ParamFunction<ROOT::Math::IParametricGradFunctionOneDim>+;
 

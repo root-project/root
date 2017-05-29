@@ -13,9 +13,7 @@
 #define ROOT_TClassTree
 
 
-#ifndef ROOT_TTnamed
 #include "TNamed.h"
-#endif
 
 class TClass;
 class TObjString;

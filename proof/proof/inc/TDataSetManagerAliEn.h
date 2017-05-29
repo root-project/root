@@ -21,13 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDataSetManager
 #include "TDataSetManager.h"
-#endif
 
-#ifndef ROOT_TDataSetManagerFile
 #include "TDataSetManagerFile.h"
-#endif
 
 #include "TFileStager.h"
 #include "TPRegexp.h"

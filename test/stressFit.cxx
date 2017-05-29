@@ -487,14 +487,14 @@ Double_t seed = 3;
 Int_t  nf;
 TMatrixD A;
 TMatrixD B;
-TVectorD x0;
+TVectorD xx0;
 TVectorD sx0;
 TVectorD cx0;
 TVectorD sx;
 TVectorD cx;
-TVectorD v0;
-TVectorD v;
-TVectorD r;
+TVectorD vv0;
+TVectorD vv;
+TVectorD rr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -502,17 +502,17 @@ Double_t TrigoFletcher(const Double_t *par)
 {
   Int_t i;
   for (i = 0; i < nf ; i++) {
-    cx0[i] = TMath::Cos(x0[i]);
-    sx0[i] = TMath::Sin(x0[i]);
+    cx0[i] = TMath::Cos(xx0[i]);
+    sx0[i] = TMath::Sin(xx0[i]);
     cx [i] = TMath::Cos(par[i]);
     sx [i] = TMath::Sin(par[i]);
   }
 
-  v0 = A*sx0+B*cx0;
-  v  = A*sx +B*cx;
-  r  = v0-v;
+  vv0 = A*sx0+B*cx0;
+  vv  = A*sx +B*cx;
+  rr  = vv0-vv;
 
-  return r * r;
+  return rr * rr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -553,14 +553,14 @@ Bool_t RunTrigoFletcher()
 
      A.ResizeTo(nf,nf);
      B.ResizeTo(nf,nf);
-     x0.ResizeTo(nf);
+     xx0.ResizeTo(nf);
      sx0.ResizeTo(nf);
      cx0.ResizeTo(nf);
      sx.ResizeTo(nf);
      cx.ResizeTo(nf);
-     v0.ResizeTo(nf);
-     v.ResizeTo(nf);
-     r.ResizeTo(nf);
+     vv0.ResizeTo(nf);
+     vv.ResizeTo(nf);
+     rr.ResizeTo(nf);
      A.Randomize(-100.,100,seed);
      B.Randomize(-100.,100,seed);
      for (Int_t i = 0; i < nf; i++) {
@@ -570,9 +570,9 @@ Bool_t RunTrigoFletcher()
        }
      }
 
-     x0.Randomize(-pi,pi,seed);
+     xx0.Randomize(-pi,pi,seed);
      TVectorD x1(nf); x1.Randomize(-delta*pi,delta*pi,seed);
-     x1+= x0;
+     x1+= xx0;
 
      for (Int_t i = 0; i < nf; i++)
        min->SetLimitedVariable(i, Form("x_%d",i), x1[i], 0.01, -pi*(1+delta), +pi*(1+delta));

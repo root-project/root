@@ -12,9 +12,7 @@
 #ifndef ROOT_TOracleStatement
 #define ROOT_TOracleStatement
 
-#ifndef ROOT_TSQLStatement
 #include "TSQLStatement.h"
-#endif
 
 #if !defined(__CINT__)
 #include <occi.h>

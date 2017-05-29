@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLStopwatch
 #define ROOT_TGLStopwatch
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

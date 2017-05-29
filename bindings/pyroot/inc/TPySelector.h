@@ -13,13 +13,9 @@
 
 
 //- ROOT
-#ifndef ROOT_TSelector
 #include "TSelector.h"
-#endif
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
 // Python
 struct _object;

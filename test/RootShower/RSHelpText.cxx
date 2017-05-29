@@ -7,9 +7,7 @@
  * For the licensing terms see the LICENSE file.                         *
  *************************************************************************/
 
-#ifndef ROOTSHOWERHELPTEXT_H
 #include "RSHelpText.h"
-#endif
 
 const char gPhysicsHelpText[] =
 "\n                    Some physics recalls...\n\n"

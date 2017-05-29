@@ -11,17 +11,11 @@
 #ifndef ROOT_TKDE
 #define ROOT_TKDE
 
-#ifndef ROOT_Math_WrappedFunction
-   #include "Math/WrappedFunction.h"
-#endif
+#include "Math/WrappedFunction.h"
 
-#ifndef ROOT_TNamed
-   #include "TNamed.h"
-#endif
+#include "TNamed.h"
 
-#ifndef ROOT_Math_Math
 #include "Math/Math.h"
-#endif
 
 //#include "TF1.h"
 class TGraphErrors;

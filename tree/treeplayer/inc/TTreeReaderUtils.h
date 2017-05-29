@@ -22,12 +22,8 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TBranchProxyDirector
 #include "TBranchProxyDirector.h"
-#endif
-#ifndef ROOT_TBranchProxy
 #include "TBranchProxy.h"
-#endif
 #include "TTreeReaderValue.h"
 
 class TDictionary;

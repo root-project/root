@@ -19,15 +19,11 @@
 #define ROOT_Math_ProbFunc
 
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 
 // all cdf are in MathCore others in mathmore
-#ifndef ROOT_Math_ProbFuncMathCore
 #include "Math/ProbFuncMathCore.h"
-#endif
 
 // include distributions from MathMore when is there
 // #ifdef R__HAS_MATHMORE

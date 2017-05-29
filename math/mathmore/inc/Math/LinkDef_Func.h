@@ -20,6 +20,7 @@
 #pragma link C++ function ROOT::Math::ellint_2(double,double);
 #pragma link C++ function ROOT::Math::ellint_3(double,double,double);
 #pragma link C++ function ROOT::Math::expint(double);
+#pragma link C++ function ROOT::Math::expint_n(int,double);
 #pragma link C++ function ROOT::Math::hyperg(double,double,double,double);
 #pragma link C++ function ROOT::Math::laguerre(unsigned,double);
 #pragma link C++ function ROOT::Math::legendre(unsigned,double);

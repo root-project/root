@@ -35,16 +35,10 @@
 #ifndef ROOT_TMVA_MethodCFMlpANN_Utils
 #define ROOT_TMVA_MethodCFMlpANN_Utils
 
-#ifndef ROOT_TMVA_MethodCFMlpANN_def
 #include "TMVA/MethodCFMlpANN_def.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <cstdlib>
 //////////////////////////////////////////////////////////////////////////

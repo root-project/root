@@ -63,26 +63,19 @@ REGISTER_METHOD(DNN)
 
 ClassImp(TMVA::MethodDNN)
 
-using TMVA::DNN::EActivationFunction;
-using TMVA::DNN::ELossFunction;
-using TMVA::DNN::EInitialization;
-using TMVA::DNN::EOutputFunction;
-
 namespace TMVA
 {
+   using namespace DNN;
 
-////////////////////////////////////////////////////////////////////////////////
-/// standard constructor
+   ////////////////////////////////////////////////////////////////////////////////
+   /// standard constructor
 
-TMVA::MethodDNN::MethodDNN(const TString& jobName,
-                           const TString& methodTitle,
-                           DataSetInfo& theData,
-                           const TString& theOption)
-   : MethodBase( jobName, Types::kDNN, methodTitle, theData, theOption),
-     fWeightInitialization(), fOutputFunction(), fLayoutString(), fErrorStrategy(),
-     fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
-     fTrainingSettings(), fResume(false), fSettings()
-{
+   TMVA::MethodDNN::MethodDNN(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                              const TString &theOption)
+      : MethodBase(jobName, Types::kDNN, methodTitle, theData, theOption), fWeightInitialization(), fOutputFunction(),
+        fLayoutString(), fErrorStrategy(), fTrainingStrategyString(), fWeightInitializationString(),
+        fArchitectureString(), fTrainingSettings(), fResume(false), fSettings()
+   {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +88,8 @@ TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
      fTrainingStrategyString(), fWeightInitializationString(), fArchitectureString(),
      fTrainingSettings(), fResume(false), fSettings()
 {
+        fWeightInitialization = DNN::EInitialization::kGauss;
+        fOutputFunction = DNN::EOutputFunction::kSigmoid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +97,8 @@ TMVA::MethodDNN::MethodDNN(DataSetInfo& theData,
 
 TMVA::MethodDNN::~MethodDNN()
 {
-   // nothing to be done
+        fWeightInitialization = DNN::EInitialization::kGauss;
+        fOutputFunction = DNN::EOutputFunction::kSigmoid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -949,7 +945,7 @@ void TMVA::MethodDNN::TrainCpu()
          p = 1.0 - p;
       }
       net.SetDropoutProbabilities(dropoutVector);
-      net.SetDropoutProbabilities(settings.dropoutProbabilities);
+      //net.SetDropoutProbabilities(settings.dropoutProbabilities);
       net.InitializeGradients();
       auto testNet = net.CreateClone(settings.batchSize);
 

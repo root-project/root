@@ -9,7 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::SamplingDistPlot
+    \ingroup Roostats
 
+This class provides simple and straightforward utilities to plot SamplingDistribution
+objects.
+*/
 
 #include "RooStats/SamplingDistPlot.h"
 
@@ -25,17 +30,13 @@
 #include <iostream>
 
 
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
 
 #include <limits>
 #define NaN std::numeric_limits<float>::quiet_NaN()
 #include "TMath.h"
 #define IsNaN(a) TMath::IsNaN(a)
 
-
-/// ClassImp for building the THtml documentation of the class
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
@@ -210,6 +211,8 @@ Double_t SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistribut
    return scaleFactor;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char* title) {
    TLine *line = new TLine(x1, y1, x2, y2);
    line->SetLineWidth(3);
@@ -220,8 +223,10 @@ void SamplingDistPlot::AddLine(Double_t x1, Double_t y1, Double_t x2, Double_t y
    addOtherObject(line, ""); // no options
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// add an histogram (it will be cloned);
+
 void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
-   // add an histogram (it will be cloned);
    if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
    TH1 * hcopy = (TH1*) h->Clone();
    hcopy->SetDirectory(0);
@@ -231,7 +236,6 @@ void SamplingDistPlot::AddTF1(TF1* f, const char* title, Option_t *drawOptions) 
    if(fLegend  &&  title) fLegend->AddEntry(f, title, "L");
    addOtherObject(f->Clone(), drawOptions);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Determine if the sampling distribution has weights and store them
@@ -248,12 +252,14 @@ void SamplingDistPlot::SetSampleWeights(const SamplingDistribution* samplingDist
   return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a generic object to this plot. The specified options will be
+/// used to Draw() this object later. The caller transfers ownership
+/// of the object with this call, and the object will be deleted
+/// when its containing plot object is destroyed.
+
 void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 {
-  // Add a generic object to this plot. The specified options will be
-  // used to Draw() this object later. The caller transfers ownership
-  // of the object with this call, and the object will be deleted
-  // when its containing plot object is destroyed.
 
   if(0 == obj) {
     std::cerr << fName << "::addObject: called with a null pointer" << std::endl;
@@ -264,13 +270,15 @@ void SamplingDistPlot::addObject(TObject *obj, Option_t *drawOptions)
 
   return;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a generic object to this plot. The specified options will be
+/// used to Draw() this object later. The caller transfers ownership
+/// of the object with this call, and the object will be deleted
+/// when its containing plot object is destroyed.
+
 void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 {
-  // Add a generic object to this plot. The specified options will be
-  // used to Draw() this object later. The caller transfers ownership
-  // of the object with this call, and the object will be deleted
-  // when its containing plot object is destroyed.
-
   if(0 == obj) {
      oocoutE(this,InputArguments) << fName << "::addOtherObject: called with a null pointer" << std::endl;
      return;
@@ -368,6 +376,8 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void SamplingDistPlot::ApplyDefaultStyle(void) {
    if(fApplyStyle) {
       // use plain black on white colors
@@ -397,7 +407,6 @@ void SamplingDistPlot::GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, D
    Double_t tmpmin = TMath::Infinity();
    Double_t tmpmax = -TMath::Infinity();
    Double_t tmpYmax = -TMath::Infinity();
-
 
   fIterator->Reset();
   TH1F *obj = 0;
@@ -470,8 +479,8 @@ void SamplingDistPlot::SetLineWidth(Width_t lwidth, const SamplingDistribution *
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->SetLineWidth(lwidth);
-	break;
+   obj->SetLineWidth(lwidth);
+   break;
       }
     }
   }
@@ -491,8 +500,8 @@ void SamplingDistPlot::SetLineStyle(Style_t style, const SamplingDistribution *s
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->SetLineStyle(style);
-	break;
+   obj->SetLineStyle(style);
+   break;
       }
     }
   }
@@ -512,8 +521,8 @@ void SamplingDistPlot::SetMarkerStyle(Style_t style, const SamplingDistribution 
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->SetMarkerStyle(style);
-	break;
+   obj->SetMarkerStyle(style);
+   break;
       }
     }
   }
@@ -533,8 +542,8 @@ void SamplingDistPlot::SetMarkerColor(Color_t color, const SamplingDistribution 
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->SetMarkerColor(color);
-	break;
+   obj->SetMarkerColor(color);
+   break;
       }
     }
   }
@@ -554,8 +563,8 @@ void SamplingDistPlot::SetMarkerSize(Size_t size, const SamplingDistribution *sa
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->SetMarkerSize(size);
-	break;
+   obj->SetMarkerSize(size);
+   break;
       }
     }
   }
@@ -582,7 +591,6 @@ TH1F* SamplingDistPlot::GetTH1F(const SamplingDistribution *samplDist)
   return NULL;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistribution *samplDist)
@@ -595,8 +603,8 @@ void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistri
     TH1F *obj = 0;
     while((obj = (TH1F*)fIterator->Next())) {
       if(!strcmp(obj->GetName(),samplDist->GetName())){
-	obj->Rebin(rebinFactor);
-	break;
+   obj->Rebin(rebinFactor);
+   break;
       }
     }
   }
@@ -604,8 +612,9 @@ void SamplingDistPlot::RebinDistribution(Int_t rebinFactor, const SamplingDistri
   return;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TODO test
 
-// TODO test
 void SamplingDistPlot::DumpToFile(const char* RootFileName, Option_t *option, const char *ftitle, Int_t compress) {
    // All the objects are written to rootfile
 
@@ -619,4 +628,3 @@ void SamplingDistPlot::DumpToFile(const char* RootFileName, Option_t *option, co
    fRooPlot->Write();
    ofile.Close();
 }
-

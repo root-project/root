@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSlave
 #include "TSlave.h"
-#endif
 
 class TObjString;
 class TSocket;

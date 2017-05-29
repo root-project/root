@@ -12,13 +12,9 @@
 #ifndef ROOT_TFileCacheRead
 #define ROOT_TFileCacheRead
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TFile
 #include "TFile.h"
-#endif
 
 class TBranch;
 class TFilePrefetch;

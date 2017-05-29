@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TThreadFactory
 #include "TThreadFactory.h"
-#endif
 
 class TMutexImp;
 class TConditionImp;

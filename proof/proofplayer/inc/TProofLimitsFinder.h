@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THLimitsFinder
 #include "THLimitsFinder.h"
-#endif
 
 class TH1;
 class TString;

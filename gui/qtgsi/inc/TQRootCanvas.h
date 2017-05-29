@@ -33,9 +33,7 @@
 #endif
 #endif
 
-#ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
-#endif
 
 
 class QAction;

@@ -14,16 +14,10 @@
 
 #include <vector>
 
-#ifndef ROOT_TH3
 #include "TH3.h"
-#endif
 
-#ifndef ROOT_TGLIsoMesh
 #include "TGLIsoMesh.h"
-#endif
-#ifndef ROOT_TKDEAdapter
 #include "TKDEAdapter.h"
-#endif
 
 /*
 Implementation of "marching cubes" algortihm for GL module. Used by

@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TXSocket
 #include "TXSocket.h"
-#endif
 #include <list>
 
 class TXHandler;

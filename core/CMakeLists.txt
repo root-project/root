@@ -13,6 +13,7 @@ add_subdirectory(multiproc)
 add_subdirectory(rint)
 add_subdirectory(textinput)
 add_subdirectory(thread)
+add_subdirectory(imt)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 

@@ -24,18 +24,10 @@
 
 #include <string>
 
-#ifndef ROOT_TSocket
 #include "TSocket.h"
-#endif
-#ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
-#endif
-#ifndef ROOT_NetErrors
 #include "NetErrors.h"
-#endif
-#ifndef ROOT_rpddefs
 #include "rpddefs.h"
-#endif
 
 #include "rpdp.h"
 

@@ -16,12 +16,7 @@ GENVECTORDIRT := $(call stripsrc,$(GENVECTORDIR)/test)
 ##### libGenvector #####
 GENVECTORL    := $(MODDIRI)/Math/LinkDef_GenVector.h
 GENVECTORL32  := $(MODDIRI)/Math/LinkDef_GenVector32.h
-GENVECTORLINC :=  \
-                $(MODDIRI)/Math/LinkDef_Point3D.h \
-                $(MODDIRI)/Math/LinkDef_Vector3D.h \
-                $(MODDIRI)/Math/LinkDef_Vector4D.h \
-                $(MODDIRI)/Math/LinkDef_GenVector2.h \
-                $(MODDIRI)/Math/LinkDef_Rotation.h
+GENVECTORLINC := $(MODDIRI)/Math/LinkDef_GenVector2.h 
 GENVECTORDS   := $(call stripsrc,$(MODDIRS)/G__GenVector.cxx)
 GENVECTORDS32 := $(call stripsrc,$(MODDIRS)/G__GenVector32.cxx)
 GENVECTORDO   := $(GENVECTORDS:.cxx=.o)

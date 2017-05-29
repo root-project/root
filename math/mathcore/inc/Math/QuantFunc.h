@@ -19,23 +19,17 @@
 #define ROOT_Math_QuantFunc
 
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 
 
-#ifndef ROOT_Math_QuantFuncMathCore
 #include "Math/QuantFuncMathCore.h"
-#endif
 
 // include distributions from MathMore when is there
 #ifdef R__HAS_MATHMORE
 
 // extra quantiles in MathMore
-#ifndef ROOT_Math_QuantFuncMathMore
 #include "Math/QuantFuncMathMore.h"
-#endif
 
 #endif
 

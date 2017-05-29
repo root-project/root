@@ -13,13 +13,9 @@
 #define ROOT_TWbox
 
 
-#ifndef ROOT_TBox
 #include "TBox.h"
-#endif
 
-#ifndef ROOT_TColor
 #include "TColor.h"
-#endif
 
 class TWbox : public TBox {
 

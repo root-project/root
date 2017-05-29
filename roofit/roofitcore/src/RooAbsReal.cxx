@@ -73,9 +73,7 @@
 #include "RooCmdConfig.h"
 #include "RooXYChi2Var.h"
 #include "RooMinuit.h"
-#ifndef __ROOFIT_NOROOMINIMIZER
 #include "RooMinimizer.h"
-#endif
 #include "RooChi2Var.h"
 #include "RooFitResult.h"
 #include "RooAbsMoment.h"

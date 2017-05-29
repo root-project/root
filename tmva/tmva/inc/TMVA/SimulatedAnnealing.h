@@ -39,9 +39,7 @@
 #include <vector>
 #include <list>
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
 class TRandom;
 

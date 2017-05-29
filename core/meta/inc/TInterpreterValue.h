@@ -24,9 +24,7 @@
 #ifndef ROOT_TInterpreterValue
 #define ROOT_TInterpreterValue
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 #include <string>
 

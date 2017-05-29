@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTree
 #include "TTree.h"
-#endif
 
 class TFile;
 class TBrowser;

@@ -67,7 +67,6 @@ class TFunc2void {
    typedef void (*funcptr_t)();
 
    union funcptr_and_voidptr {
-      typedef void (*funcptr_t)();
 
       funcptr_and_voidptr(void *val) : _read(val) {}
 

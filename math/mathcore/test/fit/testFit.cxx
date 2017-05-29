@@ -27,7 +27,7 @@
 
 // print the data
 void printData(const ROOT::Fit::BinData & data) {
-   std::cout << "Bin data, point  size is " << data.PointSize() << " data dimension is " << data.NDim() << " type is " << data.GetErrorType() << std::endl;
+   std::cout << "Bin data, data dimension is " << data.NDim() << " type is " << data.GetErrorType() << std::endl;
    for (unsigned int i = 0; i < data.Size(); ++i) {
       if (data.GetErrorType() == ROOT::Fit::BinData::kNoError)
          std::cout << data.Coords(i)[0] << "   " << data.Value(i) << std::endl;

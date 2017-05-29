@@ -4,9 +4,7 @@
 #ifndef ROOT_TLimit
 #define ROOT_TLimit
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 #include "TVectorDfwd.h"
 

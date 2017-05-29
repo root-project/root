@@ -13,9 +13,7 @@
 #define ROOT_TCutG
 
 
-#ifndef ROOT_TGraph
 #include "TGraph.h"
-#endif
 
 class TH2;
 

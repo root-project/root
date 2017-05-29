@@ -20,14 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMatrixTSparse
 #include "TMatrixTSparse.h"
-#endif
-#ifndef ROOT_TMatrixDSparsefwd
 #include "TMatrixDSparsefwd.h"
-#endif
-#ifndef ROOT_TMatrixDUtils
 #include "TMatrixDUtils.h"
-#endif
 
 #endif

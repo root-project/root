@@ -23,9 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TApplication
 #include "TApplication.h"
-#endif
 
 class TQApplication : public TApplication {
 

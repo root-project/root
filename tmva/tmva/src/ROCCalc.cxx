@@ -28,27 +28,13 @@
 #include "TMVA/Config.h"
 
 
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_ROCCalc
 #include "TMVA/ROCCalc.h"
-#endif
-#ifndef ROOT_TMVA_Config
 #include "TMVA/Config.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
-#ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
-#endif
-#ifndef ROOT_TMVA_MsgLogger
 #include "TMVA/MsgLogger.h"
-#endif
 
 #include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"

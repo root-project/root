@@ -12,11 +12,11 @@
 import os
 from glob import glob
 
+import importlib
+
 from JupyROOT.handlers import IOHandler, JupyROOTDeclarer, JupyROOTExecutor
 
 import ROOT
-
-import __builtin__
 
 _ioHandler = None
 _Executor  = None
@@ -48,7 +48,7 @@ class MagicLoader(object):
               if file != magics_path.replace("*.py","__init__.py"):
                   module_path="JupyROOT.kernel.magics."+file.split("/")[-1].replace(".py","")
                   try:
-                      module= __builtin__.__import__(module_path, globals(), locals(), ['register_magics'], -1)
+                      module = importlib.import_module(module_path)
                       module.register_magics(kernel)
                   except ImportError:
                       raise Exception("Error importing Magic: %s"%module_path)

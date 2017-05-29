@@ -11,36 +11,54 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/** \class RooStats::PdfProposal
+    \ingroup Roostats
+
+PdfProposal is a concrete implementation of the ProposalFunction interface.
+It proposes points across the parameter space in the distribution of the
+given PDF.
+
+To make Propose(xPrime, x) dependent on x, configure with
+PdfProposal::AddMapping(varToUpdate, valueToUse).  For example, suppose we have:
+
+~~~{.cpp}
+// our parameter
+RooRealVar p("p", "p", 5, 0, 10);
+
+// create mean and sigma for gaussian proposal function
+RooRealVar meanP("meanP", "meanP", 0, 10);
+RooRealVar sigma("sigma", "sigma", 1, 0, 5);
+RooGaussian pGaussian("pGaussian", "pGaussian", p, meanP, sigma);
+
+// configure proposal function
+PdfProposal pdfProposal(pGaussian);
+pdfProposal.AddMapping(meanP, p); // each call of Propose(xPrime, x), meanP in
+                                  // the proposal function will be updated to
+                                  // the value of p in x.  this will center the
+                                  // proposal function about x's p when
+                                  // proposing for xPrime
+
+// To improve performance, PdfProposal has the ability to cache a specified
+// number of proposals. If you don't call this function, the default cache size
+// is 1, which can be slow.
+pdfProposal.SetCacheSize(desiredCacheSize);
+~~~
+
+PdfProposal currently uses a fixed cache size. Adaptive caching methods are in the works
+for future versions.
+*/
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOSTATS_PdfProposal
 #include "RooStats/PdfProposal.h"
-#endif
-#ifndef RooStats_RooStatsUtils
 #include "RooStats/RooStatsUtils.h"
-#endif
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_DATA_SET
 #include "RooDataSet.h"
-#endif
-#ifndef ROO_ABS_PDF
 #include "RooAbsPdf.h"
-#endif
-#ifndef ROO_MSG_SERVICE
 #include "RooMsgService.h"
-#endif
-#ifndef ROO_REAL_VAR
 #include "RooRealVar.h"
-#endif
-#ifndef ROOT_TIterator
 #include "TIterator.h"
-#endif
 
 #include <map>
 
@@ -50,8 +68,10 @@ using namespace RooFit;
 using namespace RooStats;
 using namespace std;
 
-// By default, PdfProposal does NOT own the PDF that serves as the
-// proposal density function
+////////////////////////////////////////////////////////////////////////////////
+/// By default, PdfProposal does NOT own the PDF that serves as the
+/// proposal density function
+
 PdfProposal::PdfProposal() : ProposalFunction()
 {
    fPdf = NULL;
@@ -61,8 +81,10 @@ PdfProposal::PdfProposal() : ProposalFunction()
    fCache = NULL;
 }
 
-// By default, PdfProposal does NOT own the PDF that serves as the
-// proposal density function
+////////////////////////////////////////////////////////////////////////////////
+/// By default, PdfProposal does NOT own the PDF that serves as the
+/// proposal density function
+
 PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 {
    fPdf = &pdf;
@@ -71,6 +93,9 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fCachePosition = 0;
    fCache = NULL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// determine whether these two RooArgSets represent the same point
 
 Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
@@ -88,7 +113,9 @@ Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
    return kFALSE;
 }
 
-// Populate xPrime with a new proposed point
+////////////////////////////////////////////////////////////////////////////////
+/// Populate xPrime with a new proposed point
+
 void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 {
    if (fLastX.getSize() == 0) {
@@ -135,17 +162,21 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
    RooStats::SetParameters(proposal, &xPrime);
 }
 
-// Determine whether or not the proposal density is symmetric for
-// points x1 and x2 - that is, whether the probabilty of reaching x2
-// from x1 is equal to the probability of reaching x1 from x2
+////////////////////////////////////////////////////////////////////////////////
+/// Determine whether or not the proposal density is symmetric for
+/// points x1 and x2 - that is, whether the probabilty of reaching x2
+/// from x1 is equal to the probability of reaching x1 from x2
+
 Bool_t PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
 {
    // kbelasco: is there a better way to do this?
    return false;
 }
 
-// Return the probability of proposing the point x1 given the starting
-// point x2
+////////////////////////////////////////////////////////////////////////////////
+/// Return the probability of proposing the point x1 given the starting
+/// point x2
+
 Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 {
    RooStats::SetParameters(&x2, &fMaster);
@@ -156,6 +187,15 @@ Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
    delete temp;
    return fPdf->getVal(&x1); // could just as well use x2
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// specify a mapping between a parameter of the proposal function and
+/// a parameter of interest.  this mapping is used to set the value of
+/// proposalParam equal to the value of update to determine the
+/// proposal function.
+/// proposalParam is a parameter of the proposal function that must
+/// be set to the value of update (from the current point) in order to
+/// propose a new point.
 
 void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
 {

@@ -19,9 +19,7 @@
  *                                                                       *
  *************************************************************************/
 
-#ifndef ROOT_RVersion
 #include "RVersion.h"
-#endif
 
 
 /*---- new C++ features ------------------------------------------------------*/
@@ -37,11 +35,6 @@
 /* Now required, thus defined by default for backward compatibility */
 #define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #define R__SSTREAM         /* use sstream or strstream header */
-
-/* Do not #define nullptr if the code is compiled in c++11 mode. */
-#if __cplusplus > 199711L
-#define R__NULLPTR
-#endif
 
 #if defined(__cplusplus) && (__cplusplus < 201103L)
 # error "ROOT requires support for C++11 or higher."
@@ -114,9 +107,6 @@
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
-#   endif
-#   if __SUNPRO_CC >= 0x5110
-#      define R__THROWNEWDELETE
 #   endif
 #   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90   /* modern egcs/gcc */
 #      define R__SUNGCC3
@@ -258,7 +248,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #   define HAS_STRLCPY
 #endif
 
@@ -274,7 +263,6 @@
 #   if defined(__amd64__)
 #      define R__B64
 #   endif
-#   define R__THROWNEWDELETE /* new/delete throw exceptions */
 #   define HAS_STRLCPY
 #endif
 
@@ -364,7 +352,6 @@
 #   define R__ACC
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define R__THROWNEWDELETE  /* new/delete throw exceptions */
 #   if __HP_aCC <= 015000
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
@@ -414,7 +401,6 @@
 #   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
 #   define R__PLACEMENTDELETE /* supports overloading placement delete */
 #   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   define R__NULLPTR
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif
@@ -516,6 +502,21 @@
 #ifdef __FAST_MATH__
 #define R__FAST_MATH
 #endif
+
+#if (__GNUC__ >= 7)
+#define R__DO_PRAGMA(x) _Pragma (#x)
+# define R__INTENTIONALLY_UNINIT_BEGIN \
+  R__DO_PRAGMA(GCC diagnostic push) \
+  R__DO_PRAGMA(GCC diagnostic ignored "-Wmaybe-uninitialized") \
+  R__DO_PRAGMA(GCC diagnostic ignored "-Wuninitialized")
+# define R__INTENTIONALLY_UNINIT_END \
+  R__DO_PRAGMA(GCC diagnostic pop)
+#else
+# define R__INTENTIONALLY_UNINIT_BEGIN
+# define R__INTENTIONALLY_UNINIT_END
+
+#endif
+
 
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:

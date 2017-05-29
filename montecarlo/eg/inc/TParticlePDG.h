@@ -11,12 +11,8 @@
 #ifndef TParticlePDG_hh
 #define TParticlePDG_hh
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TDecayChannel;
 

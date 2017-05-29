@@ -12,9 +12,7 @@
 #ifndef ROOT_TCastorFile
 #define ROOT_TCastorFile
 
-#ifndef ROOT_TNetFile
 #include "TNetFile.h"
-#endif
 
 
 class TCastorFile : public TNetFile {

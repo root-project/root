@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
 const Int_t kMAXLEVELS = 20;
 const Int_t kVectorSize = 3;

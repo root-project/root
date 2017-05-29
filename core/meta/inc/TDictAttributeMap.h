@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_THashTable
 #include "THashTable.h"
-#endif
 
 
 class TDictAttributeMap : public TObject

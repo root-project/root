@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSeqCollection
 #include "TSeqCollection.h"
-#endif
 
 #include <iterator>
 

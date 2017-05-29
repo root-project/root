@@ -25,9 +25,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THashList
 #include "THashList.h"
-#endif
 
 
 class TSelectorList : public THashList {

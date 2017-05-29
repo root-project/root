@@ -12,9 +12,7 @@
 #ifndef ROOT_TOracleServer
 #define ROOT_TOracleServer
 
-#ifndef ROOT_TSQLServer
 #include "TSQLServer.h"
-#endif
 
 #if !defined(__CINT__)
 #ifndef R__WIN32

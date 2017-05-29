@@ -25,9 +25,7 @@
 #ifndef ROOT_Math_WrappedFunction
 #define ROOT_Math_WrappedFunction
 
-#ifndef ROOT_Math_IFunction
 #include "IFunction.h"
-#endif
 
 
 namespace ROOT {

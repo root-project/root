@@ -87,8 +87,8 @@ void ExamineRange(const TAxis * axis, std::pair<double,double> range,int &hxfirs
    // ignore ranges specified outside histogram range
    int ilow = axis->FindFixBin(xlow);
    int ihigh = axis->FindFixBin(xhigh);
-   if (ilow > hxlast || ihigh < hxfirst) { 
-      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName()); 
+   if (ilow > hxlast || ihigh < hxfirst) {
+      Warning("ROOT::Fit::FillData","fit range is outside histogram range, no fit data for %s",axis->GetName());
    }
    // consider only range defined with-in histogram not oustide. Always exclude underflow/overflow
    hxfirst =  std::min( std::max( ilow, hxfirst), hxlast+1) ;
@@ -174,7 +174,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    int ndim = hdim;
    // case of function dimension less than histogram
    if (func !=0 && func->GetNdim() == hdim-1) ndim = hdim-1;
-  
+
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
    //CoordData x = CoordData( hfit->GetDimension() );
@@ -775,7 +775,7 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
    dopt.fUseEmpty = true;
    // when using sparse data need to set option to use normalized bin volume, because sparse bins are merged together
    //if (!dopt.fIntegral) dopt.fBinVolume = true;
-   dopt.fBinVolume = true; 
+   dopt.fBinVolume = true;
    dopt.fNormBinVolume = true;
 
    // Get the sparse data
@@ -811,19 +811,7 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    // if data are filled already check if there are consistent - otherwise do nothing
    if (dv.Size() > 0 && dv.NDim() == 1 ) {
       // check if size is correct otherwise flag an errors
-      if (dv.PointSize() == 2 && type != BinData::kNoError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 3 && type != BinData::kValueError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 4 && type != BinData::kCoordError ) {
-         Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
-         return;
-      }
-      if (dv.PointSize() == 5 && type != BinData::kAsymError ) {
+     if ( dv.GetErrorType() != type ) {
          Error("FillData","Inconsistent TGraph with previous data set- skip all graph data");
          return;
       }

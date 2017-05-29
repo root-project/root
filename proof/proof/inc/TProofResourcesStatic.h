@@ -27,12 +27,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TProofResources
 #include "TProofResources.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TList;
 class TProofNodeInfo;

@@ -1296,8 +1296,12 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
    //
    // Prepare the parms object
    char *bpar = (char *)malloc(plsiz + 1);
-   if (bpar)
-      memcpy(bpar, plist, plsiz);
+   if (!bpar) {
+      TRACE(XERR, "unable to allocate buffer for parameters");
+      return protocol;
+   }
+
+   memcpy(bpar, plist, plsiz);
    bpar[plsiz] = 0;
    XrdSecParameters Parms(bpar, plsiz + 1);
 

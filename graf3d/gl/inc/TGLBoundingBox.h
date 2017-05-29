@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLBoundingBox
 #define ROOT_TGLBoundingBox
 
-#ifndef ROOT_TGLUtil
 #include "TGLUtil.h"
-#endif
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

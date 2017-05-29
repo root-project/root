@@ -26,8 +26,6 @@ set( LLVM_LINK_COMPONENTS
   executionengine
   ipo
   mc
-  native
-  nativecodegen
   object
   option
   orcjit
@@ -36,6 +34,7 @@ set( LLVM_LINK_COMPONENTS
   support
   target
   transformutils
+  ${LLVM_TARGETS_TO_BUILD}
 )
 
 add_cling_library(clingInterpreter OBJECT
@@ -204,7 +203,7 @@ if (UNIX)
       if (CLING_CXX_PATH)
         string(FIND "${CLING_CXX_PATH}" "--gcc-toolchain=" cling_gcc_toolchain)
         if ("${cling_gcc_toolchain}" EQUAL -1)
-          set(CLING_CXX_PATH "${CLING_CXX_PATH} --gcc-toolchain=${gcctoolchain}")
+          set(CLING_CXX_PATH_ARGS "--gcc-toolchain=${gcctoolchain}")
         endif()
       endif()
       if (CLING_CXX_RLTV)
@@ -218,8 +217,9 @@ if (UNIX)
 
   if(NOT CLING_CXX_HEADERS)
     if (CLING_CXX_PATH)
-      execute_process(COMMAND ${CLING_CXX_PATH} -xc++ -E -v /dev/null
+      execute_process(COMMAND ${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS} -xc++ -E -v /dev/null
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
+      set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
     else()
       # convert CMAKE_CXX_FLAGS to a list for execute_process
       string(REPLACE " " ";" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
@@ -258,10 +258,17 @@ if (UNIX)
 
   MESSAGE(STATUS "Cling will look for C++ headers in '${CLING_CXX_HEADERS}' at runtime.")
 
+  # In modules builds we 'mount' our own stl modulemap for libstdc++. In order to do this,
+  # we need to know where is ROOT/cling STL.
+  if (cxxmodules)
+    set_property(GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION "${CLING_CXX_HEADERS}")
+  endif(cxxmodules)
+
   if (CLING_CXX_PATH)
     MESSAGE(STATUS "And if not found, will invoke: '${CLING_CXX_PATH}' for them.")
     if (CLING_CXX_RLTV)
       MESSAGE(STATUS "And then fallback to: '${CLING_CXX_RLTV}'")
+      # FIXME: We should use file(GENERATE) cmake command.
       file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
         "
         #define CLING_CXX_INCL \"${CLING_CXX_HEADERS}\"

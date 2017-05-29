@@ -18,12 +18,8 @@
 // Const and types used by ProofBench and its selectors                 //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 const char* const kPROOF_BenchCPUSelPar  = "ProofBenchCPUSel";  // PAR with bench CPU selectors
 const char* const kPROOF_BenchDataSelPar = "ProofBenchDataSel";  // PAR with bench data selectors

@@ -12,9 +12,7 @@
 # include "TObjArray.h"
 #endif
 
-#ifndef ROOT_TFitResultPtr
 #include "TFitResultPtr.h"
-#endif
 
 #include <vector>
 

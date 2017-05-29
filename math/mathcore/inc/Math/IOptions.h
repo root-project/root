@@ -12,9 +12,7 @@
 #define ROOT_Math_IOptions
 
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 #include <iostream>
 

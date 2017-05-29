@@ -22,15 +22,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TToggle
 #include "TToggle.h"
-#endif
-#ifndef ROOT_TOrdCollection
 #include "TOrdCollection.h"
-#endif
 
 
 class TToggleGroup : public TNamed {

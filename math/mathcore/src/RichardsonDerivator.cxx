@@ -13,9 +13,7 @@
 #include <cmath>
 #include <limits>
 
-#ifndef ROOT_Math_Error
 #include "Math/Error.h"
-#endif
 
 namespace ROOT {
 namespace Math {

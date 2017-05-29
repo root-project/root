@@ -11,9 +11,7 @@
 #ifndef ROOT_TSpectrum2Fit
 #define ROOT_TSpectrum2Fit
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TSpectrum2Fit : public TNamed {
 protected:

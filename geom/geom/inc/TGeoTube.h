@@ -12,9 +12,7 @@
 #ifndef ROOT_TGeoTube
 #define ROOT_TGeoTube
 
-#ifndef ROOT_TGeoBBox
 #include "TGeoBBox.h"
-#endif
 
 class TGeoTube : public TGeoBBox
 {

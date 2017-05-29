@@ -26,9 +26,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTUBE
 #include "TTUBE.h"
-#endif
 
 class TELTU : public TTUBE {
 

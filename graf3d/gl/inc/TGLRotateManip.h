@@ -12,9 +12,7 @@
 #ifndef ROOT_TGLRotateManip
 #define ROOT_TGLRotateManip
 
-#ifndef ROOT_TGLManip
 #include "TGLManip.h"
-#endif
 
 
 class TGLRotateManip : public TGLManip

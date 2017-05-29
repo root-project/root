@@ -23,9 +23,7 @@
 //  (Unix or Tcp)                                                       //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_XrdProofConn
 #include "XrdProofConn.h"
-#endif
 
 class XrdProofPhyConn  : public XrdProofConn {
 

@@ -467,6 +467,451 @@ void DrawMarkerOpenStar(CGContextRef ctx, unsigned n, const TPoint *xy, Size_t m
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void DrawMarkerOpenSquareDiagonal(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x - im, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y + im);
+      CGContextStrokePath(ctx);
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x - im, y + im);
+      CGContextAddLineToPoint(ctx, x + im, y - im);
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenDiamondCross(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x - im, y    );
+      CGContextAddLineToPoint(ctx, x     , y - im);
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextAddLineToPoint(ctx, x     , y + im);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextStrokePath(ctx);
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y + im);
+      CGContextAddLineToPoint(ctx, x     , y - im);
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenThreeTriangles(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOctagonCross(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextStrokePath(ctx);
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y - im);
+      CGContextAddLineToPoint(ctx, x    , y + im);
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFilledThreeTriangles(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenFourTrianglesX(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFilledFourTrianglesX(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenDoubleDiamond(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im4 = Int_t(markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y + im);
+      CGContextAddLineToPoint(ctx, x -im4, y +im4);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x -im4, y -im4);
+      CGContextAddLineToPoint(ctx, x     , y - im);
+      CGContextAddLineToPoint(ctx, x +im4, y -im4);
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextAddLineToPoint(ctx, x +im4, y +im4);
+      CGContextAddLineToPoint(ctx, x     , y + im);
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFilledDoubleDiamond(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im4 = Int_t(markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y + im);
+      CGContextAddLineToPoint(ctx, x -im4, y +im4);
+      CGContextAddLineToPoint(ctx, x - im, y     );
+      CGContextAddLineToPoint(ctx, x -im4, y -im4);
+      CGContextAddLineToPoint(ctx, x     , y - im);
+      CGContextAddLineToPoint(ctx, x +im4, y -im4);
+      CGContextAddLineToPoint(ctx, x + im, y     );
+      CGContextAddLineToPoint(ctx, x +im4, y +im4);
+      CGContextAddLineToPoint(ctx, x     , y + im);
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenFourTrianglesPlus(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+   const Int_t im4 = Int_t(1.33 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x     , y     );
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFilledFourTrianglesPlus(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+   const Int_t im4 = Int_t(0.2 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x +im4, y +im4);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im4, y +im4);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im4, y -im4);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im4, y -im4);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im4, y +im4);
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerOpenCrossX(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y + im2);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x -im2, y     );
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y     );
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y +im2);
+      CGContextStrokePath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFilledCrossX(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.0 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x -im2, y - im2*1.005);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x +im2, y -im2);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x -im2, y +im2);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y -im2*0.995);
+      CGContextAddLineToPoint(ctx, x -im2, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y -im2*1.005);
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFourSuaresX(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(2.00 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x     , y + im2*1.01);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x -im2, y     );
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y     );
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y +im2*0.99);
+      CGContextAddLineToPoint(ctx, x +im2*0.99, y     );
+      CGContextAddLineToPoint(ctx, x     , y -im2*0.99);
+      CGContextAddLineToPoint(ctx, x -im2*0.99, y     );
+      CGContextAddLineToPoint(ctx, x     , y +im2*0.99);
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void DrawMarkerFourSuaresPlus(CGContextRef ctx, unsigned n, const TPoint *xy,
+                          Size_t markerSize)
+{
+   const Int_t im  = Int_t(4 * markerSize + 0.5);
+   const Int_t im2 = Int_t(1.33 * markerSize + 0.5);
+
+   for (unsigned i = 0; i < n; ++i) {
+      const Double_t x = xy[i].fX;
+      const Double_t y = xy[i].fY;
+
+      CGContextBeginPath(ctx);
+      CGContextMoveToPoint(ctx, x -im2, y - im2*1.01);
+      CGContextAddLineToPoint(ctx, x -im2, y + im);
+      CGContextAddLineToPoint(ctx, x - im, y +im2);
+      CGContextAddLineToPoint(ctx, x -im2, y     );
+      CGContextAddLineToPoint(ctx, x - im, y -im2);
+      CGContextAddLineToPoint(ctx, x -im2, y - im);
+      CGContextAddLineToPoint(ctx, x     , y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y - im);
+      CGContextAddLineToPoint(ctx, x + im, y -im2);
+      CGContextAddLineToPoint(ctx, x +im2, y     );
+      CGContextAddLineToPoint(ctx, x + im, y +im2);
+      CGContextAddLineToPoint(ctx, x +im2, y + im);
+      CGContextAddLineToPoint(ctx, x     , y +im2*0.99);
+      CGContextAddLineToPoint(ctx, x +im2*0.99, y     );
+      CGContextAddLineToPoint(ctx, x     , y -im2*0.99);
+      CGContextAddLineToPoint(ctx, x -im2*0.99, y     );
+      CGContextAddLineToPoint(ctx, x     , y +im2*0.99);
+      CGContextFillPath(ctx);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy, Size_t markerSize, Style_t markerStyle)
 {
    switch (markerStyle) {
@@ -531,6 +976,51 @@ void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy, Size_t
       break;
    case kOpenStar:
       DrawMarkerOpenStar(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenDiamondCross:     // YS
+      DrawMarkerOpenDiamondCross(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenSquareDiagonal:   // YS
+      DrawMarkerOpenSquareDiagonal(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenThreeTriangles:   // YS
+      DrawMarkerOpenThreeTriangles(ctx, nPoints, xy, markerSize);
+      break;
+   case kOctagonCross:   // YS
+      DrawMarkerOctagonCross(ctx, nPoints, xy, markerSize);
+      break;
+   case kFullThreeTriangles:   // YS
+      DrawMarkerFilledThreeTriangles(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenFourTrianglesX:   // YS
+      DrawMarkerOpenFourTrianglesX(ctx, nPoints, xy, markerSize);
+      break;
+   case kFullFourTrianglesX:   // YS
+      DrawMarkerFilledFourTrianglesX(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenDoubleDiamond:   // YS
+      DrawMarkerOpenDoubleDiamond(ctx, nPoints, xy, markerSize);
+      break;
+   case kFullDoubleDiamond:   // YS
+      DrawMarkerFilledDoubleDiamond(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenFourTrianglesPlus:   // YS
+      DrawMarkerOpenFourTrianglesPlus(ctx, nPoints, xy, markerSize);
+      break;
+   case kFullFourTrianglesPlus:   // YS
+      DrawMarkerFilledFourTrianglesPlus(ctx, nPoints, xy, markerSize);
+      break;
+   case kOpenCrossX:   // YS
+      DrawMarkerOpenCrossX(ctx, nPoints, xy, markerSize);
+      break;
+   case kFullCrossX:   // YS
+      DrawMarkerFilledCrossX(ctx, nPoints, xy, markerSize);
+      break;
+   case kFourSquaresX:   // YS
+      DrawMarkerFourSquaresX(ctx, nPoints, xy, markerSize);
+      break;
+   case kFourSquaresPlus:   // YS
+      DrawMarkerFourSquaresPlus(ctx, nPoints, xy, markerSize);
       break;
    }
 }

@@ -1,9 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Brett Viren   04/15/2001
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TList;
 class TCanvas;

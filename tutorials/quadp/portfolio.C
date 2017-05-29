@@ -291,6 +291,8 @@ void portfolio()
    TFile *f = 0;
    if (!gSystem->AccessPathName(fname)) {
       f = TFile::Open(fname);
+   } else if (!gSystem->AccessPathName(Form("%s/quadp/%s", TROOT::GetTutorialDir().Data(), fname))) {
+      f = TFile::Open(Form("%s/quadp/%s", TROOT::GetTutorialDir().Data(), fname));
    } else {
       printf("accessing %s file from http://root.cern.ch/files\n",fname);
       f = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
@@ -313,8 +315,9 @@ void portfolio()
    for (Int_t i = 0; i < nrStocks; i++) {
       for (Int_t j = 0; j <= i; j++) {
          Double_t sum = 0.;
-         for (Int_t k = 0; k < nrData; k++)
-         sum += (data[i][k]-r[i])*(data[j][k]-r[j]);
+         for (Int_t k = 0; k < nrData; k++) {
+            sum += (data[i][k] - r[i]) * (data[j][k] - r[j]);
+         }
          Covar(i,j) = Covar(j,i) = sum/nrData;
       }
    }

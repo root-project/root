@@ -6,8 +6,10 @@
 ROOT_GENERATE_DICTIONARY(G__HistFactory RooStats/HistFactory/*.h MODULE HistFactory LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
 
-                                               
-ROOT_LINKER_LIBRARY(HistFactory  *.cxx G__HistFactory.cxx LIBRARIES Core 
+ROOT_GLOB_SOURCES(sources src/*.cxx)
+list(REMOVE_ITEM sources ${CMAKE_SOURCE_DIR}/roofit/histfactory/src/hist2workspace.cxx)
+
+ROOT_LINKER_LIBRARY(HistFactory ${sources} G__HistFactory.cxx LIBRARIES Core 
                                 DEPENDENCIES RooFit RooFitCore Tree RIO Hist Matrix MathCore Minuit Foam Graf Gpad RooStats XMLParser)
 ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
 			       LIBRARIES HistFactory RooFit RooFitCore Tree RIO Matrix Hist ${ROOT_MATHMORE_LIBRARY} ${GSL_LIBRARIES} MathCore 

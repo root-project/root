@@ -23,9 +23,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
 
 
 const Int_t kDivNum = 20;               //default number of divisions

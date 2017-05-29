@@ -35,13 +35,9 @@
 #include "Math/Dsinv.h"
 #endif
 
-#ifndef ROOT_Math_CholeskyDecomp
 #include "Math/CholeskyDecomp.h"
-#endif
 
-#ifndef ROOT_Math_MatrixRepresentationsStatic
 #include "Math/MatrixRepresentationsStatic.h"
-#endif
 
 // #ifndef ROOT_Math_QRDecomposition
 // #include "Math/QRDecomposition.h"
@@ -334,14 +330,8 @@ public:
 
 }  // namespace ROOT
 
-#ifndef ROOT_Math_CramerInversion_icc
 #include "CramerInversion.icc"
-#endif
-#ifndef ROOT_Math_CramerInversionSym_icc
 #include "CramerInversionSym.icc"
-#endif
-#ifndef ROOT_Math_MatrixInversion_icc
 #include "MatrixInversion.icc"
-#endif
 
 #endif  /* ROOT_Math_Dinv */

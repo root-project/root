@@ -24,9 +24,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 #include <set>
 #include <unordered_set>

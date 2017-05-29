@@ -50,12 +50,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_PDF
 #include "TMVA/PDF.h"
-#endif
 
 class TH1D;
 

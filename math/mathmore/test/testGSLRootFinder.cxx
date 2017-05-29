@@ -167,9 +167,15 @@ int testGSLRootFinder() {
   }
   timer.Stop();
   status += printStats(rf6, returnCode, timer);
-
+  delete rf1;
+  rf1 = nullptr;
+  delete rf2;
+  rf2 = nullptr;
+  delete rf3;
+  rf3 = nullptr;
+  delete rf4;
+  rf4 = nullptr;
   return status;
-
 }
 
 int main() {

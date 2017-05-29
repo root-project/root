@@ -18,9 +18,7 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDecompBase
 #include "TDecompBase.h"
-#endif
 
 class TDecompSVD : public TDecompBase
 {

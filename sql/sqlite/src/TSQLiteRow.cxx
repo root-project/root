@@ -11,6 +11,8 @@
 
 #include "TSQLiteRow.h"
 
+#include <sqlite3.h>
+
 
 ClassImp(TSQLiteRow)
 

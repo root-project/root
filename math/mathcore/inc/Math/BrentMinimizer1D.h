@@ -31,13 +31,9 @@
 #ifndef ROOT_Math_BrentMinimizer1D
 #define ROOT_Math_BrentMinimizer1D
 
-#ifndef ROOT_Math_IMinimizer1D
 #include "Math/IMinimizer1D.h"
-#endif
 
-#ifndef ROOT_Math_IFunctionfwd
 #include "Math/IFunctionfwd.h"
-#endif
 
 
 namespace ROOT {

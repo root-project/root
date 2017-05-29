@@ -20,16 +20,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TFile;
 

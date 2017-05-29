@@ -1709,9 +1709,9 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    TH1D *h1 = 0;
 
    // Get range to use as well as bin limits
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-//   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+   // Projected range must be inside and not outside original one (ROOT-8781)
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
    Int_t nx = ixmax-ixmin+1;
 
    // Create the histogram, either reseting a preexisting one
@@ -1903,12 +1903,11 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    TH2D *h2 = 0;
 
    // Get range to use as well as bin limits
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-   Int_t iymin = projY->GetFirst();
-   Int_t iymax = projY->GetLast();
-   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
-   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
+   Int_t iymin = std::max(projY->GetFirst(),1);
+   Int_t iymax = std::min(projY->GetLast(),projY->GetNbins());
+
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
@@ -2155,17 +2154,17 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Project a 3-d histogram into 1 or 2-d histograms depending on the
-/// option parameter
-/// option may contain a combination of the characters x,y,z,e
-/// option = "x" return the x projection into a TH1D histogram
-/// option = "y" return the y projection into a TH1D histogram
-/// option = "z" return the z projection into a TH1D histogram
-/// option = "xy" return the x versus y projection into a TH2D histogram
-/// option = "yx" return the y versus x projection into a TH2D histogram
-/// option = "xz" return the x versus z projection into a TH2D histogram
-/// option = "zx" return the z versus x projection into a TH2D histogram
-/// option = "yz" return the y versus z projection into a TH2D histogram
-/// option = "zy" return the z versus y projection into a TH2D histogram
+/// option parameter, which may contain a combination of the characters x,y,z,e
+///  - option = "x" return the x projection into a TH1D histogram
+///  - option = "y" return the y projection into a TH1D histogram
+///  - option = "z" return the z projection into a TH1D histogram
+///  - option = "xy" return the x versus y projection into a TH2D histogram
+///  - option = "yx" return the y versus x projection into a TH2D histogram
+///  - option = "xz" return the x versus z projection into a TH2D histogram
+///  - option = "zx" return the z versus x projection into a TH2D histogram
+///  - option = "yz" return the y versus z projection into a TH2D histogram
+///  - option = "zy" return the z versus y projection into a TH2D histogram
+///
 /// NB: the notation "a vs b" means "a" vertical and "b" horizontal
 ///
 /// option = "o" original axis range of the target axes will be
@@ -2361,12 +2360,11 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
                                           bool originalRange, bool useUF, bool useOF) const
 {
    // Get the ranges where we will work.
-   Int_t ixmin = projX->GetFirst();
-   Int_t ixmax = projX->GetLast();
-   Int_t iymin = projY->GetFirst();
-   Int_t iymax = projY->GetLast();
-   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
-   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
+   Int_t ixmin = std::max(projX->GetFirst(),1);
+   Int_t ixmax = std::min(projX->GetLast(),projX->GetNbins());
+   Int_t iymin = std::max(projY->GetFirst(),1);
+   Int_t iymax = std::min(projY->GetLast(),projY->GetNbins());
+
    Int_t nx = ixmax-ixmin+1;
    Int_t ny = iymax-iymin+1;
 
@@ -2463,8 +2461,7 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 
    Int_t outmin = outAxis->GetFirst();
    Int_t outmax = outAxis->GetLast();
-   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
-   if (outmin == 0 && outmax == 0) { outmin = 1; outmax = outAxis->GetNbins(); }
+   // GetFirst, GetLast can return underflow or overflow bins
    // correct for underflow/overflows
    if (useUF && !outAxis->TestBit(TAxis::kAxisRange) )  outmin -= 1;
    if (useOF && !outAxis->TestBit(TAxis::kAxisRange) )  outmax += 1;

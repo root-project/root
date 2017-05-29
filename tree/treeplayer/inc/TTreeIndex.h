@@ -22,12 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#ifndef ROOT_TVirtualIndex
 #include "TVirtualIndex.h"
-#endif
-#ifndef ROOT_TTreeFormula
 #include "TTreeFormula.h"
-#endif
 
 class TTreeIndex : public TVirtualIndex {
 

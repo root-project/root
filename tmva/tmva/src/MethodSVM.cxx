@@ -44,24 +44,14 @@ SMO Platt's SVM classifier with Keerthi & Shavade improvements
 
 #include "TMVA/MethodSVM.h"
 
-#ifndef ROOT_TMVA_Tools
 #include "TMVA/Tools.h"
-#endif
-#ifndef ROOT_TMVA_Timer
 #include "TMVA/Timer.h"
-#endif
 
-#ifndef ROOT_TMVA_SVWorkingSet
 #include "TMVA/SVWorkingSet.h"
-#endif
 
-#ifndef ROOT_TMVA_SVEvent
 #include "TMVA/SVEvent.h"
-#endif
 
-#ifndef ROOT_TMVA_SVKernelFunction
 #include "TMVA/SVKernelFunction.h"
-#endif
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Configurable.h"

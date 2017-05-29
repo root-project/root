@@ -24,15 +24,9 @@
 
 #include "TNode.h"
 
-#ifndef ROOT_TShape
 #include "TShape.h"
-#endif
-#ifndef ROOT_TAttLine
 #include "TAttLine.h"
-#endif
-#ifndef ROOT_TAttFill
 #include "TAttFill.h"
-#endif
 
 class TBrowser;
 class TVolumePosition;

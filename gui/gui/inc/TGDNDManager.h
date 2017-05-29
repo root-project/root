@@ -12,9 +12,7 @@
 #ifndef ROOT_TDNDManager
 #define ROOT_TDNDManager
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
 class TGMainFrame;
 class TGDragWindow;

@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TCollection
 #include "TCollection.h"
-#endif
 
 
 class TSeqCollection : public TCollection {

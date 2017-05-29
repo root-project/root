@@ -41,21 +41,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_MethodBase
 #include "TMVA/MethodBase.h"
-#endif
-#ifndef ROOT_TMVA_TMatrixD
-#ifndef ROOT_TMatrixDfwd
 #include "TMatrixDfwd.h"
-#endif
-#endif
 #ifndef ROOT_TMVA_TVectorD
-#ifndef ROOT_TVectorD
 #include "TVectorD.h"
-#endif
-#ifndef ROOT_TMVA_SVKernelFunction
 #include "TMVA/SVKernelFunction.h"
-#endif
 #endif
 
 namespace TMVA 

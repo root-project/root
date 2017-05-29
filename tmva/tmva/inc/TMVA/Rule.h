@@ -31,19 +31,11 @@
 #ifndef ROOT_TMVA_Rule
 #define ROOT_TMVA_Rule
 
-#ifndef ROOT_TMath
 #include "TMath.h"
-#endif
 
-#ifndef ROOT_TMVA_DecisionTree
 #include "TMVA/DecisionTree.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
-#ifndef ROOT_TMVA_RuleCut
 #include "TMVA/RuleCut.h"
-#endif
 
 namespace TMVA {
 

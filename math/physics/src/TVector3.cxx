@@ -167,12 +167,12 @@ theta plane) to the (x,y,z) frame.
 */
 
 
+#include "TMatrix.h"
 #include "TVector3.h"
 
 #include "TBuffer.h"
 #include "TRotation.h"
 #include "TMath.h"
-#include "TClass.h"
 
 ClassImp(TVector3)
 

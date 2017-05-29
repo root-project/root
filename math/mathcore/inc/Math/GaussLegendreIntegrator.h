@@ -17,9 +17,7 @@
 #define ROOT_Math_GaussLegendreIntegrator
 
 
-#ifndef ROOT_Math_GaussIntegrator
 #include "Math/GaussIntegrator.h"
-#endif
 
 
 namespace ROOT {

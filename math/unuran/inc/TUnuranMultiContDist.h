@@ -13,13 +13,9 @@
 #ifndef ROOT_Math_TUnuranMultiContDist
 #define ROOT_Math_TUnuranMultiContDist
 
-#ifndef ROOT_Math_TUnuranBaseDist
 #include "TUnuranBaseDist.h"
-#endif
 
-#ifndef ROOT_Math_IFunction
 #include "Math/IFunction.h"
-#endif
 
 
 

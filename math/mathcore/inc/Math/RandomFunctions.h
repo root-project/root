@@ -71,7 +71,7 @@ namespace Math {
    public: 
 
       /// class constructor 
-      RandomFunctionsImpl() {}
+      RandomFunctionsImpl() : fBaseEngine(0) {}
 
       void SetEngine(void *r) {
          fBaseEngine = static_cast<TRandomEngine*>(r);
@@ -123,7 +123,7 @@ namespace Math {
       double Uniform(double a);
 
    protected:
-      TRandomEngine * fBaseEngine;
+      TRandomEngine* fBaseEngine;
 
    private:
       // Internal method used by the functions 

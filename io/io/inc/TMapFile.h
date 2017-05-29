@@ -15,12 +15,8 @@
 #ifdef WIN32
 #include "Windows4Root.h"
 #endif
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TROOT
 #include "TROOT.h"
-#endif
 
 class TBrowser;
 class TDirectory;

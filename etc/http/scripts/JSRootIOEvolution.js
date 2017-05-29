@@ -7,7 +7,10 @@
       define( ['JSRootCore', 'rawinflate'], factory );
    } else {
       if (typeof JSROOT == 'undefined')
-         throw new Error("This extension requires JSRootCore.js", "JSRootIOEvolution.js");
+         throw new Error("JSROOT I/O requires JSRootCore.js", "JSRootIOEvolution.js");
+
+      if (typeof JSROOT.ZIP == 'undefined')
+         throw new Error("JSROOT I/O requires rawinflate.js", "JSRootIOEvolution.js");
 
       if (typeof JSROOT.IO == "object")
          throw new Error("This JSROOT IO already loaded", "JSRootIOEvolution.js");
@@ -17,138 +20,190 @@
 } (function(JSROOT) {
 
    JSROOT.IO = {
-         kBase : 0, kOffsetL : 20, kOffsetP : 40,
-         kChar : 1, kShort : 2, kInt : 3, kLong : 4, kFloat : 5, kCounter : 6, kCharStar : 7,
-         kDouble : 8, kDouble32 : 9, kLegacyChar : 10, kUChar : 11, kUShort : 12,
-         kUInt : 13, kULong : 14, kBits : 15, kLong64 : 16, kULong64 : 17, kBool : 18, kFloat16 : 19,
-         kObject : 61, kAny : 62, kObjectp : 63, kObjectP : 64, kTString : 65,
-         kTObject : 66, kTNamed : 67, kAnyp : 68, kAnyP : 69, kAnyPnoVT : 70,
-         kSTLp : 71,
-         kSkip : 100, kSkipL : 120, kSkipP : 140,
-         kConv : 200, kConvL : 220, kConvP : 240,
-         kSTL : 300, kSTLstring : 365,
-         kStreamer : 500, kStreamLoop : 501,
-         kMapOffset : 2,
-         kByteCountMask : 0x40000000,
-         kNewClassTag : 0xFFFFFFFF,
-         kClassMask : 0x80000000,
-         Z_DEFLATED : 8,
-         Z_HDRSIZE : 9,
-         Mode : "array", // could be string or array, enable usage of ArrayBuffer in http requests
-         NativeArray : true, // when true, native arrays like Int32Array or Float64Array are used
+         kBase: 0, kOffsetL: 20, kOffsetP: 40,
+         kChar:   1, kShort:   2, kInt:   3, kLong:   4, kFloat: 5, kCounter: 6, kCharStar: 7, kDouble: 8, kDouble32: 9, kLegacyChar : 10,
+         kUChar: 11, kUShort: 12, kUInt: 13, kULong: 14, kBits: 15, kLong64: 16, kULong64: 17, kBool: 18,  kFloat16: 19,
+         kObject: 61, kAny: 62, kObjectp: 63, kObjectP: 64, kTString: 65,
+         kTObject: 66, kTNamed: 67, kAnyp: 68, kAnyP: 69, kAnyPnoVT: 70, kSTLp: 71,
+         kSkip: 100, kSkipL: 120, kSkipP: 140, kConv: 200, kConvL: 220, kConvP: 240,
+         kSTL: 300, kSTLstring: 365, kStreamer: 500, kStreamLoop: 501,
+         kMapOffset: 2,
+         kByteCountMask: 0x40000000,
+         kNewClassTag: 0xFFFFFFFF,
+         kClassMask: 0x80000000,
+         Mode: "array", // could be string or array, enable usage of ArrayBuffer in http requests
+         NativeArray: true, // when true, native arrays like Int32Array or Float64Array are used
+
+         TypeNames : ["BASE", "char", "short", "int", "long", "float", "int", "const char*", "double", "Double32_t",
+                      "char", "unsigned  char", "unsigned short", "unsigned", "unsigned long", "unsigned", "Long64_t", "ULong64_t", "bool", "Float16_t"],
 
          // constants used for coding type of STL container
-         kNotSTL :  0, kSTLvector : 1, kSTLlist : 2, kSTLdeque : 3, kSTLmap : 4, kSTLmultimap : 5,
-         kSTLset : 6, kSTLmultiset : 7, kSTLbitset : 8, kSTLforwardlist : 9,
+         kNotSTL: 0, kSTLvector: 1, kSTLlist: 2, kSTLdeque: 3, kSTLmap: 4, kSTLmultimap: 5,
+         kSTLset: 6, kSTLmultiset: 7, kSTLbitset: 8, kSTLforwardlist: 9,
          kSTLunorderedset : 10, kSTLunorderedmultiset : 11, kSTLunorderedmap : 12,
          kSTLunorderedmultimap : 13, kSTLend : 14,
 
-         IsInteger : function(typ) { return ((typ>=this.kChar) && (typ<=this.kLong)) ||
-                                     (typ===this.kCounter) ||
-                                    ((typ>=this.kLegacyChar) && (typ<=this.kBool)); },
+         // names of STL containers
+         StlNames: [ "", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset"],
 
-         IsNumeric : function(typ) { return (typ>0) && (typ<=this.kBool) && (typ!==this.kCharStar); },
+         // constants of bits in version
+         kStreamedMemberWise: JSROOT.BIT(14),
 
-         GetTypeId : function(typname) {
+         kSplitCollectionOfPointers: 100,
+
+         // map of user-streamer function like func(buf,obj)
+         // or alias (classname) which can be used to read that function
+         // or list of read functions
+         CustomStreamers: {},
+
+         // these are streamers which do not handle version regularly
+         // used for special classes like TRef or TBasket
+         DirectStreamers: {},
+
+         // TOBject bits
+         kIsReferenced: JSROOT.BIT(4),
+         kHasUUID: JSROOT.BIT(5),
+
+         IsInteger: function(typ) { return ((typ>=this.kChar) && (typ<=this.kLong)) || (typ===this.kCounter) ||
+                                             ((typ>=this.kLegacyChar) && (typ<=this.kBool)); },
+
+         IsNumeric: function(typ) { return (typ>0) && (typ<=this.kBool) && (typ!==this.kCharStar); },
+
+         GetTypeId: function(typname, norecursion) {
             switch (typname) {
-               case "bool": return JSROOT.IO.kBool;
-               case "char": return JSROOT.IO.kChar;
-               case "short": return JSROOT.IO.kShort;
-               case "int": return JSROOT.IO.kInt;
-               case "long": return JSROOT.IO.kLong;
-               case "float": return JSROOT.IO.kFloat;
-               case "double": return JSROOT.IO.kDouble;
-               case "unsigned char": return JSROOT.IO.kUChar;
-               case "unsigned short": return JSROOT.IO.kUShort;
-               case "unsigned": return JSROOT.IO.kUInt;
-               case "unsigned long": return JSROOT.IO.kULong;
-               case "int64_t": return JSROOT.IO.kLong64;
-               case "uint64_t": return JSROOT.IO.kULong64;
+               case "bool":
+               case "Bool_t": return JSROOT.IO.kBool;
+               case "char":
+               case "signed char":
+               case "Char_t": return JSROOT.IO.kChar;
+               case "Color_t":
+               case "Style_t":
+               case "Width_t":
+               case "short":
+               case "Short_t": return JSROOT.IO.kShort;
+               case "int":
+               case "EErrorType":
+               case "Int_t": return JSROOT.IO.kInt;
+               case "long":
+               case "Long_t": return JSROOT.IO.kLong;
+               case "float":
+               case "Float_t": return JSROOT.IO.kFloat;
+               case "double":
+               case "Double_t": return JSROOT.IO.kDouble;
+               case "unsigned char":
+               case "UChar_t": return JSROOT.IO.kUChar;
+               case "unsigned short":
+               case "UShort_t": return JSROOT.IO.kUShort;
+               case "unsigned":
+               case "unsigned int":
+               case "UInt_t": return JSROOT.IO.kUInt;
+               case "unsigned long":
+               case "ULong_t": return JSROOT.IO.kULong;
+               case "int64_t":
+               case "long long":
+               case "Long64_t": return JSROOT.IO.kLong64;
+               case "uint64_t":
+               case "unsigned long long":
+               case "ULong64_t": return JSROOT.IO.kULong64;
+               case "Double32_t": return JSROOT.IO.kDouble32;
+               case "Float16_t": return JSROOT.IO.kFloat16;
+               case "char*":
+               case "const char*":
+               case "const Char_t*": return JSROOT.IO.kCharStar;
+            }
+
+            if (!norecursion) {
+               var replace = JSROOT.IO.CustomStreamers[typname];
+               if (typeof replace === "string") return JSROOT.IO.GetTypeId(replace, true);
+            }
+
+            return -1;
+         },
+
+         GetTypeSize: function(typname) {
+            switch (typname) {
+               case JSROOT.IO.kBool: return 1;
+               case JSROOT.IO.kChar: return 1;
+               case JSROOT.IO.kShort : return 2;
+               case JSROOT.IO.kInt: return 4;
+               case JSROOT.IO.kLong: return 8;
+               case JSROOT.IO.kFloat: return 4;
+               case JSROOT.IO.kDouble: return 8;
+               case JSROOT.IO.kUChar: return 1;
+               case JSROOT.IO.kUShort: return 2;
+               case JSROOT.IO.kUInt: return 4;
+               case JSROOT.IO.kULong: return 8;
+               case JSROOT.IO.kLong64: return 8;
+               case JSROOT.IO.kULong64: return 8;
             }
             return -1;
          }
 
    };
 
-
-
-// map of user-streamer function like func(buf,obj)
-   JSROOT.fUserStreamers = {};
-
    JSROOT.addUserStreamer = function(type, user_streamer) {
-      JSROOT.fUserStreamers[type] = user_streamer;
+      JSROOT.IO.CustomStreamers[type] = user_streamer;
    }
 
-   JSROOT.R__unzip = function(str, tgtsize, noalert, src_shift) {
+   JSROOT.R__unzip = function(arr, tgtsize, noalert, src_shift) {
       // Reads header envelope, determines zipped size and unzip content
 
-      var isarr = (typeof str != 'string') && ('byteLength' in str),
-          totallen = isarr ? str.byteLength : str.length,
-          curr = 0, fullres = 0, tgtbuf = null;
+      var totallen = arr.byteLength, curr = src_shift || 0, fullres = 0, tgtbuf = null;
 
-      if (src_shift!==undefined) curr = src_shift;
+      function getChar(o) { return String.fromCharCode(arr.getUint8(o)); }
 
-      function getChar(o) {
-         return isarr ? String.fromCharCode(str.getUint8(o)) : str.charAt(o);
-      }
-
-      function getCode(o) {
-         return isarr ? str.getUint8(o) : str.charCodeAt(o);
-      }
+      function getCode(o) { return arr.getUint8(o); }
 
       while (fullres < tgtsize) {
 
-         if (curr + JSROOT.IO.Z_HDRSIZE >= totallen) {
+         var fmt = "uncknown", off = 0, HDRSIZE = 9;
+
+         if (curr + HDRSIZE >= totallen) {
             if (!noalert) alert("Error R__unzip: header size exceeds buffer size");
             return null;
          }
 
+         if (getChar(curr) == 'Z' && getChar(curr+1) == 'L' && getCode(curr+2) == 8) { fmt = "new"; off = 2; } else
+         if (getChar(curr) == 'C' && getChar(curr+1) == 'S' && getCode(curr+2) == 8) { fmt = "old"; off = 0; } else
+         if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA";
+
          /*   C H E C K   H E A D E R   */
-         if (!((getChar(curr) == 'Z' && getChar(curr+1) == 'L' && getCode(curr+2) == JSROOT.IO.Z_DEFLATED))) {
-            if (!noalert) alert("R__unzip: Old zlib format is not supported!");
+         if ((fmt !== "new") && (fmt !== "old")) {
+            if (!noalert) alert("R__unzip: " + fmt + " zlib format is not supported!");
             return null;
          }
 
-         var srcsize = JSROOT.IO.Z_HDRSIZE +
-                         ((getCode(curr+3) & 0xff) | ((getCode(curr+4) & 0xff) << 8) | ((getCode(curr+5) & 0xff) << 16));
+         var srcsize = HDRSIZE + ((getCode(curr+3) & 0xff) | ((getCode(curr+4) & 0xff) << 8) | ((getCode(curr+5) & 0xff) << 16));
 
-         if (isarr) {
-            // portion of packed data to process
-            var uint8arr = new Uint8Array(str.buffer, str.byteOffset + curr + JSROOT.IO.Z_HDRSIZE + 2, str.byteLength - curr - JSROOT.IO.Z_HDRSIZE - 2);
+         var uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off, arr.byteLength - curr - HDRSIZE - off);
 
-            //  place for unpacking
-            if (tgtbuf===null) tgtbuf = new ArrayBuffer(tgtsize);
+         //  place for unpacking
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
 
-            var reslen = window.RawInflate.arr_inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
-            if (reslen<=0) break;
+         var reslen = JSROOT.ZIP.inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
+         if (reslen<=0) break;
 
-            fullres += reslen;
-         } else {
-            // old code using String for unpacking, keep for compativility
-            var unpacked = window.RawInflate.inflate(str.substr(JSROOT.IO.Z_HDRSIZE + 2 + curr, srcsize));
-            if ((unpacked === null) || (unpacked.length===0)) break;
-            if (tgtbuf===null) tgtbuf = unpacked; else tgtbuf += unpacked;
-            fullres += unpacked.length;
-         }
-
+         fullres += reslen;
          curr += srcsize;
       }
 
       if (fullres !== tgtsize) {
-         if (!noalert) alert("R__unzip: fail to unzip data expacts " + tgtsize + " , got " + fullres);
+         if (!noalert) alert("R__unzip: fail to unzip data expects " + tgtsize + " , got " + fullres);
          return null;
       }
 
-      return isarr ? new DataView(tgtbuf) : tgtbuf;
+      return new DataView(tgtbuf);
    }
 
    // =================================================================================
 
-   JSROOT.TBuffer = function(_o, _file) {
+   JSROOT.TBuffer = function(arr, pos, file, length) {
+      // buffer takes with DataView as first argument
       this._typename = "TBuffer";
-      this.o = (_o !== undefined) ? _o : 0;
-      this.length = 0;
-      this.fFile = _file;
+      this.arr = arr;
+      this.o = pos || 0;
+      this.fFile = file;
+      this.length = length || (arr ? arr.byteLength : 0); // use size of arrayview, blob buffer can be much bigger
       this.ClearObjectMap();
       this.fTagOffset = 0;
       this.last_read_version = 0;
@@ -189,6 +244,7 @@
       this.fObjectMap = {};
       this.fClassMap = {};
       this.fObjectMap[0] = null;
+      this.fDisplacement = 0;
    }
 
    JSROOT.TBuffer.prototype.ReadVersion = function() {
@@ -201,14 +257,17 @@
          this.o -= 4; // rollback read bytes, this is old buffer without bytecount
 
       this.last_read_version = ver.val = this.ntoi2();
+      this.last_read_checksum = 0;
       ver.off = this.o;
 
-      if ((ver.val <= 0) && ver.bytecnt && (ver.bytecnt>=6)) {
+      if ((ver.val <= 0) && ver.bytecnt && (ver.bytecnt>=4)) {
          ver.checksum = this.ntou4();
          if (!this.fFile.FindSinfoCheckum(ver.checksum)) {
-            // JSROOT.console('Fail to find streamer info with check sum ' + ver.checksum + ' val ' + ver.val);
+            // JSROOT.console('Fail to find streamer info with check sum ' + ver.checksum + ' version ' + ver.val);
             this.o-=4; // not found checksum in the list
             delete ver.checksum; // remove checksum
+         } else {
+            this.last_read_checksum = ver.checksum;
          }
       }
       return ver;
@@ -216,8 +275,10 @@
 
    JSROOT.TBuffer.prototype.CheckBytecount = function(ver, where) {
       if ((ver.bytecnt !== undefined) && (ver.off + ver.bytecnt !== this.o)) {
-         if (where!=null)
-            alert("Missmatch in " + where + " bytecount expected = " + ver.bytecnt + "  got = " + (this.o-ver.off));
+         if (where!=null) {
+            // alert("Missmatch in " + where + " bytecount expected = " + ver.bytecnt + "  got = " + (this.o-ver.off));
+            console.log("Missmatch in " + where + " bytecount expected = " + ver.bytecnt + "  got = " + (this.o-ver.off));
+         }
          this.o = ver.off + ver.bytecnt;
          return false;
       }
@@ -258,491 +319,58 @@
       return res;
    }
 
+   JSROOT.TBuffer.prototype.ntou1 = function() {
+      return this.arr.getUint8(this.o++);
+   }
+
+   JSROOT.TBuffer.prototype.ntou2 = function() {
+      var o = this.o; this.o+=2;
+      return this.arr.getUint16(o);
+   }
+
+   JSROOT.TBuffer.prototype.ntou4 = function() {
+      var o = this.o; this.o+=4;
+      return this.arr.getUint32(o);
+   }
+
+   JSROOT.TBuffer.prototype.ntou8 = function() {
+      var high = this.arr.getUint32(this.o); this.o+=4;
+      var low = this.arr.getUint32(this.o); this.o+=4;
+      return high * 0x100000000 + low;
+   }
+
+   JSROOT.TBuffer.prototype.ntoi1 = function() {
+      return this.arr.getInt8(this.o++);
+   }
+
+   JSROOT.TBuffer.prototype.ntoi2 = function() {
+      var o = this.o; this.o+=2;
+      return this.arr.getInt16(o);
+   }
+
+   JSROOT.TBuffer.prototype.ntoi4 = function() {
+      var o = this.o; this.o+=4;
+      return this.arr.getInt32(o);
+   }
+
+   JSROOT.TBuffer.prototype.ntoi8 = function() {
+      var high = this.arr.getUint32(this.o); this.o+=4;
+      var low = this.arr.getUint32(this.o); this.o+=4;
+      if (high < 0x80000000) return high * 0x100000000 + low;
+      return -1 - ((~high) * 0x100000000 + ~low);
+   }
+
+   JSROOT.TBuffer.prototype.ntof = function() {
+      var o = this.o; this.o+=4;
+      return this.arr.getFloat32(o);
+   }
+
+   JSROOT.TBuffer.prototype.ntod = function() {
+      var o = this.o; this.o+=8;
+      return this.arr.getFloat64(o);
+   }
+
    JSROOT.TBuffer.prototype.ReadFastArray = function(n, array_type) {
-      // read array of n values from the I/O buffer
-
-      var array = null, i = 0;
-      switch (array_type) {
-         case JSROOT.IO.kDouble:
-            array = JSROOT.IO.NativeArray ? new Float64Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntod();
-            break;
-         case JSROOT.IO.kFloat:
-         case JSROOT.IO.kDouble32:
-            array = JSROOT.IO.NativeArray ? new Float32Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntof();
-            break;
-         case JSROOT.IO.kLong:
-         case JSROOT.IO.kLong64:
-            array = JSROOT.IO.NativeArray ? new Float64Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntoi8();
-            break;
-         case JSROOT.IO.kULong:
-         case JSROOT.IO.kULong64:
-            array = JSROOT.IO.NativeArray ? new Float64Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntou8();
-            break;
-         case JSROOT.IO.kInt:
-            array = JSROOT.IO.NativeArray ? new Int32Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntoi4();
-            break;
-         case JSROOT.IO.kBits:
-         case JSROOT.IO.kUInt:
-            array = JSROOT.IO.NativeArray ? new Uint32Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntou4();
-            break;
-         case JSROOT.IO.kShort:
-            array = JSROOT.IO.NativeArray ? new Int16Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntoi2();
-            break;
-         case JSROOT.IO.kUShort:
-            array = JSROOT.IO.NativeArray ? new Uint16Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntou2();
-            break;
-         case JSROOT.IO.kChar:
-            array = JSROOT.IO.NativeArray ? new Int8Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntoi1();
-            break;
-         case JSROOT.IO.kBool:
-         case JSROOT.IO.kUChar:
-            array = JSROOT.IO.NativeArray ? new Uint8Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntou1();
-            break;
-         case JSROOT.IO.kTString:
-            array = new Array(n);
-            while (i < n) array[i++] = this.ReadTString();
-            break;
-         default:
-            array = JSROOT.IO.NativeArray ? new Uint32Array(n) : new Array(n);
-            while (i < n) array[i++] = this.ntou4();
-            break;
-      }
-      return array;
-   }
-
-   JSROOT.TBuffer.prototype.can_extract = function(place) {
-      for (var n=0;n<place.length;n+=2)
-        if (place[n] + place[n+1] > this.length) return false;
-      return true;
-   }
-
-   JSROOT.IO.GetArrayKind = function(type_name) {
-      // returns type of array
-      // 0 - if TString (or equivalent)
-      // -1 - if any other kind
-      if ((type_name === "TString") || (type_name === "string") ||
-          (JSROOT.fUserStreamers[type_name] === 'TString')) return 0;
-      if ((type_name.length < 7) || (type_name.indexOf("TArray")!==0)) return -1;
-      if (type_name.length == 7)
-         switch (type_name.charAt(6)) {
-            case 'I': return JSROOT.IO.kInt;
-            case 'D': return JSROOT.IO.kDouble;
-            case 'F': return JSROOT.IO.kFloat;
-            case 'S': return JSROOT.IO.kShort;
-            case 'C': return JSROOT.IO.kChar;
-            case 'L': return JSROOT.IO.kLong;
-            default: return -1;
-         }
-
-      return  type_name == "TArrayL64" ? JSROOT.IO.kLong64 : -1;
-   }
-
-   JSROOT.TBuffer.prototype.ReadNdimArray = function(handle, func) {
-      var ndim = handle.fArrayDim, maxindx = handle.fMaxIndex;
-      if ((ndim<1) && (handle.fArrayLength>0)) { ndim = 1; maxindx = [handle.fArrayLength]; }
-      if (handle.minus1) --ndim;
-
-      if (ndim<1) return func(this, handle);
-
-      var res = [];
-
-      if (ndim===1) {
-         for (var n=0;n<maxindx[0];++n)
-            res.push(func(this, handle));
-      } else
-      if (ndim===2) {
-         for (var n=0;n<maxindx[0];++n) {
-            var res2 = [];
-            for (var k=0;k<maxindx[1];++k)
-              res2.push(func(this, handle));
-            res.push(res2);
-         }
-      } else {
-         var indx = [], arr = [], k;
-         for (k=0; k<ndim; ++k) { indx[k] = 0; arr[k] = (k==0) ? res : []; }
-         while (indx[0] < maxindx[0]) {
-            k = ndim-1;
-            arr[k].push(func(this, handle));
-            ++indx[k];
-            while ((indx[k] === maxindx[k]) && (k>0)) {
-               indx[k] = 0;
-               arr[k-1].push(arr[k]);
-               arr[k] = [];
-               ++indx[--k];
-            }
-         }
-      }
-
-      return res;
-   }
-
-   JSROOT.TBuffer.prototype.ReadTDate = function() {
-      var datime = this.ntou4();
-      var res = new Date();
-      res.setFullYear((datime >>> 26) + 1995);
-      res.setMonth((datime << 6) >>> 28);
-      res.setDate((datime << 10) >>> 27);
-      res.setHours((datime << 15) >>> 27);
-      res.setMinutes((datime << 20) >>> 26);
-      res.setSeconds((datime << 26) >>> 26);
-      res.setMilliseconds(0);
-      return res;
-   }
-
-
-   JSROOT.TBuffer.prototype.ReadTKey = function(key) {
-      if (!key) key = {};
-      key.fNbytes = this.ntoi4();
-      key.fVersion = this.ntoi2();
-      key.fObjlen = this.ntou4();
-      key.fDatime = this.ReadTDate();
-      key.fKeylen = this.ntou2();
-      key.fCycle = this.ntou2();
-      if (key.fVersion > 1000) {
-         key.fSeekKey = this.ntou8();
-         this.shift(8); // skip seekPdir
-      } else {
-         key.fSeekKey = this.ntou4();
-         this.shift(4); // skip seekPdir
-      }
-      key.fClassName = this.ReadTString();
-      key.fName = this.ReadTString();
-      key.fTitle = this.ReadTString();
-
-      var name = key.fName.replace(/['"]/g,'');
-
-      if (name !== key.fName) {
-         key.fRealName = key.fName;
-         key.fName = name;
-      }
-
-      return key;
-   }
-
-   JSROOT.TBuffer.prototype.ReadTDirectory = function(dir) {
-
-      var version = this.ntou2();
-      dir.fDatimeC = this.ReadTDate();
-      dir.fDatimeM = this.ReadTDate();
-      dir.fNbytesKeys = this.ntou4();
-      dir.fNbytesName = this.ntou4();
-      dir.fSeekDir = (version > 1000) ? this.ntou8() : this.ntou4();
-      dir.fSeekParent = (version > 1000) ? this.ntou8() : this.ntou4();
-      dir.fSeekKeys = (version > 1000) ? this.ntou8() : this.ntou4();
-
-      // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
-   }
-
-
-   JSROOT.TBuffer.prototype.ReadTBasket = function(obj) {
-      this.ReadTKey(obj);
-      var ver = this.ReadVersion();
-      obj.fBufferSize = this.ntoi4();
-      obj.fNevBufSize = this.ntoi4();
-      obj.fNevBuf = this.ntoi4();
-      obj.fLast = this.ntoi4();
-      var flag = this.ntoi1();
-      // here we implement only data skipping, no real I/O for TBasket is performed
-
-      if ((flag!==0) && ((flag % 10) != 2)) {
-         var sz = this.ntoi4();
-         // obj.fEntryOffset = this.ReadFastArray(sz, JSROOT.IO.kInt);
-         this.shift(sz*4);
-
-         if (flag>40) {
-            sz = this.ntoi4();
-            //   obj.fDisplacement = this.ReadFastArray(sz, JSROOT.IO.kInt);
-            this.shift(sz*4);
-         }
-      }
-
-      if ((flag === 1) || (flag > 10)) {
-         var sz = obj.fLast;
-         if (ver.val <= 1) sz = this.ntoi4();
-         this.o += sz; // fBufferRef
-      }
-
-      return this.CheckBytecount(ver,"ReadTBasket");
-   }
-
-   JSROOT.TBuffer.prototype.ReadClass = function() {
-      // read class definition from I/O buffer
-      var classInfo = { name: -1 },
-          tag = 0,
-          bcnt = this.ntou4(),
-          startpos = this.o;
-
-      if (!(bcnt & JSROOT.IO.kByteCountMask) || (bcnt == JSROOT.IO.kNewClassTag)) {
-         tag = bcnt;
-         bcnt = 0;
-      } else {
-         tag = this.ntou4();
-      }
-      if (!(tag & JSROOT.IO.kClassMask)) {
-         classInfo.objtag = tag; // indicate that we have deal with objects tag
-         return classInfo;
-      }
-      if (tag == JSROOT.IO.kNewClassTag) {
-         // got a new class description followed by a new object
-         classInfo.name = this.ReadFastString(-1);
-
-         if (this.GetMappedClass(this.fTagOffset + startpos + JSROOT.IO.kMapOffset) === -1)
-            this.MapClass(this.fTagOffset + startpos + JSROOT.IO.kMapOffset, classInfo.name);
-      }  else {
-         // got a tag to an already seen class
-         var clTag = (tag & ~JSROOT.IO.kClassMask);
-         classInfo.name = this.GetMappedClass(clTag);
-
-         if (classInfo.name === -1) {
-            alert("Did not found class with tag " + clTag);
-         }
-      }
-
-      return classInfo;
-   }
-
-   JSROOT.TBuffer.prototype.ReadObjectAny = function() {
-      var objtag = this.fTagOffset + this.o + JSROOT.IO.kMapOffset,
-          clRef = this.ReadClass();
-
-      // class identified as object and should be handled so
-      if ('objtag' in clRef)
-         return this.GetMappedObject(clRef.objtag);
-
-      if (clRef.name === -1) return null;
-
-      var arrkind = JSROOT.IO.GetArrayKind(clRef.name), obj = {};
-
-      if (arrkind === 0) {
-         obj = this.ReadTString();
-      } else
-      if (arrkind > 0) {
-         // reading array, can map array only afterwards
-         obj = this.ReadFastArray(this.ntou4(), arrkind);
-         this.MapObject(objtag, obj);
-      } else {
-         // reading normal object, should map before to
-         this.MapObject(objtag, obj);
-         this.ClassStreamer(obj, clRef.name);
-      }
-
-      return obj;
-   }
-
-   JSROOT.TBuffer.prototype.ClassStreamer = function(obj, classname) {
-
-      if (! ('_typename' in obj)) obj._typename = classname;
-
-      if (classname === 'TQObject') return obj;
-
-      if (classname === "TBasket") {
-         this.ReadTBasket(obj);
-         JSROOT.addMethods(obj);
-         return obj;
-      }
-
-      // TODO: version should be read before search for stremer
-
-      var ver = this.ReadVersion();
-
-      var streamer = this.fFile.GetStreamer(classname, ver);
-
-      if (streamer !== null) {
-
-         for (var n = 0; n < streamer.length; ++n)
-            streamer[n].func(this, obj);
-
-      } else {
-         // just skip bytes belonging to not-recognized object
-         // console.warn('skip object ', classname);
-
-         JSROOT.addMethods(obj);
-      }
-
-      this.CheckBytecount(ver, classname);
-
-      return obj;
-   }
-
-   // =================================================================================
-
-   JSROOT.TStrBuffer = function(str, pos, file, length) {
-      JSROOT.TBuffer.call(this, pos, file);
-      this.b = str;
-      if (length!==undefined) this.length = length; else
-      if (str) this.length = str.length;
-   }
-
-   JSROOT.TStrBuffer.prototype = Object.create(JSROOT.TBuffer.prototype);
-
-   JSROOT.TStrBuffer.prototype.extract = function(place) {
-      var res = this.b.substr(place[0], place[1]);
-      if (place.length===2) return res;
-      res = [res];
-      for (var n=2;n<place.length;n+=2)
-         res.push(this.b.substr(place[n], place[n+1]));
-      return res; // return array of strings for each part of the request
-   }
-
-   JSROOT.TStrBuffer.prototype.ntou1 = function() {
-      return (this.b.charCodeAt(this.o++) & 0xff) >>> 0;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntou2 = function() {
-      // convert (read) two bytes of buffer b into a UShort_t
-      var n = ((this.b.charCodeAt(this.o++) & 0xff) << 8) >>> 0;
-         n += (this.b.charCodeAt(this.o++) & 0xff) >>> 0;
-      return n;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntou4 = function() {
-      // convert (read) four bytes of buffer b into a UInt_t
-      var n  = ((this.b.charCodeAt(this.o++) & 0xff) << 24) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 16) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 8)  >>> 0;
-      n +=  (this.b.charCodeAt(this.o++) & 0xff) >>> 0;
-      return n;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntou8 = function() {
-      // convert (read) eight bytes of buffer b into a ULong_t
-      var n = ((this.b.charCodeAt(this.o++) & 0xff) << 56) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 48) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 40) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 32) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 24) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 16) >>> 0;
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 8) >>> 0;
-      n +=  (this.b.charCodeAt(this.o++) & 0xff) >>> 0;
-      return n;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntoi1 = function() {
-      return (this.b.charCodeAt(this.o++) & 0xff);
-   }
-
-   JSROOT.TStrBuffer.prototype.ntoi2 = function() {
-      // convert (read) two bytes of buffer b into a Short_t
-      var n = ((this.b.charCodeAt(this.o++) & 0xff) << 8);
-      n += ((this.b.charCodeAt(this.o++) & 0xff));
-      return (n < 0x8000) ? n : -1 - (~n &0xFFFF);
-   }
-
-   JSROOT.TStrBuffer.prototype.ntoi4 = function() {
-      // convert (read) four bytes of buffer b into a Int_t
-      var n = ((this.b.charCodeAt(this.o++) & 0xff) << 24);
-      n +=  ((this.b.charCodeAt(this.o++) & 0xff) << 16);
-      n += ((this.b.charCodeAt(this.o++) & 0xff) << 8);
-      n += ((this.b.charCodeAt(this.o++) & 0xff));
-      return n;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntoi8 = function(b, o) {
-      // convert (read) eight bytes of buffer b into a Long_t
-      var n = (this.b.charCodeAt(this.o++) & 0xff) << 56;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 48;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 40;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 32;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 24;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 16;
-      n += (this.b.charCodeAt(this.o++) & 0xff) << 8;
-      n += (this.b.charCodeAt(this.o++) & 0xff);
-      return n;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntof = function() {
-      // IEEE-754 Floating-Point Conversion (single precision - 32 bits)
-      var inString = this.b.substring(this.o, this.o + 4); this.o+=4;
-      if (inString.length < 4) return Number.NaN;
-      var bits = "";
-      for (var i=0; i<4; ++i) {
-         var curByte = (inString.charCodeAt(i) & 0xff).toString(2);
-         var byteLen = curByte.length;
-         if (byteLen < 8) {
-            for (var bit=0; bit<(8-byteLen); ++bit)
-               curByte = '0' + curByte;
-         }
-         bits = bits + curByte;
-      }
-      //var bsign = parseInt(bits[0]) ? -1 : 1;
-      var bsign = (bits.charAt(0) == '1') ? -1 : 1;
-      var bexp = parseInt(bits.substring(1, 9), 2) - 127;
-      var bman;
-      if (bexp == -127)
-         bman = 0;
-      else {
-         bman = 1;
-         for (var i=0; i<23; ++i) {
-            if (parseInt(bits.substr(9+i, 1)) == 1)
-               bman = bman + 1 / Math.pow(2, i+1);
-         }
-      }
-      var res = bsign * Math.pow(2, bexp) * bman;
-      return (Math.abs(res) < 1e-300) ? 0.0 : res;
-   }
-
-   JSROOT.TStrBuffer.prototype.ntod = function() {
-      // IEEE-754 Floating-Point Conversion (double precision - 64 bits)
-      var inString = this.b.substring(this.o, this.o + 8); this.o+=8;
-      if (inString.length < 8) return Number.NaN;
-      var bits = "";
-      for (var i=0; i<8; ++i) {
-         var curByte = (inString.charCodeAt(i) & 0xff).toString(2);
-         var byteLen = curByte.length;
-         if (byteLen < 8) {
-            for (var bit=0; bit<(8-byteLen); ++bit)
-               curByte = '0' + curByte;
-         }
-         bits = bits + curByte;
-      }
-      //var bsign = parseInt(bits[0]) ? -1 : 1;
-      var bsign = (bits.charAt(0) == '1') ? -1 : 1;
-      var bexp = parseInt(bits.substring(1, 12), 2) - 1023;
-      var bman;
-      if (bexp == -127)
-         bman = 0;
-      else {
-         bman = 1;
-         for (var i=0; i<52; ++i) {
-            if (parseInt(bits.substr(12+i, 1)) == 1)
-               bman = bman + 1 / Math.pow(2, i+1);
-         }
-      }
-      var res = (bsign * Math.pow(2, bexp) * bman);
-      return (Math.abs(res) < 1e-300) ? 0.0 : res;
-   }
-
-   JSROOT.TStrBuffer.prototype.codeAt = function(pos) {
-      return this.b.charCodeAt(pos) & 0xff;
-   }
-
-   JSROOT.TStrBuffer.prototype.substring = function(beg, end) {
-      return this.b.substring(beg, end);
-   }
-
-   // =======================================================================
-
-   JSROOT.TArrBuffer = function(arr, pos, file, length) {
-      // buffer should work with DataView as first argument
-      JSROOT.TBuffer.call(this, pos, file, length);
-      this.arr = arr;
-      if (length!==undefined) this.length = length; else
-      if (arr && arr.buffer) this.length = arr.buffer.byteLength;
-   }
-
-   JSROOT.TArrBuffer.prototype = Object.create(JSROOT.TBuffer.prototype);
-
-   JSROOT.TArrBuffer.prototype.ReadFastArray = function(n, array_type) {
       // read array of n values from the I/O buffer
 
       var array, i = 0, o = this.o, view = this.arr;
@@ -753,7 +381,6 @@
                array[i] = view.getFloat64(o);
             break;
          case JSROOT.IO.kFloat:
-         case JSROOT.IO.kDouble32:
             array = new Float32Array(n);
             for (; i < n; ++i, o+=4)
                array[i] = view.getFloat32(o);
@@ -771,6 +398,7 @@
                array[i] = this.ntou8();
             return array; // exit here to avoid conflicts
          case JSROOT.IO.kInt:
+         case JSROOT.IO.kCounter:
             array = new Int32Array(n);
             for (; i < n; ++i, o+=4)
                array[i] = view.getInt32(o);
@@ -807,6 +435,10 @@
             for (; i < n; ++i)
                array[i] = this.ReadTString();
             return array; // exit here to avoid conflicts
+         case JSROOT.IO.kDouble32:
+            throw new Error('kDouble32 should not be used in ReadFastArray');
+         case JSROOT.IO.kFloat16:
+            throw new Error('kFloat16 should not be used in ReadFastArray');
          default:
             array = new Uint32Array(n);
             for (; i < n; ++i, o+=4)
@@ -819,87 +451,232 @@
       return array;
    }
 
-   JSROOT.TArrBuffer.prototype.extract = function(place) {
-      if (!this.arr || !this.arr.buffer || !this.can_extract(place)) return null;
-      if (place.length===2) return new DataView(this.arr.buffer, place[0], place[1]);
+   JSROOT.TBuffer.prototype.can_extract = function(place) {
+      for (var n=0;n<place.length;n+=2)
+         if (place[n] + place[n+1] > this.length) return false;
+      return true;
+   }
 
-      var res = [];
+   JSROOT.TBuffer.prototype.extract = function(place) {
+      if (!this.arr || !this.arr.buffer || !this.can_extract(place)) return null;
+      if (place.length===2) return new DataView(this.arr.buffer, this.arr.byteOffset + place[0], place[1]);
+
+      var res = new Array(place.length/2);
 
       for (var n=0;n<place.length;n+=2)
-         res.push(new DataView(this.arr.buffer, place[n], place[n+1]));
+         res[n/2] = new DataView(this.arr.buffer, this.arr.byteOffset + place[n], place[n+1]);
 
       return res; // return array of buffers
    }
 
-   JSROOT.TArrBuffer.prototype.codeAt = function(pos) {
+   JSROOT.TBuffer.prototype.codeAt = function(pos) {
       return this.arr.getUint8(pos);
    }
 
-   JSROOT.TArrBuffer.prototype.substring = function(beg, end) {
+   JSROOT.TBuffer.prototype.substring = function(beg, end) {
       var res = "";
       for (var n=beg;n<end;++n)
          res += String.fromCharCode(this.arr.getUint8(n));
       return res;
    }
 
-   JSROOT.TArrBuffer.prototype.ntou1 = function() {
-      return this.arr.getUint8(this.o++);
+
+   JSROOT.IO.GetArrayKind = function(type_name) {
+      // returns type of array
+      // 0 - if TString (or equivalent)
+      // -1 - if any other kind
+      if ((type_name === "TString") || (type_name === "string") ||
+          (JSROOT.IO.CustomStreamers[type_name] === 'TString')) return 0;
+      if ((type_name.length < 7) || (type_name.indexOf("TArray")!==0)) return -1;
+      if (type_name.length == 7)
+         switch (type_name[6]) {
+            case 'I': return JSROOT.IO.kInt;
+            case 'D': return JSROOT.IO.kDouble;
+            case 'F': return JSROOT.IO.kFloat;
+            case 'S': return JSROOT.IO.kShort;
+            case 'C': return JSROOT.IO.kChar;
+            case 'L': return JSROOT.IO.kLong;
+            default: return -1;
+         }
+
+      return  type_name == "TArrayL64" ? JSROOT.IO.kLong64 : -1;
    }
 
-   JSROOT.TArrBuffer.prototype.ntou2 = function() {
-      var o = this.o; this.o+=2;
-      return this.arr.getUint16(o);
+   JSROOT.TBuffer.prototype.ReadNdimArray = function(handle, func) {
+      var ndim = handle.fArrayDim, maxindx = handle.fMaxIndex, res;
+      if ((ndim<1) && (handle.fArrayLength>0)) { ndim = 1; maxindx = [handle.fArrayLength]; }
+      if (handle.minus1) --ndim;
+
+      if (ndim<1) return func(this, handle);
+
+      if (ndim===1) {
+         res = new Array(maxindx[0]);
+         for (var n=0;n<maxindx[0];++n)
+            res[n] = func(this, handle);
+      } else
+      if (ndim===2) {
+         res = new Array(maxindx[0]);
+         for (var n=0;n<maxindx[0];++n) {
+            var res2 = new Array(maxindx[1]);
+            for (var k=0;k<maxindx[1];++k)
+              res2[k] = func(this, handle);
+            res[n] = res2;
+         }
+      } else {
+         var indx = [], arr = [], k;
+         for (k=0; k<ndim; ++k) { indx[k] = 0; arr[k] = []; }
+         res = arr[0];
+         while (indx[0] < maxindx[0]) {
+            k = ndim-1;
+            arr[k].push(func(this, handle));
+            ++indx[k];
+            while ((indx[k] === maxindx[k]) && (k>0)) {
+               indx[k] = 0;
+               arr[k-1].push(arr[k]);
+               arr[k] = [];
+               ++indx[--k];
+            }
+         }
+      }
+
+      return res;
    }
 
-   JSROOT.TArrBuffer.prototype.ntou4 = function() {
-      var o = this.o; this.o+=4;
-      return this.arr.getUint32(o);
+   JSROOT.TBuffer.prototype.ReadTKey = function(key) {
+      if (!key) key = {};
+      this.ClassStreamer(key, 'TKey');
+      var name = key.fName.replace(/['"]/g,'');
+      if (name !== key.fName) {
+         key.fRealName = key.fName;
+         key.fName = name;
+      }
+      return key;
    }
 
-   JSROOT.TArrBuffer.prototype.ntou8 = function() {
-      var high = this.arr.getUint32(this.o); this.o+=4;
-      var low = this.arr.getUint32(this.o); this.o+=4;
-      return high * 0x100000000 + low;
+   JSROOT.TBuffer.prototype.ReadBasketEntryOffset = function(basket, offset) {
+      // this is remaining part of TBasket streamer to decode fEntryOffset
+      // after unzipping of the TBasket data
+
+      this.locate(basket.fLast - offset);
+
+      if (this.remain() <= 0) {
+         if (!basket.fEntryOffset && (basket.fNevBuf <=1)) basket.fEntryOffset = [ basket.fKeylen ];
+         if (!basket.fEntryOffset) console.warn("No fEntryOffset when expected for basket with", basket.fNevBuf, "entries");
+         return;
+      }
+
+      basket.fEntryOffset = this.ReadFastArray(this.ntoi4(), JSROOT.IO.kInt);
+      if (!basket.fEntryOffset) basket.fEntryOffset = [ basket.fKeylen ];
+
+      if (this.remain() > 0)
+         basket.fDisplacement = this.ReadFastArray(this.ntoi4(), JSROOT.IO.kInt);
+      else
+         basket.fDisplacement = undefined;
+
+      return basket;
    }
 
-   JSROOT.TArrBuffer.prototype.ntoi1 = function() {
-      return this.arr.getInt8(this.o++);
+   JSROOT.TBuffer.prototype.ReadClass = function() {
+      // read class definition from I/O buffer
+      var classInfo = { name: -1 },
+          tag = 0,
+          bcnt = this.ntou4(),
+          startpos = this.o;
+
+      if (!(bcnt & JSROOT.IO.kByteCountMask) || (bcnt == JSROOT.IO.kNewClassTag)) {
+         tag = bcnt;
+         bcnt = 0;
+      } else {
+         tag = this.ntou4();
+      }
+      if (!(tag & JSROOT.IO.kClassMask)) {
+         classInfo.objtag = tag + this.fDisplacement; // indicate that we have deal with objects tag
+         return classInfo;
+      }
+      if (tag == JSROOT.IO.kNewClassTag) {
+         // got a new class description followed by a new object
+         classInfo.name = this.ReadFastString(-1);
+
+         if (this.GetMappedClass(this.fTagOffset + startpos + JSROOT.IO.kMapOffset) === -1)
+            this.MapClass(this.fTagOffset + startpos + JSROOT.IO.kMapOffset, classInfo.name);
+      }  else {
+         // got a tag to an already seen class
+         var clTag = (tag & ~JSROOT.IO.kClassMask) + this.fDisplacement;
+         classInfo.name = this.GetMappedClass(clTag);
+
+         if (classInfo.name === -1) {
+            alert("Did not found class with tag " + clTag);
+         }
+      }
+
+      return classInfo;
    }
 
-   JSROOT.TArrBuffer.prototype.ntoi2 = function() {
-      var o = this.o; this.o+=2;
-      return this.arr.getInt16(o);
+   JSROOT.TBuffer.prototype.ReadObjectAny = function() {
+      var objtag = this.fTagOffset + this.o + JSROOT.IO.kMapOffset,
+          clRef = this.ReadClass();
+
+      // class identified as object and should be handled so
+      if ('objtag' in clRef)
+         return this.GetMappedObject(clRef.objtag);
+
+      if (clRef.name === -1) return null;
+
+      var arrkind = JSROOT.IO.GetArrayKind(clRef.name), obj;
+
+      if (arrkind === 0) {
+         obj = this.ReadTString();
+      } else
+      if (arrkind > 0) {
+         // reading array, can map array only afterwards
+         obj = this.ReadFastArray(this.ntou4(), arrkind);
+         this.MapObject(objtag, obj);
+      } else {
+         // reading normal object, should map before to
+         obj = {};
+         this.MapObject(objtag, obj);
+         this.ClassStreamer(obj, clRef.name);
+      }
+
+      return obj;
    }
 
-   JSROOT.TArrBuffer.prototype.ntoi4 = function() {
-      var o = this.o; this.o+=4;
-      return this.arr.getInt32(o);
+   JSROOT.TBuffer.prototype.ClassStreamer = function(obj, classname) {
+
+      if (obj._typename === undefined) obj._typename = classname;
+
+      var direct = JSROOT.IO.DirectStreamers[classname];
+      if (direct) {
+         direct(this, obj);
+         return obj;
+      }
+
+      var ver = this.ReadVersion();
+
+      var streamer = this.fFile.GetStreamer(classname, ver);
+
+      if (streamer !== null) {
+
+         for (var n = 0; n < streamer.length; ++n)
+            streamer[n].func(this, obj);
+
+      } else {
+         // just skip bytes belonging to not-recognized object
+         // console.warn('skip object ', classname);
+
+         JSROOT.addMethods(obj);
+      }
+
+      this.CheckBytecount(ver, classname);
+
+      return obj;
    }
 
-   JSROOT.TArrBuffer.prototype.ntoi8 = function() {
-      var high = this.arr.getUint32(this.o); this.o+=4;
-      var low = this.arr.getUint32(this.o); this.o+=4;
-      if (high < 0x80000000) return high * 0x100000000 + low;
-      return -1 - ((~high) * 0x100000000 + ~low);
-   }
-
-   JSROOT.TArrBuffer.prototype.ntof = function() {
-      var o = this.o; this.o+=4;
-      return this.arr.getFloat32(o);
-   }
-
-   JSROOT.TArrBuffer.prototype.ntod = function() {
-      var o = this.o; this.o+=8;
-      return this.arr.getFloat64(o);
-   }
 
    // =======================================================================
 
    JSROOT.CreateTBuffer = function(blob, pos, file, length) {
-      if ((blob==null) || (typeof(blob) == 'string'))
-         return new JSROOT.TStrBuffer(blob, pos, file, length);
-
-      return new JSROOT.TArrBuffer(blob, pos, file, length);
+      return new JSROOT.TBuffer(blob, pos, file, length);
    }
 
    JSROOT.ReconstructObject = function(class_name, obj_rawdata, sinfo_rawdata) {
@@ -978,7 +755,7 @@
 
    JSROOT.TDirectory.prototype.ReadKeys = function(objbuf, readkeys_callback) {
 
-      objbuf.ReadTDirectory(this);
+      objbuf.ClassStreamer(this, 'TDirectory');
 
       if ((this.fSeekKeys <= 0) || (this.fNbytesKeys <= 0))
          return JSROOT.CallBack(readkeys_callback, this);
@@ -1041,10 +818,10 @@
       this.fFullURL = url;
       this.fURL = url;
       this.fAcceptRanges = true; // when disabled ('+' at the end of file name), complete file content read with single operation
-      this.fUseStampPar = new Date; // use additional time stamp parameter for file name to avoid browser caching problem
+      this.fUseStampPar = "stamp="+(new Date).getTime(); // use additional time stamp parameter for file name to avoid browser caching problem
       this.fFileContent = null; // this can be full or parial content of the file (if ranges are not supported or if 1K header read from file)
                                 // stored as TBuffer instance
-      this.fMultiRanges = true; // true when server supports multirange requests
+      this.fMaxRanges = 200; // maximal number of file ranges requested at once
       this.fDirectories = [];
       this.fKeys = [];
       this.fSeekInfo = 0;
@@ -1054,12 +831,18 @@
       this.fStreamerInfos = null;
       this.fFileName = "";
       this.fStreamers = [];
+      this.fBasicTypes = {}; // custom basic types, in most case enumerations
 
       if (typeof this.fURL != 'string') return this;
 
-      if (this.fURL.charAt(this.fURL.length-1) == "+") {
+      if (this.fURL[this.fURL.length-1] === "+") {
          this.fURL = this.fURL.substr(0, this.fURL.length-1);
          this.fAcceptRanges = false;
+      }
+
+      if (this.fURL[this.fURL.length-1] === "-") {
+         this.fURL = this.fURL.substr(0, this.fURL.length-1);
+         this.fUseStampPar = false;
       }
 
       if (this.fURL.indexOf("file://")==0) {
@@ -1091,47 +874,69 @@
       return this;
    }
 
-   JSROOT.TFile.prototype.ReadBuffer = function(place, callback) {
+   JSROOT.TFile.prototype.ReadBuffer = function(place, result_callback, filename, progress_callback) {
 
-      if ((this.fFileContent!==null) && (!this.fAcceptRanges || this.fFileContent.can_extract(place)))
-         return callback(this.fFileContent.extract(place));
+      if ((this.fFileContent!==null) && !filename && (!this.fAcceptRanges || this.fFileContent.can_extract(place)))
+         return result_callback(this.fFileContent.extract(place));
 
-      var file = this;
-      if ((place.length > 2) && !file.fMultiRanges) {
-         var arg = { file: file, place: place, arr: [], callback: callback };
+      var file = this, fileurl = file.fURL,
+          first = 0, last = 0, blobs = [], read_callback; // array of requested segemnts
 
-         function workaround_callback(res) {
-            if (res!==undefined) this.arr.push(res);
+      if (filename && (typeof filename === 'string') && (filename.length>0)) {
+         var pos = fileurl.lastIndexOf("/");
+         fileurl = (pos<0) ? filename : fileurl.substr(0,pos+1) + filename;
+      }
 
-            if (this.place.length===0)
-               return JSROOT.CallBack(this.callback, this.arr);
+      function send_new_request(increment) {
 
-            this.file.ReadBuffer([this.place.shift(), this.place.shift()], workaround_callback.bind(this));
+         if (increment) {
+            first = last;
+            last = Math.min(first + file.fMaxRanges*2, place.length);
+            if (first>=place.length) return result_callback(blobs);
          }
 
-         return workaround_callback.bind(arg)();
-      }
-
-      var url = this.fURL, ranges = "bytes=";
-      for (var n=0;n<place.length;n+=2) {
-         if (n>0) ranges+=","
-         ranges += (place[n] + "-" + (place[n] + place[n+1] - 1));
-      }
-
-      if (this.fUseStampPar) {
+         var fullurl = fileurl, ranges = "bytes", totalsz = 0;
          // try to avoid browser caching by adding stamp parameter to URL
-         if (url.indexOf('?')>0) url+="&stamp="; else url += "?stamp=";
-         url += this.fUseStampPar.getTime();
+         if (file.fUseStampPar) fullurl += ((fullurl.indexOf('?')<0) ? "?" : "&") + file.fUseStampPar;
+
+         for (var n=first;n<last;n+=2) {
+            ranges += (n>first ? "," : "=") + (place[n] + "-" + (place[n] + place[n+1] - 1));
+            totalsz += place[n+1]; // accumulated total size
+         }
+         if (last-first>2) totalsz += (last-first)*60; // for multi-range ~100 bytes/per request
+
+         var xhr = JSROOT.NewHttpRequest(fullurl, "buf", read_callback);
+
+         if (file.fAcceptRanges) {
+            xhr.setRequestHeader("Range", ranges);
+            xhr.expected_size = Math.max(Math.round(1.1*totalsz), totalsz+200); // 200 if offset for the potential gzip
+         }
+
+         if (progress_callback && (typeof xhr.addEventListener === 'function')) {
+            var sum1 = 0, sum2 = 0, sum_total = 0;
+            for (var n=1;n<place.length;n+=2) {
+               sum_total+=place[n];
+               if (n<first) sum1+=place[n];
+               if (n<last) sum2+=place[n];
+            }
+            if (!sum_total) sum_total = 1;
+
+            var progress_offest = sum1/sum_total, progress_this = (sum2-sum1)/sum_total;
+            xhr.addEventListener("progress", function updateProgress(oEvent) {
+               if (oEvent.lengthComputable)
+                  progress_callback(progress_offest + progress_this*oEvent.loaded/oEvent.total);
+            });
+         }
+
+         xhr.send(null);
       }
 
-      function read_callback(res) {
+      read_callback = function(res) {
 
          if (!res && file.fUseStampPar && (place[0]===0) && (place.length===2)) {
             // if fail to read file with stamp parameter, try once again without it
             file.fUseStampPar = false;
-            var xhr = JSROOT.NewHttpRequest(file.fURL, ((JSROOT.IO.Mode == "array") ? "buf" : "bin"), read_callback);
-            if (file.fAcceptRanges) xhr.setRequestHeader("Range", ranges);
-            return xhr.send(null);
+            return send_new_request();
          }
 
          if (res && (place[0]===0) && (place.length===2) && !file.fFileContent) {
@@ -1142,26 +947,40 @@
             if (!file.fAcceptRanges)
                file.fEND = file.fFileContent.length;
 
-            return callback(file.fFileContent.extract(place));
+            return result_callback(file.fFileContent.extract(place));
          }
 
-         if ((res === null) || (res === undefined)) return callback(res);
+         if (!res) {
+            if ((first===0) && (last > 2) && (file.fMaxRanges>1)) {
+               // server return no response with multirequest - try to decrease ranges count or fail
 
-         var isstr = (typeof res == 'string');
+               if (last/2 > 200) file.fMaxRanges = 200; else
+               if (last/2 > 50) file.fMaxRanges = 50; else
+               if (last/2 > 20) file.fMaxRanges = 20; else
+               if (last/2 > 5) file.fMaxRanges = 5; else file.fMaxRanges = 1;
+               last = Math.min(last, file.fMaxRanges*2);
+               // console.log('Change maxranges to ', file.fMaxRanges, 'last', last);
+               return send_new_request();
+            }
+
+            return result_callback(null);
+         }
 
          // if only single segment requested, return result as is
-         if (place.length===2) return callback(isstr ? res : new DataView(res));
+         if (last - first === 2) {
+            var b = new DataView(res);
+            if (place.length===2) return result_callback(b);
+            blobs.push(b);
+            return send_new_request(true);
+         }
 
          // object to access response data
-         var arr = [], o = 0,
-             hdr = this.getResponseHeader('Content-Type'),
-             ismulti = hdr && (hdr.indexOf('multipart')>=0),
-             view = isstr ? { getUint8: function(pos) { return res.charCodeAt(pos);  }, byteLength: res.length }
-                       : new DataView(res);
-
+         var hdr = this.getResponseHeader('Content-Type'),
+             ismulti = (typeof hdr === 'string') && (hdr.indexOf('multipart')>=0),
+             view = new DataView(res);
 
          if (!ismulti) {
-            // server may returns simple buffer
+            // server may returns simple buffer, which combines all segments together
 
             var hdr_range = this.getResponseHeader('Content-Range'), segm_start = 0, segm_last = -1;
 
@@ -1176,31 +995,34 @@
                }
             }
 
-            var canbe_single_segment = segm_start<=segm_last;
-            for(var n=0;n<place.length;n+=2)
+            var canbe_single_segment = (segm_start<=segm_last);
+            for(var n=first;n<last;n+=2)
                if ((place[n]<segm_start) || (place[n] + place[n+1] -1 > segm_last))
                   canbe_single_segment = false;
 
             if (canbe_single_segment) {
-               for (var n=0;n<place.length;n+=2)
-                  arr.push(isstr ? res.substr(place[n]-segm_start, place[n+1]) : new DataView(res, place[n]-segm_start, place[n+1]));
-               return callback(arr);
+               for (var n=first;n<last;n+=2)
+                  blobs.push(new DataView(res, place[n]-segm_start, place[n+1]));
+               return send_new_request(true);
             }
 
             console.error('Server returns normal response when multipart was requested, disable multirange support');
-            file.fMultiRanges = false;
-            return file.ReadBuffer(place, callback);
+
+            if ((file.fMaxRanges === 1) || (first!==0)) return result_callback(null);
+
+            file.fMaxRanges = 1;
+            last = Math.min(last, file.fMaxRanges*2);
+
+            return send_new_request();
          }
 
          // multipart messages requires special handling
 
-         var indx = hdr.indexOf("boundary="), boundary = "";
+         var indx = hdr.indexOf("boundary="), boundary = "", n = first, o = 0;
          if (indx > 0) boundary = "--" + hdr.substr(indx+9);
                   else console.error('Did not found boundary id in the response header');
 
-         var n = 0;
-
-         while (n<place.length) {
+         while (n<last) {
 
             var code1, code2 = view.getUint8(o), nline = 0, line = "",
                 finish_header = false, segm_start = 0, segm_last = -1;
@@ -1211,7 +1033,8 @@
 
                if ((code1==13) && (code2==10)) {
                   if ((line.length>2) && (line.substr(0,2)=='--') && (line !== boundary)) {
-                     console.error('Expact boundary ' + boundary + '  got ' + line);
+                     console.error('Decode multipart message, expect boundary ', boundary, 'got ', line);
+                     return result_callback(null);
                   }
 
                   line = line.toLowerCase();
@@ -1241,75 +1064,29 @@
 
             if (!finish_header) {
                console.error('Cannot decode header in multipart message ');
-               return callback(null);
+               return result_callback(null);
             }
 
             if (segm_start > segm_last) {
                // fall-back solution, believe that segments same as requested
-               arr.push(isstr ? res.substr(o, place[n+1]) : new DataView(res, o, place[n+1]));
+               blobs.push(new DataView(res, o, place[n+1]));
                o += place[n+1];
                n += 2;
             } else {
-               //var mycnt = 0;
-               // segments may be merged by server
-               while ((n<place.length) && (place[n] >= segm_start) && (place[n] + place[n+1] - 1 <= segm_last)) {
-                  arr.push(isstr ? res.substr(o + place[n] - segm_start, place[n+1]) :
-                                   new DataView(res, o + place[n] - segm_start, place[n+1]));
+               while ((n<last) && (place[n] >= segm_start) && (place[n] + place[n+1] - 1 <= segm_last)) {
+                  blobs.push(new DataView(res, o + place[n] - segm_start, place[n+1]));
                   n += 2;
-                  //mycnt++;
                }
-               //if (mycnt>1) console.log('MERGE segments', mycnt);
 
                o += (segm_last-segm_start+1);
             }
          }
 
-         callback(arr);
+         send_new_request(true);
       }
 
-      var xhr = JSROOT.NewHttpRequest(url, ((JSROOT.IO.Mode == "array") ? "buf" : "bin"), read_callback);
-      if (this.fAcceptRanges) xhr.setRequestHeader("Range", ranges);
-      xhr.send(null);
+      send_new_request(true);
    }
-
-   JSROOT.TFile.prototype.ReadBaskets = function(places, call_back) {
-      // read basket with tree data
-
-      var file = this;
-
-      this.ReadBuffer(places, function(blobs) {
-
-         if (!blobs) JSROOT.CallBack(call_back, null);
-
-         var baskets = [];
-
-         for (var n=0;n<places.length;n+=2) {
-
-            var basket = {}, blob = (places.length > 2) ? blobs[n/2] : blobs;
-
-            var buf = JSROOT.CreateTBuffer(blob);
-
-            buf.ReadTBasket(basket);
-
-            if (basket.fNbytes !== places[n+1]) console.log('mismatch in basket sizes', basket.fNbytes, places[n+1]);
-
-            if (basket.fKeylen + basket.fObjlen === basket.fNbytes) {
-               // use data from original blob
-               basket.raw = buf;
-            } else {
-               // unpack data and create new blob
-               var objblob = JSROOT.R__unzip(blob, basket.fObjlen, false, buf.o);
-
-               if (objblob) basket.raw = JSROOT.CreateTBuffer(objblob, 0, file);
-            }
-
-            baskets.push(basket);
-         }
-
-         JSROOT.CallBack(call_back, baskets);
-      });
-   }
-
 
    JSROOT.TFile.prototype.GetDir = function(dirname, cycle) {
       // check first that directory with such name exists
@@ -1372,7 +1149,7 @@
 
       this.ReadBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen], function(blob1) {
 
-         if (blob1==null) callback(null);
+         if (blob1==null) return callback(null);
 
          var buf = null;
 
@@ -1388,6 +1165,17 @@
 
          callback(buf);
       });
+   }
+
+   JSROOT.TFile.prototype.AddReadTree = function(obj) {
+      // method called when TTree object is streamed
+
+      if (JSROOT.TreeMethods)
+         return JSROOT.extend(obj, JSROOT.TreeMethods);
+
+      if (this.readTrees===undefined) this.readTrees = [];
+
+      if (this.readTrees.indexOf(obj)<0) this.readTrees.push(obj);
    }
 
    JSROOT.TFile.prototype.ReadObject = function(obj_name, cycle, user_call_back) {
@@ -1443,6 +1231,15 @@
             if (key.fClassName==='TF1')
                return file.ReadFormulas(obj, user_call_back, -1);
 
+            if (file.readTrees)
+               return JSROOT.AssertPrerequisites('tree', function() {
+                  if (file.readTrees) {
+                     file.readTrees.forEach(function(t) { JSROOT.extend(t, JSROOT.TreeMethods); })
+                     delete file.readTrees;
+                  }
+                  JSROOT.CallBack(user_call_back, obj);
+               });
+
             JSROOT.CallBack(user_call_back, obj);
          }); // end of ReadObjBuffer callback
       }); // end of GetKey callback
@@ -1479,6 +1276,47 @@
 
       if (typeof JSROOT.addStreamerInfos === 'function')
          JSROOT.addStreamerInfos(lst);
+
+      for (var k=0;k<lst.arr.length;++k) {
+         var si = lst.arr[k];
+         if (!si.fElements) continue;
+         for (var l=0;l<si.fElements.arr.length;++l) {
+            var elem = si.fElements.arr[l];
+
+            if (!elem.fTypeName || !elem.fType) continue;
+
+            var typ = elem.fType, typname = elem.fTypeName;
+
+            if (typ >= 60) {
+               if ((typ===JSROOT.IO.kStreamer) && (elem._typename=="TStreamerSTL") && elem.fSTLtype && elem.fCtype && (elem.fCtype<20)) {
+                  var prefix = (JSROOT.IO.StlNames[elem.fSTLtype] || "undef") + "<";
+                  if ((typname.indexOf(prefix)===0) && (typname[typname.length-1] == ">")) {
+                     typ = elem.fCtype;
+                     typname = typname.substr(prefix.length, typname.length-prefix.length-1).trim();
+
+                     if ((elem.fSTLtype === JSROOT.IO.kSTLmap) || (elem.fSTLtype === JSROOT.IO.kSTLmultimap))
+                        if (typname.indexOf(",")>0) typname = typname.substr(0, typname.indexOf(",")).trim();
+                                               else continue;
+                  }
+               }
+               if (typ>=60) continue;
+            } else {
+               if ((typ>20) && (typname[typname.length-1]=="*")) typname = typname.substr(0,typname.length-1);
+               typ = typ % 20;
+            }
+
+            var kind = JSROOT.IO.GetTypeId(typname);
+            if (kind === typ) continue;
+
+            if ((typ === JSROOT.IO.kBits) && (kind===JSROOT.IO.kUInt)) continue;
+            if ((typ === JSROOT.IO.kCounter) && (kind===JSROOT.IO.kInt)) continue;
+
+            if (typname && typ && (this.fBasicTypes[typname]!==typ)) {
+               console.log('Extract basic data type', typ, typname);
+               this.fBasicTypes[typname] = typ;
+            }
+         }
+      }
    }
 
 
@@ -1553,7 +1391,7 @@
             buf3.locate(file.fNbytesName);
 
             // we read TDirectory part of TFile
-            buf3.ReadTDirectory(file);
+            buf3.ClassStreamer(file,'TDirectory');
 
             if (!file.fSeekKeys) {
                JSROOT.console("Empty keys list in " + file.fURL);
@@ -1599,12 +1437,13 @@
       return this.ReadObject(dir_name, cycle, readdir_callback);
    };
 
-   JSROOT.TFile.prototype.AddMethods = function(clname, streamer) {
+   JSROOT.IO.AddClassMethods = function(clname, streamer) {
       // create additional entries in the streamer, which sets all methods of the class
 
       if (streamer === null) return streamer;
 
       var methods = JSROOT.getMethods(clname);
+
       if (methods !== null)
          for (var key in methods)
             if ((typeof methods[key] === 'function') || (key.indexOf("_")==0))
@@ -1621,13 +1460,17 @@
       if (this.fStreamerInfos)
          for (var i=0; i < this.fStreamerInfos.arr.length; ++i) {
             var si = this.fStreamerInfos.arr[i];
+
+            // checksum is enough to identify class
+            if ((clchecksum !== undefined) && (si.fCheckSum === clchecksum)) return si;
+
             if (si.fName !== clname) continue;
-            if (clchecksum !== undefined) {
-               if (si.fCheckSum === clchecksum) return si; else continue;
-            }
-            if (clversion !== undefined) {
-               if (si.fClassVersion===clversion) return si; else continue;
-            }
+
+            // checksum should match
+            if (clchecksum !== undefined) continue;
+
+            if ((clversion !== undefined) && (si.fClassVersion !== clversion)) continue;
+
             return si;
          }
 
@@ -1656,6 +1499,575 @@
       return null;
    }
 
+   JSROOT.IO.GetPairStreamer = function(si, typname, file) {
+
+      if (!si) {
+         if (typname.indexOf("pair")!==0) return null;
+
+         si = file.FindStreamerInfo(typname);
+
+         if (!si) {
+            var p1 = typname.indexOf("<"), p2 = typname.lastIndexOf(">");
+            function GetNextName() {
+               var res = "", p = p1+1, cnt = 0;
+               while ((p<p2) && (cnt>=0)) {
+                  switch (typname[p]) {
+                     case "<": cnt++; break;
+                     case ",": if (cnt===0) cnt--; break;
+                     case ">": cnt--; break;
+                  }
+                  if (cnt>=0) res+=typname[p];
+                  p++;
+               }
+               p1 = p-1;
+               return res.trim();
+            }
+            si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: JSROOT.Create("TList") };
+            si.fElements.Add(JSROOT.IO.CreateStreamerElement("first", GetNextName(), file));
+            si.fElements.Add(JSROOT.IO.CreateStreamerElement("second", GetNextName(), file));
+         }
+      }
+
+      var streamer = file.GetStreamer(typname, null, si);
+
+      if (!streamer) return null;
+
+      if (streamer.length!==2) {
+         console.error('Streamer for pair class contains ', streamer.length,'elements');
+         return null;
+
+      }
+
+      for (var nn=0;nn<2;++nn)
+         if (streamer[nn].readelem && !streamer[nn].pair_name) {
+            streamer[nn].pair_name = (nn==0) ? "first" : "second";
+            streamer[nn].func = function(buf, obj) {
+               obj[this.pair_name] = this.readelem(buf);
+            }
+         }
+
+      return streamer;
+   }
+
+   JSROOT.IO.CreateMember = function(element, file) {
+      // create member entry for streamer element, which is used for reading of such data
+
+      var member = { name: element.fName, type: element.fType,
+                     fArrayLength: element.fArrayLength,
+                     fArrayDim: element.fArrayDim,
+                     fMaxIndex: element.fMaxIndex };
+
+      if (element.fTypeName === 'BASE') {
+         if (JSROOT.IO.GetArrayKind(member.name) > 0) {
+            // this is workaround for arrays as base class
+            // we create 'fArray' member, which read as any other data member
+            member.name = 'fArray';
+            member.type = JSROOT.IO.kAny;
+         } else {
+            // create streamer for base class
+            member.type = JSROOT.IO.kBase;
+            // this.GetStreamer(element.fName);
+         }
+      }
+
+      switch (member.type) {
+         case JSROOT.IO.kBase:
+            member.base = element.fBaseVersion; // indicate base class
+            member.basename = element.fName; // keep class name
+            member.func = function(buf, obj) { buf.ClassStreamer(obj, this.basename); };
+            break;
+         case JSROOT.IO.kShort:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntoi2(); }; break;
+         case JSROOT.IO.kInt:
+         case JSROOT.IO.kCounter:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntoi4(); }; break;
+         case JSROOT.IO.kLong:
+         case JSROOT.IO.kLong64:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntoi8(); }; break;
+         case JSROOT.IO.kDouble:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntod(); }; break;
+         case JSROOT.IO.kFloat:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntof(); }; break;
+         case JSROOT.IO.kLegacyChar:
+         case JSROOT.IO.kUChar:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntou1(); }; break;
+         case JSROOT.IO.kUShort:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntou2(); }; break;
+         case JSROOT.IO.kBits:
+         case JSROOT.IO.kUInt:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntou4(); }; break;
+         case JSROOT.IO.kULong64:
+         case JSROOT.IO.kULong:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntou8(); }; break;
+         case JSROOT.IO.kBool:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntou1() != 0; }; break;
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kBool:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kInt:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kCounter:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kUChar:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kShort:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kUShort:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kBits:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kUInt:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kULong:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kULong64:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kLong:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kLong64:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kFloat:
+            if (element.fArrayDim < 2) {
+               member.arrlength = element.fArrayLength;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL);
+               };
+            } else {
+               member.arrlength = element.fMaxIndex[element.fArrayDim-1];
+               member.minus1 = true;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadNdimArray(this, function(buf,handle) {
+                     return buf.ReadFastArray(handle.arrlength, handle.type - JSROOT.IO.kOffsetL);
+                  });
+               };
+            }
+            break;
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kChar:
+            if (element.fArrayDim < 2) {
+               member.arrlength = element.fArrayLength;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadFastString(this.arrlength);
+               };
+            } else {
+               member.minus1 = true; // one dimension used for char*
+               member.arrlength = element.fMaxIndex[element.fArrayDim-1];
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadNdimArray(this, function(buf,handle) {
+                     return buf.ReadFastString(handle.arrlength);
+                  });
+               };
+            }
+            break;
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kBool:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kInt:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kUChar:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kShort:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kUShort:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kBits:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kUInt:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kULong:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kULong64:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kLong:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kLong64:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kFloat:
+            member.cntname = element.fCountName;
+            member.func = function(buf, obj) {
+               if (buf.ntou1() === 1)
+                  obj[this.name] = buf.ReadFastArray(obj[this.cntname], this.type - JSROOT.IO.kOffsetP);
+               else
+                  obj[this.name] = new Array();
+            };
+            break;
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kChar:
+            member.cntname = element.fCountName;
+            member.func = function(buf, obj) {
+               if (buf.ntou1() === 1)
+                  obj[this.name] = buf.ReadFastString(obj[this.cntname]);
+               else
+                  obj[this.name] = null;
+            };
+            break;
+         case JSROOT.IO.kDouble32:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble32:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble32:
+            member.double32 = true;
+         case JSROOT.IO.kFloat16:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kFloat16:
+         case JSROOT.IO.kOffsetP+JSROOT.IO.kFloat16:
+            if (element.fFactor!==0) {
+               member.factor = 1./element.fFactor;
+               member.min = element.fXmin;
+               member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
+            } else
+            if ((element.fXmin===0) && member.double32) {
+               member.read = function(buf) { return buf.ntof(); };
+            } else {
+               member.nbits = Math.round(element.fXmin);
+               if (member.nbits===0) member.nbits = 12;
+               member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
+               member.read = function(buf) {
+                  var theExp = buf.ntou1(), theMan = buf.ntou2();
+                  this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1<<(this.nbits+1))-1)) << (23-this.nbits)));
+                  return ((1<<(this.nbits+1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
+               };
+            }
+
+            member.readarr = function(buf,len) {
+               var arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
+               for (var n=0;n<len;++n) arr[n] = this.read(buf);
+               return arr;
+            }
+
+            if (member.type < JSROOT.IO.kOffsetL) {
+               member.func = function(buf,obj) { obj[this.name] = this.read(buf); }
+            } else
+            if (member.type > JSROOT.IO.kOffsetP) {
+               member.cntname = element.fCountName;
+               member.func = function(buf, obj) {
+                  if (buf.ntou1() === 1) {
+                     obj[this.name] = this.readarr(buf, obj[this.cntname]);
+                  } else {
+                     obj[this.name] = null;
+                  }
+               };
+            } else
+            if (element.fArrayDim < 2) {
+               member.arrlength = element.fArrayLength;
+               member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
+            } else {
+               member.arrlength = element.fMaxIndex[element.fArrayDim-1];
+               member.minus1 = true;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadNdimArray(this, function(buf,handle) { return handle.readarr(buf, handle.arrlength); });
+               };
+            }
+            break;
+
+         case JSROOT.IO.kAnyP:
+         case JSROOT.IO.kObjectP:
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.ReadNdimArray(this, function(buf) {
+                  return buf.ReadObjectAny();
+               });
+            };
+         break;
+
+         case JSROOT.IO.kAny:
+         case JSROOT.IO.kAnyp:
+         case JSROOT.IO.kObjectp:
+         case JSROOT.IO.kObject:
+            var classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
+            if (classname[classname.length-1] == "*")
+               classname = classname.substr(0, classname.length - 1);
+
+            var arrkind = JSROOT.IO.GetArrayKind(classname);
+
+            if (arrkind > 0) {
+               member.arrkind = arrkind;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.ReadFastArray(buf.ntou4(), this.arrkind);
+               };
+            } else
+            if (arrkind === 0) {
+               member.func = function(buf,obj) { obj[this.name] = buf.ReadTString(); };
+            } else {
+               member.classname = classname;
+
+               if (element.fArrayLength>1) {
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
+                        return buf.ClassStreamer({}, handle.classname);
+                     });
+                  };
+               } else {
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.ClassStreamer({}, this.classname);
+                  };
+               }
+            }
+            break;
+         case JSROOT.IO.kOffsetL + JSROOT.IO.kObject:
+         case JSROOT.IO.kOffsetL + JSROOT.IO.kAny:
+         case JSROOT.IO.kOffsetL + JSROOT.IO.kAnyp:
+         case JSROOT.IO.kOffsetL + JSROOT.IO.kObjectp:
+            var classname = element.fTypeName;
+            if (classname[classname.length-1] == "*")
+               classname = classname.substr(0, classname.length - 1);
+
+            member.arrkind = JSROOT.IO.GetArrayKind(classname);
+            if (member.arrkind < 0) member.classname = classname;
+            member.func = function(buf, obj) {
+               obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
+                  if (handle.arrkind>0) return buf.ReadFastArray(buf.ntou4(), handle.arrkind);
+                  if (handle.arrkind===0) return buf.ReadTString();
+                  return buf.ClassStreamer({}, handle.classname);
+               });
+            }
+            break;
+         case JSROOT.IO.kChar:
+            member.func = function(buf,obj) { obj[this.name] = buf.ntoi1(); }; break;
+         case JSROOT.IO.kCharStar:
+            member.func = function(buf,obj) {
+               var len = buf.ntoi4();
+               obj[this.name] = buf.substring(buf.o, buf.o + len);
+               buf.o += len;
+            };
+            break;
+         case JSROOT.IO.kTString:
+            member.func = function(buf,obj) { obj[this.name] = buf.ReadTString(); };
+            break;
+         case JSROOT.IO.kTObject:
+         case JSROOT.IO.kTNamed:
+            member.typename = element.fTypeName;
+            member.func = function(buf,obj) { obj[this.name] = buf.ClassStreamer({}, this.typename); };
+            break;
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kTString:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kTObject:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kTNamed:
+            member.typename = element.fTypeName;
+            member.func = function(buf, obj) {
+               var ver = buf.ReadVersion();
+               obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
+                  if (handle.typename === 'TString') return buf.ReadTString();
+                  return buf.ClassStreamer({}, handle.typename);
+               });
+               buf.CheckBytecount(ver, this.typename + "[]");
+            }
+            break;
+         case JSROOT.IO.kStreamLoop:
+         case JSROOT.IO.kOffsetL+JSROOT.IO.kStreamLoop:
+            member.typename = element.fTypeName;
+            member.cntname = element.fCountName;
+
+            if (member.typename.lastIndexOf("**")>0) {
+               member.typename = member.typename.substr(0, member.typename.lastIndexOf("**"));
+               member.isptrptr = true;
+            } else {
+               member.typename = member.typename.substr(0, member.typename.lastIndexOf("*"));
+               member.isptrptr = false;
+            }
+
+            if (member.isptrptr) {
+               member.readitem = function(buf) { return buf.ReadObjectAny(); }
+            } else {
+               member.arrkind = JSROOT.IO.GetArrayKind(member.typename);
+               if (member.arrkind > 0) {
+                  member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); };
+               } else
+               if (member.arrkind === 0) {
+                  member.readitem = function(buf) { return buf.ReadTString(); }
+               } else {
+                  member.readitem = function(buf) { return buf.ClassStreamer({}, this.typename); }
+               }
+            }
+
+            if (member.readitem !== undefined) {
+               member.read_loop = function(buf,cnt) {
+                  return buf.ReadNdimArray(this, function(buf2,member2) {
+                     var itemarr = new Array(cnt);
+                     for (var i = 0; i < cnt; ++i )
+                        itemarr[i] = member2.readitem(buf2);
+                     return itemarr;
+                  });
+               }
+
+               member.func = function(buf,obj) {
+                  var ver = buf.ReadVersion();
+                  var res = this.read_loop(buf, obj[this.cntname]);
+                  if (!buf.CheckBytecount(ver, this.typename)) res = null;
+                  obj[this.name] = res;
+               }
+               member.branch_func = function(buf,obj) {
+                  // this is special functions, used by branch in the STL container
+
+                  var ver = buf.ReadVersion(), sz0 = obj[this.stl_size], res = new Array(sz0);
+
+                  for (var loop0=0;loop0<sz0;++loop0) {
+                     var cnt = obj[this.cntname][loop0];
+                     res[loop0] = this.read_loop(buf, cnt);
+                  }
+                  if (!buf.CheckBytecount(ver, this.typename)) res = null;
+                  obj[this.name] = res;
+               }
+
+               member.objs_branch_func = function(buf,obj) {
+                  // special function when branch read as part of complete object
+                  // objects already preallocated and only appropriate member must be set
+                  // see code in JSRootTree.js for reference
+
+                  var ver = buf.ReadVersion(), arr = obj[this.name0]; // objects array where reading is done
+
+                  for (var loop0=0;loop0<arr.length;++loop0) {
+                     var obj1 = this.get(arr,loop0), cnt = obj1[this.cntname];
+                     obj1[this.name] = this.read_loop(buf, cnt);
+                  }
+
+                  buf.CheckBytecount(ver, this.typename);
+               }
+
+            } else {
+               JSROOT.console('fail to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
+               member.func = function(buf,obj) {
+                  var ver = buf.ReadVersion();
+                  buf.CheckBytecount(ver);
+                  obj[this.name] = ull;
+               };
+            }
+
+            break;
+
+         case JSROOT.IO.kStreamer:
+            member.typename = element.fTypeName;
+
+            var stl = (element.fSTLtype || 0) % 40;
+
+            if ((element._typename === 'TStreamerSTLstring') ||
+                (member.typename == "string") || (member.typename == "string*")) {
+               member.readelem = function(buf) { return buf.ReadTString(); };
+            } else
+            if ((stl === JSROOT.IO.kSTLvector) || (stl === JSROOT.IO.kSTLlist) ||
+                (stl === JSROOT.IO.kSTLdeque) || (stl === JSROOT.IO.kSTLset) ||
+                (stl === JSROOT.IO.kSTLmultiset)) {
+               var p1 = member.typename.indexOf("<"),
+                   p2 = member.typename.lastIndexOf(">");
+
+               member.conttype = member.typename.substr(p1+1,p2-p1-1).trim();
+
+               member.typeid = JSROOT.IO.GetTypeId(member.conttype);
+               if ((member.typeid<0) && file.fBasicTypes[member.conttype]) {
+                  member.typeid = file.fBasicTypes[member.conttype];
+                  console.log('!!! Reuse basic type ',member.conttype,' from file streamer infos');
+               }
+
+               // check
+               if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
+                  console.warn('Contained type ', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
+                  member.typeid = element.fCtype;
+               }
+
+               if (member.typeid > 0) {
+                  member.readelem = function(buf) {
+                     return buf.ReadFastArray(buf.ntoi4(), this.typeid);
+                  };
+               } else {
+                  member.isptr = false;
+
+                  if (member.conttype.lastIndexOf("*") === member.conttype.length-1) {
+                     member.isptr = true;
+                     member.conttype = member.conttype.substr(0,member.conttype.length-1);
+                  }
+
+                  if (element.fCtype === JSROOT.IO.kObjectp) member.isptr = true;
+
+                  member.arrkind = JSROOT.IO.GetArrayKind(member.conttype);
+
+                  member.readelem = JSROOT.IO.ReadVectorElement;
+
+                  if (!member.isptr && (member.arrkind<0)) {
+
+                     var subelem = JSROOT.IO.CreateStreamerElement("temp", member.conttype);
+
+                     if (subelem.fType === JSROOT.IO.kStreamer) {
+                        subelem.$fictional = true;
+                        member.submember = JSROOT.IO.CreateMember(subelem, file);
+                     }
+                  }
+               }
+            } else
+            if ((stl === JSROOT.IO.kSTLmap) || (stl === JSROOT.IO.kSTLmultimap)) {
+
+               var p1 = member.typename.indexOf("<"),
+                   p2 = member.typename.lastIndexOf(">");
+
+               member.pairtype = "pair<" + member.typename.substr(p1+1,p2-p1-1) + ">";
+
+               // remember found streamer info from the file -
+               // most probably it is the only one which should be used
+               member.si = file.FindStreamerInfo(member.pairtype);
+
+               member.streamer = JSROOT.IO.GetPairStreamer(member.si, member.pairtype, file);
+
+               if (!member.streamer || (member.streamer.length!==2)) {
+                  JSROOT.console('Fail to build streamer for pair ' + member.pairtype);
+                  delete member.streamer;
+               }
+
+               if (member.streamer) member.readelem = JSROOT.IO.ReadMapElement;
+            } else
+            if (stl === JSROOT.IO.kSTLbitset) {
+               member.readelem = function(buf,obj) {
+                  return buf.ReadFastArray(buf.ntou4(), JSROOT.IO.kBool);
+               }
+            }
+
+            if (!member.readelem) {
+               JSROOT.console('failed to crteate streamer for element ' + member.typename  + ' ' + member.name + ' element ' + element._typename + ' STL type ' + element.fSTLtype);
+               member.func = function(buf,obj) {
+                  var ver = buf.ReadVersion();
+                  buf.CheckBytecount(ver);
+                  obj[this.name] = null;
+               }
+            } else
+            if (!element.$fictional) {
+
+               member.read_version = function(buf, cnt) {
+                  if (cnt===0) return null;
+                  var o = buf.o, ver = buf.ReadVersion();
+                  this.member_wise = ((ver.val & JSROOT.IO.kStreamedMemberWise) !== 0);
+                  this.stl_version = undefined;
+                  if (this.member_wise) {
+                     this.stl_version = { val: buf.ntoi2() };
+                     if (this.stl_version.val<=0) this.stl_version.checksum = buf.ntou4();
+                  }
+                  return ver;
+               }
+
+               member.func = function(buf,obj) {
+                  var ver = this.read_version(buf);
+
+                  var res = buf.ReadNdimArray(this, function(buf2,member2) { return member2.readelem(buf2); });
+
+                  if (!buf.CheckBytecount(ver, this.typename)) res = null;
+                  obj[this.name] = res;
+               }
+
+               member.branch_func = function(buf,obj) {
+                  // special function to read data from STL branch
+                  var cnt = obj[this.stl_size], arr = new Array(cnt);
+
+                  var ver = this.read_version(buf, cnt);
+
+                  for (var n=0;n<cnt;++n)
+                     arr[n] = buf.ReadNdimArray(this, function(buf2,member2) { return member2.readelem(buf2); });
+
+                  if (ver) buf.CheckBytecount(ver, "branch " + this.typename);
+
+                  obj[this.name] = arr;
+               }
+               member.split_func = function(buf, arr, n) {
+                  // function to read array from member-wise streaming
+                  var ver = this.read_version(buf);
+                  for (var i=0;i<n;++i)
+                     arr[i][this.name] = buf.ReadNdimArray(this, function(buf2,member2) { return member2.readelem(buf2); });
+                  buf.CheckBytecount(ver, this.typename);
+               }
+               member.objs_branch_func = function(buf,obj) {
+                  // special function when branch read as part of complete object
+                  // objects already preallocated and only appropriate member must be set
+                  // see code in JSRootTree.js for reference
+
+                  var arr = obj[this.name0]; // objects array where reading is done
+
+                  var ver = this.read_version(buf, arr.length);
+
+                  for (var n=0;n<arr.length;++n) {
+                     var obj1 = this.get(arr,n);
+                     obj1[this.name] = buf.ReadNdimArray(this, function(buf2,member2) { return member2.readelem(buf2); });
+                  }
+
+                  if (ver) buf.CheckBytecount(ver, "branch " + this.typename);
+               }
+            }
+            break;
+
+         default:
+            JSROOT.console('fail to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
+
+            member.func = function(buf,obj) {};  // do nothing, fix in the future
+      }
+
+      return member;
+   }
+
    JSROOT.TFile.prototype.GetStreamer = function(clname, ver, s_i) {
       // return the streamer for the class 'clname', from the list of streamers
       // or generate it from the streamer infos and add it to the list
@@ -1663,788 +2075,649 @@
       // these are special cases, which are handled separately
       if (clname == 'TQObject' || clname == "TBasket") return null;
 
-      var streamer = [], fullname = clname;
+      var streamer, fullname = clname;
 
       if (ver) {
          fullname += (ver.checksum ? ("$chksum" + ver.checksum) : ("$ver" + ver.val));
          streamer = this.fStreamers[fullname];
          if (streamer !== undefined) return streamer;
-         this.fStreamers[fullname] = streamer = new Array;
       }
 
+      var custom = JSROOT.IO.CustomStreamers[clname];
 
-      if (clname == 'TObject'|| clname == 'TMethodCall') {
-         streamer.push({ func: function(buf,obj) {
-            obj.fUniqueID = buf.ntou4();
-            obj.fBits = buf.ntou4();
-         } });
-         return this.AddMethods(clname, streamer);
+      // one can define in the user streamers just aliases
+      if (typeof custom === 'string')
+         return this.GetStreamer(custom, ver, s_i);
+
+      // streamer is just separate function
+      if (typeof custom === 'function') {
+         streamer = [{ typename: clname, func: custom }];
+         return JSROOT.IO.AddClassMethods(clname, streamer);
       }
 
-      if (clname == 'TNamed') {
-         // we cannot use streamer info due to bottstrap problem
-         // try to make as much realistic as we can
-         streamer.push({ name:'TObject', base: 1, func: function(buf,obj) {
-            if (!obj._typename) obj._typename = 'TNamed';
-            buf.ClassStreamer(obj, "TObject"); }
-         });
-         streamer.push({ name:'fName', func: function(buf,obj) { obj.fName = buf.ReadTString(); } });
-         streamer.push({ name:'fTitle', func : function(buf,obj) { obj.fTitle = buf.ReadTString(); } });
-         return this.AddMethods(clname, streamer);
-      }
+      streamer = [];
 
-      if ((clname == 'TList') || (clname == 'THashList')) {
-         streamer.push({ classname: clname,
-                         func : function(buf, obj) {
-            // stream all objects in the list from the I/O buffer
-            if (!obj._typename) obj._typename = this.classname;
-            obj.name = "";
-            obj.arr = new Array;
-            obj.opt = new Array;
-            if (buf.last_read_version > 3) {
-               buf.ClassStreamer(obj, "TObject");
-               obj.name = buf.ReadTString();
-               var nobjects = buf.ntou4();
-               for (var i = 0; i < nobjects; ++i) {
-                  obj.arr.push(buf.ReadObjectAny());
-                  obj.opt.push(buf.ReadTString());
-               }
-            }
-         } });
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == 'TClonesArray') {
-         streamer.push({ func : function(buf, list) {
-            if (!list._typename) list._typename = "TClonesArray";
-            list.name = "";
-            list.arr = new Array();
-            var ver = buf.last_read_version;
-            if (ver > 2)
-               buf.ClassStreamer(list, "TObject");
-            if (ver > 1)
-               list.name = buf.ReadTString();
-            var classv = buf.ReadTString(), clv = 0,
-                pos = classv.lastIndexOf(";");
-
-            if (pos > 0) {
-               clv = parseInt(classv.substr(pos+1));
-               classv = classv.substr(0, pos);
-            }
-
-            var nobjects = buf.ntou4();
-            if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
-
-            list.fLast = nobjects-1;
-            list.fLowerBound = buf.ntou4();
-
-            var streamer = buf.fFile.GetStreamer(classv, { val: clv });
-            streamer = buf.fFile.GetSplittedStreamer(streamer);
-
-            if (!streamer) {
-               console.log('Cannot get member-wise streamer for', classv, clv);
-            } else {
-               // create objects
-               for (var n=0;n<nobjects;++n)
-                  list.arr.push({ _typename: classv });
-
-               // call streamer for all objects member-wise
-               for (var k=0;k<streamer.length;++k)
-                  for (var n=0;n<nobjects;++n)
-                     streamer[k].func(buf, list.arr[n]);
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == 'TMap') {
-         streamer.push({ func : function(buf, map) {
-            if (!map._typename) map._typename = "TMap";
-            map.name = "";
-            map.arr = new Array();
-            var ver = buf.last_read_version;
-            if (ver > 2)
-               buf.ClassStreamer(map, "TObject");
-            if (ver > 1)
-               map.name = buf.ReadTString();
-
-            var nobjects = buf.ntou4();
-
-            // create objects
-            for (var n=0;n<nobjects;++n) {
-               var obj = { _typename: "TPair" };
-               obj.first = buf.ReadObjectAny();
-               obj.second = buf.ReadObjectAny();
-               if (obj.first) map.arr.push(obj);
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-
-      if (clname == 'TRefArray') {
-         streamer.push({ func : function(buf, obj) {
-            obj._typename = "TRefArray";
-            buf.ClassStreamer(obj, "TObject");
-            obj.name = buf.ReadTString();
-
-            var nobj = buf.ntoi4();
-            obj.fLast = nobj-1;
-            obj.fLowerBound = buf.ntoi4();
-            var pidf = buf.ntou2();
-
-            obj.fUIDs = buf.ReadFastArray(nobj, JSROOT.IO.kUInt);
-
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-
-      if (clname == 'TCanvas') {
-         streamer.push({ func : function(buf, obj) {
-            obj._typename = "TCanvas";
-            buf.ClassStreamer(obj, "TPad");
-
-            obj.fDISPLAY = buf.ReadTString();
-            obj.fDoubleBuffer = buf.ntoi4();
-            obj.fRetained = (buf.ntou1() !== 0);
-            obj.fXsizeUser = buf.ntoi4();
-            obj.fYsizeUser = buf.ntoi4();
-            obj.fXsizeReal = buf.ntoi4();
-            obj.fYsizeReal = buf.ntoi4();
-            obj.fWindowTopX = buf.ntoi4();
-            obj.fWindowTopY = buf.ntoi4();
-            obj.fWindowWidth = buf.ntoi4();
-            obj.fWindowHeight = buf.ntoi4();
-            obj.fCw = buf.ntou4();
-            obj.fCh = buf.ntou4();
-
-            obj.fCatt = buf.ClassStreamer({}, "TAttCanvas");
-
-            buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
-            buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
-            obj.fHighLightColor = buf.ntoi2();
-            obj.fBatch = (buf.ntou1() !== 0);
-            buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
-            buf.ntou1();   // ignore b << TestBit(kAutoExec);
-            buf.ntou1();   // ignore b << TestBit(kMenuBar);
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == 'TObjArray')  {
-         streamer.push({ func : function(buf, list) {
-            list._typename = "TObjArray";
-            list.name = "";
-            list.arr = new Array();
-            var ver = buf.last_read_version;
-            if (ver > 2)
-               buf.ClassStreamer(list, "TObject");
-            if (ver > 1)
-               list.name = buf.ReadTString();
-            var nobjects = buf.ntou4();
-            list.fLast = nobjects-1;
-            list.fLowerBound = buf.ntou4();
-            for (var i = 0; i < nobjects; ++i)
-               list.arr.push(buf.ReadObjectAny());
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == 'TPolyMarker3D') {
-         streamer.push({ func : function(buf, marker) {
-            var ver = buf.last_read_version;
-
-            buf.ClassStreamer(marker, "TObject");
-
-            buf.ClassStreamer(marker, "TAttMarker");
-
-            marker.fN = buf.ntoi4();
-
-            marker.fP = buf.ReadFastArray(marker.fN*3, JSROOT.IO.kFloat);
-
-            marker.fOption = buf.ReadTString();
-
-            if (ver > 1)
-               marker.fName = buf.ReadTString();
-            else
-               marker.fName = "TPolyMarker3D";
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerInfo") {
-         streamer.push({ func : function(buf, streamerinfo) {
-            // stream an object of class TStreamerInfo from the I/O buffer
-            if (buf.last_read_version > 1) {
-               buf.ClassStreamer(streamerinfo, "TNamed");
-
-               streamerinfo.fCheckSum = buf.ntou4();
-               streamerinfo.fClassVersion = buf.ntou4();
-               streamerinfo.fElements = buf.ReadObjectAny();
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerElement") {
-         streamer.push({ func : function(buf, element) {
-            // stream an object of class TStreamerElement
-
-            var ver = buf.last_read_version;
-            buf.ClassStreamer(element, "TNamed");
-            element.fType = buf.ntou4();
-            element.fSize = buf.ntou4();
-            element.fArrayLength = buf.ntou4();
-            element.fArrayDim = buf.ntou4();
-            element.fMaxIndex = buf.ReadFastArray((ver == 1) ? buf.ntou4() : 5, JSROOT.IO.kUInt);
-            element.fTypeName = buf.ReadTString();
-
-            if ((element.fType == JSROOT.IO.kUChar) && (element.fTypeName == "Bool_t" ||
-                  element.fTypeName == "bool"))
-               element.fType = JSROOT.IO.kBool;
-            if (ver > 1) {
-            }
-            if (ver <= 2) {
-               // In TStreamerElement v2, fSize was holding the size of
-               // the underlying data type.  In later version it contains
-               // the full length of the data member.
-            }
-            if (ver == 3) {
-               element.fXmin = buf.ntod();
-               element.fXmax = buf.ntod();
-               element.fFactor = buf.ntod();
-            }
-            if (ver > 3) {
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerBase") {
-         streamer.push({ func : function(buf, elem) {
-            // stream an object of class TStreamerBase
-
-            var ver = buf.last_read_version;
-            buf.ClassStreamer(elem, "TStreamerElement");
-            if (ver > 2) {
-               elem.fBaseVersion = buf.ntou4();
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if ((clname == "TStreamerBasicPointer") || (clname == "TStreamerLoop")) {
-         streamer.push({ func : function(buf,elem) {
-            // stream an object of class TStreamerBasicPointer
-            if (buf.last_read_version > 1) {
-               buf.ClassStreamer(elem, "TStreamerElement");
-               elem.fCountVersion = buf.ntou4();
-               elem.fCountName = buf.ReadTString();
-               elem.fCountClass = buf.ReadTString();
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerSTL") {
-         streamer.push({ func : function(buf, elem) {
-            if (buf.last_read_version > 1) {
-               buf.ClassStreamer(elem, "TStreamerElement");
-               elem.fSTLtype = buf.ntou4();
-               elem.fCtype = buf.ntou4();
-            }
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerSTLstring") {
-         streamer.push({ func : function(buf, elem) {
-            if (buf.last_read_version > 0)
-               buf.ClassStreamer(elem, "TStreamerSTL");
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerObject" || clname == "TStreamerBasicType" ||
-            clname == "TStreamerObjectAny" || clname == "TStreamerString" ||
-            clname == "TStreamerObjectPointer") {
-         streamer.push({ func: function(buf, elem) {
-            if (buf.last_read_version > 1)
-               buf.ClassStreamer(elem, "TStreamerElement");
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
-      if (clname == "TStreamerObjectAnyPointer") {
-         streamer.push({ func: function(buf, elem) {
-            if (buf.last_read_version > 0)
-               buf.ClassStreamer(elem, "TStreamerElement");
-         }});
-         return this.AddMethods(clname, streamer);
+      if (typeof custom === 'object') {
+         if (!custom.name && !custom.func) return custom;
+         streamer.push(custom); // special read entry, add in the beginning of streamer
       }
 
       // check element in streamer infos, one can have special cases
       if (!s_i) s_i = this.FindStreamerInfo(clname, ver.val, ver.checksum);
 
-      if ((clname == 'TObjString') && !s_i) {
-         // special case when TObjString was stored inside streamer infos,
-         // than streamer cannot be normally generated
-         streamer.push({ name:'TObject', base: 1, func: function(buf,obj) {
-            if (!obj._typename) obj._typename = 'TObjString';
-            buf.ClassStreamer(obj, "TObject"); }
-         });
-
-         streamer.push({ name:'fString', func : function(buf, obj) {
-            obj.fString = buf.ReadTString();
-         }});
-         return this.AddMethods(clname, streamer);
-      }
-
       if (!s_i) {
          delete this.fStreamers[fullname];
-         console.warn('did not find streamer for ', clname, ver.val, ver.checksum);
+         if (!ver.nowarning)
+            console.warn("Not found streamer for", clname, "ver", ver.val, "checksum", ver.checksum, fullname);
          return null;
       }
 
-      if (s_i.fElements === null)
-         return this.AddMethods(clname, streamer);
+      // for each entry in streamer info produce member function
 
-      for (var j=0; j < s_i.fElements.arr.length; ++j) {
-         // extract streamer info for each class member
-         var element = s_i.fElements.arr[j],
-             member = { name: element.fName, type: element.fType,
-                        fArrayLength: element.fArrayLength,
-                        fArrayDim: element.fArrayDim,
-                        fMaxIndex: element.fMaxIndex };
+      if (s_i.fElements)
+         for (var j=0; j < s_i.fElements.arr.length; ++j)
+            streamer.push(JSROOT.IO.CreateMember(s_i.fElements.arr[j], this));
 
-         if (element.fTypeName === 'BASE') {
-            if (JSROOT.IO.GetArrayKind(member.name) > 0) {
-               // this is workaround for arrays as base class
-               // we create 'fArray' member, which read as any other data member
-               member.name = 'fArray';
-               member.type = JSROOT.IO.kAny;
-            } else {
-               // create streamer for base class
-               member.type = JSROOT.IO.kBase;
-               // this.GetStreamer(element.fName);
-            }
+      this.fStreamers[fullname] = streamer;
+
+      return JSROOT.IO.AddClassMethods(clname, streamer);
+   }
+
+   JSROOT.TFile.prototype.GetSplittedStreamer = function(streamer, tgt) {
+      // here we produce list of members, resolving all base classes
+
+      if (!streamer) return tgt;
+
+      if (!tgt) tgt = [];
+
+      for (var n=0;n<streamer.length;++n) {
+         var elem = streamer[n];
+
+         if (elem.base === undefined) {
+            tgt.push(elem);
+            continue;
          }
 
-         switch (member.type) {
-            case JSROOT.IO.kBase:
-               member.base = element.fBaseVersion; // indicate base class
-               member.func = function(buf, obj) {
-                  buf.ClassStreamer(obj, this.name);
-               };
-               break;
-            case JSROOT.IO.kShort:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntoi2(); }; break;
-            case JSROOT.IO.kInt:
-            case JSROOT.IO.kCounter:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntoi4(); }; break;
-            case JSROOT.IO.kLong:
-            case JSROOT.IO.kLong64:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntoi8(); }; break;
-            case JSROOT.IO.kDouble:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntod(); }; break;
-            case JSROOT.IO.kFloat:
-            case JSROOT.IO.kDouble32:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntof(); }; break;
-            case JSROOT.IO.kLegacyChar:
-            case JSROOT.IO.kUChar:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntou1(); }; break;
-            case JSROOT.IO.kUShort:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntou2(); }; break;
-            case JSROOT.IO.kBits:
-            case JSROOT.IO.kUInt:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntou4(); }; break;
-            case JSROOT.IO.kULong64:
-            case JSROOT.IO.kULong:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntou8(); }; break;
-            case JSROOT.IO.kBool:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntou1() != 0; }; break;
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kBool:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kInt:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kUChar:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kShort:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kUShort:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kBits:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kUInt:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kULong:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kULong64:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kLong:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kLong64:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kFloat:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kDouble32:
-               if (element.fArrayDim < 2) {
-                  member.arrlength = element.fArrayLength;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.ReadFastArray(this.arrlength, this.type - JSROOT.IO.kOffsetL);
-                  };
-               } else {
-                  member.arrlength = element.fMaxIndex[element.fArrayDim-1];
-                  member.minus1 = true;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.ReadNdimArray(this, function(buf,handle) {
-                        return buf.ReadFastArray(handle.arrlength, handle.type - JSROOT.IO.kOffsetL);
-                     });
-                  };
-               }
-               break;
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kChar:
-               if (element.fArrayDim < 2) {
-                  member.arrlength = element.fArrayLength;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.ReadFastString(this.arrlength);
-                  };
-               } else {
-                  member.minus1 = true; // one dimension used for char*
-                  member.arrlength = element.fMaxIndex[element.fArrayDim-1];
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.ReadNdimArray(this, function(buf,handle) {
-                        return buf.ReadFastString(handle.arrlength);
-                     });
-                  };
-               }
-               break;
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kBool:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kInt:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kUChar:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kShort:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kUShort:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kBits:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kUInt:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kULong:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kULong64:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kLong:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kLong64:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kFloat:
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kDouble32:
-               member.cntname = element.fCountName;
-               member.func = function(buf, obj) {
-                  if (buf.ntou1() === 1)
-                     obj[this.name] = buf.ReadFastArray(obj[this.cntname], this.type - JSROOT.IO.kOffsetP);
-                  else
-                     obj[this.name] = new Array();
-               };
-               break;
-            case JSROOT.IO.kOffsetP+JSROOT.IO.kChar:
-               member.cntname = element.fCountName;
-               member.func = function(buf, obj) {
-                  if (buf.ntou1() === 1)
-                     obj[this.name] = buf.ReadFastString(obj[this.cntname]);
-                  else
-                     obj[this.name] = null;
-               };
-               break;
-
-            case JSROOT.IO.kAnyP:
-            case JSROOT.IO.kObjectP:
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.ReadNdimArray(this, function(buf) {
-                      return buf.ReadObjectAny();
-                  });
-               };
-               break;
-
-            case JSROOT.IO.kAny:
-            case JSROOT.IO.kAnyp:
-            case JSROOT.IO.kObjectp:
-            case JSROOT.IO.kObject:
-               var classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
-               if (classname.charAt(classname.length-1) == "*")
-                  classname = classname.substr(0, classname.length - 1);
-
-               var arrkind = JSROOT.IO.GetArrayKind(classname);
-
-               if (arrkind > 0) {
-                  member.arrkind = arrkind;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.ReadFastArray(buf.ntou4(), this.arrkind);
-                  };
-               } else
-               if (arrkind === 0) {
-                  member.func = function(buf,obj) { obj[this.name] = buf.ReadTString(); };
-               } else {
-                  member.classname = classname;
-
-                  if (element.fArrayLength>1) {
-                     member.func = function(buf, obj) {
-                        obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
-                            return buf.ClassStreamer({}, handle.classname);
-                        });
-                     };
-                  } else {
-                     member.func = function(buf, obj) {
-                        obj[this.name] = buf.ClassStreamer({}, this.classname);
-                     };
-                  }
-               }
-               break;
-            case JSROOT.IO.kOffsetL + JSROOT.IO.kObject:
-            case JSROOT.IO.kOffsetL + JSROOT.IO.kAny:
-            case JSROOT.IO.kOffsetL + JSROOT.IO.kAnyp:
-            case JSROOT.IO.kOffsetL + JSROOT.IO.kObjectp:
-               var classname = element.fTypeName;
-               if (classname.charAt(classname.length-1) == "*")
-                  classname = classname.substr(0, classname.length - 1);
-
-               member.arrkind = JSROOT.IO.GetArrayKind(classname);
-               if (member.arrkind < 0) member.classname = classname;
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
-                     if (handle.arrkind>0) return buf.ReadFastArray(buf.ntou4(), handle.arrkind);
-                     if (handle.arrkind===0) return buf.ReadTString();
-                     return buf.ClassStreamer({}, handle.classname);
-                 });
-               }
-               break;
-            case JSROOT.IO.kChar:
-               member.func = function(buf,obj) { obj[this.name] = buf.ntoi1(); }; break;
-            case JSROOT.IO.kCharStar:
-               member.func = function(buf,obj) {
-                  var len = buf.ntoi4();
-                  obj[this.name] = buf.substring(buf.o, buf.o + len);
-                  buf.o += len;
-               };
-               break;
-            case JSROOT.IO.kTString:
-               member.func = function(buf,obj) { obj[this.name] = buf.ReadTString(); };
-               break;
-            case JSROOT.IO.kTObject:
-            case JSROOT.IO.kTNamed:
-               member.typename = element.fTypeName;
-               member.func = function(buf,obj) { obj[this.name] = buf.ClassStreamer({}, this.typename); };
-               break;
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kTString:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kTObject:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kTNamed:
-               member.typename = element.fTypeName;
-               member.func = function(buf, obj) {
-                  var ver = buf.ReadVersion();
-                  obj[this.name] = buf.ReadNdimArray(this, function(buf, handle) {
-                     if (handle.typename === 'TString') return buf.ReadTString();
-                     return buf.ClassStreamer({}, handle.typename);
-                  });
-                  buf.CheckBytecount(ver, this.typename + "[]");
-               }
-               break;
-            case JSROOT.IO.kStreamLoop:
-            case JSROOT.IO.kOffsetL+JSROOT.IO.kStreamLoop:
-               member.typename = element.fTypeName;
-               member.cntname = element.fCountName;
-
-               if (member.typename.lastIndexOf("**")>0) {
-                  member.typename = member.typename.substr(0, member.typename.lastIndexOf("**"));
-                  member.isptrptr = true;
-               } else {
-                  member.typename = member.typename.substr(0, member.typename.lastIndexOf("*"));
-                  member.isptrptr = false;
-               }
-
-               if (member.isptrptr) {
-                  member.readitem = function(buf) { return buf.ReadObjectAny(); }
-               } else {
-                  member.arrkind = JSROOT.IO.GetArrayKind(member.typename);
-                  if (member.arrkind > 0) {
-                     member.readitem = function(buf) { return buf.ReadFastArray(buf.ntou4(), this.arrkind); };
-                  } else
-                  if (member.arrkind === 0) {
-                     member.readitem = function(buf) { return buf.ReadTString(); }
-                  } else {
-                     member.readitem = function(buf) { return buf.ClassStreamer({}, this.typename); }
-                  }
-               }
-
-               if (member.readitem !== undefined) {
-                  member.func = function(buf,obj) {
-                     var ver = buf.ReadVersion(), cnt = obj[this.cntname];
-
-                     var res = buf.ReadNdimArray(this, function(buf2,member2) {
-                         var itemarr = new Array(cnt);
-                         for (var i = 0; i < cnt; ++i )
-                            itemarr[i] = member2.readitem(buf2);
-                         return itemarr;
-                      });
-
-                      if (!buf.CheckBytecount(ver, this.typename)) res = null;
-                      obj[this.name] = res;
-                  }
-                } else {
-                   JSROOT.console('fail to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
-                   member.func = function(buf,obj) {
-                      var ver = buf.ReadVersion();
-                      buf.CheckBytecount(ver);
-                      obj[this.name] = ull;
-                   };
-                }
-
-               break;
-
-            case JSROOT.IO.kStreamer:
-               member.typename = element.fTypeName;
-
-               // if (element._typename === 'TStreamerSTL')
-               //   console.log('member', member.name, member.typename, element.fCtype, element.fSTLtype);
-
-               if ((element._typename === 'TStreamerSTLstring') ||
-                   (member.typename == "string") || (member.typename == "string*"))
-                      member.readelem = function(buf) { return buf.ReadTString(); };
-               else
-               if ((element.fSTLtype === JSROOT.IO.kSTLvector) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLvector + 40) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLlist) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLlist + 40) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLdeque) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLdeque + 40) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLset) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLset + 40) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLmultiset) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLmultiset + 40)) {
-                  var p1 = member.typename.indexOf("<"),
-                      p2 = member.typename.lastIndexOf(">");
-
-                  member.conttype = member.typename.substr(p1+1,p2-p1-1);
-
-                  member.typeid = JSROOT.IO.GetTypeId(member.conttype);
-
-                  // console.log('container', member.name, member.typename, element.fCtype, element.fSTLtype, member.conttype);
-
-                  if (member.typeid > 0) {
-                     member.readelem = function(buf) {
-                        return buf.ReadFastArray(buf.ntoi4(), this.typeid);
-                      };
-                  } else {
-                      member.isptr = false;
-
-                      if (member.conttype.lastIndexOf("*") === member.conttype.length-1) {
-                         member.isptr = true;
-                         member.conttype = member.conttype.substr(0,member.conttype.length-1);
-                      }
-
-                      if (element.fCtype === JSROOT.IO.kObjectp) member.isptr = true;
-
-                      member.arrkind = JSROOT.IO.GetArrayKind(member.conttype);
-
-                      member.testsplit = !member.isptr && (member.arrkind < 0) &&
-                                          (element.fCtype === JSROOT.IO.kObject);
-
-                      member.readelem = JSROOT.IO.ReadVectorElement;
-                  }
-
-               } else
-               if ((element.fSTLtype === JSROOT.IO.kSTLmap) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLmap + 40) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLmultimap) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLmultimap + 40)) {
-
-                  // console.log('map', member.name, member.typename, element.fCtype, element.fSTLtype);
-
-                  var p1 = member.typename.indexOf("<"),
-                      p2 = member.typename.lastIndexOf(">");
-
-                  member.pairtype = "pair<" + member.typename.substr(p1+1,p2-p1-1) + ">";
-
-                  if (this.FindStreamerInfo(member.pairtype)) {
-                     member.readversion = true;
-                     // console.log('There is streamer info for ',member.pairtype, 'one should read version');
-                  } else {
-
-                     function GetNextName() {
-                        var res = "", p = p1+1, cnt = 0;
-                        while ((p<p2) && (cnt>=0)) {
-                          switch (member.typename.charAt(p)) {
-                             case "<": cnt++; break;
-                             case ",": if (cnt===0) cnt--; break;
-                             case ">": cnt--; break;
-                          }
-                          if (cnt>=0) res+=member.typename.charAt(p);
-                          p++;
-                        }
-                        p1 = p-1;
-                        return res;
-                     }
-
-                     var name1 = GetNextName(), name2 = GetNextName();
-
-                     // console.log(member.typename, member.pairtype, name1, name2);
-
-                     var elem1 = JSROOT.IO.CreateStreamerElement("first", name1),
-                         elem2 = JSROOT.IO.CreateStreamerElement("second", name2);
-
-                     var si = { _typename: 'TStreamerInfo',
-                                fName: member.pairtype,
-                                fElements: JSROOT.Create("TList"),
-                                fVersion: 1 };
-                     si.fElements.Add(elem1);
-                     si.fElements.Add(elem2);
-
-                     member.streamer = this.GetStreamer(member.pairtype, null, si);
-
-                     if (!member.streamer || member.streamer.length!=2) {
-                        JSROOT.console('Fail to build streamer for pair ' + member.pairtype);
-                        delete member.streamer;
-                     }
-                  }
-
-                  if (member.readversion || member.streamer)
-                     member.readelem = JSROOT.IO.ReadMapElement;
-               } else
-               if ((element.fSTLtype === JSROOT.IO.kSTLbitset) ||
-                   (element.fSTLtype === JSROOT.IO.kSTLbitset + 40)) {
-                  member.readelem = function(buf,obj) {
-                     return buf.ReadFastArray(buf.ntou4(), JSROOT.IO.kBool);
-                  }
-               }
-
-               if (member.readelem!==undefined) {
-                  member.func = function(buf,obj) {
-                     var ver = buf.ReadVersion();
-                     var res = buf.ReadNdimArray(this, function(buf2,member2) { return member2.readelem(buf2); });
-                     if (!buf.CheckBytecount(ver, this.typename)) res = null;
-                     obj[this.name] = res;
-                  }
-               } else {
-                  JSROOT.console('failed to crteate streamer for element ' + member.typename  + ' ' + member.name + ' element ' + element._typename + ' STL type ' + element.fSTLtype);
-                  member.func = function(buf,obj) {
-                     var ver = buf.ReadVersion();
-                     buf.CheckBytecount(ver);
-                     obj[this.name] = null;
-                  }
-               }
-               break;
-
-
-            default:
-               if (JSROOT.fUserStreamers !== null)
-                  member.func = JSROOT.fUserStreamers[element.fTypeName];
-
-               if (typeof member.func !== 'function') {
-                  JSROOT.console('fail to provide function for ' + element.fName + ' (' + element.fTypeName + ')  typ = ' + element.fType);
-
-                  member.func = function(buf,obj) {};  // do nothing, fix in the future
-               } else {
-                  member.element = element; // one can use element in the custom function
-               }
+         if (elem.basename == 'TObject') {
+            tgt.push({ func: function(buf,obj) {
+               buf.ntoi2(); // read version, why it here??
+               obj.fUniqueID = buf.ntou4();
+               obj.fBits = buf.ntou4();
+               if (obj.fBits & JSROOT.IO.kIsReferenced) buf.ntou2(); // skip pid
+            } });
+            continue;
          }
 
-         streamer.push(member);
+         var ver = { val: elem.base };
+
+         if (ver.val === 4294967295) {
+            // this is -1 and indicates foreign class, need more workarounds
+            ver.val = 1; // need to search version 1 - that happens when several versions of foreign class exists ???
+         }
+
+         var parent = this.GetStreamer(elem.basename, ver);
+         if (parent) this.GetSplittedStreamer(parent, tgt);
       }
 
-      return this.AddMethods(clname, streamer);
-   };
+      return tgt;
+   }
 
-   JSROOT.IO.CreateStreamerElement = function(name, typename) {
+   JSROOT.TFile.prototype.Delete = function() {
+      this.fDirectories = null;
+      this.fKeys = null;
+      this.fStreamers = null;
+      this.fSeekInfo = 0;
+      this.fNbytesInfo = 0;
+      this.fTagOffset = 0;
+   }
+
+   // =============================================================
+
+   JSROOT.TLocalFile = function(file, newfile_callback) {
+      JSROOT.TFile.call(this, null);
+      this.fUseStampPar = false;
+      this.fLocalFile = file;
+      this.fEND = file.size;
+      this.fFullURL = file.name;
+      this.fURL = file.name;
+      this.fFileName = file.name;
+      this.ReadKeys(newfile_callback);
+      return this;
+   }
+
+   JSROOT.TLocalFile.prototype = Object.create(JSROOT.TFile.prototype);
+
+   JSROOT.TLocalFile.prototype.ReadBuffer = function(place, result_callback, filename, progress_callback) {
+
+      if (filename)
+         throw new Error("Cannot access other local file "+filename)
+
+      var reader = new FileReader(), cnt = 0, blobs = [], file = this.fLocalFile;
+
+      reader.onload = function(evnt) {
+         var res = new DataView(evnt.target.result);
+         if (place.length===2) return result_callback(res);
+
+         blobs.push(res);
+         cnt+=2;
+         if (cnt >= place.length) return result_callback(blobs);
+         reader.readAsArrayBuffer(file.slice(place[cnt], place[cnt]+place[cnt+1]));
+      }
+
+      reader.readAsArrayBuffer(file.slice(place[0], place[0]+place[1]));
+   }
+
+   // =========================================
+
+
+   JSROOT.IO.ProduceCustomStreamers = function() {
+      var cs = JSROOT.IO.CustomStreamers;
+
+      cs['TObject'] = cs['TMethodCall'] = function(buf,obj) {
+         obj.fUniqueID = buf.ntou4();
+         obj.fBits = buf.ntou4();
+         if (obj.fBits & JSROOT.IO.kIsReferenced) buf.ntou2(); // skip pid
+      };
+
+      cs['TNamed'] = [
+         { basename: 'TObject', base: 1, func: function(buf,obj) {
+            if (!obj._typename) obj._typename = 'TNamed';
+            buf.ClassStreamer(obj, "TObject"); }
+         },
+         { name: 'fName', func: function(buf,obj) { obj.fName = buf.ReadTString(); } },
+         { name: 'fTitle', func: function(buf,obj) { obj.fTitle = buf.ReadTString(); } }
+      ];
+      JSROOT.IO.AddClassMethods('TNamed', cs['TNamed']);
+
+      cs['TObjString'] = [
+         { basename: 'TObject', base: 1, func: function(buf,obj) {
+            if (!obj._typename) obj._typename = 'TObjString';
+            buf.ClassStreamer(obj, "TObject"); }
+         },
+         { name: 'fString', func: function(buf, obj) { obj.fString = buf.ReadTString(); } }
+      ];
+
+      JSROOT.IO.AddClassMethods('TObjString', cs['TObjString']);
+
+      cs['TList'] = cs['THashList'] = function(buf, obj) {
+         // stream all objects in the list from the I/O buffer
+         if (!obj._typename) obj._typename = this.typename;
+         obj.$kind = "TList"; // all derived classes will be marked as well
+         if (buf.last_read_version > 3) {
+            buf.ClassStreamer(obj, "TObject");
+            obj.name = buf.ReadTString();
+            var nobjects = buf.ntou4(), i = 0;
+            obj.arr = new Array(nobjects);
+            obj.opt = new Array(nobjects);
+            for (; i<nobjects; ++i) {
+               obj.arr[i] = buf.ReadObjectAny();
+               obj.opt[i] = buf.ReadTString();
+            }
+         } else {
+            obj.name = "";
+            obj.arr = [];
+            obj.opt = [];
+         }
+      };
+
+      cs['TClonesArray'] = function(buf, list) {
+         if (!list._typename) list._typename = "TClonesArray";
+         list.$kind = "TClonesArray";
+         list.name = "";
+         var ver = buf.last_read_version;
+         if (ver > 2) buf.ClassStreamer(list, "TObject");
+         if (ver > 1) list.name = buf.ReadTString();
+         var classv = buf.ReadTString(), clv = 0,
+             pos = classv.lastIndexOf(";");
+
+         if (pos > 0) {
+            clv = parseInt(classv.substr(pos+1));
+            classv = classv.substr(0, pos);
+         }
+
+         var nobjects = buf.ntou4();
+         if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
+
+         list.arr = new Array(nobjects);
+         list.fLast = nobjects-1;
+         list.fLowerBound = buf.ntou4();
+
+         var streamer = buf.fFile.GetStreamer(classv, { val: clv });
+         streamer = buf.fFile.GetSplittedStreamer(streamer);
+
+         if (!streamer) {
+            console.log('Cannot get member-wise streamer for', classv, clv);
+         } else {
+            // create objects
+            for (var n=0;n<nobjects;++n)
+               list.arr[n] = { _typename: classv };
+
+            // call streamer for all objects member-wise
+            for (var k=0;k<streamer.length;++k)
+               for (var n=0;n<nobjects;++n)
+                  streamer[k].func(buf, list.arr[n]);
+         }
+      };
+
+      cs['TMap'] = function(buf, map) {
+         if (!map._typename) map._typename = "TMap";
+         map.name = "";
+         map.arr = new Array();
+         var ver = buf.last_read_version;
+         if (ver > 2) buf.ClassStreamer(map, "TObject");
+         if (ver > 1) map.name = buf.ReadTString();
+
+         var nobjects = buf.ntou4();
+         // create objects
+         for (var n=0;n<nobjects;++n) {
+            var obj = { _typename: "TPair" };
+            obj.first = buf.ReadObjectAny();
+            obj.second = buf.ReadObjectAny();
+            if (obj.first) map.arr.push(obj);
+         }
+      };
+
+      cs['TTreeIndex'] = function(buf, obj) {
+         var ver = buf.last_read_version;
+         obj._typename = "TTreeIndex";
+         buf.ClassStreamer(obj, "TVirtualIndex");
+         obj.fMajorName = buf.ReadTString();
+         obj.fMinorName = buf.ReadTString();
+         obj.fN = buf.ntoi8();
+         obj.fIndexValues = buf.ReadFastArray(obj.fN, JSROOT.IO.kLong64);
+         if (ver>1) obj.fIndexValuesMinor = buf.ReadFastArray(obj.fN, JSROOT.IO.kLong64);
+         obj.fIndex = buf.ReadFastArray(obj.fN, JSROOT.IO.kLong64);
+      };
+
+      cs['TRefArray'] = function(buf, obj) {
+         obj._typename = "TRefArray";
+         buf.ClassStreamer(obj, "TObject");
+         obj.name = buf.ReadTString();
+         var nobj = buf.ntoi4();
+         obj.fLast = nobj-1;
+         obj.fLowerBound = buf.ntoi4();
+         var pidf = buf.ntou2();
+         obj.fUIDs = buf.ReadFastArray(nobj, JSROOT.IO.kUInt);
+      };
+
+      cs['TCanvas'] = function(buf, obj) {
+         obj._typename = "TCanvas";
+         buf.ClassStreamer(obj, "TPad");
+         obj.fDISPLAY = buf.ReadTString();
+         obj.fDoubleBuffer = buf.ntoi4();
+         obj.fRetained = (buf.ntou1() !== 0);
+         obj.fXsizeUser = buf.ntoi4();
+         obj.fYsizeUser = buf.ntoi4();
+         obj.fXsizeReal = buf.ntoi4();
+         obj.fYsizeReal = buf.ntoi4();
+         obj.fWindowTopX = buf.ntoi4();
+         obj.fWindowTopY = buf.ntoi4();
+         obj.fWindowWidth = buf.ntoi4();
+         obj.fWindowHeight = buf.ntoi4();
+         obj.fCw = buf.ntou4();
+         obj.fCh = buf.ntou4();
+         obj.fCatt = buf.ClassStreamer({}, "TAttCanvas");
+         buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
+         buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
+         obj.fHighLightColor = buf.ntoi2();
+         obj.fBatch = (buf.ntou1() !== 0);
+         buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
+         buf.ntou1();   // ignore b << TestBit(kAutoExec);
+         buf.ntou1();   // ignore b << TestBit(kMenuBar);
+      };
+
+      cs['TObjArray'] = function(buf, list) {
+         if (!list._typename) list._typename = "TObjArray";
+         list.$kind = "TObjArray";
+         list.name = "";
+         var ver = buf.last_read_version;
+         if (ver > 2)
+            buf.ClassStreamer(list, "TObject");
+         if (ver > 1)
+            list.name = buf.ReadTString();
+         var nobjects = buf.ntou4(), i = 0;
+         list.arr = new Array(nobjects);
+         list.fLast = nobjects-1;
+         list.fLowerBound = buf.ntou4();
+         while (i < nobjects)
+            list.arr[i++] = buf.ReadObjectAny();
+      };
+
+      cs['TPolyMarker3D'] = function(buf, marker) {
+         var ver = buf.last_read_version;
+         buf.ClassStreamer(marker, "TObject");
+         buf.ClassStreamer(marker, "TAttMarker");
+         marker.fN = buf.ntoi4();
+         marker.fP = buf.ReadFastArray(marker.fN*3, JSROOT.IO.kFloat);
+         marker.fOption = buf.ReadTString();
+         marker.fName = (ver > 1) ? buf.ReadTString() : "TPolyMarker3D";
+      };
+
+      cs['TStreamerInfo'] = function(buf, obj) {
+         // stream an object of class TStreamerInfo from the I/O buffer
+         buf.ClassStreamer(obj, "TNamed");
+         obj.fCheckSum = buf.ntou4();
+         obj.fClassVersion = buf.ntou4();
+         obj.fElements = buf.ReadObjectAny();
+      };
+
+      cs['TStreamerElement'] = function(buf, element) {
+         // stream an object of class TStreamerElement
+
+         var ver = buf.last_read_version;
+         buf.ClassStreamer(element, "TNamed");
+         element.fType = buf.ntou4();
+         element.fSize = buf.ntou4();
+         element.fArrayLength = buf.ntou4();
+         element.fArrayDim = buf.ntou4();
+         element.fMaxIndex = buf.ReadFastArray((ver == 1) ? buf.ntou4() : 5, JSROOT.IO.kUInt);
+         element.fTypeName = buf.ReadTString();
+
+         if ((element.fType === JSROOT.IO.kUChar) && ((element.fTypeName == "Bool_t") || (element.fTypeName == "bool")))
+            element.fType = JSROOT.IO.kBool;
+
+         element.fXmin = element.fXmax = element.fFactor = 0;
+         if (ver === 3) {
+            element.fXmin = buf.ntod();
+            element.fXmax = buf.ntod();
+            element.fFactor = buf.ntod();
+         } else
+         if ((ver > 3) && (element.fBits & JSROOT.BIT(6))) { // kHasRange
+
+            var p1 = element.fTitle.indexOf("[");
+            if ((p1>=0) && (element.fType>JSROOT.IO.kOffsetP)) p1 = element.fTitle.indexOf("[", p1+1);
+            var p2 = element.fTitle.indexOf("]", p1+1);
+
+            if ((p1>=0) && (p2>=p1+2)) {
+               var arr = JSROOT.ParseAsArray(element.fTitle.substr(p1, p2-p1+1)), nbits = 32;
+
+               if (arr.length===3) nbits = parseInt(arr[2]);
+               if (isNaN(nbits) || (nbits<2) || (nbits>32)) nbits = 32;
+
+               function parse_range(val) {
+                  if (!val) return 0;
+                  if (val.indexOf("pi")<0) return parseFloat(val);
+                  val = val.trim();
+                  var sign = 1.;
+                  if (val[0] == "-") { sign = -1; val = val.substr(1); }
+                  switch(val) {
+                     case "2pi":
+                     case "2*pi":
+                     case "twopi": return sign*2*Math.PI;
+                     case "pi/2": return sign*Math.PI/2;
+                     case "pi/4": return sign*Math.PI/4;
+                  }
+                  return sign*Math.PI;
+               }
+
+               element.fXmin = parse_range(arr[0]);
+               element.fXmax = parse_range(arr[1]);
+
+               var bigint = (nbits < 32) ? (1<<nbits) : 0xffffffff;
+               if (element.fXmin < element.fXmax) element.fFactor = bigint/(element.fXmax - element.fXmin);
+               else if (nbits<15) element.fXmin = nbits;
+            }
+         }
+      };
+
+      cs['TStreamerBase'] = function(buf, elem) {
+         var ver = buf.last_read_version;
+         buf.ClassStreamer(elem, "TStreamerElement");
+         if (ver > 2) elem.fBaseVersion = buf.ntou4();
+      };
+
+      cs['TStreamerBasicPointer'] = cs['TStreamerLoop'] = function(buf,elem) {
+         if (buf.last_read_version > 1) {
+            buf.ClassStreamer(elem, "TStreamerElement");
+            elem.fCountVersion = buf.ntou4();
+            elem.fCountName = buf.ReadTString();
+            elem.fCountClass = buf.ReadTString();
+         }
+      };
+
+      cs['TStreamerSTL'] = function(buf, elem) {
+         buf.ClassStreamer(elem, "TStreamerElement");
+         elem.fSTLtype = buf.ntou4();
+         elem.fCtype = buf.ntou4();
+
+         if ((elem.fSTLtype === JSROOT.IO.kSTLmultimap) &&
+              ((elem.fTypeName.indexOf("std::set")===0) ||
+               (elem.fTypeName.indexOf("set")==0))) elem.fSTLtype = JSROOT.IO.kSTLset;
+
+         if ((elem.fSTLtype === JSROOT.IO.kSTLset) &&
+               ((elem.fTypeName.indexOf("std::multimap")===0) ||
+                (elem.fTypeName.indexOf("multimap")===0))) elem.fSTLtype = JSROOT.IO.kSTLmultimap;
+      };
+
+      cs['TStreamerSTLstring'] = function(buf, elem) {
+         if (buf.last_read_version > 0)
+            buf.ClassStreamer(elem, "TStreamerSTL");
+      };
+
+      cs['TStreamerObject'] = cs['TStreamerBasicType'] = cs['TStreamerObjectAny'] =
+      cs['TStreamerString'] = cs['TStreamerObjectPointer'] = function(buf, elem) {
+         if (buf.last_read_version > 1)
+            buf.ClassStreamer(elem, "TStreamerElement");
+      };
+
+      cs['TStreamerObjectAnyPointer'] = function(buf, elem) {
+         if (buf.last_read_version > 0)
+            buf.ClassStreamer(elem, "TStreamerElement");
+      };
+
+      cs['TTree'] = {
+         name: '$file',
+         func: function(buf,obj) { obj.$kind = "TTree"; obj.$file = buf.fFile; buf.fFile.AddReadTree(obj); }
+      };
+
+      cs['TVirtualPerfStats'] = "TObject"; // use directly TObject streamer
+
+      cs['RooRealVar'] = function(buf,obj) {
+         var v = buf.last_read_version;
+         buf.ClassStreamer(obj, "RooAbsRealLValue");
+         if (v==1) { buf.ntod(); buf.ntod(); buf.ntoi4(); } // skip fitMin, fitMax, fitBins
+         obj._error = buf.ntod();
+         obj._asymErrLo = buf.ntod();
+         obj._asymErrHi = buf.ntod();
+         if (v>=2) obj._binning = buf.ReadObjectAny();
+         if (v==3) obj._sharedProp = buf.ReadObjectAny();
+         if (v>=4) obj._sharedProp = buf.ClassStreamer({}, "RooRealVarSharedProperties");
+      };
+
+      cs['RooAbsBinning'] = function(buf,obj) {
+         buf.ClassStreamer(obj, (buf.last_read_version==1) ? "TObject" : "TNamed");
+         buf.ClassStreamer(obj, "RooPrintable");
+      };
+
+      cs['RooCategory'] = function(buf,obj) {
+         var v = buf.last_read_version;
+         buf.ClassStreamer(obj, "RooAbsCategoryLValue");
+         obj._sharedProp = (v===1) ? buf.ReadObjectAny() : buf.ClassStreamer({}, "RooCategorySharedProperties");
+      };
+
+      cs['RooWorkspace::CodeRepo'] = function(buf,obj) {
+         var sz = (buf.last_read_version == 2) ? 3 : 2;
+         for (var i=0;i<sz;++i) {
+            var cnt = buf.ntoi4() * ((i==0) ? 4 : 3);
+            while (cnt--) buf.ReadTString();
+         }
+      }
+
+      cs['RooLinkedList'] = function(buf,obj) {
+         var v = buf.last_read_version;
+         buf.ClassStreamer(obj, "TObject");
+         var size = buf.ntoi4();
+         obj.arr = JSROOT.Create("TList");
+         while(size--)
+            obj.arr.Add(buf.ReadObjectAny());
+         if (v>1) obj._name = buf.ReadTString();
+      };
+
+      // these are direct streamers - not follow version/checksum logic
+
+      var ds = JSROOT.IO.DirectStreamers;
+
+      ds['TQObject'] = function(buf,obj) {
+         // do nothing
+      };
+
+      ds['TDatime'] = function(buf,obj) {
+         obj.fDatime = buf.ntou4();
+//         obj.GetDate = function() {
+//            var res = new Date();
+//            res.setFullYear((this.fDatime >>> 26) + 1995);
+//            res.setMonth((this.fDatime << 6) >>> 28);
+//            res.setDate((this.fDatime << 10) >>> 27);
+//            res.setHours((this.fDatime << 15) >>> 27);
+//            res.setMinutes((this.fDatime << 20) >>> 26);
+//            res.setSeconds((this.fDatime << 26) >>> 26);
+//            res.setMilliseconds(0);
+//            return res;
+//         }
+      }
+
+      ds['TKey'] = function(buf,key) {
+         key.fNbytes = buf.ntoi4();
+         key.fVersion = buf.ntoi2();
+         key.fObjlen = buf.ntou4();
+         key.fDatime = buf.ClassStreamer({}, 'TDatime');
+         key.fKeylen = buf.ntou2();
+         key.fCycle = buf.ntou2();
+         if (key.fVersion > 1000) {
+            key.fSeekKey = buf.ntou8();
+            buf.shift(8); // skip seekPdir
+         } else {
+            key.fSeekKey = buf.ntou4();
+            buf.shift(4); // skip seekPdir
+         }
+         key.fClassName = buf.ReadTString();
+         key.fName = buf.ReadTString();
+         key.fTitle = buf.ReadTString();
+      }
+
+      ds['TDirectory'] = function(buf, dir) {
+         var version = buf.ntou2();
+         dir.fDatimeC = buf.ClassStreamer({}, 'TDatime');
+         dir.fDatimeM = buf.ClassStreamer({}, 'TDatime');
+         dir.fNbytesKeys = buf.ntou4();
+         dir.fNbytesName = buf.ntou4();
+         dir.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
+         dir.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
+         dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
+         // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
+      }
+
+
+      ds['TBasket'] = function(buf,obj) {
+         buf.ClassStreamer(obj, 'TKey');
+         var ver = buf.ReadVersion();
+         obj.fBufferSize = buf.ntoi4();
+         obj.fNevBufSize = buf.ntoi4();
+         obj.fNevBuf = buf.ntoi4();
+         obj.fLast = buf.ntoi4();
+         if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+         var flag = buf.ntoi1();
+
+         if (flag===0) return;
+
+         if ((flag % 10) != 2) {
+            if (obj.fNevBuf) {
+               obj.fEntryOffset = buf.ReadFastArray(buf.ntoi4(), JSROOT.IO.kInt);
+               if ((20<flag) && (flag<40))
+                  for(var i=0, kDisplacementMask = 0xFF000000; i<obj.fNevBuf; ++i)
+                     obj.fEntryOffset[i] &= ~kDisplacementMask;
+            }
+
+            if (flag>40)
+               obj.fDisplacement = buf.ReadFastArray(buf.ntoi4(), JSROOT.IO.kInt);
+         }
+
+         if ((flag === 1) || (flag > 10)) {
+            // here is reading of raw data
+            var sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
+
+            if (sz > obj.fKeylen) {
+               // buffer includes again complete TKey data - exclude it
+               var blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
+
+               obj.fBufferRef = JSROOT.CreateTBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
+               obj.fBufferRef.fTagOffset = obj.fKeylen;
+            }
+
+            buf.shift(sz);
+         }
+      }
+
+      ds['TRef'] = function(buf,obj) {
+         buf.ClassStreamer(obj, "TObject");
+         if (obj.fBits & JSROOT.IO.kHasUUID)
+            obj.fUUID = buf.ReadTString();
+         else
+            obj.fPID = buf.ntou2();
+      }
+
+      ds['TMatrixTSym<float>'] = function(buf,obj) {
+         buf.ClassStreamer(obj, "TMatrixTBase<float>");
+         obj.fElements = new Float32Array(obj.fNelems);
+         var arr = buf.ReadFastArray((obj.fNrows * (obj.fNcols + 1))/2, JSROOT.IO.kFloat), cnt = 0;
+         for (var i=0;i<obj.fNrows;++i)
+            for (var j=i;j<obj.fNcols;++j)
+               obj.fElements[j*obj.fNcols+i] = obj.fElements[i*obj.fNcols+j] = arr[cnt++];
+      }
+
+      ds['TMatrixTSym<double>'] = function(buf,obj) {
+         buf.ClassStreamer(obj, "TMatrixTBase<double>");
+         obj.fElements = new Float64Array(obj.fNelems);
+         var arr = buf.ReadFastArray((obj.fNrows * (obj.fNcols + 1))/2, JSROOT.IO.kDouble), cnt = 0;
+         for (var i=0;i<obj.fNrows;++i)
+            for (var j=i;j<obj.fNcols;++j)
+               obj.fElements[j*obj.fNcols+i] = obj.fElements[i*obj.fNcols+j] = arr[cnt++];
+      }
+   }
+
+   JSROOT.IO.CreateStreamerElement = function(name, typename, file) {
       // return function, which could be used for element of the map
 
       var elem = { _typename: 'TStreamerElement', fName: name, fTypeName: typename,
-                   fType: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0,0,0,0,0] };
+                   fType: 0, fSize: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0,0,0,0,0],
+                   fXmin: 0, fXmax: 0, fFactor: 0 };
 
-      elem.fType = JSROOT.IO.GetTypeId(typename);
+      if (typeof typename === "string") {
+         elem.fType = JSROOT.IO.GetTypeId(typename);
+         if ((elem.fType<0) && file && file.fBasicTypes[typename])
+            elem.fType = file.fBasicTypes[typename];
+      } else {
+         elem.fType = typename;
+         typename = elem.fTypeName = JSROOT.IO.TypeNames[elem.fType] || "int";
+      }
+
       if (elem.fType > 0) return elem; // basic type
+
+/*
+      if (typename.indexOf('string')===0) {
+         elem._typename = 'TStreamerSTLstring';
+         elem.fType = JSROOT.IO.kStreamer;
+         elem.fSTLtype = 10000; // any positive number
+         elem.fCtype = 0;
+         return elem;
+      }
+*/
+
+      // check if there are STL containers
+      var stltype = JSROOT.IO.kNotSTL, pos = typename.indexOf("<");
+      if ((pos>0) && (typename.indexOf(">") > pos+2))
+         for (var stl=1;stl<JSROOT.IO.StlNames.length;++stl)
+            if (typename.substr(0, pos) === JSROOT.IO.StlNames[stl]) {
+               stltype = stl; break;
+            }
+
+      if (stltype !== JSROOT.IO.kNotSTL) {
+         elem._typename = 'TStreamerSTL';
+         elem.fType = JSROOT.IO.kStreamer;
+         elem.fSTLtype = stltype;
+         elem.fCtype = 0;
+         return elem;
+      }
 
       var isptr = false;
 
@@ -2466,45 +2739,57 @@
    }
 
    JSROOT.IO.ReadVectorElement = function(buf) {
-      if (this.testsplit) {
-         var ver = { val: buf.ntoi2() };
-         if (ver.val<=0) ver.checksum = buf.ntou4();
 
-         var streamer = buf.fFile.GetStreamer(this.conttype, ver);
+      if (this.member_wise) {
 
-         streamer = buf.fFile.GetSplittedStreamer(streamer);
+         var n = buf.ntou4(), streamer = null, ver = this.stl_version;
 
-         if (streamer) {
-            var n = buf.ntoi4(), res = [];
+         if (n===0) return []; // for empty vector no need to search splitted streamers
 
-            // console.log('reading splitted vector', this.typename, 'length', n, 'split length', streamer.length)
-
-            for (var i=0;i<n;++i)
-               res[i] = { _typename: this.conttype }; // create objects
-
-            for (var k=0;k<streamer.length;++k) {
-               //var pos = buf.o;
-               for (var i=0;i<n;++i)
-                  streamer[k].func(buf, res[i]);
-               //console.log('Read element', streamer[k].name, 'totallen', buf.o - pos);
-            }
-
-            // console.log('reading splitted vector done', this.typename);
-            return res;
+         if (n>1000000) {
+            throw new Error('member-wise streaming of ' + this.conttype + " num " + n + ' member ' + this.name);
+            return [];
          }
 
-         buf.o -= (ver.val<=0) ? 6 : 2; // rallback position of the
-         // console.log('RALLBACK reading for type', this.conttype);
+         if ((ver.val === this.member_ver) && (ver.checksum === this.member_checksum)) {
+            streamer = this.member_streamer;
+         } else {
+            streamer = buf.fFile.GetStreamer(this.conttype, ver);
+
+            this.member_streamer = streamer = buf.fFile.GetSplittedStreamer(streamer);
+            this.member_ver = ver.val;
+            this.member_checksum = ver.checksum;
+         }
+
+         var res = new Array(n), i, k, member;
+
+         for (i=0;i<n;++i)
+            res[i] = { _typename: this.conttype }; // create objects
+         if (!streamer) {
+            console.error('Fail to create splitted streamer for', this.conttype, 'need to read ', n, 'objects version', ver );
+         } else {
+            for (k=0;k<streamer.length;++k) {
+               member = streamer[k];
+               if (member.split_func) {
+                  member.split_func(buf, res, n);
+               } else {
+                  for (i=0;i<n;++i)
+                     member.func(buf, res[i]);
+               }
+            }
+         }
+         return res;
       }
 
-      var n = buf.ntoi4(), res = [];
+      var n = buf.ntou4(), res = new Array(n), i = 0;
 
-      for (var i=0;i<n;++i) {
-         if (this.arrkind > 0) res.push(buf.ReadFastArray(buf.ntou4(), this.arrkind)); else
-         if (this.arrkind===0) res.push(buf.ReadTString()); else
-         if (this.isptr) res.push(buf.ReadObjectAny()); else
-            res.push(buf.ClassStreamer({}, this.conttype));
-      }
+      if (n>200000) { console.error('vector streaming for of', this.conttype, n); return res; }
+
+      if (this.arrkind > 0) { while (i<n) res[i++] = buf.ReadFastArray(buf.ntou4(), this.arrkind); }
+      else if (this.arrkind===0) { while (i<n) res[i++] = buf.ReadTString(); }
+      else if (this.isptr) { while (i<n) res[i++] = buf.ReadObjectAny(); }
+      else if (this.submember) { while (i<n) res[i++] = this.submember.readelem(buf); }
+      else { while (i<n) res[i++] = buf.ClassStreamer({}, this.conttype); }
 
       return res;
    }
@@ -2512,90 +2797,48 @@
    JSROOT.IO.ReadMapElement = function(buf) {
       var streamer = this.streamer;
 
-      if (this.readversion) {
-         // when version written into buffer, it is indication of member splitting
-         // not very logical in my mind SL
-         var ver = { val: buf.ntoi2() };
-         if (ver.val<=0) ver.checksum = buf.ntou4();
+      if (this.member_wise) {
+         // when member-wise streaming is used, version is written
+         var ver =  this.stl_version;
 
-         streamer = buf.fFile.GetStreamer(this.pairtype, ver);
-         if (!streamer || streamer.length!=2) {
-            console.log('Fail to get streamer for ', this.pairtype);
-            return null;
+         if (this.si) {
+            var si = buf.fFile.FindStreamerInfo(this.pairtype, ver.val, ver.checksum);
+
+            if (this.si !== si) {
+               streamer = JSROOT.IO.GetPairStreamer(si, this.pairtype, buf.fFile);
+               if (!streamer || streamer.length!==2) {
+                  console.log('Fail to produce streamer for ', this.pairtype);
+                  return null;
+               }
+            }
          }
       }
 
-      var n = buf.ntoi4(), res = [];
+      var i, n = buf.ntoi4(), res = new Array(n);
 
-      // console.log('Reading map', n, this.pairtype, this.typename);
-      for (var i=0;i<n;++i) {
-         var obj = { _typename: this.pairtype };
-         streamer[0].func(buf, obj);
-         if (!this.readversion)
-            streamer[1].func(buf, obj);
-         res.push(obj);
+      for (i=0;i<n;++i) {
+         res[i] = { _typename: this.pairtype };
+         streamer[0].func(buf, res[i]);
+         if (!this.member_wise) streamer[1].func(buf, res[i]);
       }
 
       // due-to member-wise streaming second element read after first is completed
-      if (this.readversion)
-         for (var i=0;i<n;++i)
-            streamer[1].func(buf, res[i]);
+      if (this.member_wise)
+         for (i=0;i<n;++i) streamer[1].func(buf, res[i]);
 
       return res;
    }
 
-   JSROOT.TFile.prototype.GetSplittedStreamer = function(streamer, tgt) {
-      // here we produce list of members, resolving all base classes
+   JSROOT.OpenFile = function(filename, callback) {
+      if (typeof filename === 'object'  && filename.size && filename.name)
+         return new JSROOT.TLocalFile(filename, callback);
 
-      if (!streamer) return tgt;
-
-      if (!tgt) tgt = [];
-
-      for (var n=0;n<streamer.length;++n) {
-         var elem = streamer[n];
-         if (elem.base === undefined) {
-            tgt.push(elem);
-            continue;
-         }
-
-         if (elem.name=='TObject') {
-            tgt.push({ func: function(buf,obj) {
-               buf.ntoi2(); // read version, why it here??
-               obj.fUniqueID = buf.ntou4();
-               obj.fBits = buf.ntou4();
-            } });
-            continue;
-         }
-
-         var ver = { val: elem.base };
-
-         if (ver.val === 4294967295) {
-            // this is -1 and indicates foreign class, need more workarounds
-            ver.val = 1; // need to search version 1 - that happens when several versions of foreign class exists ???
-         }
-
-         var parent = this.GetStreamer(elem.name, ver);
-         if (parent) this.GetSplittedStreamer(parent, tgt);
-      }
-
-      return tgt;
+      return new JSROOT.TFile(filename, callback);
    }
 
-   JSROOT.TFile.prototype.Delete = function() {
-      this.fDirectories = null;
-      this.fKeys = null;
-      this.fStreamers = null;
-      this.fSeekInfo = 0;
-      this.fNbytesInfo = 0;
-      this.fTagOffset = 0;
-   };
+   JSROOT.IO.NativeArray = ('Float64Array' in window);
 
-   (function() {
-      var iomode = JSROOT.GetUrlOption("iomode");
-      if ((iomode=="str") || (iomode=="string")) JSROOT.IO.Mode = "string"; else
-      if ((iomode=="bin") || (iomode=="arr") || (iomode=="array")) JSROOT.IO.Mode = "array";
-      JSROOT.IO.NativeArray = ('Float64Array' in window);
-   })();
+   JSROOT.IO.ProduceCustomStreamers();
 
    return JSROOT;
 

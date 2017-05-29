@@ -41,13 +41,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
-#ifndef ROOT_ESTLType
 #include "ESTLType.h"
-#endif
 
 // The following are opaque type and are never really declared
 // The specific implemenation of TInterpreter will cast the

@@ -16,24 +16,12 @@
 #include <vector>
 #include <map>
 
-#ifndef ROOT_CocoaUtils
 #include "CocoaUtils.h"
-#endif
-#ifndef ROOT_X11Colors
 #include "X11Colors.h"
-#endif
-#ifndef ROOT_X11Events
 #include "X11Events.h"
-#endif
-#ifndef ROOT_X11Buffer
 #include "X11Buffer.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_GuiFonts
 #include "FontCache.h"
-#endif
 
 @protocol X11Drawable;
 @protocol X11Window;

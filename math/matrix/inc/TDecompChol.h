@@ -18,12 +18,8 @@
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TDecompBase
 #include "TDecompBase.h"
-#endif
-#ifndef ROOT_TMatrixDSym
 #include "TMatrixDSym.h"
-#endif
 
 class TDecompChol : public TDecompBase
 {

@@ -44,12 +44,11 @@ Note that for the TGFALFile plugin to work, all these pathnames
 should be prepended by gfal:.
 */
 
+#include "RConfig.h"
 #include "TROOT.h"
 #include "TUrl.h"
 
-extern "C" {
 #include <gfal_api.h>
-}
 
 // GFAL2 doesn't use special names for 64 bit versions
 #if defined(_GFAL2_API_) || defined(GFAL2_API_) || defined(_GFAL2_API) || defined(_GFAL2_API_H_) || defined(GFAL2_API_H_) || defined(_GFAL2_API_H)

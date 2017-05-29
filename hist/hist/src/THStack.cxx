@@ -23,6 +23,7 @@
 #include "TBrowser.h"
 #include "TMath.h"
 #include "TObjString.h"
+#include "TVirtualMutex.h"
 
 ClassImp(THStack)
 
@@ -97,6 +98,12 @@ Begin_Macro(source)
 ../../../tutorials/hist/candleplotstack.C
 End_Macro
 
+Automatic coloring according to the current palette is available as shown in the
+following example:
+
+Begin_Macro(source)
+../../../tutorials/hist/thstackpalettecolor.C
+End_Macro
 */
 
 
@@ -123,6 +130,7 @@ THStack::THStack(const char *name, const char *title)
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
+   R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -166,8 +174,10 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
    fHistogram = 0;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   gROOT->GetListOfCleanups()->Add(this);
-
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
    if (!axis) {
       Warning("THStack", "Need an axis.");
       return;
@@ -310,7 +320,10 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
 THStack::~THStack()
 {
 
-   gROOT->GetListOfCleanups()->Remove(this);
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Remove(this);
+   }
    if (!fHists) return;
    fHists->Clear("nodelete");
    delete fHists;
@@ -717,6 +730,7 @@ void THStack::Paint(Option_t *choptin)
 
    TString opt = option;
    opt.ToLower();
+   opt.ReplaceAll(" ","");
    Bool_t lsame = kFALSE;
    if (opt.Contains("same")) {
       lsame = kTRUE;
@@ -758,8 +772,6 @@ void THStack::Paint(Option_t *choptin)
       padsav->cd();
       return;
    }
-   Bool_t lnoaxis = kFALSE;
-   if (opt.Contains("a")) lnoaxis = kTRUE;
 
    // compute the min/max of each axis
    TH1 *h;
@@ -781,8 +793,8 @@ void THStack::Paint(Option_t *choptin)
    snprintf(loption,31,"%s",opt.Data());
    char *nostack  = strstr(loption,"nostack");
    char *nostackb = strstr(loption,"nostackb");
-   char *candle = strstr(loption,"candle");
-   char *violin = strstr(loption,"violin");
+   char *candle   = strstr(loption,"candle");
+   char *violin   = strstr(loption,"violin");
 
    // do not delete the stack. Another pad may contain the same object
    // drawn in stack mode!
@@ -948,7 +960,10 @@ void THStack::Paint(Option_t *choptin)
          lnk = (TObjOptLink*)lnk->Prev();
       }
    }
-   if (!lsame && !lnoaxis) fHistogram->Paint("axissame");
+
+   opt.ReplaceAll("nostack","");
+   opt.ReplaceAll("candle","");
+   if (!lsame && !opt.Contains("a")) fHistogram->Paint("axissame");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1044,4 +1059,12 @@ void THStack::SetMinimum(Double_t minimum)
 {
    fMinimum = minimum;
    if (fHistogram) fHistogram->SetMinimum(minimum);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get iterator over internal hists list.
+TIter THStack::begin() const
+{
+  return TIter(fHists);
 }

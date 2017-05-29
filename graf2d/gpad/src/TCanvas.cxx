@@ -102,6 +102,15 @@ and in the batch mode simply do:
 ~~~ {.cpp}
       c->SetCanvasSize(w,h);
 ~~~
+
+If the canvas size this exceed the window size, scroll bars will be added to the canvas
+This allows to display very large canvases (even bigger than the screen size). The
+Following example shows how to proceed.
+~~~ {.cpp}
+TCanvas *c1 = new TCanvas("c1","c1");
+c1->SetCanvasSize(1500, 1500);
+c1->SetWindowSize(500, 500);
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +118,32 @@ and in the batch mode simply do:
 
 TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
 {
-   fPainter      = 0;
-   fWindowTopX   = 0;
-   fWindowTopY   = 0;
-   fWindowWidth  = 0;
-   fWindowHeight = 0;
-   fCw           = 0;
-   fCh           = 0;
+   fPainter          = 0;
+   fWindowTopX       = 0;
+   fWindowTopY       = 0;
+   fWindowWidth      = 0;
+   fWindowHeight     = 0;
+   fCw               = 0;
+   fCh               = 0;
+   fXsizeUser        = 0;
+   fYsizeUser        = 0;
+   fXsizeReal        = kDefaultCanvasSize;
+   fYsizeReal        = kDefaultCanvasSize;
+   fHighLightColor   = gEnv->GetValue("Canvas.HighLightColor", kRed);
+   fEvent            = -1;
+   fEventX           = -1;
+   fEventY           = -1;
+   fSelectedX        = 0;
+   fSelectedY        = 0;
+   fRetained         = kTRUE;
+   fDrawn            = kFALSE;
+   fSelected         = 0;
+   fClickSelected    = 0;
+   fSelectedPad      = 0;
+   fClickSelectedPad = 0;
+   fPadSave          = 0;
+   fCanvasImp        = 0;
+   fContextMenu      = 0;
 
    fUseGL = gStyle->GetCanvasPreferGL();
 
@@ -1217,8 +1245,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
          fSelected->ExecuteEvent(event, px, py);
          gVirtualX->Update();
-
-         if (!fSelected->InheritsFrom(TAxis::Class())) {
+         if (fSelected && !fSelected->InheritsFrom(TAxis::Class())) {
             Bool_t resize = kFALSE;
             if (fSelected->InheritsFrom(TBox::Class()))
                resize = ((TBox*)fSelected)->IsBeingResized();
@@ -1743,6 +1770,10 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
 
    TString mname(fname);
+//    out <<"#ifdef __CLING__"<<std::endl;
+//    out <<"#pragma cling optimize(0)"<<std::endl;
+//    out <<"#endif"<<std::endl;
+//    out <<""<<std::endl;
    Int_t p = mname.Last('.');
    Int_t s = mname.Last('/')+1;
    out <<"void " << mname(s,p-s) << "()" <<std::endl;

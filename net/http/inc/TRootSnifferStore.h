@@ -1,16 +1,20 @@
 // $Id$
 // Author: Sergey Linev   22/12/2013
 
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TRootSnifferStore
 #define ROOT_TRootSnifferStore
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TDataMember;
 class TFolder;
@@ -19,11 +23,11 @@ class TFolder;
 
 class TRootSnifferStore : public TObject {
 protected:
-   void         *fResPtr;       //! pointer on found item
-   TClass       *fResClass;     //! class of found item
-   TDataMember  *fResMember;    //! datamember pointer of found item
-   Int_t         fResNumChilds; //! count of found childs, -1 by default
-   Int_t         fResRestrict;  //! restriction for result, 0-default, 1-readonly, 2-full
+   void *fResPtr;           ///<! pointer on found item
+   TClass *fResClass;       ///<! class of found item
+   TDataMember *fResMember; ///<! datamember pointer of found item
+   Int_t fResNumChilds;     ///<! count of found childs, -1 by default
+   Int_t fResRestrict;      ///<! restriction for result, 0-default, 1-readonly, 2-full
 public:
    TRootSnifferStore();
    virtual ~TRootSnifferStore();
@@ -33,33 +37,14 @@ public:
    virtual void BeforeNextChild(Int_t, Int_t, Int_t) {}
    virtual void CloseNode(Int_t, Int_t) {}
 
-   void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb,
-                  Int_t _res_chld, Int_t restr = 0);
+   void SetResult(void *_res, TClass *_rescl, TDataMember *_resmemb, Int_t _res_chld, Int_t restr = 0);
 
-   void *GetResPtr() const
-   {
-      return fResPtr;
-   }
-   TClass *GetResClass() const
-   {
-      return fResClass;
-   }
-   TDataMember *GetResMember() const
-   {
-      return fResMember;
-   }
-   Int_t GetResNumChilds() const
-   {
-      return fResNumChilds;
-   }
-   Int_t GetResRestrict() const
-   {
-      return fResRestrict;
-   }
-   virtual Bool_t IsXml() const
-   {
-      return kFALSE;
-   }
+   void *GetResPtr() const { return fResPtr; }
+   TClass *GetResClass() const { return fResClass; }
+   TDataMember *GetResMember() const { return fResMember; }
+   Int_t GetResNumChilds() const { return fResNumChilds; }
+   Int_t GetResRestrict() const { return fResRestrict; }
+   virtual Bool_t IsXml() const { return kFALSE; }
 
    ClassDef(TRootSnifferStore, 0) // structure for results store of objects sniffer
 };
@@ -70,14 +55,13 @@ public:
 
 class TRootSnifferStoreXml : public TRootSnifferStore {
 protected:
-   TString *fBuf;          //! output buffer
-   Bool_t fCompact;        //! produce compact xml code
+   TString *fBuf;   ///<! output buffer
+   Bool_t fCompact; ///<! produce compact xml code
 
 public:
-   TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) :
-      TRootSnifferStore(),
-      fBuf(&_buf),
-      fCompact(_compact) {}
+   TRootSnifferStoreXml(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
+   {
+   }
 
    virtual ~TRootSnifferStoreXml() {}
 
@@ -86,10 +70,7 @@ public:
    virtual void BeforeNextChild(Int_t lvl, Int_t nchld, Int_t);
    virtual void CloseNode(Int_t lvl, Int_t numchilds);
 
-   virtual Bool_t IsXml() const
-   {
-      return kTRUE;
-   }
+   virtual Bool_t IsXml() const { return kTRUE; }
 
    ClassDef(TRootSnifferStoreXml, 0) // xml results store of objects sniffer
 };
@@ -100,13 +81,12 @@ public:
 
 class TRootSnifferStoreJson : public TRootSnifferStore {
 protected:
-   TString *fBuf;     //! output buffer
-   Bool_t fCompact;   //! produce compact json code
+   TString *fBuf;   ///<! output buffer
+   Bool_t fCompact; ///<! produce compact json code
 public:
-   TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) :
-      TRootSnifferStore(),
-      fBuf(&_buf),
-      fCompact(_compact) {}
+   TRootSnifferStoreJson(TString &_buf, Bool_t _compact = kFALSE) : TRootSnifferStore(), fBuf(&_buf), fCompact(_compact)
+   {
+   }
    virtual ~TRootSnifferStoreJson() {}
 
    virtual void CreateNode(Int_t lvl, const char *nodename);
@@ -116,6 +96,5 @@ public:
 
    ClassDef(TRootSnifferStoreJson, 0) // json results store of objects sniffer
 };
-
 
 #endif

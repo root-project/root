@@ -13,9 +13,7 @@
 
 
 
-#ifndef ROOSTATS_SimpleInterval
 #include "RooStats/SimpleInterval.h"
-#endif
 
 #include "RooStats/HypoTestResult.h"
 
@@ -25,16 +23,6 @@ namespace RooStats {
 
 class SamplingDistribution;
 
-/**
-   HypoTestInverterResult class: holds the array of hypothesis test results and compute a confidence interval.
-   Based on the RatioFinder code available in the RooStatsCms package developed by Gregory Schott and Danilo Piparo
-   Ported and adapted to RooStats by Gregory Schott
-   Some contributions to this class have been written by Matthias Wolf (error estimation)
-
-   \ingroup Roostats
-**/
-
-
 class HypoTestInverterResult : public SimpleInterval {
 
 public:
@@ -43,7 +31,7 @@ public:
    explicit HypoTestInverterResult(const char* name = 0);
 
    /// constructor
-   HypoTestInverterResult( const char* name, 
+   HypoTestInverterResult( const char* name,
                            const RooRealVar& scannedVariable,
                            double cl ) ;
 
@@ -61,8 +49,8 @@ public:
    /// merge with the content of another HypoTestInverterResult object
    bool Add( const HypoTestInverterResult& otherResult );
 
-   ///add the result of a single point (an HypoTestRsult) 
-   bool Add( Double_t x, const HypoTestResult & result ); 
+   ///add the result of a single point (an HypoTestRsult)
+   bool Add( Double_t x, const HypoTestResult & result );
 
    /// function to return the value of the parameter of interest for the i^th entry in the results
    double GetXValue( int index ) const ;
@@ -74,25 +62,25 @@ public:
    double GetYError( int index ) const ;
 
    /// return the observed CLsplusb value  for the i-th entry
-   double CLsplusb( int index) const; 
- 
-   /// return the observed CLb value  for the i-th entry
-   double CLb( int index) const; 
+   double CLsplusb( int index) const;
 
    /// return the observed CLb value  for the i-th entry
-   double CLs( int index) const; 
+   double CLb( int index) const;
+
+   /// return the observed CLb value  for the i-th entry
+   double CLs( int index) const;
 
    /// return the observed CLsplusb value  for the i-th entry
-   double CLsplusbError( int index) const; 
- 
-   /// return the observed CLb value  for the i-th entry
-   double CLbError( int index) const; 
+   double CLsplusbError( int index) const;
 
    /// return the observed CLb value  for the i-th entry
-   double CLsError( int index) const; 
-   
+   double CLbError( int index) const;
+
+   /// return the observed CLb value  for the i-th entry
+   double CLsError( int index) const;
+
    /// return a pointer to the i^th result object
-   HypoTestResult* GetResult( int index ) const ;   
+   HypoTestResult* GetResult( int index ) const ;
 
    double GetLastYValue( ) const  { return GetYValue(  fXValues.size()-1); }
 
@@ -113,11 +101,11 @@ public:
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
    virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
 
-   /// set CLs threshold for exclusion cleanup function 
+   /// set CLs threshold for exclusion cleanup function
    inline void SetCLsCleanupThreshold( Double_t th ) { fCLsCleanupThreshold = th; }
 
    /// flag to switch between using CLsb (default) or CLs as confidence level
-   void UseCLs( bool on = true ) { fUseCLs = on; }  
+   void UseCLs( bool on = true ) { fUseCLs = on; }
 
    /// query if one sided result
    bool IsOneSided() const { return !fIsTwoSided; }
@@ -128,33 +116,33 @@ public:
    Double_t LowerLimit();
    Double_t UpperLimit();
 
-   /// rough estimation of the error on the computed bound of the confidence interval 
+   /// rough estimation of the error on the computed bound of the confidence interval
    /// Estimate of lower limit error
-   ///function evaluates only a rought error on the lower limit. Be careful when using this estimation
+   ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
    Double_t LowerLimitEstimatedError();
 
    /// Estimate of lower limit error
-   ///function evaluates only a rought error on the lower limit. Be careful when using this estimation
+   ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
    Double_t UpperLimitEstimatedError();
 
    /// return expected distribution of p-values (Cls or Clsplusb)
-   
-   SamplingDistribution * GetExpectedPValueDist(int index) const; 
 
-   SamplingDistribution * GetBackgroundTestStatDist(int index ) const; 
+   SamplingDistribution * GetExpectedPValueDist(int index) const;
 
-   SamplingDistribution * GetSignalAndBackgroundTestStatDist(int index) const; 
+   SamplingDistribution * GetBackgroundTestStatDist(int index ) const;
+
+   SamplingDistribution * GetSignalAndBackgroundTestStatDist(int index) const;
 
    /// same in terms of alt and null
-   SamplingDistribution * GetNullTestStatDist(int index) const { 
+   SamplingDistribution * GetNullTestStatDist(int index) const {
       return  GetSignalAndBackgroundTestStatDist(index);
    }
-   SamplingDistribution * GetAltTestStatDist(int index) const { 
+   SamplingDistribution * GetAltTestStatDist(int index) const {
       return  GetBackgroundTestStatDist(index);
    }
 
    /// get expected lower limit distributions
-   /// implemented using interpolation 
+   /// implemented using interpolation
    ///  The size for the sampling distribution is given (by default is given by the average number of toy/point)
    SamplingDistribution* GetLowerLimitDistribution() const { return GetLimitDistribution(true); }
 
@@ -162,11 +150,11 @@ public:
    /// implemented using interpolation
    SamplingDistribution* GetUpperLimitDistribution() const { return GetLimitDistribution(false); }
 
-   /// get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
-   double GetExpectedLowerLimit(double nsig = 0, const char * opt = "" ) const ; 
+   /// get Limit value corresponding at the desired nsigma level (0) is median -1 sigma is 1 sigma
+   double GetExpectedLowerLimit(double nsig = 0, const char * opt = "" ) const ;
 
-   /// get Limit value correspnding at the desired nsigma level (0) is median -1 sigma is 1 sigma
-   double GetExpectedUpperLimit(double nsig = 0, const char * opt = "") const ; 
+   /// get Limit value corresponding at the desired nsigma level (0) is median -1 sigma is 1 sigma
+   double GetExpectedUpperLimit(double nsig = 0, const char * opt = "") const ;
 
 
    double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0);
@@ -175,7 +163,7 @@ public:
 
    /// set the interpolation option, linear (kLinear ) or spline  (kSpline)
    void SetInterpolationOption( InterpolOption_t opt) { fInterpolOption = opt; }
-   
+
    InterpolOption_t GetInterpolationOption() const { return fInterpolOption; }
 
 private:
@@ -187,24 +175,24 @@ private:
 
    SamplingDistribution* GetLimitDistribution(bool lower ) const;
 
-   double GetExpectedLimit(double nsig, bool lower, const char * opt = "" ) const ; 
+   double GetExpectedLimit(double nsig, bool lower, const char * opt = "" ) const ;
 
    double GetGraphX(const TGraph & g, double y0, bool lowSearch, double &xmin, double &xmax) const;
-   double GetGraphX(const TGraph & g, double y0, bool lowSearch = true) const { 
+   double GetGraphX(const TGraph & g, double y0, bool lowSearch = true) const {
       double xmin=1; double xmax = 0;
       return GetGraphX(g,y0,lowSearch,xmin,xmax);
    }
 
- 
+
 protected:
 
-   bool fUseCLs; 
-   bool fIsTwoSided;                  /// two sided scan (look for lower/upper limit) 
+   bool fUseCLs;
+   bool fIsTwoSided;                  /// two sided scan (look for lower/upper limit)
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
    bool fFittedUpperLimit;
-   InterpolOption_t fInterpolOption;  /// interpolatation option (linear or spline)
+   InterpolOption_t fInterpolOption;  /// interpolation option (linear or spline)
 
    double fLowerLimitError;
    double fUpperLimitError;
@@ -223,7 +211,7 @@ protected:
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,5)  /// HypoTestInverterResult class      
+   ClassDef(HypoTestInverterResult,5)  /// HypoTestInverterResult class
 };
 }
 

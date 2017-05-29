@@ -53,26 +53,19 @@
 #include <string>
 #include <vector>
 #include <map>
-#ifndef ROOT_TCut
 #include "TCut.h"
-#endif
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
 
-class TFile;
-class TTree;
-class TDirectory;
 class TCanvas;
+class TDirectory;
+class TFile;
 class TGraph;
 class TH1F;
+class TMultiGraph;
+class TTree;
 namespace TMVA {
 
    class IMethod;
@@ -133,7 +126,8 @@ namespace TMVA {
       void DeleteAllMethods( void );
 
       // accessors
-      IMethod* GetMethod( const TString& datasetname, const TString& title )const;
+      IMethod* GetMethod( const TString& datasetname, const TString& title ) const;
+      Bool_t   HasMethod( const TString& datasetname, const TString& title ) const;
 
       Bool_t Verbose( void ) const { return fVerbose; }
       void SetVerbose( Bool_t v=kTRUE );
@@ -158,14 +152,19 @@ namespace TMVA {
       Double_t GetROCIntegral(DataLoader *loader,TString theMethodName);
       Double_t GetROCIntegral(TString  datasetname,TString theMethodName);
 
-      //methods to get TGraph for a indicate method in dataset
-      //optional tiitle and axis added with fLegend=kTRUE
-      TGraph* GetROCCurve(DataLoader *loader,TString theMethodName,Bool_t fLegend=kTRUE);
-      TGraph* GetROCCurve(TString  datasetname,TString theMethodName,Bool_t fLegend=kTRUE);
+      // Methods to get a TGraph for an indicated method in dataset.
+      // Optional title and axis added with fLegend=kTRUE.
+      // Argument iClass used in multiclass settings, otherwise ignored.
+      TGraph* GetROCCurve(DataLoader *loader, TString theMethodName, Bool_t setTitles=kTRUE, UInt_t iClass=0);
+      TGraph* GetROCCurve(TString datasetname, TString theMethodName, Bool_t setTitles=kTRUE, UInt_t iClass=0);
+
+      // Methods to get a TMultiGraph for a given class and all methods in dataset.
+      TMultiGraph* GetROCCurveAsMultiGraph(DataLoader *loader, UInt_t iClass);
+      TMultiGraph* GetROCCurveAsMultiGraph(TString datasetname, UInt_t iClass);
       
-      // Draw all ROC curves for all methods in the dataset.
-      TCanvas* GetROCCurve(DataLoader *loader);
-      TCanvas* GetROCCurve(TString datasetname);
+      // Draw all ROC curves of a given class for all methods in the dataset.
+      TCanvas* GetROCCurve(DataLoader *loader, UInt_t iClass=0);
+      TCanvas* GetROCCurve(TString datasetname, UInt_t iClass=0);
 
    private:
 

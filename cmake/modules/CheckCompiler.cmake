@@ -2,15 +2,16 @@
 #  CheckCompiler.cmake
 #---------------------------------------------------------------------------------------------------
 
+include(CheckLanguage)
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
   #--Work-around for CMake issue 0009220
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
-  enable_language(Fortran OPTIONAL)
-  if(NOT CMAKE_Fortran_COMPILER)
-    set(CMAKE_Fortran_COMPILER_LOADED)   # FindBLAS/LAPACK tests CMAKE_Fortran_COMPILER_LOADED
+  check_language(Fortran)
+  if(CMAKE_Fortran_COMPILER)
+    enable_language(Fortran)
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -88,6 +89,11 @@ if(cxx11 AND cxx14)
   message(STATUS "c++11 mode requested but superseded by request for c++14 mode")
   set(cxx11 OFF CACHE BOOL "" FORCE)
 endif()
+if((cxx11 OR cxx14) AND cxx17)
+  message(STATUS "c++11 or c++14 mode requested but superseded by request for c++17 mode")
+  set(cxx11 OFF CACHE BOOL "" FORCE)
+  set(cxx14 OFF CACHE BOOL "" FORCE)
+endif()
 if(cxx11)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
   if(NOT HAS_CXX11)
@@ -101,11 +107,17 @@ if(cxx14)
     message(STATUS "Current compiler does not suppport -std=c++14 option. Switching OFF cxx14 option")
     set(cxx14 OFF CACHE BOOL "" FORCE)
   endif()
-  set(root7 On)
+endif()
+if(cxx17)
+  CHECK_CXX_COMPILER_FLAG("-std=c++1z" HAS_CXX17)
+  if(NOT HAS_CXX17)
+    message(STATUS "Current compiler does not suppport -std=c++17 option. Switching OFF cxx17 option")
+    set(cxx17 OFF CACHE BOOL "" FORCE)
+  endif()
 endif()
 if(root7)
-  if(NOT cxx14)
-    message(STATUS "ROOT7 interfaces require cxx14 which is disabled. Switching OFF root7 option")
+  if(cxx11)
+    message(STATUS "ROOT7 interfaces require >= cxx14 which is disabled. Switching OFF root7 option")
     set(root7 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -119,52 +131,6 @@ if(libcxx)
   endif()
 endif()
 
-
-#---Check for cxxmodules option------------------------------------------------------------
-if(cxxmodules)
-  # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
-  set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -fmodules -fcxx-modules")
-  # Check that we can build code with modules enabled, and that repeatedly
-  # including <cassert> still manages to respect NDEBUG properly.
-  CHECK_CXX_SOURCE_COMPILES("#undef NDEBUG
-                             #include <cassert>
-                             #define NDEBUG
-                             #include <cassert>
-                             int main() { assert(this code is not compiled); }"
-                             CXX_SUPPORTS_MODULES)
-  set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
-  if(CXX_SUPPORTS_MODULES)
-    file(COPY ${CMAKE_SOURCE_DIR}/build/unix/module.modulemap DESTINATION ${ROOT_INCLUDE_DIR})
-    set(ROOT_CXXMODULES_COMMONFLAGS "-fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Rmodule-build")
-    if (APPLE)
-      # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
-      # trickery to override the contents of system's OpenGL.
-      # On OSX #include TGLIncludes.h will trigger the creation of the system
-      # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
-      # the translation units which it needs to 'rewrite'. The translation units
-      # which need glew support are in graf3d. However, depending on the modulemap
-      # organization we could request it implicitly (eg. one big module for ROOT).
-      # In these cases we need to 'prepend' this include path to the compiler in order
-      # for glew.h to it its trick.
-      #set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem"
-
-      # Workaround the issue described above by not picking up the system module
-      # maps. In this way we can use the -fmodules-local-submodule-visibility
-      # flag.
-      set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fno-implicit-module-maps -fmodule-map-file=${CMAKE_BINARY_DIR}/include/module.modulemap")
-    endif(APPLE)
-    # This var is useful when we want to compile things without cxxmodules.
-    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags.")
-
-    set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
-  else()
-    message(FATAL_ERROR "cxxmodules is not supported by this compiler")
-  endif()
-endif(cxxmodules)
-
 #---Need to locate thead libraries and options to set properly some compilation flags----------------
 find_package(Threads)
 if(CMAKE_USE_PTHREADS_INIT)
@@ -173,7 +139,20 @@ else()
   set(CMAKE_THREAD_FLAG)
 endif()
 
-#---Setup details depending opn the major platform type----------------------------------------------
+
+#---Setup compiler-specific flags (warning etc)----------------------------------------------
+if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
+  # AppleClang and Clang proper.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc++11-narrowing -Wsign-compare -Wsometimes-uninitialized -Wconditional-uninitialized -Wheader-guard -Warray-bounds -Wcomment -Wtautological-compare -Wstrncat-size -Wloop-analysis -Wbool-conversion")
+elseif(CMAKE_COMPILER_IS_GNUCXX)
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-implicit-fallthrough -Wno-noexcept-type")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-implicit-fallthrough")
+  endif()
+endif()
+
+
+#---Setup details depending on the major platform type----------------------------------------------
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
   include(SetUpLinux)
 elseif(APPLE)
@@ -187,13 +166,14 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_THREAD_FLAG}")
 
 if(cxx11)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-  if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wc++11-narrowing -Wsign-compare -Wsometimes-uninitialized -Wconditional-uninitialized -Wheader-guard -Warray-bounds -Wcomment -Wtautological-compare -Wstrncat-size -Wloop-analysis -Wbool-conversion")
-  endif()
 endif()
 
 if(cxx14)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+endif()
+
+if(cxx17)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 endif()
 
 if(libcxx)
@@ -210,6 +190,18 @@ endif()
 if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
+
+#---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
+# Necessary to compile check_cxx_source_compiles this early
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+"
+#include <string>
+#if _GLIBCXX_USE_CXX11_ABI == 0
+  #error NOCXX11
+#endif
+int main() {}
+" GLIBCXX_USE_CXX11_ABI)
 
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")

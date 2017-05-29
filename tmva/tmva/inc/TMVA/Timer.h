@@ -39,12 +39,8 @@
 #ifndef ROOT_time
 #include "time.h"
 #endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
-#ifndef ROOT_TStopwatch
 #include "TStopwatch.h"
-#endif
 
 // ensure that clock_t is always defined
 #if defined(__SUNPRO_CC) && defined(_XOPEN_SOURCE) && (_XOPEN_SOURCE - 0 == 500 )
@@ -86,6 +82,11 @@ namespace TMVA {
       Int_t     fNcounts;               // reference number of "counts"
       TString   fPrefix;                // prefix for outputs
       Bool_t    fColourfulOutput;       // flag for use of colors
+
+      // Save state of previos progress
+      Int_t     fPreviousProgress;
+      TString   fPreviousTimeEstimate;
+      Bool_t    fOutputToFile;
 
       Int_t     fProgressBarStringLength;
 

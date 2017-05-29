@@ -13,13 +13,9 @@
 #define ROOT_TControlBar
 
 
-#ifndef ROOT_TControlBarButton
 #include "TControlBarButton.h"
-#endif
 
-#ifndef ROOT_TControlBarImp
 #include "TControlBarImp.h"
-#endif
 
 class TList;
 

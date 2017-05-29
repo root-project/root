@@ -21,9 +21,7 @@
 //#define THREAD_SAFE
 
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 #include <map>
 #include <vector>

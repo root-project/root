@@ -21,18 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TDatime
 #include "TDatime.h"
-#endif
-#ifndef ROOT_TMacro
 #include "TMacro.h"
-#endif
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TBrowser;
 class TTreePlayer;

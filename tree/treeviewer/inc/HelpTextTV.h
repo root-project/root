@@ -12,9 +12,7 @@
 #ifndef ROOT_HelpTextTV
 #define ROOT_HelpTextTV
 
-#ifndef ROOT_Rtypes
 #include <Rtypes.h>
-#endif
 
 R__EXTERN const char gTVHelpAbout[];
 R__EXTERN const char gTVHelpStart[];

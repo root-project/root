@@ -11,18 +11,10 @@
 
 #ifndef ROOT_TPie
 #define ROOT_TPie
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
-#ifndef ROOT_TNamed
 #include <TNamed.h>
-#endif
-#ifndef ROOT_TString
 #include <TString.h>
-#endif
-#ifndef ROOT_TAttText
 #include <TAttText.h>
-#endif
 
 class TH1;
 class TPieSlice;

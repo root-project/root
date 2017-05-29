@@ -42,7 +42,7 @@ VERSION=
 EXPLLNKCORE=
 if [ "x$EXPLICIT" = "xyes" ]; then
    if [ $LIB != "lib/libminicern.$soext" ]; then
-      if [ $LIB != "lib/libCore.$soext" ]; then
+      if [ $LIB != "lib/libCore.$soext" -a $LIB != "lib/libCling.$soext" ]; then
          EXPLLNKCORE="-Llib -lCore"
       else
          EXPLLNKCORE=""

@@ -24,9 +24,7 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TTUBE
 #include "TTUBE.h"
-#endif
 
 class TTUBS : public TTUBE {
 protected:

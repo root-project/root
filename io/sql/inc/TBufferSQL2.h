@@ -5,17 +5,11 @@
 #ifndef ROOT_TBufferSQL2
 #define ROOT_TBufferSQL2
 
-#ifndef ROOT_TBufferFile
 #include "TBufferFile.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TObjArray
 #include "TObjArray.h"
-#endif
 
 class TMap;
 class TExMap;

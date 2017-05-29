@@ -16,9 +16,7 @@
 #include "assert.h"
 #include <vector>
 
-#ifndef ROOT_TTable
 #include "TTable.h"
-#endif
 
 //////////////////////////////////////////////////////
 //

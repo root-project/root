@@ -11,9 +11,7 @@
 #ifndef ROOT_TGSimpleTable
 #define ROOT_TGSimpleTable
 
-#ifndef ROOT_TGTable
 #include "TGTable.h"
-#endif
 
 class TObjArray;
 

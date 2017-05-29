@@ -30,9 +30,7 @@
 #ifndef ROOT_TMVA_PDEFoamDiscriminant
 #define ROOT_TMVA_PDEFoamDiscriminant
 
-#ifndef ROOT_TMVA_PDEFoam
 #include "TMVA/PDEFoam.h"
-#endif
 
 namespace TMVA
 {

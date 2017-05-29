@@ -568,7 +568,7 @@ Bool_t TPgSQLStatement::GetTime(Int_t npar, Int_t& hour, Int_t& min, Int_t& sec)
    Int_t year = d.GetYear();
    Int_t month = d.GetMonth();
    Int_t day = d.GetDay();
-   ConvertTimeToUTC(val, day, month, year, hour, min, sec);
+   ConvertTimeToUTC(val, year, month, day, hour, min, sec);
    return kTRUE;
 }
 

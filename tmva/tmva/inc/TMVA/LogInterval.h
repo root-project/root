@@ -68,13 +68,9 @@
 //    i=10 --> 1024                                                         //
 //                                                                          //
 //////////////////////////////////////////////////////////////////////////////
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef TMVA_Interval
 #include "Interval.h"
-#endif
 
 
 

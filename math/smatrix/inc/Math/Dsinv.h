@@ -28,9 +28,7 @@
 //
 // ********************************************************************
 
-#ifndef ROOT_Math_SMatrixDfwd
 #include "Math/SMatrixDfwd.h"
-#endif
 
 namespace ROOT {
 

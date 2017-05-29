@@ -8,11 +8,22 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class RooStats::SimpleLikelihoodRatioTestStat
+    \ingroup Roostats
+
+TestStatistic class that returns -log(L[null] / L[alt]) where
+L is the likelihood.
+It is often called as the LEP Test statistic.
+
+
+*/
+
 #include "RooStats/SimpleLikelihoodRatioTestStat.h"
 #include "RooStats/RooStatsUtils.h"
 
-
 Bool_t RooStats::SimpleLikelihoodRatioTestStat::fgAlwaysReuseNll = kTRUE ;
+
+////////////////////////////////////////////////////////////////////////////////
 
 void RooStats::SimpleLikelihoodRatioTestStat::SetAlwaysReuseNLL(Bool_t flag) { fgAlwaysReuseNll = flag ; }
 
@@ -23,7 +34,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
          << "Same RooArgSet used for null and alternate, so you must explicitly SetNullParameters and SetAlternateParameters or the likelihood ratio will always be 1."
          << std::endl;
    }
-   
+
    // strip pdfs of constraints (which cancel out in the ratio) to avoid unnecessary computations and computational errors
    if (fFirstEval) {
       fNullPdf = RooStats::MakeUnconstrainedPdf(*fNullPdf, *fNullPdf->getObservables(data));
@@ -53,10 +64,10 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
    *attachedSet = *fNullParameters;
    *attachedSet = nullPOI;
    double nullNLL = fNllNull->getVal();
-         
+
    //std::cout << std::endl << "SLRTS: null params:" << std::endl;
    //attachedSet->Print("v");
-         
+
 
    if (!reuse) {
       delete fNllNull ; fNllNull = NULL ;
@@ -85,7 +96,7 @@ Double_t RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, Roo
 //   std::cout << std::endl << "SLRTS null NLL: " << nullNLL << "    alt NLL: " << altNLL << std::endl << std::endl;
 
 
-   if (!reuse) { 
+   if (!reuse) {
       delete fNllAlt ; fNllAlt = NULL ;
    }
    delete attachedSet;

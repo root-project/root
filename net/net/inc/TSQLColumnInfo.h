@@ -12,9 +12,7 @@
 #ifndef ROOT_TSQLColumnInfo
 #define ROOT_TSQLColumnInfo
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
 
 class TSQLColumnInfo : public TNamed {
 

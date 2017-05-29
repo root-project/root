@@ -4,53 +4,29 @@
 #ifndef ROOT_TMVA_CrossValidation
 #define ROOT_TMVA_CrossValidation
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
-#ifndef ROOT_TMultiGraph
 #include "TMultiGraph.h"
-#endif
 
-#ifndef ROOT_TMVA_IMethod
 #include "TMVA/IMethod.h"
-#endif
 
-#ifndef ROOT_TMVA_Configurable
 #include "TMVA/Configurable.h"
-#endif
 
-#ifndef ROOT_TMVA_Types
 #include "TMVA/Types.h"
-#endif
 
-#ifndef ROOT_TMVA_DataSet
 #include "TMVA/DataSet.h"
-#endif
 
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
-#ifndef ROOT_TMVA_Results
 #include <TMVA/Results.h>
-#endif
 
-#ifndef ROOT_TMVA_Factory
 #include <TMVA/Factory.h>
-#endif
 
-#ifndef ROOT_TMVA_DataLoader
 #include <TMVA/DataLoader.h>
-#endif
 
-#ifndef ROOT_TMVA_OptionMap
 #include <TMVA/OptionMap.h>
-#endif
 
-#ifndef ROOT_TMVA_Envelope
 #include <TMVA/Envelope.h>
-#endif
 
 namespace TMVA {
 

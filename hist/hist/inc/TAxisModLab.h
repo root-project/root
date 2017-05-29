@@ -12,17 +12,11 @@
 #ifndef ROOT_TAxisModLab
 #define ROOT_TAxisModLab
 
-#ifndef ROOT_TAttText
 #include "TObject.h"
-#endif
 
-#ifndef ROOT_TAttText
 #include "TAttText.h"
-#endif
 
-#ifndef ROOT_TString
 #include "TString.h"
-#endif
 
 class TAxisModLab : public TObject, public TAttText {
 
@@ -51,7 +45,7 @@ public:
    Int_t    GetFont()   {return fTextFont;}
    TString  GetText()   {return fLabText;}
 
-   ClassDef(TAxisModLab,0)  // Modified axis label
+   ClassDef(TAxisModLab,3)  // Modified axis label
 };
 
 #endif

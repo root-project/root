@@ -22,9 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TConditionImp
 #include "TConditionImp.h"
-#endif
 
 #include "Windows4Root.h"
 

@@ -21,12 +21,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGlobal
 #include "TGlobal.h"
-#endif
-#ifndef ROOT_TEnum
 #include "TEnum.h"
-#endif
 
 class TEnum;
 

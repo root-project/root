@@ -26,7 +26,6 @@ Full description with examples and pictures
 #include "TBuffer.h"
 #include "TObject.h"
 #include "TMath.h"
-#include "TThread.h"
 #include "TGeoMatrix.h"
 #include "TGeoBBox.h"
 #include "TGeoNode.h"

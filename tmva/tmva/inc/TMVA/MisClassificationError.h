@@ -39,9 +39,7 @@
 //       criterion: 1-max(p, 1-p)                                       //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TMVA_SeparationBase
 #include "TMVA/SeparationBase.h"
-#endif
 
 namespace TMVA {
 
@@ -59,7 +57,7 @@ namespace TMVA {
       virtual ~MisClassificationError() {}
 
       // Return the separation index: 1-max(p,1-p)
-      virtual Double_t  GetSeparationIndex( const Double_t &s, const Double_t &b );
+      virtual Double_t  GetSeparationIndex( const Double_t s, const Double_t b );
    protected:
 
       ClassDef(MisClassificationError,0); // Implementation of the MisClassificationError as separation criterion

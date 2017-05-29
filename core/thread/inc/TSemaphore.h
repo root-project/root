@@ -24,9 +24,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#ifndef ROOT_TObject
 #include "TObject.h"
-#endif
 
 class TSemaphore : public TObject {
 

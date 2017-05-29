@@ -26,12 +26,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualPacketizer
 #include "TVirtualPacketizer.h"
-#endif
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 
 class TMessage;

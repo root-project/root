@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TFunction
 #include "TFunction.h"
-#endif
 
 class TList;
 class TDataMember;

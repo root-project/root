@@ -19,12 +19,8 @@
 
 #include <ApplicationServices/ApplicationServices.h>
 
-#ifndef ROOT_XLFDParser
 #include "XLFDParser.h"
-#endif
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
 
 #include "CocoaUtils.h"
 

@@ -13,9 +13,7 @@
 
 
 
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 //#include "TNamed.h"
 
@@ -28,19 +26,18 @@ namespace RooStats {
 
    class ModelConfig;
 
-/**
-
-\ingroup Roostats
+/** \class IntervalCalculator
+    \ingroup Roostats
 
 IntervalCalculator is an interface class for a tools which produce RooStats
 ConfIntervals. The interface currently assumes that any interval calculator can
 be configured by specifying:
 
-*   a model,
-*   a data set,
-*   a set of parameters of interest,
-*   a set of nuisance parameters (eg. parameters on which the model depends, but are not of interest), and
-*   a confidence level or size of the test (eg. rate of Type I error).
+  - a model,
+  - a data set,
+  - a set of parameters of interest,
+  - a set of nuisance parameters (eg. parameters on which the model depends, but are not of interest), and
+  - a confidence level or size of the test (eg. rate of Type I error).
 
 The interface allows one to pass the model, data, and parameters via a workspace
 and then specify them with names. The interface will be extended so that one does

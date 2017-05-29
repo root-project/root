@@ -200,7 +200,6 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
 
       // if histogram is empty it does not matter if it has label or not 
       if (allHaveLabels && !histoIsEmpty) {
-         if (histoIsEmpty) continue;
          THashList* hlabels=h->GetXaxis()->GetLabels();
          Bool_t haveOneLabel = (hlabels != nullptr);
          // do here to print message only one time
@@ -385,13 +384,13 @@ Bool_t TH1Merger::BufferMerge() {
          }
          if (fH0->fDimension == 2) {
             auto h2 = dynamic_cast<TH2*>(fH0);
-            R__ASSERT(h2); 
+            R__ASSERT(h2);
             for (Int_t i = 0; i < nbentries; i++)
                h2->Fill(hist->fBuffer[3*i + 2], hist->fBuffer[3*i + 3],hist->fBuffer[3*i + 1] );
          }
          if (fH0->fDimension == 3) {
             auto h3 = dynamic_cast<TH3*>(fH0);
-            R__ASSERT(h3); 
+            R__ASSERT(h3);
             for (Int_t i = 0; i < nbentries; i++)
                h3->Fill(hist->fBuffer[4*i + 2], hist->fBuffer[4*i + 3],hist->fBuffer[4*i + 4], hist->fBuffer[4*i + 1] );
          }
@@ -514,7 +513,7 @@ Bool_t TH1Merger::DifferentAxesMerge() {
             }
          }
          if (binz <= 0 || binz >= hist->GetNbinsZ() + 1) {
-            if (fH0->fZaxis.CanExtend() || ( hist->fZaxis.GetBinCenter(binz) > fH0->fZaxis.GetXmin() && hist->fXaxis.GetBinCenter(binz) < fH0->fZaxis.GetXmax()) ) {
+            if (fH0->fZaxis.CanExtend() || ( hist->fZaxis.GetBinCenter(binz) > fH0->fZaxis.GetXmin() && hist->fZaxis.GetBinCenter(binz) < fH0->fZaxis.GetXmax()) ) {
                Error("TH1Merger::DifferentAxesMerge", "Cannot merge histograms - the histograms %s can extend the Z axis or have"
                      " different limits and underflows/overflows are present in the histogram %s.",fH0->GetName(),hist->GetName());
                   return kFALSE;

@@ -11,15 +11,9 @@
 #ifndef RooStats_ConfidenceBelt
 #define RooStats_ConfidenceBelt
 
-#ifndef ROO_ARG_SET
 #include "RooArgSet.h"
-#endif
-#ifndef ROO_TREE_DATA
 #include "RooAbsData.h"
-#endif
-#ifndef RooStats_ConfInterval
 #include "RooStats/ConfInterval.h"
-#endif
 
 #include "RooStats/SamplingDistribution.h"
 

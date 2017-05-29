@@ -30,33 +30,15 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TVirtualProofPlayer
 #include "TVirtualProofPlayer.h"
-#endif
-#ifndef ROOT_TArrayL64
 #include "TArrayL64.h"
-#endif
-#ifndef ROOT_TArrayF
 #include "TArrayF.h"
-#endif
-#ifndef ROOT_TArrayI
 #include "TArrayI.h"
-#endif
-#ifndef ROOT_TList
 #include "TList.h"
-#endif
-#ifndef ROOT_TSystem
 #include "TSystem.h"
-#endif
-#ifndef ROOT_TQueryResult
 #include "TQueryResult.h"
-#endif
-#ifndef ROOT_TProofProgressStatus
 #include "TProofProgressStatus.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 #include <mutex>
 

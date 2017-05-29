@@ -11,17 +11,11 @@
 #ifndef ROOT_TGenCollectionProxy
 #define ROOT_TGenCollectionProxy
 
-#ifndef ROOT_TBuffer
 #include "TBuffer.h"
-#endif
 
-#ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
-#endif
 
-#ifndef ROOT_TCollectionProxyInfo
 #include "TCollectionProxyInfo.h"
-#endif
 
 #include <atomic>
 #include <string>
@@ -50,8 +44,7 @@ public:
       // Those 'bits' are used in conjunction with CINT's bit to store the 'type'
       // info into one int
       kBIT_ISSTRING   = 0x20000000,  // We can optimized a value operation when the content are strings
-      kBIT_ISTSTRING  = 0x40000000,
-      kBOOL_t = 21
+      kBIT_ISTSTRING  = 0x40000000
    };
 
    /** @class TGenCollectionProxy::Value TGenCollectionProxy.h TGenCollectionProxy.h

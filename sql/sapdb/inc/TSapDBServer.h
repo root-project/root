@@ -12,9 +12,7 @@
 #ifndef ROOT_TSapDBServer
 #define ROOT_TSapDBServer
 
-#ifndef ROOT_TSQLServer
 #include "TSQLServer.h"
-#endif
 
 #include <ctime>
 #include <WINDOWS.H>

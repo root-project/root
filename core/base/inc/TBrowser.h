@@ -26,12 +26,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TNamed
 #include "TNamed.h"
-#endif
-#ifndef ROOT_TBrowserImp
 #include "TBrowserImp.h"
-#endif
 
 
 class TContextMenu;
@@ -91,7 +87,7 @@ public:
 
    virtual void  Create(TObject *obj = 0);      // Create this Browser
    virtual void  Destructor();
-   void          BrowseObject(TObject *obj)    { fImp->BrowseObj(obj); }
+   void          BrowseObject(TObject *obj)    { if (fImp) fImp->BrowseObj(obj); }
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }
    void          SetBrowserImp(TBrowserImp *i) { fImp = i; }
@@ -99,25 +95,25 @@ public:
    Bool_t        GetRefreshFlag() const        { return fNeedRefresh; }
    TObject      *GetSelected() const           { return fLastSelectedObject; }
    void          SetRefreshFlag(Bool_t flag)   { fNeedRefresh = flag; }
-   void          Iconify()                     { fImp->Iconify(); }
+   void          Iconify()                     { if (fImp) fImp->Iconify(); }
    virtual void  RecursiveRemove(TObject *obj);
    void          Refresh();
    void          SetSelected(TObject *clickedObject);
-   void          Show()                        { fImp->Show(); }
-   void          SetDrawOption(Option_t *option="") { fImp->SetDrawOption(option); }
-   Option_t     *GetDrawOption() const { return  fImp->GetDrawOption(); }
+   void          Show()                        { if (fImp) fImp->Show(); }
+   void          SetDrawOption(Option_t *option="") { if (fImp) fImp->SetDrawOption(option); }
+   Option_t     *GetDrawOption() const { return  (fImp) ? fImp->GetDrawOption() : 0; }
 
    Long_t        ExecPlugin(const char *name = 0, const char *fname = 0,
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
-                    return fImp->ExecPlugin(name, fname, cmd, pos, subpos);
+                    return (fImp) ? fImp->ExecPlugin(name, fname, cmd, pos, subpos) : -1;
                  }
    void          SetStatusText(const char *txt, Int_t col) {
-                    fImp->SetStatusText(txt, col);
+                    if (fImp) fImp->SetStatusText(txt, col);
                  }
    void          StartEmbedding(Int_t pos, Int_t subpos) {
-                    fImp->StartEmbedding(pos, subpos);
+                    if (fImp) fImp->StartEmbedding(pos, subpos);
                  }
-   void          StopEmbedding(const char *name = "") { fImp->StopEmbedding(name); }
+   void          StopEmbedding(const char *name = "") { if (fImp) fImp->StopEmbedding(name); }
 
    ClassDef(TBrowser,0)  //ROOT Object Browser
 };

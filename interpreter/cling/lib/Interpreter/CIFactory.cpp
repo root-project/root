@@ -159,15 +159,6 @@ namespace {
     if (sArguments.empty()) {
       const bool Verbose = opts.Verbose;
 #ifdef _MSC_VER
-      // Honor %INCLUDE%. It should know essential search paths with vcvarsall.bat.
-      if (const char* Includes = getenv("INCLUDE")) {
-        SmallVector<StringRef, 8> Dirs;
-        utils::SplitPaths(Includes, Dirs, utils::kAllowNonExistant,
-                          platform::kEnvDelim, Verbose);
-        for (const llvm::StringRef& Path : Dirs)
-          sArguments.addArgument("-I", Path.str());
-      }
-
       // When built with access to the proper Windows APIs, try to actually find
       // the correct include paths first. Init for UnivSDK.empty check below.
       std::string VSDir, WinSDK,
@@ -211,7 +202,13 @@ namespace {
       // Do not warn about such cases.
       sArguments.addArgument("-Wno-dll-attribute-on-redeclaration");
       sArguments.addArgument("-Wno-inconsistent-dllimport");
-      //sArguments.addArgument("-Wno-ignored-attributes");
+
+      // Assume Windows.h might be included, and don't spew a ton of warnings
+      sArguments.addArgument("-Wno-ignored-attributes");
+      sArguments.addArgument("-Wno-nonportable-include-path");
+      sArguments.addArgument("-Wno-microsoft-enum-value");
+      sArguments.addArgument("-Wno-expansion-to-defined");
+
       //sArguments.addArgument("-Wno-dllimport-static-field-def");
       //sArguments.addArgument("-Wno-microsoft-template");
 
@@ -350,36 +347,30 @@ namespace {
   static void SetClingCustomLangOpts(LangOptions& Opts) {
     Opts.EmitAllDecls = 0; // Otherwise if PCH attached will codegen all decls.
 #ifdef _MSC_VER
-#if _HAS_EXCEPTIONS
-    Opts.Exceptions = 1;
-    if (Opts.CPlusPlus) {
-      Opts.CXXExceptions = 1;
-    }
-#else
-    Opts.Exceptions = 0;
-    if (Opts.CPlusPlus) {
-      Opts.CXXExceptions = 0;
-    }
-#endif
-    Opts.Trigraphs = 0;
-    Opts.RTTIData = 0;
-    Opts.setDefaultCallingConv(clang::LangOptions::DCC_CDecl);
 #ifdef _DEBUG
     // FIXME: This requires bufferoverflowu.lib, but adding:
     // #pragma comment(lib, "bufferoverflowu.lib") still gives errors!
     // Opts.setStackProtector(clang::LangOptions::SSPStrong);
-#endif
+#endif // _DEBUG
+#ifdef _CPPRTTI
+    Opts.RTTIData = 1;
 #else
-    Opts.Exceptions = 1;
-    if (Opts.CPlusPlus) {
-      Opts.CXXExceptions = 1;
-    }
+    Opts.RTTIData = 0;
+#endif // _CPPRTTI
+    Opts.Trigraphs = 0;
+    Opts.setDefaultCallingConv(clang::LangOptions::DCC_CDecl);
+#else // !_MSC_VER
     Opts.Trigraphs = 1;
 //    Opts.RTTIData = 1;
 //    Opts.DefaultCallingConventions = 1;
 //    Opts.StackProtector = 0;
 #endif // _MSC_VER
-    Opts.Deprecated = 1;
+
+    Opts.Exceptions = 1;
+    if (Opts.CPlusPlus) {
+      Opts.CXXExceptions = 1;
+    }
+
     //Opts.Modules = 1;
 
     // See test/CodeUnloading/PCH/VTables.cpp which implicitly compares clang
@@ -406,15 +397,28 @@ namespace {
     // the test for C++14 or more (201402L) as previously specified.
     // I would claim that the check should be relaxed to:
 
+    if (Opts.CPlusPlus) {
+#if __cplusplus > 201402L
+      Opts.CPlusPlus1z = 1;
+#endif
 #if __cplusplus > 201103L
-    if (Opts.CPlusPlus) Opts.CPlusPlus14 = 1;
+      Opts.CPlusPlus14 = 1;
 #endif
 #if __cplusplus >= 201103L
-    if (Opts.CPlusPlus) Opts.CPlusPlus11 = 1;
+      Opts.CPlusPlus11 = 1;
 #endif
+    }
 
 #ifdef _REENTRANT
     Opts.POSIXThreads = 1;
+#endif
+#ifdef __STRICT_ANSI__
+    Opts.GNUMode = 0;
+#else
+    Opts.GNUMode = 1;
+#endif
+#ifdef __FAST_MATH__
+    Opts.FastMath = 1;
 #endif
   }
 
@@ -503,7 +507,8 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
   /// Set cling's preprocessor defines to match the cling binary.
   static void SetPreprocessorFromBinary(PreprocessorOptions& PPOpts) {
 #ifdef _MSC_VER
-    STRINGIFY_PREPROC_SETTING(PPOpts, _HAS_EXCEPTIONS);
+// FIXME: Stay consistent with the _HAS_EXCEPTIONS flag settings in SetClingCustomLangOpts
+//    STRINGIFY_PREPROC_SETTING(PPOpts, _HAS_EXCEPTIONS);
 #ifdef _DEBUG
     STRINGIFY_PREPROC_SETTING(PPOpts, _DEBUG);
 #endif
@@ -521,6 +526,8 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     PPOpts.addMacroDef("__CLING__clang__=" ClingStringify(__clang__));
 #elif defined(__GNUC__)
     PPOpts.addMacroDef("__CLING__GNUC__=" ClingStringify(__GNUC__));
+#elif defined(_MSC_VER)
+    PPOpts.addMacroDef("__CLING__MSVC__=" ClingStringify(_MSC_VER));
 #endif
 
 // https://gcc.gnu.org/onlinedocs/libstdc++/manual/using_dual_abi.html
@@ -668,7 +675,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return false;
     }
   };
-  
+
   static CompilerInstance*
   createCIImpl(std::unique_ptr<llvm::MemoryBuffer> Buffer,
                const CompilerOptions& COpts, const char* LLVMDir,
@@ -677,15 +684,16 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     if (COpts.Verbose)
       cling::log() << "cling version " << ClingStringify(CLING_VERSION) << '\n';
 
+    llvm::InitializeAllTargetInfos();
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllAsmParsers();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllTargetMCs();
+
     // Create an instance builder, passing the LLVMDir and arguments.
     //
 
     CheckClangCompatibility();
-
-    //  Initialize the llvm library.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmParser();
-    llvm::InitializeNativeTargetAsmPrinter();
 
     const size_t argc = COpts.Remaining.size();
     const char* const* argv = &COpts.Remaining[0];
@@ -735,7 +743,12 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       return nullptr;
     }
 
-    clang::driver::Driver Drvr(argv[0], llvm::sys::getProcessTriple(), *Diags);
+    llvm::Triple TheTriple(llvm::sys::getProcessTriple());
+#ifdef LLVM_ON_WIN32
+    // COFF format currently needs a few changes in LLVM to function properly.
+    TheTriple.setObjectFormat(llvm::Triple::ELF);
+#endif
+    clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
     //Drvr.setWarnMissingInput(false);
     Drvr.setCheckInputsExist(false); // think foo.C(12)
     llvm::ArrayRef<const char*>RF(&(argvCompile[0]), argvCompile.size());
@@ -765,6 +778,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CI->setInvocation(InvocationPtr.get());
     InvocationPtr.release();
     CI->setDiagnostics(Diags.get()); // Diags is ref-counted
+    if (!OnlyLex)
+      CI->getDiagnosticOpts().ShowColors = cling::utils::ColorizeOutput();
+
 
     // Copied from CompilerInstance::createDiagnostics:
     // Chain in -verify checker, if requested.
@@ -921,20 +937,28 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CodeCompleteConsumer* CCC = 0;
     CI->createSema(TU_Complete, CCC);
 
-    // Set CodeGen options
-    // want debug info
+    // Set CodeGen options.
+    CodeGenOptions& CGOpts = CI->getCodeGenOpts();
 #ifdef _MSC_VER
-    CI->getCodeGenOpts().MSVolatile = 1;
-    CI->getCodeGenOpts().RelaxedAliasing = 1;
-    CI->getCodeGenOpts().EmitCodeView = 1;
-    CI->getCodeGenOpts().CXXCtorDtorAliases = 1;
+    CGOpts.MSVolatile = 1;
+    CGOpts.RelaxedAliasing = 1;
+    CGOpts.EmitCodeView = 1;
+    CGOpts.CXXCtorDtorAliases = 1;
 #endif
-    //CI->getCodeGenOpts().setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
-    // CI->getCodeGenOpts().EmitDeclMetadata = 1; // For unloading, for later
-    CI->getCodeGenOpts().CXXCtorDtorAliases = 0; // aliasing the complete
-                                                 // ctor to the base ctor causes
-                                                 // the JIT to crash
-    CI->getCodeGenOpts().VerifyModule = 0; // takes too long
+    // Reduce amount of emitted symbols by optimizing more.
+    CGOpts.OptimizationLevel = 2;
+    // Taken from a -O2 run of clang:
+    CGOpts.DiscardValueNames = 1;
+    CGOpts.OmitLeafFramePointer = 1;
+    CGOpts.UnrollLoops = 1;
+    CGOpts.VectorizeLoop = 1;
+    CGOpts.VectorizeSLP = 1;
+
+    // CGOpts.setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
+    // CGOpts.EmitDeclMetadata = 1; // For unloading, for later
+    // aliasing the complete ctor to the base ctor causes the JIT to crash
+    CGOpts.CXXCtorDtorAliases = 0;
+    CGOpts.VerifyModule = 0; // takes too long
 
     if (!OnlyLex) {
       // -nobuiltininc

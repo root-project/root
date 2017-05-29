@@ -12,7 +12,7 @@ set(ClingUtils_dict_headers ${headers} PARENT_SCOPE)
 
 include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
-add_definitions(${CLING_CXXFLAGS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 ROOT_OBJECT_LIBRARY(ClingUtils ${sources})
 
@@ -40,7 +40,7 @@ foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
-  ROOT_GENERATE_DICTIONARY(G__std_${dict} STAGE1 MODULE ${dict}Dict OPTIONS ${header} LINKDEF src/${dict}Linkdef.h)
+  ROOT_GENERATE_DICTIONARY(G__std_${dict} ${header} STAGE1 MODULE ${dict}Dict LINKDEF src/${dict}Linkdef.h)
   ROOT_LINKER_LIBRARY(${dict}Dict G__std_${dict}.cxx DEPENDENCIES  Core)
 endforeach()
 
@@ -137,6 +137,6 @@ add_custom_command(OUTPUT ${stamp_file}
         ${copy_commands}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}
-        COMMENT "Copying LLVM respurce and header files")
+        COMMENT "Copying LLVM resource and header files")
 add_custom_target(LLVMRES DEPENDS ${stamp_file} CLING)
 

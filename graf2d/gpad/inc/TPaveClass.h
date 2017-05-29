@@ -12,12 +12,8 @@
 #define ROOT_TPaveClass
 
 
-#ifndef ROOT_TPaveLabel
 #include "TPaveLabel.h"
-#endif
-#ifndef ROOT_TClassTree
 #include "TClassTree.h"
-#endif
 
 
 class TPaveClass : public TPaveLabel{

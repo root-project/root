@@ -13,9 +13,7 @@
 #define ROOT_TSlider
 
 
-#ifndef ROOT_TPad
 #include "TPad.h"
-#endif
 
 class TSlider : public TPad {
 

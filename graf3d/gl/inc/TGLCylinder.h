@@ -14,9 +14,7 @@
 #ifndef ROOT_TGLCylinder
 #define ROOT_TGLCylinder
 
-#ifndef ROOT_TGLLogicalShape
 #include "TGLLogicalShape.h"
-#endif
 
 class TBuffer3DTube;
 

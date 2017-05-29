@@ -95,7 +95,7 @@ MODULES       = build interpreter/llvm interpreter/cling core/foundation \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/rootpcm io/io math/mathcore net/net core/zip core/lzma \
                 math/matrix \
-                core/newdelete hist/hist tree/tree graf2d/freetype \
+                core/newdelete hist/hist hist/unfold tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
@@ -894,8 +894,8 @@ CXXMODULES_CORE_EXCLUDE := RConfig.h RVersion.h  RtypesImp.h \
 			   DllImport.h TGenericClassInfo.h \
 			   TSchemaHelper.h ESTLType.h RStringView.h Varargs.h \
 			   RootMetaSelection.h libcpp_string_view.h \
-			   RWrap_libcpp_string_view.h TAtomicCountGcc.h \
-			   TException.h ROOT/TThreadExecutor.hxx TBranchProxyTemplate.h \
+			   RWrap_libcpp_string_view.h \
+			   TException.h TBranchProxyTemplate.h \
 			   TGLIncludes.h TGLWSIncludes.h snprintf.h strlcpy.h
 COREDICTH_REL := $(filter-out $(CXXMODULES_CORE_EXCLUDE),$(COREDICTH_REL))
 CXXMODULES_CORE_HEADERS := $(patsubst %,header \"%\"\\n, $(COREDICTH_REL))
@@ -1180,6 +1180,11 @@ endif
 	@rm -f $(ROOTA) $(PROOFSERVA) $(ROOTALIB)
 	@rm -f README/ChangeLog build/dummy.d
 	@rm -f etc/gitinfo.txt
+	@(mv -f etc/dictpch/makepch.py etc/makepch.py- >/dev/null 2>&1;true)
+	@(mv -f etc/dictpch/makepch.sh etc/makepch.sh- >/dev/null 2>&1;true)
+	@rm -rf etc/dictpch/*
+	@(mv -f etc/makepch.py- etc/dictpch/makepch.py >/dev/null 2>&1;true)
+	@(mv -f etc/makepch.sh- etc/dictpch/makepch.sh >/dev/null 2>&1;true)
 	@(find README/ReleaseNotes -name *.html -exec rm -f {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/daemons' -prune -o -name *.d -exec rm -rf {} \; >/dev/null 2>&1;true)
 	@(find . -path '*/interpreter/llvm/src' -prune -o -name *.o -exec rm -rf {} \; >/dev/null 2>&1;true)

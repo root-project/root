@@ -18,12 +18,8 @@
 Small helper class to generically acquire and release iterators.
 */
 
-#ifndef ROOT_TVirtualCollectionProxy
 #include "TVirtualCollectionProxy.h"
-#endif
-#ifndef ROOT_TError
 #include "TError.h"
-#endif
 
 class TVirtualCollectionIterators
 {

@@ -61,13 +61,9 @@
 #include "Rtypes.h"
 #endif
 
-#ifndef ROOT_RConfig
 #include "RConfig.h"
-#endif
 
-#ifndef ROOT_RConfigure
 #include "RConfigure.h"
-#endif
 
 #if defined(R__MACOSX)
 #  if defined(__clang__) && defined(MAC_OS_X_VERSION_10_7) && (defined(__x86_64__) || defined(__i386__))

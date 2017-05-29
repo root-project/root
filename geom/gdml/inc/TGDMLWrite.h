@@ -12,89 +12,47 @@
 #ifndef ROOT_TGDMLWRITE
 #define ROOT_TGDMLWRITE
 
-#ifndef ROOT_TGeoMatrix
 #include "TGeoMatrix.h"
-#endif
 
-#ifndef ROOT_TXMLEngine
 #include "TXMLEngine.h"
-#endif
 
-#ifndef ROOT_TGeoVolume
 #include "TGeoVolume.h"
-#endif
 
-#ifndef ROOT_TGeoParaboloid
 #include "TGeoParaboloid.h"
-#endif
 
-#ifndef ROOT_TGeoSphere
 #include "TGeoSphere.h"
-#endif
 
-#ifndef ROOT_TGeoArb8
 #include "TGeoArb8.h"
-#endif
 
-#ifndef ROOT_TGeoCone
 #include "TGeoCone.h"
-#endif
 
-#ifndef ROOT_TGeoPara
 #include "TGeoPara.h"
-#endif
 
-#ifndef ROOT_TGeoTrd1
 #include "TGeoTrd1.h"
-#endif
 
-#ifndef ROOT_TGeoTrd2
 #include "TGeoTrd2.h"
-#endif
 
-#ifndef ROOT_TGeoTube
 #include "TGeoTube.h"
-#endif
 
-#ifndef ROOT_TGeoPcon
 #include "TGeoPcon.h"
-#endif
 
-#ifndef ROOT_TGeoTorus
 #include "TGeoTorus.h"
-#endif
 
-#ifndef ROOT_TGeoPgon
 #include "TGeoPgon.h"
-#endif
 
-#ifndef ROOT_TGeoXtru
 #include "TGeoXtru.h"
-#endif
 
-#ifndef ROOT_TGeoPgon
 #include "TGeoPgon.h"
-#endif
 
-#ifndef ROOT_TGeoEltu
 #include "TGeoEltu.h"
-#endif
 
-#ifndef ROOT_TGeoHype
 #include "TGeoHype.h"
-#endif
 
-#ifndef ROOT_TGeoBoolNode
 #include "TGeoBoolNode.h"
-#endif
 
-#ifndef ROOT_TGeoCompositeShape
 #include "TGeoCompositeShape.h"
-#endif
 
-#ifndef ROOT_TGeoScaledShape
 #include "TGeoScaledShape.h"
-#endif
 
 #include <map>
 #include <vector>

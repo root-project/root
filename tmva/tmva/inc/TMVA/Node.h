@@ -37,13 +37,9 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iosfwd>
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
-#ifndef ROOT_TMVA_Version
 #include "TMVA/Version.h"
-#endif
 
 namespace TMVA {
 

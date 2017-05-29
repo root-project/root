@@ -20,13 +20,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGFrame
 #include "TGFrame.h"
-#endif
 
-#ifndef ROOT_TMap
 #include "TMap.h"
-#endif
 
 class TVirtualPad;
 class TClass;

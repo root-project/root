@@ -19,15 +19,11 @@
 This class defines thread-safe interface to a command line interpreter.
 */
 
-#ifndef ROOT_TInterpreter
 #include "TInterpreter.h"
-#endif
 
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,00,00)
 
-#ifndef ROOT_TGWin32ProxyBase
 #include "TGWin32ProxyBase.h"
-#endif
 
 
 class TGWin32InterpreterProxy : public TInterpreter , public TGWin32ProxyBase {

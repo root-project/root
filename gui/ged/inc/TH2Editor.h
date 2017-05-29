@@ -20,9 +20,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TGedFrame
 #include "TGedFrame.h"
-#endif
 
 class TH2;
 class TGComboBox;

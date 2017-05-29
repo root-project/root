@@ -21,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_THbookFile
 #include "THbookFile.h"
-#endif
 
 class THbookKey : public TNamed {
 

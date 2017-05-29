@@ -12,12 +12,8 @@
 #ifndef ROOT_TAttBBox2D
 #define ROOT_TAttBBox2D
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_Rtypes
 #include "Rtypes.h"
-#endif
 
 class TPoint;
 class TAttBBox2D {

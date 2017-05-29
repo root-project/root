@@ -39,19 +39,11 @@
 
 #include <vector>
 
-#ifndef ROOT_TH1F
 #include "TH1F.h"
-#endif
-#ifndef ROOT_TH2F
 #include "TH2F.h"
-#endif
 
-#ifndef ROOT_TMVA_Results
 #include "TMVA/Results.h"
-#endif
-#ifndef ROOT_TMVA_Event
 #include "TMVA/Event.h"
-#endif
 
 namespace TMVA {
 

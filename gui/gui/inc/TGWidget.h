@@ -23,15 +23,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_GuiTypes
 #include "GuiTypes.h"
-#endif
-#ifndef ROOT_TGString
 #include "TGString.h"
-#endif
-#ifndef ROOT_WidgetMessageTypes
 #include "WidgetMessageTypes.h"
-#endif
 
 
 //--- Text justification modes
