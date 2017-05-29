@@ -22,7 +22,7 @@ namespace ROOT {
          friend class TMpiSignalHandler;
          friend class TErrorHandler;
       private:
-         static TString fStdOut;
+         static TString fStdOut;         //stding object for stdout
          static TString fStdErr;
          static Bool_t  fSyncOutput;
          static Int_t   fStdOutPipe[2];
@@ -43,34 +43,16 @@ namespace ROOT {
          void InitSignalHandlers();
       public:
          TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
-         /**
-         Constructor thar reciev command line arguments
-              */
          TEnvironment(Int_t argc, Char_t **argv, Int_t level = ROOT::Mpi::THREAD_SINGLE);
          ~TEnvironment();
 
-
-         /**
-         Method to finalize the environment.
-              */
          void Finalize();
 
          // static public functions TODO
-         /**
-         Method to synchronize stdout/stderr output.
-         \param status enable/disable output synchronization
-         \param output FILE pointer to merge stdout and stderr
-         by default is merged in stdout but if NULL stdout will be printed asynchronous respect to stderr
-              */
          static void SyncOutput(Bool_t status = kTRUE, FILE *output = stdout);
 
-         /**
-         Method to check if the communication system is finalized.
-              */
          static Bool_t IsFinalized();
-         /**
-         Method to check if the communication system is initialized.
-              */
+
          static Bool_t IsInitialized();
 
          static TString GetProcessorName();

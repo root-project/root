@@ -94,6 +94,10 @@ TEnvironment::~TEnvironment()
 }
 
 //______________________________________________________________________________
+/**
+ * Method to capture stdout/stderr into buffers, used to show synchronized
+ * output for every process.
+ */
 void TEnvironment::InitCapture()
 {
    if (fSyncOutput) {
@@ -133,6 +137,9 @@ void TEnvironment::InitCapture()
 }
 
 //______________________________________________________________________________
+/**
+ * Method to stop capturing stdout/stderr into buffers.
+ */
 void TEnvironment::EndCapture()
 {
    if (fSyncOutput) {
@@ -160,16 +167,30 @@ void TEnvironment::EndCapture()
 }
 
 //______________________________________________________________________________
+/**
+ * Return stdout in string
+ * \return string with the captured stdout.
+ */
 TString TEnvironment::GetStdOut()
 {
    return fStdOut;
 }
+
 //______________________________________________________________________________
+/**
+ * Return stderr in string
+ * \return string with the captured stderr.
+ */
 TString TEnvironment::GetStdErr()
 {
    return fStdErr;
 }
+
 //______________________________________________________________________________
+/**
+ * Return true is synchronized output is enable
+ * \return boolean true is synchronized output is enable.
+ */
 Bool_t TEnvironment::IsSyncOutput()
 {
    return fSyncOutput;
@@ -212,6 +233,11 @@ void TEnvironment::Flush()
 }
 
 //______________________________________________________________________________
+/**
+ * Method to flush stdout/stderr given a communicator using ring algorithm
+ * with an small delay to print synchronized.
+ *\param comm Any non-null communicator object pointer
+ */
 void TEnvironment::Flush(TCommunicator *comm)
 {
    Char_t dummy;
@@ -244,6 +270,12 @@ void TEnvironment::ClearBuffers()
 }
 
 //______________________________________________________________________________
+/**
+Method to synchronize stdout/stderr output.
+\param status enable/disable output synchronization
+\param output FILE pointer to merge stdout and stderr
+by default is merged in stdout but if output pointer is NULL stdout will be printed asynchronous respect to stderr
+*/
 void TEnvironment::SyncOutput(Bool_t status, FILE *output)
 {
    if (!fSyncOutput) {
@@ -265,6 +297,9 @@ void TEnvironment::SyncOutput(Bool_t status, FILE *output)
 }
 
 //______________________________________________________________________________
+/**
+ * Method to check if the communication system is finalized.
+*/
 Bool_t TEnvironment::IsFinalized()
 {
    Int_t t;
@@ -273,6 +308,9 @@ Bool_t TEnvironment::IsFinalized()
 }
 
 //______________________________________________________________
+/**
+ * Method to check if the communication system is initialized.
+*/
 Bool_t TEnvironment::IsInitialized()
 {
    Int_t t;
@@ -282,6 +320,9 @@ Bool_t TEnvironment::IsInitialized()
 
 
 //______________________________________________________________________________
+/**
+ * Terminates MPI execution environment.
+ */
 void TEnvironment::Finalize()
 {
    if (!IsFinalized()) {
@@ -294,6 +335,9 @@ void TEnvironment::Finalize()
 }
 
 //______________________________________________________________________________
+/**
+ * Gets the name of the processor
+ */
 TString TEnvironment::GetProcessorName()
 {
    Char_t name[MAX_PROCESSOR_NAME];
@@ -303,6 +347,9 @@ TString TEnvironment::GetProcessorName()
 }
 
 //______________________________________________________________________________
+/**
+ * Returns the current level of thread support
+ */
 Int_t TEnvironment::GetThreadLevel()
 {
    Int_t level;
@@ -311,6 +358,9 @@ Int_t TEnvironment::GetThreadLevel()
 }
 
 //______________________________________________________________________________
+/**
+ * True if calling thread is main thread (boolean).
+ */
 Bool_t TEnvironment::IsMainThread()
 {
    Int_t status;
@@ -319,18 +369,27 @@ Bool_t TEnvironment::IsMainThread()
 }
 
 //______________________________________________________________________________
+/**
+ *
+ */
 Int_t TEnvironment::GetCompressionAlgorithm()
 {
    return fCompressionAlgorithm;
 }
 
 //______________________________________________________________________________
+/**
+ *
+ */
 Int_t TEnvironment::GetCompressionLevel()
 {
    return fCompressionLevel;
 }
 
 //______________________________________________________________________________
+/**
+ *
+ */
 void TEnvironment::SetCompression(Int_t level, Int_t algorithm)
 {
    fCompressionAlgorithm = algorithm;
