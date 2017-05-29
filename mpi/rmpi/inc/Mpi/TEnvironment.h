@@ -41,16 +41,6 @@ namespace ROOT {
          TMpiSignalHandler *fSigSegmentationViolationSignal;
       protected:
          void InitSignalHandlers();
-         static void InitCapture();
-         static void EndCapture();
-         static void Flush();
-         static void Flush(TCommunicator *comm);
-         static void ClearBuffers();
-         static TString GetStdOut();
-         static TString GetStdErr();
-         static Bool_t IsSyncOutput();
-         static Int_t GetCompressionAlgorithm();
-         static Int_t GetCompressionLevel();
       public:
          TEnvironment(Int_t level = ROOT::Mpi::THREAD_SINGLE);
          /**
@@ -90,6 +80,26 @@ namespace ROOT {
 
 
          static void SetCompression(Int_t level, Int_t algorithm = 0);
+
+         static void InitCapture();
+
+         static void EndCapture();
+
+         static void Flush();
+
+         static void Flush(TCommunicator *comm);
+
+         static void ClearBuffers();
+
+         static TString GetStdOut();
+
+         static TString GetStdErr();
+
+         static Bool_t IsSyncOutput();
+
+         static Int_t GetCompressionAlgorithm();
+
+         static Int_t GetCompressionLevel();
 
          ClassDef(TEnvironment, 1)
       };
