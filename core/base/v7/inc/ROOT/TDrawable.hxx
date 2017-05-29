@@ -86,10 +86,10 @@ public:
    TUniWeakPtr(const std::shared_ptr<T>& ptr): fWeak(ptr), fIsWeak(true) {}
    TUniWeakPtr(std::unique_ptr<T>&& ptr): fUnique(std::move(ptr)), fIsWeak(false) {}
    TUniWeakPtr(TUniWeakPtr&& rhs): fIsWeak(rhs.fIsWeak) {
-      if (fIsWeak)
-         fWeak.swap(rhs.fWeak);
-      else
-         fUnique.swap(rhs.fUnique);
+      if (fIsWeak) {
+         fWeak.weak_ptr(std::move(rhs.fWeak));
+      } else
+         fWeak.unique_ptr(std::move(rhs.fUnique));
    }
 
    ~TUniWeakPtr() {
