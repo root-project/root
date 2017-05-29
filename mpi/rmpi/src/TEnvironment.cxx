@@ -212,6 +212,31 @@ void TEnvironment::Flush()
 }
 
 //______________________________________________________________________________
+void TEnvironment::Flush(TCommunicator *comm)
+{
+   Char_t dummy;
+   if (comm->GetRank() != 0) {
+      comm->Recv(dummy, comm->GetRank() - 1, comm->GetInternalTag());
+      std::cout << fStdOut << std::flush;
+      gSystem->Sleep(10 * comm->GetSize());
+      std::cerr << fStdErr << std::flush;
+      gSystem->Sleep(10 * comm->GetSize());
+   } else {
+   }
+   comm->Send(dummy, (comm->GetRank() + 1) % comm->GetSize(), comm->GetInternalTag());
+
+   if (comm->GetRank() == 0) {
+      comm->Recv(dummy, comm->GetSize() - 1, comm->GetInternalTag());
+      std::cout << fStdOut << std::flush;
+      gSystem->Sleep(10 * comm->GetSize());
+      std::cerr << fStdErr << std::flush;
+      gSystem->Sleep(10 * comm->GetSize());
+   }
+   comm->Barrier();
+   ClearBuffers();
+}
+
+//______________________________________________________________________________
 void TEnvironment::ClearBuffers()
 {
    fStdOut = "";

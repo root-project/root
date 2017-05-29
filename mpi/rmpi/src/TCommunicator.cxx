@@ -97,7 +97,7 @@ void TCommunicator::Abort(Int_t error, Bool_t silent) const
    }
    if (TEnvironment::IsSyncOutput()) {
       TEnvironment::EndCapture();
-      TEnvironment::Flush();
+      TEnvironment::Flush(const_cast<TCommunicator *>(this));
    }
    ROOT_MPI_CHECK_CALL(MPI_Abort, (fComm, error), this);
 }

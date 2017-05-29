@@ -155,10 +155,10 @@ namespace ROOT {
             Info("Notify", "Processing signal ... %d in rank %d", fSignal, COMM_WORLD.GetRank());
             if (fEnv.IsSyncOutput()) {
                fEnv.EndCapture();
-               fEnv.Flush();
+               fEnv.Flush(&COMM_WORLD);
             }
             //Finalize the mpi's environment
-            MPI_Finalize();
+            fEnv.Finalize();
          } else {
             Info("Notify", "Processing signal ... %d ", fSignal);
             if (fEnv.IsSyncOutput()) {

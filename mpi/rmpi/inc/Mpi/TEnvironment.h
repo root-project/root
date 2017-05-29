@@ -16,6 +16,7 @@ namespace ROOT {
       //TODO: added error handing callback to flush stderr/stdout in case premature exit by signals o Abort call
       class TErrorHandler;
       class TMpiSignalHandler;
+      class TCommunicator;
       class TEnvironment: public TObject {
          friend class TCommunicator;
          friend class TMpiSignalHandler;
@@ -34,7 +35,7 @@ namespace ROOT {
          static Int_t fCompressionLevel;
 
          static FILE *fOutput;
-         
+
          TMpiSignalHandler *fInterruptSignal;
          TMpiSignalHandler *fTerminationSignal;
          TMpiSignalHandler *fSigSegmentationViolationSignal;
@@ -43,6 +44,7 @@ namespace ROOT {
          static void InitCapture();
          static void EndCapture();
          static void Flush();
+         static void Flush(TCommunicator *comm);
          static void ClearBuffers();
          static TString GetStdOut();
          static TString GetStdErr();

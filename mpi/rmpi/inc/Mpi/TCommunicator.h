@@ -72,6 +72,7 @@ namespace ROOT {
        */
 
       class TCommunicator: public TNullCommunicator {
+         friend class TEnvironment;
       protected:
          Int_t GetInternalTag() const;
       public:
