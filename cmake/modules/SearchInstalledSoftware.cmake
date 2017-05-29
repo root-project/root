@@ -340,7 +340,7 @@ if(asimage)
 endif()
 
 #---Check for AfterImage---------------------------------------------------------------
-if(NOT builtin_afterimage)
+if(asimage AND NOT builtin_afterimage)
   message(STATUS "Looking for AfterImage")
   find_package(AfterImage)
   if(NOT AFTERIMAGE_FOUND)
