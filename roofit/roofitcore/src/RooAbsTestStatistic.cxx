@@ -554,6 +554,10 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
   RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange);
   gof->recursiveRedirectServers(_paramSet);
 
+  if (RooTrace::timing_flag > 0) {
+    std::vector<RooJsonListFile> RooTimer::timing_outfiles(_nCPU);
+  }
+
   for (Int_t i = 0; i < _nCPU; ++i) {
     gof->setMPSet(i,_nCPU);
     gof->SetName(Form("%s_GOF%d",GetName(),i));
@@ -562,6 +566,7 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
     ccoutD(Eval) << "RooAbsTestStatistic::initMPMode: starting remote server process #" << i << endl;
     _mpfeArray[i] = new RooRealMPFE(Form("%s_%lx_MPFE%d",GetName(),(ULong_t)this,i),Form("%s_%lx_MPFE%d",GetTitle(),(ULong_t)this,i),*gof, i, _nCPU,false);
     //_mpfeArray[i]->setVerbose(kTRUE,kTRUE);
+
     _mpfeArray[i]->initialize();
     if (i > 0) {
       _mpfeArray[i]->followAsSlave(*_mpfeArray[0]);
