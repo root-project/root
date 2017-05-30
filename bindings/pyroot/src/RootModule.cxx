@@ -466,11 +466,11 @@ namespace {
    // Return object proxy address as an indexable buffer.
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
-         return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)addr, 1 );
+         return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)addr, sizeof(Long_t) );
       if ( ! addr && PyTuple_Size( args ) ) {
          Utility::GetBuffer( PyTuple_GetItem( args, 0 ), '*', 1, addr, kFALSE );
          if ( addr )
-            return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&addr, 1 );
+            return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&addr, sizeof(Long_t) );
       }
       return 0;//_addressof_common( dummy );
    }

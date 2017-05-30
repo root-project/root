@@ -1753,9 +1753,9 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       PyObject* pyfunc = (PyObject*)vpyfunc;
 
    // prepare arguments
-      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( &a0,  1 );
-      PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory(  a1, a0 );
-      PyObject* pya2 = BufFac_t::Instance()->PyBuffer_FromMemory( &a2,  1 );
+      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( &a0,  sizeof(Int_t) );
+      PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory(  a1, a0 * sizeof(Double_t) );
+      PyObject* pya2 = BufFac_t::Instance()->PyBuffer_FromMemory( &a2,  sizeof(Double_t) );
       PyObject* pya3 = BufFac_t::Instance()->PyBuffer_FromMemory(  a3, -1 ); // size unknown
 
       if ( ! (pya0 && pya1 && pya2 && pya3) ) {
@@ -1782,13 +1782,13 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       PyObject* pyfunc = (PyObject*)vpyfunc;
 
    // prepare arguments and call
-      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( a0, 4 );
+      PyObject* pya0 = BufFac_t::Instance()->PyBuffer_FromMemory( a0, 4 * sizeof(double) );
       if ( ! pya0 )
          return 0.;
 
       PyObject* result = 0;
       if ( npar != 0 ) {
-         PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory( a1, npar );
+         PyObject* pya1 = BufFac_t::Instance()->PyBuffer_FromMemory( a1, npar * sizeof(double) );
          result = PyObject_CallFunction( pyfunc, (char*)"OO", pya0, pya1 );
          Py_DECREF( pya1 );
       } else
@@ -2119,7 +2119,7 @@ namespace {
       PyObject* arg3 = PyList_New( 1 );
       PyList_SetItem( arg3, 0, PyFloat_FromDouble( f ) );
 
-      PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory( u, npar );
+      PyObject* arg4 = BufFac_t::Instance()->PyBuffer_FromMemory( u, npar * sizeof(double) );
 
    // perform actual call
       result = PyObject_CallFunction(
