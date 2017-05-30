@@ -44,7 +44,8 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
              RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h
              RooTestStatMPDriver.h
-             RooTimer.h)
+             RooTimer.h
+             RooJsonListFile.h)
 
 ROOT_GENERATE_DICTIONARY(G__RooFitCore MODULE RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h OPTIONS "-writeEmptyRootPCM")
 
