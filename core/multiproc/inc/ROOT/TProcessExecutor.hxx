@@ -241,7 +241,7 @@ auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename
 template<class F, class T, class R, class Cond>
 auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
 {
-   using retTypeCand = decltype(func(args.front()));
+   using retTypeCand = decltype(redfunc(args));
    using retTypeCandNoPtr = typename std::remove_pointer<retTypeCand>::type;
    using TObjType = typename std::conditional<std::is_pointer<retTypeCand>::value, TObject*, TObject>::type;
    using retType = typename std::conditional<std::is_base_of<TObject, retTypeCandNoPtr>::value, TObjType, retTypeCand>::type;
