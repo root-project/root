@@ -237,7 +237,7 @@ if(NOT builtin_lz4)
   endif()
 endif()
 if(builtin_lz4)
-  set(lz4_version 1.7.5)
+  set(lz4_version v1.7.5)
   message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
   if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
     set(LZ4_CFLAGS "-Wno-format-nonliteral")
@@ -247,8 +247,8 @@ if(builtin_lz4)
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
   ExternalProject_Add(
     LZ4
-    URL ${CMAKE_SOURCE_DIR}/core/lz4/src/lz4-${lz4_version}.tar.gz
-    URL_MD5 0601f6b8477209d07db33d504feb6ac4
+    URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
+    URL_MD5 c9610c5ce97eb431dddddf0073d919b9
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> make cmake"
     BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
