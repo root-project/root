@@ -54,6 +54,7 @@ ClassImp(TGraphPainter);
 - [TGraphPolar options](#GP04)
 - [Colors automatically picked in palette](#GP05)
 - [Reverse graphs' axis](#GP06)
+- [Graphs in logarithmic scale](#GP07)
 
 
 ### <a name="GP00"></a> Introduction
@@ -484,6 +485,47 @@ Begin_Macro(source)
    c->cd(2); gPad->SetGrid(1,1);
    g->Draw("A RX RY PL");
 }
+End_Macro
+
+### <a name="GP07"></a> Graphs in logarithmic scale
+
+Like histograms, graphs can be drawn in logarithmic scale along X and Y. When
+a pad is set to logarithmic scale with TPad::SetLogx() and/or with TPad::SetLogy()
+the points building the graph are converted into logarithmic scale. But **only** the
+points not the lines connecting them which stay linear. This can be clearly seen
+on the following example:
+
+Begin_Macro(source)
+{
+   // A graph with 3 points
+   Double_t xmin = 750.;
+   Double_t xmax = 1000;
+   auto g = new TGraph(3);
+   g->SetPoint(0,xmin,0.1);
+   g->SetPoint(1,845,0.06504);
+   g->SetPoint(2,xmax,0.008);
+
+   // The same graph with n points
+   Int_t n = 10000;
+   Double_t dx = (xmax-xmin)/n;
+   Double_t x = xmin;
+   TGraph*g2 = new TGraph();
+   for (Int_t i=0; i<n; i++) {
+      g2->SetPoint(i, x, g->Eval(x));
+      x = x + dx;
+   }
+
+   auto cv = new TCanvas("cv","cv",800,600);
+   cv->SetLogy();
+   cv->SetGridx();
+   cv->SetGridy();
+   g->Draw("AL*");
+
+   g2->SetMarkerColor(kRed);
+   g2->SetMarkerStyle(1);
+   g2->Draw("P");
+}
+
 End_Macro
 */
 
