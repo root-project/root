@@ -91,6 +91,11 @@ LZMALIBDIR     := @lzmalibdir@
 LZMACLILIB     := @lzmalib@
 LZMAINCDIR     := $(filter-out /usr/include, @lzmaincdir@)
 
+BUILTINLZ4     := @builtinlz4@
+LZ4LIBDIR      := @lz4libdir@
+LZ4CLILIB      := @lz4lib@
+LZ4INCDIR      := $(filter-out /usr/include, @lz4incdir@)
+
 BUILDGL        := @buildgl@
 OPENGLLIBDIR   := @opengllibdir@
 OPENGLULIB     := @openglulib@

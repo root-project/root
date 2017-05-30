@@ -78,7 +78,7 @@ include $(MAKEFILEDEP)
 
 MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/io math/mathcore net/net core/zip core/lzma math/matrix \
+                io/io math/mathcore net/net core/zip core/lzma core/lz4 math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
                 gui/gui math/minuit hist/histpainter tree/treeplayer \
@@ -554,7 +554,7 @@ endif
 
 COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
                 $(SYSTEML) $(CLIBL) $(METAUTILSL) $(TEXTINPUTL)
-COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
+COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) $(LZ4O) \
                 $(CLIBO) $(METAUTILSO) $(METAUTILSTO) $(TEXTINPUTO)
 COREDO        = $(BASEDO) $(CONTDO) $(METADO) $(METACDO) $(SYSTEMDO) $(ZIPDO) \
                 $(CLIBDO) $(METAUTILSDO) $(TEXTINPUTDO)
@@ -573,6 +573,14 @@ STATICEXTRALIBS += $(LZMALIBDIR) $(LZMACLILIB)
 else
 CORELIBEXTRA    += $(LZMALIB)
 STATICEXTRALIBS += $(LZMALIB)
+endif
+
+ifneq ($(BUILTINLZ4),yes)
+CORELIBEXTRA    += $(LZ4LIBDIR) $(LZ4CLILIB)
+STATICEXTRALIBS += $(LZ4LIBDIR) $(LZ4CLILIB)
+else
+CORELIBEXTRA    += $(LZ4LIB)
+STATICEXTRALIBS += $(LZ4LIB)
 endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####

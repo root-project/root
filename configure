@@ -52,6 +52,7 @@ options="                    \
    enable_builtin_pcre       \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
+   enable_builtin_lz4        \
    enable_cxx11              \
    enable_cxx14              \
    enable_libcxx             \
@@ -179,6 +180,7 @@ enable_builtin_glew=no
 enable_builtin_pcre=no
 enable_builtin_zlib=no
 enable_builtin_lzma=no
+enable_builtin_lz4=yes
 enable_afdsmgrd=no
 
 if test "x$ENABLEALL" = "xyes"; then
@@ -205,6 +207,7 @@ envvars="
 THREAD           \
 ZLIB             \
 LZMA             \
+LZ4              \
 OPENGL           \
 MYSQL            \
 ORACLE           \
@@ -1648,6 +1651,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-pcre       Built included libpcre, or use system libpcre
   builtin-zlib       Built included libz, or use system libz
   builtin-lzma       Built included liblzma, or use system liblzma
+  builtin-lz4        Build included liblz4, or use system liblz4
   cxx11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
   cxx14              Build using C++14 compatible mode, requires gcc > 4.9.x or clang
   libcxx             Build using libc++, required by clang cxx11 and cxx14 option (MacOS X only, for the time being)
@@ -1991,6 +1995,7 @@ win32)
    enable_builtin_pcre="yes"
    enable_builtin_zlib="yes"
    enable_builtin_lzma="yes"
+   enable_builtin_lz4="yes"
    top_builddir=`cygpath -u $top_builddir`
    top_srcdir=`cygpath -u $top_srcdir`
    ;;
@@ -3075,6 +3080,48 @@ if test "x$enable_builtin_lzma" = "xno" ; then
 fi
 message "Checking whether to build included lzma"
 result "$enable_builtin_lzma"
+
+######################################################################
+#
+### echo %%% Use included lz4 or use systems
+#
+# (See http://lz4.github.io/lz4/)
+#
+if test "x$enable_builtin_lz4" = "xno" ; then
+    check_header "lz4.h" "" \
+        $LZ4 ${LZ4:+$LZ4/include} \
+        ${finkdir:+$finkdir/include} \
+        /usr/local/include /usr/include \
+        /usr/local/include/lz4 /usr/include/lz4 \
+        /opt/lz4/include
+    if test "x$found_dir" = "x" ; then
+        enable_builtin_lz4=yes
+    else
+        lz4inc=$found_hdr
+        lz4incdir=$found_dir
+    fi
+
+    check_library "liblz4" "$enable_shared" "" \
+        $LZ4 ${LZ4:+$LZ4/lib} \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lz4/lib /usr/local/lib \
+        /usr/lib/lz4 /usr/local/lib/lz4 /usr/lz4/lib /usr/lib \
+        /usr/lz4 /usr/local/lz4 /opt/lz4 /opt/lz4/lib
+    if test "x$found_lib" = "x" ; then
+        lz4lib=""
+        lz4libdir=""
+        enable_builtin_lz4="yes"
+    else
+        lz4lib="$found_lib"
+        lz4libdir="$found_dir"
+    fi
+
+    if test "x$lz4incdir" = "x" || test "x$lz4lib" = "x"; then
+        enable_builtin_lz4="yes"
+    fi
+fi
+message "Checking whether to build included lz4"
+result "$enable_builtin_lz4"
 
 ######################################################################
 #
@@ -7331,6 +7378,10 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@lzmaincdir@|$lzmaincdir|"            \
     -e "s|@lzmalib@|$lzmalib|"                  \
     -e "s|@lzmalibdir@|$lzmalibdir|"            \
+    -e "s|@builtinlz4@|$enable_builtin_lz4|"  \
+    -e "s|@lz4incdir@|$lz4incdir|"            \
+    -e "s|@lz4lib@|$lz4lib|"                  \
+    -e "s|@lz4libdir@|$lz4libdir|"            \
     -e "s|@buildcintex@|$enable_cintex|"        \
     -e "s|@buildcling@|$enable_cling|"          \
     -e "s|@buildreflex@|$enable_reflex|"        \
