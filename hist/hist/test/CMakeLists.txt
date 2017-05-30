@@ -3,3 +3,76 @@ ROOT_ADD_GTEST(testTHn THn.cxx LIBRARIES Hist Matrix MathCore RIO)
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
 endif()
+
+ROOT_ADD_GTEST(stressHistogramUnit
+        stress/StressHistogramGlobal.cxx
+        stress/testProjection.cxx
+        stress/add/testAdd.cxx
+        stress/add/testAddProfile.cxx
+        stress/add/testAddVar.cxx
+        stress/add/testAddVarProf.cxx
+        stress/add/testAdd2D.cxx
+        stress/add/testAdd2DProfile.cxx
+        stress/add/testAdd3D.cxx
+        stress/add/testAdd3DProfile.cxx
+        stress/add/testAddHn.cxx
+        stress/mul/testMul.cxx
+        stress/mul/testMulVar.cxx
+        stress/mul/testMul2D.cxx
+        stress/mul/testMul3D.cxx
+        stress/mul/testMulHn.cxx
+        stress/mul/testMulF1D.cxx
+        stress/mul/testMulF2D.cxx
+        stress/mul/testMulF3D.cxx
+        stress/mul/testMulFND.cxx
+        stress/testDivide.cxx
+        stress/testDivideVar.cxx
+        stress/testDivide2D.cxx
+        stress/testDivide3D.cxx
+        stress/testDivHn.cxx
+        stress/testAssign.cxx
+        stress/testAssignProfile.cxx
+        stress/testCopyConstructor.cxx
+        stress/testCopyConstructorProfile.cxx
+        stress/testClone.cxx
+        stress/testCloneHn.cxx
+        stress/testWriteRead.cxx
+        stress/testWriteReadProfile.cxx
+        stress/merge/testMerge1D.cxx
+        stress/merge/testMergeVar1D.cxx
+        stress/merge/testMergeProf1D.cxx
+        stress/merge/testMergeProfVar1D.cxx
+        stress/merge/testMerge2D.cxx
+        stress/merge/testMergeProf2D.cxx
+        stress/merge/testMerge3D.cxx
+        stress/merge/testMergeProf3D.cxx
+        stress/merge/testMergeHn.cxx
+        stress/merge/testMerge1DLabel.cxx
+        stress/merge/testMerge2DLabel.cxx
+        stress/merge/testMerge3DLabel.cxx
+        stress/merge/testMergeProf1DLabel.cxx
+        stress/merge/testMergeProf2DLabel.cxx
+        stress/merge/testMergeProf3DLabel.cxx
+        stress/merge/testMerge1D_Diff.cxx
+        stress/merge/testMerge1DExtend.cxx
+        stress/merge/testMerge2DExtend.cxx
+        stress/testLabel.cxx
+        stress/testInterpolation.cxx
+        stress/testScaleProf.cxx
+        stress/testH1.cxx
+        stress/testH2.cxx
+        stress/testH3.cxx
+        stress/testProfile.cxx
+        stress/testConversion.cxx
+        stress/testSparseData.cxx
+        stress/testBinDataData.cxx
+        stress/testIntegerRebin.cxx
+        stress/testArrayRebin.cxx
+        stress/testRebin.cxx
+        stress/testHnRebin1.cxx
+        stress/testTH2toTH1.cxx
+        stress/testTH3toTH1.cxx
+        stress/testTH3toTH2.cxx
+        stress/testRefRead.cxx
+        LIBRARIES Hist RIO)
+
