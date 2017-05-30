@@ -550,7 +550,7 @@ void TGLViewer::DoDraw(Bool_t swap_buffers)
    // to ensure thread safety. For PrintObjects repeated Draw() calls are made.
    // If no draw lock taken get one now.
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    fRedrawTimer->Stop();
 
@@ -1325,7 +1325,7 @@ Bool_t TGLViewer::RequestSelect(Int_t x, Int_t y)
 
 Bool_t TGLViewer::DoSelect(Int_t x, Int_t y)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoSelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
@@ -1394,7 +1394,7 @@ Bool_t TGLViewer::RequestSecondarySelect(Int_t x, Int_t y)
 
 Bool_t TGLViewer::DoSecondarySelect(Int_t x, Int_t y)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoSecondarySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));
@@ -1505,7 +1505,7 @@ Bool_t TGLViewer::RequestOverlaySelect(Int_t x, Int_t y)
 
 Bool_t TGLViewer::DoOverlaySelect(Int_t x, Int_t y)
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (CurrentLock() != kSelectLock) {
       Error("TGLViewer::DoOverlaySelect", "expected kSelectLock, found %s", LockName(CurrentLock()));

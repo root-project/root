@@ -284,7 +284,7 @@ Bool_t TPluginHandler::CheckForExecPlugin(Int_t nargs)
       // Grab it now to avoid dead-lock.  In particular TPluginHandler::ExecPluginImpl
       // takes the gInterpreterMutex and *then* call (indirectly) code that
       // take the gPluginManagerMutex.
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       R__LOCKGUARD2(gPluginManagerMutex);
 
       // Now check if another thread did not already do the work.
@@ -459,7 +459,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    // delete the object after release the gInterpreterMutex lock
    TObjArray *dirs = nullptr;
    {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       if (!fBasesLoaded) {
          fBasesLoaded = new THashTable();
          fBasesLoaded->SetOwner();

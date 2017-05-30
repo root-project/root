@@ -593,7 +593,7 @@ void TPad::Clear(Option_t *option)
 {
    if (!IsEditable()) return;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    if (!fPadPaint) {
       SafeDelete(fView);

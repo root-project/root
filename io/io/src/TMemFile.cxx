@@ -332,7 +332,7 @@ void TMemFile::ResetAfterMerge(TFileMergeInfo *info)
    fBlockSeek   = &fBlockList;
    fBlockOffset = 0;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Remove(this);
    }
 

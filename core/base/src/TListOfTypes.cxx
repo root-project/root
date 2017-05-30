@@ -108,7 +108,7 @@ TDataType *TListOfTypes::FindType(const char *name) const
 
       // We perform now a lookup
 
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       TypedefInfo_t  *info = gInterpreter->TypedefInfo_Factory(name);
       if (gInterpreter->TypedefInfo_IsValid(info)) {

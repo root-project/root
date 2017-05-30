@@ -707,7 +707,7 @@ void TCanvas::Clear(Option_t *option)
 {
    if (fCanvasID == -1) return;
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TString opt = option;
    opt.ToLower();
@@ -767,7 +767,7 @@ void TCanvas::Close(Option_t *option)
          return;
       }
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
 
       FeedbackMode(kFALSE);
 
@@ -1120,7 +1120,7 @@ void TCanvas::UseCurrentStyle()
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TPad::UseCurrentStyle();
 
@@ -1566,7 +1566,7 @@ void TCanvas::Resize(Option_t *)
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    TPad *padsav  = (TPad*)gPad;
    cd();
@@ -2245,7 +2245,7 @@ void TCanvas::Update()
       return;
    }
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    fUpdating = kTRUE;
 

@@ -523,7 +523,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 zombie:
    // error in file opening occurred, make this object a zombie
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
    MakeZombie();
@@ -556,7 +556,7 @@ TFile::~TFile()
    SafeDelete(fOpenPhases);
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Remove(this);
       gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
    }
@@ -839,7 +839,7 @@ void TFile::Init(Bool_t create)
    }
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
    }
@@ -853,7 +853,7 @@ void TFile::Init(Bool_t create)
          if (fSeekInfo > fBEGIN) {
             ReadStreamerInfo();
             if (IsZombie()) {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                gROOT->GetListOfFiles()->Remove(this);
                goto zombie;
             }
@@ -879,7 +879,7 @@ void TFile::Init(Bool_t create)
 
 zombie:
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
    // error in file opening occurred, make this object a zombie
@@ -985,7 +985,7 @@ void TFile::Close(Option_t *option)
    pidDeleted.Delete();
 
    if (!IsZombie()) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Remove(this);
       gROOT->GetListOfBrowsers()->RecursiveRemove(this);
       gROOT->GetListOfClosedObjects()->Add(this);
@@ -4711,7 +4711,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    }
 
    // Check also the list of files open
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4758,7 +4758,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    }
 
    // Check also the list of files open
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);

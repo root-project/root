@@ -323,7 +323,7 @@ public:
    template <typename... T>
    void CallFunc_SetArguments(CallFunc_t *func, const T&... args)
    {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       CallFunc_ResetArg(func);
       CallFunc_SetArgImpl(func,args...);

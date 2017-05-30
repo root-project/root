@@ -577,7 +577,7 @@ TProofMgr *TProofMgr::Create(const char *uin, Int_t loglevel,
    if (m) {
       fgListOfManagers.Add(m);
       if (m->IsValid() && !(m->IsProofd())) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfProofs()->Add(m);
          gROOT->GetListOfSockets()->Add(m);
       }

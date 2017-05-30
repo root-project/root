@@ -131,7 +131,7 @@ TQSlot::TQSlot(TClass *cl, const char *method_name,
       if ((params = strchr(proto, '='))) * params = ' ';
    }
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    fFunc = gCling->CallFunc_Factory();
 
    // initiate class method (function) with proto
@@ -198,7 +198,7 @@ TQSlot::TQSlot(const char *class_name, const char *funcname) :
       if ((params = strchr(proto, '='))) * params = ' ';
    }
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    fFunc = gCling->CallFunc_Factory();
    gCling->CallFunc_IgnoreExtraArgs(fFunc, true);
 
@@ -346,7 +346,7 @@ inline void TQSlot::ExecuteMethod(void *object, const char *param)
 inline void TQSlot::ExecuteMethod(void *object, Long_t *paramArr, Int_t nparam)
 {
    void *address = 0;
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (paramArr) gCling->CallFunc_SetArgArray(fFunc, paramArr, nparam);
    if (object) address = (void *)((Long_t)object + fOffset);
    fExecuting++;

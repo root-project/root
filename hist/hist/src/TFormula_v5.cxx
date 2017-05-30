@@ -259,7 +259,7 @@ TFormula::TFormula(const char *name,const char *expression) :
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
    } else {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
       if (old) {
          gROOT->GetListOfFunctions()->Remove(old);
@@ -311,7 +311,7 @@ TFormula& TFormula::operator=(const TFormula &rhs)
 TFormula::~TFormula()
 {
    if (gROOT) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(this);
    }
 
@@ -1349,7 +1349,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
                   if (find==0) {
                      {
-                        R__LOCKGUARD2(gROOTMutex);
+                        R__LOCKGUARD(gROOTMutex);
                         oldformula = (const TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                      }
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
@@ -3357,7 +3357,7 @@ void TFormula::ProcessLinear(TString &formula)
          return;
       }
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfFunctions()->Remove(f);
       }
       f->SetBit(kNotGlobal, 1);
@@ -3499,7 +3499,7 @@ void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCl
    if (v > 3 ) {
       b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c, onfile_class);
       if (!TestBit(kNotGlobal)) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfFunctions()->Add(this);
       }
 
@@ -3547,7 +3547,7 @@ void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCl
    for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
    for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
       gROOT->GetListOfFunctions()->Add(this);
    }

@@ -123,7 +123,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
    fAppRemote(0)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // Create the list of applications the first time
    if (!fgApplications)
@@ -1267,7 +1267,7 @@ void TApplication::SetEchoMode(Bool_t)
 
 void TApplication::CreateApplication()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    // gApplication is set at the end of 'new TApplication.
    if (!gApplication) {
       char *a = StrDup("RootApp");

@@ -269,7 +269,7 @@ void TStyleDialog::DoOK()
       tmpStyle->SetName(fName->GetText());
       tmpStyle->SetTitle(fTitle->GetText());
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfStyles()->Add(tmpStyle);
       }
       if (fMode == 3) {

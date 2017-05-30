@@ -462,7 +462,7 @@ void TClass::AddClass(TClass *cl)
 {
    if (!cl) return;
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
       GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
@@ -488,7 +488,7 @@ void TClass::RemoveClass(TClass *oldcl)
 {
    if (!oldcl) return;
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
@@ -1051,7 +1051,7 @@ TClass::TClass() :
 {
    // Default ctor.
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    {
       TMmallocDescTemp setreset;
       fStreamerInfo = new TObjArray(1, -2);
@@ -1086,7 +1086,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
@@ -1133,7 +1133,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Init(name, cversion, 0, 0, 0, 0, -1, -1, 0, silent);
 }
 
@@ -1160,7 +1160,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    // Treat the case in which a TClass instance is created for a namespace
    if (theState == kNamespaceForMeta){
@@ -1204,7 +1204,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
@@ -1221,7 +1221,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    } else {
       fName = gInterpreter->ClassInfo_FullName(classInfo);
 
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       Init(fName, cversion, 0, 0, dfil, ifil, dl, il, classInfo, silent);
    }
    ResetBit(kLoading);
@@ -1254,7 +1254,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Init(name,cversion, 0, 0, dfil, ifil, dl, il, 0, silent);
 }
 
@@ -1285,7 +1285,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    // use info
    Init(name, cversion, &info, isa, dfil, ifil, dl, il, 0, silent);
 }
@@ -2332,7 +2332,7 @@ TObject *TClass::Clone(const char *new_name) const
    }
 
    // Need to lock access to TROOT::GetListOfClasses so the cloning happens atomically
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    // Temporarily remove the original from the list of classes.
    TClass::RemoveClass(const_cast<TClass*>(this));
 
@@ -3066,7 +3066,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    //protect access to TROOT::GetListOfClasses
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if (!gROOT->GetListOfClasses())    return 0;
 
@@ -3510,12 +3510,12 @@ TList *TClass::GetListOfEnums(Bool_t requestListLoading /* = kTRUE */)
       if (requestListLoading) {
          if (fProperty == -1) Property();
          if (! ((kIsClass | kIsStruct | kIsUnion) & fProperty) ) {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             temp->Load();
          } else if ( temp->IsA() == TListOfEnumsWithLock::Class() ) {
             // We have a class for which the list was not loaded fully at
             // first use.
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             temp->Load();
          }
       }
@@ -3937,7 +3937,7 @@ void TClass::ResetClassInfo(Long_t /* tagnum */)
 
 void TClass::ResetClassInfo()
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    InsertTClassInRegistryRAII insertRAII(fState,fName,fNoInfoOrEmuOrFwdDeclNameRegistry);
 
@@ -4570,7 +4570,7 @@ void TClass::IgnoreTObjectStreamer(Bool_t doIgnore)
    // We need to tak the lock since we are test and then setting fBits
    // and TStreamerInfo::fBits (and the StreamerInfo state in general)
    // which can also be modified by another thread.
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
 
    if ( doIgnore &&  TestBit(kIgnoreTObjectStreamer)) return;
    if (!doIgnore && !TestBit(kIgnoreTObjectStreamer)) return;
@@ -5326,7 +5326,7 @@ void TClass::SetClassVersion(Version_t version)
 
 TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
 {
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if(!fCurrentInfo.load()) {
      fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
    }

@@ -114,7 +114,7 @@ TTreePlayer::TTreePlayer()
    fInput->Add(new TNamed("selection",""));
    fSelector->SetInputList(fInput);
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    TClass::GetClass("TRef")->AdoptReferenceProxy(new TRefProxy());
@@ -131,7 +131,7 @@ TTreePlayer::~TTreePlayer()
    DeleteSelectorFromFile();
    fInput->Delete();
    delete fInput;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 

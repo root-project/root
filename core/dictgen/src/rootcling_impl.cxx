@@ -1426,7 +1426,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    if (autoLoad) {
       dictStream << "   Dictionary();\n";
    } else {
-      dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
       dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
    }
    dictStream    << "   return fgIsA;" << std::endl

@@ -111,7 +111,7 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    // nothing to check against
    bool streamerInfosTest;
    {
-     R__LOCKGUARD2(gInterpreterMutex);
+     R__LOCKGUARD(gInterpreterMutex);
      streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
    }
    if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {

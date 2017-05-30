@@ -76,7 +76,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 
    Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ static TBuffer* R__CreateBuffer()
    typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
    static tcling_callfunc_Wrapper_t creator = 0;
    if (creator == 0) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TClass *c = TClass::GetClass("TBufferFile");
       TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
       creator = (tcling_callfunc_Wrapper_t)( m->InterfaceMethod() );
@@ -353,7 +353,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    char *s = (char*)strrchr(path, ':');
    if (s) {
       *s = '\0';
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -1201,7 +1201,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
 /// Register a TContext pointing to this TDirectory object
 
 void TDirectory::RegisterContext(TContext *ctxt) {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (fContext) {
       TContext *current = fContext;
       while(current->fNext) {
@@ -1230,7 +1230,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * 
 /// UnRegister a TContext pointing to this TDirectory object
 
 void TDirectory::UnregisterContext(TContext *ctxt) {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (ctxt==fContext) {
       fContext = ctxt->fNext;
       if (fContext) fContext->fPrevious = 0;
