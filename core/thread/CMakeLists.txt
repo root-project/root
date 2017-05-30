@@ -18,7 +18,7 @@ endif()
 
 set(sources TCondition.cxx TConditionImp.cxx TMutex.cxx TMutexImp.cxx
             TRWLock.cxx TRWSpinLock.cxx TSemaphore.cxx TThread.cxx TThreadFactory.cxx
-            TThreadImp.cxx)
+            TThreadImp.cxx TRWMutexImp.cxx)
 if(NOT WIN32)
   set(sources ${sources} TPosixCondition.cxx TPosixMutex.cxx
                          TPosixThread.cxx TPosixThreadFactory.cxx)
