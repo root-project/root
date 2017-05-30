@@ -1923,12 +1923,6 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       // and is implemented by
       if (gApplication) {
          if (gApplication->IsCmdThread()) {
-            if (gGlobalMutex && !gInterpreterMutex && fLockProcessLine) {
-               gGlobalMutex->Lock();
-               if (!gInterpreterMutex)
-                  gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
-               gGlobalMutex->UnLock();
-            }
             R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
             gROOT->SetLineIsProcessing();
 
