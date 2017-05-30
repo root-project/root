@@ -623,7 +623,7 @@ void TF1::DoInitialize(EAddToList addToGlobalList)
                  || addToGlobalList == EAddToList::kAdd);
    if (doAdd && gROOT) {
       SetBit(kNotGlobal, kFALSE);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       // Store formula in linked list of formula in ROOT
       TF1 *f1old = (TF1 *)gROOT->GetListOfFunctions()->FindObject(fName);
       if (f1old) {
@@ -668,20 +668,20 @@ Bool_t TF1::AddToGlobalList(Bool_t on)
    bool prevStatus = !TestBit(kNotGlobal);
    if (on)  {
       if (prevStatus) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          assert(gROOT->GetListOfFunctions()->FindObject(this) != nullptr);
          return on; // do nothing
       }
       // do I need to delete previous one with the same name ???
       //TF1 * old = dynamic_cast<TF1*>( gROOT->GetListOfFunctions()->FindObject(GetName()) );
       //if (old) { gROOT->GetListOfFunctions()->Remove(old); old->SetBit(kNotGlobal, kTRUE); }
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFunctions()->Add(this);
       SetBit(kNotGlobal, kFALSE);
    } else if (prevStatus) {
       // if previous status was on and now is off we need to remove the function
       SetBit(kNotGlobal, kTRUE);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TF1 *old = dynamic_cast<TF1 *>(gROOT->GetListOfFunctions()->FindObject(GetName()));
       if (!old) {
          Warning("AddToGlobalList", "Function is supposed to be in the global list but it is not present");
@@ -715,7 +715,7 @@ TF1::~TF1()
 
    // this was before in TFormula destructor
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (gROOT) gROOT->GetListOfFunctions()->Remove(this);
    }
 
@@ -2287,7 +2287,7 @@ void TF1::InitArgs(const Double_t *x, const Double_t *params)
 void TF1::InitStandardFunctions()
 {
    TF1 *f1;
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (!gROOT->GetListOfFunctions()->FindObject("gaus")) {
       f1 = new TF1("gaus", "gaus", -1, 1);
       f1->SetParameters(1, 0, 1);
@@ -3349,7 +3349,7 @@ void TF1::Streamer(TBuffer &b)
          // need to register the objects
          b.ReadClassBuffer(TF1::Class(), this, v, R__s, R__c);
          if (!TestBit(kNotGlobal)) {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfFunctions()->Add(this);
          }
          return;

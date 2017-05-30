@@ -459,7 +459,7 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
    fFCN = 0;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Add(this);
    }
    gMinuit = this;
@@ -486,7 +486,7 @@ TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 
    mninit(5,6,7);
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Add(this);
    }
    gMinuit = this;
@@ -509,7 +509,7 @@ TMinuit::~TMinuit()
    delete fPlot;
    delete fMethodCall;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
    }
    if (gMinuit == this) gMinuit = nullptr;

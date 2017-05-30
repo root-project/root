@@ -219,7 +219,7 @@ TStreamerElement::TStreamerElement(const char *name, const char *title, Int_t of
       fTypeName = typeName;
    } else {
       //must protect call into the interpreter
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       fTypeName    = TClassEdit::ResolveTypedef(typeName);
    }
    fStreamer    = 0;

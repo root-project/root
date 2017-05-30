@@ -882,7 +882,7 @@ TTree::~TTree()
    if (fClones) {
       // Clone trees should no longer be removed from fClones when they are deleted.
      {
-        R__LOCKGUARD2(gROOTMutex);
+        R__LOCKGUARD(gROOTMutex);
         gROOT->GetListOfCleanups()->Remove(fClones);
      }
       // Note: fClones does not own its content.
@@ -1109,7 +1109,7 @@ void TTree::AddClone(TTree* clone)
       // So that the clones are automatically removed from the list when
       // they are deleted.
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfCleanups()->Add(fClones);
       }
    }

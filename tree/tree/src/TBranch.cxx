@@ -464,7 +464,7 @@ TBranch::~TBranch()
    if (fDirectory && (!fTree || fDirectory != fTree->GetDirectory())) {
       TString bFileName( GetRealFileName() );
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TFile* file = (TFile*)gROOT->GetListOfFiles()->FindObject(bFileName);
       if (file){
          file->Close();
@@ -1421,7 +1421,7 @@ TFile* TBranch::GetFile(Int_t mode)
    // check if a file with this name is in the list of Root files
    TFile *file = 0;
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
       if (file) {
          fDirectory = file;

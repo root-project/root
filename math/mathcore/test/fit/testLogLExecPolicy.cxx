@@ -32,7 +32,7 @@ public:
    {
       bool changed = false;
       for (unsigned i = 0; i < params.size(); i++) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          if (p[i] != params[i])
             if (!changed) {
                changed = true;
@@ -41,7 +41,7 @@ public:
       }
 
       if (changed) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          for (unsigned i = 0; i < paramSize; i++) {
             params[i] = p[i];
          }

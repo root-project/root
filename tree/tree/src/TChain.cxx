@@ -90,7 +90,7 @@ TChain::TChain()
    gROOT->GetListOfDataSets()->Add(this);
 
    // Make sure we are informed if the TFile is deleted.
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -167,7 +167,7 @@ TChain::TChain(const char* name, const char* title)
    gROOT->GetListOfDataSets()->Add(this);
 
    // Make sure we are informed if the TFile is deleted.
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -179,7 +179,7 @@ TChain::~TChain()
    bool rootAlive = gROOT && !gROOT->TestBit(TObject::kInvalidObject);
 
    if (rootAlive) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
 
@@ -2817,7 +2817,7 @@ void TChain::Streamer(TBuffer& b)
    if (b.IsReading()) {
       // Remove using the 'old' name.
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfCleanups()->Remove(this);
       }
 
@@ -2841,7 +2841,7 @@ void TChain::Streamer(TBuffer& b)
       }
       // Re-add using the new name.
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfCleanups()->Add(this);
       }
 

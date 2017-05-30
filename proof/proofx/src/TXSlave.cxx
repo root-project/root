@@ -283,7 +283,7 @@ void TXSlave::Init(const char *host, Int_t stype)
    // ensure the correct termination of all proof servers in case the
    // root session terminates.
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
 

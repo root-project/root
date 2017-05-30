@@ -100,7 +100,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
    fExcessFiles = new TList;
    fExcessFiles->SetOwner(kTRUE);
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -110,7 +110,7 @@ TFileMerger::TFileMerger(Bool_t isLocal, Bool_t histoOneGo)
 TFileMerger::~TFileMerger()
 {
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
    SafeDelete(fFileList);

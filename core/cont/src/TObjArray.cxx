@@ -343,11 +343,11 @@ void TObjArray::Delete(Option_t *opt)
    const char *noreg = "noregistration";
    bool needRegister = fSize && TROOT::Initialized() && strcmp(opt,noreg) == 0;
    if(needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
    }
    if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    for (Int_t i = 0; i < fSize; i++) {
@@ -357,7 +357,7 @@ void TObjArray::Delete(Option_t *opt)
       }
    }
    if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
 

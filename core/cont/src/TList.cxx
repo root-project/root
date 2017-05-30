@@ -369,11 +369,11 @@ void TList::Clear(Option_t *option)
    // So let's temporarily add the current list and remove it later.
    bool needRegister = fFirst && TROOT::Initialized();
    if(needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
    }
    if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    while (fFirst) {
@@ -391,7 +391,7 @@ void TList::Clear(Option_t *option)
       delete tlk;
    }
    if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
    fFirst = fLast = fCache = 0;
@@ -424,11 +424,11 @@ void TList::Delete(Option_t *option)
       // So let's temporarily add the current list and remove it later.
       bool needRegister = fFirst && TROOT::Initialized();
       if(needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
       }
       if (needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfCleanups()->Add(this);
       }
       while (fFirst) {
@@ -445,7 +445,7 @@ void TList::Delete(Option_t *option)
       }
 
       if (needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
       }
 

@@ -115,7 +115,7 @@ TStyle::TStyle(const char *name, const char *title)
    Reset();
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfStyles()->Add(this);
    }
 
@@ -263,7 +263,7 @@ TStyle::TStyle(const char *name, const char *title)
 
 TStyle::~TStyle()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfStyles()->Remove(this);
    if (gStyle == this) gStyle = (TStyle*)gROOT->GetListOfStyles()->Last();
 }

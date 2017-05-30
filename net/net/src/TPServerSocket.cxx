@@ -128,7 +128,7 @@ TSocket *TPServerSocket::Accept(UChar_t Opt)
       for (int i = 0; i < size; i++) {
          pSockets[i] = new TSocket(setupSocket->GetInetAddress(),
                                            port, fTcpWindowSize);
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Remove(pSockets[i]);
       }
 

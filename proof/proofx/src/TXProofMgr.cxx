@@ -142,7 +142,7 @@ Int_t TXProofMgr::Init(Int_t)
    fRemoteProtocol = fSocket->GetRemoteProtocol();
 
    // We add the manager itself for correct destruction
-   {  R__LOCKGUARD2(gROOTMutex);
+   {  R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(fSocket);
    }
 
@@ -171,7 +171,7 @@ void TXProofMgr::SetInvalid()
    SafeDelete(fSocket);
 
    // Avoid destroying twice
-   {  R__LOCKGUARD2(gROOTMutex);
+   {  R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
 }

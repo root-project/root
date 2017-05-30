@@ -151,7 +151,7 @@ TGLPlotPainter::TGLPlotPainter(TGLPlotCamera *camera)
 
 void TGLPlotPainter::Paint()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 
    fHighColor = kFALSE;
    fSelectionBase = fHighColor ? kHighColorSelectionBase : kTrueColorSelectionBase;
