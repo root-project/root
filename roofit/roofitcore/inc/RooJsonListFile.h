@@ -8,8 +8,13 @@
 
 class RooJsonListFile {
 public:
+  // ctors
   RooJsonListFile(): _member_index(0) {}
   RooJsonListFile(const std::string & filename);
+  // default move ctors
+  RooJsonListFile(RooJsonListFile&& other) = default;
+  RooJsonListFile& operator=(RooJsonListFile&& other) = default;
+  // dtor
   ~RooJsonListFile();
 
   void open(const std::string & filename);

@@ -255,9 +255,6 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   if (SimMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
-      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     // Evaluate array of owned GOF objects
@@ -291,24 +288,18 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 2) {
       timer.stop();
       // set ppid to -1, to signify that this is not a slave process
-      RooTrace::timing_outfile << timer.timing_s() << getpid() << -1 << "SimMaster";
+      RooTimer::timing_outfiles[0] << timer.timing_s() << getpid() << -1 << "SimMaster";
     }
 
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
     if (RooTrace::timing_flag == 2) {
-      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
-      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
     std::vector<double> timings;
     if (RooTrace::timing_flag == 3) {
       timings.reserve(_nCPU);
-      RooTrace::timing_outfile.open("timing_RATS_evaluate_mpmaster_perCPU.json");
-      std::string names[3] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid"};
-      RooTrace::timing_outfile.set_member_names(names, names + 3);
     }
 
     // Start calculations in parallel
@@ -334,7 +325,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     if (RooTrace::timing_flag == 3) {
       for (Int_t i = 0; i < _nCPU; ++i) {
-        RooTrace::timing_outfile << timings[i] << i << getpid();
+        RooTimer::timing_outfiles[0] << timings[i] << i << getpid();
       }
     }
 
@@ -344,7 +335,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     if (RooTrace::timing_flag == 2) {
       timer.stop();
       // set ppid to -1, to signify that this is not a slave process
-      RooTrace::timing_outfile << timer.timing_s() << getpid() << -1 << "MPMaster";
+      RooTimer::timing_outfiles[0] << timer.timing_s() << getpid() << -1 << "MPMaster";
     }
 
     if (RooTrace::time_numInts() == kTRUE) {
@@ -355,9 +346,6 @@ Double_t RooAbsTestStatistic::evaluate() const
 
   } else {
     if (RooTrace::timing_flag == 2) {
-      RooTrace::timing_outfile.open("timing_RATS_evaluate_full.json");
-      std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
-      RooTrace::timing_outfile.set_member_names(names, names + 4);
       timer.start();
     }
 
@@ -411,7 +399,7 @@ Double_t RooAbsTestStatistic::evaluate() const
         // set ppid to -1, to signify that this is not a slave process
         ppid = -1;
       }
-      RooTrace::timing_outfile << timer.timing_s() << getpid() << ppid << "other";
+      RooTimer::timing_outfiles[0] << timer.timing_s() << getpid() << ppid << "other";
     }
 
     return ret ;
@@ -430,6 +418,10 @@ Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
 
+  if (RooTrace::timing_flag > 0) {
+    _initTiming();
+  }
+
   if ((MPMaster != _gofOpMode) && (RooTrace::time_numInts() == kTRUE)) {
     // in single-process mode, activate numerical integral timing on the local process
     // for multi-process mode, this is called from RooRealMPFE::setTimingNumInts in initMPMode
@@ -446,6 +438,45 @@ Bool_t RooAbsTestStatistic::initialize()
   return kFALSE;
 }
 
+
+void RooAbsTestStatistic::_initTiming() {
+
+  if (RooTimer::timing_outfiles.size() < 1) {
+    RooTimer::timing_outfiles.emplace_back();
+  }
+
+  switch (RooTrace::timing_flag) {
+    case 2: {
+      if (SimMaster == _gofOpMode) {
+        RooTimer::timing_outfiles[0].open("timing_RATS_evaluate_full.json");
+        std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+        RooTimer::timing_outfiles[0].set_member_names(names, names + 4);
+      } else if (MPMaster == _gofOpMode) {
+        RooTimer::timing_outfiles[0].open("timing_RATS_evaluate_full.json");
+        std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+        RooTimer::timing_outfiles[0].set_member_names(names, names + 4);
+      } else {
+        RooTimer::timing_outfiles[0].open("timing_RATS_evaluate_full.json");
+        std::string names[4] = {"RATS_evaluate_wall_s", "pid", "ppid", "mode"};
+        RooTimer::timing_outfiles[0].set_member_names(names, names + 4);
+      }
+      break;
+    }
+    case 3: {
+      if (MPMaster == _gofOpMode) {
+        RooTimer::timing_outfiles[0].open("timing_RATS_evaluate_mpmaster_perCPU.json");
+        std::string names[3] = {"RATS_evaluate_mpmaster_it_wall_s", "it_nr", "pid"};
+        RooTimer::timing_outfiles[0].set_member_names(names, names + 3);
+      }
+      break;
+    }
+    default: {
+      // no timing, do nothing
+      break;
+    }
+  }
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward server redirect calls to component test statistics
@@ -553,10 +584,6 @@ void RooAbsTestStatistic::initMPMode(RooAbsReal *real, RooAbsData *data, const R
   // Create proto-goodness-of-fit
   RooAbsTestStatistic* gof = create(GetName(),GetTitle(),*real,*data,*projDeps,rangeName,addCoefRangeName,1,_mpinterl,_verbose,_splitRange);
   gof->recursiveRedirectServers(_paramSet);
-
-  if (RooTrace::timing_flag > 0) {
-    std::vector<RooJsonListFile> RooTimer::timing_outfiles(_nCPU);
-  }
 
   for (Int_t i = 0; i < _nCPU; ++i) {
     gof->setMPSet(i,_nCPU);

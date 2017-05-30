@@ -272,6 +272,9 @@ void RooRealMPFE::_initTiming() {
   std::string proc_id = proc_id_ss.str();
 
   if (_pipe->isChild()) {
+    if (RooTimer::timing_outfiles.size() < 1) {
+      RooTimer::timing_outfiles.emplace_back();
+    }
     // on server (slave process)
     switch (RooTrace::timing_flag) {
       case 9: {
@@ -289,6 +292,10 @@ void RooRealMPFE::_initTiming() {
     }
   } else {
     // on client (master process)
+    while (RooTimer::timing_outfiles.size() < _numSets) {
+      RooTimer::timing_outfiles.emplace_back();
+    }
+
     switch (RooTrace::timing_flag) {
       case 4: {
         stringstream filename_ss;

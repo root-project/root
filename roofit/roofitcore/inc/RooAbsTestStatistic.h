@@ -154,6 +154,8 @@ private:
 
   void _setNumIntTimingInPdfs(Bool_t flag = kTRUE);
 
+  void _initTiming();
+
   ClassDef(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
 };
 

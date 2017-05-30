@@ -14,6 +14,8 @@ void RooTimer::store_timing_in_RooTrace(const std::string &name) {
   RooTrace::objectTiming[name] = _timing_s;  // subscript operator overwrites existing values, insert does not
 }
 
+std::vector<RooJsonListFile> RooTimer::timing_outfiles;
+
 
 RooWallTimer::RooWallTimer() {
   start();
