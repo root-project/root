@@ -118,8 +118,7 @@ TYPED_TEST_P(SMatrixTest, TestSMatrix)
 
 REGISTER_TYPED_TEST_CASE_P(SMatrixTest, TestSMatrix);
 
-typedef testing::Types<GenericSMatrixTypeWrapper<3, 4, RepStd<3, 4>>,
-                       GenericSMatrixTypeWrapper<4, 3, RepStd<4, 3>>,
+typedef testing::Types<GenericSMatrixTypeWrapper<3, 4, RepStd<3, 4>>, GenericSMatrixTypeWrapper<4, 3, RepStd<4, 3>>,
                        GenericSMatrixTypeWrapper<3, 3, RepStd<3, 3>>,
                        GenericSMatrixTypeWrapper<5, 5, RepSym<5>>> // sym matrix
    SMatrixTestingTypes_t;
