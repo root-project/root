@@ -351,7 +351,7 @@ PyObject* PyROOT::TVoidArrayExecutor::Execute(
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
    }
-   return BufFac_t::Instance()->PyBuffer_FromMemory( result, 1 );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( result, sizeof(void*) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

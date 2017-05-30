@@ -739,7 +739,7 @@ PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
    }
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, sizeof(void*) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -793,7 +793,7 @@ Bool_t PyROOT::T##name##ArrayRefConverter::SetArg(                           \
                                                                              \
 PyObject* PyROOT::T##name##ArrayConverter::FromMemory( void* address )       \
 {                                                                            \
-   return BufFac_t::Instance()->PyBuffer_FromMemory( *(type**)address, fSize );\
+   return BufFac_t::Instance()->PyBuffer_FromMemory( *(type**)address, fSize * sizeof(type) );\
 }                                                                            \
                                                                              \
 Bool_t PyROOT::T##name##ArrayConverter::ToMemory( PyObject* value, void* address )\
@@ -1212,7 +1212,7 @@ PyObject* PyROOT::TVoidPtrPtrConverter::FromMemory( void* address )
       Py_INCREF( gNullPtrObject );
       return gNullPtrObject;
    }
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, sizeof(void*) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
