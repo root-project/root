@@ -1779,7 +1779,7 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    out <<"void " << mname(s,p-s) << "()" <<std::endl;
    out <<"{"<<std::endl;
    out <<"//=========Macro generated from canvas: "<<GetName()<<"/"<<GetTitle()<<std::endl;
-   out <<"//=========  ("<<t.AsString()<<") by ROOT version"<<gROOT->GetVersion()<<std::endl;
+   out <<"//=========  ("<<t.AsString()<<") by ROOT version "<<gROOT->GetVersion()<<std::endl;
 
    if (gStyle->GetCanvasPreferGL())
       out <<std::endl<<"   gStyle->SetCanvasPreferGL(kTRUE);"<<std::endl<<std::endl;
