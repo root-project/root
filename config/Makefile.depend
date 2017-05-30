@@ -466,7 +466,7 @@ MATHMORELIBEXTRA        = -Llib -lMathCore
 HADDLIBEXTRA            = -Llib -lMultiProc
 TREELIBEXTRA            = -Llib -lNet -lRIO -lThread
 TREEPLAYERLIBEXTRA      = -Llib -lTree -lGraf3d -lGraf -lHist -lGpad -lRIO \
-                          -lMathCore -lMultiProc
+                          -lNet -lMathCore -lMultiProc
 TREEVIEWERLIBEXTRA      = -Llib -lTree -lGpad -lGraf -lHist -lGui -lTreePlayer \
                           -lGed -lRIO -lMathCore
 PROOFLIBEXTRA           = -Llib -lNet -lTree -lThread -lRIO -lMathCore
