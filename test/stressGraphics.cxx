@@ -433,7 +433,7 @@ void stressGraphics(Int_t verbose = 0)
       const Double_t rootmarks = 860*(47.12/ct);
 
       printf("**********************************************************************\n");
-      printf("*  ROOTMARKS =%6.1f   *  Root%-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
+      printf("*  ROOTMARKS =%6.1f   *  Root %-8s  %d/%d\n",rootmarks,gROOT->GetVersion(),
              gROOT->GetVersionDate(),gROOT->GetVersionTime());
       printf("**********************************************************************\n");
    }
