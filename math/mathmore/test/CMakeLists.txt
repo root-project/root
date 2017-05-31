@@ -52,3 +52,4 @@ foreach(file ${TestMathMoreSource})
   ROOT_ADD_TEST(mathmore-${testname} COMMAND ${testname} LABELS ${${testname}_LABELS})
 endforeach()
 
+ROOT_ADD_GTEST(stressMathMoreUnit testStress.cxx StatFunction.cxx LIBRARIES MathMore)
