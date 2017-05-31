@@ -267,7 +267,7 @@ protected:
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, const std::string &name);
+   TCustomColumnBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TCustomColumnBase() {}
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual void CreateSlots(unsigned int nSlots) = 0;
@@ -299,7 +299,7 @@ class TCustomColumn final : public TCustomColumnBase {
    std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TCustomColumn(const std::string &name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
+   TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, PrevData &pd)
       : TCustomColumnBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fExpression(std::move(expression)),
         fBranches(bl), fPrevData(pd)
    {
@@ -375,7 +375,7 @@ protected:
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
 
 public:
-   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, const std::string &name);
+   TFilterBase(TLoopManager *df, const ColumnNames_t &tmpBranches, std::string_view name);
    virtual ~TFilterBase() {}
    virtual void BuildReaderValues(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
@@ -401,7 +401,7 @@ class TFilter final : public TFilterBase {
    std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
 public:
-   TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, const std::string &name = "")
+   TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
       : TFilterBase(pd.GetImplPtr(), pd.GetTmpBranches(), name), fFilter(std::move(f)), fBranches(bl), fPrevData(pd)
    {
    }

@@ -502,16 +502,17 @@ thread-safety, see [here](#generic-actions).
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
+TDataFrame::TDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
+   const std::string treeNameInt(treeName);
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
       throw std::runtime_error(msg);
    }
-   auto tree = static_cast<TTree *>(dirPtr->Get(treeName.c_str()));
+   auto tree = static_cast<TTree *>(dirPtr->Get(treeNameInt.c_str()));
    if (!tree) {
-      auto msg = "Tree \"" + treeName + "\" cannot be found!";
+      auto msg = "Tree \"" + treeNameInt + "\" cannot be found!";
       throw std::runtime_error(msg);
    }
    fProxiedPtr->SetTree(std::shared_ptr<TTree>(tree, [](TTree *) {}));
@@ -527,12 +528,14 @@ TDataFrame::TDataFrame(const std::string &treeName, TDirectory *dirPtr, const Co
 /// booking of actions or transformations.
 /// See TInterface for the documentation of the
 /// methods available.
-TDataFrame::TDataFrame(const std::string &treeName, const std::string &filenameglob,
+TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
                        const ColumnNames_t &defaultBranches)
    : TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   auto chain = new TChain(treeName.c_str());
-   chain->Add(filenameglob.c_str());
+   const std::string treeNameInt(treeName);
+   const std::string filenameglobInt(filenameglob);
+   auto chain = new TChain(treeNameInt.c_str());
+   chain->Add(filenameglobInt.c_str());
    fProxiedPtr->SetTree(std::shared_ptr<TTree>(static_cast<TTree *>(chain)));
 }
 

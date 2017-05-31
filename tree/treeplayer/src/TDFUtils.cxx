@@ -126,12 +126,13 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void CheckTmpBranch(const std::string &branchName, TTree *treePtr)
+void CheckTmpBranch(std::string_view branchName, TTree *treePtr)
 {
    if (treePtr != nullptr) {
-      auto branch = treePtr->GetBranch(branchName.c_str());
+      std::string branchNameInt(branchName);
+      auto branch = treePtr->GetBranch(branchNameInt.c_str());
       if (branch != nullptr) {
-         auto msg = "branch \"" + branchName + "\" already present in TTree";
+         auto msg = "branch \"" + branchNameInt + "\" already present in TTree";
          throw std::runtime_error(msg);
       }
    }
