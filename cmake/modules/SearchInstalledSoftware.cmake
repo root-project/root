@@ -1377,15 +1377,15 @@ elseif(veccore)
 endif()
 
 if(veccore AND NOT VecCore_FOUND)
-  set(VecCore_VERSION "0.4.0")
+  set(VecCore_VERSION "0.4.1")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_SRC_MD5 "c719909eaffbcc1d7a7680b25b6e5019")
+  set(VecCore_SRC_MD5 "7728dc706744e54a79fcb80059a31529")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/VECCORE-prefix/install")
   set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
 
   if(builtin_vc)
-    set(Vc_VERSION "1.3.1") # version built by VecCore
+    set(Vc_VERSION "1.3.2") # version built by VecCore
     set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
     set(Vc_LIBRARY "${VecCore_ROOTDIR}/lib/${Vc_LIBNAME}")
   endif()
