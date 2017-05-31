@@ -376,12 +376,12 @@ Double_t RooAbsTestStatistic::evaluate() const
     }
 
     Double_t ret = evaluatePartition(nFirst,nLast,nStep);
-    if (getAttribute("timing_on")) {
-      timer.stop();
-      std::stringstream object_partition_name;
-      object_partition_name << GetName() << "_partition_" << nFirst << "_" << nLast << "_" << nStep;
-      timer.store_timing_in_RooTrace(object_partition_name.str());
-    }
+//    if (getAttribute("timing_on")) {
+//      timer.stop();
+//      std::stringstream object_partition_name;
+//      object_partition_name << GetName() << "_partition_" << nFirst << "_" << nLast << "_" << nStep;
+//      timer.store_timing_in_RooTrace(object_partition_name.str());
+//    }
 
     if (numSets()==1) {
       const Double_t norm = globalNormalization();
