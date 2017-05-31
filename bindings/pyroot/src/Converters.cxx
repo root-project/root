@@ -1052,7 +1052,11 @@ Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::SetArg(
          ((ObjectProxy*)pyobject)->Release();
 
    // set pointer (may be null) and declare success
-      para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
+      if( ((ObjectProxy*)pyobject)->fFlags & ObjectProxy::kIsReference)
+        // If given object is already a reference (aka pointer) then we should not take the address of it
+        para.fValue.fVoidp = ((ObjectProxy*)pyobject)->fObject;
+      else
+        para.fValue.fVoidp = &((ObjectProxy*)pyobject)->fObject;
       para.fTypeCode = ISREFERENCE ? 'V' : 'p';
       return kTRUE;
    }
