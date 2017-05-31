@@ -241,7 +241,7 @@ void CheckFilter(Filter &)
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
 
-void CheckTmpBranch(const std::string &branchName, TTree *treePtr);
+void CheckTmpBranch(std::string_view branchName, TTree *treePtr);
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Check that the callable passed to TInterface::Reduce:

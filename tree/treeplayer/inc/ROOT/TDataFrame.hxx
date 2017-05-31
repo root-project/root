@@ -37,7 +37,7 @@ class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
 
 public:
-   TDataFrame(const std::string &treeName, const std::string &filenameglob, const ColumnNames_t &defaultBranches = {});
+   TDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Build the dataframe
    /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
@@ -51,19 +51,20 @@ public:
    /// methods available.
    template <typename FILENAMESCOLL,
              typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type = 0>
-   TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
+   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
               const ColumnNames_t &defaultBranches = {});
-   TDataFrame(const std::string &treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
+   TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(Long64_t numEntries);
 };
 
 template <typename FILENAMESCOLL, typename std::enable_if<TDFInternal::TIsContainer<FILENAMESCOLL>::fgValue, int>::type>
-TDataFrame::TDataFrame(const std::string &treeName, const FILENAMESCOLL &filenamescoll,
+TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
    : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
 {
-   auto chain = new TChain(treeName.c_str());
+   const std::string treeNameInt(treeName);
+   auto chain = new TChain(treeNameInt.c_str());
    for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
    fProxiedPtr->SetTree(std::make_shared<TTree>(static_cast<TTree *>(chain)));
 }
