@@ -310,8 +310,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     // Make import mapping if index category is specified
     map<string,RooAbsData*> hmap ;  
     if (indexCat) {
-      char tmp[10240] ;
-      strlcpy(tmp,lnkSliceNames,10240) ;      
+      char tmp[64000] ;
+      strlcpy(tmp,lnkSliceNames,64000) ;      
       char* token = strtok(tmp,",") ;
       TIterator* hiter = lnkSliceData.MakeIterator() ;
       while(token) {
@@ -848,7 +848,11 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 {
   _dstore = (defaultStorageType==Tree) ? 
     ((RooAbsDataStore*) new RooTreeDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) :
-    ((RooAbsDataStore*) new RooVectorDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) ;
+    ( ( dset->_dstore->IsA()==RooCompositeDataStore::Class() )? 
+      ((RooAbsDataStore*) new RooCompositeDataStore(name,title,(RooCompositeDataStore&)(*dset->_dstore),_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
+      : 
+      ((RooAbsDataStore*) new RooVectorDataStore(name,title,*dset->_dstore,_vars,cutVar,cutRange,nStart,nStop,copyCache,wgtVarName)) 
+      ) ;
 
   _cachedVars.add(_dstore->cachedVars()) ;
 
@@ -951,17 +955,20 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 {
   checkInit() ;
 
+  cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar?_wgtVar->GetName():"") << endl ;
+
   RooArgSet tmp(varSubset) ;
   if (_wgtVar) {
     tmp.add(*_wgtVar) ;
   }
   RooDataSet* ret =  new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop, copyCache,_wgtVar?_wgtVar->GetName():0) ;
+
   
   // WVE - propagate optional weight variable
   //       check behaviour in plotting.
-//   if (_wgtVar) {
-//     ret->setWeightVar(_wgtVar->GetName()) ;
-//   }
+   // if (_wgtVar) {
+   //   ret->setWeightVar(_wgtVar->GetName()) ;
+   // }
   return ret ;
 }
 
@@ -1697,8 +1704,8 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
   Int_t outOfRange(0) ;
 
   // Make local copy of file list for tokenizing 
-  char fileList2[10240] ;
-  strlcpy(fileList2,fileList,10240) ;
+  char fileList2[64000] ;
+  strlcpy(fileList2,fileList,64000) ;
   
   // Loop over all names in comma separated list
   char *filename = strtok(fileList2,", ") ;
