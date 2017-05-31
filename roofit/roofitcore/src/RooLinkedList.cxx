@@ -890,7 +890,7 @@ void RooLinkedList::Streamer(TBuffer &R__b)
       Add(arg) ;      
     }
 
-    if (v>1 ) {
+    if (v>1 && v<4) {
       R__b >> _name ;
     }
     
