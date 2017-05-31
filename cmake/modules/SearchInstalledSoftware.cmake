@@ -1443,6 +1443,20 @@ if(veccore AND NOT VecCore_FOUND)
     REQUIRED_VARS VecCore_INCLUDE_DIRS
     VERSION_VAR VecCore_VERSION)
 
+  # The following few lines are a temporary fix for a breakage introduced
+  # recently in math/mathcore VecCore integration. Once the proper solution
+  # is found, the lines below should be removed from here and added to the
+  # proper targets.
+  add_definitions(${VecCore_DEFINITIONS})
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${VecCore_DEFINITIONS}")
+  include_directories(SYSTEM BEFORE ${VecCore_INCLUDE_DIRS})
+
+  # Copy Vc and VecCore headers to build directory, otherwise dictionary generation breaks
+  add_custom_command(TARGET VECCORE POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${VecCore_INCLUDE_DIRS}/ ${CMAKE_BINARY_DIR}/include)
+
+  ### End of temporary fix
+
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
 
