@@ -72,6 +72,13 @@ class PickleWritingSimpleObjectsTestCase( MyTestCase ):
       pickle.dump(  v, self.out1 )
       cPickle.dump( v, self.out2 )
 
+   def test5WriteCustomTypes( self ):
+      """Test writing PyROOT custom types"""
+
+      o = [ ROOT.Long(123), ROOT.Double(123.123) ]
+      pickle.dump(  o, self.out1, protocol = 2 )
+      cPickle.dump( o, self.out2, protocol = 2 )
+
    def tearDown( self ):
       self.out1.flush()
       self.out2.flush()

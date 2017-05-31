@@ -104,6 +104,15 @@ class PickleReadingSimpleObjectsTestCase( MyTestCase ):
       d = cPickle.load( self.in2 )
       __doftest( self, d )
 
+   def test5ReadCustomTypes( self ):
+      """Test reading PyROOT custom types"""
+
+      o = pickle.load( self.in1 )
+      self.assertEqual(o, [123,123.123] )
+
+      o = cPickle.load( self.in2 )
+      self.assertEqual(o, [123,123.123] )
+
 
 ### Pretend-write and read back objects that gave complications ==============
 class PickleReadingComplicationsTestCase( MyTestCase ):
